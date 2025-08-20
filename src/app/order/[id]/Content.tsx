@@ -2,7 +2,7 @@
 import React from "react";
 import { OrderData, ReceiptItem, ParsedAddress } from "./types";
 import JsBarCode from "jsbarcode";
-// Interface for the component props
+
 interface ReceiptProps {
   orderData?: OrderData;
 }
@@ -10,7 +10,6 @@ interface ReceiptProps {
 export function Content({ orderData }: ReceiptProps) {
   const order = orderData;
 
-  // Parsing the address string from the OrderData interface
   let parsedAddress: string = order.address;
   if (typeof order.address === "string" && order.address.startsWith("{")) {
     try {
@@ -21,7 +20,6 @@ export function Content({ orderData }: ReceiptProps) {
     }
   }
 
-  // Mapping order items to a simpler structure for display
   const items: ReceiptItem[] =
     order.order_items?.map((item) => ({
       description: item.dish?.name || "Article inconnu",
@@ -48,40 +46,42 @@ export function Content({ orderData }: ReceiptProps) {
 
   React.useEffect(() => {
     JsBarCode("#ticket", order.reference, {
-      width: 1, // Réduit la largeur du code-barres
-      height: 30, // Réduit la hauteur du code-barres
-      fontSize: 10, // Réduit la taille de la police du code-barres
+      width: 1,
+      height: 25,
+      fontSize: 8,
       text: order.reference,
     });
   }, []);
-  // The rest of the component remains the same
+
   return (
-    <div className="w-full bg-white text-black text-[10px] font-mono shadow-none p-1">
+    <div className="w-full bg-white text-black font-mono shadow-none p-1">
       <div className="text-center mb-1">
-        <div className="text-[8px] tracking-tight">
+        <div className="text-[6px] tracking-tight">
           ****************************
         </div>
       </div>
-      <div className="text-center font-bold text-xs mb-1">BON DE COMMANDE</div>
+      <div className="text-center font-bold text-[10px] mb-1">
+        BON DE COMMANDE
+      </div>
       <div className="text-center mb-2">
-        <div className="text-[8px] tracking-tight">
+        <div className="text-[6px] tracking-tight">
           ****************************
         </div>
       </div>
 
-      <div className="text-center font-bold text-sm mb-2">
+      <div className="text-center font-bold text-xs mb-2 whitespace-nowrap overflow-hidden">
         {order.restaurant?.name || "RESTAURANT NAME"}
       </div>
-      <div className="mb-2">
+      <div className="mb-2 text-[8px]">
         <div className="flex justify-between mb-0">
           <span>Adresse:</span>
-          <span className="text-right max-w-[60%]">
+          <span className="text-right max-w-[60%] overflow-hidden text-ellipsis whitespace-nowrap">
             {order.restaurant?.address || "Adresse restaurant"}
           </span>
         </div>
         <div className="flex justify-between mb-0">
           <span>Date:</span>
-          <span>
+          <span className="whitespace-nowrap">
             {formatDate(order.date)} {order.time}
           </span>
         </div>
@@ -95,10 +95,10 @@ export function Content({ orderData }: ReceiptProps) {
         </div>
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 text-[8px]">
         <div className="flex justify-between mb-0">
           <span>Client:</span>
-          <span>
+          <span className="text-right whitespace-nowrap overflow-hidden text-ellipsis">
             {order.customer?.first_name && order.customer?.last_name
               ? `${order.customer.first_name} ${order.customer.last_name}`
               : order.fullname || "Client"}
@@ -115,17 +115,19 @@ export function Content({ orderData }: ReceiptProps) {
         {order.type === "DELIVERY" && (
           <div className="flex justify-between mt-1">
             <span>Livraison:</span>
-            <span className="text-right max-w-[60%]">{parsedAddress}</span>
+            <span className="text-right max-w-[60%] overflow-hidden text-ellipsis whitespace-nowrap">
+              {parsedAddress}
+            </span>
           </div>
         )}
       </div>
 
-      <div className="flex justify-between font-bold mb-1 border-b border-dashed border-gray-400 pb-1">
+      <div className="flex justify-between font-bold text-[8px] mb-1 border-b border-dashed border-gray-400 pb-1">
         <span>Description</span>
         <span>Price</span>
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 text-[8px]">
         {items.length > 0 ? (
           items.map((item, index) => (
             <div key={index} className="mb-1">
@@ -136,25 +138,27 @@ export function Content({ orderData }: ReceiptProps) {
                     <span className="ml-1 text-red-500">🌶️</span>
                   )}
                 </span>
-                <span className="text-right">{formatPrice(item.price)}</span>
+                <span className="text-right whitespace-nowrap">
+                  {formatPrice(item.price)}
+                </span>
               </div>
               {item.details && (
-                <div className="text-[8px] text-gray-600 mb-0">
+                <div className="text-[6px] text-gray-600 mb-0">
                   {item.details}
                 </div>
               )}
-              <div className="text-[8px] flex justify-between">
-                <span>
+              <div className="text-[6px] flex justify-between">
+                <span className="whitespace-nowrap">
                   Qté: {item.quantity} x {formatPrice(item.unitPrice)}
                 </span>
                 {item.isPromotion && (
-                  <span className="text-red-500">PROMO</span>
+                  <span className="text-red-500 whitespace-nowrap">PROMO</span>
                 )}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-500 text-[10px]">
+          <div className="text-center text-gray-500 text-[8px]">
             Aucun article
           </div>
         )}
@@ -162,17 +166,17 @@ export function Content({ orderData }: ReceiptProps) {
 
       <div className="border-t border-dashed border-gray-400 mb-1"></div>
 
-      <div className="mb-2">
+      <div className="mb-2 text-[8px]">
         <div className="flex justify-between mb-0">
           <span>Sous-total</span>
           <span>{formatPrice(order.net_amount)}</span>
         </div>
-        {order.delivery_fee > 0 ? (
+        {order.delivery_fee > 0 && (
           <div className="flex justify-between mb-0">
             <span>Frais de livraison</span>
             <span>{formatPrice(order.delivery_fee)}</span>
           </div>
-        ) : null}
+        )}
         {order.discount > 0 && (
           <div className="flex justify-between mb-0 text-green-600">
             <span>Remise</span>
@@ -184,14 +188,14 @@ export function Content({ orderData }: ReceiptProps) {
           <span>{formatPrice(order.tax * order.net_amount)}</span>
         </div>
         <div className="flex justify-between border-t border-dashed pt-1">
-          <span className="font-bold text-xs">TOTAL</span>
-          <span className="font-bold text-xs">
+          <span className="font-bold text-[10px]">TOTAL</span>
+          <span className="font-bold text-[10px] whitespace-nowrap">
             {formatPrice(order.amount)}
           </span>
         </div>
       </div>
 
-      <div className="mb-2">
+      <div className="mb-2 text-[8px]">
         <div className="flex justify-between mb-0">
           <span>Mode paiement:</span>
           <span>{order.paiements?.[0]?.mode || "N/A"}</span>
@@ -219,7 +223,7 @@ export function Content({ orderData }: ReceiptProps) {
       </div>
 
       <div className="text-center mb-2">
-        <div className="text-[8px] tracking-tight">
+        <div className="text-[6px] tracking-tight">
           ****************************
         </div>
       </div>
@@ -227,14 +231,14 @@ export function Content({ orderData }: ReceiptProps) {
       <div className="text-center mb-1">
         <svg
           id="ticket"
-          className="w-full h-[50px]"
+          className="w-full h-[30px]"
           jsbarcode-format="upc"
           jsbarcode-textmargin="0"
           jsbarcode-fontoptions="bold"
         ></svg>
       </div>
 
-      <div className="text-center font-bold text-sm mb-2">THANK YOU</div>
+      <div className="text-center font-bold text-[10px] mb-2">THANK YOU</div>
 
       <div className="text-center text-gray-400">
         <svg viewBox="0 0 300 20" className="w-full h-4" fill="currentColor">
