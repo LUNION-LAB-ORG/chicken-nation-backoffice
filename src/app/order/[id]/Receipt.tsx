@@ -9,163 +9,163 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
     padding: 15,
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontFamily: "Courier",
   },
   divider: {
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     textAlign: "center",
-    marginVertical: 10,
+    marginVertical: 12, // Augmenté
   },
   header: {
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 15, // Augmenté
   },
   restaurantName: {
-    fontSize: 22, // Augmenté
+    fontSize: 24, // Augmenté
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 8, // Augmenté
     textTransform: "uppercase",
   },
   restaurantInfo: {
-    fontSize: 12, // Augmenté
-    marginBottom: 2,
+    fontSize: 14, // Augmenté
+    marginBottom: 4, // Augmenté
     color: "#000",
   },
   receiptTitle: {
-    fontSize: 16, // Augmenté
+    fontSize: 18, // Augmenté
     fontWeight: "bold",
-    marginTop: 10,
+    marginTop: 15, // Augmenté
   },
   infoSection: {
-    marginBottom: 10,
-    padding: 5,
+    marginBottom: 15, // Augmenté
+    padding: 8, // Augmenté
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 8, // Augmenté
   },
   infoLabel: {
     fontWeight: "bold",
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     flex: 1,
   },
   infoValue: {
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontWeight: "normal",
     flex: 2,
     textAlign: "right",
   },
   itemsSection: {
-    marginBottom: 10,
+    marginBottom: 15, // Augmenté
   },
   itemsHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingBottom: 5,
-    marginBottom: 5,
+    paddingBottom: 8, // Augmenté
+    marginBottom: 8, // Augmenté
   },
   itemsHeaderText: {
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
     textTransform: "uppercase",
   },
   itemRow: {
-    marginBottom: 8,
+    marginBottom: 10, // Augmenté
     borderBottom: 1,
     borderBottomStyle: "dotted",
     borderBottomColor: "#000",
-    paddingBottom: 8,
+    paddingBottom: 10, // Augmenté
   },
   itemMainRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 3,
+    marginBottom: 5, // Augmenté
   },
   itemName: {
     flex: 2,
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
   },
   itemQuantity: {
     flex: 0.5,
     textAlign: "right",
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
   },
   itemPrice: {
     flex: 1.5,
     textAlign: "right",
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
   },
   itemDetails: {
-    fontSize: 12, // Augmenté
+    fontSize: 14, // Augmenté
     color: "#333",
-    marginTop: 2,
+    marginTop: 4, // Augmenté
     fontStyle: "italic",
   },
   supplementText: {
-    fontSize: 12, // Augmenté
+    fontSize: 14, // Augmenté
     color: "#555",
-    marginTop: 2,
+    marginTop: 4, // Augmenté
     paddingLeft: 10,
   },
   spicyIndicator: {
-    fontSize: 12, // Augmenté
+    fontSize: 14, // Augmenté
     color: "#000",
     fontWeight: "bold",
   },
   promotionIndicator: {
-    fontSize: 12, // Augmenté
+    fontSize: 14, // Augmenté
     color: "#000",
     fontWeight: "bold",
   },
   totalsSection: {
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 15, // Augmenté
+    paddingTop: 15, // Augmenté
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 5,
+    marginBottom: 8, // Augmenté
   },
   totalLabel: {
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
   },
   totalValue: {
-    fontSize: 14, // Augmenté
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
   },
   grandTotal: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 10,
-    paddingTop: 10,
+    marginTop: 15, // Augmenté
+    paddingTop: 15, // Augmenté
     borderTop: 2,
     borderTopStyle: "solid",
     borderTopColor: "#000",
   },
   grandTotalLabel: {
-    fontSize: 16, // Augmenté
+    fontSize: 18, // Augmenté
     fontWeight: "bold",
   },
   grandTotalValue: {
-    fontSize: 16, // Augmenté
+    fontSize: 18, // Augmenté
     fontWeight: "bold",
   },
   footer: {
     textAlign: "center",
-    marginTop: 20,
-    paddingTop: 10,
+    marginTop: 30, // Augmenté
+    paddingTop: 15, // Augmenté
   },
   footerText: {
-    fontSize: 12, // Augmenté
-    marginBottom: 5,
+    fontSize: 14, // Augmenté
+    marginBottom: 8, // Augmenté
   },
   poweredBy: {
-    fontSize: 10, // Augmenté
+    fontSize: 12, // Augmenté
     color: "#000",
   },
 });
@@ -273,7 +273,7 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
   if (validationErrors.length > 0) {
     return (
       <Document>
-        <Page size={[384, 1500]} style={styles.page}>
+        <Page size={[384, 700]} style={styles.page}>
           <View>
             <Text style={{ fontSize: 16, fontWeight: "bold" }}>
               Erreur dans les données
@@ -323,7 +323,7 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
 
   return (
     <Document>
-      <Page size={[384, 1500]} style={styles.page}>
+      <Page size={[384, 700]} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.restaurantName}>
