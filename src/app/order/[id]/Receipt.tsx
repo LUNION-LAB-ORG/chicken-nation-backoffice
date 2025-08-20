@@ -5,17 +5,15 @@ import { OrderData, ParsedAddress, PaymentMode } from "./types";
 // Les styles sont la partie la plus importante à corriger
 const styles = StyleSheet.create({
   page: {
-    // La largeur de 384px correspond à la résolution standard d'une imprimante thermique de 80mm
     width: 384,
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    padding: 15, // Réduction du padding pour optimiser l'espace
-    fontSize: 12, // Augmentation de la taille de police de base
+    padding: 15,
+    fontSize: 14, // Augmenté
     fontFamily: "Courier",
   },
   divider: {
-    // Utilisation de tirets pour une ligne de séparation lisible sur l'imprimante
-    fontSize: 12,
+    fontSize: 14, // Augmenté
     textAlign: "center",
     marginVertical: 10,
   },
@@ -24,18 +22,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   restaurantName: {
-    fontSize: 18, // Taille de police plus grande pour le titre
+    fontSize: 22, // Augmenté
     fontWeight: "bold",
     marginBottom: 5,
     textTransform: "uppercase",
   },
   restaurantInfo: {
-    fontSize: 10,
+    fontSize: 12, // Augmenté
     marginBottom: 2,
     color: "#000",
   },
   receiptTitle: {
-    fontSize: 14,
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
     marginTop: 10,
   },
@@ -50,11 +48,11 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontWeight: "bold",
-    fontSize: 11,
+    fontSize: 14, // Augmenté
     flex: 1,
   },
   infoValue: {
-    fontSize: 11,
+    fontSize: 14, // Augmenté
     fontWeight: "normal",
     flex: 2,
     textAlign: "right",
@@ -69,14 +67,14 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   itemsHeaderText: {
-    fontSize: 12, // Augmentation de la taille de police pour les en-têtes de colonnes
+    fontSize: 14, // Augmenté
     fontWeight: "bold",
     textTransform: "uppercase",
   },
   itemRow: {
     marginBottom: 8,
     borderBottom: 1,
-    borderBottomStyle: "dotted", // Les pointillés sont plus lisibles que les lignes solides fines
+    borderBottomStyle: "dotted",
     borderBottomColor: "#000",
     paddingBottom: 8,
   },
@@ -88,40 +86,39 @@ const styles = StyleSheet.create({
   },
   itemName: {
     flex: 2,
-    fontSize: 12,
+    fontSize: 14, // Augmenté
     fontWeight: "bold",
   },
   itemQuantity: {
     flex: 0.5,
     textAlign: "right",
-    fontSize: 12,
+    fontSize: 14, // Augmenté
   },
   itemPrice: {
     flex: 1.5,
     textAlign: "right",
-    fontSize: 12,
+    fontSize: 14, // Augmenté
     fontWeight: "bold",
   },
   itemDetails: {
-    fontSize: 10,
+    fontSize: 12, // Augmenté
     color: "#333",
     marginTop: 2,
     fontStyle: "italic",
   },
   supplementText: {
-    fontSize: 10,
+    fontSize: 12, // Augmenté
     color: "#555",
     marginTop: 2,
     paddingLeft: 10,
   },
-  // Déclaration des styles manquants pour résoudre les erreurs TypeScript
   spicyIndicator: {
-    fontSize: 10,
-    color: "#000", // Les imprimantes thermiques ne gèrent pas la couleur
+    fontSize: 12, // Augmenté
+    color: "#000",
     fontWeight: "bold",
   },
   promotionIndicator: {
-    fontSize: 10,
+    fontSize: 12, // Augmenté
     color: "#000",
     fontWeight: "bold",
   },
@@ -135,10 +132,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   totalLabel: {
-    fontSize: 12,
+    fontSize: 14, // Augmenté
   },
   totalValue: {
-    fontSize: 12,
+    fontSize: 14, // Augmenté
     fontWeight: "bold",
   },
   grandTotal: {
@@ -151,11 +148,11 @@ const styles = StyleSheet.create({
     borderTopColor: "#000",
   },
   grandTotalLabel: {
-    fontSize: 14,
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
   },
   grandTotalValue: {
-    fontSize: 14,
+    fontSize: 16, // Augmenté
     fontWeight: "bold",
   },
   footer: {
@@ -164,12 +161,11 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   footerText: {
-    fontSize: 10,
+    fontSize: 12, // Augmenté
     marginBottom: 5,
   },
-  // Déclaration du style manquant pour résoudre l'erreur TypeScript
   poweredBy: {
-    fontSize: 8,
+    fontSize: 10, // Augmenté
     color: "#000",
   },
 });
@@ -277,13 +273,15 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
   if (validationErrors.length > 0) {
     return (
       <Document>
-        <Page style={styles.page}>
+        <Page size={[384, 1500]} style={styles.page}>
           <View>
-            <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
               Erreur dans les données
             </Text>
             {validationErrors.map((error, index) => (
-              <Text key={index}>• {error}</Text>
+              <Text key={index} style={{ fontSize: 14 }}>
+                • {error}
+              </Text>
             ))}
           </View>
         </Page>
@@ -454,7 +452,7 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
               );
             })
           ) : (
-            <Text style={{ fontSize: 12 }}>Aucun article trouvé</Text>
+            <Text style={{ fontSize: 14 }}>Aucun article trouvé</Text>
           )}
         </View>
 
@@ -490,8 +488,8 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
         {/* Notes */}
         {safeOrder.note && (
           <View style={{ marginTop: 15 }}>
-            <Text style={{ fontSize: 10, fontWeight: "bold" }}>Notes:</Text>
-            <Text style={{ fontSize: 10 }}>{safeOrder.note}</Text>
+            <Text style={{ fontSize: 14, fontWeight: "bold" }}>Notes:</Text>
+            <Text style={{ fontSize: 14 }}>{safeOrder.note}</Text>
           </View>
         )}
 
