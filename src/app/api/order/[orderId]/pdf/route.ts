@@ -35,7 +35,6 @@ export async function GET(
 ) {
     try {
         const { orderId } = params;
-        console.log('Processing PDF generation for order:', orderId);
 
         if (!orderId || orderId.trim() === '') {
             console.error('Missing orderId');
