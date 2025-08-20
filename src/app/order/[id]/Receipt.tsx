@@ -200,15 +200,23 @@ const formatDate = (dateString: string | undefined | null): string => {
 };
 
 const formatTime = (timeString: string | undefined | null): string => {
-  if (!timeString) return new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  if (!timeString)
+    return new Date().toLocaleTimeString("fr-FR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   return timeString;
 };
 
-const parseAddress = (addressJson: string | undefined | null): ParsedAddress | null => {
+const parseAddress = (
+  addressJson: string | undefined | null
+): ParsedAddress | null => {
   if (!addressJson || typeof addressJson !== "string") return null;
   try {
     const parsed = JSON.parse(addressJson);
-    return parsed && typeof parsed === "object" ? (parsed as ParsedAddress) : null;
+    return parsed && typeof parsed === "object"
+      ? (parsed as ParsedAddress)
+      : null;
   } catch {
     return null;
   }
@@ -217,21 +225,30 @@ const parseAddress = (addressJson: string | undefined | null): ParsedAddress | n
 const getOrderTypeLabel = (type: string | undefined): string => {
   const safeType = type || "DELIVERY";
   switch (safeType) {
-    case "DELIVERY": return "Livraison";
-    case "TAKEAWAY": return "À emporter";
-    case "DINE_IN": return "Sur place";
-    default: return safeType;
+    case "DELIVERY":
+      return "Livraison";
+    case "TAKEAWAY":
+      return "À emporter";
+    case "DINE_IN":
+      return "Sur place";
+    default:
+      return safeType;
   }
 };
 
 const getPaymentModeLabel = (mode: PaymentMode | undefined): string => {
   if (!mode) return "Non spécifié";
   switch (mode) {
-    case "MOBILE_MONEY": return "Mobile Money";
-    case "CARD": return "Carte bancaire";
-    case "CASH": return "Espèces";
-    case "BANK_TRANSFER": return "Virement bancaire";
-    default: return mode;
+    case "MOBILE_MONEY":
+      return "Mobile Money";
+    case "CARD":
+      return "Carte bancaire";
+    case "CASH":
+      return "Espèces";
+    case "BANK_TRANSFER":
+      return "Virement bancaire";
+    default:
+      return mode;
   }
 };
 
@@ -244,7 +261,11 @@ const validateOrderData = (order: OrderData): string[] => {
   if (!order.restaurant || !order.restaurant.name) {
     errors.push("Nom du restaurant manquant");
   }
-  if (!order.order_items || !Array.isArray(order.order_items) || order.order_items.length === 0) {
+  if (
+    !order.order_items ||
+    !Array.isArray(order.order_items) ||
+    order.order_items.length === 0
+  ) {
     errors.push("Articles de commande manquants");
   }
   return errors;
@@ -258,7 +279,9 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
       <Document>
         <Page style={styles.page}>
           <View>
-            <Text style={{ fontSize: 14, fontWeight: "bold" }}>Erreur dans les données</Text>
+            <Text style={{ fontSize: 14, fontWeight: "bold" }}>
+              Erreur dans les données
+            </Text>
             {validationErrors.map((error, index) => (
               <Text key={index}>• {error}</Text>
             ))}
@@ -288,24 +311,38 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
     estimated_delivery_time: order.estimated_delivery_time || "",
   };
 
-  const deliveryAddress = safeOrder.address ? parseAddress(safeOrder.address) : null;
-  const successfulPayment = order.paiements?.find((p) => p && p.status === "SUCCESS");
-  const customerName = order.customer ? `${order.customer.first_name || ""} ${order.customer.last_name || ""}`.trim() || "Client" : "Client";
+  const deliveryAddress = safeOrder.address
+    ? parseAddress(safeOrder.address)
+    : null;
+  const successfulPayment = order.paiements?.find(
+    (p) => p && p.status === "SUCCESS"
+  );
+  const customerName = order.customer
+    ? `${order.customer.first_name || ""} ${
+        order.customer.last_name || ""
+      }`.trim() || "Client"
+    : "Client";
 
   return (
     <Document>
-      <Page size={[384, "auto"]} style={styles.page}>
+      <Page size={[384, 1500]} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.restaurantName}>{order.restaurant?.name || "Restaurant"}</Text>
+          <Text style={styles.restaurantName}>
+            {order.restaurant?.name || "Restaurant"}
+          </Text>
           <Text style={styles.restaurantInfo}>
             {order.restaurant?.address || "Adresse non spécifiée"}
           </Text>
           {order.restaurant?.phone && (
-            <Text style={styles.restaurantInfo}>Tél: {order.restaurant.phone}</Text>
+            <Text style={styles.restaurantInfo}>
+              Tél: {order.restaurant.phone}
+            </Text>
           )}
           {order.restaurant?.email && (
-            <Text style={styles.restaurantInfo}>Email: {order.restaurant.email}</Text>
+            <Text style={styles.restaurantInfo}>
+              Email: {order.restaurant.email}
+            </Text>
           )}
           <Text style={styles.receiptTitle}>REÇU DE COMMANDE</Text>
         </View>
@@ -334,7 +371,9 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
           </View>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Type</Text>
-            <Text style={styles.infoValue}>{getOrderTypeLabel(safeOrder.type)}</Text>
+            <Text style={styles.infoValue}>
+              {getOrderTypeLabel(safeOrder.type)}
+            </Text>
           </View>
           {safeOrder.type === "DELIVERY" && deliveryAddress && (
             <View style={styles.infoRow}>
@@ -352,8 +391,22 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
         <View style={styles.itemsSection}>
           <View style={styles.itemsHeader}>
             <Text style={[styles.itemsHeaderText, { flex: 2 }]}>Articles</Text>
-            <Text style={[styles.itemsHeaderText, { flex: 0.5, textAlign: "right" }]}>Qté</Text>
-            <Text style={[styles.itemsHeaderText, { flex: 1.5, textAlign: "right" }]}>Prix</Text>
+            <Text
+              style={[
+                styles.itemsHeaderText,
+                { flex: 0.5, textAlign: "right" },
+              ]}
+            >
+              Qté
+            </Text>
+            <Text
+              style={[
+                styles.itemsHeaderText,
+                { flex: 1.5, textAlign: "right" },
+              ]}
+            >
+              Prix
+            </Text>
           </View>
           {order.order_items && Array.isArray(order.order_items) ? (
             order.order_items.map((item, index) => {
@@ -362,27 +415,41 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
                 <View key={index} style={styles.itemRow}>
                   <View style={styles.itemMainRow}>
                     <View style={{ flex: 2 }}>
-                      <Text style={styles.itemName}>{item.dish.name || "Plat sans nom"}</Text>
+                      <Text style={styles.itemName}>
+                        {item.dish.name || "Plat sans nom"}
+                      </Text>
                       {item.dish.description && (
-                        <Text style={styles.itemDetails}>{item.dish.description}</Text>
-                      )}
-                      {item.epice && <Text style={styles.spicyIndicator}>🌶️ Épicé</Text>}
-                      {item.dish.is_promotion && (
-                        <Text style={styles.promotionIndicator}>🏷️ Promotion</Text>
-                      )}
-                    </View>
-                    <Text style={styles.itemQuantity}>×{item.quantity || 1}</Text>
-                    <Text style={styles.itemPrice}>{formatCurrency(item.amount)}</Text>
-                  </View>
-                  {item.supplements && Array.isArray(item.supplements) && item.supplements.length > 0 && (
-                    <View style={{ marginTop: 5 }}>
-                      {item.supplements.map((supplement, suppIndex) => (
-                        <Text key={suppIndex} style={styles.supplementText}>
-                          + {supplement.name || "Supplément"}
+                        <Text style={styles.itemDetails}>
+                          {item.dish.description}
                         </Text>
-                      ))}
+                      )}
+                      {item.epice && (
+                        <Text style={styles.spicyIndicator}>🌶️ Épicé</Text>
+                      )}
+                      {item.dish.is_promotion && (
+                        <Text style={styles.promotionIndicator}>
+                          🏷️ Promotion
+                        </Text>
+                      )}
                     </View>
-                  )}
+                    <Text style={styles.itemQuantity}>
+                      ×{item.quantity || 1}
+                    </Text>
+                    <Text style={styles.itemPrice}>
+                      {formatCurrency(item.amount)}
+                    </Text>
+                  </View>
+                  {item.supplements &&
+                    Array.isArray(item.supplements) &&
+                    item.supplements.length > 0 && (
+                      <View style={{ marginTop: 5 }}>
+                        {item.supplements.map((supplement, suppIndex) => (
+                          <Text key={suppIndex} style={styles.supplementText}>
+                            + {supplement.name || "Supplément"}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
                 </View>
               );
             })
@@ -397,7 +464,9 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
         <View style={styles.totalsSection}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.totalValue}>{formatCurrency(safeOrder.amount)}</Text>
+            <Text style={styles.totalValue}>
+              {formatCurrency(safeOrder.amount)}
+            </Text>
           </View>
         </View>
 
@@ -407,7 +476,9 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
             <Text style={styles.infoLabel}>Paiement</Text>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Mode:</Text>
-              <Text style={styles.totalValue}>{getPaymentModeLabel(successfulPayment.mode)}</Text>
+              <Text style={styles.totalValue}>
+                {getPaymentModeLabel(successfulPayment.mode)}
+              </Text>
             </View>
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Statut:</Text>
