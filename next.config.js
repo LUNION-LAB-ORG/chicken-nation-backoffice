@@ -9,6 +9,7 @@ const nextConfig = {
 
   // ✅ PERFORMANCE: Optimisations du bundle (temporairement réduites)
   experimental: {
+    serverComponentsExternalPackages: ['puppeteer'],
     optimizeCss: false, 
     optimizePackageImports: ['lucide-react', 'date-fns'],
     forceSwcTransforms: false,

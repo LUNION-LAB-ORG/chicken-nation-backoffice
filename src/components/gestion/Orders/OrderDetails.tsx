@@ -1279,7 +1279,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   className="w-full cursor-pointer py-3 px-4 bg-[#F17922] hover:bg-[#ea7019] text-white rounded-xl font-medium"
                   onClick={() => {
                     const pdfUrl =
-                      process.env.NEXT_PUBLIC_URL! + `/order/${order.id}`;
+                      process.env.NEXT_PUBLIC_URL! + `/api/order/${order.id}/pdf`;
                     if (typeof window !== "undefined") {
                       window.flutter_inappwebview.callHandler(
                         "printDocument",
