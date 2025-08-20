@@ -1,0 +1,212 @@
+/* PersonalizedPromo.module.css */
+
+.cubeContainer {
+  position: absolute;
+  left: -50%;
+  top: 180px;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--cube-rotation-x, -40deg)) rotateY(var(--cube-rotation-y, 50deg));
+}
+
+.promoCard {
+  background-color: var(--card-background-color);
+  border-color: var(--card-border-color);
+}
+
+.promoCard[data-bg-color] {
+  background-color: attr(data-bg-color);
+}
+
+.promoCard[data-border-color] {
+  border-color: attr(data-border-color);
+}
+
+@media (min-width: 475px) { /* xs */
+  .cubeContainer {
+    left: -30%;
+    top: 190px;
+  }
+}
+
+@media (min-width: 640px) { /* sm */
+  .cubeContainer {
+    left: -30%;
+    top: 160px;
+  }
+}
+
+@media (min-width: 768px) { /* md */
+  .cubeContainer {
+    left: -150px;
+    top: 160px;
+  }
+}
+
+@media (min-width: 1024px) { /* lg */
+  .cubeContainer {
+    left: -162px; /* -63 * 4 */
+    top: 180px;
+  }
+}
+
+@media (min-width: 1280px) { /* xl */
+  .cubeContainer {
+    left: -200px; /* -50 * 4 */
+    top: 190px;
+  }
+}
+
+@media (min-width: 1536px) { /* 2xl */
+  .cubeContainer {
+    left: -140px; /* -35 * 4 */
+    top: 200px;
+  }
+}
+
+.cubeFaceForward {
+  position: absolute;
+  width: 400px; /* w-100 = 25rem = 400px */
+  height: 400px; /* h-100 = 25rem = 400px */
+  transform: translateZ(160px);
+  background-color: var(--cube-face-forward-color);
+}
+
+.cubeFaceTop {
+  position: absolute;
+  width: 400px; /* w-100 */
+  height: 320px; /* h-80 */
+  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  transform: rotateX(90deg) translateZ(160px);
+  background-color: var(--cube-face-top-color);
+}
+
+.cubeFaceLeft {
+  position: absolute;
+  width: 320px; /* w-80 */
+  height: 320px; /* h-80 */
+  transform: rotateY(-90deg) translateZ(160px);
+  background-color: var(--cube-face-left-color);
+}
+
+.cubeFaceBottom {
+  position: absolute;
+  width: 320px; /* w-80 */
+  height: 320px; /* h-80 */
+  transform: rotateX(-90deg) translateZ(160px);
+  background-color: var(--cube-face-bottom-color);
+}
+
+.circleLeft,
+.circleRight {
+  position: absolute;
+  bottom: 20px; /* bottom-5 */
+  width: 48px; /* w-12 */
+  height: 32px; /* h-8 */
+  border-radius: 50%;
+  background-color: var(--circle-background-color);
+}
+
+.circleLeft {
+  left: -32px; /* -left-8 */
+}
+
+.circleRight {
+  right: -28px; /* -right-7 */
+}
+
+.discountText {
+  color: var(--discount-text-color);
+}
+
+.discountSubtext {
+  color: var(--discount-text-color);
+}
+
+.expirationText {
+  color: var(--expiration-text-color);
+}
+
+@media (min-width: 1536px) { /* 2xl */
+  .circleLeft,
+  .circleRight {
+    bottom: 24px; /* 2xl:bottom-6 */
+    width: 48px; /* 2xl:w-12 */
+    height: 40px; /* 2xl:h-10 */
+  }
+  
+  .circleLeft {
+    left: -28px; /* 2xl:-left-7 */
+  }
+}
+
+/* Sélecteurs de couleur personnalisés arrondis */
+.colorPickerWrapper {
+  position: relative;
+  width: 2rem; /* w-8 */
+  height: 2rem; /* h-8 */
+  border-radius: 0.5rem; /* rounded-lg */
+  border: 2px solid #e5e7eb; /* border-gray-200 */
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.colorPickerWrapper:hover {
+  border-color: #d1d5db; /* border-gray-300 */
+}
+
+.colorPickerWrapper:focus-within {
+  border-color: #f59e0b; /* border-amber-500 */
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.colorPickerInput {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  border: none;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.colorPickerInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.colorPickerInput::-webkit-color-swatch {
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.colorPickerInput::-moz-color-swatch {
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.colorPickerInput:focus {
+  outline: none;
+}
+
+/* Classes pour le texte formaté avec espacement réduit */
+.formattedTitle {
+  line-height: 1 
+}
+
+.formattedDescription {
+  line-height: 1.1;  
+}
+
+.formattedLine {
+  margin: 0; 
+  padding: 0; 
+}

@@ -1,0 +1,110 @@
+/* PromoDetailView.module.css - Styles essentiels pour le cube 3D uniquement */
+
+/* Carte de promotion avec variables CSS */
+.promoCard {
+  background-color: var(--card-background-color);
+  border-color: var(--card-border-color);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cube 3D - Styles essentiels */
+.cubeContainer {
+  position: absolute;
+  left: -50%; 
+  top: 180px;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--cube-rotation-x, -50deg)) rotateY(var(--cube-rotation-y, 50deg));
+}
+
+.cubeFaceForward {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  transform: translateZ(160px);
+  background-color: var(--cube-face-forward-color);
+}
+
+.cubeFaceTop {
+  position: absolute;
+  width: 400px;
+  height: 320px;
+  border-bottom: 4px solid rgba(255, 255, 255, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  transform: rotateX(90deg) translateZ(160px);
+  background-color: var(--cube-face-top-color);
+}
+
+.cubeFaceLeft {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  transform: rotateY(-90deg) translateZ(160px);
+  background-color: var(--cube-face-left-color);
+}
+
+.cubeFaceBottom {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  transform: rotateX(-90deg) translateZ(160px);
+  background-color: var(--cube-face-bottom-color);
+}
+
+/* Cercles décoratifs - essentiels */
+.circleLeft,
+.circleRight {
+  position: absolute;
+  bottom: 20px;
+  width: 48px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--circle-background-color);
+}
+
+.circleLeft {
+  left: -28px;
+}
+
+.circleRight {
+  right: -28px;
+}
+
+/* Styles de texte pour le cube 3D */
+.discountText {
+  color: var(--discount-text-color);
+}
+
+.discountSubtext {
+  color: var(--discount-text-color);
+}
+
+.expirationText {
+  color: var(--expiration-text-color);
+}
+
+/* Classes pour le texte formaté avec espacement réduit */
+.formattedTitle {
+  line-height: 1;
+}
+
+.formattedDescription {
+  line-height: 1.1;
+}
+
+.formattedLine {
+  margin: 0;
+  padding: 0;
+}
+
+/* Variables CSS pour les couleurs dynamiques */
+.colorSwatch {
+  background-color: var(--swatch-color, #F17922);
+}
+
+.colorSwatch:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}

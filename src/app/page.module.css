@@ -1,0 +1,25 @@
+.fullHeightContainer {
+  height: calc(100vh - var(--header-height));
+  margin-top: var(--header-height);
+  overflow: hidden;
+}
+
+/* Définir différentes hauteurs de header pour différentes tailles d'écran */
+/* Calcul basé sur les classes du header: py-2 (0.5rem top + 0.5rem bottom) + logo height + shadow */
+@media (max-width: 640px) { /* sm */
+  .fullHeightContainer {
+    --header-height: 40px; /* py-2 (8px) + logo (24px) + shadow (8px) */
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) { /* md */
+  .fullHeightContainer {
+    --header-height: 48px; /* py-3 (12px) + logo (28px) + shadow (8px) */
+  }
+}
+
+@media (min-width: 769px) { /* lg et plus */
+  .fullHeightContainer {
+    --header-height: 60px; /* py-4 (16px) + logo (36px) + shadow (8px) */
+  }
+}

@@ -1,0 +1,6 @@
+# Temporaire: Ignorer les fichiers qui peuvent causer des erreurs de build
+*.log
+*.tsbuildinfo
+.eslintcache
+.next/cache
+node_modules/.cache
