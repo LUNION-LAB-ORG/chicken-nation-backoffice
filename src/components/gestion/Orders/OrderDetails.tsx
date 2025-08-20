@@ -80,6 +80,25 @@ const SafeImage: React.FC<SafeImageProps> = ({
     />
   );
 };
+function getAuthToken() {
+  try {
+    if (typeof document === 'undefined') return null;
+
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'chicken-nation-token') {
+        return decodeURIComponent(value);
+      }
+    }
+
+    console.error('Token non trouvé dans les cookies');
+    return null;
+  } catch (error) {
+    console.error('Erreur lors de la récupération du token:', error);
+    return null;
+  }
+}
 
 interface OrderDetailsProps {
   order: Order;
@@ -106,12 +125,13 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     date?: string;
     [key: string]: unknown;
   } | null>(null);
-  const router = useRouter();
   const [restaurantName, setRestaurantName] = useState<string>(
     order.restaurant || "Restaurant inconnu"
   );
   const [currentStatus, setCurrentStatus] = useState<string>(order.status);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+
+  const token = getAuthToken();
 
   // Fonction pour traduire le statut API en statut UI
   const convertApiStatusToUiStatus = useCallback(
@@ -1283,7 +1303,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     if (typeof window !== "undefined") {
                       window.flutter_inappwebview.callHandler(
                         "printDocument",
-                        pdfUrl
+                        pdfUrl,
+                        token
                       );
                     }
                     // router.push(`/order/${order.id}`);
