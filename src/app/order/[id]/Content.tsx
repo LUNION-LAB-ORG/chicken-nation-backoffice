@@ -48,44 +48,44 @@ export function Content({ orderData }: ReceiptProps) {
 
   React.useEffect(() => {
     JsBarCode("#ticket", order.reference, {
-      width: 3,
-      height: 100,
-      fontSize: 32,
+      width: 1, // Réduit la largeur du code-barres
+      height: 30, // Réduit la hauteur du code-barres
+      fontSize: 10, // Réduit la taille de la police du code-barres
       text: order.reference,
     });
   }, []);
   // The rest of the component remains the same
   return (
-    <div className="max-w-sm mx-auto bg-white text-black p-6 font-mono text-sm shadow-lg">
-      <div className="text-center mb-2">
-        <div className="text-xs text-center tracking-widest">
-          *****************************
+    <div className="w-full bg-white text-black text-[10px] font-mono shadow-none p-1">
+      <div className="text-center mb-1">
+        <div className="text-[8px] tracking-tight">
+          ****************************
         </div>
       </div>
-      <div className="text-center font-bold text-lg mb-2">BON DE COMMANDE</div>
-      <div className="text-center mb-4">
-        <div className="text-xs text-center tracking-widest">
-          *****************************
+      <div className="text-center font-bold text-xs mb-1">BON DE COMMANDE</div>
+      <div className="text-center mb-2">
+        <div className="text-[8px] tracking-tight">
+          ****************************
         </div>
       </div>
 
-      <div className="text-center font-bold text-base mb-6">
+      <div className="text-center font-bold text-sm mb-2">
         {order.restaurant?.name || "RESTAURANT NAME"}
       </div>
-      <div className="mb-6 text-xs">
-        <div className="flex justify-between mb-1">
+      <div className="mb-2">
+        <div className="flex justify-between mb-0">
           <span>Adresse:</span>
-          <span className="text-right max-w-48">
+          <span className="text-right max-w-[60%]">
             {order.restaurant?.address || "Adresse restaurant"}
           </span>
         </div>
-        <div className="flex justify-between mb-1">
+        <div className="flex justify-between mb-0">
           <span>Date:</span>
           <span>
             {formatDate(order.date)} {order.time}
           </span>
         </div>
-        <div className="flex justify-between mb-1">
+        <div className="flex justify-between mb-0">
           <span>Téléphone:</span>
           <span>{order.restaurant?.phone || "0000000000"}</span>
         </div>
@@ -95,8 +95,8 @@ export function Content({ orderData }: ReceiptProps) {
         </div>
       </div>
 
-      <div className="mb-4 text-xs">
-        <div className="flex justify-between mb-1">
+      <div className="mb-2">
+        <div className="flex justify-between mb-0">
           <span>Client:</span>
           <span>
             {order.customer?.first_name && order.customer?.last_name
@@ -104,7 +104,7 @@ export function Content({ orderData }: ReceiptProps) {
               : order.fullname || "Client"}
           </span>
         </div>
-        <div className="flex justify-between mb-1">
+        <div className="flex justify-between mb-0">
           <span>Tel Client:</span>
           <span>{order.customer?.phone || "+000000000"}</span>
         </div>
@@ -115,87 +115,89 @@ export function Content({ orderData }: ReceiptProps) {
         {order.type === "DELIVERY" && (
           <div className="flex justify-between mt-1">
             <span>Livraison:</span>
-            <span className="text-right max-w-48">{parsedAddress}</span>
+            <span className="text-right max-w-[60%]">{parsedAddress}</span>
           </div>
         )}
       </div>
 
-      <div className="flex justify-between font-bold mb-3 pb-1">
+      <div className="flex justify-between font-bold mb-1 border-b border-dashed border-gray-400 pb-1">
         <span>Description</span>
         <span>Price</span>
       </div>
 
-      <div className="mb-4">
+      <div className="mb-2">
         {items.length > 0 ? (
           items.map((item, index) => (
-            <div key={index} className="mb-2">
-              <div className="flex justify-between">
-                <span className="font-semibold flex items-center">
+            <div key={index} className="mb-1">
+              <div className="flex justify-between items-start">
+                <span className="font-semibold flex items-center max-w-[70%]">
                   {item.description}
                   {item.isSpicy && (
                     <span className="ml-1 text-red-500">🌶️</span>
                   )}
                 </span>
-                <span>{formatPrice(item.price)}</span>
+                <span className="text-right">{formatPrice(item.price)}</span>
               </div>
               {item.details && (
-                <div className="text-xs text-gray-600 mb-1">{item.details}</div>
+                <div className="text-[8px] text-gray-600 mb-0">
+                  {item.details}
+                </div>
               )}
-              <div className="text-xs flex justify-between">
+              <div className="text-[8px] flex justify-between">
                 <span>
                   Qté: {item.quantity} x {formatPrice(item.unitPrice)}
                 </span>
-                <div className="flex gap-2">
-                  {item.isPromotion && (
-                    <span className="text-red-500">PROMO</span>
-                  )}
-                </div>
+                {item.isPromotion && (
+                  <span className="text-red-500">PROMO</span>
+                )}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-500 text-sm">Aucun article</div>
+          <div className="text-center text-gray-500 text-[10px]">
+            Aucun article
+          </div>
         )}
       </div>
 
-      <div className="border-t border-gray-400 mb-3"></div>
+      <div className="border-t border-dashed border-gray-400 mb-1"></div>
 
-      <div className="mb-6">
-        <div className="flex justify-between mb-1">
+      <div className="mb-2">
+        <div className="flex justify-between mb-0">
           <span>Sous-total</span>
           <span>{formatPrice(order.net_amount)}</span>
         </div>
         {order.delivery_fee > 0 ? (
-          <div className="flex justify-between mb-1">
+          <div className="flex justify-between mb-0">
             <span>Frais de livraison</span>
             <span>{formatPrice(order.delivery_fee)}</span>
           </div>
         ) : null}
         {order.discount > 0 && (
-          <div className="flex justify-between mb-1 text-green-600">
+          <div className="flex justify-between mb-0 text-green-600">
             <span>Remise</span>
             <span>-{formatPrice(order.discount)}</span>
           </div>
         )}
-        <div className="flex justify-between mb-2">
+        <div className="flex justify-between mb-1">
           <span>Taxe ({Math.round(order.tax * 100)}%)</span>
           <span>{formatPrice(order.tax * order.net_amount)}</span>
         </div>
-        <div className="flex justify-between border-t pt-2">
-          <span className="font-bold text-base">TOTAL</span>
-          <span className="font-bold text-base">
+        <div className="flex justify-between border-t border-dashed pt-1">
+          <span className="font-bold text-xs">TOTAL</span>
+          <span className="font-bold text-xs">
             {formatPrice(order.amount)}
           </span>
         </div>
       </div>
 
-      <div className="mb-4 text-xs">
-        <div className="flex justify-between mb-1">
+      <div className="mb-2">
+        <div className="flex justify-between mb-0">
           <span>Mode paiement:</span>
           <span>{order.paiements?.[0]?.mode || "N/A"}</span>
         </div>
         {order.paiements?.[0]?.reference && (
-          <div className="flex justify-between mb-1">
+          <div className="flex justify-between mb-0">
             <span>Ref. paiement:</span>
             <span>{order.paiements?.[0]?.reference}</span>
           </div>
@@ -216,23 +218,23 @@ export function Content({ orderData }: ReceiptProps) {
         </div>
       </div>
 
-      <div className="text-center mb-4">
-        <div className="text-xs text-center tracking-widest">
-          *****************************
+      <div className="text-center mb-2">
+        <div className="text-[8px] tracking-tight">
+          ****************************
         </div>
       </div>
 
-      <div className="text-center mb-2 relative">
+      <div className="text-center mb-1">
         <svg
           id="ticket"
-          className="w-full"
+          className="w-full h-[50px]"
           jsbarcode-format="upc"
           jsbarcode-textmargin="0"
           jsbarcode-fontoptions="bold"
         ></svg>
       </div>
 
-      <div className="text-center font-bold text-lg mb-6">THANK YOU</div>
+      <div className="text-center font-bold text-sm mb-2">THANK YOU</div>
 
       <div className="text-center text-gray-400">
         <svg viewBox="0 0 300 20" className="w-full h-4" fill="currentColor">
