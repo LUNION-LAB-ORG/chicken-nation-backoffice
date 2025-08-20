@@ -37,43 +37,48 @@ export async function GET(
         const { orderId } = params;
         console.log('Processing PDF generation for order:', orderId);
 
-        // Validation de orderId
         if (!orderId || orderId.trim() === '') {
             console.error('Missing orderId');
             return new NextResponse('ID de commande requis', { status: 400 });
         }
 
-        // Récupération des cookies
-        const cookieStore = await cookies();
-        const token = cookieStore.get("chicken-nation-token");
+        let token: string | null = null;
+        const authHeader = request.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.substring(7);
+        }
 
-        if (!token || !token.value) {
+        if (!token) {
+            const cookieStore = await cookies();
+            const tokenCookie = cookieStore.get("chicken-nation-token");
+            if (tokenCookie) {
+                token = tokenCookie.value;
+            }
+        }
+
+        if (!token) {
             console.error('Missing authentication token');
             return new NextResponse('Utilisateur non authentifié', { status: 401 });
         }
 
-        // Récupération des données de la commande
         console.log('Fetching order data...');
-        const orderData = await getOrder(token.value, orderId);
+        const orderData = await getOrder(token, orderId);
 
         if (!orderData) {
             console.error('Order not found:', orderId);
             return new NextResponse('Commande non trouvée', { status: 404 });
         }
 
-        // Validation et nettoyage des données de la commande
         if (!orderData.order_items || !Array.isArray(orderData.order_items) || orderData.order_items.length === 0) {
             console.error('Invalid order data structure:', orderData);
             return new NextResponse('Données de commande invalides', { status: 400 });
         }
 
-        // Validation des données requises pour le PDF
         if (!orderData.restaurant || !orderData.restaurant.name) {
             console.error('Missing restaurant data');
             return new NextResponse('Données de restaurant manquantes', { status: 400 });
         }
 
-        // Nettoyage et validation des données pour éviter les erreurs undefined
         const cleanOrderData = {
             ...orderData,
             reference: orderData.reference || `ORDER-${orderId}`,
@@ -132,22 +137,18 @@ export async function GET(
         };
 
         console.log('Order data cleaned and validated');
-
         console.log('Generating PDF...');
 
-        // CORRECTION : Passer "order" au lieu de "orderData" avec données nettoyées
         const pdfBuffer: Buffer = await pdf(receiptPDF({ order: cleanOrderData })).toBuffer();
 
         console.log('PDF generated successfully, size:', pdfBuffer.length);
 
-        // Définition des en-têtes de réponse
         const headers = new Headers({
             'Content-Type': 'application/pdf',
             'Content-Disposition': `inline; filename="recu-${cleanOrderData.reference || orderId}.pdf"`,
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
             'Expires': '0',
-            // 'Content-Length': pdfBuffer.length.toString()
         });
 
         return new NextResponse(pdfBuffer, { headers });
@@ -155,14 +156,12 @@ export async function GET(
     } catch (error) {
         console.error('Erreur génération PDF:', error);
 
-        // Log détaillé de l'erreur
         if (error instanceof Error) {
             console.error('Error name:', error.name);
             console.error('Error message:', error.message);
             console.error('Error stack:', error.stack);
         }
 
-        // Gestion spécifique des erreurs
         if (error instanceof Error) {
             if (error.message.includes('fetch') || error.message.includes('network')) {
                 return new NextResponse('Erreur de connexion au serveur', { status: 503 });
