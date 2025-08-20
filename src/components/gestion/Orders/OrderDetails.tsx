@@ -1277,7 +1277,16 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               <div className="flex justfy-center p-2">
                 <button
                   className="w-full cursor-pointer py-3 px-4 bg-[#F17922] hover:bg-[#ea7019] text-white rounded-xl font-medium"
-                  onClick={() => router.push(`/order/${order.id}`)}
+                  onClick={() => {
+                    const pdfUrl = `/order/${order.id}`;
+                    if (typeof window !== "undefined") {
+                      window.flutter_inappwebview.callHandler(
+                        "printDocument",
+                        pdfUrl
+                      );
+                    }
+                    // router.push(`/order/${order.id}`);
+                  }}
                 >
                   imprimer{" "}
                 </button>

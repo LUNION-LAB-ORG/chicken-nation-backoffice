@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import "./style.css";
 
 import { OrderData, ReceiptItem, ParsedAddress } from "./types";
 
@@ -61,7 +60,7 @@ export function Content({ orderData }: ReceiptProps) {
   }, []); // The rest of the component remains the same
 
   return (
-    <div className="max-w-sm mx-auto bg-white text-black p-6 font-mono text-sm shadow-lg print-container">
+    <div className="max-w-sm mx-auto bg-white text-black p-6 font-mono text-sm shadow-lg">
       <div className="text-center mb-2">
         <div className="text-xs text-center tracking-widest">
           ****************
