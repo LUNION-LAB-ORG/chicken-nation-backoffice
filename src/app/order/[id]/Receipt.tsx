@@ -273,7 +273,7 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
   if (validationErrors.length > 0) {
     return (
       <Document>
-        <Page size={[384, 700]} style={styles.page}>
+        <Page size={[384, 1000]} style={styles.page}>
           <View>
             <Text style={{ fontSize: 16, fontWeight: "bold" }}>
               Erreur dans les données
@@ -323,7 +323,7 @@ export function receiptPDF({ order }: ReceiptPDFProps) {
 
   return (
     <Document>
-      <Page size={[384, 700]} style={styles.page}>
+      <Page size={[384, 1000]} style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.restaurantName}>
