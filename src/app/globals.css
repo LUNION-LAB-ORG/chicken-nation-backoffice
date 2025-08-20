@@ -1,31 +1,26 @@
 @import "tailwindcss";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
 
 @layer base {
   :root {
-    --font-sofia: 'Sofia Sans', system-ui, sans-serif;
-    --font-urbanist: 'Urbanist', system-ui, sans-serif;
-    --font-blocklyn-condensed: 'Blocklyn Condensed', system-ui, sans-serif;
-    --font-blocklyn-grunge: 'Blocklyn Grunge', system-ui, sans-serif;
+    --font-sofia: "Sofia Sans", system-ui, sans-serif;
+    --font-urbanist: "Urbanist", system-ui, sans-serif;
+    --font-blocklyn-condensed: "Blocklyn Condensed", system-ui, sans-serif;
+    --font-blocklyn-grunge: "Blocklyn Grunge", system-ui, sans-serif;
     --background: #ffffff;
     --foreground: #171717;
-    --primary: #F17922;
+    --primary: #f17922;
     --primary-foreground: #ffffff;
-    --secondary: #4FCBBA;
+    --secondary: #4fcbba;
     --secondary-foreground: #ffffff;
     --muted: #f3f4f6;
     --muted-foreground: #6b7280;
-    --accent: #FBD2B5;
+    --accent: #fbd2b5;
     --accent-foreground: #171717;
     --destructive: #ef4444;
     --destructive-foreground: #ffffff;
     --border: #e5e7eb;
     --input: #e5e7eb;
-    --ring: #F17922;
+    --ring: #f17922;
   }
 }
 
