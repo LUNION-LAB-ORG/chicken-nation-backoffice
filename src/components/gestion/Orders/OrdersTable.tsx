@@ -688,7 +688,40 @@ export function OrdersTable({
           onPageChange={handlePageChange}
           isLoading={isLoading}
         />
+      ))}
+    </div>
+
+    {/* Version desktop */}
+    <div className="hidden md:block overflow-x-auto">
+      <div className="min-w-[1200px]">
+        <table className="min-w-full">
+          <TableHeader
+            onSelectAll={canDeleteCommande() || canUpdateCommande() ? handleSelectAll : undefined}
+            isAllSelected={selectedOrders.length > 0 && selectedOrders.length === ordersToDisplay.length}
+            showRestaurantColumn={currentUser?.role === 'ADMIN'}
+            showActionsColumn={hasAnyActionPermission}
+          />
+          <tbody>
+            {ordersToDisplay.map((order) => (
+              <OrderRow
+                key={order.id}
+                order={order}
+                isSelected={selectedOrders.includes(order.id)}
+                onSelect={canDeleteCommande() || canUpdateCommande() ? (orderId, checked) => handleSelectOrder(orderId, checked) : undefined}
+                onAccept={canAcceptCommande() ? handleAcceptOrder : undefined}
+                onReject={canRejectCommande() ? handleRejectOrder : undefined}
+                onViewDetails={handleViewOrderDetails}
+                onHideFromList={canDeleteCommande() ? handleHideOrder : undefined}
+                onRemoveFromList={canDeleteCommande() ? handleRemoveOrder : undefined}
+                showRestaurantColumn={currentUser?.role === 'ADMIN'}
+                showActionsColumn={hasAnyActionPermission}
+                paymentStatus={getPaymentStatus(order)}
+              />
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
+   </div>
   );
 }
