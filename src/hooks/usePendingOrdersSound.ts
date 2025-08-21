@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../../socket';
 import { getOrders } from '@/services/orderService';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UsePendingOrdersSoundParams {
   activeFilter: string;
@@ -21,6 +22,7 @@ export const usePendingOrdersSound = ({
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasPendingOrders, setHasPendingOrders] = useState(false);
+  const queryClient = useQueryClient();
 
   // ✅ Vérifier si l'utilisateur peut entendre les sons (exclure ADMIN et MARKETING)
   const canPlaySound = user && !['ADMIN', 'MARKETING'].includes(user.role?.toUpperCase());
@@ -54,7 +56,7 @@ export const usePendingOrdersSound = ({
 
     socketRef.current = io(SOCKET_URL);
 
-    const handleNewPendingOrder = (orderData: any) => {
+    const handleNewPendingOrder = async (orderData: any) => {
       // Vérifier si c'est une commande PENDING
       if (orderData?.status === 'PENDING') {
         // Filtrer par restaurant si nécessaire
@@ -64,6 +66,10 @@ export const usePendingOrdersSound = ({
 
         setHasPendingOrders(true);
       }
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        exact: false
+      });
     };
 
     const handleOrderStatusChange = async (orderData: any) => {
@@ -84,7 +90,12 @@ export const usePendingOrdersSound = ({
           // En cas d'erreur, on arrête le son par précaution
           setHasPendingOrders(false);
         }
+
       }
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        exact: false
+      });
     };
 
     // Écouter les événements

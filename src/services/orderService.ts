@@ -293,25 +293,25 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
     const data = await response.json();
 
     // ✅ Si le statut atteint COLLECTED, passer automatiquement à COMPLETED
-    if (status === 'COLLECTED') {
-      // Attendre un petit délai pour s'assurer que COLLECTED est bien enregistré
-      await new Promise(resolve => setTimeout(resolve, 100));
+    // if (status === 'COLLECTED') {
+    //   // Attendre un petit délai pour s'assurer que COLLECTED est bien enregistré
+    //   await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Passer automatiquement à COMPLETED
-      const completedResponse = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'COMPLETED' }),
-      });
+    //   // Passer automatiquement à COMPLETED
+    //   const completedResponse = await fetch(url, {
+    //     method: 'PATCH',
+    //     headers: {
+    //       Authorization: `Bearer ${token}`,
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ status: 'COMPLETED' }),
+    //   });
 
-      if (completedResponse.ok) {
-        const completedData = await completedResponse.json();
-        return completedData;
-      }
-    }
+    //   if (completedResponse.ok) {
+    //     const completedData = await completedResponse.json();
+    //     return completedData;
+    //   }
+    // }
 
     return data;
   } catch (error) {
