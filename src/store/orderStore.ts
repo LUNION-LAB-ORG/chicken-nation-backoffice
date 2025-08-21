@@ -11,6 +11,7 @@ import {
   updateOrderStatus,
   deleteOrder
 } from '@/services/orderService';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface OrderState {
   orders: Order[];
@@ -142,6 +143,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
 
+
       const updatedOrder = await updateOrderStatus(id, status);
 
       // Mettre à jour la commande dans la liste
@@ -153,6 +155,17 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         isLoading: false
       }));
 
+      // TODO : Notifier le TPE de la commande acceptée
+      if (typeof window !== "undefined") {
+        window.flutter_inappwebview.callHandler("printDocument", updatedOrder);
+      }
+
+      const queryClient = useQueryClient();
+
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        exact: false
+      });
       return updatedOrder;
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut de la commande:', error);

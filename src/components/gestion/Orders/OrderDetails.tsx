@@ -367,10 +367,6 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       if (orderType === "À table") {
         // Workflow TABLE
         if (newStatus === "EN COURS") {
-          // TODO : Notifier le TPE de la commande acceptée
-          if (typeof window !== "undefined") {
-            window.flutter_inappwebview.callHandler("printDocument", orderData);
-          }
           // Accepter la réservation
           await updateOrderStatus(order.id, "ACCEPTED");
         } else if (newStatus === "PRÊT") {

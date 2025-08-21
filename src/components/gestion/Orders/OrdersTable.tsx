@@ -8,12 +8,12 @@ import { OrderFilters } from "./OrderFilters";
 import { toast } from "react-hot-toast";
 import { useOrdersQuery } from "@/hooks/useOrdersQuery";
 import {
-  updateOrderStatus,
   deleteOrder,
   ApiOrderRaw,
 } from "@/services/orderService";
 import { useRBAC } from "@/hooks/useRBAC";
 import { PaymentStatus } from "./PaymentBadge";
+import { useOrderStore } from "@/store/orderStore";
 
 // Interface étendue pour les commandes UI
 export interface Order {
@@ -359,6 +359,8 @@ export function OrdersTable({
     canUpdateCommande();
 
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+  const { updateOrderStatus } = useOrderStore();
 
   // ✅ Utiliser TanStack Query pour les commandes avec recherche côté serveur
   const {
