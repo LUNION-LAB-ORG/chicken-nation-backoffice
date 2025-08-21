@@ -1,255 +1,245 @@
 import React from "react";
-import { Document, Page, Text, View } from "@react-pdf/renderer";
-import { OrderData } from "./types";
-import {
-  styles,
-  validateOrderData,
-  parseAddress,
-  getPaymentModeLabel,
-  getOrderTypeLabel,
-  formatCurrency,
-  formatDate,
-  formatTime,
-} from "./utils";
-
-interface ReceiptPDFProps {
-  order: OrderData;
+import { OrderData, ReceiptItem, ParsedAddress } from "./types";
+import JsBarCode from "jsbarcode";
+// Interface for the component props
+interface ReceiptProps {
+  orderData?: OrderData;
 }
 
-export function receiptPDF({ order }: ReceiptPDFProps) {
-  const validationErrors = validateOrderData(order);
+const Receipt = ({ orderData }: ReceiptProps) => {
+  const order = orderData;
 
-  if (validationErrors.length > 0) {
-    return (
-      <Document>
-        <Page size={[384, 1000]} style={styles.page}>
-          <View>
-            <Text style={{ fontSize: 16, fontWeight: "bold" }}>
-              Erreur dans les données
-            </Text>
-            {validationErrors.map((error, index) => (
-              <Text key={index} style={{ fontSize: 14 }}>
-                • {error}
-              </Text>
-            ))}
-          </View>
-        </Page>
-      </Document>
-    );
+  // Parsing the address string from the OrderData interface
+  let parsedAddress: string = order.address;
+  if (typeof order.address === "string" && order.address.startsWith("{")) {
+    try {
+      const addressObj: ParsedAddress = JSON.parse(order.address);
+      parsedAddress = `${addressObj.title}, ${addressObj.city}`;
+    } catch (e) {
+      parsedAddress = order.address;
+    }
   }
 
-  const safeOrder = {
-    ...order,
-    reference: order.reference || "N/A",
-    date: order.date || new Date().toISOString().split("T")[0],
-    time: order.time || new Date().toLocaleTimeString("fr-FR"),
-    phone: order.phone || "N/A",
-    type: order.type || "DELIVERY",
-    status: order.status || "PENDING",
-    net_amount: order.net_amount ?? 0,
-    amount: order.amount ?? 0,
-    discount: order.discount ?? 0,
-    delivery_fee: order.delivery_fee ?? 0,
-    tax: order.tax ?? 0,
-    points: order.points ?? 0,
-    note: order.note || "",
-    code_promo: order.code_promo || "",
-    address: order.address || "",
-    estimated_delivery_time: order.estimated_delivery_time || "",
+  // Mapping order items to a simpler structure for display
+  const items: ReceiptItem[] =
+    order.order_items?.map((item) => ({
+      description: item.dish?.name || "Article inconnu",
+      details: item.dish?.description || "",
+      quantity: item.quantity || 1,
+      unitPrice: item.dish?.is_promotion
+        ? item.dish.promotion_price || 0
+        : item.dish?.price || 0,
+      price: item.amount || 0,
+      isPromotion: item.dish?.is_promotion || false,
+      isSpicy: item.epice || false,
+    })) || [];
+
+  const formatPrice = (price: number) => {
+    if (typeof price !== "number") return "0 FCFA";
+    return `${Math.round(price)} FCFA`;
   };
 
-  const deliveryAddress = safeOrder.address
-    ? parseAddress(safeOrder.address)
-    : null;
-  const successfulPayment = order.paiements?.find(
-    (p) => p && p.status === "SUCCESS"
-  );
-  const customerName = order.customer
-    ? `${order.customer.first_name || ""} ${
-        order.customer.last_name || ""
-      }`.trim() || "Client"
-    : "Client";
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR");
+  };
 
+  React.useEffect(() => {
+    JsBarCode("#ticket", order.reference, {
+      width: 3,
+      height: 100,
+      fontSize: 32,
+      text: order.reference,
+    });
+  }, []);
+  // The rest of the component remains the same
   return (
-    <Document>
-      <Page size={[384, 1000]} style={styles.page}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.restaurantName}>
-            {order.restaurant?.name || "Restaurant"}
-          </Text>
-          <Text style={styles.restaurantInfo}>
-            {order.restaurant?.address || "Adresse non spécifiée"}
-          </Text>
-          {order.restaurant?.phone && (
-            <Text style={styles.restaurantInfo}>
-              Tél: {order.restaurant.phone}
-            </Text>
-          )}
-          {order.restaurant?.email && (
-            <Text style={styles.restaurantInfo}>
-              Email: {order.restaurant.email}
-            </Text>
-          )}
-          <Text style={styles.receiptTitle}>REÇU DE COMMANDE</Text>
-        </View>
+    <div className="max-w-sm mx-auto bg-white p-6 font-mono text-sm shadow-lg">
+        <div className="text-center mb-2">
+        <div className="text-xs text-center tracking-widest">
+          *****************************
+        </div>
+      </div>
+      <div className="text-center font-bold text-lg mb-2">BON DE COMMANDE</div>
+        <div className="text-center mb-4">
+        <div className="text-xs text-center tracking-widest">
+          *****************************
+        </div>
+      </div>
 
-        <Text style={styles.divider}>--------------------------------</Text>
+      <div className="text-center font-bold text-base mb-6">
+        {order.restaurant?.name || "RESTAURANT NAME"}
+      </div>
+      <div className="mb-6 text-xs">
+        <div className="flex justify-between mb-1">
+          <span>Adresse:</span>
+          <span className="text-right max-w-48">
+            {order.restaurant?.address || "Adresse restaurant"}
+          </span>
+        </div>
+        <div className="flex justify-between mb-1">
+          <span>Date:</span>
+          <span>
+            {formatDate(order.date)} {order.time}
+          </span>
+        </div>
+        <div className="flex justify-between mb-1">
+          <span>Téléphone:</span>
+          <span>{order.restaurant?.phone || "0000000000"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Commande:</span>
+          <span>{order.reference}</span>
+        </div>
+      </div>
 
-        {/* Order Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Commande</Text>
-            <Text style={styles.infoValue}>#{safeOrder.reference}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Date</Text>
-            <Text style={styles.infoValue}>
-              {formatDate(safeOrder.date)} à {formatTime(safeOrder.time)}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Client</Text>
-            <Text style={styles.infoValue}>{customerName}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Téléphone</Text>
-            <Text style={styles.infoValue}>{safeOrder.phone}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Type</Text>
-            <Text style={styles.infoValue}>
-              {getOrderTypeLabel(safeOrder.type)}
-            </Text>
-          </View>
-          {safeOrder.type === "DELIVERY" && deliveryAddress && (
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Adresse</Text>
-              <Text style={styles.infoValue}>
-                {deliveryAddress.address || "Adresse non spécifiée"}
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <Text style={styles.divider}>--------------------------------</Text>
-
-        {/* Items */}
-        <View style={styles.itemsSection}>
-          <View style={styles.itemsHeader}>
-            <Text style={[styles.itemsHeaderText, { flex: 2 }]}>Articles</Text>
-            <Text
-              style={[
-                styles.itemsHeaderText,
-                { flex: 0.5, textAlign: "right" },
-              ]}
-            >
-              Qté
-            </Text>
-            <Text
-              style={[
-                styles.itemsHeaderText,
-                { flex: 1.5, textAlign: "right" },
-              ]}
-            >
-              Prix
-            </Text>
-          </View>
-          {order.order_items && Array.isArray(order.order_items) ? (
-            order.order_items.map((item, index) => {
-              if (!item || !item.dish) return null;
-              return (
-                <View key={index} style={styles.itemRow}>
-                  <View style={styles.itemMainRow}>
-                    <View style={{ flex: 2 }}>
-                      <Text style={styles.itemName}>
-                        {item.dish.name || "Plat sans nom"}
-                      </Text>
-                      {item.dish.description && (
-                        <Text style={styles.itemDetails}>
-                          {item.dish.description}
-                        </Text>
-                      )}
-                      {item.epice && (
-                        <Text style={styles.spicyIndicator}>🌶️ Épicé</Text>
-                      )}
-                      {item.dish.is_promotion && (
-                        <Text style={styles.promotionIndicator}>
-                          🏷️ Promotion
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={styles.itemQuantity}>
-                      ×{item.quantity || 1}
-                    </Text>
-                    <Text style={styles.itemPrice}>
-                      {formatCurrency(item.amount)}
-                    </Text>
-                  </View>
-                  {item.supplements &&
-                    Array.isArray(item.supplements) &&
-                    item.supplements.length > 0 && (
-                      <View style={{ marginTop: 5 }}>
-                        {item.supplements.map((supplement, suppIndex) => (
-                          <Text key={suppIndex} style={styles.supplementText}>
-                            + {supplement.name || "Supplément"}
-                          </Text>
-                        ))}
-                      </View>
-                    )}
-                </View>
-              );
-            })
-          ) : (
-            <Text style={{ fontSize: 14 }}>Aucun article trouvé</Text>
-          )}
-        </View>
-
-        <Text style={styles.divider}>--------------------------------</Text>
-
-        {/* Totals */}
-        <View style={styles.totalsSection}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>TOTAL:</Text>
-            <Text style={styles.totalValue}>
-              {formatCurrency(safeOrder.amount)}
-            </Text>
-          </View>
-        </View>
-
-        {/* Payment Info */}
-        {successfulPayment && (
-          <View style={styles.infoSection}>
-            <Text style={styles.infoLabel}>Paiement</Text>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Mode:</Text>
-              <Text style={styles.totalValue}>
-                {getPaymentModeLabel(successfulPayment.mode)}
-              </Text>
-            </View>
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Statut:</Text>
-              <Text style={styles.totalValue}>Payé</Text>
-            </View>
-          </View>
+      <div className="mb-4 text-xs">
+        <div className="flex justify-between mb-1">
+          <span>Client:</span>
+          <span>
+            {order.customer?.first_name && order.customer?.last_name
+              ? `${order.customer.first_name} ${order.customer.last_name}`
+              : order.fullname || "Client"}
+          </span>
+        </div>
+        <div className="flex justify-between mb-1">
+          <span>Tel Client:</span>
+          <span>{order.customer?.phone || "+000000000"}</span>
+        </div>
+        <div className="flex justify-between">
+          <span>Type:</span>
+          <span>{order.type}</span>
+        </div>
+        {order.type === "DELIVERY" && (
+          <div className="flex justify-between mt-1">
+            <span>Livraison:</span>
+            <span className="text-right max-w-48">{parsedAddress}</span>
+          </div>
         )}
+      </div>
 
-        {/* Notes */}
-        {safeOrder.note && (
-          <View style={{ marginTop: 15 }}>
-            <Text style={{ fontSize: 14, fontWeight: "bold" }}>Notes:</Text>
-            <Text style={{ fontSize: 14 }}>{safeOrder.note}</Text>
-          </View>
+      <div className="flex justify-between font-bold mb-3 pb-1">
+        <span>Description</span>
+        <span>Price</span>
+      </div>
+
+      <div className="mb-4">
+        {items.length > 0 ? (
+          items.map((item, index) => (
+            <div key={index} className="mb-2">
+              <div className="flex justify-between">
+                <span className="font-semibold flex items-center">
+                  {item.description}
+                  {item.isSpicy && (
+                    <span className="ml-1 text-red-500">🌶️</span>
+                  )}
+                </span>
+                <span>{formatPrice(item.price)}</span>
+              </div>
+              {item.details && (
+                <div className="text-xs text-gray-600 mb-1">{item.details}</div>
+              )}
+              <div className="text-xs flex justify-between">
+                <span>
+                  Qté: {item.quantity} x {formatPrice(item.unitPrice)}
+                </span>
+                <div className="flex gap-2">
+                  {item.isPromotion && (
+                    <span className="text-red-500">PROMO</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-500 text-sm">Aucun article</div>
         )}
+      </div>
 
-        <Text style={styles.divider}>--------------------------------</Text>
+      <div className="border-t border-gray-400 mb-3"></div>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Merci pour votre commande!</Text>
-          <Text style={styles.poweredBy}>Powered by LUnion TPE</Text>
-        </View>
-      </Page>
-    </Document>
+      <div className="mb-6">
+        <div className="flex justify-between mb-1">
+          <span>Sous-total</span>
+          <span>{formatPrice(order.net_amount)}</span>
+        </div>
+        {order.delivery_fee > 0 ? (
+          <div className="flex justify-between mb-1">
+            <span>Frais de livraison</span>
+            <span>{formatPrice(order.delivery_fee)}</span>
+          </div>
+        ) : null}
+        {order.discount > 0 && (
+          <div className="flex justify-between mb-1 text-green-600">
+            <span>Remise</span>
+            <span>-{formatPrice(order.discount)}</span>
+          </div>
+        )}
+        <div className="flex justify-between mb-2">
+          <span>Taxe ({Math.round(order.tax * 100)}%)</span>
+          <span>{formatPrice(order.tax * order.net_amount)}</span>
+        </div>
+        <div className="flex justify-between border-t pt-2">
+          <span className="font-bold text-base">TOTAL</span>
+          <span className="font-bold text-base">
+            {formatPrice(order.amount)}
+          </span>
+        </div>
+      </div>
+
+      <div className="mb-4 text-xs">
+        <div className="flex justify-between mb-1">
+          <span>Mode paiement:</span>
+          <span>{order.paiements?.[0]?.mode || "N/A"}</span>
+        </div>
+        {order.paiements?.[0]?.reference && (
+          <div className="flex justify-between mb-1">
+            <span>Ref. paiement:</span>
+            <span>{order.paiements?.[0]?.reference}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span>Statut:</span>
+          <span
+            className={`${
+              order.status === "COMPLETED"
+                ? "text-green-600"
+                : order.status === "PENDING"
+                ? "text-yellow-600"
+                : "text-gray-600"
+            }`}
+          >
+            {order.status}
+          </span>
+        </div>
+      </div>
+
+      <div className="text-center mb-4">
+        <div className="text-xs text-center tracking-widest">
+          *****************************
+        </div>
+      </div>
+
+      <div className="text-center mb-2 relative">
+        <svg
+          id="ticket"
+          className="w-full"
+          jsbarcode-format="upc"
+          jsbarcode-textmargin="0"
+          jsbarcode-fontoptions="bold"
+        ></svg>
+      </div>
+
+      <div className="text-center font-bold text-lg mb-6">THANK YOU</div>
+
+      <div className="text-center text-gray-400">
+        <svg viewBox="0 0 300 20" className="w-full h-4" fill="currentColor">
+          <path d="M0,10 Q7.5,0 15,10 T30,10 T45,10 T60,10 T75,10 T90,10 T105,10 T120,10 T135,10 T150,10 T165,10 T180,10 T195,10 T210,10 T225,10 T240,10 T255,10 T270,10 T285,10 T300,10 L300,20 L0,20 Z" />
+        </svg>
+      </div>
+    </div>
   );
-}
+};
+
+export default Receipt;

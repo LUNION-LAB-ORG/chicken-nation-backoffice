@@ -6,7 +6,7 @@ export interface OrderData {
   paied: boolean;
   delivery_fee: number;
   points: number;
-  type: OrderType;
+  type: 'DELIVERY' | 'TAKEAWAY' | 'DINE_IN';
   table_type?: string | null;
   places?: number | null;
   address: string; // JSON string format: {"title": "...", "address": "...", "street": "...", "city": "...", "latitude": number, "longitude": number}
@@ -23,10 +23,10 @@ export interface OrderData {
   phone: string;
   email: string;
   note?: string | null;
-  status: OrderStatus;
+  status: 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'DELIVERING' | 'COMPLETED' | 'CANCELLED';
   restaurant_id: string;
   promotion_id?: string | null;
-  entity_status: EntityStatus;
+  entity_status: 'ACTIVE' | 'INACTIVE';
   completed_at?: string | null;
   paied_at?: string | null;
   created_at: string;
@@ -61,7 +61,7 @@ export interface Dish {
   is_promotion: boolean;
   promotion_price?: number;
   category_id: string;
-  entity_status: EntityStatus;
+  entity_status: 'ACTIVE' | 'INACTIVE';
   created_at: string;
   updated_at: string;
 }
@@ -79,17 +79,17 @@ export interface Payment {
   id: string;
   amount: number;
   total: number;
-  mode: PaymentMode;
+  mode: 'MOBILE_MONEY' | 'CARD' | 'CASH' | 'BANK_TRANSFER';
   source?: string | null;
   fees: number;
   client?: string | null;
   client_id?: string | null;
-  status: PaymentStatus;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
   reference: string;
   failure_code?: string | null;
   failure_message?: string | null;
   order_id: string;
-  entity_status: EntityStatus;
+  entity_status: 'ACTIVE' | 'INACTIVE';
   created_at: string;
   updated_at: string;
 }
@@ -132,11 +132,11 @@ export interface ReceiptProps {
 }
 
 // Types utilitaires pour les énumérations
-export type OrderType = 'DELIVERY' | 'PICKUP' | 'TABLE';
-export type OrderStatus = 'PENDING' | 'CANCELLED' | 'ACCEPTED' | 'IN_PROGRESS' | 'READY' | 'PICKED_UP' | 'COLLECTED' | 'COMPLETED';
-export type PaymentMode = 'MOBILE_MONEY' | 'WALLET' | 'CREDIT_CARD' | 'CASH';
-export type PaymentStatus = 'REVERTED' | 'SUCCESS' | 'FAILED';
-export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
+export type OrderType = 'DELIVERY' | 'TAKEAWAY' | 'DINE_IN';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'PREPARING' | 'READY' | 'DELIVERING' | 'COMPLETED' | 'CANCELLED';
+export type PaymentMode = 'MOBILE_MONEY' | 'CARD' | 'CASH' | 'BANK_TRANSFER';
+export type PaymentStatus = 'SUCCESS' | 'PENDING' | 'FAILED';
+export type EntityStatus = 'ACTIVE' | 'INACTIVE';
 
 // Interface simplifiée pour l'affichage dans le receipt (données transformées)
 export interface ReceiptItem {

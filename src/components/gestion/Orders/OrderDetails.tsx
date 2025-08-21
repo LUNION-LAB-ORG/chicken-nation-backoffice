@@ -9,7 +9,7 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
-import { OrderData } from "@/app/order/[id]/types";
+import { useRouter } from "next/navigation";
 
 const getPaymentStatus = (orderDetails: any): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
@@ -80,25 +80,6 @@ const SafeImage: React.FC<SafeImageProps> = ({
     />
   );
 };
-function getAuthToken() {
-  try {
-    if (typeof document === "undefined") return null;
-
-    const cookies = document.cookie.split(";");
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split("=");
-      if (name === "chicken-nation-token") {
-        return decodeURIComponent(value);
-      }
-    }
-
-    console.error("Token non trouvé dans les cookies");
-    return null;
-  } catch (error) {
-    console.error("Erreur lors de la récupération du token:", error);
-    return null;
-  }
-}
 
 interface OrderDetailsProps {
   order: Order;
@@ -116,7 +97,6 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 }) => {
   const { getOrderById, fetchOrderById, updateOrderStatus } = useOrderStore();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
-
   const [fullOrderDetails, setFullOrderDetails] = useState<{
     id: string;
     status: string;
@@ -126,10 +106,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     date?: string;
     [key: string]: unknown;
   } | null>(null);
+  const router = useRouter();
   const [restaurantName, setRestaurantName] = useState<string>(
     order.restaurant || "Restaurant inconnu"
   );
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>(order.status);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
@@ -166,36 +146,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     },
     [fullOrderDetails?.type]
   );
-  useEffect(() => {
-    async function getOrder() {
-      const token = getAuthToken();
 
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_API_PREFIX + `/orders/${order.id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      setOrderData(data);
-
-      return data;
-    }
-    getOrder();
-  }, [order]);
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!order.id) {
@@ -337,6 +288,97 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       }
     }
   };
+
+  // Définition de tous les statuts possibles (non utilisée actuellement)
+  // const allStatuses: Order['status'][] = [
+  //   'NOUVELLE',
+  //   'EN COURS',
+  //   'EN PRÉPARATION',
+  //   'PRÊT',
+  //   'LIVRAISON',
+  //   'LIVRÉ',
+  //   'COLLECTÉ',
+  //   'ANNULÉE'
+  // ];
+
+  // Définition des statuts visibles pour les commandes TABLE
+  // const visibleTableStatuses: Order['status'][] = [
+  //   'EN COURS',
+  //   'EN PRÉPARATION',
+  //   'PRÊT',
+  //   'ANNULÉE'
+  // ];
+
+  // Définition des statuts visibles pour les commandes PICKUP
+  // const visiblePickupStatuses: Order['status'][] = [
+  //   'EN COURS',
+  //   'EN PRÉPARATION',
+  //   'PRÊT',
+  //   'COLLECTÉ',
+  //   'ANNULÉE'
+  // ];
+
+  // Fonction pour obtenir les statuts à afficher dans le menu déroulant
+  // const getVisibleStatuses = (): Order['status'][] => {
+  //   if (fullOrderDetails?.type === 'TABLE') {
+  //     return visibleTableStatuses;
+  //   }
+  //   if (fullOrderDetails?.type === 'PICKUP') {
+  //     return visiblePickupStatuses;
+  //   }
+  //   return allStatuses;
+  // };
+
+  // Fonction pour traduire le statut UI en statut API (non utilisée actuellement)
+  // const convertUiStatusToApiStatus = (uiStatus: string): OrderStatus => {
+  //   if (fullOrderDetails?.type === 'PICKUP') {
+  //     const pickupStatusMapping: Record<string, OrderStatus> = {
+  //       'NOUVELLE': 'PENDING',
+  //       'EN COURS': 'ACCEPTED',
+  //       'EN PRÉPARATION': 'IN_PROGRESS',
+  //       'PRÊT': 'READY',
+  //       'COLLECTÉ': 'COLLECTED',
+  //       'ANNULÉE': 'CANCELLED'
+  //     };
+  //     return pickupStatusMapping[uiStatus] || 'PENDING';
+  //   }
+
+  //   const statusMapping: Record<string, OrderStatus> = {
+  //     'NOUVELLE': 'PENDING',
+  //     'EN COURS': 'ACCEPTED',
+  //     'EN PRÉPARATION': 'IN_PROGRESS',
+  //     'PRÊT': 'READY',
+  //     'LIVRAISON': 'PICKED_UP',
+  //     'LIVRÉ': 'DELIVERED',
+  //     'COLLECTÉ': 'COLLECTED',
+  //     'ANNULÉE': 'CANCELLED'
+  //   };
+
+  //   return statusMapping[uiStatus] || 'PENDING';
+  // };
+
+  // Fonction pour obtenir l'index d'un statut dans le workflow (non utilisée actuellement)
+  // const getStatusIndex = (status: Order['status']): number => {
+  //   return allStatuses.indexOf(status);
+  // };
+
+  // Fonction pour vérifier si un statut est disponible (non utilisée actuellement)
+  // const isStatusAvailable = (status: Order['status'], currentStatusParam: Order['status']): boolean => {
+  //   // Le statut actuel est toujours disponible
+  //   if (status === currentStatusParam) return true;
+
+  //   // ANNULÉE est toujours disponible sauf si la commande est déjà annulée
+  //   if (status === 'ANNULÉE' && currentStatusParam !== 'ANNULÉE') {
+  //     return true;
+  //   }
+
+  //   // Pour les autres statuts, vérifier si on peut y accéder
+  //   const currentIndex = getStatusIndex(currentStatusParam);
+  //   const targetIndex = getStatusIndex(status);
+
+  //   // On ne peut pas revenir en arrière dans le workflow
+  //   return targetIndex > currentIndex;
+  // };
 
   // Nouvelle fonction pour gérer le workflow avec bouton unique
   const handleWorkflowAction = async () => {
@@ -1232,17 +1274,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   );
                 }
               })()}
-              <div className="lg:hidden flex justfy-center p-2">
+              <div className="flex justfy-center p-2">
                 <button
                   className="w-full cursor-pointer py-3 px-4 bg-[#F17922] hover:bg-[#ea7019] text-white rounded-xl font-medium"
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      window.flutter_inappwebview.callHandler(
-                        "printDocument",
-                        orderData
-                      );
-                    }
-                  }}
+                  onClick={() => router.push(`/order/${order.id}`)}
                 >
                   imprimer{" "}
                 </button>

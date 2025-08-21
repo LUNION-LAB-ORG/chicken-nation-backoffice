@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
-import { useRBAC } from "@/hooks/useRBAC";
-import { LogOut } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore'
+import { useRBAC } from '@/hooks/useRBAC';
+import { LogOut } from 'lucide-react';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -24,17 +24,9 @@ interface SidebarIconProps {
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  isMobile: boolean;
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (open: boolean) => void;
 }
 
-const SidebarIcon: React.FC<SidebarIconProps> = ({
-  defaultIcon,
-  whiteIcon,
-  alt,
-  active,
-}) => {
+const SidebarIcon: React.FC<SidebarIconProps> = ({ defaultIcon, whiteIcon, alt, active }) => {
   return (
     <div className="relative w-5 h-5">
       <Image
@@ -48,54 +40,26 @@ const SidebarIcon: React.FC<SidebarIconProps> = ({
   );
 };
 
-const SidebarItem: React.FC<SidebarItemProps> = ({
-  icon,
-  label,
-  active = false,
-  onClick,
-}) => {
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, active = false, onClick }) => {
   return (
-    <button
+    <button 
       onClick={onClick}
       className={`
         w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
-        ${
-          active
-            ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
-            : "text-gray-600 hover:bg-gray-100"
-        }
+        ${active ? 'bg-gradient-to-r from-[#F17922] to-[#FA6345]' : 'text-gray-600 hover:bg-gray-100'}
         transition-all duration-200
       `}
     >
       {icon}
-      <span
-        className={`text-sm font-sofia-regular font-normal cursor-pointer ${
-          active ? "text-white" : "text-gray-600"
-        }`}
-      >
-        {label}
-      </span>
+      <span className={`text-sm font-sofia-regular font-normal cursor-pointer ${active ? 'text-white' : 'text-gray-600'}`}>{label}</span>
     </button>
   );
 };
 
-export default function Sidebar({
-  activeTab,
-  setActiveTab,
-  isMobile,
-  isSidebarOpen,
-  setIsSidebarOpen,
-}: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
   const router = useRouter();
   const { logout, user } = useAuthStore();
-  const {
-    canViewPlat,
-    canViewCommande,
-    canViewClient,
-    canViewUtilisateur,
-    canViewRestaurant,
-    canViewOffreSpeciale,
-  } = useRBAC();
+  const { canViewPlat, canViewCommande, canViewClient, canViewUtilisateur, canViewRestaurant, canViewOffreSpeciale } = useRBAC();
   const [isClient, setIsClient] = useState(false);
 
   // Éviter l'erreur d'hydration en s'assurant que le composant est rendu côté client
@@ -106,65 +70,62 @@ export default function Sidebar({
   const handleLogout = async () => {
     try {
       await logout();
-      router.push("/");
+      router.push('/');
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      console.error('Erreur lors de la déconnexion:', error);
     }
   };
 
   // Définir les éléments de navigation en fonction des permissions RBAC
   const navigationItems = [
     {
-      id: "dashboard",
-      label: "Tableau de bord",
-      defaultIcon: "/icons/sidebar/home.png",
-      whiteIcon: "/icons/sidebar/home-white.png",
-      canAccess: () =>
-        user?.role === "ADMIN" ||
-        user?.role === "MANAGER" ||
-        user?.role === "MARKETING", // Dashboard spécial
+      id: 'dashboard',
+      label: 'Tableau de bord',
+      defaultIcon: '/icons/sidebar/home.png',
+      whiteIcon: '/icons/sidebar/home-white.png',
+      canAccess: () => user?.role === 'ADMIN' || user?.role === 'MANAGER' || user?.role === 'MARKETING' // Dashboard spécial
     },
     {
-      id: "menus",
-      label: "Menus",
-      defaultIcon: "/icons/sidebar/menu.png",
-      whiteIcon: "/icons/sidebar/menu-white.png",
-      canAccess: canViewPlat,
+      id: 'menus',
+      label: 'Menus',
+      defaultIcon: '/icons/sidebar/menu.png',
+      whiteIcon: '/icons/sidebar/menu-white.png',
+      canAccess: canViewPlat
     },
     {
-      id: "orders",
-      label: "Commandes",
-      defaultIcon: "/icons/sidebar/commande.png",
-      whiteIcon: "/icons/sidebar/commande-white.png",
-      canAccess: canViewCommande,
+      id: 'orders',
+      label: 'Commandes',
+      defaultIcon: '/icons/sidebar/commande.png',
+      whiteIcon: '/icons/sidebar/commande-white.png',
+      canAccess: canViewCommande
     },
     {
-      id: "clients",
-      label: "Clients",
-      defaultIcon: "/icons/sidebar/client.png",
-      whiteIcon: "/icons/sidebar/client-white.png",
-      canAccess: canViewClient,
+      id: 'clients',
+      label: 'Clients',
+      defaultIcon: '/icons/sidebar/client.png',
+      whiteIcon: '/icons/sidebar/client-white.png',
+      canAccess: canViewClient
     },
     {
-      id: "inventory",
-      label: "Inventaires",
-      defaultIcon: "/icons/sidebar/inventaire.png",
-      whiteIcon: "/icons/sidebar/inventaire-white.png",
-      canAccess: () => canViewPlat(), // Inventaire lié aux plats/catégories
+      id: 'inventory',
+      label: 'Inventaires',
+      defaultIcon: '/icons/sidebar/inventaire.png',
+      whiteIcon: '/icons/sidebar/inventaire-white.png',
+      canAccess: () => canViewPlat() // Inventaire lié aux plats/catégories
     },
     {
-      id: "restaurants",
-      label: "Restaurants",
-      defaultIcon: "/icons/sidebar/restaurants.png",
-      whiteIcon: "/icons/sidebar/restaurants-white.png",
-      canAccess: canViewRestaurant,
+      id: 'restaurants',
+      label: 'Restaurants',
+      defaultIcon: '/icons/sidebar/restaurants.png',
+      whiteIcon: '/icons/sidebar/restaurants-white.png',
+      canAccess: canViewRestaurant
     },
     {
-      id: "personnel",
-      label: "Personnel",
-      defaultIcon: "/icons/sidebar/client.png",
-      whiteIcon: "/icons/sidebar/client-white.png",
-      canAccess: canViewUtilisateur,
+      id: 'personnel',
+      label: 'Personnel',
+      defaultIcon: '/icons/sidebar/client.png',
+      whiteIcon: '/icons/sidebar/client-white.png',
+      canAccess: canViewUtilisateur
     },
     // {
     //   id: 'ads',
@@ -174,18 +135,18 @@ export default function Sidebar({
     //   showForRoles: ['ADMIN']
     // },
     {
-      id: "promos",
-      label: "Promotions",
-      defaultIcon: "/icons/sidebar/promotions.png",
-      whiteIcon: "/icons/sidebar/promotions-white.png",
-      canAccess: canViewOffreSpeciale,
+      id: 'promos',
+      label: 'Promotions',
+      defaultIcon: '/icons/sidebar/promotions.png',
+      whiteIcon: '/icons/sidebar/promotions-white.png',
+      canAccess: canViewOffreSpeciale
     },
     {
-      id: "loyalty",
-      label: "Fidélisation",
-      defaultIcon: "/icons/sidebar/fidelisation.png",
-      whiteIcon: "/icons/sidebar/fidelisation-white.png",
-      canAccess: () => false, // Désactivé pour l'instant
+      id: 'loyalty',
+      label: 'Fidélisation',
+      defaultIcon: '/icons/sidebar/fidelisation.png',
+      whiteIcon: '/icons/sidebar/fidelisation-white.png',
+      canAccess: () => false // Désactivé pour l'instant
     },
     // {
     //   id: 'apps',
@@ -202,12 +163,7 @@ export default function Sidebar({
         {/* Logo */}
         <div className="p-4">
           <div className="flex space-x-2 items-start justify-start">
-            <Image
-              src="/icons/sidebar/logo-orange.png"
-              alt="Chicken Nation"
-              width={200}
-              height={100}
-            />
+            <Image src="/icons/sidebar/logo-orange.png" alt="Chicken Nation" width={200} height={100} />
           </div>
         </div>
 
@@ -218,10 +174,7 @@ export default function Sidebar({
               // Pendant l'hydration, afficher un contenu statique
               <div className="space-y-1">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
-                  <div
-                    key={index}
-                    className="w-full flex items-center space-x-3 px-4 py-[10px] rounded-[14px] opacity-0"
-                  >
+                  <div key={index} className="w-full flex items-center space-x-3 px-4 py-[10px] rounded-[14px] opacity-0">
                     <div className="relative w-5 h-5 bg-gray-200 rounded"></div>
                     <span className="text-sm bg-gray-200 rounded h-4 w-20"></span>
                   </div>
@@ -238,22 +191,15 @@ export default function Sidebar({
                 return (
                   <SidebarItem
                     key={item.id}
-                    icon={
-                      <SidebarIcon
-                        defaultIcon={item.defaultIcon}
-                        whiteIcon={item.whiteIcon}
-                        alt={item.label}
-                        active={activeTab === item.id}
-                      />
-                    }
+                    icon={<SidebarIcon
+                      defaultIcon={item.defaultIcon}
+                      whiteIcon={item.whiteIcon}
+                      alt={item.label}
+                      active={activeTab === item.id}
+                    />}
                     label={item.label}
                     active={activeTab === item.id}
-                    onClick={() => {
-                      if (isMobile || !isSidebarOpen) {
-                        setIsSidebarOpen(false);
-                      }
-                      setActiveTab(item.id);
-                    }}
+                    onClick={() => setActiveTab(item.id)}
                   />
                 );
               })
@@ -263,7 +209,7 @@ export default function Sidebar({
 
         {/* Bouton de déconnexion */}
         <div className="p-4 border-t border-gray-200">
-          <button
+          <button 
             onClick={handleLogout}
             className={`
               w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
@@ -274,9 +220,7 @@ export default function Sidebar({
             <div className="relative w-5 h-5 flex items-center justify-center">
               <LogOut size={20} className="text-[#F17922]" />
             </div>
-            <span className="text-sm font-sofia-regular font-normal cursor-pointer text-gray-600">
-              Déconnexion
-            </span>
+            <span className="text-sm font-sofia-regular font-normal cursor-pointer text-gray-600">Déconnexion</span>
           </button>
         </div>
       </aside>

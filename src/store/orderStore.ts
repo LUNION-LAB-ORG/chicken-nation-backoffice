@@ -116,6 +116,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     try {
       console.log('[orderStore] Tentative de récupération de la commande avec ID:', id);
       const order = await getOrderById(id);
+      console.log('[orderStore] DONNÉES BRUTES DE COMMANDE:', JSON.stringify(order, null, 2));
       set({
         selectedOrder: order,
         isLoading: false,

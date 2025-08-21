@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { Menu, ChevronDown, LogOut } from "lucide-react";
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/store/authStore";
-import { formatImageUrl } from "@/utils/imageHelpers";
-import EditMember from "@/components/gestion/Personnel/EditMember";
-import NotificationDropdown from "@/components/ui/NotificationDropdown";
-import MessageModal from "@/components/ui/MessageModal";
-import { useMessageStore } from "@/store/messageStore";
-import { User } from "@/types/auth";
+import { Menu, ChevronDown, LogOut } from 'lucide-react';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import { formatImageUrl } from '@/utils/imageHelpers';
+import EditMember from '@/components/gestion/Personnel/EditMember';
+import NotificationDropdown from '@/components/ui/NotificationDropdown';
+import MessageModal from '@/components/ui/MessageModal';
+import { useMessageStore } from '@/store/messageStore';
+import { User } from '@/types/auth'; 
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -18,11 +18,7 @@ interface HeaderProps {
   className?: string;
 }
 
-export default function Header({
-  toggleSidebar,
-  isSidebarOpen,
-  className,
-}: HeaderProps) {
+export default function Header({ toggleSidebar, isSidebarOpen, className }: HeaderProps) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -44,12 +40,14 @@ export default function Header({
     return () => clearInterval(interval);
   }, [fetchStats]);
 
+ 
+
   const handleLogout = async () => {
     try {
       await logout();
-      router.push("/");
+      router.push('/');
     } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
+      console.error('Erreur lors de la déconnexion:', error);
     }
   };
 
@@ -63,18 +61,15 @@ export default function Header({
   };
 
   return (
-    <header
-      className={`bg-white border-b border-gray-200 shadow-3xl ${className}`}
-    >
+    <header className={`bg-white border-b border-gray-200 shadow-3xl ${className}`}>
       <div className="flex items-center justify-between h-14 flex-row">
         {/* Menu Hamburger */}
         <button
           onClick={toggleSidebar}
           className="p-4 hover:bg-orange-100 rounded-lg transition-colors duration-200"
-          aria-label={isSidebarOpen ? "Fermer le menu" : "Ouvrir le menu"}
-        >
+          aria-label={isSidebarOpen ? "Fermer le menu" : "Ouvrir le menu"}>
           <Menu size={20} className="text-gray-800" />
-        </button>
+        </button> 
         {/* Espace flexible pour les petits écrans */}
         <div className="flex-1 md:hidden"></div>
 
@@ -89,33 +84,21 @@ export default function Header({
             className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
             title="Messages"
           >
-            <Image
-              src="/icons/header/mail.png"
-              alt="Mail"
-              width={24}
-              height={24}
-              className="text-gray-600 w-6 h-6"
-            />
+            <Image src="/icons/header/mail.png" alt="Mail" width={24} height={24} className="text-gray-600" />
             {/* Badge de notification pour les messages non lus */}
             {stats && stats.unread_messages > 0 && (
-              <span className="absolute z-[1] -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                {stats.unread_messages > 99 ? "99+" : stats.unread_messages}
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                {stats.unread_messages > 99 ? '99+' : stats.unread_messages}
               </span>
             )}
           </button>
 
           <button
-            className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
+            className="hidden md:block relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
             title="Paramètres"
             onClick={() => setShowEditProfile(true)}
           >
-            <Image
-              src="/icons/header/setting.png"
-              alt="Settings"
-              width={24}
-              height={24}
-              className="text-gray-600"
-            />
+            <Image src="/icons/header/setting.png" alt="Settings" width={24} height={24} className="text-gray-600" />
           </button>
 
           {/* Menu Utilisateur */}
@@ -126,32 +109,24 @@ export default function Header({
             >
               <div className="flex items-center">
                 <span className="text-sm text-gray-700">
-                  {!isClient ? "Utilisateur" : user?.fullname || "Utilisateur"}
+                  {!isClient ? 'Utilisateur' : (user?.fullname || 'Utilisateur')}
                 </span>
               </div>
               <div className="w-8 h-8 bg-gray-200 rounded-full cursor-pointer  overflow-hidden">
                 <Image
-                  src={
-                    formatImageUrl(user?.image || undefined) ||
-                    "/icons/header/default-avatar.png"
-                  }
-                  alt={
-                    !isClient ? "Utilisateur" : user?.fullname || "Utilisateur"
-                  }
+                  src={formatImageUrl(user?.image || undefined) || "/icons/header/default-avatar.png"}
+                  alt={!isClient ? "Utilisateur" : (user?.fullname || "Utilisateur")}
                   width={32}
                   height={32}
                   className="w-full h-full cursor-pointer  object-cover"
-                  unoptimized={
-                    !user?.image || user?.image?.startsWith("/icons/")
-                  }
+                  unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
                 />
               </div>
               <ChevronDown
                 size={16}
-                className={`text-gray-500 transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
               />
+
             </button>
 
             {/* Menu déroulant */}
@@ -169,32 +144,19 @@ export default function Header({
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
                         <Image
-                          src={
-                            formatImageUrl(user?.image || undefined) ||
-                            "/icons/header/default-avatar.png"
-                          }
-                          alt={
-                            !isClient
-                              ? "Utilisateur"
-                              : user?.fullname || "Utilisateur"
-                          }
+                          src={formatImageUrl(user?.image || undefined) || "/icons/header/default-avatar.png"}
+                          alt={!isClient ? "Utilisateur" : (user?.fullname || "Utilisateur")}
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
-                          unoptimized={
-                            !user?.image || user?.image?.startsWith("/icons/")
-                          }
+                          unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
                         />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          {!isClient
-                            ? "Utilisateur"
-                            : user?.fullname || "Utilisateur"}
+                          {!isClient ? 'Utilisateur' : (user?.fullname || 'Utilisateur')}
                         </p>
-                        <p className="text-sm text-gray-500 capitalize">
-                          Profil
-                        </p>
+                        <p className="text-sm text-gray-500 capitalize">Profil</p>
                       </div>
                     </div>
                   </div>
@@ -208,13 +170,7 @@ export default function Header({
                       }}
                       className="w-full flex items-center cursor-pointer space-x-3 px-3 py-2 text-left text-gray-700 hover:bg-orange-50 rounded-md transition-colors"
                     >
-                      <Image
-                        src="/icons/header/setting.png"
-                        alt="Profil"
-                        width={16}
-                        height={16}
-                        className="text-gray-500"
-                      />
+                      <Image src="/icons/header/setting.png" alt="Profil" width={16} height={16} className="text-gray-500" />
                       <span className="text-sm">Modifier le profil</span>
                     </button>
                     <button
@@ -237,32 +193,29 @@ export default function Header({
       {showEditProfile && user && (
         <EditMember
           existingMember={{
+        
             id: user.id,
             fullname: user.fullname,
             email: user.email,
             role: user.role,
-            type: user.type || "",
+            type: user.type || '',  
             image: user.image || undefined,
-            phone: user.phone || "",
-            address: user.address || "",
-
-            entity_status: user.entity_status as
-              | "NEW"
-              | "ACTIVE"
-              | "INACTIVE"
-              | "DELETED"
-              | undefined,
+            phone: user.phone || '',
+            address: user.address || '',
+           
+            entity_status: user.entity_status as 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED' | undefined,
             restaurant: user.restaurant_id || undefined,
             restaurant_id: user.restaurant_id || undefined,
             created_at: user.created_at,
             updated_at: user.updated_at,
             password_is_updated: user.password_is_updated,
+
           }}
           onCancel={() => setShowEditProfile(false)}
-          onSuccess={(updatedUserFromEdit) => {
+          onSuccess={(updatedUserFromEdit) => {  
             setShowEditProfile(false);
-
-            useAuthStore.getState().setUser(updatedUserFromEdit as User);
+         
+            useAuthStore.getState().setUser(updatedUserFromEdit as User); 
           }}
         />
       )}
