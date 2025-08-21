@@ -94,7 +94,7 @@ export default function Header({
               alt="Mail"
               width={24}
               height={24}
-              className="text-gray-600 w-6 h-6"
+              className="text-gray-600"
             />
             {/* Badge de notification pour les messages non lus */}
             {stats && stats.unread_messages > 0 && (
