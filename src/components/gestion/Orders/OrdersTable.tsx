@@ -573,7 +573,7 @@ export function OrdersTable({
   }
 
   return (
-   <div className="min-w-full bg-white min-h-screen border border-slate-300 p-3 rounded-xl overflow-auto">
+   <div className="min-w-full bg-white min-h-screen border border-slate-300 p-2 rounded-xl overflow-auto">
   {/* Composant de filtres */}
   <OrderFilters
     activeFilter={activeFilter || "all"}
