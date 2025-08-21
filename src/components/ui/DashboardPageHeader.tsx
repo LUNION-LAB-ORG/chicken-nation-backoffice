@@ -110,7 +110,7 @@ const DashboardPageHeader = ({
     if (actions.length === 0) return null
 
     return (
-      <div className="flex mt-4 flex-col sm:flex-row gap-2 w-full sm:w-auto ">
+      <div className="flex mt-4 flex-col sm:flex-row  gap-2 w-full sm:w-auto ">
         {actions.map((action, index) => {
           // Si customComponent est fourni, l'utiliser à la place du bouton par défaut
           if (action.customComponent) {
