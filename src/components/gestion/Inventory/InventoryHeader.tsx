@@ -15,7 +15,7 @@ export default function InventoryHeader({ onCreateCategory }: InventoryHeaderPro
   const canAddCategory = canCreateCategory()
 
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between  mb-4">
       <div className="flex items-center gap-4">
         <div className="bg-white rounded-[10px] shadow-sm">
           <button type="button" className="text-[#F17922] text-[13px] font-medium px-4 py-2 hover:bg-orange-50">
