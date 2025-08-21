@@ -1,25 +1,27 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useAuthStore } from '@/store/authStore'
-import { Notification } from '@/services/notificationService'
-import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
-import NotificationModal from './NotificationModal'
-import { useNotificationsQuery } from '@/hooks/useNotificationsQuery'
-import { useNotificationStatsQuery } from '@/hooks/useNotificationStatsQuery'
-
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useAuthStore } from "@/store/authStore";
+import { Notification } from "@/services/notificationService";
+import { formatDistanceToNow } from "date-fns";
+import { fr } from "date-fns/locale";
+import NotificationModal from "./NotificationModal";
+import { useNotificationsQuery } from "@/hooks/useNotificationsQuery";
+import { useNotificationStatsQuery } from "@/hooks/useNotificationStatsQuery";
 
 interface NotificationDropdownProps {
-  className?: string
+  className?: string;
 }
 
-const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className = '' }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const { user } = useAuthStore()
+const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
+  className = "",
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] =
+    useState<Notification | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuthStore();
   // ✅ Plus besoin de restaurantName - le backend gère le filtrage
 
   // ✅ TanStack Query pour les notifications
@@ -36,135 +38,140 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
     markAllAsRead,
     deleteNotification,
   } = useNotificationsQuery({
-    userId: user?.id || '',
-    userRole: user?.role,
-    enabled: !!user?.id
+    user: user!,
+    enabled: !!user?.id,
   });
 
   // ✅ TanStack Query pour les stats
   const { data: stats } = useNotificationStatsQuery({
-    userId: user?.id || '',
-    enabled: !!user?.id
+    userId: user?.id || "",
+    enabled: !!user?.id,
   });
 
   // Fermer le dropdown quand on clique à l'extérieur
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
- 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // ✅ Filtrage côté client pour sécurité supplémentaire
   const filteredNotifications = useMemo(() => {
-    if (!Array.isArray(notifications)) return []
-    
+    if (!Array.isArray(notifications)) return [];
+
     // ✅ IMPORTANT : Exclure définitivement les notifications de type CUSTOMER
-    return notifications.filter(notification => 
-      notification.target !== 'CUSTOMER'
-    )
-  }, [notifications])
-
-
+    return notifications.filter(
+      (notification) => notification.target !== "CUSTOMER"
+    );
+  }, [notifications]);
 
   // ✅ Calculer le nombre de notifications non lues après filtrage
   const filteredUnreadCount = useMemo(() => {
-    return filteredNotifications.filter(n => !n.is_read).length;
-  }, [filteredNotifications])
+    return filteredNotifications.filter((n) => !n.is_read).length;
+  }, [filteredNotifications]);
 
   const handleNotificationClick = async (notification: Notification) => {
-    setSelectedNotification(notification)
-    setIsModalOpen(true)
-    setIsOpen(false) // Fermer le dropdown
-  }
+    setSelectedNotification(notification);
+    setIsModalOpen(true);
+    setIsOpen(false); // Fermer le dropdown
+  };
 
   // Récupérer la notification live du store pour le modal
   const liveNotification = selectedNotification
-    ? notifications.find(n => n.id === selectedNotification.id) || selectedNotification
-    : null
+    ? notifications.find((n) => n.id === selectedNotification.id) ||
+      selectedNotification
+    : null;
 
   const handleMarkAllAsRead = async () => {
-    markAllAsRead()
-  }
+    markAllAsRead();
+  };
 
   // ✅ Charger plus de notifications (pour ADMIN)
   const handleLoadMore = async () => {
-    fetchNextPage()
-  }
+    fetchNextPage();
+  };
 
-  const handleDeleteNotification = async (notificationId: string, event: React.MouseEvent) => {
-    event.stopPropagation()
-    await deleteNotification(notificationId)
-  }
+  const handleDeleteNotification = async (
+    notificationId: string,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
+    await deleteNotification(notificationId);
+  };
 
   const handleModalMarkAsRead = async (notificationId: string) => {
-    await markAsRead(notificationId)
-  }
+    await markAsRead(notificationId);
+  };
 
   const handleModalMarkAsUnread = async (notificationId: string) => {
-    await markAsUnread(notificationId)
-  }
+    await markAsUnread(notificationId);
+  };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false)
-    setSelectedNotification(null)
-  }
+    setIsModalOpen(false);
+    setSelectedNotification(null);
+  };
 
-  const handleToggleNotificationRead = async (notification: Notification, event: React.MouseEvent) => {
-    event.stopPropagation()
+  const handleToggleNotificationRead = async (
+    notification: Notification,
+    event: React.MouseEvent
+  ) => {
+    event.stopPropagation();
     if (notification.is_read) {
-      await markAsUnread(notification.id)
+      await markAsUnread(notification.id);
     } else {
-      await markAsRead(notification.id)
+      await markAsRead(notification.id);
     }
-  }
+  };
 
-  const getNotificationIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: Notification["type"]) => {
     switch (type.toUpperCase()) {
-      case 'ORDER':
-        return '🛒'
-      case 'PAYMENT':
-        return '💳'
-      case 'DELIVERY':
-        return '🚚'
-      case 'PROMOTION':
-        return '🎉'
+      case "ORDER":
+        return "🛒";
+      case "PAYMENT":
+        return "💳";
+      case "DELIVERY":
+        return "🚚";
+      case "PROMOTION":
+        return "🎉";
       default:
-        return '📢'
+        return "📢";
     }
-  }
+  };
 
-  const getNotificationColor = (type: Notification['type']) => {
+  const getNotificationColor = (type: Notification["type"]) => {
     switch (type.toUpperCase()) {
-      case 'ORDER':
-        return 'text-green-600'
-      case 'PAYMENT':
-        return 'text-blue-600'
-      case 'DELIVERY':
-        return 'text-orange-600'
-      case 'PROMOTION':
-        return 'text-purple-600'
+      case "ORDER":
+        return "text-green-600";
+      case "PAYMENT":
+        return "text-blue-600";
+      case "DELIVERY":
+        return "text-orange-600";
+      case "PROMOTION":
+        return "text-purple-600";
       default:
-        return 'text-gray-600'
+        return "text-gray-600";
     }
-  }
+  };
 
   const formatNotificationTime = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), {
         addSuffix: true,
-        locale: fr
-      })
+        locale: fr,
+      });
     } catch {
-      return 'Il y a quelques instants'
+      return "Il y a quelques instants";
     }
-  }
+  };
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
@@ -192,7 +199,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
         {/* Badge de notifications non lues (filtrées selon les permissions) */}
         {filteredUnreadCount > 0 && (
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-            {filteredUnreadCount > 99 ? '99+' : filteredUnreadCount}
+            {filteredUnreadCount > 99 ? "99+" : filteredUnreadCount}
           </span>
         )}
       </button>
@@ -202,7 +209,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
         <div className="absolute left-1/2 md:right-0 md:left-auto mt-2 w-[calc(100vw-1rem)] md:w-80 max-w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 transform -translate-x-1/4 md:translate-x-0">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Notifications
+            </h3>
             {stats && stats.unread > 0 && (
               <button
                 type="button"
@@ -223,9 +232,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
               </div>
             ) : error ? (
               <div className="p-4 text-center">
-                <p className="text-sm text-red-600">{error.message || 'Une erreur est survenue'}</p>
+                <p className="text-sm text-red-600">
+                  {error.message || "Une erreur est survenue"}
+                </p>
               </div>
-            ) : !Array.isArray(filteredNotifications) || filteredNotifications.length === 0 ? (
+            ) : !Array.isArray(filteredNotifications) ||
+              filteredNotifications.length === 0 ? (
               <div className="p-4 text-center">
                 <p className="text-sm text-gray-500">Aucune notification</p>
               </div>
@@ -236,15 +248,21 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
                     className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      !notification.is_read ? 'bg-orange-50' : ''
+                      !notification.is_read ? "bg-orange-50" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-lg">{getNotificationIcon(notification.type)}</span>
+                          <span className="text-lg">
+                            {getNotificationIcon(notification.type)}
+                          </span>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-medium ${getNotificationColor(notification.type)}`}>
+                            <p
+                              className={`text-sm font-medium ${getNotificationColor(
+                                notification.type
+                              )}`}
+                            >
                               {notification.title}
                             </p>
                           </div>
@@ -263,27 +281,47 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
                         {/* Bouton marquer comme lu/non lu */}
                         <button
                           type="button"
-                          onClick={(e) => handleToggleNotificationRead(notification, e)}
+                          onClick={(e) =>
+                            handleToggleNotificationRead(notification, e)
+                          }
                           className={`p-1 rounded-full transition-colors ${
                             notification.is_read
-                              ? 'text-gray-400 hover:text-orange-500'
-                              : 'text-orange-500 hover:text-orange-600'
+                              ? "text-gray-400 hover:text-orange-500"
+                              : "text-orange-500 hover:text-orange-600"
                           }`}
-                          title={notification.is_read ? 'Marquer comme non lue' : 'Marquer comme lue'}
+                          title={
+                            notification.is_read
+                              ? "Marquer comme non lue"
+                              : "Marquer comme lue"
+                          }
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
-                            <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                            <path
+                              fillRule="evenodd"
+                              d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </button>
                         {/* Bouton supprimer */}
                         <button
                           type="button"
-                          onClick={(e) => handleDeleteNotification(notification.id, e)}
+                          onClick={(e) =>
+                            handleDeleteNotification(notification.id, e)
+                          }
                           className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                           title="Supprimer la notification"
                         >
-                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-4 h-4"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path
                               fillRule="evenodd"
                               d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
@@ -300,7 +338,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
           </div>
 
           {/* Footer */}
-          {user?.role === 'ADMIN' && hasNextPage && (
+          {user?.role === "ADMIN" && hasNextPage && (
             <div className="px-4 py-3 border-t border-gray-200 text-center">
               <button
                 type="button"
@@ -308,7 +346,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
                 disabled={isFetchingNextPage}
                 className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isFetchingNextPage ? 'Chargement...' : 'Charger plus de notifications'}
+                {isFetchingNextPage
+                  ? "Chargement..."
+                  : "Charger plus de notifications"}
               </button>
             </div>
           )}
@@ -324,7 +364,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ className =
         onMarkAsUnread={handleModalMarkAsUnread}
       />
     </div>
-  )
-}
+  );
+};
 
-export default NotificationDropdown
+export default NotificationDropdown;

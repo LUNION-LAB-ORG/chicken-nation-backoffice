@@ -7,13 +7,13 @@ import { getOrders } from '@/services/orderService';
 interface UsePendingOrdersSoundParams {
   activeFilter: string;
   selectedRestaurant?: string;
-  enabled: boolean; // Pour permettre d'activer/désactiver le son
+  disabledSound: boolean; // Pour permettre d'activer/désactiver le son
 }
 
-export const usePendingOrdersSound = ({ 
-  activeFilter, 
-  selectedRestaurant, 
-  enabled 
+export const usePendingOrdersSound = ({
+  activeFilter,
+  selectedRestaurant,
+  disabledSound,
 }: UsePendingOrdersSoundParams) => {
   const { user } = useAuthStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -27,7 +27,7 @@ export const usePendingOrdersSound = ({
 
   // ✅ Vérifier les commandes PENDING existantes au démarrage
   useEffect(() => {
-    if (!enabled || !canPlaySound) return;
+    if (!canPlaySound) return;
 
     const checkExistingPendingOrders = async () => {
       try {
@@ -36,9 +36,8 @@ export const usePendingOrdersSound = ({
           restaurantId: selectedRestaurant || undefined,
           limit: 1 // On a juste besoin de savoir s'il y en a
         });
-        
+
         if (response.data.length > 0) {
-          console.log(`[usePendingOrdersSound] ${response.data.length} commande(s) PENDING détectée(s)`);
           setHasPendingOrders(true);
         }
       } catch (error) {
@@ -47,31 +46,27 @@ export const usePendingOrdersSound = ({
     };
 
     checkExistingPendingOrders();
-  }, [enabled, canPlaySound, selectedRestaurant]);
+  }, [canPlaySound, selectedRestaurant]);
 
   // ✅ WebSocket pour écouter les nouvelles commandes PENDING
   useEffect(() => {
-    if (!enabled || !canPlaySound) return;
+    if (!canPlaySound) return;
 
     socketRef.current = io(SOCKET_URL);
-    
+
     const handleNewPendingOrder = (orderData: any) => {
-      console.log('[WebSocket] Nouvelle commande PENDING reçue:', orderData);
-      
       // Vérifier si c'est une commande PENDING
       if (orderData?.status === 'PENDING') {
         // Filtrer par restaurant si nécessaire
         if (selectedRestaurant && orderData.restaurant_id !== selectedRestaurant) {
           return;
         }
-        
+
         setHasPendingOrders(true);
       }
     };
 
     const handleOrderStatusChange = async (orderData: any) => {
-      console.log('[WebSocket] Changement de statut de commande:', orderData);
-      
       // Si une commande PENDING change de statut, vérifier s'il en reste
       if (orderData?.oldStatus === 'PENDING' && orderData?.newStatus !== 'PENDING') {
         try {
@@ -80,9 +75,8 @@ export const usePendingOrdersSound = ({
             restaurantId: selectedRestaurant || undefined,
             limit: 1
           });
-          
+
           if (response.data.length === 0) {
-            console.log('[WebSocket] Plus de commandes PENDING - arrêt du son');
             setHasPendingOrders(false);
           }
         } catch (error) {
@@ -105,11 +99,11 @@ export const usePendingOrdersSound = ({
         socketRef.current = null;
       }
     };
-  }, [enabled, canPlaySound, selectedRestaurant]);
+  }, [canPlaySound, selectedRestaurant]);
 
   // Initialiser l'audio
   useEffect(() => {
-    if (enabled && canPlaySound) {
+    if (!disabledSound && canPlaySound) {
       audioRef.current = new Audio("/musics/pending-order.mp3");
       audioRef.current.load();
       audioRef.current.loop = false; // On gérera la boucle manuellement
@@ -125,16 +119,16 @@ export const usePendingOrdersSound = ({
         intervalRef.current = null;
       }
     };
-  }, [enabled, canPlaySound]);
+  }, [disabledSound, canPlaySound]);
 
   // Fonction pour jouer le son en continu
   const startContinuousSound = () => {
-    if (!audioRef.current || !enabled || !canPlaySound || isPlaying) return;
+    if (!audioRef.current || disabledSound || !canPlaySound || isPlaying) return;
 
     setIsPlaying(true);
-    
+
     const playSound = () => {
-      if (audioRef.current && enabled && canPlaySound) {
+      if (audioRef.current && !disabledSound && canPlaySound) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch((error) => {
           console.error("Erreur de lecture audio pour commandes en attente", error);
@@ -164,7 +158,7 @@ export const usePendingOrdersSound = ({
 
   // ✅ Jouer le son quand il y a des commandes PENDING (basé sur WebSocket)
   useEffect(() => {
-    if (!enabled || !canPlaySound) return;
+    if (!disabledSound && !canPlaySound) return;
 
     if (hasPendingOrders && !isPlaying) {
       // Il y a des commandes en attente et le son ne joue pas -> démarrer
@@ -173,7 +167,7 @@ export const usePendingOrdersSound = ({
       // Plus de commandes en attente et le son joue -> arrêter
       stopContinuousSound();
     }
-  }, [hasPendingOrders, isPlaying, enabled, canPlaySound]);
+  }, [hasPendingOrders, isPlaying, disabledSound, canPlaySound]);
 
   // Cleanup global
   useEffect(() => {
@@ -185,7 +179,7 @@ export const usePendingOrdersSound = ({
   return {
     hasPendingOrders,
     isPlaying,
-    pendingOrdersCount: hasPendingOrders ? 1 : 0,  
+    pendingOrdersCount: hasPendingOrders ? 1 : 0,
     startSound: startContinuousSound,
     stopSound: stopContinuousSound
   };

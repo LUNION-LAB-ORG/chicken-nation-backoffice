@@ -8,10 +8,11 @@ import { NotificationAPI, Notification } from "@/services/notificationService";
 import { useEffect, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../../socket";
+import { usePendingOrdersSound } from "./usePendingOrdersSound";
+import { User } from '@/types/auth';
 
 interface UseNotificationsQueryProps {
-  userId: string;
-  userRole?: string;
+  user: User;
   enabled: boolean;
 }
 
@@ -44,8 +45,7 @@ interface UseNotificationsQueryReturn {
 }
 
 export const useNotificationsQuery = ({
-  userId,
-  userRole,
+  user,
   enabled,
 }: UseNotificationsQueryProps): UseNotificationsQueryReturn => {
   const queryClient = useQueryClient();
@@ -58,6 +58,15 @@ export const useNotificationsQuery = ({
       audioRef.current = null;
     };
   }, []);
+
+  // ✅ Hook pour le son continu des commandes en attente
+  const { hasPendingOrders, isPlaying, pendingOrdersCount } =
+    usePendingOrdersSound({
+      activeFilter: "nouvelle", // Utiliser 'nouvelle' pour les commandes PENDING
+      selectedRestaurant: user?.restaurant_id || undefined,
+      disabledSound: false, // Toujours activé pour l'instant
+    });
+
   // ✅ Query pour récupérer les notifications avec pagination infinie
   const {
     data,
@@ -68,9 +77,9 @@ export const useNotificationsQuery = ({
     error,
     refetch,
   } = useInfiniteQuery<NotificationPage>({
-    queryKey: ["notifications", userId, userRole],
+    queryKey: ["notifications", user.id],
     queryFn: async ({ pageParam = 1 }) => {
-      return NotificationAPI.getUserNotifications(userId, {
+      return NotificationAPI.getUserNotifications(user.id, {
         page: pageParam as number,
       });
     },
@@ -102,10 +111,10 @@ export const useNotificationsQuery = ({
     });
     const handleNewNotification = () => {
       queryClient.invalidateQueries({
-        queryKey: ["notifications", userId, userRole],
+        queryKey: ["notifications", user.id],
       });
       queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
+        queryKey: ["notification-stats", user.id],
       });
 
       // Jouer le son de notification
@@ -122,7 +131,7 @@ export const useNotificationsQuery = ({
     return () => {
       socket.off("notification:new", handleNewNotification);
     };
-  }, [queryClient, userId, userRole]);
+  }, [queryClient, user]);
 
   // ✅ Mutation pour marquer comme lu (optimiste)
   const markAsReadMutation = useMutation({
@@ -130,16 +139,16 @@ export const useNotificationsQuery = ({
       NotificationAPI.markAsRead(notificationId),
     onMutate: async (notificationId) => {
       await queryClient.cancelQueries({
-        queryKey: ["notifications", userId, userRole],
+        queryKey: ["notifications", user.id],
       });
 
       const previousNotifications = queryClient.getQueryData<
         InfiniteData<NotificationPage>
-      >(["notifications", userId, userRole]);
+      >(["notifications", user.id]);
 
       if (previousNotifications) {
         queryClient.setQueryData<InfiniteData<NotificationPage>>(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           {
             ...previousNotifications,
             pages: previousNotifications.pages.map((page) => ({
@@ -159,14 +168,14 @@ export const useNotificationsQuery = ({
     onError: (err, _, context) => {
       if (context?.previousNotifications) {
         queryClient.setQueryData(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           context.previousNotifications
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
+        queryKey: ["notification-stats", user.id],
       });
     },
   });
@@ -178,16 +187,16 @@ export const useNotificationsQuery = ({
       NotificationAPI.markAsUnread(notificationId),
     onMutate: async (notificationId) => {
       await queryClient.cancelQueries({
-        queryKey: ["notifications", userId, userRole],
+        queryKey: ["notifications", user.id],
       });
 
       const previousNotifications = queryClient.getQueryData<
         InfiniteData<NotificationPage>
-      >(["notifications", userId, userRole]);
+      >(["notifications", user.id]);
 
       if (previousNotifications) {
         queryClient.setQueryData<InfiniteData<NotificationPage>>(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           {
             ...previousNotifications,
             pages: previousNotifications.pages.map((page) => ({
@@ -207,33 +216,33 @@ export const useNotificationsQuery = ({
     onError: (err, _, context) => {
       if (context?.previousNotifications) {
         queryClient.setQueryData(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           context.previousNotifications
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
+        queryKey: ["notification-stats", user.id],
       });
     },
   });
 
   // ✅ Mutation pour marquer toutes comme lues (optimiste)
   const markAllAsReadMutation = useMutation({
-    mutationFn: () => NotificationAPI.markAllAsRead(userId),
+    mutationFn: () => NotificationAPI.markAllAsRead(user.id),
     onMutate: async () => {
       await queryClient.cancelQueries({
-        queryKey: ["notifications", userId, userRole],
+        queryKey: ["notifications", user.id],
       });
 
       const previousNotifications = queryClient.getQueryData<
         InfiniteData<NotificationPage>
-      >(["notifications", userId, userRole]);
+      >(["notifications", user.id]);
 
       if (previousNotifications) {
         queryClient.setQueryData<InfiniteData<NotificationPage>>(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           {
             ...previousNotifications,
             pages: previousNotifications.pages.map((page) => ({
@@ -252,14 +261,14 @@ export const useNotificationsQuery = ({
     onError: (err, _, context) => {
       if (context?.previousNotifications) {
         queryClient.setQueryData(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           context.previousNotifications
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
+        queryKey: ["notification-stats", user.id],
       });
     },
   });
@@ -270,16 +279,16 @@ export const useNotificationsQuery = ({
       NotificationAPI.deleteNotification(notificationId),
     onMutate: async (notificationId) => {
       await queryClient.cancelQueries({
-        queryKey: ["notifications", userId, userRole],
+        queryKey: ["notifications", user.id],
       });
 
       const previousNotifications = queryClient.getQueryData<
         InfiniteData<NotificationPage>
-      >(["notifications", userId, userRole]);
+      >(["notifications", user.id]);
 
       if (previousNotifications) {
         queryClient.setQueryData<InfiniteData<NotificationPage>>(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           {
             ...previousNotifications,
             pages: previousNotifications.pages.map((page) => ({
@@ -297,14 +306,14 @@ export const useNotificationsQuery = ({
     onError: (err, _, context) => {
       if (context?.previousNotifications) {
         queryClient.setQueryData(
-          ["notifications", userId, userRole],
+          ["notifications", user.id],
           context.previousNotifications
         );
       }
     },
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
+        queryKey: ["notification-stats", user.id],
       });
     },
   });
