@@ -94,6 +94,7 @@ export interface ApiOrderRaw {
     amount?: number;
     price?: number;
     quantity?: number;
+    epice?: boolean;
     dish?: {
       id: string;
       name: string;
