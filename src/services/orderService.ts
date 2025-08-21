@@ -137,7 +137,7 @@ export interface PaginatedResponse<T> {
 
 // Fonction pour récupérer les commandes avec filtres
 export async function getOrders(params: OrderQuery = {}): Promise<PaginatedResponse<ApiOrderRaw>> {
- 
+
   const {
     page = 1,
     limit = 10,
@@ -177,8 +177,8 @@ export async function getOrders(params: OrderQuery = {}): Promise<PaginatedRespo
 
   try {
     const token = getAuthToken();
- 
-    
+
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -188,7 +188,7 @@ export async function getOrders(params: OrderQuery = {}): Promise<PaginatedRespo
       },
     });
 
-   
+
     // Gérer spécifiquement l'erreur 404
     if (response.status === 404) {
       return { data: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 12, totalPages: 0, currentPage: 1 } };
@@ -199,7 +199,7 @@ export async function getOrders(params: OrderQuery = {}): Promise<PaginatedRespo
     }
 
     const data = await response.json();
-    
+
     return data;
   } catch (error) {
     throw error;
@@ -210,16 +210,16 @@ export async function getOrders(params: OrderQuery = {}): Promise<PaginatedRespo
 export async function getOrderById(id: string): Promise<ApiOrderRaw> {
   if (!id) throw new Error('ID commande manquant');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
-  
+
   try {
     const token = getAuthToken();
-    
+
     if (!token) {
       throw new Error('Authentication required');
     }
 
     const response = await fetch(url, {
-      headers: { 
+      headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -231,8 +231,8 @@ export async function getOrderById(id: string): Promise<ApiOrderRaw> {
     }
 
     const data = await response.json();
-    
-  
+
+
     // Enrichir les données si nécessaire
     if (data) {
       // S'assurer que les informations client sont disponibles
@@ -245,7 +245,7 @@ export async function getOrderById(id: string): Promise<ApiOrderRaw> {
           phone: data.phone || ''
         };
       }
-      
+
       // S'assurer que les informations de prix sont disponibles
       if (data.order_items && Array.isArray(data.order_items) && data.order_items.length > 0) {
         // Calculer le total si non disponible
@@ -323,7 +323,7 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
 export async function deleteOrder(id: string): Promise<void> {
   if (!id) throw new Error('ID commande manquant');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
-   
+
 
   try {
     const token = getAuthToken();
@@ -331,7 +331,7 @@ export async function deleteOrder(id: string): Promise<void> {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
- 
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
@@ -344,8 +344,8 @@ export async function deleteOrder(id: string): Promise<void> {
 export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promise<ApiOrderRaw> {
   if (!id || !data) throw new Error('ID ou données manquantes');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
-  
- 
+
+
 
   try {
     const token = getAuthToken();
@@ -358,7 +358,7 @@ export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promi
       body: JSON.stringify(data),
     });
 
-  
+
 
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
@@ -370,4 +370,3 @@ export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promi
     throw error;
   }
 }
- 

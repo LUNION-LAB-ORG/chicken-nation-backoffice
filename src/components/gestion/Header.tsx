@@ -98,14 +98,14 @@ export default function Header({
             />
             {/* Badge de notification pour les messages non lus */}
             {stats && stats.unread_messages > 0 && (
-              <span className="absolute z-[1] -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                 {stats.unread_messages > 99 ? "99+" : stats.unread_messages}
               </span>
             )}
           </button>
 
           <button
-            className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
+            className="hidden md:block relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
             title="Paramètres"
             onClick={() => setShowEditProfile(true)}
           >

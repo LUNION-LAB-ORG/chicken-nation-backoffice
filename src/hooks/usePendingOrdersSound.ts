@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../../socket';
+import { getOrders } from '@/services/orderService';
 
 interface UsePendingOrdersSoundParams {
   activeFilter: string;
@@ -24,6 +25,30 @@ export const usePendingOrdersSound = ({
   // ✅ Vérifier si l'utilisateur peut entendre les sons (exclure ADMIN et MARKETING)
   const canPlaySound = user && !['ADMIN', 'MARKETING'].includes(user.role?.toUpperCase());
 
+  // ✅ Vérifier les commandes PENDING existantes au démarrage
+  useEffect(() => {
+    if (!enabled || !canPlaySound) return;
+
+    const checkExistingPendingOrders = async () => {
+      try {
+        const response = await getOrders({
+          status: 'PENDING',
+          restaurantId: selectedRestaurant || undefined,
+          limit: 1 // On a juste besoin de savoir s'il y en a
+        });
+        
+        if (response.data.length > 0) {
+          console.log(`[usePendingOrdersSound] ${response.data.length} commande(s) PENDING détectée(s)`);
+          setHasPendingOrders(true);
+        }
+      } catch (error) {
+        console.error('[usePendingOrdersSound] Erreur lors de la vérification des commandes PENDING:', error);
+      }
+    };
+
+    checkExistingPendingOrders();
+  }, [enabled, canPlaySound, selectedRestaurant]);
+
   // ✅ WebSocket pour écouter les nouvelles commandes PENDING
   useEffect(() => {
     if (!enabled || !canPlaySound) return;
@@ -44,14 +69,27 @@ export const usePendingOrdersSound = ({
       }
     };
 
-    const handleOrderStatusChange = (orderData: any) => {
+    const handleOrderStatusChange = async (orderData: any) => {
       console.log('[WebSocket] Changement de statut de commande:', orderData);
       
-      // Si une commande PENDING change de statut, on vérifie s'il en reste
+      // Si une commande PENDING change de statut, vérifier s'il en reste
       if (orderData?.oldStatus === 'PENDING' && orderData?.newStatus !== 'PENDING') {
-        // On pourrait faire une vérification plus précise ici
-        // Pour simplifier, on assume qu'il n'y a plus de commandes PENDING
-        setHasPendingOrders(false);
+        try {
+          const response = await getOrders({
+            status: 'PENDING',
+            restaurantId: selectedRestaurant || undefined,
+            limit: 1
+          });
+          
+          if (response.data.length === 0) {
+            console.log('[WebSocket] Plus de commandes PENDING - arrêt du son');
+            setHasPendingOrders(false);
+          }
+        } catch (error) {
+          console.error('[WebSocket] Erreur lors de la vérification des commandes PENDING restantes:', error);
+          // En cas d'erreur, on arrête le son par précaution
+          setHasPendingOrders(false);
+        }
       }
     };
 
@@ -147,7 +185,7 @@ export const usePendingOrdersSound = ({
   return {
     hasPendingOrders,
     isPlaying,
-    pendingOrdersCount: hasPendingOrders ? 1 : 0, // Approximation basée sur l'état WebSocket
+    pendingOrdersCount: hasPendingOrders ? 1 : 0,  
     startSound: startContinuousSound,
     stopSound: stopContinuousSound
   };

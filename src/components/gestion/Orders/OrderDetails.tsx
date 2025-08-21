@@ -9,7 +9,7 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
-import { OrderData } from "@/app/order/[id]/types";
+import { OrderData } from "./types";
 
 const getPaymentStatus = (orderDetails: any): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement

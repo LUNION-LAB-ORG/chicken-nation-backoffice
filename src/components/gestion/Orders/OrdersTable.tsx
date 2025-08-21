@@ -83,6 +83,7 @@ export interface Order {
     status?: string;
     amount?: number;
   }>;
+
   // Notes
   notes?: string;
   specialInstructions?: string;
@@ -573,98 +574,122 @@ export function OrdersTable({
   }
 
   return (
-   <div className="min-w-full bg-white min-h-screen border border-slate-300 p-2 rounded-xl overflow-auto">
-  {/* Composant de filtres */}
-  <OrderFilters
-    activeFilter={activeFilter || "all"}
-    onFilterChange={handleFilterChange}
-    selectedDate={selectedDate || null}
-    onDateChange={handleDateChange}
-  />
+    <div className="min-w-full bg-white min-h-screen border border-slate-300 p-2 rounded-xl overflow-auto">
+      {/* Composant de filtres */}
+      <OrderFilters
+        activeFilter={activeFilter || "all"}
+        onFilterChange={handleFilterChange}
+        selectedDate={selectedDate || null}
+        onDateChange={handleDateChange}
+      />
 
-  {/* Liste des commandes */}
-  <div className="min-w-full mt-4">
-    {/* Version mobile / tablette */}
-    <div className="md:hidden px-2 space-y-3 overflow-x-auto">
-      {ordersToDisplay.map((order) => (
-        <OrderRow
-          key={order.id}
-          order={order}
-          isSelected={selectedOrders.includes(order.id)}
-          onSelect={canDeleteCommande() || canUpdateCommande()
-            ? (orderId, checked) => handleSelectOrder(orderId, checked)
-            : undefined}
-          onAccept={canAcceptCommande() ? handleAcceptOrder : undefined}
-          onReject={canRejectCommande() ? handleRejectOrder : undefined}
-          onViewDetails={handleViewOrderDetails}
-          onHideFromList={canDeleteCommande() ? handleHideOrder : undefined}
-          onRemoveFromList={canDeleteCommande() ? handleRemoveOrder : undefined}
-          isMobile={true}
-          showActionsColumn={hasAnyActionPermission}
-          paymentStatus={getPaymentStatus(order)}
-        />
-      ))}
-    </div>
-
-    {/* Version desktop */}
-    <div className="hidden md:block overflow-x-auto">
-      <div className="min-w-[1200px]">
-        <table className="min-w-full">
-          <TableHeader
-            onSelectAll={canDeleteCommande() || canUpdateCommande() ? handleSelectAll : undefined}
-            isAllSelected={selectedOrders.length > 0 && selectedOrders.length === ordersToDisplay.length}
-            showRestaurantColumn={currentUser?.role === "ADMIN"}
-            showActionsColumn={hasAnyActionPermission}
-          />
-          <tbody>
-            {ordersToDisplay.map((order) => (
-              <OrderRow
-                key={order.id}
-                order={order}
-                isSelected={selectedOrders.includes(order.id)}
-                onSelect={canDeleteCommande() || canUpdateCommande()
+      <div className="min-w-full mt-4">
+        {/* Version mobile */}
+        <div className="md:hidden px-2 space-y-3 overflow-x-auto">
+          {ordersToDisplay.map((order) => (
+            <OrderRow
+              key={order.id}
+              order={order}
+              isSelected={selectedOrders.includes(order.id)}
+              onSelect={
+                canDeleteCommande() || canUpdateCommande()
                   ? (orderId, checked) => handleSelectOrder(orderId, checked)
-                  : undefined}
-                onAccept={canAcceptCommande() ? handleAcceptOrder : undefined}
-                onReject={canRejectCommande() ? handleRejectOrder : undefined}
-                onViewDetails={handleViewOrderDetails}
-                onHideFromList={canDeleteCommande() ? handleHideOrder : undefined}
-                onRemoveFromList={canDeleteCommande() ? handleRemoveOrder : undefined}
-                showRestaurantColumn={currentUser?.role === "ADMIN"}
-                showActionsColumn={hasAnyActionPermission}
-                paymentStatus={getPaymentStatus(order)}
+                  : undefined
+              }
+              onAccept={canAcceptCommande() ? handleAcceptOrder : undefined}
+              onReject={canRejectCommande() ? handleRejectOrder : undefined}
+              onViewDetails={handleViewOrderDetails}
+              onHideFromList={canDeleteCommande() ? handleHideOrder : undefined}
+              onRemoveFromList={
+                canDeleteCommande() ? handleRemoveOrder : undefined
+              }
+              isMobile={true}
+              showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
+              paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
+            />
+          ))}
+        </div>
+
+        {/* Version desktop */}
+        <div className="hidden md:block overflow-x-auto">
+          <div className="min-w-[1200px]">
+            {" "}
+            {/* Largeur minimale pour assurer le scroll */}
+            <table className="min-w-full">
+              <TableHeader
+                onSelectAll={
+                  canDeleteCommande() || canUpdateCommande()
+                    ? handleSelectAll
+                    : undefined
+                }
+                isAllSelected={
+                  selectedOrders.length > 0 &&
+                  selectedOrders.length === ordersToDisplay.length
+                }
+                showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
+                showActionsColumn={hasAnyActionPermission} // ✅ Cacher colonne Actions si aucune permission
               />
-            ))}
-          </tbody>
-        </table>
+              <tbody>
+                {ordersToDisplay.map((order) => (
+                  <OrderRow
+                    key={order.id}
+                    order={order}
+                    isSelected={selectedOrders.includes(order.id)}
+                    onSelect={
+                      canDeleteCommande() || canUpdateCommande()
+                        ? (orderId, checked) =>
+                            handleSelectOrder(orderId, checked)
+                        : undefined
+                    }
+                    onAccept={
+                      canAcceptCommande() ? handleAcceptOrder : undefined
+                    }
+                    onReject={
+                      canRejectCommande() ? handleRejectOrder : undefined
+                    }
+                    onViewDetails={handleViewOrderDetails}
+                    onHideFromList={
+                      canDeleteCommande() ? handleHideOrder : undefined
+                    }
+                    onRemoveFromList={
+                      canDeleteCommande() ? handleRemoveOrder : undefined
+                    }
+                    showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
+                    showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
+                    paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {/* ✅ Informations de pagination et statistiques */}
+      <div className="flex flex-col items-center py-4 px-2 space-y-2">
+        {/* Statistiques avec indicateur de chargement */}
+        <div className="text-sm text-gray-600 flex items-center gap-2">
+          {!isLoading && totalItems > 0 && (
+            <span className="text-xs">
+              {totalItems} commande{totalItems > 1 ? "s" : ""} au total
+            </span>
+          )}
+
+          {isLoading && (
+            <div className="flex items-center gap-1 text-orange-500">
+              <div className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs">Chargement...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination - Toujours affichée, même avec 1 seule page */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.max(1, totalPages)}
+          onPageChange={handlePageChange}
+          isLoading={isLoading}
+        />
       </div>
     </div>
-  </div>
-
-  {/* Pagination et statistiques */}
-  <div className="flex flex-col items-center py-4 px-2 space-y-2">
-    <div className="text-sm text-gray-600 flex items-center gap-2">
-      {!isLoading && totalItems > 0 && (
-        <span className="text-xs">
-          {totalItems} commande{totalItems > 1 ? "s" : ""}
-        </span>
-      )}
-      {isLoading && (
-        <div className="flex items-center gap-1 text-orange-500">
-          <div className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-xs">Chargement...</span>
-        </div>
-      )}
-    </div>
-
-    <Pagination
-      currentPage={currentPage}
-      totalPages={Math.max(1, totalPages)}
-      onPageChange={handlePageChange}
-      isLoading={isLoading}
-    />
-  </div>
-</div>
-
   );
 }

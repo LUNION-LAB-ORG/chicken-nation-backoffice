@@ -114,7 +114,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   fetchOrderById: async (id: string) => {
     set({ isLoading: true, error: null });
     try {
-      console.log('[orderStore] Tentative de récupération de la commande avec ID:', id);
       const order = await getOrderById(id);
       set({
         selectedOrder: order,

@@ -141,8 +141,8 @@ export function useOrdersQuery({
     socketRef.current = io(SOCKET_URL);
     
     const handleOrderUpdate = () => {
-      console.log('[WebSocket] Nouvelle commande ou mise à jour reçue');
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      // Force un nouveau fetch en supprimant le cache
+      queryClient.removeQueries({ queryKey: ['orders'] });
     };
 
     // Écouter les événements de commande

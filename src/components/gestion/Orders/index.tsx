@@ -8,8 +8,7 @@ import OrderHeader from './OrderHeader';
 import RestaurantTabs from './RestaurantTabs';
 import AddMenu from '../Menus/AddMenu';
 import OrderDetails from './OrderDetails';
-import { getAllRestaurants, Restaurant } from '@/services/restaurantService';
-// import { useOrdersQuery } from '@/hooks/useOrdersQuery'; // ✅ OrdersTable gère cela maintenant
+import { getAllRestaurants, Restaurant } from '@/services/restaurantService'; 
 import { updateOrderStatus } from '@/services/orderService';
 import { toast } from 'react-hot-toast';
 import { useRBAC } from '@/hooks/useRBAC';
@@ -27,7 +26,7 @@ export default function Orders() {
   // États pour la recherche locale
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // ✅ États pour les filtres (synchronisés avec OrdersTable)
+  // ✅ États pour les filtres (synchronisés avec OrdersTable) - Par défaut afficher les nouvelles commandes
   const [activeFilter, setActiveFilter] = useState('all');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -38,14 +37,11 @@ export default function Orders() {
 
   // ✅ Hook pour le son continu des commandes en attente
   const { hasPendingOrders, isPlaying, pendingOrdersCount } = usePendingOrdersSound({
-    activeFilter: 'new',
+    activeFilter: 'nouvelle', // Utiliser 'nouvelle' pour les commandes PENDING
     selectedRestaurant: selectedRestaurant || undefined,
     enabled: true // Toujours activé pour l'instant
   });
-
-  // ✅ OrdersTable gère maintenant directement les données via son propre useOrdersQuery
-  // Plus besoin de récupérer les commandes ici
-
+ 
   // ✅ Récupération des restaurants et gestion des permissions
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -137,7 +133,7 @@ export default function Orders() {
   };
 
   return (
-    <div className="flex-1 overflow-auto  ">
+    <div className="flex-1 overflow-auto">
       <div className="px-2 lg:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
         <OrderHeader
           currentView={view}
@@ -164,7 +160,7 @@ export default function Orders() {
                 showAllTab={currentUser?.role === 'ADMIN'} // Seulement pour ADMIN
               />
             )}
-
+        
             <OrdersTable
               onViewDetails={handleViewOrderDetails}
               searchQuery={searchQuery}

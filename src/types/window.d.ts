@@ -1,4 +1,3 @@
-// types/window.d.ts
 declare global {
     interface Window {
       flutter_inappwebview: {
