@@ -64,7 +64,7 @@ export const useNotificationsQuery = ({
   const { hasPendingOrders, isPlaying, pendingOrdersCount } =
     usePendingOrdersSound({
       activeFilter: "nouvelle", // Utiliser 'nouvelle' pour les commandes PENDING
-      selectedRestaurant: restaurantId || undefined,
+      selectedRestaurant: restaurantId || "",
       disabledSound: false, // Toujours activé pour l'instant
     });
 

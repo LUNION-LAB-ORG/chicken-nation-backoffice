@@ -41,7 +41,7 @@ export const usePendingOrdersSound = ({
       });
       return result.data;
     },
-    enabled: canPlaySound && Boolean(selectedRestaurant),
+    enabled: Boolean(canPlaySound) && Boolean(selectedRestaurant),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
