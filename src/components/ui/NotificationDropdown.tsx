@@ -38,7 +38,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     markAllAsRead,
     deleteNotification,
   } = useNotificationsQuery({
-    user: user!,
+    userId: user?.id || "",
+    restaurantId: user?.restaurant_id || "",
     enabled: !!user?.id,
   });
 
