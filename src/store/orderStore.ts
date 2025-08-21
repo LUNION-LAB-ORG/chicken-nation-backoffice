@@ -156,7 +156,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       }));
 
       // TODO : Notifier le TPE de la commande acceptée
-      if (typeof window !== "undefined") {
+      if (status === "ACCEPTED" && typeof window !== "undefined") {
         window.flutter_inappwebview.callHandler("printDocument", updatedOrder);
       }
 
