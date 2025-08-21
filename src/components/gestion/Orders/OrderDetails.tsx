@@ -9,6 +9,7 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
+import { OrderData } from "@/app/order/[id]/types";
 
 const getPaymentStatus = (orderDetails: any): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
@@ -115,6 +116,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 }) => {
   const { getOrderById, fetchOrderById, updateOrderStatus } = useOrderStore();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
+
   const [fullOrderDetails, setFullOrderDetails] = useState<{
     id: string;
     status: string;
@@ -127,10 +129,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [restaurantName, setRestaurantName] = useState<string>(
     order.restaurant || "Restaurant inconnu"
   );
+  const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>(order.status);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
-
-  const token = getAuthToken();
 
   // Fonction pour traduire le statut API en statut UI
   const convertApiStatusToUiStatus = useCallback(
@@ -165,7 +166,36 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     },
     [fullOrderDetails?.type]
   );
+  useEffect(() => {
+    async function getOrder() {
+      const token = getAuthToken();
 
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_API_PREFIX + `/orders/${order.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      setOrderData(data);
+
+      return data;
+    }
+    getOrder();
+  }, [order]);
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!order.id) {
@@ -1209,7 +1239,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     if (typeof window !== "undefined") {
                       window.flutter_inappwebview.callHandler(
                         "printDocument",
-                        order
+                        orderData
                       );
                     }
                   }}
