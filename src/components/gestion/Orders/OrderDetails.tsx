@@ -80,6 +80,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
     />
   );
 };
+
 function getAuthToken() {
   try {
     if (typeof document === "undefined") return null;
@@ -366,6 +367,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       if (orderType === "À table") {
         // Workflow TABLE
         if (newStatus === "EN COURS") {
+          // TODO : Notifier le TPE de la commande acceptée
+          if (typeof window !== "undefined") {
+            window.flutter_inappwebview.callHandler("printDocument", orderData);
+          }
           // Accepter la réservation
           await updateOrderStatus(order.id, "ACCEPTED");
         } else if (newStatus === "PRÊT") {
@@ -1232,21 +1237,6 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   );
                 }
               })()}
-              <div className="lg:hidden flex justfy-center p-2">
-                <button
-                  className="w-full cursor-pointer py-3 px-4 bg-[#F17922] hover:bg-[#ea7019] text-white rounded-xl font-medium"
-                  onClick={() => {
-                    if (typeof window !== "undefined") {
-                      window.flutter_inappwebview.callHandler(
-                        "printDocument",
-                        orderData
-                      );
-                    }
-                  }}
-                >
-                  imprimer{" "}
-                </button>
-              </div>
             </div>
           </div>
         </div>
