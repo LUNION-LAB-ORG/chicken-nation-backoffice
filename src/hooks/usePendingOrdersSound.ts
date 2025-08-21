@@ -32,7 +32,7 @@ export const usePendingOrdersSound = ({
 
   // Hook pour récupérer le statut des commandes en attente
   const { data: ordersPending } = useQuery({
-    queryKey: ['orders', 'pending', selectedRestaurant],
+    queryKey: ['orders', selectedRestaurant],
     queryFn: async () => {
       const result = await getOrders({
         status: 'PENDING',
@@ -41,7 +41,7 @@ export const usePendingOrdersSound = ({
       });
       return result.data;
     },
-    enabled: canPlaySound && !!selectedRestaurant,
+    enabled: canPlaySound && Boolean(selectedRestaurant),
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
