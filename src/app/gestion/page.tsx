@@ -9,6 +9,12 @@ import { useAuthStore } from "@/store/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import type { TabKey } from "@/store/dashboardStore";
 
+import EditMember from "@/components/gestion/Personnel/EditMember";
+import { User as ServiceUser } from "@/services/userService";
+import { User } from "@/types/auth";
+import Image from "next/image";
+import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
+
 // ✅ PERFORMANCE: Lazy loading des composants lourds
 const Dashboard = dynamic(() => import("@/components/gestion/Dashboard"), {
   loading: () => (
@@ -97,10 +103,6 @@ const Apps = dynamic(() => import("@/components/gestion/Apps"), {
     </div>
   ),
 });
-import EditMember from "@/components/gestion/Personnel/EditMember";
-import { User as ServiceUser } from "@/services/userService";
-import { User } from "@/types/auth";
-import Image from "next/image";
 
 export default function GestionPage() {
   const router = useRouter();
@@ -118,6 +120,14 @@ export default function GestionPage() {
       router.replace("/");
     }
   }, [isAuthenticated, router]);
+
+  const { hasPendingOrders, isPlaying, pendingOrdersCount } =
+    usePendingOrdersSound({
+      activeFilter: "all",
+      selectedRestaurant:
+        user?.role !== "ADMIN" ? user?.restaurant_id : undefined,
+      disabledSound: false,
+    });
 
   // Vérification pour le changement de mot de passe
   useEffect(() => {

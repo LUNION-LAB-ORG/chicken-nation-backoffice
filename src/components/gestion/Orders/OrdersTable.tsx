@@ -7,10 +7,7 @@ import { TableHeader } from "./TableHeader";
 import { OrderFilters } from "./OrderFilters";
 import { toast } from "react-hot-toast";
 import { useOrdersQuery } from "@/hooks/useOrdersQuery";
-import {
-  deleteOrder,
-  ApiOrderRaw,
-} from "@/services/orderService";
+import { deleteOrder, ApiOrderRaw } from "@/services/orderService";
 import { useRBAC } from "@/hooks/useRBAC";
 import { PaymentStatus } from "./PaymentBadge";
 import { useOrderStore } from "@/store/orderStore";
@@ -118,7 +115,11 @@ interface OrdersTableProps {
 // 🎯 FONCTION POUR DÉTERMINER LE STATUT DE PAIEMENT
 const getPaymentStatus = (order: Order): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
-  if (order.status === "ANNULÉE") {
+  if (
+    order.status === "ANNULÉE" &&
+    order.paiements &&
+    order.paiements.length > 0
+  ) {
     // Vérifier s'il y a un paiement avec le statut REVERTED
     const hasRevertedPayment = order.paiements?.some(
       (p) => p.status === "REVERTED"

@@ -47,18 +47,18 @@ const Dashboard = () => {
     ? 'admin-global'
     : 'manager-restaurant';
 
-  // ✅ Log pour debug
-  console.log('🏪 [Dashboard] État utilisateur:', {
-    userId: user?.id,
-    userRole: user?.role,
-    userRestaurantId: user?.restaurant_id,
-    isSuperAdmin,
-    isRestaurantManager,
-    isViewingSpecificRestaurant,
-    selectedRestaurantId,
-    displayMode,
-    currentRestaurant: currentRestaurant?.name
-  });
+  // // ✅ Log pour debug
+  // console.log('🏪 [Dashboard] État utilisateur:', {
+  //   userId: user?.id,
+  //   userRole: user?.role,
+  //   userRestaurantId: user?.restaurant_id,
+  //   isSuperAdmin,
+  //   isRestaurantManager,
+  //   isViewingSpecificRestaurant,
+  //   selectedRestaurantId,
+  //   displayMode,
+  //   currentRestaurant: currentRestaurant?.name
+  // });
 
   // Fonctions pour naviguer vers les différentes sections
   const handleMenusSoldClick = () => {
@@ -90,13 +90,13 @@ const Dashboard = () => {
               const assignedRestaurant = restaurants.find(r => r.id === user.restaurant_id);
               if (assignedRestaurant) {
                 setCurrentRestaurant(assignedRestaurant);
-                console.log('🏪 [Dashboard] Manager assigné au restaurant:', assignedRestaurant.name);
+                // console.log('🏪 [Dashboard] Manager assigné au restaurant:', assignedRestaurant.name);
               } else {
-                console.error('❌ [Dashboard] Restaurant assigné non trouvé:', user.restaurant_id);
+                // console.error('❌ [Dashboard] Restaurant assigné non trouvé:', user.restaurant_id);
                 setCurrentRestaurant(null);
               }
             } else {
-              console.error('❌ [Dashboard] Manager sans restaurant_id assigné');
+              // console.error('❌ [Dashboard] Manager sans restaurant_id assigné');
               setCurrentRestaurant(null);
             }
           }

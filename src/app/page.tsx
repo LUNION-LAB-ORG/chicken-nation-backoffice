@@ -8,6 +8,7 @@ import AuthHeader from '@/components/auth/AuthHeader';
 import styles from './page.module.css';
 import { useAuthStore } from '@/store/authStore';
 import { LoginCredentials } from '@/types/auth';
+import { usePendingOrdersSound } from '@/hooks/usePendingOrdersSound';
 
 /**
  * Page de connexion

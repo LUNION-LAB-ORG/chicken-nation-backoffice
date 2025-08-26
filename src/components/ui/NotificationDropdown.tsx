@@ -32,6 +32,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     isFetchingNextPage,
     hasNextPage,
     error,
+    socketConnected,
     fetchNextPage,
     markAsRead,
     markAsUnread,
@@ -202,6 +203,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
             {filteredUnreadCount > 99 ? "99+" : filteredUnreadCount}
           </span>
+        )}
+        {/* Badge de socket connecté */}
+        {socketConnected && (
+          <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full h-2 w-2 flex items-center justify-center animate-ping"></span>
         )}
       </button>
 

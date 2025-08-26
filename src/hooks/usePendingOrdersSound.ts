@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import NotificationAPI from '@/services/notificationService';
 
 interface UsePendingOrdersSoundParams {
   activeFilter: string;
@@ -22,9 +23,8 @@ export const usePendingOrdersSound = ({
   const { user } = useAuthStore();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const socketRef = useRef<ReturnType<typeof io> | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
+  const audio = new Audio("/musics/pending-order.mp3");
   const queryClient = useQueryClient();
 
   // Déterminer si l'utilisateur a le droit d'entendre le son
@@ -45,10 +45,12 @@ export const usePendingOrdersSound = ({
     staleTime: 30 * 1000,
     refetchOnWindowFocus: false,
   });
+
   const hasPendingOrders = ordersPending?.length > 0;
 
   // Fonction d'invalidation de la cache de React Query
-  const handleInvalidateQueries = () => {
+  const handleInvalidateQueries = (data) => {
+    console.log(data)
     queryClient.invalidateQueries({
       queryKey: ['orders'],
       exact: false,
@@ -59,20 +61,23 @@ export const usePendingOrdersSound = ({
   useEffect(() => {
     if (!canPlaySound) return;
 
-    // Si le socket existe déjà, ne rien faire.
-    if (!socketRef.current) {
-      socketRef.current = io(SOCKET_URL);
-    }
-
-    socketRef.current.on('order:new', handleInvalidateQueries);
-    socketRef.current.on('order:status_changed', handleInvalidateQueries);
+    const socket = io(SOCKET_URL, {
+      query: {
+        token: NotificationAPI.getToken(),
+        type: "user",
+      },
+    });
+    socket.on('order:created', (data) => handleInvalidateQueries(data));
+    socket.on('order:status_updated', (data) => handleInvalidateQueries(data));
+    socket.on('order:updated', (data) => handleInvalidateQueries(data));
+    socket.on('order:delete', (data) => handleInvalidateQueries(data));
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off('order:new');
-        socketRef.current.off('order:status_changed');
-        socketRef.current.disconnect();
-        socketRef.current = null;
+      if (socket) {
+        socket.off('order:created');
+        socket.off('order:status_updated');
+        socket.off('order:updated');
+        socket.disconnect();
       }
     };
   }, [canPlaySound]);
@@ -85,11 +90,11 @@ export const usePendingOrdersSound = ({
       return;
     }
 
-    // Créer l'instance audio si elle n'existe pas
-    if (!audioRef.current) {
-      audioRef.current = new Audio("/musics/pending-order.mp3");
-      audioRef.current.loop = false;
-    }
+    // // Créer l'instance audio si elle n'existe pas
+    // if (audio) {
+    //   audioRef.current = new Audio("/musics/pending-order.mp3");
+    //   audioRef.current.loop = false;
+    // }
 
     if (hasPendingOrders && !isPlaying) {
       startContinuousSound();
@@ -106,9 +111,9 @@ export const usePendingOrdersSound = ({
 
   // Fonction pour jouer le son en continu
   const playSound = () => {
-    if (audioRef.current && !disabledSound && canPlaySound) {
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error) => {
+    if (audio && !disabledSound && canPlaySound) {
+      audio.currentTime = 0;
+      audio.play().catch((error) => {
         console.error("Erreur de lecture audio pour commandes en attente", error);
       });
     }

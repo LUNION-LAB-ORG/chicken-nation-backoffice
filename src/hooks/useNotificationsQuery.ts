@@ -5,10 +5,9 @@ import {
   InfiniteData,
 } from "@tanstack/react-query";
 import { NotificationAPI, Notification } from "@/services/notificationService";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "../../socket";
-import { usePendingOrdersSound } from "./usePendingOrdersSound";
 
 interface UseNotificationsQueryProps {
   userId: string;
@@ -42,6 +41,7 @@ interface UseNotificationsQueryReturn {
   isMarkingAsUnread: boolean;
   isMarkingAllAsRead: boolean;
   isDeletingNotification: boolean;
+  socketConnected: boolean;
 }
 
 export const useNotificationsQuery = ({
@@ -51,6 +51,7 @@ export const useNotificationsQuery = ({
 }: UseNotificationsQueryProps): UseNotificationsQueryReturn => {
   const queryClient = useQueryClient();
   const audioRef = useRef<HTMLAudioElement | null>(null); // Référence audio
+  const [connected, setConnected] = useState(false);
   useEffect(() => {
     audioRef.current = new Audio("/musics/notification-sound.mp3");
     audioRef.current.load();
@@ -59,14 +60,6 @@ export const useNotificationsQuery = ({
       audioRef.current = null;
     };
   }, []);
-
-  // ✅ Hook pour le son continu des commandes en attente
-  const { hasPendingOrders, isPlaying, pendingOrdersCount } =
-    usePendingOrdersSound({
-      activeFilter: "nouvelle", // Utiliser 'nouvelle' pour les commandes PENDING
-      selectedRestaurant: restaurantId || "",
-      disabledSound: false, // Toujours activé pour l'instant
-    });
 
   // ✅ Query pour récupérer les notifications avec pagination infinie
   const {
@@ -102,6 +95,24 @@ export const useNotificationsQuery = ({
     [data]
   );
 
+
+  const handleNewNotification = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["notifications", userId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["notification-stats", userId],
+    });
+
+    // Jouer le son de notification
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0; // Réinitialiser la position
+      audioRef.current.play().catch((error) => {
+        console.error("Erreur de lecture audio", error);
+      });
+    }
+  };
+
   // ✅ Gestion des sockets
   useEffect(() => {
     const socket = io(SOCKET_URL, {
@@ -110,23 +121,9 @@ export const useNotificationsQuery = ({
         type: "user",
       },
     });
-    const handleNewNotification = () => {
-      queryClient.invalidateQueries({
-        queryKey: ["notifications", userId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["notification-stats", userId],
-      });
-
-      // Jouer le son de notification
-      if (audioRef.current) {
-        audioRef.current.currentTime = 0; // Réinitialiser la position
-        audioRef.current.play().catch((error) => {
-          console.error("Erreur de lecture audio", error);
-        });
-      }
-    };
-
+    socket.on("connect", () => {
+      setConnected(true);
+    })
     socket.on("notification:new", handleNewNotification);
 
     return () => {
@@ -335,5 +332,6 @@ export const useNotificationsQuery = ({
     isMarkingAsUnread: markAsUnreadMutation.isPending,
     isMarkingAllAsRead: markAllAsReadMutation.isPending,
     isDeletingNotification: deleteNotificationMutation.isPending,
+    socketConnected: connected,
   };
 };
