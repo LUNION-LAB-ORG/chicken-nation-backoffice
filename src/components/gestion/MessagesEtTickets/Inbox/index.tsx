@@ -3,16 +3,25 @@
 import React, { useState, useEffect } from 'react';
 import InboxSidebar from './InboxSidebar';
 import ConversationView from './ConversationView';
+// Suppression de l'import markMessagesAsRead car on utilise localStorage
+import { useQueryClient } from '@tanstack/react-query';
 
 function InboxModule({ initialConversationId }: { initialConversationId?: string | null }) {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(initialConversationId || null);
+  const queryClient = useQueryClient();
+
+  // Fonction pour sélectionner une conversation (le marquage comme lu se fait dans ConversationView)
+  const handleSelectConversation = (conversationId: string | null) => {
+    setSelectedConversation(conversationId);
+ 
+  };
 
   // If initialConversationId changes (opened from header), select it
   useEffect(() => {
     if (initialConversationId) {
-      setSelectedConversation(initialConversationId);
+      handleSelectConversation(initialConversationId);
     }
-  }, [initialConversationId]);
+  }, [initialConversationId, queryClient]);
 
   return (
     <div className="h-full bg-[#FBFBFB]">
@@ -24,7 +33,7 @@ function InboxModule({ initialConversationId }: { initialConversationId?: string
         `}>
           <InboxSidebar 
             selectedConversation={selectedConversation}
-            onSelectConversation={setSelectedConversation}
+            onSelectConversation={handleSelectConversation}
           />
         </div>
         
@@ -35,7 +44,7 @@ function InboxModule({ initialConversationId }: { initialConversationId?: string
         `}>
           <ConversationView 
             conversationId={selectedConversation}
-            onBack={() => setSelectedConversation(null)}
+            onBack={() => handleSelectConversation(null)}
           />
         </div>
       </div>

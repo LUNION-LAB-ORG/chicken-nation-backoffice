@@ -8,10 +8,11 @@ import { useAuthStore } from "@/store/authStore";
 import { formatImageUrl, isValidImageUrl } from "@/utils/imageHelpers";
 import { MessagesResponse } from '@/types/messaging';
 import EditMember from "@/components/gestion/Personnel/EditMember";
-import NotificationDropdown from "@/components/ui/NotificationDropdown"; 
+import NotificationDropdown from "@/components/ui/NotificationDropdown";
 import { User } from "@/types/auth";
-import { useConversationsQuery } from '@/hooks/useConversationsQuery';
+import { useConversationsInfiniteQuery } from '@/hooks/useConversationsQuery';
 import { useConversationsSocket } from '@/hooks/useConversationsSocket';
+import { useMessagesSound } from '@/hooks/useMessagesSound';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useQueryClient } from '@tanstack/react-query';
@@ -33,32 +34,58 @@ export default function Header({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isMessageDropdownOpen, setIsMessageDropdownOpen] = useState(false);
-  // Messages réels récupérés via React Query
-  const { data: conversationsData, isLoading: isLoadingConversations } = useConversationsQuery();
+  const [displayedMessagesCount, setDisplayedMessagesCount] = useState(10);
+  // Messages réels récupérés via React Query avec pagination
+  const {
+    data: conversationsData,
+    isLoading: isLoadingConversations,
+    fetchNextPage: fetchNextConversationsPage,
+    hasNextPage: hasNextConversationsPage,
+    isFetchingNextPage: isFetchingNextConversationsPage
+  } = useConversationsInfiniteQuery();
 
   // Activer l'écoute WebSocket pour actualiser en temps réel
   useConversationsSocket();
 
+  // Utiliser le hook useMessagesSound pour obtenir le compteur de messages non lus
+  const { hasUnreadMessages, unreadMessagesCount } = useMessagesSound({
+    disabledSound: true, // Désactiver le son dans le Header pour éviter les doublons
+  });
+
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
-  const conversations = conversationsData?.data || [];
+  // Flatten toutes les pages de conversations
+  const conversations = conversationsData?.pages?.flatMap(page => page.data || []) || [];
 
-  // Construire la liste des messages non lus à partir des conversations
+  // Fonction pour récupérer les messages lus depuis localStorage
+  const getReadMessages = () => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const stored = localStorage.getItem('readMessages');
+      return new Set(stored ? JSON.parse(stored) : []);
+    } catch {
+      return new Set();
+    }
+  };
+
+  // Construire la liste des messages non lus à partir des conversations pour l'affichage dans le dropdown
   const currentUserId = user?.id;
 
   const unreadMessagesList = conversations
     .flatMap((c) => (c.messages || []).map((m) => ({ ...m, conversationId: c.id, customer: c.customer })))
-    // Ne garder que les messages non lus ET qui ne sont pas envoyés par l'utilisateur courant
+    // Ne garder que les messages non lus selon localStorage ET qui ne sont pas envoyés par l'utilisateur courant
     .filter((m) => {
-      const isUnread = m.isRead === false;
+      const readMessages = getReadMessages();
+      const isNotReadInLocalStorage = !readMessages.has(m.id);
       const isFromCustomer = !!m.authorCustomer;
       const isFromOtherUser = !!m.authorUser && m.authorUser.id !== currentUserId;
-      return isUnread && (isFromCustomer || isFromOtherUser);
+      return isNotReadInLocalStorage && (isFromCustomer || isFromOtherUser);
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-  const totalUnread = unreadMessagesList.length;
+  // Utiliser le compteur du hook au lieu de calculer localement
+  const totalUnread = unreadMessagesCount;
 
   const formatTimestamp = (dateString?: string) => {
     if (!dateString) return '';
@@ -69,8 +96,9 @@ export default function Header({
     }
   };
 
-  // Preview: prendre les derniers messages non lus
-  const recentUnread = unreadMessagesList.slice(0, 6);
+  // Preview: prendre les derniers messages non lus selon le nombre affiché
+  const recentUnread = unreadMessagesList.slice(0, displayedMessagesCount);
+  const hasMoreMessages = unreadMessagesList.length > displayedMessagesCount || hasNextConversationsPage;
   const [isClient, setIsClient] = useState(false);
 
   // Éviter l'erreur d'hydration
@@ -78,13 +106,7 @@ export default function Header({
     setIsClient(true);
   }, []);
 
-  // Fonction pour obtenir l'URL de l'avatar de manière consistante
-  const getAvatarUrl = () => {
-    if (!isClient || !user?.image) {
-      return "/icons/header/default-avatar.png";
-    }
-    return formatImageUrl(user.image) || "/icons/header/default-avatar.png";
-  };
+
 
   // Fonction pour obtenir le nom utilisateur de manière consistante
   const getUserDisplayName = () => {
@@ -114,6 +136,7 @@ export default function Header({
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsMessageDropdownOpen(false);
+        setDisplayedMessagesCount(10); // Réinitialiser le compteur
       }
     };
 
@@ -171,7 +194,15 @@ export default function Header({
           <div className="relative">
             <button
               type="button"
-              onClick={() => setIsMessageDropdownOpen((open) => !open)}
+              onClick={() => {
+                setIsMessageDropdownOpen((open) => {
+                  if (open) {
+                    // Réinitialiser le compteur quand on ferme
+                    setDisplayedMessagesCount(10);
+                  }
+                  return !open;
+                });
+              }}
               className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
               title="Messages"
             >
@@ -198,22 +229,20 @@ export default function Header({
                     <button
                       type="button"
                       onClick={() => {
-                        // Marquer localement comme lu toutes les conversations contenant des messages non lus
-                        const convIds = Array.from(new Set(unreadMessagesList.map((m) => m.conversationId)));
-                        convIds.forEach((id) => {
-                          // Mettre à jour les messages localement (isRead=true)
-                          queryClient.setQueryData<MessagesResponse>(['messages', id], (oldData) => {
-                            if (!oldData) return oldData as any;
-                            return {
-                              ...oldData,
-                              data: oldData.data.map((msg) => ({ ...msg, isRead: true }))
-                            };
-                          });
-                        });
+                        // Marquer tous les messages comme lus dans localStorage
+                        try {
+                          const readMessages = getReadMessages();
+                          unreadMessagesList.forEach(msg => readMessages.add(msg.id));
+                          localStorage.setItem('readMessages', JSON.stringify([...readMessages]));
+                          console.log('✅ [Header] Tous les messages marqués comme lus dans localStorage');
 
-                        // Invalider légèrement pour rafraîchir si besoin (mais on reste local)
-                        convIds.forEach((id) => queryClient.invalidateQueries({ queryKey: ['messages', id] }));
-                        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                          // Invalider les queries pour mettre à jour l'UI
+                          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                          const convIds = Array.from(new Set(unreadMessagesList.map((m) => m.conversationId)));
+                          convIds.forEach((id) => queryClient.invalidateQueries({ queryKey: ['messages', id] }));
+                        } catch (error) {
+                          console.warn('Erreur lors du marquage global comme lu:', error);
+                        }
                       }}
                       className="text-sm text-orange-600 hover:text-orange-700 font-medium"
                     >
@@ -238,29 +267,34 @@ export default function Header({
                         const senderName = msg.authorCustomer
                           ? (msg.authorCustomer.name || `${msg.authorCustomer.first_name || ''} ${msg.authorCustomer.last_name || ''}`.trim())
                           : msg.authorUser
-                          ? msg.authorUser.email || msg.authorUser.id
-                          : 'Client';
+                            ? msg.authorUser.email || msg.authorUser.id
+                            : 'Client';
 
                         const rawAvatar = msg.authorCustomer?.image || msg.authorUser?.image || null;
-                        const avatarUrl = rawAvatar ? formatImageUrl(rawAvatar) : null;
-                        
-                        // Debug pour voir les URLs d'avatar
-                        if (process.env.NODE_ENV === 'development') {
-                          console.log('🖼️ [Header] Avatar debug:', {
-                            messageId: msg.id,
-                            senderName,
-                            rawAvatar,
-                            avatarUrl,
-                            authorCustomer: !!msg.authorCustomer,
-                            authorUser: !!msg.authorUser
-                          });
-                        }
+                        const formattedAvatar = rawAvatar ? formatImageUrl(rawAvatar) : '';
+                        const avatarUrl = formattedAvatar && isValidImageUrl(formattedAvatar) ? formattedAvatar : null;
+
+
 
                         return (
                           <div
                             key={msg.id}
-                            onClick={() => {
+                            onClick={async () => {
                               setIsMessageDropdownOpen(false);
+
+                              // Marquer la conversation comme lue dans localStorage avant d'ouvrir l'inbox
+                              try {
+                                const readMessages = getReadMessages();
+                                readMessages.add(msg.id);
+                                localStorage.setItem('readMessages', JSON.stringify([...readMessages]));
+
+                                // Invalider les queries pour mettre à jour l'UI
+                                queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                                queryClient.invalidateQueries({ queryKey: ['messages', msg.conversationId] });
+                              } catch (error) {
+                                console.warn('Erreur lors du marquage comme lu:', error);
+                              }
+
                               if (window && window.dispatchEvent) {
                                 window.dispatchEvent(new CustomEvent('openInboxFromHeader', { detail: { conversationId: msg.conversationId } }));
                               }
@@ -270,27 +304,7 @@ export default function Header({
                             <div className="flex items-start justify-between">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                    {avatarUrl ? (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img 
-                                        src={avatarUrl} 
-                                        alt={senderName} 
-                                        className="w-full h-full object-cover" 
-                                        onError={(e) => {
-                                          const target = e.target as HTMLImageElement;
-                                          target.src = "/icons/header/default-avatar.png";
-                                        }}
-                                      />
-                                    ) : (
-                                      // eslint-disable-next-line @next/next/no-img-element
-                                      <img 
-                                        src="/icons/header/default-avatar.png" 
-                                        alt={senderName} 
-                                        className="w-full h-full object-cover" 
-                                      />
-                                    )}
-                                  </div>
+
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900">{senderName}</p>
                                     <p className="text-sm text-gray-600 line-clamp-2">{msg.body}</p>
@@ -326,6 +340,28 @@ export default function Header({
                       })}
                     </div>
                   )}
+
+                  {/* Bouton Charger plus */}
+                  {!isLoadingConversations && recentUnread.length > 0 && hasMoreMessages && (
+                    <div className="p-4 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (unreadMessagesList.length > displayedMessagesCount) {
+                            // Charger plus de messages locaux
+                            setDisplayedMessagesCount(prev => prev + 10);
+                          } else if (hasNextConversationsPage) {
+                            // Charger plus de conversations du backend
+                            fetchNextConversationsPage();
+                          }
+                        }}
+                        disabled={isFetchingNextConversationsPage}
+                        className="w-full text-center text-sm text-orange-600 hover:text-orange-700 font-medium py-2 hover:bg-orange-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isFetchingNextConversationsPage ? 'Chargement...' : 'Charger plus'}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -356,21 +392,20 @@ export default function Header({
                   {getUserDisplayName()}
                 </span>
               </div>
-              <div className="w-8 h-8 bg-gray-200 rounded-full cursor-pointer  overflow-hidden">
+              <div className="w-8 h-8 bg-gray-200 rounded-full cursor-pointer overflow-hidden">
                 <Image
-                  src={getAvatarUrl()}
+                  src={formatImageUrl(user?.image || undefined) || "/icons/header/default-avatar.png"}
                   alt={getUserDisplayName()}
                   width={32}
                   height={32}
-                  className="w-full h-full cursor-pointer  object-cover"
-                  unoptimized={true}
+                  className="w-full h-full cursor-pointer object-cover"
+                  unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
                 />
               </div>
               <ChevronDown
                 size={16}
-                className={`text-gray-500 transition-transform ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""
+                  }`}
               />
             </button>
 
@@ -389,12 +424,12 @@ export default function Header({
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
                         <Image
-                          src={getAvatarUrl()}
+                          src={formatImageUrl(user?.image || undefined) || "/icons/header/default-avatar.png"}
                           alt={getUserDisplayName()}
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
-                          unoptimized={true}
+                          unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
                         />
                       </div>
                       <div>
@@ -476,7 +511,7 @@ export default function Header({
         />
       )}
 
- 
+
     </header>
   );
 }

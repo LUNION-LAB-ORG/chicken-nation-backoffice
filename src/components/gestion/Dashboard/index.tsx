@@ -224,7 +224,6 @@ const Dashboard = () => {
             unit="xof"
             badgeText={displayMode === 'admin-global' ? "Revenu mensuel total" : "Revenu mensuel restaurant"}
             badgeColor="#EA4335"
-            iconImage="/icons/circle.png"
             objective={{
               value: statsData.revenue.objective,
               percentage: statsData.revenue.percentage
@@ -235,7 +234,6 @@ const Dashboard = () => {
             value={statsData.menusSold.value}
             badgeText="Plats vendus"
             badgeColor="#F17922"
-            iconImage="/icons/circle.png"
             objective={{
               value: statsData.menusSold.objective,
               percentage: statsData.menusSold.percentage
@@ -247,7 +245,6 @@ const Dashboard = () => {
             value={statsData.orders.value}
             badgeText={displayMode === 'admin-global' ? "Total de commandes" : "Commandes restaurant"}
             badgeColor="#4FCB71"
-            iconImage="/icons/market.png"
             onClick={handleOrdersClick}
           />
           <GenericStatCard
@@ -255,7 +252,6 @@ const Dashboard = () => {
             value={statsData.clients.value}
             badgeText={displayMode === 'admin-global' ? "Nombre de clients" : "Clients restaurant"}
             badgeColor="#007AFF"
-            iconImage="/icons/client.png"
             onClick={handleClientsClick}
           />
         </div>

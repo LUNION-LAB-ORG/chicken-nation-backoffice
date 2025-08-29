@@ -43,16 +43,24 @@ export interface Restaurant {
   image?: string;
 }
 
+// Types pour les utilisateurs dans les conversations
+export interface ConversationUser {
+  id: string;
+  fullName: string;
+  image?: string | null;
+  role: string;
+}
+
 // Types pour les conversations selon la nouvelle structure API
 export interface Conversation {
   id: string;
   unreadNumber: number;
-  customerId: string;
+  customerId: string | null; // null pour les conversations internes
   createdAt: string;
   messages: Message[];
   restaurant?: Restaurant | null;
-  customer: Customer;
-  users: unknown[]; // Pour les utilisateurs assignés à la conversation
+  customer: Customer | null; // null pour les conversations internes
+  users: ConversationUser[]; // Utilisateurs participants à la conversation
 }
 
 export interface MessageStats {

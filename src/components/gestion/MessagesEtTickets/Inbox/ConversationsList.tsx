@@ -18,6 +18,7 @@ interface ConversationsListProps {
 
 function ConversationsList({ selectedConversation, onSelectConversation, onNewConversation }: ConversationsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'client' | 'internal'>('all');
   
   // 🔌 React Query hooks
   const { 
@@ -72,19 +73,47 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
     };
   };
 
+  // Fonction pour obtenir le nom d'affichage d'une conversation
+  const getConversationDisplayName = (conversation: Conversation) => {
+    if (!conversation.customer) {
+      // Conversation interne - afficher les noms des participants
+      const participantNames = conversation.users.map(user => user.fullName).join(', ');
+      return participantNames || 'Discussion interne';
+    } else {
+      // Conversation avec client
+      return conversation.customer 
+        ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.trim()
+        : 'Client inconnu';
+    }
+  };
+
+  // Fonction pour obtenir les infos secondaires d'une conversation
+  const getConversationSecondaryInfo = (conversation: Conversation) => {
+    if (!conversation.customer) {
+      // Conversation interne - afficher les rôles
+      const roles = conversation.users.map(user => user.role).join(', ');
+      return roles || 'Équipe';
+    } else {
+      // Conversation avec client - afficher le téléphone
+      return conversation.customer?.phone || 'N/A';
+    }
+  };
+
   // Filtrage des conversations
   const filteredConversations = conversations.filter(conversation => {
+    // Filtrer par type si nécessaire
+    if (activeFilter === 'client' && !conversation.customer) return false;
+    if (activeFilter === 'internal' && conversation.customer) return false;
+    
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
-    const customerName = conversation.customer 
-      ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.toLowerCase()
-      : '';
-    const customerPhone = conversation.customer?.phone?.toLowerCase() || '';
+    const displayName = getConversationDisplayName(conversation).toLowerCase();
+    const secondaryInfo = getConversationSecondaryInfo(conversation).toLowerCase();
     const lastMessage = getLastMessage(conversation).text.toLowerCase();
     
-    return customerName.includes(searchLower) || 
-           customerPhone.includes(searchLower) || 
+    return displayName.includes(searchLower) || 
+           secondaryInfo.includes(searchLower) || 
            lastMessage.includes(searchLower);
   });
 
@@ -126,9 +155,28 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         {/* Filters */}
         <div className="flex gap-2 md:gap-3">
           <button 
-            className="cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium bg-orange-500 text-white"
+            onClick={() => setActiveFilter('all')}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
+              activeFilter === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            Toutes ({filteredConversations.length})
+            Toutes ({conversations.length})
+          </button>
+          <button 
+            onClick={() => setActiveFilter('client')}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
+              activeFilter === 'client' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Clients ({conversations.filter(c => c.customer).length})
+          </button>
+          <button 
+            onClick={() => setActiveFilter('internal')}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
+              activeFilter === 'internal' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Internes ({conversations.filter(c => !c.customer).length})
           </button>
         </div>
       </div>
@@ -163,9 +211,9 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         {/* Conversations */}
         {filteredConversations.map((conversation) => {
           const lastMessage = getLastMessage(conversation);
-          const customerName = conversation.customer 
-            ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.trim()
-            : 'Client inconnu';
+          const displayName = getConversationDisplayName(conversation);
+          const secondaryInfo = getConversationSecondaryInfo(conversation);
+          const isInternal = !conversation.customer;
           
           return (
             <div
@@ -176,25 +224,56 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
               }`}
             >
               <div className="flex items-start md:space-x-3 space-x-2">
-                {/* Avatar du client */}
+                {/* Avatar */}
                 <div className="flex-shrink-0">
                   <div className="relative md:w-12 w-10 md:h-12 h-10">
-                    <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
-                      {conversation.customer?.image ? (
-                        <Image
-                          src={formatImageUrl(conversation.customer.image)}
-                          alt={customerName}
-                          width={48}
-                          height={48}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="md:text-lg text-base font-bold text-gray-600 uppercase">
-                          {conversation.customer?.first_name?.[0] || '?'}
-                          {conversation.customer?.last_name?.[0] || ''}
-                        </span>
-                      )}
-                    </div>
+                    {isInternal ? (
+                      // Affichage pour conversation interne - deux avatars côte à côte
+                      <div className="relative w-full h-full">
+                        {conversation.users.slice(0, 2).map((user, index) => {
+                          const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
+                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-0 right-0';
+                          
+                          return (
+                            <div key={user.id} className={`${size} ${position}`}>
+                              <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
+                                {user.image ? (
+                                  <Image
+                                    src={formatImageUrl(user.image)}
+                                    alt={user.fullName}
+                                    width={32}
+                                    height={32}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="md:text-xs text-xs font-bold text-gray-600 uppercase">
+                                    {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // Affichage pour conversation avec client
+                      <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
+                        {conversation.customer?.image ? (
+                          <Image
+                            src={formatImageUrl(conversation.customer.image)}
+                            alt={displayName}
+                            width={48}
+                            height={48}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="md:text-lg text-base font-bold text-gray-600 uppercase">
+                            {conversation.customer?.first_name?.[0] || '?'}
+                            {conversation.customer?.last_name?.[0] || ''}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -203,7 +282,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                   <div className="flex items-center justify-between md:mb-2 mb-1">
                     <div className="flex items-center md:space-x-2 space-x-1">
                       <span className="md:text-base text-sm font-semibold text-black">
-                        {customerName}
+                        {displayName}
                       </span>
                       {conversation.unreadNumber > 0 && (
                         <span className="bg-red-500 text-white md:text-sm text-xs md:px-2 md:py-1 px-1.5 py-0.5 rounded-full font-medium md:min-w-[24px] md:h-6 min-w-[20px] h-5 flex items-center justify-center">
@@ -225,7 +304,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                       {conversation.restaurant?.name || 'Chicken Nation'}
                     </span>
                     <span className="md:text-sm text-xs text-gray-500 font-medium">
-                      {conversation.customer?.phone || 'N/A'}
+                      {secondaryInfo}
                     </span>
                   </div>
                 </div>

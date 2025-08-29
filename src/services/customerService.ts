@@ -1,4 +1,3 @@
-// --- Customer Service simplifié ---
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://chicken.turbodeliveryapp.com';
 const API_PREFIX = '/api/v1';
@@ -7,7 +6,7 @@ const REVIEWS_ENDPOINT = '/reviews';
 const ORDERS_ENDPOINT = '/orders';
 const CUSTOMER_ORDERS_ENDPOINT = '/orders/customer';
 
- 
+
 
 function getAuthToken() {
   try {
@@ -30,21 +29,20 @@ function getAuthToken() {
   }
 }
 
-// Ajout des types TypeScript pour robustesse et auto-complétion
 
 type CustomerStatus = 'ACTIVE' | 'INACTIVE' | 'BLOCKED' | 'NEW';
 
 export interface CustomerAddress {
   id: string;
-  name?: string; // Nom de l'adresse (ex: "Maison", "Bureau")
-  address?: string; // Adresse complète
+  name?: string;
+  address?: string;
   street?: string;
   city?: string;
   postal_code?: string;
   country?: string;
-  details?: string; // Détails supplémentaires
+  details?: string;
   is_default?: boolean;
-  isDefault?: boolean; // Alias pour compatibilité
+  isDefault?: boolean;
 }
 
 export interface Customer {
@@ -71,7 +69,7 @@ export interface CustomerQuery {
   search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-  restaurantId?: string; // ✅ Ajouter le filtrage par restaurant
+  restaurantId?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -200,6 +198,46 @@ export async function getCustomers(params: CustomerQuery = {}): Promise<Paginate
     const enrichedData = await enrichCustomersWithOrderInfo(data);
 
     return enrichedData as PaginatedResponse<Customer>;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// ✅ Nouvelle fonction pour récupérer les clients d'un restaurant spécifique
+export async function getRestaurantCustomers(restaurantId: string, params: CustomerQuery = {}): Promise<Customer[]> {
+  if (!restaurantId) throw new Error('ID restaurant manquant');
+
+  const { search, status = 'ACTIVE' } = params;
+
+  // Construire les paramètres de requête
+  const queryParams = new URLSearchParams();
+  if (status) queryParams.append('status', status);
+  if (search) queryParams.append('search', search);
+
+  const url = `${API_URL}${API_PREFIX}/restaurants/${restaurantId}/clients${queryParams.toString() ? `?${queryParams}` : ''}`;
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const result = await handleAuthError(response, () => getRestaurantCustomers(restaurantId, params));
+      if (result === null) {
+        throw new Error('Authentication failed');
+      }
+      return result;
+    }
+
+    const data = await response.json();
+
+    // Le nouvel endpoint retourne directement un tableau de clients
+    if (!Array.isArray(data)) {
+      throw new Error('Format de réponse invalide: la réponse n\'est pas un tableau');
+    }
+
+    return data as Customer[];
   } catch (error) {
     throw error;
   }
@@ -491,4 +529,3 @@ export async function getCustomerReviews(id: string, params: { page?: number; li
   return await response.json();
 }
 
- 

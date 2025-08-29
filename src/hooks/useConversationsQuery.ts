@@ -1,14 +1,14 @@
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
-import { 
-  getConversations, 
-  getMessages, 
-  sendMessage, 
+import {
+  getConversations,
+  getMessages,
+  sendMessage,
   markMessagesAsRead,
-  getMessageStats 
+  getMessageStats
 } from '@/services/messageService';
 import { Message } from '@/types/messaging';
 
-// Hook pour les conversations
+// Hook pour les conversations (version originale)
 export const useConversationsQuery = (enabled = true) => {
   return useQuery({
     queryKey: ['conversations'],
@@ -17,8 +17,29 @@ export const useConversationsQuery = (enabled = true) => {
       return response;
     },
     enabled,
-    staleTime: 30 * 1000, // 30 secondes
-    refetchInterval: 60 * 1000, // Refetch toutes les minutes
+    staleTime: 5 * 1000,
+    refetchInterval: 10 * 1000,
+    refetchIntervalInBackground: true,
+  });
+};
+
+// Hook pour les conversations avec pagination (pour le Header)
+export const useConversationsInfiniteQuery = (enabled = true) => {
+  return useInfiniteQuery({
+    queryKey: ['conversations-infinite'],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await getConversations(pageParam, 10); // 10 conversations par page
+      return response;
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.meta) return undefined;
+      return lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined;
+    },
+    enabled,
+    staleTime: 5 * 1000, 
+    refetchInterval: 10 * 1000,
+    refetchIntervalInBackground: true, 
   });
 };
 
@@ -33,6 +54,7 @@ export const useMessagesQuery = (conversationId: string | null, enabled = true) 
       const response = await getMessages(conversationId, pageParam, PAGE_SIZE);
       return response;
     },
+    initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (!lastPage?.meta) return undefined;
       const next = lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined;
@@ -59,28 +81,28 @@ export const useMessageStatsQuery = (enabled = true) => {
 // Hook pour envoyer un message
 export const useSendMessageMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async ({ 
-      conversationId, 
-      content, 
-      messageType, 
-      file 
-    }: { 
-      conversationId: string; 
-      content: string; 
-      messageType?: 'TEXT' | 'IMAGE' | 'FILE'; 
-      file?: File 
+    mutationFn: async ({
+      conversationId,
+      content,
+      messageType,
+      file
+    }: {
+      conversationId: string;
+      content: string;
+      messageType?: 'TEXT' | 'IMAGE' | 'FILE';
+      file?: File
     }) => {
       return sendMessage(conversationId, content, messageType, file);
     },
     onMutate: async (variables) => {
       // Annuler les queries en cours pour éviter les conflits
       await queryClient.cancelQueries({ queryKey: ['messages', variables.conversationId] });
-      
+
       // Snapshot de l'état actuel
       const previousMessages = queryClient.getQueryData(['messages', variables.conversationId]);
-      
+
       // Ajouter optimistiquement le message (compatible with infiniteQuery pages)
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
@@ -111,7 +133,7 @@ export const useSendMessageMutation = () => {
         if (!oldData) return { data: [optimisticMessage], meta: { page: 1, limit: 100, total: 1, totalPages: 1 } };
         return { ...oldData, data: Array.isArray(oldData.data) ? [...oldData.data, optimisticMessage] : [optimisticMessage] };
       });
-      
+
       return { previousMessages };
     },
     onError: (err, variables, context) => {
@@ -141,11 +163,11 @@ export const useSendMessageMutation = () => {
           : [newMessage];
         return { ...oldData, data: updatedData };
       });
-      
+
       // Invalider les conversations pour mettre à jour les previews
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['message-stats'] });
-      
+
       console.log('✅ Message sent successfully, data updated');
     },
     onSettled: (newMessage, error, variables) => {
@@ -158,7 +180,7 @@ export const useSendMessageMutation = () => {
 // Hook pour marquer comme lu
 export const useMarkAsReadMutation = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: markMessagesAsRead,
     onSuccess: (_, conversationId) => {
@@ -177,7 +199,7 @@ export const useMarkAsReadMutation = () => {
         // Legacy shape
         return { ...oldData, data: Array.isArray(oldData.data) ? oldData.data.map((m: any) => ({ ...m, isRead: true })) : [] };
       });
-      
+
       // Invalider les conversations et stats
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['message-stats'] });

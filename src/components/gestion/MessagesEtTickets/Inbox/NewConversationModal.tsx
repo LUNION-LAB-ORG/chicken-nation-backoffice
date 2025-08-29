@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Users, Loader2 } from 'lucide-react';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
-import { getAllCustomers } from '@/services/customerService';
+import { getRestaurantCustomers } from '@/services/customerService';
 import { getAllUsers } from '@/services/userService';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
@@ -74,13 +74,17 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const loadClients = useCallback(async () => {
     setIsLoadingClients(true);
     try {
-      const clientsData = await getAllCustomers({
+      // Utiliser le nouvel endpoint qui filtre déjà par restaurant
+      if (!user?.restaurant_id) {
+        throw new Error('Aucun restaurant associé à votre compte');
+      }
+
+      const clientsData = await getRestaurantCustomers(user.restaurant_id, {
         status: 'ACTIVE',
-        limit: 100, // Récupérer plus de clients pour la sélection
         search: clientSearchTerm.trim() || undefined
       });
 
-      const formattedClients = clientsData.data.map(client => ({
+      const formattedClients = clientsData.map(client => ({
         id: client.id,
         label: `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || client.id,
         email: client.email || undefined,
@@ -96,7 +100,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     } finally {
       setIsLoadingClients(false);
     }
-  }, [clientSearchTerm]);
+  }, [clientSearchTerm, user?.restaurant_id]);
 
   const loadUsers = useCallback(async () => {
     setIsLoadingUsers(true);
@@ -251,7 +255,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
         {/* Content */}
         <div className="md:p-6 p-4 pt-2">
-          <p className="text-gray-600 md:text-sm text-xs mb-6">
+          <p className="text-black md:text-sm text-xs mb-6">
             Créer une nouvelle conversation avec un client ou une conversation interne.
           </p>
 
@@ -265,7 +269,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
           {/* Type de conversation - Boutons horizontaux */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-black mb-3">
               Type de conversation
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -274,7 +278,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 onClick={() => setConversationType('Avec client')}
                 className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm ${conversationType === 'Avec client'
                   ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  : 'border-gray-200 bg-white text-black hover:border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 Avec client
@@ -284,7 +288,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 onClick={() => setConversationType('Interne')}
                 className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
                   ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  : 'border-gray-200 bg-white text-black hover:border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 <Users className="w-4 h-4" />
@@ -310,20 +314,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 className="mb-6"
               />
 
-              {/* Participants (utilisateurs internes) */}
-              <SearchableDropdown
-                label="Participants"
-                placeholder="Rechercher des participants..."
-                options={users}
-                value={selectedParticipantIds[0] || ''}
-                onChange={(value) => setSelectedParticipantIds(value ? [value as string] : [])}
-                onSearchChange={setUserSearchTerm}
-                isLoading={isLoadingUsers}
-                error={errors.participants}
-                required
-                multiSelect={false}
-                className="mb-6"
-              />
+              {/* Pas de participants pour les conversations avec client */}
             </>
           ) : (
             // Conversation interne
@@ -347,7 +338,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
           {/* Sujet */}
           <div className="mb-6">
-            <label className="block md:text-sm text-xs font-medium text-gray-700 mb-2">
+            <label className="block md:text-sm text-xs font-medium text-black mb-2">
               Sujet de la conversation
               <span className="text-red-500 ml-1">*</span>
             </label>
@@ -356,7 +347,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex: Problème avec commande #12345"
-              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.subject ? 'border-red-500' : 'border-gray-300'
+              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.subject ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
             {errors.subject && (
@@ -366,7 +357,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
           {/* Message initial */}
           <div className="mb-16">
-            <label className="block md:text-sm text-xs font-medium text-gray-700 mb-2">
+            <label className="block md:text-sm text-xs font-medium text-black mb-2">
               Message initial (optionnel)
             </label>
             <textarea
@@ -374,7 +365,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               onChange={(e) => setInitialMessage(e.target.value)}
               placeholder="Tapez votre message initial..."
               rows={4}
-              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
             />
           </div>
 
@@ -383,7 +374,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
             <button
               onClick={handleCancel}
               disabled={isCreating}
-              className="md:px-6 md:py-3 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl md:text-sm text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="md:px-6 md:py-3 px-4 py-2 border border-gray-300 text-black rounded-xl md:text-sm text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Annuler
             </button>

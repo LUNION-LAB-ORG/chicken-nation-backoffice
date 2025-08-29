@@ -14,6 +14,7 @@ import { User as ServiceUser } from "@/services/userService";
 import { User } from "@/types/auth";
 import Image from "next/image";
 import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
+import { useMessagesSound } from "@/hooks/useMessagesSound";
 
 // ✅ PERFORMANCE: Lazy loading des composants lourds
 const Dashboard = dynamic(() => import("@/components/gestion/Dashboard"), {
@@ -140,7 +141,7 @@ export default function GestionPage() {
   const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
   
   // États pour gérer les sous-modules de Messages et Tickets
-  const [activeSubModule, setActiveSubModule] = useState<string>("");
+  const [activeSubModule, setActiveSubModule] = useState<string>("inbox");
   // Conversation initiale à sélectionner lorsque l'on ouvre l'inbox depuis le header
   const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
 
@@ -158,6 +159,13 @@ export default function GestionPage() {
     return () => window.removeEventListener('openInboxFromHeader', handleOpenInboxFromHeader as EventListener);
   }, [setActiveTab]);
 
+  // S'assurer que quand on navigue vers Messages et Tickets, le sous-module par défaut soit "inbox"
+  useEffect(() => {
+    if (activeTab === 'messages-tickets' && !activeSubModule) {
+      setActiveSubModule('inbox');
+    }
+  }, [activeTab, activeSubModule]);
+
   // Vérification d'authentification simplifiée
   useEffect(() => {
     // Si l'utilisateur n'est pas authentifié, rediriger vers la page de connexion
@@ -171,6 +179,12 @@ export default function GestionPage() {
       activeFilter: "all",
       selectedRestaurant:
         user?.role !== "ADMIN" ? user?.restaurant_id : undefined,
+      disabledSound: false,
+    });
+
+  // Hook pour les notifications sonores des messages
+  const { hasUnreadMessages: _hasUnreadMessages, unreadMessagesCount: _unreadMessagesCount } =
+    useMessagesSound({
       disabledSound: false,
     });
 
@@ -236,7 +250,7 @@ export default function GestionPage() {
           case "tickets":
             return <TicketsModule />;
           default:
-            return <RapportModule />; // Par défaut, afficher Rapport
+            return <InboxModule initialConversationId={initialConversationId} />; // Par défaut, afficher Inbox
         }
       case "ads":
         return <Ads />;

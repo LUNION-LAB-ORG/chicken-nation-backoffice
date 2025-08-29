@@ -51,7 +51,7 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
   };
 
   return (
-    <div className="lg:w-96 xl:w-[450px] 2xl:w-[500px] bg-white border-r border-slate-300">
+    <div className="h-full bg-white border-r border-slate-300 overflow-y-auto">
       <ConversationsList
         selectedConversation={selectedConversation}
         onSelectConversation={onSelectConversation}
