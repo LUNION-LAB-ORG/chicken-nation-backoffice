@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { X, Users, Loader2 } from 'lucide-react';
-import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
-import { getAllRestaurants } from '@/services/restaurantService';
 import { getAllCustomers } from '@/services/customerService';
 import { getAllUsers } from '@/services/userService';
+import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 
 interface NewConversationModalProps {
@@ -33,10 +32,7 @@ interface ClientOption {
   image?: string;
 }
 
-interface RestaurantOption {
-  id: string;
-  label: string;
-}
+
 
 interface UserOption {
   id: string;
@@ -47,22 +43,22 @@ interface UserOption {
 }
 
 function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConversationModalProps) {
+  // Récupérer l'utilisateur connecté
+  const { user } = useAuthStore();
+
   // États du formulaire
   const [conversationType, setConversationType] = useState('Avec client');
   const [selectedClientId, setSelectedClientId] = useState('');
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState('');
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
   const [initialMessage, setInitialMessage] = useState('');
 
   // États des données
   const [clients, setClients] = useState<ClientOption[]>([]);
-  const [restaurants, setRestaurants] = useState<RestaurantOption[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
 
   // États de chargement
   const [isLoadingClients, setIsLoadingClients] = useState(false);
-  const [isLoadingRestaurants, setIsLoadingRestaurants] = useState(false);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
   // États de recherche
@@ -73,25 +69,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCreating, setIsCreating] = useState(false);
 
-  const loadRestaurants = useCallback(async () => {
-    setIsLoadingRestaurants(true);
-    try {
-      const restaurantsData = await getAllRestaurants();
-      const formattedRestaurants = restaurantsData
-        .filter(r => r.active) // Filtrer les restaurants actifs
-        .map(restaurant => ({
-          id: restaurant.id || '',
-          label: restaurant.name || 'Restaurant sans nom'
-        }));
-      setRestaurants(formattedRestaurants);
-    } catch (error) {
-      console.error('Erreur lors du chargement des restaurants:', error);
-      setErrors(prev => ({ ...prev, restaurants: 'Erreur lors du chargement des restaurants' }));
-      toast.error('Erreur lors du chargement des restaurants');
-    } finally {
-      setIsLoadingRestaurants(false);
-    }
-  }, []);
+
 
   const loadClients = useCallback(async () => {
     setIsLoadingClients(true);
@@ -147,12 +125,11 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   // Charger les données au montage du composant
   useEffect(() => {
     if (isOpen) {
-      loadRestaurants();
       loadClients();
       // Charger les utilisateurs pour les deux types de conversation
       loadUsers();
     }
-  }, [isOpen, loadRestaurants, loadClients, loadUsers]);
+  }, [isOpen, loadClients, loadUsers]);
 
   // Recherche avec debounce pour les clients
   useEffect(() => {
@@ -188,8 +165,9 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       newErrors.client = 'Veuillez sélectionner un client';
     }
 
-    if (!selectedRestaurantId) {
-      newErrors.restaurant = 'Veuillez sélectionner un restaurant';
+    // Validation du restaurant - utiliser l'ID du restaurant de l'utilisateur connecté
+    if (!user?.restaurant_id) {
+      newErrors.restaurant = 'Aucun restaurant associé à votre compte';
     }
 
     if (conversationType === 'Interne' && selectedParticipantIds.length === 0) {
@@ -211,15 +189,15 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         initialMessage: initialMessage.trim() || undefined,
         ...(conversationType === 'Avec client' && {
           clientId: selectedClientId,
-          restaurantId: selectedRestaurantId
+          restaurantId: user?.restaurant_id
         }),
         ...(conversationType === 'Interne' && {
           participantId: selectedParticipantIds[0] || undefined,
-          restaurantId: selectedRestaurantId
+          restaurantId: user?.restaurant_id
         })
       };
 
-      console.log('Création de conversation:', conversationData);
+      console.log('🔄 [NewConversationModal] Données du formulaire:', conversationData);
       await onCreateConversation(conversationData);
 
       // Réinitialiser et fermer
@@ -242,7 +220,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const resetForm = () => {
     setConversationType('Avec client');
     setSelectedClientId('');
-    setSelectedRestaurantId('');
     setSelectedParticipantIds([]);
     setSubject('');
     setInitialMessage('');
@@ -333,28 +310,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 className="mb-6"
               />
 
-              {/* Restaurant */}
-              <div className="mb-6">
-                <CustomDropdown
-                  label="Restaurant"
-                  options={restaurants.map(r => ({ value: r.id, label: r.label }))}
-                  value={selectedRestaurantId}
-                  onChange={setSelectedRestaurantId}
-                  placeholder={isLoadingRestaurants ? "Chargement des restaurants..." : "Sélectionner un restaurant"}
-                  className="w-full"
-                  disabled={isLoadingRestaurants}
-                />
-                {errors.restaurant && (
-                  <p className="mt-1 text-xs text-red-500">{errors.restaurant}</p>
-                )}
-                {isLoadingRestaurants && (
-                  <div className="flex items-center mt-2 text-sm text-gray-500">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Chargement des restaurants...
-                  </div>
-                )}
-              </div>
-
               {/* Participants (utilisateurs internes) */}
               <SearchableDropdown
                 label="Participants"
@@ -373,28 +328,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           ) : (
             // Conversation interne
             <>
-              {/* Restaurant */}
-              <div className="mb-6">
-                <CustomDropdown
-                  label="Restaurant"
-                  options={restaurants.map(r => ({ value: r.id, label: r.label }))}
-                  value={selectedRestaurantId}
-                  onChange={setSelectedRestaurantId}
-                  placeholder={isLoadingRestaurants ? "Chargement des restaurants..." : "Sélectionner un restaurant"}
-                  className="w-full"
-                  disabled={isLoadingRestaurants}
-                />
-                {errors.restaurant && (
-                  <p className="mt-1 text-xs text-red-500">{errors.restaurant}</p>
-                )}
-                {isLoadingRestaurants && (
-                  <div className="flex items-center mt-2 text-sm text-gray-500">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Chargement des restaurants...
-                  </div>
-                )}
-              </div>
-
               {/* Participants avec recherche */}
               <SearchableDropdown
                 label="Participants"

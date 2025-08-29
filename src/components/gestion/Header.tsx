@@ -78,6 +78,22 @@ export default function Header({
     setIsClient(true);
   }, []);
 
+  // Fonction pour obtenir l'URL de l'avatar de manière consistante
+  const getAvatarUrl = () => {
+    if (!isClient || !user?.image) {
+      return "/icons/header/default-avatar.png";
+    }
+    return formatImageUrl(user.image) || "/icons/header/default-avatar.png";
+  };
+
+  // Fonction pour obtenir le nom utilisateur de manière consistante
+  const getUserDisplayName = () => {
+    if (!isClient) {
+      return "Utilisateur";
+    }
+    return user?.fullname || "Utilisateur";
+  };
+
   // Suppression du code lié à fetchStats/messages
 
   const handleLogout = async () => {
@@ -106,6 +122,30 @@ export default function Header({
   }, []);
 
   const handleClickOutside = () => setIsDropdownOpen(false);
+
+  // Éviter le rendu avant l'hydratation complète
+  if (!isClient) {
+    return (
+      <header className={`bg-white border-b border-gray-200 shadow-3xl ${className}`}>
+        <div className="flex items-center justify-between h-14 flex-row">
+          <button
+            onClick={toggleSidebar}
+            className="p-4 hover:bg-orange-100 rounded-lg transition-colors duration-200"
+            aria-label="Menu"
+          >
+            <Menu size={20} className="text-gray-800" />
+          </button>
+          <div className="flex-1 md:hidden"></div>
+          <div className="flex items-end justify-end px-4 space-x-8">
+            <div className="flex items-center space-x-3 p-2 rounded-lg">
+              <span className="text-sm text-gray-700">Chargement...</span>
+              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
@@ -202,8 +242,19 @@ export default function Header({
                           : 'Client';
 
                         const rawAvatar = msg.authorCustomer?.image || msg.authorUser?.image || null;
-                        const formattedAvatar = rawAvatar ? formatImageUrl(rawAvatar) : '';
-                        const avatarUrl = formattedAvatar && isValidImageUrl(formattedAvatar) ? formattedAvatar : null;
+                        const avatarUrl = rawAvatar ? formatImageUrl(rawAvatar) : null;
+                        
+                        // Debug pour voir les URLs d'avatar
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('🖼️ [Header] Avatar debug:', {
+                            messageId: msg.id,
+                            senderName,
+                            rawAvatar,
+                            avatarUrl,
+                            authorCustomer: !!msg.authorCustomer,
+                            authorUser: !!msg.authorUser
+                          });
+                        }
 
                         return (
                           <div
@@ -222,9 +273,22 @@ export default function Header({
                                   <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                                     {avatarUrl ? (
                                       // eslint-disable-next-line @next/next/no-img-element
-                                      <img src={avatarUrl} alt={senderName} className="w-full h-full object-cover" />
+                                      <img 
+                                        src={avatarUrl} 
+                                        alt={senderName} 
+                                        className="w-full h-full object-cover" 
+                                        onError={(e) => {
+                                          const target = e.target as HTMLImageElement;
+                                          target.src = "/icons/header/default-avatar.png";
+                                        }}
+                                      />
                                     ) : (
-                                      <img src="/icons/header/default-avatar.png" alt={senderName} className="w-full h-full object-cover" />
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img 
+                                        src="/icons/header/default-avatar.png" 
+                                        alt={senderName} 
+                                        className="w-full h-full object-cover" 
+                                      />
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
@@ -289,24 +353,17 @@ export default function Header({
             >
               <div className="flex items-center">
                 <span className="text-sm text-gray-700">
-                  {!isClient ? "Utilisateur" : user?.fullname || "Utilisateur"}
+                  {getUserDisplayName()}
                 </span>
               </div>
               <div className="w-8 h-8 bg-gray-200 rounded-full cursor-pointer  overflow-hidden">
                 <Image
-                  src={
-                    formatImageUrl(user?.image || undefined) ||
-                    "/icons/header/default-avatar.png"
-                  }
-                  alt={
-                    !isClient ? "Utilisateur" : user?.fullname || "Utilisateur"
-                  }
+                  src={getAvatarUrl()}
+                  alt={getUserDisplayName()}
                   width={32}
                   height={32}
                   className="w-full h-full cursor-pointer  object-cover"
-                  unoptimized={
-                    !user?.image || user?.image?.startsWith("/icons/")
-                  }
+                  unoptimized={true}
                 />
               </div>
               <ChevronDown
@@ -332,28 +389,17 @@ export default function Header({
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
                         <Image
-                          src={
-                            formatImageUrl(user?.image || undefined) ||
-                            "/icons/header/default-avatar.png"
-                          }
-                          alt={
-                            !isClient
-                              ? "Utilisateur"
-                              : user?.fullname || "Utilisateur"
-                          }
+                          src={getAvatarUrl()}
+                          alt={getUserDisplayName()}
                           width={40}
                           height={40}
                           className="w-full h-full object-cover"
-                          unoptimized={
-                            !user?.image || user?.image?.startsWith("/icons/")
-                          }
+                          unoptimized={true}
                         />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">
-                          {!isClient
-                            ? "Utilisateur"
-                            : user?.fullname || "Utilisateur"}
+                          {getUserDisplayName()}
                         </p>
                         <p className="text-sm text-gray-500 capitalize">
                           Profil

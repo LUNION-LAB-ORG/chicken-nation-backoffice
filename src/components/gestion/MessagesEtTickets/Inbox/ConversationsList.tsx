@@ -77,8 +77,10 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
-    const customerName = `${conversation.customer.first_name} ${conversation.customer.last_name}`.toLowerCase();
-    const customerPhone = conversation.customer.phone?.toLowerCase() || '';
+    const customerName = conversation.customer 
+      ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.toLowerCase()
+      : '';
+    const customerPhone = conversation.customer?.phone?.toLowerCase() || '';
     const lastMessage = getLastMessage(conversation).text.toLowerCase();
     
     return customerName.includes(searchLower) || 
@@ -93,7 +95,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h1 className="lg:text-2xl md:text-lg text-base font-bold text-orange-500">Conversations</h1>
           {/* Bouton Nouvelle conversation - Temporairement désactivé */}
-          {/* 
+       
           <button 
             onClick={() => {
               console.log('Bouton Nouvelle cliqué');
@@ -104,7 +106,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             <Plus className="mr-1 md:w-5 md:h-5 w-4 h-4" />
             Nouvelle
           </button>
-          */}
+        
         </div>
         
         {/* Search */}
@@ -161,7 +163,9 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         {/* Conversations */}
         {filteredConversations.map((conversation) => {
           const lastMessage = getLastMessage(conversation);
-          const customerName = `${conversation.customer.first_name} ${conversation.customer.last_name}`;
+          const customerName = conversation.customer 
+            ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.trim()
+            : 'Client inconnu';
           
           return (
             <div
@@ -176,7 +180,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                 <div className="flex-shrink-0">
                   <div className="relative md:w-12 w-10 md:h-12 h-10">
                     <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
-                      {conversation.customer.image ? (
+                      {conversation.customer?.image ? (
                         <Image
                           src={formatImageUrl(conversation.customer.image)}
                           alt={customerName}
@@ -186,8 +190,8 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                         />
                       ) : (
                         <span className="md:text-lg text-base font-bold text-gray-600 uppercase">
-                          {conversation.customer.first_name?.[0] || '?'}
-                          {conversation.customer.last_name?.[0] || ''}
+                          {conversation.customer?.first_name?.[0] || '?'}
+                          {conversation.customer?.last_name?.[0] || ''}
                         </span>
                       )}
                     </div>
@@ -221,7 +225,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                       {conversation.restaurant?.name || 'Chicken Nation'}
                     </span>
                     <span className="md:text-sm text-xs text-gray-500 font-medium">
-                      {conversation.customer.phone || 'N/A'}
+                      {conversation.customer?.phone || 'N/A'}
                     </span>
                   </div>
                 </div>

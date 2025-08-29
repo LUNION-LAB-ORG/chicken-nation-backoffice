@@ -36,7 +36,7 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
         dto.restaurant_id = conversationData.restaurantId
       }
 
-
+      console.log('📤 [InboxSidebar] DTO envoyé au backend:', dto);
 
       const created = await createConversationWithDto(dto)
 
