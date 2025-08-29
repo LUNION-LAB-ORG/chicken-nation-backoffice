@@ -178,38 +178,16 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         fd.append('image', formData.image)
       }
       
-      // Récupérer le token
-      const token = localStorage.getItem('chicken-nation-auth') 
-        ? JSON.parse(localStorage.getItem('chicken-nation-auth') || '{}')?.state?.accessToken 
-        : null;
+      // Utiliser le client API centralisé qui gère automatiquement l'authentification
+      const { api } = await import('@/services/api')
       
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      // Envoyer la requête avec le client API
+      const newSupplement = await api.post<Dish>('/api/v1/supplements', fd)
       
-      // URL de l'API
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
-      
-      // Envoyer directement le FormData
-      const response = await fetch(`${API_URL}/api/v1/supplements`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: fd
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erreur API:', response.status, errorText);
-        throw new Error(`Erreur ${response.status}: ${errorText}`);
-      }
-      
-      const newDish = await response.json();
       toast.success('Supplément créé avec succès')
       
       if (onSuccess) {
-        onSuccess(newDish)
+        onSuccess(newSupplement)
       }
       onCancel()
     } catch (error: unknown) {
@@ -318,6 +296,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
               accept="image/*" 
               className="hidden" 
               onChange={handleImageChange}
+              aria-label="Télécharger une image du supplément"
             />
           </div>
         </div>

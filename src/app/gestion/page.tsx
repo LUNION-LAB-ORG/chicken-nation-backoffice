@@ -104,6 +104,31 @@ const Apps = dynamic(() => import("@/components/gestion/Apps"), {
   ),
 });
 
+// Composants Messages et Tickets
+const RapportModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Rapport"), {
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
+    </div>
+  ),
+});
+
+const InboxModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
+    </div>
+  ),
+});
+
+const TicketsModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
+  loading: () => (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
+    </div>
+  ),
+});
+
 export default function GestionPage() {
   const router = useRouter();
   const { isAuthenticated, user, setUser } = useAuthStore();
@@ -112,6 +137,10 @@ export default function GestionPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
+  
+  // États pour gérer les sous-modules de Messages et Tickets
+  const [activeSubModule, setActiveSubModule] = useState<string>("");
 
   // Vérification d'authentification simplifiée
   useEffect(() => {
@@ -121,7 +150,7 @@ export default function GestionPage() {
     }
   }, [isAuthenticated, router]);
 
-  const { hasPendingOrders, isPlaying, pendingOrdersCount } =
+  const { hasPendingOrders: _hasPendingOrders, isPlaying: _isPlaying, pendingOrdersCount: _pendingOrdersCount } =
     usePendingOrdersSound({
       activeFilter: "all",
       selectedRestaurant:
@@ -129,10 +158,14 @@ export default function GestionPage() {
       disabledSound: false,
     });
 
-  // Vérification pour le changement de mot de passe
+  // Vérification pour le changement de mot de passe et modal de bienvenue
   useEffect(() => {
     if (isAuthenticated && user && user.password_is_updated === false) {
       setShowPasswordChangeModal(true);
+      setShowWelcomeBackModal(false);
+    } else if (isAuthenticated && user && user.password_is_updated === true) {
+      // Afficher la modal "Heureux de vous revoir" pour les utilisateurs existants
+      setShowWelcomeBackModal(true);
     }
   }, [isAuthenticated, user]);
 
@@ -177,6 +210,18 @@ export default function GestionPage() {
         return <Restaurants />;
       case "personnel":
         return <Personnel />;
+      case "messages-tickets":
+        // Rendu conditionnel basé sur le sous-module actif
+        switch (activeSubModule) {
+          case "rapport":
+            return <RapportModule />;
+          case "inbox":
+            return <InboxModule />;
+          case "tickets":
+            return <TicketsModule />;
+          default:
+            return <RapportModule />; // Par défaut, afficher Rapport
+        }
       case "ads":
         return <Ads />;
       case "promos":
@@ -210,6 +255,8 @@ export default function GestionPage() {
             isSidebarOpen={isSidebarOpen}
             setIsSidebarOpen={setIsSidebarOpen}
             setActiveTab={(tab: string) => setActiveTab(tab as TabKey)}
+            activeSubModule={activeSubModule}
+            setActiveSubModule={setActiveSubModule}
           />
         </div>
       </aside>
@@ -232,9 +279,45 @@ export default function GestionPage() {
           } right-0 top-0`}
         />
 
+        {/* Modal "Heureux de vous revoir" pour les utilisateurs existants */}
+        {showWelcomeBackModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full transform animate-in fade-in zoom-in duration-300">
+              <div className="text-center">
+                {/* Icône de bienvenue */}
+                <div className="mx-auto w-16  h-16 bg-gradient-to-br from-[#F17922] to-orange-500 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                
+                {/* Titre et message */}
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Heureux de vous revoir !
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  Bon retour sur Chicken Nation. Bon service !
+                </p>
+                
+                {/* Bouton OK */}
+                <button
+                  onClick={() => setShowWelcomeBackModal(false)}
+                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  OK, merci !
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto pt-14">
-          <div className="container mx-auto px-4 ">{renderContent()}</div>
+          {activeTab === "messages-tickets" ? (
+            <div className="h-full">{renderContent()}</div>
+          ) : (
+            <div className="container mx-auto px-4">{renderContent()}</div>
+          )}
         </main>
       </div>
 

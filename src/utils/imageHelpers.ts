@@ -13,13 +13,17 @@ export const formatImageUrl = (imageUrl?: string): string => {
     if (imageUrl.startsWith('uploads/')) {
       return `${API_URL}/${imageUrl}`;
     }
-
  
-    if (imageUrl.includes(':') && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(imageUrl)) {
-      return `${API_URL}/uploads/${imageUrl}`;
+    if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(imageUrl)) {
+ 
+      if (imageUrl.includes(':')) {
+        return `${API_URL}/uploads/customer-avatar/${imageUrl}`;
+      } else {
+        return `${API_URL}/uploads/${imageUrl}`;
+      }
     }
 
-    // URLs relatives (commencent par /)
+ 
     if (imageUrl.startsWith('/')) {
       return imageUrl;
     }
@@ -30,8 +34,7 @@ export const formatImageUrl = (imageUrl?: string): string => {
     return '';
   }
 };
-
-// ✅ Fonction spécialisée pour les images de promotions avec fallback
+ 
 export const formatPromotionImageUrl = (imageUrl?: string | null): string => {
   
 
@@ -46,8 +49,7 @@ export const formatPromotionImageUrl = (imageUrl?: string | null): string => {
     
       return imageUrl;
     }
-
-    // URLs avec uploads/promotions/ (format correct après create)
+ 
     if (imageUrl.startsWith('uploads/promotions/')) {
       const result = `${API_URL}/${imageUrl}`;
     
@@ -66,8 +68,7 @@ export const formatPromotionImageUrl = (imageUrl?: string | null): string => {
   
       return imageUrl;
     }
-
-    // Autres cas - utiliser formatImageUrl standard
+ 
     const fallbackResult = formatImageUrl(imageUrl);
     
     return fallbackResult;
@@ -103,8 +104,7 @@ export const addImageToFormData = async (
     try {
       const file = await base64ToFile(image);
       formData.append(fieldName, file);
-    } catch {
-      // Erreur lors de l'ajout de l'image
+    } catch { 
     }
   }
    else if (typeof image === 'string') {
@@ -113,8 +113,7 @@ export const addImageToFormData = async (
 
   return formData;
 };
-
-// ✅ Fonction utilitaire pour valider les URLs d'images pour Next.js Image
+ 
 export const isValidImageUrl = (url: string | null | undefined): boolean => {
   if (!url) return false;
 
@@ -126,9 +125,8 @@ export const isValidImageUrl = (url: string | null | undefined): boolean => {
     if (url.startsWith('http://') || url.startsWith('https://')) return true;
 
     // Check if it's a valid path starting with '/'
-    if (url.startsWith('/')) return true;
+    if (url.startsWith('/')) return true; 
 
-    // If it's a relative path like 'image-1748482035238.jpg', it's invalid for Next.js Image
     return false;
   } catch {
     return false;

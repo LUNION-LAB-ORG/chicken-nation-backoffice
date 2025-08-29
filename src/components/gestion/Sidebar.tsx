@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { useRBAC } from "@/hooks/useRBAC";
-import { LogOut } from "lucide-react";
+import { LogOut, ChevronDown, ChevronRight } from "lucide-react";
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -27,6 +27,9 @@ interface SidebarProps {
   isMobile: boolean;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
+  // Nouveaux props pour gérer les sous-modules de Messages et tickets
+  activeSubModule?: string;
+  setActiveSubModule?: (subModule: string) => void;
 }
 
 const SidebarIcon: React.FC<SidebarIconProps> = ({
@@ -85,6 +88,8 @@ export default function Sidebar({
   isMobile,
   isSidebarOpen,
   setIsSidebarOpen,
+  activeSubModule,
+  setActiveSubModule,
 }: SidebarProps) {
   const router = useRouter();
   const { logout, user } = useAuthStore();
@@ -97,11 +102,30 @@ export default function Sidebar({
     canViewOffreSpeciale,
   } = useRBAC();
   const [isClient, setIsClient] = useState(false);
+  
+  // États pour gérer l'expansion de la section Messages et tickets
+  const [isMessagesExpanded, setIsMessagesExpanded] = useState(false);
 
   // Éviter l'erreur d'hydration en s'assurant que le composant est rendu côté client
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Écouter l'événement du header pour activer automatiquement le sous-module "Inbox"
+  useEffect(() => {
+    const handleOpenInboxFromHeader = () => {
+      setActiveTab("messages-tickets");
+      setIsMessagesExpanded(true);
+      if (setActiveSubModule) {
+        setActiveSubModule("inbox");
+      }
+    };
+
+    window.addEventListener("openInboxFromHeader", handleOpenInboxFromHeader);
+    return () => {
+      window.removeEventListener("openInboxFromHeader", handleOpenInboxFromHeader);
+    };
+  }, [setActiveTab, setActiveSubModule]);
 
   const handleLogout = async () => {
     try {
@@ -111,6 +135,28 @@ export default function Sidebar({
       console.error("Erreur lors de la déconnexion:", error);
     }
   };
+
+  // Sous-modules pour Messages et tickets
+  const messageSubModules = [
+    // {
+    //   id: "rapport",
+    //   label: "Rapport",
+    //   defaultIcon: "/icons/sidebar/rapport-dark.png",
+    //   whiteIcon: "/icons/sidebar/rapport.png",
+    // },
+    {
+      id: "inbox",
+      label: "Inbox", 
+      defaultIcon: "/icons/sidebar/message.png",
+      whiteIcon: "/icons/sidebar/inbox.png",
+    },
+    // {
+    //   id: "tickets",
+    //   label: "Tickets",
+    //   defaultIcon: "/icons/sidebar/ticket-dark.png",
+    //   whiteIcon: "/icons/sidebar/ticket.png",
+    // }
+  ];
 
   // Définir les éléments de navigation en fonction des permissions RBAC
   const navigationItems = [
@@ -144,6 +190,15 @@ export default function Sidebar({
       defaultIcon: "/icons/sidebar/client.png",
       whiteIcon: "/icons/sidebar/client-white.png",
       canAccess: canViewClient,
+    },
+    // Nouvelle section Messages et tickets
+    {
+      id: "messages-tickets",
+      label: "Messages et tickets",
+      defaultIcon: "/icons/sidebar/message.png",
+      whiteIcon: "/icons/sidebar/messages-white.png",
+      canAccess: () => true, 
+      hasSubModules: true,
     },
     {
       id: "inventory",
@@ -230,11 +285,116 @@ export default function Sidebar({
             ) : (
               // Après l'hydration, afficher le contenu réel
               navigationItems.map((item) => {
-                // ✅ RBAC: Vérifier les permissions au lieu des rôles hardcodés
+            
                 if (!item.canAccess()) {
                   return null;
                 }
 
+                // Gestion spéciale pour la section "Messages et tickets"
+                if (item.hasSubModules && item.id === "messages-tickets") {
+                  return (
+                    <div key={item.id}>
+                      {/* Element principal Messages et tickets */}
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          
+                          // Déplier/plier les sous-modules sans fermer la sidebar
+                          setActiveTab(item.id);
+                          setIsMessagesExpanded(!isMessagesExpanded);
+                        }}
+                        className={`
+                          w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
+                          ${
+                            activeTab === item.id
+                              ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
+                              : "text-gray-600 hover:bg-gray-100"
+                          }
+                          transition-all duration-200
+                        `}
+                      >
+                        <SidebarIcon
+                          defaultIcon={item.defaultIcon}
+                          whiteIcon={item.whiteIcon}
+                          alt={item.label}
+                          active={activeTab === item.id}
+                        />
+                        <span
+                          className={`text-sm font-sofia-regular -ml-6 font-normal cursor-pointer flex-1 ${
+                            activeTab === item.id ? "text-white" : "text-gray-600"
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                        {/* Icône d'expansion */}
+                        {isMessagesExpanded ? (
+                          <ChevronDown
+                            size={16}
+                            className={`transition-transform ${
+                              activeTab === item.id ? "text-white" : "text-gray-400"
+                            }`}
+                          />
+                        ) : (
+                          <ChevronRight
+                            size={16}
+                            className={`transition-transform ${
+                              activeTab === item.id ? "text-white" : "text-gray-400"
+                            }`}
+                          />
+                        )}
+                      </button>
+
+                      {/* Sous-modules */}
+                      {isMessagesExpanded && (
+                        <div className="ml-6 mt-1 space-y-1">
+                          {messageSubModules.map((subModule) => (
+                            <button
+                              key={subModule.id}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                
+                                // Seulement fermer la sidebar si on navigue vers un sous-module différent
+                                if (activeSubModule !== subModule.id && isMobile) {
+                                  setIsSidebarOpen(false);
+                                }
+                                
+                                setActiveTab("messages-tickets");
+                                if (setActiveSubModule) {
+                                  setActiveSubModule(subModule.id);
+                                }
+                              }}
+                              className={`
+                                w-full flex items-center cursor-pointer space-x-3 px-4 py-2 rounded-[10px]
+                                ${
+                                  activeSubModule === subModule.id
+                                    ? "text-orange-500"
+                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                }
+                                transition-all duration-200
+                              `}
+                            >
+                              <SidebarIcon
+                                defaultIcon={subModule.defaultIcon}
+                                whiteIcon={subModule.whiteIcon}
+                                alt={subModule.label}
+                                active={activeSubModule === subModule.id}
+                              />
+                              <span className={`text-sm font-sofia-regular ${
+                                activeSubModule === subModule.id ? "text-orange-500 font-medium" : ""
+                              }`}>
+                                {subModule.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Éléments de navigation normaux
                 return (
                   <SidebarItem
                     key={item.id}

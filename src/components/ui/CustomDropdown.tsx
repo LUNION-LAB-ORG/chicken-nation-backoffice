@@ -70,7 +70,7 @@ export function CustomDropdown({
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
         className={`
-          w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-lg 
+          w-full md:px-4 md:py-4 px-3 py-3 text-left bg-white border border-gray-300 rounded-xl 
           focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] 
           transition-all duration-200 flex items-center justify-between
           ${disabled 

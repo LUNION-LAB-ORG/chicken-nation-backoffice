@@ -1,81 +1,12 @@
 import { apiRequest } from '@/services/api'
-import { mockConversations, mockMessages, mockStats } from '@/data/mockMessages'
+import { Message, Conversation, MessageStats, PaginatedResponse } from '@/types/messaging'
 
-// Mode simulation - toujours actif car l'endpoint n'existe pas encore
-const USE_MOCK_DATA = true
-
-// Types pour les messages
-export interface Message {
-  id: string
-  conversation_id: string
-  sender_id: string
-  sender_type: 'CLIENT' | 'BACKOFFICE'
-  content: string
-  message_type: 'TEXT' | 'IMAGE' | 'FILE'
-  file_url?: string
-  is_read: boolean
-  created_at: string
-  updated_at: string
-  // Informations du sender
-  sender?: {
-    id: string
-    fullname: string
-    email: string
-    image?: string
-    user_type?: string
-  }
-}
-
-export interface Conversation {
-  id: string
-  client_id: string
-  last_message_at: string
-  unread_count: number
-  status: 'ACTIVE' | 'CLOSED' | 'ARCHIVED'
-  created_at: string
-  updated_at: string
-  // Informations du client
-  client: {
-    id: string
-    fullname: string
-    email: string
-    phone?: string
-    image?: string
-    user_type?: string
-    is_connected?: boolean
-  }
-  // Dernier message pour l'aperçu
-  last_message?: {
-    id: string
-    content: string
-    sender_type: 'CLIENT' | 'BACKOFFICE'
-    message_type: 'TEXT' | 'IMAGE' | 'FILE'
-    created_at: string
-  }
-}
-
-export interface MessageStats {
-  total_conversations: number
-  unread_conversations: number
-  total_messages: number
-  unread_messages: number
-}
-
-// ✅ Récupérer toutes les conversations
-export const getConversations = async (): Promise<Conversation[]> => {
+// ✅ Récupérer toutes les conversations avec pagination
+export const getConversations = async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<Conversation>> => {
   try {
-     
-
-    // Mode développement avec données mockées
-    if (USE_MOCK_DATA) {
-  
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simuler un délai réseau
-      return mockConversations
-    }
-
-    const response = await apiRequest<Conversation[]>('/messages/conversations', 'GET')
-
-     
+    console.log(`🔄 [getConversations] GET /conversations?page=${page}&limit=${limit}`)
+    const response = await apiRequest<PaginatedResponse<Conversation>>(`/conversations?page=${page}&limit=${limit}`, 'GET')
+    console.log(`✅ [getConversations] Reçu ${response.data?.length || 0} conversations`, response)
     return response
   } catch (error) {
     console.error('❌ [getConversations] Erreur:', error)
@@ -83,21 +14,13 @@ export const getConversations = async (): Promise<Conversation[]> => {
   }
 }
 
-// ✅ Récupérer les messages d'une conversation
-export const getMessages = async (conversationId: string): Promise<Message[]> => {
+// ✅ Récupérer les messages d'une conversation avec pagination
+export const getMessages = async (conversationId: string, page: number = 1, limit: number = 50): Promise<PaginatedResponse<Message>> => {
   try {
-     
-
-    // Mode développement avec données mockées
-    if (USE_MOCK_DATA) {
-     
-      await new Promise(resolve => setTimeout(resolve, 300)) // Simuler un délai réseau
-      return mockMessages[conversationId] || []
-    }
-
-    const response = await apiRequest<Message[]>(`/messages/conversations/${conversationId}/messages`, 'GET')
-
- 
+    console.log(`🔄 [getMessages] GET /conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
+    const response = await apiRequest<PaginatedResponse<Message>>(`/conversations/${conversationId}/messages?page=${page}&limit=${limit}`, 'GET')
+    console.log(`✅ [getMessages] Reçu ${response.data?.length || 0} messages pour conversation ${conversationId}`, response)
+    
     return response
   } catch (error) {
     console.error('❌ [getMessages] Erreur:', error)
@@ -108,55 +31,30 @@ export const getMessages = async (conversationId: string): Promise<Message[]> =>
 // ✅ Envoyer un message
 export const sendMessage = async (conversationId: string, content: string, messageType: 'TEXT' | 'IMAGE' | 'FILE' = 'TEXT', file?: File): Promise<Message> => {
   try {
-  
-
-    // Mode développement avec données mockées
-    if (USE_MOCK_DATA) {
-       
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simuler un délai réseau
-
-      const mockMessage: Message = {
-        id: `msg-${Date.now()}`,
-        conversation_id: conversationId,
-        sender_id: 'backoffice-1',
-        sender_type: 'BACKOFFICE',
-        content,
-        message_type: messageType,
-        file_url: file ? URL.createObjectURL(file) : undefined,
-        is_read: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        sender: {
-          id: 'backoffice-1',
-          fullname: 'Support Chicken Nation',
-          email: 'support@chickennation.com'
-        }
-      }
-
-      return mockMessage
-    }
-
     if (messageType === 'TEXT') {
-      const response = await apiRequest<Message>(`/messages/conversations/${conversationId}/messages`, 'POST', {
-        content,
-        message_type: messageType
+      const response = await apiRequest<Message>(`/conversations/${conversationId}/messages`, 'POST', {
+        body: content
       })
-
-  
       return response
     } else {
       // Pour les fichiers, utiliser FormData
       const formData = new FormData()
-      formData.append('content', content)
+      formData.append('body', content)
       formData.append('message_type', messageType)
       if (file) {
         formData.append('file', file)
       }
 
-      const response = await apiRequest<Message>(`/messages/conversations/${conversationId}/messages`, 'POST', formData)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/conversations/${conversationId}/messages`, {
+        method: 'POST',
+        body: formData,
+      })
 
-    
-      return response
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return await response.json()
     }
   } catch (error) {
     console.error('❌ [sendMessage] Erreur:', error)
@@ -167,54 +65,40 @@ export const sendMessage = async (conversationId: string, content: string, messa
 // ✅ Marquer les messages comme lus
 export const markMessagesAsRead = async (conversationId: string): Promise<void> => {
   try {
-     
-
-    // Mode développement avec données mockées
-    if (USE_MOCK_DATA) {
-      
-      await new Promise(resolve => setTimeout(resolve, 200)) // Simuler un délai réseau
-      return
-    }
-
-    await apiRequest(`/messages/conversations/${conversationId}/read`, 'POST')
+    console.log(`🔄 [markMessagesAsRead] POST /conversations/${conversationId}/read`)
+    await apiRequest(`/conversations/${conversationId}/read`, 'POST')
+    console.log(`✅ [markMessagesAsRead] Messages marqués comme lus pour conversation ${conversationId}`)
   } catch (error) {
-    console.error('❌ [markMessagesAsRead] Erreur:', error)
-    throw error
+    console.warn(`⚠️ [markMessagesAsRead] Impossible de marquer les messages comme lus:`, error)
+    // On n'interrompt pas le flux si cette opération échoue
   }
 }
 
-// ✅ Récupérer les statistiques des messages
+// ✅ Obtenir les statistiques des messages
 export const getMessageStats = async (): Promise<MessageStats> => {
   try {
-    
-
-    // Mode développement avec données mockées
-    if (USE_MOCK_DATA) {
-      
-      await new Promise(resolve => setTimeout(resolve, 200)) // Simuler un délai réseau
-      return mockStats
-    }
-
-    const response = await apiRequest<MessageStats>('/messages/stats', 'GET')
-
-     
+    console.log('🔄 [getMessageStats] GET /conversations/stats')
+    const response = await apiRequest<MessageStats>('/conversations/stats', 'GET')
+    console.log('✅ [getMessageStats] Statistiques reçues:', response)
     return response
-  } catch (error) {
-    console.error('❌ [getMessageStats] Erreur:', error)
-    throw error
+  } catch {
+    console.log('⚠️ [getMessageStats] Endpoint stats non disponible, utilisation des valeurs par défaut')
+    // Retourner des stats par défaut si l'endpoint n'existe pas
+    return {
+      total_conversations: 0,
+      unread_conversations: 0,
+      total_messages: 0,
+      unread_messages: 0
+    }
   }
 }
 
 // ✅ Créer une nouvelle conversation (si nécessaire)
 export const createConversation = async (clientId: string): Promise<Conversation> => {
   try {
-   
-
-    const response = await apiRequest<Conversation>('/messages/conversations', 'POST', {
-      client_id: clientId
+    const response = await apiRequest<Conversation>('/conversations', 'POST', {
+      receiver_user_id: clientId
     })
-
-     
     return response
   } catch (error) {
     console.error('❌ [createConversation] Erreur:', error)
@@ -225,11 +109,7 @@ export const createConversation = async (clientId: string): Promise<Conversation
 // ✅ Archiver une conversation
 export const archiveConversation = async (conversationId: string): Promise<void> => {
   try {
- 
-
-    await apiRequest(`/messages/conversations/${conversationId}/archive`, 'POST')
-
-    
+    await apiRequest(`/conversations/${conversationId}/archive`, 'POST')
   } catch (error) {
     console.error('❌ [archiveConversation] Erreur:', error)
     throw error
@@ -239,12 +119,21 @@ export const archiveConversation = async (conversationId: string): Promise<void>
 // ✅ Fermer une conversation
 export const closeConversation = async (conversationId: string): Promise<void> => {
   try {
- 
-    await apiRequest(`/messages/conversations/${conversationId}/close`, 'POST')
-
-    console.log('✅ [closeConversation] Conversation fermée')
+    await apiRequest(`/conversations/${conversationId}/close`, 'POST')
   } catch (error) {
     console.error('❌ [closeConversation] Erreur:', error)
     throw error
   }
 }
+
+// ✅ Marquer une conversation comme lue
+export const markConversationAsRead = async (conversationId: string): Promise<void> => {
+  try {
+    await markMessagesAsRead(conversationId)
+  } catch (error) {
+    console.warn('⚠️ [markConversationAsRead] Impossible de marquer la conversation comme lue:', error)
+    // On continue malgré l'erreur
+  }
+}
+export type { Message }
+

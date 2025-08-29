@@ -8,8 +8,8 @@ import { useAuthStore } from "@/store/authStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import EditMember from "@/components/gestion/Personnel/EditMember";
 import NotificationDropdown from "@/components/ui/NotificationDropdown";
-import MessageModal from "@/components/ui/MessageModal";
-import { useMessageStore } from "@/store/messageStore";
+// import MessageModal from "@/components/ui/MessageModal"; // supprimé, non utilisé
+// import { useMessageStore } from "@/store/messageStore"; // supprimé, non utilisé
 import { User } from "@/types/auth";
 
 interface HeaderProps {
@@ -27,22 +27,30 @@ export default function Header({
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [isMessageDropdownOpen, setIsMessageDropdownOpen] = useState(false);
+  // Simuler des messages non lus (à remplacer par store réel)
+  const unreadMessages = [
+    {
+      id: 'msg-1',
+      sender: 'Kouamé Adjoua',
+      content: "Bonsoir, ma commande n'est pas arrivée...",
+      time: 'il y a 5 min',
+    },
+    {
+      id: 'msg-2',
+      sender: 'Yao Koffi',
+      content: 'Merci pour le kedjenou !',
+      time: 'il y a 30 min',
+    },
+  ];
   const [isClient, setIsClient] = useState(false);
-  const { stats, fetchStats } = useMessageStore();
 
   // Éviter l'erreur d'hydration
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Charger les statistiques des messages au montage
-  useEffect(() => {
-    fetchStats();
-    // Recharger les stats toutes les 30 secondes
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
-  }, [fetchStats]);
+  // Suppression du code lié à fetchStats/messages
 
   const handleLogout = async () => {
     try {
@@ -83,26 +91,59 @@ export default function Header({
           {/* Notifications */}
           <NotificationDropdown />
 
-          <button
-            type="button"
-            onClick={() => setShowMessageModal(true)}
-            className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
-            title="Messages"
-          >
-            <Image
-              src="/icons/header/mail.png"
-              alt="Mail"
-              width={24}
-              height={24}
-              className="text-gray-600"
-            />
-            {/* Badge de notification pour les messages non lus */}
-            {stats && stats.unread_messages > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                {stats.unread_messages > 99 ? "99+" : stats.unread_messages}
-              </span>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsMessageDropdownOpen((open) => !open)}
+              className="relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
+              title="Messages"
+            >
+              <Image
+                src="/icons/header/mail.png"
+                alt="Mail"
+                width={24}
+                height={24}
+                className="text-gray-600"
+              />
+              {/* Badge de notification pour les messages non lus */}
+              {unreadMessages.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                  {unreadMessages.length > 99 ? "99+" : unreadMessages.length}
+                </span>
+              )}
+            </button>
+            {/* Dropdown messages */}
+            {isMessageDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="p-4 border-b font-bold text-gray-900">Nouveaux messages</div>
+                {unreadMessages.length === 0 ? (
+                  <div className="p-4 text-gray-500 text-center">Aucun nouveau message</div>
+                ) : (
+                  <ul>
+                    {unreadMessages.map((msg) => (
+                      <li
+                        key={msg.id}
+                        className="px-4 py-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0"
+                        onClick={() => {
+                          setIsMessageDropdownOpen(false);
+                          // Appeler la fonction pour activer le module Inbox dans la sidebar
+                          if (window && window.dispatchEvent) {
+                            window.dispatchEvent(new CustomEvent('openInboxFromHeader'));
+                          }
+                        }}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-gray-900">{msg.sender}</span>
+                          <span className="text-xs text-gray-400">{msg.time}</span>
+                        </div>
+                        <div className="text-sm text-gray-600 truncate">{msg.content}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             )}
-          </button>
+          </div>
 
           <button
             className="hidden md:block relative p-2 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors"
@@ -267,11 +308,7 @@ export default function Header({
         />
       )}
 
-      {/* Modal de messages */}
-      <MessageModal
-        isOpen={showMessageModal}
-        onClose={() => setShowMessageModal(false)}
-      />
+  {/* Modal de messages supprimé définitivement */}
     </header>
   );
 }

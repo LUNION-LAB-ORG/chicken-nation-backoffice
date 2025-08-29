@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 import { Order } from '@/components/gestion/Orders/OrdersTable';
 import { MenuItem } from '@/types';
 
-type SectionKey = 'orders' | 'menus' | 'clients' | 'inventory' | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos' | 'loyalty' | 'apps';
+type SectionKey = 'orders' | 'menus' | 'clients' | 'inventory' | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos' | 'loyalty' | 'apps' | 'messages-tickets';
 type ViewType = 'list' | 'create' | 'edit' | 'view';
 export type TabKey = 'dashboard' | SectionKey;
 

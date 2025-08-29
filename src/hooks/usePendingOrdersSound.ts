@@ -24,7 +24,6 @@ export const usePendingOrdersSound = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audio = new Audio("/musics/pending-order.mp3");
   const queryClient = useQueryClient();
 
   // Déterminer si l'utilisateur a le droit d'entendre le son
@@ -84,17 +83,17 @@ export const usePendingOrdersSound = ({
 
   // Initialisation de l'audio et gestion de la lecture/pause
   useEffect(() => {
+    // Créer l'instance audio côté client
+    if (!audioRef.current && typeof window !== 'undefined') {
+      audioRef.current = new Audio("/musics/pending-order.mp3");
+      audioRef.current.loop = false;
+    }
+
     // Si la lecture n'est pas autorisée ou que le son est désactivé, on arrête tout
     if (!canPlaySound || disabledSound) {
       stopContinuousSound();
       return;
     }
-
-    // // Créer l'instance audio si elle n'existe pas
-    // if (audio) {
-    //   audioRef.current = new Audio("/musics/pending-order.mp3");
-    //   audioRef.current.loop = false;
-    // }
 
     if (hasPendingOrders && !isPlaying) {
       startContinuousSound();
@@ -111,9 +110,9 @@ export const usePendingOrdersSound = ({
 
   // Fonction pour jouer le son en continu
   const playSound = () => {
-    if (audio && !disabledSound && canPlaySound) {
-      audio.currentTime = 0;
-      audio.play().catch((error) => {
+    if (audioRef.current && !disabledSound && canPlaySound) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch((error) => {
         console.error("Erreur de lecture audio pour commandes en attente", error);
       });
     }

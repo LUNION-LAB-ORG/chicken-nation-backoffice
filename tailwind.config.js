@@ -56,6 +56,7 @@ module.exports = {
         ring: "var(--ring)",
         'orange-light': '#FBD2B5',
         'gray-light': '#F5F5F5',
+        'rapport-bg': '#FBFBFB',
         dark: '#5D5C5C',
       },
       fontSize: {
