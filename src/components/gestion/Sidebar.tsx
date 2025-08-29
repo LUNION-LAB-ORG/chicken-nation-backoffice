@@ -144,12 +144,12 @@ export default function Sidebar({
     //   defaultIcon: "/icons/sidebar/rapport-dark.png",
     //   whiteIcon: "/icons/sidebar/rapport.png",
     // },
-    {
-      id: "inbox",
-      label: "Inbox", 
-      defaultIcon: "/icons/sidebar/message.png",
-      whiteIcon: "/icons/sidebar/inbox.png",
-    },
+    // {
+    //   id: "inbox",
+    //   label: "Inbox", 
+    //   defaultIcon: "/icons/sidebar/message.png",
+    //   whiteIcon: "/icons/sidebar/inbox.png",
+    // },
     // {
     //   id: "tickets",
     //   label: "Tickets",
