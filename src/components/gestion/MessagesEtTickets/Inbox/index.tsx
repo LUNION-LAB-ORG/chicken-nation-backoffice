@@ -1,11 +1,18 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import InboxSidebar from './InboxSidebar';
 import ConversationView from './ConversationView';
 
-function InboxModule() {
-  const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
+function InboxModule({ initialConversationId }: { initialConversationId?: string | null }) {
+  const [selectedConversation, setSelectedConversation] = useState<string | null>(initialConversationId || null);
+
+  // If initialConversationId changes (opened from header), select it
+  useEffect(() => {
+    if (initialConversationId) {
+      setSelectedConversation(initialConversationId);
+    }
+  }, [initialConversationId]);
 
   return (
     <div className="h-full bg-[#FBFBFB]">

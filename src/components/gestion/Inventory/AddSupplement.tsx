@@ -9,6 +9,7 @@ import Toggle from '@/components/ui/Toggle'
 import { Dish } from '@/types/dish'
 import { ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { api } from "@/services/api"
 import { validateCreateSupplement } from '@/schemas/supplementSchemas'
 
 interface AddProductProps {
@@ -178,11 +179,9 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         fd.append('image', formData.image)
       }
       
-      // Utiliser le client API centralisé qui gère automatiquement l'authentification
-      const { api } = await import('@/services/api')
-      
+
       // Envoyer la requête avec le client API
-      const newSupplement = await api.post<Dish>('/api/v1/supplements', fd)
+      const newSupplement = await api.post<Dish>('/supplements', fd)
       
       toast.success('Supplément créé avec succès')
       

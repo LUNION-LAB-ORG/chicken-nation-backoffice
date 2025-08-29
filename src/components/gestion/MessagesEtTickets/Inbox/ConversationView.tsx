@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { MessageCircle, Eye, EyeOff, Send, ArrowLeft, AlertTriangle } from 'lucide-react';
 import InboxRightbar from './InboxRightbar';
@@ -11,6 +12,7 @@ import { useMessagesSocket } from '@/hooks/useMessagesSocket';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
+import type { MessagesResponse, Message } from '@/types/messaging';
 
 interface ConversationViewProps {
   conversationId: string | null;
@@ -23,27 +25,30 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const [isMobileRightbarOpen, setIsMobileRightbarOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   // 🔌 React Query hooks
   const { 
-    data: messagesData, 
+    data: messagesPagesData, 
     isLoading: isLoadingMessages, 
-    refetch: refetchMessagesQuery 
+    refetch: refetchMessagesQuery,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   } = useMessagesQuery(conversationId);
   
   const sendMessageMutation = useSendMessageMutation();
   // const markAsReadMutation = useMarkAsReadMutation(); // Temporairement désactivé
 
-  // Récupérer les messages de la conversation actuelle avec useMemo et tri chronologique
+  // Flatten pages and sort chronologically (older -> newer)
   const conversationMessages = useMemo(() => {
-    const messages = messagesData?.data || [];
-    // Trier les messages par ordre chronologique (anciens vers récents)
-    return messages.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateA - dateB; // Anciens en premier, récents en dernier
-    });
-  }, [messagesData?.data]);
+    const pages = (messagesPagesData?.pages || []) as MessagesResponse[];
+    const all = pages.flatMap((p) => p.data || []) as Message[];
+    return all.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  }, [messagesPagesData]);
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isInitialLoadRef = useRef(true);
   
   // Récupérer la conversation actuelle (on peut obtenir des infos depuis le premier message)
   const currentConversation = useMemo(() => {
@@ -59,7 +64,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           fullname: firstMessage.authorCustomer.name || 
                    `${firstMessage.authorCustomer.first_name || ''} ${firstMessage.authorCustomer.last_name || ''}`.trim(),
           image: firstMessage.authorCustomer.image,
-          email: firstMessage.authorCustomer.email
+          email: ((firstMessage.authorCustomer as unknown) as { email?: string })?.email ?? null
         }
       };
     }
@@ -85,8 +90,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               `${client.first_name || ''} ${client.last_name || ''}`.trim() ||
               currentConversation?.client?.fullname ||
               'Client',
-        image: client.image || currentConversation?.client?.image || null,
-        email: client.email || currentConversation?.client?.email || null
+  image: client.image || currentConversation?.client?.image || null,
+  email: ((client as unknown) as { email?: string })?.email || currentConversation?.client?.email || null
       };
     }
 
@@ -101,8 +106,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   // 🔌 Hook WebSocket pour les mises à jour en temps réel
   const { socketConnected, refetchMessages } = useMessagesSocket({
     conversationId,
-    userId: currentConversation?.client_id,
-    enabled: !!conversationId
+    enabled: !!conversationId,
   });
 
   // Marquer comme lu quand la conversation change - DÉSACTIVÉ temporairement pour éviter la boucle
@@ -117,24 +121,68 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
+  // Charger plus d'anciens messages quand on scroll vers le haut
+  const handleScroll = useCallback(async () => {
+    const el = scrollContainerRef.current;
+    if (!el || !hasNextPage || isFetchingNextPage) return;
+    // si on est proche du top (ex: scrollTop < 100px)
+    if (el.scrollTop < 120) {
+      // Préserver la position actuelle
+      const previousHeight = el.scrollHeight;
+  await fetchNextPage();
+      // Après chargement, recalculer et restaurer le scrollTop pour préserver la vue actuelle
+      requestAnimationFrame(() => {
+        try {
+          const newHeight = el.scrollHeight;
+          el.scrollTop = newHeight - previousHeight + el.scrollTop;
+        } catch (err) {
+          console.warn('Erreur en restaurant la position de scroll', err);
+        }
+      });
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   // Scroll au changement de conversation (instant)
   useEffect(() => {
     if (conversationId && conversationMessages.length > 0) {
-      scrollToBottom('instant');
+      // Sur la première ouverture de conversation on scroll en bas
+      if (isInitialLoadRef.current) {
+        scrollToBottom('instant');
+        isInitialLoadRef.current = false;
+      }
+
+      // Marquer localement les messages comme lus quand on ouvre la conversation
+      // Mise à jour locale via React Query
+      if (conversationId) {
+        // Messages: set isRead = true safely
+        queryClient.setQueryData<MessagesResponse>(['messages', conversationId], (oldData) => {
+          const prev = oldData ?? { data: [], meta: { page: 1, limit: 100, total: 0, totalPages: 0 } };
+          const data = Array.isArray(prev.data) ? prev.data.map((m) => ({ ...m, isRead: true })) : [];
+          return { ...prev, data };
+        });
+
+        // Conversations: safely update unread_count for the opened conversation
+        queryClient.setQueryData<import('@/types/messaging').ConversationsResponse>(['conversations'], (old) => {
+          const prev = (old as import('@/types/messaging').ConversationsResponse) || { data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 0 } };
+          const dataArray = Array.isArray(prev.data) ? prev.data : [];
+          const updated = dataArray.map((conv) => (conv && conv.id === conversationId ? { ...conv, unread_count: 0 } : conv));
+          return { ...prev, data: updated } as import('@/types/messaging').ConversationsResponse;
+        });
+      }
     }
-  }, [conversationId, conversationMessages.length]);
+  }, [conversationId, conversationMessages.length, queryClient]);
 
   // Scroll quand de nouveaux messages arrivent (smooth)
   useEffect(() => {
     if (conversationMessages.length > 0) {
-      // Petit délai pour s'assurer que le DOM est mis à jour
       const timer = setTimeout(() => {
-        scrollToBottom('smooth');
+        // Quand de nouveaux messages arrivent (non paginés), scroll en bas
+        if (!isFetchingNextPage) scrollToBottom('smooth');
       }, 100);
-      
+
       return () => clearTimeout(timer);
     }
-  }, [conversationMessages.length]); // On écoute le changement de longueur
+  }, [conversationMessages.length, isFetchingNextPage]); // On écoute le changement de longueur
 
   if (!conversationId) {
     return (
@@ -237,29 +285,9 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            {/* Indicateur de connexion WebSocket */}
-            <div className="flex items-center space-x-2">
-              <div className={`w-2 h-2 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-              <span className="text-xs text-gray-500 hidden md:inline">
-                {socketConnected ? 'Connecté' : 'Déconnecté'}
-              </span>
-            </div>
-            
-            {/* Bouton de rafraîchissement manuel */}
-            <button 
-              onClick={() => {
-                console.log('🔄 Manual refresh requested');
-                refetchMessages();
-                refetchMessagesQuery();
-              }}
-              className="p-2 hover:bg-gray-100 rounded-full"
-              title="Actualiser les messages"
-            >
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-            
+           
+            {/* Bouton d'escalation en ticket - Temporairement désactivé */}
+            {/* 
             <button 
               onClick={() => setIsEscalateModalOpen(true)}
               className="bg-orange-500 text-white md:px-6 md:py-4 px-3 py-2 rounded-2xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
@@ -268,11 +296,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               <span className="md:inline hidden lg:inline">Escalader en ticket</span>
               <span className="md:hidden">Escalader</span>
             </button>
+            */}
           </div>
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 md:px-6 md:py-4 px-4 py-3">
+  <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto bg-gray-50 md:px-6 md:py-4 px-4 py-3">
           {/* Loading des messages */}
           {isLoadingMessages && (
             <div className="flex justify-center items-center h-32">
@@ -337,11 +366,10 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                         <div className="flex items-center justify-end md:space-x-2 space-x-1 mb-1">
                           <span className="md:text-sm text-xs text-gray-400">
                             {formatMessageTime(msg.createdAt)}
-                          </span>
-                          <span className="md:text-sm text-xs text-gray-500">support</span>
+                          </span> 
                           <span className="md:text-sm text-xs font-medium text-gray-500">
                             {msg.authorUser?.name || 
-                             `${msg.authorUser?.first_name || ''} ${msg.authorUser?.last_name || ''}`.trim() ||
+                             msg.authorUser?.name ||
                              'Support'}
                           </span>
                         </div>
@@ -352,7 +380,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                       <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0">
                         <Image
                           src={formatImageUrl(msg.authorUser?.image) || "/icons/imageprofile.png"}
-                          alt={msg.authorUser?.name || msg.authorUser?.first_name || 'Agent'}
+                          alt={msg.authorUser?.name || msg.authorUser?.email || 'Agent'}
                           width={40}
                           height={40}
                           className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"

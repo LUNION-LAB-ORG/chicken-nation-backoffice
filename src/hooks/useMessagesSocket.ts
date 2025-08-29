@@ -15,6 +15,7 @@ interface UseMessagesSocketProps {
   conversationId?: string | null;
   userId?: string;
   enabled?: boolean;
+  onNewMessage?: (data: SocketMessageData) => void;
 }
 
 interface UseMessagesSocketReturn {
@@ -27,6 +28,7 @@ export const useMessagesSocket = ({
   conversationId,
   userId,
   enabled = true,
+  onNewMessage,
 }: UseMessagesSocketProps): UseMessagesSocketReturn => {
   const [socketConnected, setSocketConnected] = useState(false);
   const queryClient = useQueryClient();
@@ -51,10 +53,18 @@ export const useMessagesSocket = ({
       exact: false,
     });
   }, [queryClient]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
 
   // Gestionnaire pour les nouveaux messages
   const handleNewMessage = useCallback((data: SocketMessageData) => {
     console.log('📨 [useMessagesSocket] New message received:', data);
+    // Callback local pour jouer un son ou autres actions spécifiques
+    try {
+      if (onNewMessage) onNewMessage(data);
+    } catch (err) {
+      console.warn('Erreur onNewMessage callback', err);
+    }
     
     // Invalider les messages de la conversation concernée
     if (data.conversationId) {
@@ -77,7 +87,19 @@ export const useMessagesSocket = ({
     queryClient.invalidateQueries({
       queryKey: ['message-stats'],
     });
-  }, [queryClient, refetchConversations]);
+
+    // Jouer le son de notification si la conversation correspond à celle du hook
+    try {
+      if (audioRef.current && conversationId && data.conversationId === conversationId) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch((err) => {
+          console.error('Erreur lecture son notification (useMessagesSocket)', err);
+        });
+      }
+    } catch (err) {
+      console.warn('Erreur tentative lecture son notification', err);
+    }
+  }, [queryClient, refetchConversations, onNewMessage, conversationId]);
 
   // Gestionnaire pour les messages mis à jour
   const handleMessageUpdated = useCallback((data: SocketMessageData) => {
@@ -105,17 +127,55 @@ export const useMessagesSocket = ({
   }, [queryClient, refetchConversations]);
 
   useEffect(() => {
-    if (!enabled || !userId) return;
+    if (!enabled) return;
 
     console.log('🔌 [useMessagesSocket] Connecting to socket...');
-    
+
+    // Préparer la query; n'inclure userId que si on l'a
+    const baseQuery: Record<string, string> = {
+      token: NotificationAPI.getToken(),
+      type: 'user',
+    };
+    const query = userId ? { ...baseQuery, userId } : baseQuery;
+
+    // Précharger le son de notification (même logique que notifications)
+    if (!audioRef.current && typeof window !== 'undefined') {
+      audioRef.current = new Audio('/musics/notification-sound.mp3');
+      audioRef.current.load();
+    }
+
+    // Tentative d'unlock du son via un geste utilisateur (clic/keydown) — joue muet une fois
+    const tryUnlockAudio = () => {
+      try {
+        if (!audioRef.current || audioUnlockedRef.current) return;
+        // Jouer muet puis arrêter pour débloquer l'autoplay dans certains navigateurs
+        audioRef.current.muted = true;
+        const p = audioRef.current.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => {
+            try {
+              audioRef.current?.pause();
+              audioRef.current!.currentTime = 0;
+            } catch {}
+            audioRef.current!.muted = false;
+            audioUnlockedRef.current = true;
+          }).catch((err) => {
+            console.warn('unlock audio failed', err);
+            audioRef.current!.muted = false;
+          });
+        }
+      } catch (err) {
+        console.warn('Erreur tryUnlockAudio', err);
+      }
+    };
+
+    // Écouteurs one-shot pour le premier geste utilisateur
+    window.addEventListener('click', tryUnlockAudio, { once: true });
+    window.addEventListener('keydown', tryUnlockAudio, { once: true });
+
     // Créer la connexion socket
     const socket = io(SOCKET_URL, {
-      query: {
-        token: NotificationAPI.getToken(),
-        type: "user",
-        userId: userId
-      },
+      query,
     });
 
     socketRef.current = socket;
@@ -161,6 +221,14 @@ export const useMessagesSocket = ({
       socket.off('message:read', handleMessagesRead);
       socket.off('new_message', handleNewMessage);
       socket.off('message_created', handleNewMessage);
+      // Nettoyer la référence audio
+      if (audioRef.current) {
+        try {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        } catch { }
+        audioRef.current = null;
+      }
       socket.off('message_updated', handleMessageUpdated);
       socket.off('conversation:updated', handleConversationUpdated);
       socket.off('conversation:new', handleConversationUpdated);

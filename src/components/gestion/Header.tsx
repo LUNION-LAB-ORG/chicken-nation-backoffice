@@ -2,15 +2,20 @@
 
 import { Menu, ChevronDown, LogOut } from "lucide-react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import { formatImageUrl } from "@/utils/imageHelpers";
+import { formatImageUrl, isValidImageUrl } from "@/utils/imageHelpers";
+import { MessagesResponse } from '@/types/messaging';
 import EditMember from "@/components/gestion/Personnel/EditMember";
-import NotificationDropdown from "@/components/ui/NotificationDropdown";
-// import MessageModal from "@/components/ui/MessageModal"; // supprimé, non utilisé
-// import { useMessageStore } from "@/store/messageStore"; // supprimé, non utilisé
+import NotificationDropdown from "@/components/ui/NotificationDropdown"; 
 import { User } from "@/types/auth";
+import { useConversationsQuery } from '@/hooks/useConversationsQuery';
+import { useConversationsSocket } from '@/hooks/useConversationsSocket';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { useQueryClient } from '@tanstack/react-query';
+import { markMessagesAsRead } from '@/services/messageService';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -28,21 +33,44 @@ export default function Header({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [isMessageDropdownOpen, setIsMessageDropdownOpen] = useState(false);
-  // Simuler des messages non lus (à remplacer par store réel)
-  const unreadMessages = [
-    {
-      id: 'msg-1',
-      sender: 'Kouamé Adjoua',
-      content: "Bonsoir, ma commande n'est pas arrivée...",
-      time: 'il y a 5 min',
-    },
-    {
-      id: 'msg-2',
-      sender: 'Yao Koffi',
-      content: 'Merci pour le kedjenou !',
-      time: 'il y a 30 min',
-    },
-  ];
+  // Messages réels récupérés via React Query
+  const { data: conversationsData, isLoading: isLoadingConversations } = useConversationsQuery();
+
+  // Activer l'écoute WebSocket pour actualiser en temps réel
+  useConversationsSocket();
+
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
+
+  const conversations = conversationsData?.data || [];
+
+  // Construire la liste des messages non lus à partir des conversations
+  const currentUserId = user?.id;
+
+  const unreadMessagesList = conversations
+    .flatMap((c) => (c.messages || []).map((m) => ({ ...m, conversationId: c.id, customer: c.customer })))
+    // Ne garder que les messages non lus ET qui ne sont pas envoyés par l'utilisateur courant
+    .filter((m) => {
+      const isUnread = m.isRead === false;
+      const isFromCustomer = !!m.authorCustomer;
+      const isFromOtherUser = !!m.authorUser && m.authorUser.id !== currentUserId;
+      return isUnread && (isFromCustomer || isFromOtherUser);
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const totalUnread = unreadMessagesList.length;
+
+  const formatTimestamp = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale: fr });
+    } catch {
+      return '';
+    }
+  };
+
+  // Preview: prendre les derniers messages non lus
+  const recentUnread = unreadMessagesList.slice(0, 6);
   const [isClient, setIsClient] = useState(false);
 
   // Éviter l'erreur d'hydration
@@ -66,9 +94,18 @@ export default function Header({
   };
 
   // Fermer le dropdown quand on clique ailleurs
-  const handleClickOutside = () => {
-    setIsDropdownOpen(false);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsMessageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleClickOutside = () => setIsDropdownOpen(false);
 
   return (
     <header
@@ -106,41 +143,126 @@ export default function Header({
                 className="text-gray-600"
               />
               {/* Badge de notification pour les messages non lus */}
-              {unreadMessages.length > 0 && (
+              {totalUnread > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                  {unreadMessages.length > 99 ? "99+" : unreadMessages.length}
+                  {totalUnread > 99 ? "99+" : totalUnread}
                 </span>
               )}
             </button>
             {/* Dropdown messages */}
             {isMessageDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-                <div className="p-4 border-b font-bold text-gray-900">Nouveaux messages</div>
-                {unreadMessages.length === 0 ? (
-                  <div className="p-4 text-gray-500 text-center">Aucun nouveau message</div>
-                ) : (
-                  <ul>
-                    {unreadMessages.map((msg) => (
-                      <li
-                        key={msg.id}
-                        className="px-4 py-3 hover:bg-orange-50 cursor-pointer border-b last:border-b-0"
-                        onClick={() => {
-                          setIsMessageDropdownOpen(false);
-                          // Appeler la fonction pour activer le module Inbox dans la sidebar
-                          if (window && window.dispatchEvent) {
-                            window.dispatchEvent(new CustomEvent('openInboxFromHeader'));
-                          }
-                        }}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">{msg.sender}</span>
-                          <span className="text-xs text-gray-400">{msg.time}</span>
-                        </div>
-                        <div className="text-sm text-gray-600 truncate">{msg.content}</div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div ref={dropdownRef} className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
+                <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-900">Messages</h3>
+                  {totalUnread > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Marquer localement comme lu toutes les conversations contenant des messages non lus
+                        const convIds = Array.from(new Set(unreadMessagesList.map((m) => m.conversationId)));
+                        convIds.forEach((id) => {
+                          // Mettre à jour les messages localement (isRead=true)
+                          queryClient.setQueryData<MessagesResponse>(['messages', id], (oldData) => {
+                            if (!oldData) return oldData as any;
+                            return {
+                              ...oldData,
+                              data: oldData.data.map((msg) => ({ ...msg, isRead: true }))
+                            };
+                          });
+                        });
+
+                        // Invalider légèrement pour rafraîchir si besoin (mais on reste local)
+                        convIds.forEach((id) => queryClient.invalidateQueries({ queryKey: ['messages', id] }));
+                        queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                      }}
+                      className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                    >
+                      Tout marquer comme lu
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-96 overflow-y-auto">
+                  {isLoadingConversations ? (
+                    <div className="p-4 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                      <p className="text-sm text-gray-500 mt-2">Chargement...</p>
+                    </div>
+                  ) : recentUnread.length === 0 ? (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-gray-500">Aucun nouveau message</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-gray-100">
+                      {recentUnread.map((msg) => {
+                        const senderName = msg.authorCustomer
+                          ? (msg.authorCustomer.name || `${msg.authorCustomer.first_name || ''} ${msg.authorCustomer.last_name || ''}`.trim())
+                          : msg.authorUser
+                          ? msg.authorUser.email || msg.authorUser.id
+                          : 'Client';
+
+                        const rawAvatar = msg.authorCustomer?.image || msg.authorUser?.image || null;
+                        const formattedAvatar = rawAvatar ? formatImageUrl(rawAvatar) : '';
+                        const avatarUrl = formattedAvatar && isValidImageUrl(formattedAvatar) ? formattedAvatar : null;
+
+                        return (
+                          <div
+                            key={msg.id}
+                            onClick={() => {
+                              setIsMessageDropdownOpen(false);
+                              if (window && window.dispatchEvent) {
+                                window.dispatchEvent(new CustomEvent('openInboxFromHeader', { detail: { conversationId: msg.conversationId } }));
+                              }
+                            }}
+                            className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${!msg.isRead ? 'bg-orange-50' : ''}`}
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className="w-9 h-9 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                    {avatarUrl ? (
+                                      // eslint-disable-next-line @next/next/no-img-element
+                                      <img src={avatarUrl} alt={senderName} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <img src="/icons/header/default-avatar.png" alt={senderName} className="w-full h-full object-cover" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900">{senderName}</p>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{msg.body}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{formatTimestamp(msg.createdAt)}</p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 ml-2">
+                                <button
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      await markMessagesAsRead(msg.conversationId);
+                                    } catch (err) {
+                                      console.warn('Erreur mark as read', err);
+                                    }
+                                    queryClient.invalidateQueries({ queryKey: ['conversations'] });
+                                    queryClient.invalidateQueries({ queryKey: ['messages', msg.conversationId] });
+                                  }}
+                                  className={`p-1 rounded-full transition-colors text-gray-400 hover:text-orange-500`}
+                                  title={msg.isRead ? 'Marquer comme non lue' : 'Marquer comme lue'}
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -308,7 +430,7 @@ export default function Header({
         />
       )}
 
-  {/* Modal de messages supprimé définitivement */}
+ 
     </header>
   );
 }

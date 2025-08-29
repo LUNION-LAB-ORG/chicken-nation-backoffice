@@ -200,6 +200,8 @@ export default function Sidebar({
       canAccess: () => true, 
       hasSubModules: true,
     },
+  
+  
     {
       id: "inventory",
       label: "Inventaires",
@@ -299,10 +301,13 @@ export default function Sidebar({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
-                          
-                          // Déplier/plier les sous-modules sans fermer la sidebar
+ 
+                          const willExpand = !isMessagesExpanded;
                           setActiveTab(item.id);
-                          setIsMessagesExpanded(!isMessagesExpanded);
+                          setIsMessagesExpanded(willExpand);
+                          if (willExpand && setActiveSubModule) {
+                            setActiveSubModule("inbox");
+                          }
                         }}
                         className={`
                           w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]

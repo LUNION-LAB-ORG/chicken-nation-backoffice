@@ -14,21 +14,27 @@ export const getConversations = async (page: number = 1, limit: number = 10): Pr
   }
 }
 
-// ✅ Récupérer les messages d'une conversation avec pagination
-export const getMessages = async (conversationId: string, page: number = 1, limit: number = 50): Promise<PaginatedResponse<Message>> => {
+ 
+export const getMessages = async (conversationId: string, page?: number, limit?: number): Promise<PaginatedResponse<Message>> => {
   try {
-    console.log(`🔄 [getMessages] GET /conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
-    const response = await apiRequest<PaginatedResponse<Message>>(`/conversations/${conversationId}/messages?page=${page}&limit=${limit}`, 'GET')
-    console.log(`✅ [getMessages] Reçu ${response.data?.length || 0} messages pour conversation ${conversationId}`, response)
-    
-    return response
+    // Construire dynamiquement la query string uniquement si des paramètres sont fournis
+    const params = new URLSearchParams();
+    if (page !== undefined) params.append('page', String(page));
+    if (limit !== undefined) params.append('limit', String(limit));
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    console.log(`🔄 [getMessages] GET /conversations/${conversationId}/messages${queryString}`);
+    const response = await apiRequest<PaginatedResponse<Message>>(`/conversations/${conversationId}/messages${queryString}`, 'GET');
+    console.log(`✅ [getMessages] Reçu ${response.data?.length || 0} messages pour conversation ${conversationId}`, response);
+
+    return response;
   } catch (error) {
-    console.error('❌ [getMessages] Erreur:', error)
-    throw error
+    console.error('❌ [getMessages] Erreur:', error);
+    throw error;
   }
 }
 
-// ✅ Envoyer un message
+ 
 export const sendMessage = async (conversationId: string, content: string, messageType: 'TEXT' | 'IMAGE' | 'FILE' = 'TEXT', file?: File): Promise<Message> => {
   try {
     if (messageType === 'TEXT') {
@@ -102,6 +108,36 @@ export const createConversation = async (clientId: string): Promise<Conversation
     return response
   } catch (error) {
     console.error('❌ [createConversation] Erreur:', error)
+    throw error
+  }
+}
+
+// ✅ Créer une nouvelle conversation en utilisant le DTO complet
+export type CreateConversationDto = {
+  receiver_user_id?: string
+  seed_message: string
+  restaurant_id?: string
+  subject?: string
+  customer_to_contact_id?: string
+}
+
+export const createConversationWithDto = async (dto: CreateConversationDto): Promise<Conversation> => {
+  try {
+    const payload: Partial<CreateConversationDto> = {
+      seed_message: dto.seed_message
+    }
+
+    if (dto.receiver_user_id) payload.receiver_user_id = dto.receiver_user_id
+    if (dto.customer_to_contact_id) payload.customer_to_contact_id = dto.customer_to_contact_id
+    if (dto.restaurant_id) payload.restaurant_id = dto.restaurant_id
+    if (dto.subject) payload.subject = dto.subject
+
+    console.log('🔄 [createConversationWithDto] POST /conversations payload:', payload)
+    const response = await apiRequest<Conversation>('/conversations', 'POST', payload)
+    console.log('✅ [createConversationWithDto] response:', response)
+    return response
+  } catch (error) {
+    console.error('❌ [createConversationWithDto] Erreur:', error)
     throw error
   }
 }

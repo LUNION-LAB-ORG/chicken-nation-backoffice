@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { 
   getConversations, 
   getMessages, 
@@ -24,17 +24,24 @@ export const useConversationsQuery = (enabled = true) => {
 
 // Hook pour les messages d'une conversation
 export const useMessagesQuery = (conversationId: string | null, enabled = true) => {
-  return useQuery({
+  const PAGE_SIZE = 100; // charger 100 messages par page lors du scroll vers les anciens
+
+  return useInfiniteQuery({
     queryKey: ['messages', conversationId],
-    queryFn: async () => {
-      if (!conversationId) return { data: [], meta: { page: 1, limit: 50, total: 0, totalPages: 0 } };
-      const response = await getMessages(conversationId, 1, 50);
+    queryFn: async ({ pageParam = 1 }) => {
+      if (!conversationId) return { data: [], meta: { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 } };
+      const response = await getMessages(conversationId, pageParam, PAGE_SIZE);
       return response;
     },
+    getNextPageParam: (lastPage) => {
+      if (!lastPage?.meta) return undefined;
+      const next = lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined;
+      return next;
+    },
     enabled: enabled && !!conversationId,
-    staleTime: 5 * 1000, // 5 secondes - plus court pour la démo
-    refetchInterval: 10 * 1000, // Polling toutes les 10 secondes en backup du WebSocket
-    refetchIntervalInBackground: true, // Continue même quand l'onglet n'est pas actif
+    staleTime: 5 * 1000,
+    refetchInterval: 10 * 1000,
+    refetchIntervalInBackground: true,
   });
 };
 
@@ -74,7 +81,7 @@ export const useSendMessageMutation = () => {
       // Snapshot de l'état actuel
       const previousMessages = queryClient.getQueryData(['messages', variables.conversationId]);
       
-      // Ajouter optimistiquement le message
+      // Ajouter optimistiquement le message (compatible with infiniteQuery pages)
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
         content: variables.content,
@@ -83,14 +90,26 @@ export const useSendMessageMutation = () => {
         isRead: true,
         authorUser: { id: 'current-user', name: 'Moi' }, // Utilisateur actuel
         conversationId: variables.conversationId,
-      };
-      
-      queryClient.setQueryData(['messages', variables.conversationId], (oldData: { data: Message[]; meta: { page: number; limit: number; total: number; totalPages: number } } | undefined) => {
-        if (!oldData) return { data: [optimisticMessage], meta: { page: 1, limit: 50, total: 1, totalPages: 1 } };
-        return {
-          ...oldData,
-          data: [...oldData.data, optimisticMessage]
-        };
+      } as unknown as Message;
+
+      queryClient.setQueryData(['messages', variables.conversationId], (oldData: any) => {
+        // If using useInfiniteQuery shape
+        if (oldData && Array.isArray(oldData.pages)) {
+          const pages = oldData.pages.slice();
+          if (pages.length === 0) {
+            pages.push({ data: [optimisticMessage], meta: { page: 1, limit: 100, total: 1, totalPages: 1 } });
+          } else {
+            // append to last page
+            const last = { ...pages[pages.length - 1] };
+            last.data = Array.isArray(last.data) ? [...last.data, optimisticMessage] : [optimisticMessage];
+            pages[pages.length - 1] = last;
+          }
+          return { ...oldData, pages };
+        }
+
+        // Legacy single-page shape
+        if (!oldData) return { data: [optimisticMessage], meta: { page: 1, limit: 100, total: 1, totalPages: 1 } };
+        return { ...oldData, data: Array.isArray(oldData.data) ? [...oldData.data, optimisticMessage] : [optimisticMessage] };
       });
       
       return { previousMessages };
@@ -103,20 +122,24 @@ export const useSendMessageMutation = () => {
     },
     onSuccess: (newMessage, variables) => {
       // Remplacer le message optimiste par le vrai message de l'API
-      queryClient.setQueryData(['messages', variables.conversationId], (oldData: { data: Message[]; meta: { page: number; limit: number; total: number; totalPages: number } } | undefined) => {
-        if (!oldData) return { data: [newMessage], meta: { page: 1, limit: 50, total: 1, totalPages: 1 } };
-        
-        // Remplacer le message temporaire par le vrai
-        const updatedData = oldData.data.map(msg => 
-          msg.id.toString().startsWith('temp-') && msg.content === variables.content 
-            ? newMessage 
-            : msg
-        );
-        
-        return {
-          ...oldData,
-          data: updatedData
-        };
+      queryClient.setQueryData(['messages', variables.conversationId], (oldData: any) => {
+        // Infinite pages shape
+        if (oldData && Array.isArray(oldData.pages)) {
+          const pages = oldData.pages.map((page: any) => {
+            const data = Array.isArray(page.data)
+              ? page.data.map((msg: any) => (msg.id?.toString?.().startsWith('temp-') && msg.content === variables.content ? newMessage : msg))
+              : [];
+            return { ...page, data };
+          });
+          return { ...oldData, pages };
+        }
+
+        // Legacy single-page shape
+        if (!oldData) return { data: [newMessage], meta: { page: 1, limit: 100, total: 1, totalPages: 1 } };
+        const updatedData = Array.isArray(oldData.data)
+          ? oldData.data.map((msg: any) => (msg.id?.toString?.().startsWith('temp-') && msg.content === variables.content ? newMessage : msg))
+          : [newMessage];
+        return { ...oldData, data: updatedData };
       });
       
       // Invalider les conversations pour mettre à jour les previews
@@ -140,15 +163,19 @@ export const useMarkAsReadMutation = () => {
     mutationFn: markMessagesAsRead,
     onSuccess: (_, conversationId) => {
       // Mettre à jour optimistiquement les messages comme lus
-      queryClient.setQueryData(['messages', conversationId], (oldData: { data: Message[]; meta: { page: number; limit: number; total: number; totalPages: number } } | undefined) => {
+      queryClient.setQueryData(['messages', conversationId], (oldData: any) => {
         if (!oldData) return oldData;
-        return {
-          ...oldData,
-          data: oldData.data.map((message: Message) => ({
-            ...message,
-            isRead: true
-          }))
-        };
+        // Infinite pages
+        if (Array.isArray(oldData.pages)) {
+          const pages = oldData.pages.map((page: any) => ({
+            ...page,
+            data: Array.isArray(page.data) ? page.data.map((m: any) => ({ ...m, isRead: true })) : []
+          }));
+          return { ...oldData, pages };
+        }
+
+        // Legacy shape
+        return { ...oldData, data: Array.isArray(oldData.data) ? oldData.data.map((m: any) => ({ ...m, isRead: true })) : [] };
       });
       
       // Invalider les conversations et stats

@@ -1,56 +1,58 @@
-import { DateAdapter } from "chart.js";
-
-// Types pour les messages selon la structure réelle de l'API
-export interface MessageAuthor {
+// Types pour les auteurs de messages (Users du back-office)
+export interface MessageAuthorUser {
   id: string;
-  first_name?: string;
-  last_name?: string;
-  name?: string;
-  email?: string;
-  image?: string;
+  name: string;
+  email: string;
+  image?: string | null;
 }
 
-export interface Message {
-  created_at: DateAdapter;
-  content: string;
-  sender_type: string;
-  message_type: string;
+// Types pour les auteurs de messages (Customers/Clients)
+export interface MessageAuthorCustomer {
   id: string;
-  conversationId: string;
-  body: string;
-  authorCustomer?: MessageAuthor | null;
-  authorUser?: MessageAuthor | null;
+  name: string;
+  first_name: string;
+  last_name: string;
+  image?: string | null;
+}
+
+// Types pour les messages selon la nouvelle structure API
+export interface Message {
+  id: string;
   isRead: boolean;
+  body: string;
+  authorUser?: MessageAuthorUser | null;
+  authorCustomer?: MessageAuthorCustomer | null;
   createdAt: string;
   updatedAt: string;
 }
 
+// Types pour les clients/customers
+export interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  image?: string;
+  email?: string;
+  phone?: string;
+}
+
+// Types pour les restaurants
+export interface Restaurant {
+  id: string;
+  name: string;
+  image?: string;
+}
+
+// Types pour les conversations selon la nouvelle structure API
 export interface Conversation {
-  id: string
-  client_id: string
-  last_message_at: string
-  unread_count: number
-  status: 'ACTIVE' | 'CLOSED' | 'ARCHIVED'
-  created_at: string
-  updated_at: string
-  // Informations du client
-  client: {
-    id: string
-    fullname: string
-    email: string
-    phone?: string
-    image?: string
-    user_type?: string
-    is_connected?: boolean
-  }
-  // Dernier message pour l'aperçu
-  last_message?: {
-    id: string
-    content: string
-    sender_type: 'CLIENT' | 'BACKOFFICE'
-    message_type: 'TEXT' | 'IMAGE' | 'FILE'
-    created_at: string
-  }
+  id: string;
+  unreadNumber: number;
+  customerId: string;
+  createdAt: string;
+  messages: Message[];
+  restaurant?: Restaurant | null;
+  customer: Customer;
+  users: unknown[]; // Pour les utilisateurs assignés à la conversation
 }
 
 export interface MessageStats {
@@ -69,3 +71,7 @@ export interface PaginatedResponse<T> {
     totalPages: number
   }
 }
+
+// Types spécialisés pour les réponses API
+export type ConversationsResponse = PaginatedResponse<Conversation>
+export type MessagesResponse = PaginatedResponse<Message>

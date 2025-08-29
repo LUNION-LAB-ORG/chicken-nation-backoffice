@@ -205,6 +205,57 @@ export async function getCustomers(params: CustomerQuery = {}): Promise<Paginate
   }
 }
 
+// ✅ Nouvelle fonction pour récupérer les clients sans enrichissement (pour les dropdowns)
+export async function getAllCustomers(params: CustomerQuery = {}): Promise<PaginatedResponse<Customer>> {
+  const { page = 1, limit = 100, status = 'ACTIVE', search, sortBy, sortOrder, restaurantId } = params;
+
+  // Construire les paramètres de requête
+  const queryParams = new URLSearchParams();
+  queryParams.append('page', page.toString());
+  queryParams.append('limit', limit.toString());
+  if (status) queryParams.append('status', status);
+  if (search) queryParams.append('search', search);
+  if (sortBy) queryParams.append('sortBy', sortBy);
+  if (sortOrder) queryParams.append('sortOrder', sortOrder);
+
+  if (restaurantId) {
+    queryParams.append('restaurantId', restaurantId);
+  }
+
+  const url = `${API_URL}${API_PREFIX}${CUSTOMERS_ENDPOINT}?${queryParams}`;
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      const result = await handleAuthError(response, () => getAllCustomers(params));
+      if (result === null) {
+        throw new Error('Authentication failed');
+      }
+      return result;
+    }
+
+    const data = await response.json();
+
+    // Vérifier que la réponse a le bon format
+    if (!data.data || !Array.isArray(data.data)) {
+      throw new Error('Format de réponse invalide: data.data manquant ou n\'est pas un tableau');
+    }
+
+    if (!data.meta) {
+      throw new Error('Format de réponse invalide: data.meta manquant');
+    }
+
+    // ✅ Retourner directement sans enrichissement pour éviter les erreurs 404
+    return data as PaginatedResponse<Customer>;
+  } catch (error) {
+    throw error;
+  }
+}
+
 // Fonction pour enrichir les données des clients avec les informations sur les commandes
 async function enrichCustomersWithOrderInfo(customersData: PaginatedResponse<Customer>): Promise<PaginatedResponse<Customer>> {
   // ✅ Le backend envoie maintenant toujours un objet avec pagination

@@ -15,7 +15,7 @@ import { Conversation, MessageStats } from "@/types/messaging";
 interface ConversationStore {
   // État
   conversations: Conversation[];
-  messages: Record<string, Message[]>; // Messages par conversation ID
+  messages: Record<string, Message[]>;
   stats: MessageStats | null;
   isLoading: boolean;
   error: string | null;
@@ -134,7 +134,7 @@ export const useConversationStore = create<ConversationStore>((set, get) => ({
     set({ isLoadingMessages: true, error: null });
     
     try {
-      const response = await getMessages(conversationId, 1, 50);
+      const response = await getMessages(conversationId);
       
       const { messages: currentMessages } = get();
       set({

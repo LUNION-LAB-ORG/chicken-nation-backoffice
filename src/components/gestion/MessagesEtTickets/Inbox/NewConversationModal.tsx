@@ -5,7 +5,7 @@ import { X, Users, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { getAllRestaurants } from '@/services/restaurantService';
-import { getCustomers } from '@/services/customerService';
+import { getAllCustomers } from '@/services/customerService';
 import { getAllUsers } from '@/services/userService';
 import toast from 'react-hot-toast';
 
@@ -21,7 +21,7 @@ interface ConversationData {
   restaurantId?: string;
   subject: string;
   initialMessage?: string;
-  participantIds?: string[];
+  participantId?: string | null;
 }
 
 // Types pour les options des dropdowns
@@ -96,12 +96,12 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const loadClients = useCallback(async () => {
     setIsLoadingClients(true);
     try {
-      const clientsData = await getCustomers({ 
-        status: 'ACTIVE', 
+      const clientsData = await getAllCustomers({
+        status: 'ACTIVE',
         limit: 100, // Récupérer plus de clients pour la sélection
         search: clientSearchTerm.trim() || undefined
       });
-      
+
       const formattedClients = clientsData.data.map(client => ({
         id: client.id,
         label: `${client.first_name || ''} ${client.last_name || ''}`.trim() || client.email || client.id,
@@ -109,7 +109,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         phone: client.phone || undefined,
         image: client.image || undefined
       }));
-      
+
       setClients(formattedClients);
     } catch (error) {
       console.error('Erreur lors du chargement des clients:', error);
@@ -133,7 +133,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           phone: user.phone || undefined,
           image: user.image || undefined
         }));
-      
+
       setUsers(formattedUsers);
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
@@ -161,7 +161,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         loadClients();
       }
     }, 300);
-    
+
     return () => clearTimeout(timeoutId);
   }, [clientSearchTerm, conversationType, loadClients]);
 
@@ -172,7 +172,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         loadUsers();
       }
     }, 300);
-    
+
     return () => clearTimeout(timeoutId);
   }, [userSearchTerm, conversationType, loadUsers]);
 
@@ -193,7 +193,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     }
 
     if (conversationType === 'Interne' && selectedParticipantIds.length === 0) {
-      newErrors.participants = 'Veuillez sélectionner au moins un participant';
+      newErrors.participants = 'Veuillez sélectionner un participant';
     }
 
     setErrors(newErrors);
@@ -209,12 +209,12 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         type: conversationType,
         subject,
         initialMessage: initialMessage.trim() || undefined,
-        ...(conversationType === 'Avec client' && { 
-          clientId: selectedClientId, 
-          restaurantId: selectedRestaurantId 
+        ...(conversationType === 'Avec client' && {
+          clientId: selectedClientId,
+          restaurantId: selectedRestaurantId
         }),
-        ...(conversationType === 'Interne' && { 
-          participantIds: selectedParticipantIds,
+        ...(conversationType === 'Interne' && {
+          participantId: selectedParticipantIds[0] || undefined,
           restaurantId: selectedRestaurantId
         })
       };
@@ -295,22 +295,20 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               <button
                 type="button"
                 onClick={() => setConversationType('Avec client')}
-                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm ${
-                  conversationType === 'Avec client'
-                    ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm ${conversationType === 'Avec client'
+                  ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
               >
                 Avec client
               </button>
               <button
                 type="button"
                 onClick={() => setConversationType('Interne')}
-                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${
-                  conversationType === 'Interne'
-                    ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
+                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
+                  ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                  }`}
               >
                 <Users className="w-4 h-4" />
                 Interne
@@ -327,7 +325,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 placeholder="Rechercher un client..."
                 options={clients}
                 value={selectedClientId}
-                onChange={setSelectedClientId}
+                onChange={(value) => setSelectedClientId(Array.isArray(value) ? (value[0] as string) ?? '' : (value as string) ?? '')}
                 onSearchChange={setClientSearchTerm}
                 isLoading={isLoadingClients}
                 error={errors.client}
@@ -362,13 +360,13 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 label="Participants"
                 placeholder="Rechercher des participants..."
                 options={users}
-                value={selectedParticipantIds}
-                onChange={(value) => setSelectedParticipantIds(Array.isArray(value) ? value : [value])}
+                value={selectedParticipantIds[0] || ''}
+                onChange={(value) => setSelectedParticipantIds(value ? [value as string] : [])}
                 onSearchChange={setUserSearchTerm}
                 isLoading={isLoadingUsers}
                 error={errors.participants}
                 required
-                multiSelect={true}
+                multiSelect={false}
                 className="mb-6"
               />
             </>
@@ -402,13 +400,13 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                 label="Participants"
                 placeholder="Rechercher des employés..."
                 options={users}
-                value={selectedParticipantIds}
-                onChange={(value) => setSelectedParticipantIds(Array.isArray(value) ? value : [value])}
+                value={selectedParticipantIds[0] || ''}
+                onChange={(value) => setSelectedParticipantIds(value ? [value as string] : [])}
                 onSearchChange={setUserSearchTerm}
                 isLoading={isLoadingUsers}
                 error={errors.participants}
                 required
-                multiSelect={true}
+                multiSelect={false}
                 className="mb-6"
               />
             </>
@@ -425,9 +423,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex: Problème avec commande #12345"
-              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 ${
-                errors.subject ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 ${errors.subject ? 'border-red-500' : 'border-gray-300'
+                }`}
             />
             {errors.subject && (
               <p className="mt-1 text-xs text-red-500">{errors.subject}</p>

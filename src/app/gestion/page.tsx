@@ -141,6 +141,22 @@ export default function GestionPage() {
   
   // États pour gérer les sous-modules de Messages et Tickets
   const [activeSubModule, setActiveSubModule] = useState<string>("");
+  // Conversation initiale à sélectionner lorsque l'on ouvre l'inbox depuis le header
+  const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenInboxFromHeader = (e: any) => {
+      const conversationId = e?.detail?.conversationId || null;
+      setActiveTab('messages-tickets');
+      setActiveSubModule('inbox');
+      setInitialConversationId(conversationId);
+      // Ensure sidebar is visible on desktop
+      setIsSidebarOpen(true);
+    };
+
+    window.addEventListener('openInboxFromHeader', handleOpenInboxFromHeader as EventListener);
+    return () => window.removeEventListener('openInboxFromHeader', handleOpenInboxFromHeader as EventListener);
+  }, [setActiveTab]);
 
   // Vérification d'authentification simplifiée
   useEffect(() => {
@@ -216,7 +232,7 @@ export default function GestionPage() {
           case "rapport":
             return <RapportModule />;
           case "inbox":
-            return <InboxModule />;
+            return <InboxModule initialConversationId={initialConversationId} />;
           case "tickets":
             return <TicketsModule />;
           default:
@@ -302,9 +318,9 @@ export default function GestionPage() {
                 {/* Bouton OK */}
                 <button
                   onClick={() => setShowWelcomeBackModal(false)}
-                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  OK, merci !
+                 Merci !
                 </button>
               </div>
             </div>
