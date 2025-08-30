@@ -129,7 +129,7 @@ export const deleteDishRestaurantRelation = async (relationId: string): Promise<
     });
     
      if (response.status === 404) {
-      console.log(`Relation restaurant ${relationId} déjà supprimée ou inexistante, considéré comme un succès.`);
+      console.log('Relation restaurant déjà supprimée ou inexistante, considéré comme un succès.');
       return;
     }
     
@@ -138,7 +138,7 @@ export const deleteDishRestaurantRelation = async (relationId: string): Promise<
       throw new Error(`Erreur: ${response.status} - ${errorText.substring(0, 100)}`);
     }
   } catch (error) {
-    console.error(`Erreur lors de la suppression de la relation plat-restaurant ${relationId}:`, error);
+    console.error('Erreur lors de la suppression de la relation plat-restaurant:', error);
     throw error;
   }
 };

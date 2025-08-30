@@ -39,10 +39,10 @@ export const getSupplementsByDishId = async (dishId: string): Promise<Array<{ id
     
     const data = await response.json();
     const result = data.data || [];
-    console.log(`[getSupplementsByDishId] ${result.length} suppléments trouvés:`, result);
+     
     return result;
   } catch (error) {
-    console.error(`[getSupplementsByDishId] Erreur lors de la récupération des suppléments pour le plat ${dishId}:`, error);
+    console.error('[getSupplementsByDishId] Erreur lors de la récupération des suppléments pour le plat  :', error);
     throw error;
   }
 };
@@ -222,7 +222,7 @@ export const updateDishSupplements = async (
     );
     
     if (uniqueExistingRelations.length !== relationsToUse.length) {
-      // Il y a des doublons à supprimer
+      
       const duplicateRelations = relationsToUse.filter(r => {
         const supplementId = r.supplement_id || (hasProperty(r, 'supplement') && hasProperty(r.supplement, 'id') ? r.supplement.id : undefined);
         if (!supplementId) return false;

@@ -155,17 +155,9 @@ const Promos = () => {
         couponImageUrl: draftUnifiedData.couponImageUrl
       };
  
-
-      console.log('🔄 [index] Début de handleSaveAsDraft avec:', promoData);
-      console.log('🔧 [index] Données unifiées converties:', draftUnifiedData);
-      console.log('🔍 [index] Catégories sélectionnées:', draftUnifiedData.selectedCategories);
-
-      // ✅ UTILISER createPromotionFromUnified au lieu de createPromotion
-      // Cette fonction gère correctement les catégories via targeted_category_ids
+ 
       const response = await createPromotionFromUnified(draftUnifiedData, null, 'DRAFT')
-
-      console.log('📥 [index] Réponse de createPromotionFromUnified:', response);
-
+ 
       // Recharger les promotions pour afficher le nouveau brouillon
       await loadPromotions()
 
@@ -190,14 +182,11 @@ const Promos = () => {
     try {
       setPromoState(prev => ({ ...prev, loading: true }))
 
-      console.log('🔄 [index] Début de handleSaveAsDraftEdit (ÉDITION) avec:', promoData);
-
+    
       // ✅ Convertir PromoTransitData vers UnifiedPromoFormData
       const unifiedData = convertTransitDataToUnifiedFormData(promoData);
 
-      console.log('🔧 [index] Données unifiées converties (ÉDITION):', unifiedData);
-      console.log('🔍 [index] Catégories sélectionnées (ÉDITION):', unifiedData.selectedCategories);
-
+    
       // ✅ S'assurer que la visibilité est DRAFT
       const draftUnifiedData: UnifiedPromoFormData = {
         ...unifiedData,
@@ -213,9 +202,7 @@ const Promos = () => {
           null,
           'DRAFT'
         )
-
-        console.log('📥 [index] Réponse de updatePromotionFromUnified (ÉDITION):', response);
-
+ 
         // Recharger les promotions pour afficher les modifications
         await loadPromotions()
 
@@ -437,14 +424,9 @@ const Promos = () => {
               promo={promoState.selectedApiPromo}
               onEdit={async (apiPromo) => {
                 try {
-                 
-
-                  // Charger les données complètes avec l'endpoint détaillé
+                  
                   const detailedPromo = await getPromotionById(apiPromo.id!)
-
-                
-
-                  // Aller vers l'édition avec les données complètes
+ 
                   setPromoState(prev => ({
                     ...prev,
                     view: 'edit',
@@ -515,7 +497,7 @@ const Promos = () => {
 
               {/* Publicités en cours avec barre de recherche */}
               <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4'>
-                <span className='text-[#F17922] text-[26px] font-regular'>Publicitées récentes</span>
+                <span className='text-[#F17922] text-[26px] text-md font-regular'>Publicitées récentes</span>
 
               </div>
               {/* Statistiques */}

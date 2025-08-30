@@ -50,7 +50,7 @@ const WeeklyOrdersChart: React.FC<WeeklyOrdersChartProps> = ({ restaurantId, dat
     restaurantId,
     dateRange: selectedDateRange, // ✅ Utiliser la date sélectionnée
     period, // ✅ Passer la période
-    enabled: !data // Désactiver si des données sont passées en props
+    enabled: !data  
   });
 
   // ✅ Calculer l'échelle dynamique

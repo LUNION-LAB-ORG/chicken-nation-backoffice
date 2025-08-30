@@ -19,10 +19,10 @@ interface ConversationsListProps {
 function ConversationsList({ selectedConversation, onSelectConversation, onNewConversation }: ConversationsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'client' | 'internal'>('all');
-  
-  // 🔌 React Query hooks
-  const { 
-    data: conversationsData, 
+
+
+  const {
+    data: conversationsData,
     isLoading
   } = useConversationsQuery();
 
@@ -38,7 +38,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
       const messageDate = new Date(dateString);
       const now = new Date();
       const diffInMinutes = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60));
-      
+
       if (diffInMinutes < 1) {
         return 'à l\'instant';
       } else if (diffInMinutes < 60) {
@@ -60,12 +60,12 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
     if (!conversation.messages || conversation.messages.length === 0) {
       return { text: 'Aucun message', timestamp: conversation.createdAt };
     }
-    
+
     // Trier par date et prendre le plus récent
-    const sortedMessages = conversation.messages.sort((a, b) => 
+    const sortedMessages = conversation.messages.sort((a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
-    
+
     const lastMessage = sortedMessages[0];
     return {
       text: lastMessage.body || 'Message sans contenu',
@@ -81,7 +81,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
       return participantNames || 'Discussion interne';
     } else {
       // Conversation avec client
-      return conversation.customer 
+      return conversation.customer
         ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.trim()
         : 'Client inconnu';
     }
@@ -99,23 +99,34 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
     }
   };
 
-  // Filtrage des conversations
-  const filteredConversations = conversations.filter(conversation => {
-    // Filtrer par type si nécessaire
-    if (activeFilter === 'client' && !conversation.customer) return false;
-    if (activeFilter === 'internal' && conversation.customer) return false;
-    
-    if (!searchTerm) return true;
-    
-    const searchLower = searchTerm.toLowerCase();
-    const displayName = getConversationDisplayName(conversation).toLowerCase();
-    const secondaryInfo = getConversationSecondaryInfo(conversation).toLowerCase();
-    const lastMessage = getLastMessage(conversation).text.toLowerCase();
-    
-    return displayName.includes(searchLower) || 
-           secondaryInfo.includes(searchLower) || 
-           lastMessage.includes(searchLower);
-  });
+  // Filtrage et tri des conversations
+  const filteredConversations = conversations
+    .filter(conversation => {
+      // Filtrer par type si nécessaire
+      if (activeFilter === 'client' && !conversation.customer) return false;
+      if (activeFilter === 'internal' && conversation.customer) return false;
+
+      if (!searchTerm) return true;
+
+      const searchLower = searchTerm.toLowerCase();
+      const displayName = getConversationDisplayName(conversation).toLowerCase();
+      const secondaryInfo = getConversationSecondaryInfo(conversation).toLowerCase();
+      const lastMessage = getLastMessage(conversation).text.toLowerCase();
+
+      return displayName.includes(searchLower) ||
+        secondaryInfo.includes(searchLower) ||
+        lastMessage.includes(searchLower);
+    })
+    // ✅ Trier par date du dernier message (plus récent en premier)
+    .sort((a, b) => {
+      const lastMessageA = getLastMessage(a);
+      const lastMessageB = getLastMessage(b);
+
+      const dateA = new Date(lastMessageA.timestamp).getTime();
+      const dateB = new Date(lastMessageB.timestamp).getTime();
+
+      return dateB - dateA; // Plus récent en premier
+    });
 
   return (
     <div className="h-full flex flex-col   lg:w-96 xl:w-[400px] 2xl:w-[450px] md:w-80 w-full">
@@ -124,8 +135,8 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h1 className="lg:text-2xl md:text-lg text-base font-bold text-orange-500">Conversations</h1>
           {/* Bouton Nouvelle conversation - Temporairement désactivé */}
-       
-          <button 
+
+          <button
             onClick={() => {
               console.log('Bouton Nouvelle cliqué');
               onNewConversation?.();
@@ -135,9 +146,9 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             <Plus className="mr-1 md:w-5 md:h-5 w-4 h-4" />
             Nouvelle
           </button>
-        
+
         </div>
-        
+
         {/* Search */}
         <div className="relative mb-4 md:mb-6">
           <div className="absolute inset-y-0 left-0 md:pl-4 pl-3 flex items-center pointer-events-none">
@@ -148,33 +159,30 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             placeholder="Rechercher une conversation..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-orange-500 focus:border-transparent bg-white"
+            className="block text-slate-700  w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-orange-500 focus:border-transparent bg-white"
           />
         </div>
 
         {/* Filters */}
         <div className="flex gap-2 md:gap-3">
-          <button 
+          <button
             onClick={() => setActiveFilter('all')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
-              activeFilter === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Toutes ({conversations.length})
           </button>
-          <button 
+          <button
             onClick={() => setActiveFilter('client')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
-              activeFilter === 'client' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Clients ({conversations.filter(c => c.customer).length})
           </button>
-          <button 
+          <button
             onClick={() => setActiveFilter('internal')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
-              activeFilter === 'internal' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
           >
             Internes ({conversations.filter(c => !c.customer).length})
           </button>
@@ -198,7 +206,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
               {searchTerm ? 'Aucune conversation trouvée' : 'Aucune conversation'}
             </p>
             {!searchTerm && (
-              <button 
+              <button
                 onClick={onNewConversation}
                 className="mt-4 text-orange-500 text-sm underline"
               >
@@ -214,14 +222,13 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
           const displayName = getConversationDisplayName(conversation);
           const secondaryInfo = getConversationSecondaryInfo(conversation);
           const isInternal = !conversation.customer;
-          
+
           return (
             <div
               key={conversation.id}
               onClick={() => onSelectConversation(conversation.id)}
-              className={`md:px-4 md:py-4 px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
-                selectedConversation === conversation.id ? 'bg-orange-50' : ''
-              }`}
+              className={`md:px-4 md:py-4  px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${selectedConversation === conversation.id ? 'bg-orange-50' : ''
+                }`}
             >
               <div className="flex items-start md:space-x-3 space-x-2">
                 {/* Avatar */}
@@ -232,8 +239,8 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                       <div className="relative w-full h-full">
                         {conversation.users.slice(0, 2).map((user, index) => {
                           const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
-                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-0 right-0';
-                          
+                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-5 right-0';
+
                           return (
                             <div key={user.id} className={`${size} ${position}`}>
                               <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
@@ -294,11 +301,11 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                       {formatTimestamp(lastMessage.timestamp)}
                     </span>
                   </div>
-                  
+
                   <p className="md:text-base text-sm text-gray-600 truncate md:mb-3 mb-2 leading-relaxed">
                     {lastMessage.text}
                   </p>
-                  
+
                   <div className="flex items-center justify-between">
                     <span className="border-gray-200 border text-gray-700 md:px-3 md:py-1 px-2 py-0.5 rounded-full md:text-sm text-xs font-medium">
                       {conversation.restaurant?.name || 'Chicken Nation'}

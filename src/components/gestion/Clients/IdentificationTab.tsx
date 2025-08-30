@@ -51,9 +51,8 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
 
   const handleSave = () => {
 
-  }
-
-
+  } 
+  
   const handleNameChange = (value: string) => {
     setDisplayName(value)
 
@@ -71,10 +70,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
       }
     }
   }
-
-
-
-
+ 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="space-y-4 w-full lg:w-1/3">
@@ -84,7 +80,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
             type="text"
             value={displayName}
             onChange={(e) => handleNameChange(e.target.value)}
-            className="p-2 px-3 border-2 border-[#3C3C434A] rounded-2xl text-sm focus:border-orange-500 focus:outline-none"
+            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700  rounded-2xl text-sm focus:border-orange-500 focus:outline-none"
             onBlur={handleSave}
           />
         </div>
@@ -95,11 +91,11 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
             type="text"
             value={formatDate(client.created_at)}
             readOnly
-            className="p-2 px-3 border-2 border-[#3C3C434A] rounded-2xl text-sm"
+            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700 rounded-2xl text-sm"
           />
         </div>
 
-        <div className="flex flex-col space-y-1">
+        {/* <div className="flex flex-col space-y-1">
           <label className="text-xs font-light text-[#9796A1]">Connecté sur l&apos;application</label>
           <div className="mt-1">
             <span className={`inline-block px-3 py-1.5 text-xs font-light rounded-xl ${
@@ -120,7 +116,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
                client.entity_status}
             </span>
           </div>
-        </div>
+        </div> */}
 
         <div className="flex flex-col space-y-1">
           <label className="text-xs font-light text-[#9796A1]">Image de profil</label>

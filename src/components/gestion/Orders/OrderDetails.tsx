@@ -73,7 +73,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
       height={height}
       className={className}
       onError={(e) => {
-        console.warn("Erreur de chargement d'image:", safeSrc);
+        console.warn("Erreur de chargement d'image:");
         (e.target as HTMLImageElement).src = "/images/food2.png";
         if (onError) onError(e);
       }}
@@ -242,8 +242,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
             }
           } else {
             console.warn(
-              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:",
-              order.id
+              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:" 
             );
           }
         } else if (getOrderById) {
@@ -912,7 +911,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium">
+                            <p className="text-sm font-medium text-slate-600">
                               {item.name}
                               {item.price === 0 && (
                                 <span className="ml-1 text-xs text-[#F17922] font-normal">

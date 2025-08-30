@@ -134,7 +134,7 @@ const BestSalesChart: React.FC<BestSalesChartProps> = ({ title, items, restauran
                   height={200}
                   className="object-cover"
                   onError={(e) => {
-                    console.warn('Erreur de chargement de l\'image du menu:', item.image);
+                    console.warn('Erreur de chargement de l\'image du menu:');
                     (e.target as HTMLImageElement).src = '/images/placeholder-food.jpg';
                   }}
                 />

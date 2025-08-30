@@ -184,7 +184,7 @@ export function OrderRow({
           <div className="flex-1">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <div className="font-medium text-[#71717A]">
+                <div className="font-medium text-black">
                   {order.reference}
                 </div>
                 <div className="text-xs text-gray-500">{order.date}</div>
@@ -192,7 +192,7 @@ export function OrderRow({
               <OrderTypeBadge type={order.orderType} />
             </div>
             <div className="mb-3">
-              <div className="font-medium text-[#71717A]">
+              <div className="font-medium text-black">
                 {order.clientName}
               </div>
               <div className="text-xs text-gray-500">
@@ -206,7 +206,7 @@ export function OrderRow({
               </div>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <div className="text-sm font-bold text-[#F17922]">
+              <div className="text-sm font-bold text-black">
                 {(order.totalPrice || 0).toLocaleString()} F
               </div>
               <StatusBadge order={order} />
@@ -248,7 +248,7 @@ export function OrderRow({
         </td>
       )}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium text-[#71717A]">
+        <span className="text-sm font-medium text-black">
           {order.reference}
         </span>
       </td>
@@ -256,7 +256,7 @@ export function OrderRow({
         <span className="text-sm text-gray-500">{order.date}</span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium text-[#71717A]">
+        <span className="text-sm font-medium text-black">
           {order.clientName}
         </span>
       </td>
@@ -280,7 +280,7 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium">
+        <span className="text-sm font-medium text-black">
           {(order.totalPrice || 0).toLocaleString()} F
         </span>
       </td>

@@ -378,34 +378,21 @@ export const mapApiPromotionToUnifiedFormData = (apiPromo: ApiPromotion): Unifie
   } else {
     baseData.selectedCategories = [];
   }
-
-  // ✅ MAPPING DES RESTAURANTS SÉLECTIONNÉS - CORRECTION MAJEURE
-  // L'API retourne "restaurants" avec des objets {id, name}, pas "restaurant_ids"
-  console.log('🏪 [mapApiPromotionToUnifiedFormData] === CORRECTION RESTAURANTS ===');
-  console.log('📋 [mapApiPromotionToUnifiedFormData] apiPromo.restaurants:', apiPromo.restaurants);
-  console.log('📋 [mapApiPromotionToUnifiedFormData] apiPromo.restaurant_ids (legacy):', apiPromo.restaurant_ids);
-  
+ 
   if (apiPromo.restaurants && apiPromo.restaurants.length > 0) {
     // ✅ PRIORITÉ : Utiliser le champ "restaurants" avec des objets complets
     baseData.selectedRestaurants = apiPromo.restaurants.map(restaurant => String(restaurant.id));
-    console.log('✅ [mapApiPromotionToUnifiedFormData] Restaurants mappés depuis "restaurants":', baseData.selectedRestaurants);
+  
   } else if (apiPromo.restaurant_ids && apiPromo.restaurant_ids.length > 0) {
     // ✅ FALLBACK : Utiliser le champ "restaurant_ids" si disponible (compatibilité)
     baseData.selectedRestaurants = apiPromo.restaurant_ids.map(id => String(id));
-    console.log('✅ [mapApiPromotionToUnifiedFormData] Restaurants mappés depuis "restaurant_ids" (fallback):', baseData.selectedRestaurants);
+   
   } else {
     baseData.selectedRestaurants = [];
     console.log('⚠️ [mapApiPromotionToUnifiedFormData] Aucun restaurant trouvé');
   }
   
-  // ✅ LOGS DE DEBUG pour le mapping des restaurants
-  console.log('🏪 [mapApiPromotionToUnifiedFormData] Résultat final mapping restaurants:', {
-    promo_title: apiPromo.title,
-    source_restaurants: apiPromo.restaurants?.length || 0,
-    source_restaurant_ids: apiPromo.restaurant_ids?.length || 0,
-    mapped_selectedRestaurants: baseData.selectedRestaurants,
-    has_restaurants: baseData.selectedRestaurants.length > 0
-  });
+  
 
   // ✅ MAPPING DES MENUS DE RÉCOMPENSE
   if (apiPromo.offered_dishes && apiPromo.offered_dishes.length > 0) {
@@ -472,18 +459,9 @@ export const mapApiPromotionToUnifiedFormData = (apiPromo: ApiPromotion): Unifie
 
   return baseData;
 };
-
-// Mapping UnifiedPromoFormData vers ApiPromotion (pour la création/mise à jour)
+ 
 export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData, status: 'ACTIVE' | 'DRAFT' = 'ACTIVE'): Omit<ApiPromotion, 'id' | 'created_at' | 'updated_at'> => {
-  console.log('🔧 [mapUnifiedFormDataToApiPromotion] === DÉBUT DU MAPPING ===');
-  console.log('📥 [mapUnifiedFormDataToApiPromotion] Données reçues:', {
-    selectedRestaurants: formData.selectedRestaurants,
-    selectedPublicTypes: formData.selectedPublicTypes,
-    targetStandard: formData.targetStandard,
-    targetPremium: formData.targetPremium,
-    targetGold: formData.targetGold,
-    visibility: formData.visibility
-  });
+   
 
   // Conversion des types de discount
   let discountType: ApiPromotion['discount_type'];
@@ -546,13 +524,10 @@ export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData,
   if (formData.selectedCategories && formData.selectedCategories.length > 0) {
     apiPromotion.targeted_category_ids = formData.selectedCategories;
   }
-
-  // ✅ NOUVEAU : Mapping des restaurants sélectionnés
-  console.log('🏪 [mapUnifiedFormDataToApiPromotion] Traitement des restaurants...');
-  console.log('📋 [mapUnifiedFormDataToApiPromotion] selectedRestaurants:', formData.selectedRestaurants);
+ 
   if (formData.selectedRestaurants && formData.selectedRestaurants.length > 0) {
     apiPromotion.restaurant_ids = formData.selectedRestaurants;
-    console.log('✅ [mapUnifiedFormDataToApiPromotion] restaurant_ids ajouté:', apiPromotion.restaurant_ids);
+     
   } else {
     console.log('⚠️ [mapUnifiedFormDataToApiPromotion] Aucun restaurant sélectionné');
   }
@@ -607,17 +582,14 @@ export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData,
     apiPromotion.max_discount_amount = formData.maxDiscountAmount;
   }
 
-  // ✅ CORRECTION CRITIQUE : Gestion correcte de la visibilité et des cibles
-  console.log('🎯 [mapUnifiedFormDataToApiPromotion] === TRAITEMENT DES TARGETS ===');
-  console.log('🔍 [mapUnifiedFormDataToApiPromotion] selectedPublicTypes:', formData.selectedPublicTypes);
-
+ 
   if (formData.selectedPublicTypes.includes('Public')) {
     // Public = visible pour tous, avec tous les targets à false explicitement
     apiPromotion.visibility = 'PUBLIC';
     apiPromotion.target_standard = false;
     apiPromotion.target_premium = false;
     apiPromotion.target_gold = false;
-    console.log('✅ [mapUnifiedFormDataToApiPromotion] Mode PUBLIC - target_* mis à false explicitement');
+    
   } else {
     // Privé = sélection spécifique des types d'utilisateurs
     apiPromotion.visibility = 'PRIVATE';
@@ -625,17 +597,12 @@ export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData,
     apiPromotion.target_premium = formData.selectedPublicTypes.includes('Utilisateur Premium') || formData.targetPremium || false;
     apiPromotion.target_gold = formData.selectedPublicTypes.includes('Utilisateur Gold') || formData.targetGold || false;
 
-    console.log('🔒 [mapUnifiedFormDataToApiPromotion] Mode PRIVATE - champs target_*:', {
-      target_standard: apiPromotion.target_standard,
-      target_premium: apiPromotion.target_premium,
-      target_gold: apiPromotion.target_gold
-    });
-
+ 
     // ✅ VALIDATION : Au moins un type doit être sélectionné en mode privé
     if (!apiPromotion.target_standard && !apiPromotion.target_premium && !apiPromotion.target_gold) {
       // Par défaut, cibler les utilisateurs standard si aucun type n'est sélectionné
       apiPromotion.target_standard = true;
-      console.log('⚠️ [mapUnifiedFormDataToApiPromotion] Aucun target sélectionné, target_standard mis à true par défaut');
+    
     }
   }
 
@@ -650,17 +617,7 @@ export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData,
     apiPromotion.coupon_image_url = formData.couponImageUrl;
   }
 
-  console.log('📤 [mapUnifiedFormDataToApiPromotion] === RÉSULTAT FINAL ===');
-  console.log('📋 [mapUnifiedFormDataToApiPromotion] ApiPromotion finale:', {
-    restaurant_ids: apiPromotion.restaurant_ids,
-    visibility: apiPromotion.visibility,
-    target_standard: apiPromotion.target_standard,
-    target_premium: apiPromotion.target_premium,
-    target_gold: apiPromotion.target_gold,
-    targeted_dish_ids: apiPromotion.targeted_dish_ids,
-    targeted_category_ids: apiPromotion.targeted_category_ids
-  });
-
+  
   return apiPromotion;
 };
 
@@ -1239,19 +1196,10 @@ export const getAllPromotions = async (): Promise<ApiPromotion[]> => {
   try {
     const response = await apiRequest<ApiPromotionListResponse>('/fidelity/promotions', 'GET');
     
-    // ✅ LOGS DE DEBUG pour vérifier les restaurants (CORRECTION)
-    console.log('🏪 [getAllPromotions] === VÉRIFICATION DES RESTAURANTS ===');
+   
     if (response.data && response.data.length > 0) {
       response.data.forEach((promo, index) => {
-        console.log(`📋 [getAllPromotions] Promo ${index + 1} (${promo.title}):`, {
-          id: promo.id,
-          restaurants: promo.restaurants,
-          restaurants_length: promo.restaurants?.length || 0,
-          has_restaurants: !!promo.restaurants && promo.restaurants.length > 0,
-          // Legacy fields pour comparaison
-          restaurant_ids: promo.restaurant_ids,
-          restaurant_ids_length: promo.restaurant_ids?.length || 0
-        });
+       
       });
     } else {
       console.log('⚠️ [getAllPromotions] Aucune promotion retournée par l\'API');
@@ -1269,19 +1217,7 @@ export const getPromotionById = async (id: string): Promise<ApiPromotion> => {
     // ✅ Utiliser le nouvel endpoint avec détails complets
     const response = await apiRequest<ApiPromotion>(`/fidelity/promotions/${id}`, 'GET');
 
-    // ✅ LOGS DE DEBUG pour vérifier les restaurants dans le détail (CORRECTION)
-    console.log('🔍 [getPromotionById] === VÉRIFICATION DES RESTAURANTS DÉTAILLÉS ===');
-    console.log(`📋 [getPromotionById] Promo détaillée (${response.title}):`, {
-      id: response.id,
-      restaurants: response.restaurants,
-      restaurants_type: typeof response.restaurants,
-      restaurants_length: response.restaurants?.length || 0,
-      has_restaurants: !!response.restaurants && response.restaurants.length > 0,
-      restaurants_values: response.restaurants?.map(restaurant => ({ id: restaurant.id, name: restaurant.name, type: typeof restaurant.id })),
-      // Legacy fields pour comparaison
-      restaurant_ids: response.restaurant_ids,
-      restaurant_ids_length: response.restaurant_ids?.length || 0
-    });
+     
 
     return response;
   } catch (error) {
@@ -1337,16 +1273,7 @@ export const createPromotionFromUnified = async (
   imageFile: File | null = null,
   status: 'ACTIVE' | 'DRAFT' = 'ACTIVE'
 ): Promise<ApiPromotion> => {
-
-  console.log('🚀 [createPromotionFromUnified] === DÉBUT DE LA CRÉATION ===');
-  console.log('📥 [createPromotionFromUnified] Données unifiées reçues:', {
-    selectedRestaurants: unifiedData.selectedRestaurants,
-    selectedPublicTypes: unifiedData.selectedPublicTypes,
-    selectedMenus: unifiedData.selectedMenus,
-    selectedCategories: unifiedData.selectedCategories,
-    title: unifiedData.title,
-    discountType: unifiedData.discountType
-  });
+ 
 
   try {
     // ✅ EXACTEMENT COMME MENUSERVICE : FormData simple
@@ -1354,14 +1281,7 @@ export const createPromotionFromUnified = async (
 
     // Convertir les données unifiées vers l'API avec les bonnes énumérations
     const apiData = mapUnifiedFormDataToApiPromotion(unifiedData, status);
-
-    console.log('🔧 [createPromotionFromUnified] Données API après mapping:', {
-      restaurant_ids: apiData.restaurant_ids,
-      visibility: apiData.visibility,
-      target_standard: apiData.target_standard,
-      target_premium: apiData.target_premium,
-      target_gold: apiData.target_gold
-    });
+ 
 
     // ✅ CHAMPS DE BASE (comme menuService)
     formData.append('title', apiData.title);
@@ -1387,9 +1307,7 @@ export const createPromotionFromUnified = async (
       formData.append('max_discount_amount', apiData.max_discount_amount.toString());
     }
 
-    // Champs de visibilité et cibles
-    console.log('🎯 [createPromotionFromUnified] === AJOUT DES TARGETS DANS FORMDATA ===');
-    console.log('🔍 [createPromotionFromUnified] Visibilité:', apiData.visibility);
+    
     formData.append('visibility', apiData.visibility || 'PUBLIC');
 
     // ✅ CORRECTION : Envoyer SEULEMENT les targets cochés avec "true" (pas les non-cochés)
@@ -1397,50 +1315,45 @@ export const createPromotionFromUnified = async (
       // Envoyer seulement les targets activés
       if (apiData.target_standard) {
         formData.append('target_standard', 'true');
-        console.log('✅ [createPromotionFromUnified] target_standard envoyé: true');
+        
       }
       if (apiData.target_premium) {
         formData.append('target_premium', 'true');
-        console.log('✅ [createPromotionFromUnified] target_premium envoyé: true');
+       
       }
       if (apiData.target_gold) {
         formData.append('target_gold', 'true');
-        console.log('✅ [createPromotionFromUnified] target_gold envoyé: true');
+         
       }
-      console.log('🔒 [createPromotionFromUnified] Mode PRIVATE - seuls les targets cochés envoyés');
+      
     } else {
       console.log('✅ [createPromotionFromUnified] Mode PUBLIC - aucun target spécifique envoyé');
     }
 
     // ✅ CHAMPS DE SÉLECTION (selon config Postman)
     if (apiData.targeted_dish_ids && apiData.targeted_dish_ids.length > 0) {
-      formData.append('targeted_dish_ids', JSON.stringify(apiData.targeted_dish_ids));
-      console.log('🍽️ [createPromotionFromUnified] targeted_dish_ids ajouté:', apiData.targeted_dish_ids);
+      formData.append('targeted_dish_ids', JSON.stringify(apiData.targeted_dish_ids)); 
     }
 
     // ✅ NOUVEAU CHAMP : targeted_category_ids (selon config Postman)
     if (apiData.targeted_category_ids && apiData.targeted_category_ids.length > 0) {
-      formData.append('targeted_category_ids', JSON.stringify(apiData.targeted_category_ids));
-      console.log('📂 [createPromotionFromUnified] targeted_category_ids ajouté:', apiData.targeted_category_ids);
+      formData.append('targeted_category_ids', JSON.stringify(apiData.targeted_category_ids)); 
     }
 
     // ✅ Restaurant_ids (restaurants sélectionnés)
-    console.log('🏪 [createPromotionFromUnified] === AJOUT DES RESTAURANTS ===');
-    console.log('📋 [createPromotionFromUnified] apiData.restaurant_ids:', apiData.restaurant_ids);
+    
     if (apiData.restaurant_ids && apiData.restaurant_ids.length > 0) {
       formData.append('restaurant_ids', JSON.stringify(apiData.restaurant_ids));
-      console.log('✅ [createPromotionFromUnified] restaurant_ids ajouté dans FormData:', JSON.stringify(apiData.restaurant_ids));
+       
     } else {
       console.log('⚠️ [createPromotionFromUnified] Aucun restaurant_ids à ajouter');
     }
 
     if (apiData.offered_dishes && apiData.offered_dishes.length > 0) {
-      formData.append('offered_dishes', JSON.stringify(apiData.offered_dishes));
-      console.log('🎁 [createPromotionFromUnified] offered_dishes ajouté:', apiData.offered_dishes);
+      formData.append('offered_dishes', JSON.stringify(apiData.offered_dishes)); 
     }
 
-    // ✅ DESCRIPTION DÉJÀ AJOUTÉE DANS LES CHAMPS DE BASE - PAS DE DUPLICATION
-
+ 
     // ✅ CHAMPS VISUELS
     if (apiData.background_color) {
       formData.append('background_color', apiData.background_color);
@@ -1452,28 +1365,17 @@ export const createPromotionFromUnified = async (
     // ✅ IMAGE : EXACTEMENT COMME MENUSERVICE
     if (imageFile && imageFile instanceof File) {
       formData.append('coupon_image_url', imageFile);
-      console.log('🖼️ [createPromotionFromUnified] Image ajoutée:', imageFile.name);
+      
     }
-
-    // ✅ LOGS DES DONNÉES FINALES ENVOYÉES
-    console.log('📤 [createPromotionFromUnified] === FORMDATA FINALE À ENVOYER ===');
+ 
     const formDataEntries: Record<string, string | File> = {};
     for (const [key, value] of formData.entries()) {
       formDataEntries[key] = value;
-    }
-    console.log('📋 [createPromotionFromUnified] FormData entries:', formDataEntries);
-
-    console.log('🚀 [createPromotionFromUnified] Envoi de la requête POST...');
+    } 
+    
     const response = await apiRequest<ApiPromotion>('/fidelity/promotions', 'POST', formData);
 
-    console.log('📥 [createPromotionFromUnified] Réponse complète du backend:', response);
-    console.log('🔍 [createPromotionFromUnified] Champs de visibilité dans la réponse:', {
-      visibility: response.visibility,
-      target_standard: response.target_standard,
-      target_premium: response.target_premium,
-      target_gold: response.target_gold,
-      restaurant_ids: response.restaurant_ids
-    });
+   
 
     return response;
 
@@ -1493,19 +1395,15 @@ export const updatePromotionFromUnified = async (
 ): Promise<ApiPromotion> => {
 
   try {
-    console.log('🔄 [updatePromotionFromUnified] Début de la mise à jour, ID:', id);
-    console.log('📥 [updatePromotionFromUnified] Données unifiées reçues:', unifiedData);
-    console.log('🎯 [updatePromotionFromUnified] Statut demandé:', status);
-
+   
     // ✅ EXACTEMENT COMME MENUSERVICE : FormData simple
     const formData = new FormData();
 
     // Convertir les données unifiées vers l'API avec les bonnes énumérations
     const apiData = mapUnifiedFormDataToApiPromotion(unifiedData, status);
+ 
 
-    console.log('🔧 [updatePromotionFromUnified] Données API mappées:', apiData);
-
-    // ✅ CHAMPS DE BASE (comme menuService)
+    // ✅ CHAMPS DE BASE  
     formData.append('title', apiData.title);
     formData.append('description', String(apiData.description || '')); // ✅ CORRECTION : Forcer en string
     formData.append('discount_type', apiData.discount_type);
@@ -1531,57 +1429,50 @@ export const updatePromotionFromUnified = async (
 
     // Champs de visibilité et cibles
     formData.append('visibility', apiData.visibility || 'PUBLIC');
-    // ✅ CORRECTION : Envoyer SEULEMENT les targets cochés avec "true" (pas les non-cochés)
-    console.log('🎯 [updatePromotionFromUnified] === AJOUT DES TARGETS DANS FORMDATA ===');
-    console.log('🔍 [updatePromotionFromUnified] Visibilité:', apiData.visibility);
+     
     if (apiData.visibility === 'PRIVATE') {
       // Envoyer seulement les targets activés
       if (apiData.target_standard) {
         formData.append('target_standard', 'true');
-        console.log('✅ [updatePromotionFromUnified] target_standard envoyé: true');
+        
       }
       if (apiData.target_premium) {
         formData.append('target_premium', 'true');
-        console.log('✅ [updatePromotionFromUnified] target_premium envoyé: true');
+        
       }
       if (apiData.target_gold) {
         formData.append('target_gold', 'true');
-        console.log('✅ [updatePromotionFromUnified] target_gold envoyé: true');
+       
       }
-      console.log('🔒 [updatePromotionFromUnified] Mode PRIVATE - seuls les targets cochés envoyés');
+      
     } else {
       console.log('✅ [updatePromotionFromUnified] Mode PUBLIC - aucun target spécifique envoyé');
     }
 
     // ✅ CHAMPS DE SÉLECTION (selon config Postman)
     if (apiData.targeted_dish_ids && apiData.targeted_dish_ids.length > 0) {
-      formData.append('targeted_dish_ids', JSON.stringify(apiData.targeted_dish_ids));
-      console.log('🍽️ [updatePromotionFromUnified] targeted_dish_ids ajouté:', apiData.targeted_dish_ids);
+      formData.append('targeted_dish_ids', JSON.stringify(apiData.targeted_dish_ids)); 
     }
 
     // ✅ NOUVEAU CHAMP : targeted_category_ids (selon config Postman)
     if (apiData.targeted_category_ids && apiData.targeted_category_ids.length > 0) {
       formData.append('targeted_category_ids', JSON.stringify(apiData.targeted_category_ids));
-      console.log('📂 [updatePromotionFromUnified] targeted_category_ids ajouté:', apiData.targeted_category_ids);
+       
     }
 
-    // ✅ CORRECTION : restaurant_ids (restaurants sélectionnés)
-    console.log('🏪 [updatePromotionFromUnified] === AJOUT DES RESTAURANTS ===');
-    console.log('📋 [updatePromotionFromUnified] apiData.restaurant_ids:', apiData.restaurant_ids);
+   
     if (apiData.restaurant_ids && apiData.restaurant_ids.length > 0) {
       formData.append('restaurant_ids', JSON.stringify(apiData.restaurant_ids));
-      console.log('✅ [updatePromotionFromUnified] restaurant_ids ajouté dans FormData:', JSON.stringify(apiData.restaurant_ids));
+     
     } else {
       console.log('⚠️ [updatePromotionFromUnified] Aucun restaurant_ids à ajouter');
     }
 
     if (apiData.offered_dishes && apiData.offered_dishes.length > 0) {
       formData.append('offered_dishes', JSON.stringify(apiData.offered_dishes));
-      console.log('🎁 [updatePromotionFromUnified] offered_dishes ajouté:', apiData.offered_dishes);
+    
     }
-
-    // ✅ DESCRIPTION DÉJÀ AJOUTÉE DANS LES CHAMPS DE BASE - PAS DE DUPLICATION
-
+ 
     // ✅ CHAMPS VISUELS
     if (apiData.background_color) {
       formData.append('background_color', apiData.background_color);
@@ -1593,26 +1484,13 @@ export const updatePromotionFromUnified = async (
     // ✅ IMAGE : EXACTEMENT COMME MENUSERVICE
     if (imageFile && imageFile instanceof File) {
       formData.append('coupon_image_url', imageFile);
-      console.log('🖼️ [updatePromotionFromUnified] Image ajoutée:', imageFile.name);
+     
     }
 
-    // ✅ LOGS DES DONNÉES FINALES ENVOYÉES
-    console.log('📤 [updatePromotionFromUnified] FormData finale à envoyer:');
-    for (const [key, value] of formData.entries()) {
-      console.log(`  ${key}:`, value);
-    }
-
-    console.log('🚀 [updatePromotionFromUnified] Envoi de la requête PATCH...');
+   
     const response = await apiRequest<ApiPromotion>(`/fidelity/promotions/${id}`, 'PATCH', formData);
 
-    console.log('📥 [updatePromotionFromUnified] Réponse complète du backend:', response);
-    console.log('🔍 [updatePromotionFromUnified] Champs de visibilité dans la réponse:', {
-      visibility: response.visibility,
-      target_standard: response.target_standard,
-      target_premium: response.target_premium,
-      target_gold: response.target_gold
-    });
-
+ 
     return response;
 
   } catch (error) {
@@ -1629,7 +1507,7 @@ export const convertUnifiedFormDataToTransitData = (formData: UnifiedPromoFormDa
   // Données de l'étape 1
   promoType: formData.discountType,
   discountType: formData.discountType,
-  discountValue: formData.discountValue, // ✅ AJOUTÉ
+  discountValue: formData.discountValue,  
   percentageValue: formData.percentageValue,
   fixedAmountValue: formData.fixedAmountValue,
   buyQuantity: formData.buyQuantity,
@@ -1828,17 +1706,7 @@ export const validateCompletePromoData = (formData: UnifiedPromoFormData): { isV
 // ✅ NOUVELLE FONCTION : Convertir ApiPromotion détaillée vers UnifiedPromoFormData pour l'édition
 export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromotion): UnifiedPromoFormData => {
 
-  console.log('🔄 [convertDetailedApiPromotionToUnifiedFormData] === DÉBUT DE LA CONVERSION POUR ÉDITION ===');
-  console.log('📥 [convertDetailedApiPromotionToUnifiedFormData] ApiPromotion reçue:', {
-    id: apiPromo.id,
-    restaurant_ids: apiPromo.restaurant_ids,
-    visibility: apiPromo.visibility,
-    target_standard: apiPromo.target_standard,
-    target_premium: apiPromo.target_premium,
-    target_gold: apiPromo.target_gold,
-    targeted_dishes: apiPromo.targeted_dishes?.length || 0,
-    targeted_categories: apiPromo.targeted_categories?.length || 0
-  });
+ 
 
   const baseData = createEmptyUnifiedFormData();
 
@@ -1876,8 +1744,7 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
       break;
   }
 
-  // === TYPE DE CIBLE ===
-  console.log('🎯 [convertDetailedApiPromotionToUnifiedFormData] === CONVERSION DES TARGETS ===');
+  // === TYPE DE CIBLE === 
   switch (apiPromo.target_type) {
     case 'ALL_PRODUCTS':
       baseData.productTarget = 'all';
@@ -1889,7 +1756,7 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
       // Utiliser les données détaillées targeted_dishes (extraire seulement les IDs)
       if (apiPromo.targeted_dishes) {
         baseData.selectedMenus = apiPromo.targeted_dishes.map(dish => dish.id);
-        console.log('🍽️ [convertDetailedApiPromotionToUnifiedFormData] selectedMenus extraits:', baseData.selectedMenus);
+        
       }
       break;
     case 'CATEGORIES':
@@ -1898,7 +1765,7 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
       // Utiliser les données détaillées targeted_categories (extraire seulement les IDs)
       if (apiPromo.targeted_categories) {
         baseData.selectedCategories = apiPromo.targeted_categories.map(category => category.id);
-        console.log('📂 [convertDetailedApiPromotionToUnifiedFormData] selectedCategories extraits:', baseData.selectedCategories);
+        
       }
       break;
   }
@@ -1907,22 +1774,19 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
   if (apiPromo.offered_dishes && apiPromo.offered_dishes.length > 0) {
     // Extraire seulement les IDs des produits de récompense
     baseData.selectedRewardMenus = apiPromo.offered_dishes.map(offered => offered.dish_id);
-    console.log('🎁 [convertDetailedApiPromotionToUnifiedFormData] selectedRewardMenus extraits:', baseData.selectedRewardMenus);
+  
   }
 
   // === RESTAURANTS SÉLECTIONNÉS - CORRECTION MAJEURE ===
-  console.log('🏪 [convertDetailedApiPromotionToUnifiedFormData] === CONVERSION DES RESTAURANTS ===');
-  console.log('📋 [convertDetailedApiPromotionToUnifiedFormData] apiPromo.restaurants:', apiPromo.restaurants);
-  console.log('📋 [convertDetailedApiPromotionToUnifiedFormData] apiPromo.restaurant_ids (legacy):', apiPromo.restaurant_ids);
-  
+ 
   if (apiPromo.restaurants && apiPromo.restaurants.length > 0) {
     // ✅ PRIORITÉ : Utiliser le champ "restaurants" avec des objets complets
     baseData.selectedRestaurants = apiPromo.restaurants.map(restaurant => String(restaurant.id));
-    console.log('✅ [convertDetailedApiPromotionToUnifiedFormData] Restaurants mappés depuis "restaurants":', baseData.selectedRestaurants);
+    
   } else if (apiPromo.restaurant_ids && apiPromo.restaurant_ids.length > 0) {
     // ✅ FALLBACK : Utiliser le champ "restaurant_ids" si disponible (compatibilité)
     baseData.selectedRestaurants = apiPromo.restaurant_ids.map(id => String(id));
-    console.log('✅ [convertDetailedApiPromotionToUnifiedFormData] Restaurants mappés depuis "restaurant_ids" (fallback):', baseData.selectedRestaurants);
+    
   } else {
     baseData.selectedRestaurants = [];
     console.log('⚠️ [convertDetailedApiPromotionToUnifiedFormData] Aucun restaurant trouvé dans l\'API');
@@ -1942,35 +1806,21 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
   const selectedPublicTypes: string[] = [];
   if (apiPromo.visibility === 'PUBLIC') {
     selectedPublicTypes.push('Public');
-    console.log('✅ [convertDetailedApiPromotionToUnifiedFormData] Mode PUBLIC détecté');
+    
   } else {
-    console.log('🔒 [convertDetailedApiPromotionToUnifiedFormData] Mode PRIVATE détecté, targets:', {
-      target_standard: apiPromo.target_standard,
-      target_premium: apiPromo.target_premium,
-      target_gold: apiPromo.target_gold
-    });
+    
     if (apiPromo.target_standard) selectedPublicTypes.push('Utilisateur Standard');
     if (apiPromo.target_premium) selectedPublicTypes.push('Utilisateur Premium');
     if (apiPromo.target_gold) selectedPublicTypes.push('Utilisateur Gold');
   }
   baseData.selectedPublicTypes = selectedPublicTypes;
-  console.log('👥 [convertDetailedApiPromotionToUnifiedFormData] selectedPublicTypes final:', selectedPublicTypes);
+ 
 
   // === PERSONNALISATION VISUELLE ===
   baseData.backgroundColor = apiPromo.background_color || '#F17922';
   baseData.textColor = apiPromo.text_color || '#FFFFFF';
   baseData.couponImageUrl = apiPromo.coupon_image_url || '';
-
-  console.log('📤 [convertDetailedApiPromotionToUnifiedFormData] === RÉSULTAT FINAL ===');
-  console.log('📋 [convertDetailedApiPromotionToUnifiedFormData] UnifiedPromoFormData final:', {
-    selectedRestaurants: baseData.selectedRestaurants,
-    selectedPublicTypes: baseData.selectedPublicTypes,
-    selectedMenus: baseData.selectedMenus,
-    selectedCategories: baseData.selectedCategories,
-    productTarget: baseData.productTarget,
-    discountType: baseData.discountType
-  });
-
+ 
   return baseData;
 };
 
@@ -2003,7 +1853,6 @@ export const getAllPromotionsWithDetails = async (): Promise<ApiPromotion[]> => 
       return basicPromotions;
     }
     
-    console.log('🔄 [getAllPromotionsWithDetails] restaurant_ids manquants, récupération des détails...');
     
     // Si les restaurant_ids manquent, récupérer les détails complets pour chaque promotion
     const detailedPromotions = await Promise.allSettled(
@@ -2012,9 +1861,7 @@ export const getAllPromotionsWithDetails = async (): Promise<ApiPromotion[]> => 
         
         try {
           const detailed = await getPromotionById(promo.id);
-          console.log(`📋 [getAllPromotionsWithDetails] Détails récupérés pour ${promo.title}:`, {
-            restaurant_ids: detailed.restaurant_ids?.length || 0
-          });
+          
           return detailed;
         } catch (error) {
           console.error(`❌ [getAllPromotionsWithDetails] Erreur pour la promo ${promo.id}:`, error);
@@ -2029,9 +1876,7 @@ export const getAllPromotionsWithDetails = async (): Promise<ApiPromotion[]> => 
         result.status === 'fulfilled'
       )
       .map(result => result.value);
-    
-    console.log(`✅ [getAllPromotionsWithDetails] ${results.length}/${basicPromotions.length} promotions avec détails récupérées`);
-    
+     
     return results;
     
   } catch (error) {

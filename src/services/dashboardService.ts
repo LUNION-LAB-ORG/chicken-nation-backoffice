@@ -283,11 +283,11 @@ export async function getGlobalDashboardStats(period: 'today' | 'week' | 'month'
       return transformApiDataToDashboardStats(apiData);
     } catch (apiError) {
       console.error('❌ Échec de récupération API:', apiError);
-      throw apiError; // Propager l'erreur au lieu d'utiliser des données simulées
+      throw apiError; 
     }
   } catch (error) {
     console.error('❌ Erreur lors de la récupération des stats globales:', error);
-    throw error; // Propager l'erreur au lieu d'utiliser des données de fallback
+    throw error;  
   }
 }
 
@@ -308,11 +308,11 @@ export async function getRestaurantDashboardStats(restaurantId: string, period: 
       return transformApiDataToDashboardStats(apiData);
     } catch (err) {
       console.error('❌ Échec de récupération API:', err);
-      throw err; // Propager l'erreur au lieu d'utiliser des données simulées
+      throw err;  
     }
   } catch (err) {
     console.error('❌ Erreur lors de la récupération des stats du restaurant:', err);
-    throw err; // Propager l'erreur au lieu d'utiliser des données de fallback
+    throw err;  
   }
 }
 
@@ -336,7 +336,7 @@ export async function getRevenueData(restaurantId?: string, period: 'today' | 'w
     }
   } catch (error) {
     console.error('❌ Erreur lors de la récupération des données de revenus:', error);
-    throw error; // Propager l'erreur au lieu d'utiliser des données de fallback
+    throw error;  
   }
 }
 
@@ -416,7 +416,7 @@ export async function getBestSalesData(restaurantId?: string, period: 'today' | 
 
     } catch {
       console.error('❌ Échec de récupération API pour les meilleures ventes');
-      return []; // Retourner un tableau vide au lieu de données simulées
+      return [];  
     }
   } catch {
     console.error('❌ Erreur lors de la récupération des meilleures ventes');

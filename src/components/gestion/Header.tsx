@@ -234,7 +234,7 @@ export default function Header({
                           const readMessages = getReadMessages();
                           unreadMessagesList.forEach(msg => readMessages.add(msg.id));
                           localStorage.setItem('readMessages', JSON.stringify([...readMessages]));
-                          console.log('✅ [Header] Tous les messages marqués comme lus dans localStorage');
+                           
 
                           // Invalider les queries pour mettre à jour l'UI
                           queryClient.invalidateQueries({ queryKey: ['conversations'] });

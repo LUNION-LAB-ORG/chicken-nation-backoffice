@@ -295,7 +295,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               <button
                 onClick={onBack}
                 title="Retour à la liste"
-                className="md:p-2 p-1 hover:bg-orange-100 rounded-full"
+                className="md:p-2 p-1 cursor-pointer hover:bg-orange-100 rounded-full"
               >
                 <ArrowLeft className="md:w-5 md:h-5 w-4 h-4 text-slate-600" />
               </button>
@@ -312,8 +312,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                   // Affichage pour conversation interne - deux avatars côte à côte
                   <div className="relative w-full h-full">
                     {currentConversation?.users?.slice(0, 2).map((user: any, index: number) => {
-                      const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
-                      const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-0 right-0';
+                       const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
+                       const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-5 right-0';
                       
                       return (
                         <div key={user.id} className={`${size} ${position}`}>
@@ -490,7 +490,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           <div className="flex md:mb-4 mb-3">
             <button
               onClick={() => setMessageType('public')}
-              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
+              className={`flex items-center md:px-4 md:py-2 px-3 cursor-pointer py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
                 ? 'bg-orange-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
@@ -500,7 +500,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             </button>
             <button
               onClick={() => setMessageType('internal')}
-              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
+              className={`flex items-center md:px-4 md:py-2 cursor-pointer px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
                 ? 'bg-orange-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
@@ -518,7 +518,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={messageType === 'public' ? "Écrire un message public..." : "Écrire un message interne..."}
-                className="w-full md:px-4 md:py-3 px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent md:text-sm text-xs bg-gray-50"
+                className="w-full md:px-4 md:py-3 text-slate-700  px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent md:text-sm text-xs bg-gray-50"
                 rows={3}
                 disabled={sendMessageMutation.isPending}
               />
@@ -527,7 +527,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               title="Envoyer le message"
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
-              className="bg-orange-500 text-white md:p-3 p-2 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 relative"
+              className="bg-orange-500 text-white md:p-3 p-2 cursor-pointer rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 relative"
             >
               {sendMessageMutation.isPending ? (
                 <div className="animate-spin rounded-full md:w-5 md:h-5 w-4 h-4 border-b-2 border-white"></div>

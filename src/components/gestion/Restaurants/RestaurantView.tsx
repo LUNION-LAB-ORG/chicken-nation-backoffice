@@ -8,6 +8,7 @@ import { createPortal } from 'react-dom'
 // import { updateRestaurantStatus } from '@/services/restaurantService'
 import { useDashboardNavigation } from '@/hooks/useDashboardNavigation'
 import { useRBAC } from '@/hooks/useRBAC'
+import { Menu } from 'lucide-react'
 
 interface Schedule {
   [day: string]: string;
@@ -57,18 +58,7 @@ export default function RestaurantView({
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const menuBtnRef = useRef<HTMLSpanElement|null>(null)
   const menuRef = useRef<HTMLDivElement|null>(null)
-
-  // const handleToggleActive = async (restaurantId: string, active: boolean) => {
-  //   try {
-  //     await updateRestaurantStatus(restaurantId, active);
-  //     toast.success(`Restaurant ${active ? 'activé' : 'désactivé'} avec succès`);
-  //   } catch (error: unknown) {
-  //     const errorMessage = error instanceof Error ? error.message : 'Impossible de mettre à jour le statut du restaurant';
-  //     toast.error(`Erreur: ${errorMessage}`);
-  //     console.error('Erreur lors de la mise à jour du statut:', error);
-  //   }
-  // };
-
+ 
 
   const filteredRestaurants = restaurants.filter(restaurant => {
     if (filter === 'all') return true;
@@ -140,33 +130,26 @@ export default function RestaurantView({
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-[#F17922] text-2xl font-regular -mt-1">{restaurant.name}</span>
+            <span className="text-[#F17922] text-sm lg:text-2xl font-regular -mt-1">{restaurant.name}</span>
           </div>
-          {/* <div className="ml-8 bg-[#E8FAF0] text-[#34C759] px-4 py-1.5 font-bold rounded-3xl text-md">
-            SuperAdmin
-          </div> */}
+        
         </div>
         <div className="flex gap-2 items-center">
           <button
             type="button"
             onClick={() => handleDashboardClick(restaurant)}
-            className="bg-[#F17922] text-white px-4 py-2 rounded-full text-sm hover:bg-[#e06a15] transition-colors"
+            className="bg-[#F17922] text-white px-4 py-2 rounded-full text-xs lg:text-sm hover:bg-[#e06a15] transition-colors"
           >
             Tableau de bord
           </button>
-          <button
-            type="button"
-            className="bg-orange-100 text-[#F17922] px-4 py-2 rounded-full text-sm"
-          >
-            Actuel
-          </button>
+        
           {(canViewRestaurant() || canUpdateRestaurant() || canDeleteRestaurant()) && (
             <span
               className="text-[#71717A] text-lg cursor-pointer select-none px-2 ml-1"
               ref={menuBtnRef}
               onClick={(e) => handleMenuOpen(e, restaurant)}
             >
-              •••
+             <Menu size={20} />
             </span>
           )}
         </div>

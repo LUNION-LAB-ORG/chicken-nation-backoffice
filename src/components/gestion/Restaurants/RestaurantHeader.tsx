@@ -26,7 +26,7 @@ export default function RestaurantHeader({ onAddRestaurant, onSearch }: Restaura
         onSearch: onSearch || ((value) => {
           // ✅ SÉCURITÉ: Log minimal en production
           if (process.env.NODE_ENV === 'development') {
-            console.log('Searching:', value);
+           
           }
         }),
         realTimeSearch: true  // ✅ Activer la recherche en temps réel

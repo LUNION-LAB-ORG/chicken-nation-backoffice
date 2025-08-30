@@ -27,11 +27,11 @@ const PromoTabs = ({ activeTab, onTabChange, onCreatePromo, className = '' }: Pr
     <div className={className}>
       {/* Titre de la section */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className='text-[#F17922] text-[26px] font-regular'>Gestions des promotions</h2>
+        <h2 className='text-[#F17922] lg:text-[26px] text-md font-regular'>Gestions des promotions</h2>
         {canAddPromo && (
           <button
             type="button"
-            className="px-6 py-2 bg-[#F17922] cursor-pointer text-white text-sm font-medium rounded-2xl hover:bg-[#F17922] transition-colors"
+            className="lg:px-6 p-2 lg:py-2 bg-[#F17922] cursor-pointer text-white font-medium rounded-2xl hover:bg-[#F17922] text-xs lg:text-sm transition-colors"
             onClick={onCreatePromo}
           >
             Ajouter une promo
@@ -47,7 +47,7 @@ const PromoTabs = ({ activeTab, onTabChange, onCreatePromo, className = '' }: Pr
             type="button"
             onClick={() => onTabChange(tab.id)}
             className={`
-              px-4 py-1 cursor-pointer rounded-xl text-sm font-medium transition-all duration-200
+              lg:px-4 p-2 py-1 cursor-pointer rounded-xl text-xs font-medium transition-all duration-200
               ${activeTab === tab.id
                 ? 'bg-gradient-to-r from-[#F17922] to-[#FA6345] text-white'
                 : 'bg-white border-slate-200 border-1 text-gray-500 hover:bg-gray-200'

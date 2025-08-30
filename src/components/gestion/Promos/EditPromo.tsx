@@ -152,20 +152,11 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
   // ✅ Initialiser les données quand le mode édition est activé
   useEffect(() => {
     if (isEditing && initialData) {
-      console.log('🔧 [EditPromo] Mode édition activé, initialisation des données:', initialData);
-
+     
       try {
         // Utiliser la fonction de conversion correcte
         const mappedData = convertDetailedApiPromotionToUnifiedFormData(initialData as ApiPromotion);
-        
-        console.log('📄 [EditPromo] Données converties pour le formulaire:', mappedData);
-        console.log('🏪 [EditPromo] === VÉRIFICATION DES RESTAURANTS MAPPÉS ===');
-        console.log('📋 [EditPromo] selectedRestaurants après mapping:', {
-          selectedRestaurants: mappedData.selectedRestaurants,
-          selectedRestaurants_length: mappedData.selectedRestaurants?.length || 0,
-          selectedRestaurants_values: mappedData.selectedRestaurants?.map(rid => ({ value: rid, type: typeof rid }))
-        });
-
+       
         // Mise à jour de tous les états avec les données converties
         updateFormData(mappedData);
 
@@ -179,10 +170,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
   // ✅ Effet pour comparer les IDs des restaurants sélectionnés avec les restaurants disponibles
   useEffect(() => {
     if (restaurants.length > 0 && unifiedFormData.selectedRestaurants.length > 0) {
-      console.log('🔍 [EditPromo] === COMPARAISON DES IDS RESTAURANTS ===');
-      console.log('📋 [EditPromo] Restaurants disponibles:', restaurants.map(r => ({ id: r.id, name: r.name, type: typeof r.id })));
-      console.log('📋 [EditPromo] Restaurants sélectionnés:', unifiedFormData.selectedRestaurants.map(rid => ({ value: rid, type: typeof rid })));
-      
+    
       // Vérifier les correspondances
       const matches = unifiedFormData.selectedRestaurants.map(selectedId => {
         const found = restaurants.find(r => r.id === selectedId || r.id === selectedId.toString() || r.id?.toString() === selectedId);
@@ -192,7 +180,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
           foundRestaurant: found ? { id: found.id, name: found.name } : null
         };
       });
-      console.log('🔍 [EditPromo] Correspondances trouvées:', matches);
+      
     }
   }, [restaurants, unifiedFormData.selectedRestaurants]);
 
@@ -366,13 +354,13 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
 
   // Fonction de soumission avec gestion d'erreurs
   const handleSubmit = async () => {
-    console.log('🔄 [SAVE] Début de la sauvegarde normale...');
+     
     setIsSubmitting(true);
     setErrors([]);
 
     try {
       // Validation spécifique à l'étape 1 seulement
-      console.log('🔍 [SAVE] Validation du formulaire...');
+    
       const validation = validateEditPromoStep();
       if (!validation.isValid) {
         console.log('❌ [SAVE] Validation échouée:', validation.errors);
@@ -407,27 +395,15 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
                       activePromoType === 'fixed' ? (parseFloat(fixedAmountValue) || 0) :
                       (parseFloat(buyQuantity) || 0)
       };
-
-      console.log('🔧 [SAVE] Données unifiées:', updatedUnifiedFormData);
-
+ 
       // ✅ UTILISER LA FONCTION DE CONVERSION UNIFIÉE
       if (onSave) {
-        console.log('🔄 [SAVE] Conversion des données pour l\'API...');
+     
         const promoDataToPass = convertUnifiedFormDataToTransitData(updatedUnifiedFormData);
-
-        console.log('📤 [SAVE] Données finales à envoyer:', promoDataToPass);
-        console.log('🔒 [SAVE] Visibilité:', promoDataToPass.visibility);
-
-        console.log('🚀 [SAVE] Appel de onSave...');
-
+ 
         // ✅ ATTENDRE LA RÉPONSE DU BACKEND
         const backendResponse = await onSave(promoDataToPass);
-
-        console.log('📥 [SAVE] Réponse du backend reçue:', backendResponse);
-        console.log('📊 [SAVE] Type de réponse:', typeof backendResponse);
-        console.log('📋 [SAVE] Détails de la réponse:', JSON.stringify(backendResponse, null, 2));
-
-      
+ 
       } else {
         console.warn('⚠️ [SAVE] onSave n\'est pas défini');
       }
@@ -451,22 +427,9 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
     setErrors([]);
 
     try {
-      console.log('📝 [DRAFT] Données actuelles du formulaire:', {
-        activePromoType,
-        percentageValue,
-        fixedAmountValue,
-        buyQuantity,
-        getQuantity,
-        selectedRestaurants,
-        selectedMenus,
-        selectedCategories,
-        selectedPublicTypes
-      });
-
-      // ✅ MISE À JOUR DES DONNÉES UNIFIÉES avec visibility: "DRAFT"
+   
       const updatedUnifiedFormData: UnifiedPromoFormData = {
-        ...unifiedFormData,
-        // Mettre à jour avec les valeurs actuelles du formulaire
+        ...unifiedFormData, 
         discountType: activePromoType,
         percentageValue,
         fixedAmountValue,
@@ -490,23 +453,15 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
                       activePromoType === 'fixed' ? (parseFloat(fixedAmountValue) || 0) :
                       (parseFloat(buyQuantity) || 0)
       };
-
-      console.log('🔧 [DRAFT] Données unifiées mises à jour:', updatedUnifiedFormData);
-
+ 
       // ✅ UTILISER LA FONCTION DE SAUVEGARDE BROUILLON SPÉCIFIQUE
       if (onSaveAsDraft) {
         console.log('🔄 [DRAFT] Conversion des données pour l\'API...');
         const promoDataToPass = convertUnifiedFormDataToTransitData(updatedUnifiedFormData);
 
         // ✅ S'assurer que la visibilité est bien DRAFT dans les données finales
-        promoDataToPass.visibility = 'DRAFT';
-
-        console.log('📤 [DRAFT] Données finales à envoyer à l\'API:', promoDataToPass);
-        console.log('🔒 [DRAFT] Visibilité forcée:', promoDataToPass.visibility);
-
-        console.log('🚀 [DRAFT] Appel de onSaveAsDraft avec les données...');
-
-        // ✅ ATTENDRE LA RÉPONSE DU BACKEND
+        promoDataToPass.visibility = 'DRAFT'; 
+      
         await onSaveAsDraft(promoDataToPass);
 
         console.log('✅ [DRAFT] Sauvegarde terminée avec succès');

@@ -91,8 +91,7 @@ export class NotificationAPI {
 
       // ✅ Utiliser directement fetch pour plus de contrôle
       const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL ||
-        "https://chicken.turbodeliveryapp.com";
+        process.env.NEXT_PUBLIC_API_URL
       const fullUrl = `${baseUrl}/api/v1${endpoint}`;
 
       const token = NotificationAPI.getToken();

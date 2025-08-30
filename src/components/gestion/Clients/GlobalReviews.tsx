@@ -414,7 +414,7 @@ export function GlobalReviews() {
                       height={40}
                       className="object-cover w-full h-full"
                       onError={(e) => {
-                        console.error('Erreur de chargement image client:', comment.customer?.image);
+                        console.error('Erreur de chargement image client:');
                         e.currentTarget.style.display = 'none';
                       }}
                     />

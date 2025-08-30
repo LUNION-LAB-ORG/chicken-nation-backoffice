@@ -20,22 +20,7 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
 
   // EXACTEMENT comme dans PersonalizedPromo
   const cubeRotationX = -50
-  const cubeRotationY = 50
-
-  // Fonction pour obtenir le texte de réduction
-  // const getDiscountText = () => { // Non utilisé actuellement
-  //   if (promo.discount_type === 'PERCENTAGE') {
-  //     return `${promo.discount_value || 0}%`
-  //   } else if (promo.discount_type === 'FIXED_AMOUNT') {
-  //     return `${promo.discount_value || 0} FCFA`
-  //   } else if (promo.discount_type === 'BUY_X_GET_Y') {
-  //     // Utiliser les propriétés correctes pour BUY_X_GET_Y
-  //     const buyQty = (promo as unknown as { buy_quantity?: number }).buy_quantity || 1;
-  //     const getQty = (promo as unknown as { get_quantity?: number }).get_quantity || 1;
-  //     return `Achetez ${buyQty}, Obtenez ${getQty}`
-  //   }
-  //   return `${promo.discount_value || 0}%`
-  // }
+  const cubeRotationY = 50 
 
   // Fonction pour formater les dates d'expiration
   const formatExpirationDate = (dateString?: string) => {
@@ -107,8 +92,8 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
         {/* Badge "Cible" en haut à droite */}
         {promo.visibility && (
           <div className="absolute top-4 right-4 z-10">
-            <div className="bg-white rounded-xl lg:px-1.5 lg:py-1 md:px-1 sm:px-2 sm:py-2 2xl:px-4 xl:px-4 2xl:py-1 py-[1px] px-1   xl:py-[1px] shadow-sm">
-              <span className="text-orange-500 2xl:text-xs lg:text-[8px] text-xs font-medium">{promo.visibility}</span>
+            <div className="bg-white rounded-xl lg:px-1.5 lg:py-1 md:px-1 sm:px-2 sm:py-2 2xl:px-4 xl:px-4 2xl:py-1 py-[1px] px-2 xl:py-[1px] shadow-sm">
+              <span className="text-orange-500 2xl:text-xs lg:text-[8px] text-[8px] font-medium">{promo.visibility}</span>
             </div>
           </div>
         )}
@@ -122,7 +107,7 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
                 className="2xl:text-[44px] xl:text-3xl lg:text-xl md:text-lg sm:text-md font-blocklyn-grunge font-black leading-none"
                 style={{ color: promo.text_color || promo.textColor || '#FFFFFF' }}
               >
-                <span className="text-2xl">{promo.title}</span>
+                <span className="lg:text-2xl text-lg">{promo.title}</span>
               </div>
             )}
             <div

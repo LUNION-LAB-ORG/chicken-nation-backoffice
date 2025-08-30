@@ -24,11 +24,7 @@ interface GenericStatCardClientProps {
   className?: string
   onClick: () => void // Required pour la version interactive
 }
-
-/**
- * Version Client Component de GenericStatCard avec interactions
- * Utilise le Server Component de base et ajoute les interactions
- */
+ 
 export function GenericStatCardClient({ onClick, ...props }: GenericStatCardClientProps) {
   return (
     <div 

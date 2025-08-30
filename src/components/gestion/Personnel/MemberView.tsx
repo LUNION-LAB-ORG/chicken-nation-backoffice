@@ -14,14 +14,15 @@ import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { getHumanReadableError, getPersonnelSuccessMessage } from '@/utils/errorMessages';
 import { useRBAC } from '@/hooks/useRBAC';
+import { Menu } from 'lucide-react'
 
 export interface Member {
   id: string;
-  fullname: string; // Changed from name to fullname
+  fullname: string; 
   email: string;
   role: string;
   image?: string;
-  restaurant?: string | { id: string; name: string }; // Simplified restaurant type
+  restaurant?: string | { id: string; name: string }; 
   phone?: string;
   address?: string;
   // status?: 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED'; // Removed status field
@@ -162,12 +163,12 @@ const MemberView: React.FC<MemberViewProps> = ({ members, onRefresh, isReadOnly 
       fullname: member.fullname, // Changed from member.name
       email: member.email,
       role: member.role,
-      type: '', // Assuming type is not present or needed here, adjust if necessary
+      type: '',  
       restaurant: typeof member.restaurant === 'object' ? { ...member.restaurant, name: member.restaurant.name } : undefined,
       phone: member.phone || '',
       address: member.address || '',
       image: member.image,
-      entity_status: member.entity_status // Added entity_status
+      entity_status: member.entity_status 
     };
 
     return userMember;
@@ -235,22 +236,20 @@ const MemberView: React.FC<MemberViewProps> = ({ members, onRefresh, isReadOnly 
     <div className="w-full  min-h-screen mt-2">
       {/* Table desktop */}
       <table className="w-full bg-white border-separate border-spacing-0 hidden md:table">
-        <thead className="border-b border-[#ECECEC]">
-          <tr className="text-[#9796A1] text-[14px]">
-            <th className="px-4 py-2 w-8 border-b-2 border-[#A1A1AA]/50">
-              <Checkbox checked={allChecked} onChange={toggleAll} />
-            </th>
-            <th className="font-bold text-[#71717A]  px-0 py-2 text-left border-b-2  pl-10 border-[#A1A1AA]/50">Utilisateur</th>
-            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b-2 border-[#A1A1AA]/50">Rôle</th>
-            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b-2 border-[#A1A1AA]/50">Status</th>
-            <th className="px-4 py-2 w-10 border-b-2 border-[#A1A1AA]/50">Actions</th>
+        <thead >
+          <tr className="text-[#9796A1] text-[14px]"> 
+            <th className="font-bold text-[#71717A]  px-0 py-2 text-left border-b-1  pl-10 border-slate-100 w-[260px]">Utilisateur</th>
+            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b-1 border-slate-100 w-[260px]">Rôle</th>
+            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b-1 border-slate-100 w-[260px]">Status</th>
+            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b-1 border-slate-100 w-[260px]">Email</th>
+            <th className="px-4 py-2 w-10 border-b-1 text-left border-slate-100 ">Actions</th>
           </tr>
         </thead>
         <tbody>
           {filteredMembers.map((member) => {
-            const memberStatus = member.entity_status || 'ACTIVE'; // Simplified to use only entity_status
+            const memberStatus = member.entity_status || 'ACTIVE'; 
             const isDisabled = memberStatus === 'DELETED' || memberStatus === 'INACTIVE';
-            const rowClassName = `border-t border-[#ECECEC] relative hover:bg-[#FFF6E9]/60 transition cursor-pointer ${
+            const rowClassName = `  hover:bg-[#FFF6E9]/60 transition cursor-pointer ${
               isDisabled ? 'bg-gray-50' : ''
             }`;
             const contentOpacity = isDisabled ? 'opacity-50' : '';
@@ -258,14 +257,7 @@ const MemberView: React.FC<MemberViewProps> = ({ members, onRefresh, isReadOnly 
             return (
               <tr key={member.id} className={rowClassName}
                 onClick={() => { setEditMember(member); setShowAddModal(false); setModal(null); setShowMemberViewModal(true); }}>
-                <td className={`px-4 py-2 w-8 ${contentOpacity}`} onClick={e => e.stopPropagation()}>
-                  {!isReadOnly && (
-                    <Checkbox
-                      checked={selected.includes(member.id)}
-                      onChange={() => toggleOne(member.id)}
-                    />
-                  )}
-                </td>
+               
                 <td className={`px-0 py-2 ${contentOpacity}`}>
                   <div className="flex ml-10 items-center gap-2 min-w-[180px]">
                     <div className="w-8 h-8 rounded-full bg-[#FFF6E9] flex items-center justify-center overflow-hidden ">
@@ -296,7 +288,9 @@ const MemberView: React.FC<MemberViewProps> = ({ members, onRefresh, isReadOnly 
                         e.stopPropagation();
                         handleMenuOpen(member.id, e);
                       }}
-                    >•••</span>
+                    >
+                      <Menu size={20}  />
+                    </span>
                   )}
                 </td>
               </tr>
@@ -344,7 +338,9 @@ const MemberView: React.FC<MemberViewProps> = ({ members, onRefresh, isReadOnly 
                     e.stopPropagation();
                     handleMenuOpen(member.id, e);
                   }}
-                >•••</span>
+                >
+                    <Menu size={20} />
+                </span>
               )}
             </div>
           );

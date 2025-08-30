@@ -16,13 +16,12 @@ function OrderHeader({ currentView = 'list', onBack }: OrderHeaderProps) {
 
   if (currentView === 'list') {
  
-
-    // Préparer les actions avec le filtre de période
+ 
     const actions = [
       // Filtre de période en premier
       {
         label: "Filtre période",
-        onClick: () => {}, // Non utilisé car on utilise customComponent
+        onClick: () => {},  
         customComponent: <DashboardPeriodFilter />
       },
      
