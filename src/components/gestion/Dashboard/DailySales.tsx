@@ -5,13 +5,7 @@ import React from 'react';
 import { DailySalesData } from '@/services/dashboardService';
 import { useDailySalesQuery } from '@/hooks/useDailySalesQuery';
 import './DailySales.css';
-
-// interface SalesData { // Interface non utilisée
-//   label: string;
-//   value: string;
-//   color: string;
-//   percentage: number;
-// }
+ 
 
 interface DailySalesProps {
   title?: string;
@@ -47,16 +41,7 @@ const DailySales: React.FC<DailySalesProps> = ({
 
   // ✅ Utiliser les données de la query ou fallback
   const finalSalesData = salesData && salesData.length > 0 ? salesData : defaultSalesData;
-
-  // // ✅ Log pour debug
-  // console.log('💳 [DailySales] État:', {
-  //   restaurantId,
-  //   salesData,
-  //   finalSalesData,
-  //   isLoading,
-  //   error
-  // });
-
+ 
   // Calculer la largeur totale pour s'assurer que les pourcentages s'additionnent à 100%
   const totalPercentage = finalSalesData.reduce((sum, item) => sum + item.percentage, 0);
 

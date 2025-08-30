@@ -51,9 +51,8 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
 
   const handleSave = () => {
 
-  }
-
-
+  } 
+  
   const handleNameChange = (value: string) => {
     setDisplayName(value)
 
@@ -71,10 +70,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
       }
     }
   }
-
-
-
-
+ 
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="space-y-4 w-full lg:w-1/3">

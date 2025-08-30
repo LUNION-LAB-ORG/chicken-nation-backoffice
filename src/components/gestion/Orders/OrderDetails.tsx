@@ -73,7 +73,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
       height={height}
       className={className}
       onError={(e) => {
-        console.warn("Erreur de chargement d'image:", safeSrc);
+        console.warn("Erreur de chargement d'image:");
         (e.target as HTMLImageElement).src = "/images/food2.png";
         if (onError) onError(e);
       }}
@@ -242,8 +242,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
             }
           } else {
             console.warn(
-              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:",
-              order.id
+              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:" 
             );
           }
         } else if (getOrderById) {

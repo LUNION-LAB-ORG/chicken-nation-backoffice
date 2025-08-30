@@ -144,22 +144,25 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   // Charger les données au montage du composant
   useEffect(() => {
     if (isOpen) {
-      loadClients();
+      // Ne charger les clients que si l'utilisateur n'est pas admin
+      if (user?.role !== 'ADMIN') {
+        loadClients();
+      }
       // Charger les utilisateurs pour les deux types de conversation
       loadUsers();
     }
-  }, [isOpen, loadClients, loadUsers]);
+  }, [isOpen, loadClients, loadUsers, user?.role]);
 
   // Recherche avec debounce pour les clients
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (clientSearchTerm.trim() && conversationType === 'Avec client') {
+      if (clientSearchTerm.trim() && conversationType === 'Avec client' && user?.role !== 'ADMIN') {
         loadClients();
       }
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [clientSearchTerm, conversationType, loadClients]);
+  }, [clientSearchTerm, conversationType, loadClients, user?.role]);
 
   // Recherche avec debounce pour les utilisateurs
   useEffect(() => {

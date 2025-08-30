@@ -5,11 +5,9 @@ import Image from 'next/image'
 import Input from '../../ui/Input'  
 import Button from '../../ui/Button'    
 import Select from '@/components/ui/Select' 
-import Toggle from '@/components/ui/Toggle'
-// import { getAllCategories } from '@/services' // Import non utilisé
+import Toggle from '@/components/ui/Toggle' 
 import { updateSupplementAvailability } from '@/services/dishService'
-import { Dish } from '@/types/dish'
-// import { Category } from '@/services/categoryService' // Import non utilisé
+import { Dish } from '@/types/dish' 
 import { ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 
@@ -37,26 +35,10 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
   })
   
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  // const [categories, setCategories] = useState<Category[]>([]) // Variable non utilisée
+  const [isLoading, setIsLoading] = useState(false) 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
-
-  // Charger les catégories au chargement du composant (non utilisé actuellement)
-  // useEffect(() => {
-  //   const fetchCategories = async () => {
-  //     try {
-  //       const categoriesData = await getAllCategories()
-  //       setCategories(categoriesData)
-  //     } catch (error) {
-  //       console.error('Erreur lors du chargement des catégories:', error)
-  //       toast.error('Impossible de charger les catégories')
-  //     }
-  //   }
-
-  //   fetchCategories()
-  // }, [])
-
-  // Initialiser le formulaire avec les données du supplément
+ 
+  // Initialiser  
   useEffect(() => {
     if (product) {
       setFormData({
@@ -123,14 +105,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         setFormErrors(prev => ({ ...prev, [name]: '' }))
       }
     }
-  }
-
-  // const handleToggleChange = (name: string, checked: boolean) => { // Fonction non utilisée
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     [name]: checked
-  //   }))
-  // }
+  } 
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -178,11 +153,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         fd.append('image', formData.image)
       }
       
-      // Importer le client API depuis services/api
       const { api } = await import('@/services/api')
-      
-      // Utiliser le client API pour envoyer la requête
-      // Cela gère automatiquement l'authentification et le refresh token
       const updatedSupplement = await api.patch<Dish>(
         `/supplements/${product.id}`,
         fd

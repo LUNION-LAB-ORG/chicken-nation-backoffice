@@ -25,8 +25,7 @@ export default function SupplementTabs({
     if (id === 'FOOD') return 'Acc.';
     if (id === 'DRINK') return 'Bois.';
     if (id === 'ACCESSORY') return 'Ing.';
-    
-    // Sinon, prendre la première lettre
+  
     return label.charAt(0).toUpperCase();
   };
 

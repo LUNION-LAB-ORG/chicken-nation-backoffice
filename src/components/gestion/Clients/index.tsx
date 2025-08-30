@@ -42,16 +42,9 @@ export default function Clients({ setActiveTab }: ClientsProps) {
 
   // ✅ Utiliser le hook spécialisé pour le comptage
   const { totalCount: clientsCount, hasAccurateCount } = useCustomersCount({
-    restaurantId // ✅ Filtrage par restaurant si applicable
+    restaurantId  
   });
-
-  // ✅ Debug pour voir le nouveau comptage
-  console.log('🔍 [UserCounter avec useCustomersCount]:', {
-    clientsCount,
-    hasAccurateCount,
-    restaurantId
-  });
-
+ 
   const handleViewChange = (view: 'list' | 'create' | 'edit' | 'view' | 'reviews', clientId?: string | null) => {
     setClientState(prev => ({ ...prev, view, selectedClientId: clientId }));
   };

@@ -85,9 +85,8 @@ export default function AddRestaurant({ onCancel, onSuccess, restaurant }: AddRe
   const fetchManagerDetails = async (restaurantId: string) => {
     // setIsLoadingManager(true); // Variable non utilisée
     try {
-      console.log('Chargement des informations du manager pour le restaurant:', restaurantId);
-      const managerData = await getRestaurantManager(restaurantId);
-      console.log('Données du manager reçues:', managerData);
+      
+      const managerData = await getRestaurantManager(restaurantId); 
 
       if (managerData) {
         setFormData(prev => ({
@@ -294,11 +293,9 @@ export default function AddRestaurant({ onCancel, onSuccess, restaurant }: AddRe
         if (onSuccess) onSuccess(result);
         onCancel();
       } 
-      // Si c'est une création (nouveau restaurant)
-      else {
-        console.log('Création d\'un nouveau restaurant')
-        
-       
+    
+      else { 
+
         const restaurantData = {
           name: formData.name,
           description: formData.description,
@@ -336,7 +333,7 @@ export default function AddRestaurant({ onCancel, onSuccess, restaurant }: AddRe
           
           try {
             const result = await createRestaurant(fd);
-            console.log('Résultat création avec image:', result);
+            
             
              if (result && result.manager && typeof result.manager === 'object' && result.manager.email && result.manager.password) {
               setManagerCredentials({

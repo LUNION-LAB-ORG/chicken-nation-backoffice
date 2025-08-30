@@ -58,18 +58,7 @@ export default function RestaurantView({
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const menuBtnRef = useRef<HTMLSpanElement|null>(null)
   const menuRef = useRef<HTMLDivElement|null>(null)
-
-  // const handleToggleActive = async (restaurantId: string, active: boolean) => {
-  //   try {
-  //     await updateRestaurantStatus(restaurantId, active);
-  //     toast.success(`Restaurant ${active ? 'activé' : 'désactivé'} avec succès`);
-  //   } catch (error: unknown) {
-  //     const errorMessage = error instanceof Error ? error.message : 'Impossible de mettre à jour le statut du restaurant';
-  //     toast.error(`Erreur: ${errorMessage}`);
-  //     console.error('Erreur lors de la mise à jour du statut:', error);
-  //   }
-  // };
-
+ 
 
   const filteredRestaurants = restaurants.filter(restaurant => {
     if (filter === 'all') return true;

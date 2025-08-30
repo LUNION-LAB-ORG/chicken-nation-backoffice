@@ -70,23 +70,11 @@ export default function SupplementView({
   const showAvailabilityColumn = canUpdateSupplement();
   const showActionsColumn = canUpdateSupplement() || canDeleteSupplement() || Boolean(onEdit || onDelete || onDeleteProduct);
   const showSelectionColumn = canUpdateSupplement() || canDeleteSupplement(); // Sélection pour actions de masse
-
-  // ✅ Plus besoin de pagination côté client - gérée par TanStack Query
-
-  // ✅ Utiliser les products des props au lieu du store temporairement
-  // TODO: Réactiver le store quand les données seront correctes
-
-  // Safely get products with useMemo to prevent dependency issues
+  
   const safeProducts = useMemo(() => {
     const result = Array.isArray(products) ? products : [];
 
-    // ✅ Debug : vérifier la structure des produits
-    if (result.length > 0) {
-      console.log('[SupplementView] Premier produit:', result[0]);
-      console.log('[SupplementView] Catégorie du premier produit:', result[0]?.category);
-      console.log('[SupplementView] Type de la catégorie:', typeof result[0]?.category);
-    }
-
+   
     return result;
   }, [products]);
 
@@ -97,8 +85,7 @@ export default function SupplementView({
 
     if (typeof category === 'string') {
       categoryStr = category;
-    } else if (category && typeof category === 'object') {
-      // Si c'est un objet, essayer d'extraire le nom ou l'id
+    } else if (category && typeof category === 'object') { 
       categoryStr = category.name || category.id || category.type || String(category);
     } else {
       categoryStr = String(category || '');
@@ -168,7 +155,7 @@ export default function SupplementView({
       
       setMenuPosition({ 
         top: event.clientY, 
-        left: event.clientX - 150 // Décaler le menu vers la droite (valeur négative pour décaler vers la gauche)
+        left: event.clientX - 150  
       });
       setMenuOpenId(productId);
     }

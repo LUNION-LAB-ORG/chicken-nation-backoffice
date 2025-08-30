@@ -285,16 +285,7 @@ const CreatePromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialD
 
   // Fonction de soumission avec gestion d'erreurs
   const handleSubmit = async () => {
-    console.log('🚀 [CreatePromo] === DÉBUT DE LA SOUMISSION ===');
-    console.log('📥 [CreatePromo] États actuels:', {
-      selectedRestaurants,
-      selectedPublicTypes,
-      selectedMenus,
-      selectedCategories,
-      activePromoType,
-      activeProductTarget
-    });
-
+   
     setIsSubmitting(true);
     setErrors([]);
 
@@ -340,16 +331,7 @@ const CreatePromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialD
           // Métadonnées
           isEditing: false
         };
-
-        console.log('📤 [CreatePromo] Données à passer à onSave:', {
-          selectedRestaurants: promoDataToPass.selectedRestaurants,
-          selectedPublicTypes: promoDataToPass.selectedPublicTypes,
-          selectedMenus: promoDataToPass.selectedMenus,
-          selectedCategories: promoDataToPass.selectedCategories,
-          productTarget: promoDataToPass.productTarget,
-          discountType: promoDataToPass.discountType
-        });
-
+ 
         onSave(promoDataToPass);
       }
 

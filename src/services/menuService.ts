@@ -416,21 +416,11 @@ export const updateMenu = async (id: string, menuData: FormData): Promise<Valida
 // ✅ CONVERSION SÉCURISÉE MENU → FORMDATA
 export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = false): FormData => {
   try {
-    // ✅ DEBUG: Vérifier les données avant validation
-    console.log('🔍 DEBUG menuService - Menu avant validation:', {
-      selectedRestaurants: (menu as unknown as { selectedRestaurants?: string[] }).selectedRestaurants,
-      dish_supplements: (menu as unknown as { dish_supplements?: unknown[] }).dish_supplements
-    });
+    
 
     // ✅ Validation du menu d'entrée selon le contexte
     const validatedMenu = isUpdate ? validateUpdateMenu(menu) : validateCreateMenu(menu);
-
-    // ✅ DEBUG: Vérifier les données après validation
-    console.log('🔍 DEBUG menuService - Menu après validation:', {
-      selectedRestaurants: (validatedMenu as unknown as { selectedRestaurants?: string[] }).selectedRestaurants,
-      dish_supplements: (validatedMenu as unknown as { dish_supplements?: unknown[] }).dish_supplements
-    });
-
+ 
     const formData = new FormData();
 
     if (isUpdate) {
@@ -546,9 +536,7 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       formData.append('restaurant_ids', restaurantId);
     });
 
-    // ✅ DEBUG: Vérifier les restaurants ajoutés
-    console.log('🔍 DEBUG menuService - Restaurants ajoutés:', restaurantIds);
-
+  
     // ✅ Ajout sécurisé des suppléments pour CREATE
     const supplementsAdded: Array<{id: string, quantity: number}> = [];
     const menuWithSupplements = validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string; quantity?: number }> };
@@ -589,10 +577,7 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
           });
         }
       });
-    }
-
-    // ✅ DEBUG: Vérifier les suppléments ajoutés
-    console.log('🔍 DEBUG menuService - Suppléments ajoutés:', supplementsAdded);
+    } 
   }
 
   return formData;
@@ -634,7 +619,7 @@ export const deleteMenu = async (id: string): Promise<void> => {
 
     await apiRequest<void>(`/dishes/${sanitizedId}`, 'DELETE');
 
-    console.log(`Menu supprimé avec succès (ID: ${sanitizedId})`);
+ 
   } catch (error) {
     console.error(`Erreur lors de la suppression du menu ${id}:`, error);
     throw new Error(`Impossible de supprimer le menu: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);

@@ -155,17 +155,9 @@ const Promos = () => {
         couponImageUrl: draftUnifiedData.couponImageUrl
       };
  
-
-      console.log('🔄 [index] Début de handleSaveAsDraft avec:', promoData);
-      console.log('🔧 [index] Données unifiées converties:', draftUnifiedData);
-      console.log('🔍 [index] Catégories sélectionnées:', draftUnifiedData.selectedCategories);
-
-      // ✅ UTILISER createPromotionFromUnified au lieu de createPromotion
-      // Cette fonction gère correctement les catégories via targeted_category_ids
+ 
       const response = await createPromotionFromUnified(draftUnifiedData, null, 'DRAFT')
-
-      console.log('📥 [index] Réponse de createPromotionFromUnified:', response);
-
+ 
       // Recharger les promotions pour afficher le nouveau brouillon
       await loadPromotions()
 
@@ -190,14 +182,11 @@ const Promos = () => {
     try {
       setPromoState(prev => ({ ...prev, loading: true }))
 
-      console.log('🔄 [index] Début de handleSaveAsDraftEdit (ÉDITION) avec:', promoData);
-
+    
       // ✅ Convertir PromoTransitData vers UnifiedPromoFormData
       const unifiedData = convertTransitDataToUnifiedFormData(promoData);
 
-      console.log('🔧 [index] Données unifiées converties (ÉDITION):', unifiedData);
-      console.log('🔍 [index] Catégories sélectionnées (ÉDITION):', unifiedData.selectedCategories);
-
+    
       // ✅ S'assurer que la visibilité est DRAFT
       const draftUnifiedData: UnifiedPromoFormData = {
         ...unifiedData,
@@ -213,9 +202,7 @@ const Promos = () => {
           null,
           'DRAFT'
         )
-
-        console.log('📥 [index] Réponse de updatePromotionFromUnified (ÉDITION):', response);
-
+ 
         // Recharger les promotions pour afficher les modifications
         await loadPromotions()
 

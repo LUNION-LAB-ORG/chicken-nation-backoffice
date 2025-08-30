@@ -125,7 +125,7 @@ export function GenericStatCardServer({
                 width={36}
                 height={36}
                 onError={(e) => {
-                  console.warn('Erreur de chargement de l\'icône:', iconImage);
+                  console.warn('Erreur de chargement de l\'icône:');
                   (e.target as HTMLImageElement).src = '/icons/circle.png';
                 }}
               />

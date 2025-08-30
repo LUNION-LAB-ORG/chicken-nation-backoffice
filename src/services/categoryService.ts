@@ -68,9 +68,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
  * ✅ Récupère toutes les catégories avec le nombre réel de produits/menus
  */
 export const getAllCategoriesWithProductCount = async (): Promise<Category[]> => {
-  try {
-    console.log('🔄 Récupération des catégories avec calcul du nombre de produits...');
-    
+  try { 
     // Récupérer toutes les catégories d'abord
     const categories = await api.get<Category[]>('/categories', false);
     
@@ -86,16 +84,14 @@ export const getAllCategoriesWithProductCount = async (): Promise<Category[]> =>
           // Récupérer les menus de cette catégorie
           const menus = await getMenusByCategoryId(category.id);
           const productCount = menus ? menus.length : 0;
-          
-          console.log(`📊 Catégorie "${category.name}": ${productCount} produits`);
-          
+           
           return {
             ...category,
             productCount
           };
         } catch (error) {
           console.error(`❌ Erreur lors du calcul des produits pour la catégorie ${category.name}:`, error);
-          // En cas d'erreur, retourner la catégorie avec productCount = 0
+          
           return {
             ...category,
             productCount: 0
@@ -103,8 +99,7 @@ export const getAllCategoriesWithProductCount = async (): Promise<Category[]> =>
         }
       })
     );
-
-    console.log('✅ Catégories avec nombre de produits calculé:', categoriesWithCount.length);
+ 
     return categoriesWithCount;
     
   } catch (error) {
