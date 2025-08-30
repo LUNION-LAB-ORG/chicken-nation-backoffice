@@ -130,9 +130,9 @@ const getPaymentStatus = (order: Order): PaymentStatus => {
   return "PAID";
 };
 
-// 🎯 MAPPING COMPLET ET EXACT API → UI
+ 
 const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
-  // ✅ 1. MAPPING DES STATUTS API → UI
+ 
   const mapApiStatusToUiStatus = (apiStatus: string): Order["status"] => {
     const statusMapping: Record<string, Order["status"]> = {
       PENDING: "NOUVELLE",

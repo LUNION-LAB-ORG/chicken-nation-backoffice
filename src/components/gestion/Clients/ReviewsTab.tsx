@@ -116,20 +116,7 @@ export function ReviewsTab({ clientReviews, client, fullName, formatDate }: Revi
 
             return (
               <div key={item.id} className="flex p-4 border-b border-[#80808096]">
-                <div className="items-center mr-6 space-y-2">
-                  <Checkbox
-                    checked={selectedReviews[item.id] || false}
-                    onChange={(checked) => handleSelectReview(item.id, checked)}
-                  />
-                  <button
-                    type="button"
-                    title="Copier le commentaire"
-                    className="flex items-center text-xs text-gray-500 hover:text-gray-700 mt-auto"
-                  >
-                    <Image src={"/icons/copy.png"} alt="Copy" width={20} height={20} />
-                  </button>
-                </div>
-
+             
                 <div className="flex-1">
                   <div className="flex space-x-3 mb-2">
                     {/* ✅ Avatar avec image - même style que GlobalReviews */}

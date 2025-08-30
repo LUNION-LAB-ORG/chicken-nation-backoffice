@@ -20,7 +20,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'client' | 'internal'>('all');
   
-  // 🔌 React Query hooks
+ 
   const { 
     data: conversationsData, 
     isLoading
@@ -148,7 +148,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             placeholder="Rechercher une conversation..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-orange-500 focus:border-transparent bg-white"
+            className="block text-slate-700  w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-orange-500 focus:border-transparent bg-white"
           />
         </div>
 
@@ -219,7 +219,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             <div
               key={conversation.id}
               onClick={() => onSelectConversation(conversation.id)}
-              className={`md:px-4 md:py-4 px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
+              className={`md:px-4 md:py-4  px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
                 selectedConversation === conversation.id ? 'bg-orange-50' : ''
               }`}
             >
@@ -232,7 +232,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                       <div className="relative w-full h-full">
                         {conversation.users.slice(0, 2).map((user, index) => {
                           const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
-                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-0 right-0';
+                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-5 right-0';
                           
                           return (
                             <div key={user.id} className={`${size} ${position}`}>

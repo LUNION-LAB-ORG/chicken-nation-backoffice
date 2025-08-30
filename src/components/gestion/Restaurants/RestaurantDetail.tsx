@@ -292,7 +292,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
 
       return (
         <div key={day} className="flex justify-between py-2 border-b border-gray-100 last:border-0">
-          <span className="font-medium text-sm">{daysMap[day]}</span>
+          <span className="font-medium text-sm text-gray-500">{daysMap[day]}</span>
           <span className={`text-sm ${isClosed ? 'text-red-500 italic' : 'text-green-600'} font-medium`}>
             {isClosed ? 'Fermé' : hours}
           </span>
@@ -463,7 +463,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
                       <UserIcon className="h-8 w-8 text-gray-400" />
                     )}
                   </div>
-                  <h4 className="text-base font-medium">{manager?.fullname || 'Non disponible'}</h4>
+                  <h4 className="text-base font-medium text-gray-600">{manager?.fullname || 'Non disponible'}</h4>
                 </div>
 
                 <div className="space-y-3">
@@ -504,7 +504,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
                   <Calendar className="h-5 w-5 text-gray-400" />
                   <div>
                     <p className="text-sm text-gray-500">Date de création</p>
-                    <p className="text-sm font-medium">{formatDate(restaurant.createdAt)}</p>
+                    <p className="text-sm font-medium text-gray-500">{formatDate(restaurant.createdAt)}</p>
                   </div>
                 </div>
               </div>
@@ -566,7 +566,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
                     <input
                       type="text"
                       placeholder="Rechercher un menu..."
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
+                      className="w-full text-slate-500 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
                       value={searchMenuQuery}
                       onChange={(e) => setSearchMenuQuery(e.target.value)}
                     />
@@ -609,7 +609,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium">{menu.name}</p>
+                              <p className="text-sm font-medium text-orange-500">{menu.name}</p>
                               <div className="flex items-center gap-2">
                                 <p className="text-xs text-gray-500">
                                   {(menu.isPromotion || menu.is_promotion) && menu.originalPrice && menu.discountedPrice ? (
@@ -792,7 +792,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
               <button
                 type="button"
                 onClick={handleCloseMenuModal}
-                className="px-4 py-2 bg-gray-100 text-gray-700 cursor-pointer rounded-lg hover:bg-orange-200 transition"
+                className="px-4 py-2 bg-gray-100 text-gray-700 cursor-pointer rounded-lg hover:bg-red-500 hover:text-white hover:border-white transition"
               >
                 Fermer
               </button>

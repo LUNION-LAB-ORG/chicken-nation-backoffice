@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useMemo, useEffect } from 'react'
 import Image from 'next/image'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Menu } from 'lucide-react'
 import Checkbox from '@/components/ui/Checkbox'
 import Toggle from '@/components/ui/Toggle'
 import SupplementActionsMenu from './SupplementActionsMenu'
@@ -308,9 +308,9 @@ export default function SupplementView({
                   <td className="text-center">
                     <button 
                       onClick={(e) => handleMenuOpen(product.id, e)}
-                      className="px-2 py-2 text-[14px] cursor-pointer hover:bg-gray-100 rounded-full transition-colors"
+                      className="px-2 py-2 text-[14px] cursor-pointer hover:bg-gray-100  rounded-full transition-colors"
                     >
-                      •••
+                        <Menu size={20} className='text-slate-500 hover:text-slate-600' />
                     </button>
                     {menuOpenId === product.id && menuPosition && createPortal(
                       <SupplementActionsMenu 
@@ -421,7 +421,7 @@ export default function SupplementView({
                   handleMenuOpen(product.id, e);
                 }}
               >
-                •••
+                  <Menu size={20} />
               </span>
             )}
           </div>

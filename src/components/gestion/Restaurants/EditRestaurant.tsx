@@ -202,26 +202,11 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                     defaultValue={restaurant.description}
                     placeholder="Description du restaurant"
                     rows={3}
-                    className={`w-full rounded-xl bg-white border ${formErrors.description ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 py-2 text-[13px] placeholder-gray-400`}
+                    className={`w-full rounded-xl text-gray-600 bg-white border-1 ${formErrors.description ? 'border-red-500' : 'border-gray-300'} px-4 py-2 text-[13px] placeholder-gray-400`}
                   />
                 </div>
                 
-                {/* Adresse
-                <div>
-                  <label className="block text-sm text-[#595959] font-light mb-2">
-                    Adresse*
-                  </label>
-                  <Input
-                    name="address"
-                    type="text"
-                    defaultValue={restaurant.address}
-                    required
-                    placeholder="Adresse du restaurant"
-                    className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.address ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
-                  />
-                  {formErrors.address && <p className="text-red-500 text-xs mt-1">{formErrors.address}</p>}
-                </div> */}
-                
+               
                 {/* Carte */}
                 <div>
                   <label className="block text-sm text-[#595959] font-light mb-2">

@@ -437,14 +437,9 @@ const Promos = () => {
               promo={promoState.selectedApiPromo}
               onEdit={async (apiPromo) => {
                 try {
-                 
-
-                  // Charger les données complètes avec l'endpoint détaillé
+                  
                   const detailedPromo = await getPromotionById(apiPromo.id!)
-
-                
-
-                  // Aller vers l'édition avec les données complètes
+ 
                   setPromoState(prev => ({
                     ...prev,
                     view: 'edit',
@@ -515,7 +510,7 @@ const Promos = () => {
 
               {/* Publicités en cours avec barre de recherche */}
               <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4'>
-                <span className='text-[#F17922] text-[26px] font-regular'>Publicitées récentes</span>
+                <span className='text-[#F17922] text-[26px] text-md font-regular'>Publicitées récentes</span>
 
               </div>
               {/* Statistiques */}

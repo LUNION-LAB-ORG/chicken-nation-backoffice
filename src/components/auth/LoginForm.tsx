@@ -1,7 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { User, Lock } from 'lucide-react';
-// import { useRouter } from 'next/navigation'; // Commenté car non utilisé actuellement
+import { User, Lock } from 'lucide-react'; 
 import { LoginCredentials } from '@/types/auth';
 
 

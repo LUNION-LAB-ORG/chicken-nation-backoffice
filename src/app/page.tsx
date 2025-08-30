@@ -101,20 +101,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
           </div>
-          
-          {/* Debug info - seulement en développement
-          {process.env.NODE_ENV === 'development' && (
-            <div className="text-xs text-left bg-gray-100 p-3 rounded-lg mt-4 border">
-              <div className="font-semibold text-gray-700 mb-2">🔧 Informations de debug :</div>
-              <div className="space-y-1 text-gray-600">
-                <div>• Authentifié: {isAuthenticated ? '✅ Oui' : '❌ Non'}</div>
-                <div>• Utilisateur: {user ? '✅ Connecté' : '❌ Non connecté'}</div>
-                <div>• Token: {accessToken ? '✅ Valide' : '❌ Absent'}</div>
-                <div>• Vérification: {checkingAuth ? '⏳ En cours' : '✅ Terminée'}</div>
-                <div>• Redirection: {redirecting ? '🔄 En cours' : '⏸️ En attente'}</div>
-              </div>
-            </div>
-          )} */}
+   
         </div>
       </div>
     );
@@ -162,7 +149,7 @@ export default function LoginPage() {
               Commençons
             </h2>
 
-            <div className="text-center text-sm font-sofia-regular text-dark mb-6">
+            <div className="text-center text-sm font-sofia-regular text-slate-600 mb-6">
               Identifiant de l&apos;admin
             </div>
 

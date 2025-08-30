@@ -166,7 +166,7 @@ export function SearchableDropdown({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Label */}
-      <label className="block md:text-sm text-xs font-medium text-gray-700 mb-2">
+      <label className="block md:text-sm text-xs font-medium text-black mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -197,7 +197,7 @@ export function SearchableDropdown({
           disabled={disabled}
           className={`
             block w-full md:pl-12 pl-10 md:pr-12 pr-10 md:py-4 py-3 
-            border rounded-xl md:text-sm text-xs placeholder-gray-400 
+            border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 
             focus:outline-none focus:ring-2 focus:ring-orange-500 
             ${error ? 'border-red-500' : 'border-gray-300'} 
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
@@ -254,7 +254,7 @@ export function SearchableDropdown({
                 onClick={() => handleOptionSelect(option)}
                 className={`
                   px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center space-x-3
-                  ${isSelected(option.id) ? 'bg-orange-50 text-orange-600' : 'text-gray-900'}
+                  ${isSelected(option.id) ? 'bg-orange-50 text-orange-600' : 'text-black'}
                   border-b border-gray-100 last:border-b-0
                 `}
               >
@@ -306,7 +306,7 @@ export function SearchableDropdown({
                     {option.label}
                   </div>
                   {(option.email || option.phone) && (
-                    <div className="text-xs text-gray-500 truncate">
+                    <div className="text-xs text-gray-600 truncate">
                       {option.email && <span>{option.email}</span>}
                       {option.email && option.phone && <span> • </span>}
                       {option.phone && <span>{option.phone}</span>}
@@ -321,15 +321,15 @@ export function SearchableDropdown({
               </div>
             ))
           ) : searchTerm.trim() ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-500">
+            <div className="px-4 py-8 text-center text-sm text-black">
               Aucun résultat trouvé pour &quot;{searchTerm}&quot;
             </div>
           ) : options.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-500">
+            <div className="px-4 py-8 text-center text-sm text-black">
               Aucune option disponible
             </div>
           ) : (
-            <div className="px-4 py-8 text-center text-sm text-gray-500">
+            <div className="px-4 py-8 text-center text-sm text-black">
               Tapez pour rechercher...
             </div>
           )}

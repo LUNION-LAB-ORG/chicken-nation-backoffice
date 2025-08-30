@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Image from 'next/image'
-import { MoreHorizontal, Loader2 } from 'lucide-react'
+import { MoreHorizontal, Loader2, Menu, ChevronDown } from 'lucide-react'
 import { Category as ApiCategory } from '@/services'
 import { Pagination } from '@/components/ui/pagination'
 import { useCategoriesQuery } from '@/hooks/useCategoriesQuery'
@@ -193,12 +193,26 @@ export default function CategoriesTable({
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="w-16"></th>
-                  <th className="text-left py-4 text-[13px] text-gray-600 font-medium">Catégories</th>
-                  <th className="text-left py-4 text-[13px] text-gray-600 font-medium">Nombre de produits</th>
-                  <th className="text-left py-4 text-[13px] text-gray-600 font-medium">Description</th>
+                  <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px] ">
+                    <div className="flex items-center">
+                      Catégorie  
+                    </div>
+              </th>
+              <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                <div className="flex items-center">
+                  Nombre de produits
+                   
+                </div>
+              </th>
+              <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                <div className="flex items-center">
+                  Description
+                 
+                </div>
+              </th>
                   {/* Colonne Actions - conditionnelle */}
                   {showActionsColumn && (
-                    <th className="text-center py-4 text-[13px] text-gray-600 font-medium w-[100px]">
+                    <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
                       Actions
                     </th>
                   )}
@@ -250,11 +264,11 @@ export default function CategoriesTable({
                         <td className="py-4 relative text-center">
                           <button
                             onClick={() => setOpenMenuId(openMenuId === category.id ? null : category.id)}
-                            className="p-1 hover:bg-gray-50 rounded"
+                            className="p-1 cursor-pointer hover:bg-gray-50 rounded"
                             aria-label="Options de catégorie"
                             title="Options de catégorie"
                           >
-                            <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                            <Menu size={20} className='text-slate-500 hover:text-slate-600' />
                           </button>
                           
                           {/* Dropdown menu */}

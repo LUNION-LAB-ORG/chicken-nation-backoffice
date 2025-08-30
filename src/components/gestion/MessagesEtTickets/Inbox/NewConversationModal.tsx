@@ -47,7 +47,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const { user } = useAuthStore();
 
   // États du formulaire
-  const [conversationType, setConversationType] = useState('Avec client');
+  // ✅ Problème 3 : Définir le type par défaut selon le rôle
+  const [conversationType, setConversationType] = useState(user?.role === 'ADMIN' ? 'Interne' : 'Avec client');
   const [selectedClientId, setSelectedClientId] = useState('');
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
@@ -105,7 +106,21 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   const loadUsers = useCallback(async () => {
     setIsLoadingUsers(true);
     try {
-      const usersData = await getAllUsers();
+      let usersData;
+
+      // ✅ Problème 1 & 3 : Filtrage selon le rôle de l'utilisateur
+      if (user?.role === 'ADMIN') {
+        // Admin : voir tous les utilisateurs
+        usersData = await getAllUsers();
+      } else if (user?.restaurant_id && ['MANAGER', 'CAISSIER', 'CALL_CENTER', 'CUISINE'].includes(user.role || '')) {
+        // Rôles liés à un restaurant : seulement les utilisateurs du même restaurant
+        const { getRestaurantUsers } = await import('@/services/restaurantService');
+        usersData = await getRestaurantUsers(user.restaurant_id);
+      } else {
+        // Autres rôles (COMPTABLE, MARKETING, etc.) : voir tous les utilisateurs
+        usersData = await getAllUsers();
+      }
+
       const formattedUsers = usersData
         .filter(user => user.entity_status === 'ACTIVE')
         .map(user => ({
@@ -124,7 +139,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     } finally {
       setIsLoadingUsers(false);
     }
-  }, []);
+  }, [user?.role, user?.restaurant_id]);
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -222,7 +237,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   };
 
   const resetForm = () => {
-    setConversationType('Avec client');
+    // ✅ Problème 3 : Réinitialiser selon le rôle
+    setConversationType(user?.role === 'ADMIN' ? 'Interne' : 'Avec client');
     setSelectedClientId('');
     setSelectedParticipantIds([]);
     setSubject('');
@@ -268,34 +284,37 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           )}
 
           {/* Type de conversation - Boutons horizontaux */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-black mb-3">
-              Type de conversation
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setConversationType('Avec client')}
-                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm ${conversationType === 'Avec client'
-                  ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                  : 'border-gray-200 bg-white text-black hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-              >
-                Avec client
-              </button>
-              <button
-                type="button"
-                onClick={() => setConversationType('Interne')}
-                className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
-                  ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
-                  : 'border-gray-200 bg-white text-black hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-              >
-                <Users className="w-4 h-4" />
-                Interne
-              </button>
+          {/* ✅ Problème 3 : Masquer "Avec client" pour les admins */}
+          {user?.role !== 'ADMIN' && (
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-black mb-3">
+                Type de conversation
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setConversationType('Avec client')}
+                  className={`px-6 py-2.5 rounded-xl border-2 transition-all  font-medium text-sm ${conversationType === 'Avec client'
+                    ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                    : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  Avec client
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConversationType('Interne')}
+                  className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
+                    ? 'border-orange-500 bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                    : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                >
+                  <Users className="w-4 h-4" />
+                  Interne
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Champs conditionnels selon le type */}
           {conversationType === 'Avec client' ? (
@@ -374,14 +393,14 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
             <button
               onClick={handleCancel}
               disabled={isCreating}
-              className="md:px-6 md:py-3 px-4 py-2 border border-gray-300 text-black rounded-xl md:text-sm text-xs font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer  border border-gray-300 text-black rounded-xl md:text-sm text-xs font-medium hover:text-white hover:border-white hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Annuler
             </button>
             <button
               onClick={handleCreateConversation}
               disabled={isCreating || !subject.trim()}
-              className="md:px-6 md:py-3 px-4 py-2 bg-orange-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-orange-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {isCreating ? (
                 <>
