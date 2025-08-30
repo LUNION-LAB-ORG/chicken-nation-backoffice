@@ -3,8 +3,8 @@ import {Dish} from '@/types/dish';
 
 // Réexporter le type Dish pour l'utilisation dans d'autres modules
 export type { Dish };
-
-const DISHES_ENDPOINT = '/api/v1/supplements';
+ 
+const DISHES_ENDPOINT = '/supplements';
 
 export const createDish = async (formData: FormData): Promise<Dish> => {
   // Récupérer le token depuis les cookies

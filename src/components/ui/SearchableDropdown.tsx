@@ -81,11 +81,13 @@ export function SearchableDropdown({
   }, [value, options, multiSelect]);
 
   // Filtrer les options selon la recherche
-  const filteredOptions = options.filter(option =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (option.email && option.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (option.phone && option.phone.includes(searchTerm))
-  );
+  const filteredOptions = searchTerm.trim() 
+    ? options.filter(option =>
+        option.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (option.email && option.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (option.phone && option.phone.includes(searchTerm))
+      )
+    : options;
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
@@ -95,7 +97,7 @@ export function SearchableDropdown({
       setDisplayValue(newSearchTerm);
       
       // Si le champ est vidé, réinitialiser la sélection
-      if (!newSearchTerm) {
+      if (!newSearchTerm.trim()) {
         onChange('');
       }
     }
@@ -105,7 +107,7 @@ export function SearchableDropdown({
       setIsOpen(true);
     }
 
-    // Callback pour la recherche externe
+    // Callback pour la recherche externe (avec debounce géré par le parent)
     if (onSearchChange) {
       onSearchChange(newSearchTerm);
     }
@@ -185,6 +187,9 @@ export function SearchableDropdown({
               // En mode multi-select, vider le champ de recherche quand on focus
               if (multiSelect) {
                 setSearchTerm('');
+              } else {
+                // En mode simple, mettre le terme de recherche égal à la valeur affichée
+                setSearchTerm(displayValue);
               }
             }
           }}
@@ -309,15 +314,19 @@ export function SearchableDropdown({
                   )}
                 </div>
 
-                {/* Indicateur de sélection */}
-                {value === option.id && (
+                {/* Indicateur de sélection pour mode simple */}
+                {!multiSelect && value === option.id && (
                   <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" />
                 )}
               </div>
             ))
-          ) : searchTerm ? (
+          ) : searchTerm.trim() ? (
             <div className="px-4 py-8 text-center text-sm text-gray-500">
               Aucun résultat trouvé pour &quot;{searchTerm}&quot;
+            </div>
+          ) : options.length === 0 ? (
+            <div className="px-4 py-8 text-center text-sm text-gray-500">
+              Aucune option disponible
             </div>
           ) : (
             <div className="px-4 py-8 text-center text-sm text-gray-500">

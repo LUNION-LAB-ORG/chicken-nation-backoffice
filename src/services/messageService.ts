@@ -4,9 +4,9 @@ import { Message, Conversation, MessageStats, PaginatedResponse } from '@/types/
 // ✅ Récupérer toutes les conversations avec pagination
 export const getConversations = async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<Conversation>> => {
   try {
-    console.log(`🔄 [getConversations] GET /conversations?page=${page}&limit=${limit}`)
+     
     const response = await apiRequest<PaginatedResponse<Conversation>>(`/conversations?page=${page}&limit=${limit}`, 'GET')
-    console.log(`✅ [getConversations] Reçu ${response.data?.length || 0} conversations`, response)
+    
     return response
   } catch (error) {
     console.error('❌ [getConversations] Erreur:', error)
@@ -14,21 +14,27 @@ export const getConversations = async (page: number = 1, limit: number = 10): Pr
   }
 }
 
-// ✅ Récupérer les messages d'une conversation avec pagination
-export const getMessages = async (conversationId: string, page: number = 1, limit: number = 50): Promise<PaginatedResponse<Message>> => {
+
+export const getMessages = async (conversationId: string, page?: number, limit?: number): Promise<PaginatedResponse<Message>> => {
   try {
-    console.log(`🔄 [getMessages] GET /conversations/${conversationId}/messages?page=${page}&limit=${limit}`)
-    const response = await apiRequest<PaginatedResponse<Message>>(`/conversations/${conversationId}/messages?page=${page}&limit=${limit}`, 'GET')
-    console.log(`✅ [getMessages] Reçu ${response.data?.length || 0} messages pour conversation ${conversationId}`, response)
+    // Construire dynamiquement la query string uniquement si des paramètres sont fournis
+    const params = new URLSearchParams();
+    if (page !== undefined) params.append('page', String(page));
+    if (limit !== undefined) params.append('limit', String(limit));
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
     
-    return response
+    const response = await apiRequest<PaginatedResponse<Message>>(`/conversations/${conversationId}/messages${queryString}`, 'GET');
+    
+
+    return response;
   } catch (error) {
-    console.error('❌ [getMessages] Erreur:', error)
-    throw error
+    console.error('❌ [getMessages] Erreur:', error);
+    throw error;
   }
 }
 
-// ✅ Envoyer un message
+
 export const sendMessage = async (conversationId: string, content: string, messageType: 'TEXT' | 'IMAGE' | 'FILE' = 'TEXT', file?: File): Promise<Message> => {
   try {
     if (messageType === 'TEXT') {
@@ -65,25 +71,24 @@ export const sendMessage = async (conversationId: string, content: string, messa
 // ✅ Marquer les messages comme lus
 export const markMessagesAsRead = async (conversationId: string): Promise<void> => {
   try {
-    console.log(`🔄 [markMessagesAsRead] POST /conversations/${conversationId}/read`)
+   
     await apiRequest(`/conversations/${conversationId}/read`, 'POST')
-    console.log(`✅ [markMessagesAsRead] Messages marqués comme lus pour conversation ${conversationId}`)
+    
   } catch (error) {
     console.warn(`⚠️ [markMessagesAsRead] Impossible de marquer les messages comme lus:`, error)
-    // On n'interrompt pas le flux si cette opération échoue
+    
   }
 }
 
 // ✅ Obtenir les statistiques des messages
 export const getMessageStats = async (): Promise<MessageStats> => {
   try {
-    console.log('🔄 [getMessageStats] GET /conversations/stats')
+   
     const response = await apiRequest<MessageStats>('/conversations/stats', 'GET')
-    console.log('✅ [getMessageStats] Statistiques reçues:', response)
+    
     return response
   } catch {
-    console.log('⚠️ [getMessageStats] Endpoint stats non disponible, utilisation des valeurs par défaut')
-    // Retourner des stats par défaut si l'endpoint n'existe pas
+    
     return {
       total_conversations: 0,
       unread_conversations: 0,
@@ -93,7 +98,7 @@ export const getMessageStats = async (): Promise<MessageStats> => {
   }
 }
 
-// ✅ Créer une nouvelle conversation (si nécessaire)
+// ✅ Créer une nouvelle conversation 
 export const createConversation = async (clientId: string): Promise<Conversation> => {
   try {
     const response = await apiRequest<Conversation>('/conversations', 'POST', {
@@ -102,6 +107,36 @@ export const createConversation = async (clientId: string): Promise<Conversation
     return response
   } catch (error) {
     console.error('❌ [createConversation] Erreur:', error)
+    throw error
+  }
+}
+
+// ✅ Créer une nouvelle conversation en utilisant le DTO complet
+export type CreateConversationDto = {
+  receiver_user_id?: string
+  seed_message: string
+  restaurant_id?: string
+  subject?: string
+  customer_to_contact_id?: string
+}
+
+export const createConversationWithDto = async (dto: CreateConversationDto): Promise<Conversation> => {
+  try {
+    const payload: Partial<CreateConversationDto> = {
+      seed_message: dto.seed_message
+    }
+
+    if (dto.receiver_user_id) payload.receiver_user_id = dto.receiver_user_id
+    if (dto.customer_to_contact_id) payload.customer_to_contact_id = dto.customer_to_contact_id
+    if (dto.restaurant_id) payload.restaurant_id = dto.restaurant_id
+    if (dto.subject) payload.subject = dto.subject
+
+   
+    const response = await apiRequest<Conversation>('/conversations', 'POST', payload)
+    
+    return response
+  } catch (error) {
+    console.error('❌ [createConversationWithDto] Erreur:', error)
     throw error
   }
 }

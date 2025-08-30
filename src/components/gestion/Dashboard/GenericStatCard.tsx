@@ -117,18 +117,6 @@ export function GenericStatCard({
 
           <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ color: iconColor }}>
             {Icon && <Icon size={30} strokeWidth={2} />}
-            {iconImage && (
-              <Image
-                src={formatImageUrl(iconImage)}
-                alt={title}
-                width={36}
-                height={36}
-                onError={(e) => {
-                  console.warn('Erreur de chargement de l\'icône:', iconImage);
-                  (e.target as HTMLImageElement).src = '/icons/circle.png';
-                }}
-              />
-            )}
           </div>
         </div>
       </div>

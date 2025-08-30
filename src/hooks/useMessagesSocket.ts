@@ -8,6 +8,8 @@ interface SocketMessageData {
   conversationId?: string;
   messageId?: string;
   userId?: string;
+  authorCustomer?: any;
+  authorUser?: { id: string };
   [key: string]: unknown;
 }
 
@@ -15,6 +17,8 @@ interface UseMessagesSocketProps {
   conversationId?: string | null;
   userId?: string;
   enabled?: boolean;
+  onNewMessage?: (data: SocketMessageData) => void;
+  playSound?: boolean;
 }
 
 interface UseMessagesSocketReturn {
@@ -27,73 +31,79 @@ export const useMessagesSocket = ({
   conversationId,
   userId,
   enabled = true,
+  onNewMessage,
+  playSound = false,
 }: UseMessagesSocketProps): UseMessagesSocketReturn => {
   const [socketConnected, setSocketConnected] = useState(false);
   const queryClient = useQueryClient();
   const socketRef = useRef<Socket | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Fonction pour rafraîchir les messages de la conversation courante
   const refetchMessages = useCallback(() => {
     if (conversationId) {
-      console.log(`🔄 [useMessagesSocket] Invalidating messages for conversation ${conversationId}`);
       queryClient.invalidateQueries({
         queryKey: ['messages', conversationId],
-        exact: false,
       });
     }
   }, [conversationId, queryClient]);
 
   // Fonction pour rafraîchir la liste des conversations
   const refetchConversations = useCallback(() => {
-    console.log('🔄 [useMessagesSocket] Invalidating conversations');
     queryClient.invalidateQueries({
       queryKey: ['conversations'],
-      exact: false,
     });
   }, [queryClient]);
 
   // Gestionnaire pour les nouveaux messages
   const handleNewMessage = useCallback((data: SocketMessageData) => {
-    console.log('📨 [useMessagesSocket] New message received:', data);
+    console.log('🔄 [Socket] Nouveau message reçu:', data);
     
-    // Invalider les messages de la conversation concernée
+    // Jouer le son immédiatement si activé
+    if (playSound && audioRef.current) {
+      const message = Array.isArray(data) ? data[0] : data;
+      if (message) {
+        const isFromCustomer = !!message.authorCustomer;
+        const isFromOtherUser = !!message.authorUser && message.authorUser.id !== userId;
+
+        if (isFromCustomer || isFromOtherUser) {
+          console.log('🔊 [Socket] Jouer le son pour nouveau message');
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch((error) => {
+            console.warn('Impossible de jouer le son:', error);
+          });
+        }
+      }
+    }
+    
+    // Callback personnalisé
+    if (onNewMessage) {
+      try {
+        onNewMessage(data);
+      } catch (err) {
+        console.warn('Erreur onNewMessage callback', err);
+      }
+    }
+    
+    // Invalidation intelligente des queries (pas de refetch forcé)
     if (data.conversationId) {
-      console.log(`🔄 [useMessagesSocket] Invalidating messages for conversation: ${data.conversationId}`);
       queryClient.invalidateQueries({
-        queryKey: ['messages', data.conversationId],
-      });
-      
-      // Force refetch pour être sûr
-      queryClient.refetchQueries({
         queryKey: ['messages', data.conversationId],
       });
     }
     
-    // Invalider la liste des conversations pour mettre à jour les previews
-    console.log('🔄 [useMessagesSocket] Invalidating conversations list');
-    refetchConversations();
+    queryClient.invalidateQueries({
+      queryKey: ['conversations'],
+    });
     
-    // Invalider les stats des messages
     queryClient.invalidateQueries({
       queryKey: ['message-stats'],
     });
-  }, [queryClient, refetchConversations]);
-
-  // Gestionnaire pour les messages mis à jour
-  const handleMessageUpdated = useCallback((data: SocketMessageData) => {
-    console.log('📝 [useMessagesSocket] Message updated:', data);
-    handleNewMessage(data); // Même logique que pour un nouveau message
-  }, [handleNewMessage]);
-
-  // Gestionnaire pour les conversations mises à jour
-  const handleConversationUpdated = useCallback((data: SocketMessageData) => {
-    console.log('💬 [useMessagesSocket] Conversation updated:', data);
-    refetchConversations();
-  }, [refetchConversations]);
+  }, [queryClient, onNewMessage, playSound, userId]);
 
   // Gestionnaire pour les messages lus
   const handleMessagesRead = useCallback((data: SocketMessageData) => {
-    console.log('👁️ [useMessagesSocket] Messages marked as read:', data);
+    console.log('📖 [Socket] Messages marqués comme lus:', data);
     
     if (data.conversationId) {
       queryClient.invalidateQueries({
@@ -101,76 +111,68 @@ export const useMessagesSocket = ({
       });
     }
     
-    refetchConversations();
-  }, [queryClient, refetchConversations]);
+    queryClient.invalidateQueries({
+      queryKey: ['conversations'],
+    });
+  }, [queryClient]);
 
   useEffect(() => {
-    if (!enabled || !userId) return;
+    if (!enabled) return;
 
-    console.log('🔌 [useMessagesSocket] Connecting to socket...');
+    console.log('🔌 [Socket] Connexion WebSocket...');
     
-    // Créer la connexion socket
-    const socket = io(SOCKET_URL, {
-      query: {
-        token: NotificationAPI.getToken(),
-        type: "user",
-        userId: userId
-      },
-    });
+    // Initialiser l'audio si nécessaire
+    if (playSound && !audioRef.current && typeof window !== 'undefined') {
+      audioRef.current = new Audio('/musics/message.mp3');
+      audioRef.current.volume = 0.5;
+    }
+    
+    const baseQuery: Record<string, string> = {
+      token: NotificationAPI.getToken(),
+      type: 'user',
+    };
+    const query = userId ? { ...baseQuery, userId } : baseQuery;
 
+    const socket = io(SOCKET_URL, { query });
     socketRef.current = socket;
 
     // Événements de connexion
     socket.on('connect', () => {
-      console.log('✅ [useMessagesSocket] Socket connected');
+      console.log('✅ [Socket] Connecté');
       setSocketConnected(true);
     });
 
     socket.on('disconnect', () => {
-      console.log('❌ [useMessagesSocket] Socket disconnected');
+      console.log('❌ [Socket] Déconnecté');
       setSocketConnected(false);
     });
 
-    // Événements de messages - On écoute tous les événements possibles
+    // Événements de messages - Tous les formats possibles
     socket.on('message:new', handleNewMessage);
     socket.on('message:created', handleNewMessage);
-    socket.on('message:updated', handleMessageUpdated);
+    socket.on('new_message', handleNewMessage);
+    socket.on('new:message', handleNewMessage);
+    socket.on('message_created', handleNewMessage);
+    socket.on('message:updated', handleNewMessage);
+    socket.on('message_updated', handleNewMessage);
+    
+    // Événements de lecture
     socket.on('message:read', handleMessagesRead);
-    socket.on('new_message', handleNewMessage); // Alternative naming
-    socket.on('message_created', handleNewMessage); // Alternative naming
-    socket.on('message_updated', handleMessageUpdated); // Alternative naming
+    socket.on('messages:read', handleMessagesRead);
     
     // Événements de conversations
-    socket.on('conversation:updated', handleConversationUpdated);
-    socket.on('conversation:new', handleConversationUpdated);
-    socket.on('conversation_updated', handleConversationUpdated); // Alternative naming
-    
-    // Log tous les événements pour débugger
-    socket.onAny((eventName, ...args) => {
-      console.log(`🔊 [useMessagesSocket] Received event: ${eventName}`, args);
-    });
+    socket.on('conversation:updated', handleNewMessage);
+    socket.on('conversation:new', handleNewMessage);
+    socket.on('conversation_updated', handleNewMessage);
 
-    // Cleanup
     return () => {
-      console.log('🧹 [useMessagesSocket] Cleaning up socket connection');
-      socket.off('connect');
-      socket.off('disconnect');
-      socket.off('message:new', handleNewMessage);
-      socket.off('message:created', handleNewMessage);
-      socket.off('message:updated', handleMessageUpdated);
-      socket.off('message:read', handleMessagesRead);
-      socket.off('new_message', handleNewMessage);
-      socket.off('message_created', handleNewMessage);
-      socket.off('message_updated', handleMessageUpdated);
-      socket.off('conversation:updated', handleConversationUpdated);
-      socket.off('conversation:new', handleConversationUpdated);
-      socket.off('conversation_updated', handleConversationUpdated);
-      socket.offAny(); // Remove all listeners
+      console.log('🧹 [Socket] Nettoyage connexion');
+      socket.offAny();
       socket.disconnect();
       socketRef.current = null;
       setSocketConnected(false);
     };
-  }, [enabled, userId, handleNewMessage, handleMessageUpdated, handleMessagesRead, handleConversationUpdated]);
+  }, [enabled, userId, handleNewMessage, handleMessagesRead, playSound]);
 
   return {
     socketConnected,

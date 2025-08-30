@@ -116,10 +116,18 @@ export function useCustomersQuery({
   // ✅ Recherche côté serveur - pas de filtrage côté client
   const customers = data?.data || [];
 
+
+
+  // ✅ Calculer totalPages si l'API ne le fournit pas
+  const totalItems = data?.meta?.totalItems || 0;
+  const itemsPerPage = data?.meta?.itemsPerPage || 10;
+  const calculatedTotalPages = totalItems > 0 ? Math.ceil(totalItems / itemsPerPage) : 0;
+  const finalTotalPages = data?.meta?.totalPages || calculatedTotalPages;
+
   return {
     customers: customers,
-    totalItems: data?.meta?.totalItems || 0,
-    totalPages: data?.meta?.totalPages || 0,
+    totalItems: totalItems,
+    totalPages: finalTotalPages,
     currentPage: currentPage,
     isLoading,
     error: error as Error | null,

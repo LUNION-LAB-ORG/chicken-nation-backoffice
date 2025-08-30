@@ -14,6 +14,7 @@ import { User as ServiceUser } from "@/services/userService";
 import { User } from "@/types/auth";
 import Image from "next/image";
 import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
+import { useMessagesSound } from "@/hooks/useMessagesSound";
 
 // ✅ PERFORMANCE: Lazy loading des composants lourds
 const Dashboard = dynamic(() => import("@/components/gestion/Dashboard"), {
@@ -140,7 +141,30 @@ export default function GestionPage() {
   const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
   
   // États pour gérer les sous-modules de Messages et Tickets
-  const [activeSubModule, setActiveSubModule] = useState<string>("");
+  const [activeSubModule, setActiveSubModule] = useState<string>("inbox");
+  // Conversation initiale à sélectionner lorsque l'on ouvre l'inbox depuis le header
+  const [initialConversationId, setInitialConversationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleOpenInboxFromHeader = (e: any) => {
+      const conversationId = e?.detail?.conversationId || null;
+      setActiveTab('messages-tickets');
+      setActiveSubModule('inbox');
+      setInitialConversationId(conversationId);
+      // Ensure sidebar is visible on desktop
+      setIsSidebarOpen(true);
+    };
+
+    window.addEventListener('openInboxFromHeader', handleOpenInboxFromHeader as EventListener);
+    return () => window.removeEventListener('openInboxFromHeader', handleOpenInboxFromHeader as EventListener);
+  }, [setActiveTab]);
+
+  // S'assurer que quand on navigue vers Messages et Tickets, le sous-module par défaut soit "inbox"
+  useEffect(() => {
+    if (activeTab === 'messages-tickets' && !activeSubModule) {
+      setActiveSubModule('inbox');
+    }
+  }, [activeTab, activeSubModule]);
 
   // Vérification d'authentification simplifiée
   useEffect(() => {
@@ -155,6 +179,12 @@ export default function GestionPage() {
       activeFilter: "all",
       selectedRestaurant:
         user?.role !== "ADMIN" ? user?.restaurant_id : undefined,
+      disabledSound: false,
+    });
+
+  // Hook pour les notifications sonores des messages
+  const { hasUnreadMessages: _hasUnreadMessages, unreadMessagesCount: _unreadMessagesCount } =
+    useMessagesSound({
       disabledSound: false,
     });
 
@@ -216,11 +246,11 @@ export default function GestionPage() {
           case "rapport":
             return <RapportModule />;
           case "inbox":
-            return <InboxModule />;
+            return <InboxModule initialConversationId={initialConversationId} />;
           case "tickets":
             return <TicketsModule />;
           default:
-            return <RapportModule />; // Par défaut, afficher Rapport
+            return <InboxModule initialConversationId={initialConversationId} />; // Par défaut, afficher Inbox
         }
       case "ads":
         return <Ads />;
@@ -302,9 +332,9 @@ export default function GestionPage() {
                 {/* Bouton OK */}
                 <button
                   onClick={() => setShowWelcomeBackModal(false)}
-                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  OK, merci !
+                 Merci !
                 </button>
               </div>
             </div>

@@ -33,6 +33,7 @@ export function ClientsTable({
   // ✅ Utiliser TanStack Query pour les clients - exactement comme OrdersTable
   const {
     customers,
+    totalItems,
     totalPages,
     currentPage,
     setCurrentPage,
@@ -121,17 +122,32 @@ export function ClientsTable({
         )}
       </div>
       
-      {/* Pagination - exactement comme OrdersTable */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            isLoading={actualLoading}
-          />
+      {/* ✅ Informations de pagination et statistiques - comme OrdersTable */}
+      <div className="flex flex-col items-center py-4 px-2 space-y-2">
+        {/* Statistiques avec indicateur de chargement */}
+        <div className="text-sm text-gray-600 flex items-center gap-2">
+          {!actualLoading && totalItems > 0 && (
+            <span className="text-xs">
+              {totalItems} client{totalItems > 1 ? "s" : ""} au total
+            </span>
+          )}
+
+          {actualLoading && (
+            <div className="flex items-center gap-1 text-orange-500">
+              <div className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-xs">Chargement...</span>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Pagination - Toujours affichée, même avec 1 seule page */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={Math.max(1, totalPages)}
+          onPageChange={handlePageChange}
+          isLoading={actualLoading}
+        />
+      </div>
     </div>
   )
 }

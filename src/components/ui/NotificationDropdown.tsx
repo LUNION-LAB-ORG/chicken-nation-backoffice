@@ -20,6 +20,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
   // ✅ Plus besoin de restaurantName - le backend gère le filtrage
@@ -74,6 +75,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       (notification) => notification.target !== "CUSTOMER"
     );
   }, [notifications]);
+
+  // Toutes les notifications filtrées (la pagination est gérée côté backend)
+  const displayedNotifications = filteredNotifications;
 
   // ✅ Calculer le nombre de notifications non lues après filtrage
   const filteredUnreadCount = useMemo(() => {
@@ -249,7 +253,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredNotifications.map((notification) => (
+                {displayedNotifications.map((notification) => (
                   <div
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification)}
@@ -341,23 +345,21 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                 ))}
               </div>
             )}
+            
+            {/* Bouton Charger plus */}
+            {!isLoading && filteredNotifications.length > 0 && hasNextPage && (
+              <div className="p-4 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={handleLoadMore}
+                  disabled={isFetchingNextPage}
+                  className="w-full text-center text-sm text-orange-600 hover:text-orange-700 font-medium py-2 hover:bg-orange-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isFetchingNextPage ? 'Chargement...' : 'Charger plus'}
+                </button>
+              </div>
+            )}
           </div>
-
-          {/* Footer */}
-          {user?.role === "ADMIN" && hasNextPage && (
-            <div className="px-4 py-3 border-t border-gray-200 text-center">
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                disabled={isFetchingNextPage}
-                className="text-sm text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isFetchingNextPage
-                  ? "Chargement..."
-                  : "Charger plus de notifications"}
-              </button>
-            </div>
-          )}
         </div>
       )}
 

@@ -4,21 +4,11 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Search, Plus, Users } from 'lucide-react';
 import { useConversationsQuery } from '@/hooks/useConversationsQuery';
+import { useConversationsSocket } from '@/hooks/useConversationsSocket';
+import { formatImageUrl } from '@/utils/imageHelpers';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-// Interface adaptée au composant
-interface ConversationDisplayItem {
-  id: string;
-  type: 'client' | 'interne';
-  clientName: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  restaurant: string;
-  assignedTo: string;
-  isActive?: boolean;
-}
+import { Conversation } from '@/types/messaging';
 
 interface ConversationsListProps {
   selectedConversation: string | null;
@@ -28,73 +18,104 @@ interface ConversationsListProps {
 
 function ConversationsList({ selectedConversation, onSelectConversation, onNewConversation }: ConversationsListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'all' | 'client' | 'internal'>('all');
-
+  const [activeFilter, setActiveFilter] = useState<'all' | 'client' | 'internal'>('all');
+  
   // 🔌 React Query hooks
   const { 
     data: conversationsData, 
     isLoading
   } = useConversationsQuery();
 
+  // 🔌 WebSocket pour les mises à jour temps réel
+  useConversationsSocket();
+
   // Récupérer les conversations depuis React Query
   const conversations = conversationsData?.data || [];
 
-  // Transformation des données du store pour le composant
-  const displayConversations: ConversationDisplayItem[] = (conversations || [])
-    .filter(conv => {
-      // Filtrage par terme de recherche
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          conv.client?.fullname?.toLowerCase().includes(searchLower) ||
-          conv.last_message?.content?.toLowerCase().includes(searchLower) ||
-          conv.client?.email?.toLowerCase().includes(searchLower)
-        );
+  // Fonction pour formater le timestamp
+  const formatTimestamp = (dateString: string) => {
+    try {
+      const messageDate = new Date(dateString);
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60));
+      
+      if (diffInMinutes < 1) {
+        return 'à l\'instant';
+      } else if (diffInMinutes < 60) {
+        return `il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
+      } else if (diffInMinutes < 1440) {
+        const hours = Math.floor(diffInMinutes / 60);
+        return `il y a ${hours} heure${hours > 1 ? 's' : ''}`;
+      } else {
+        return format(messageDate, 'dd/MM/yyyy', { locale: fr });
       }
-      return true;
-    })
-    .filter(() => {
-      // Filtrage par type (tous les conversations sont considérées comme 'client' pour l'instant)
-      if (filter === 'client') return true;
-      if (filter === 'internal') return false; // Pas de conversations internes pour l'instant
-      return true;
-    })
-    .map(conv => {
-      // Formatage de la date
-      let timestamp = 'il y a longtemps';
-      if (conv.last_message_at) {
-        try {
-          const messageDate = new Date(conv.last_message_at);
-          const now = new Date();
-          const diffInMinutes = Math.floor((now.getTime() - messageDate.getTime()) / (1000 * 60));
-          
-          if (diffInMinutes < 1) {
-            timestamp = 'à l\'instant';
-          } else if (diffInMinutes < 60) {
-            timestamp = `il y a ${diffInMinutes} minute${diffInMinutes > 1 ? 's' : ''}`;
-          } else if (diffInMinutes < 1440) {
-            const hours = Math.floor(diffInMinutes / 60);
-            timestamp = `il y a ${hours} heure${hours > 1 ? 's' : ''}`;
-          } else {
-            timestamp = format(messageDate, 'dd/MM/yyyy', { locale: fr });
-          }
-        } catch (error) {
-          console.error('Erreur formatage date:', error);
-        }
-      }
+    } catch (error) {
+      console.error('Erreur formatage date:', error);
+      return 'il y a longtemps';
+    }
+  };
 
-      return {
-        id: conv.id,
-        type: 'client' as const,
-        clientName: conv.client?.fullname || conv.client?.email || 'Client inconnu',
-        lastMessage: conv.last_message?.content || 'Aucun message',
-        timestamp,
-        unreadCount: conv.unread_count || 0,
-        restaurant: 'Chicken Nation', // Valeur par défaut
-        assignedTo: 'Support',
-        isActive: false
-      };
-    });
+  // Fonction pour obtenir le dernier message d'une conversation
+  const getLastMessage = (conversation: Conversation) => {
+    if (!conversation.messages || conversation.messages.length === 0) {
+      return { text: 'Aucun message', timestamp: conversation.createdAt };
+    }
+    
+    // Trier par date et prendre le plus récent
+    const sortedMessages = conversation.messages.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    
+    const lastMessage = sortedMessages[0];
+    return {
+      text: lastMessage.body || 'Message sans contenu',
+      timestamp: lastMessage.createdAt
+    };
+  };
+
+  // Fonction pour obtenir le nom d'affichage d'une conversation
+  const getConversationDisplayName = (conversation: Conversation) => {
+    if (!conversation.customer) {
+      // Conversation interne - afficher les noms des participants
+      const participantNames = conversation.users.map(user => user.fullName).join(', ');
+      return participantNames || 'Discussion interne';
+    } else {
+      // Conversation avec client
+      return conversation.customer 
+        ? `${conversation.customer.first_name || ''} ${conversation.customer.last_name || ''}`.trim()
+        : 'Client inconnu';
+    }
+  };
+
+  // Fonction pour obtenir les infos secondaires d'une conversation
+  const getConversationSecondaryInfo = (conversation: Conversation) => {
+    if (!conversation.customer) {
+      // Conversation interne - afficher les rôles
+      const roles = conversation.users.map(user => user.role).join(', ');
+      return roles || 'Équipe';
+    } else {
+      // Conversation avec client - afficher le téléphone
+      return conversation.customer?.phone || 'N/A';
+    }
+  };
+
+  // Filtrage des conversations
+  const filteredConversations = conversations.filter(conversation => {
+    // Filtrer par type si nécessaire
+    if (activeFilter === 'client' && !conversation.customer) return false;
+    if (activeFilter === 'internal' && conversation.customer) return false;
+    
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const displayName = getConversationDisplayName(conversation).toLowerCase();
+    const secondaryInfo = getConversationSecondaryInfo(conversation).toLowerCase();
+    const lastMessage = getLastMessage(conversation).text.toLowerCase();
+    
+    return displayName.includes(searchLower) || 
+           secondaryInfo.includes(searchLower) || 
+           lastMessage.includes(searchLower);
+  });
 
   return (
     <div className="h-full flex flex-col   lg:w-96 xl:w-[400px] 2xl:w-[450px] md:w-80 w-full">
@@ -102,6 +123,8 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
       <div className="p-3 md:p-6 border-b border-slate-300 bg-white">
         <div className="flex items-center justify-between mb-4 md:mb-6">
           <h1 className="lg:text-2xl md:text-lg text-base font-bold text-orange-500">Conversations</h1>
+          {/* Bouton Nouvelle conversation - Temporairement désactivé */}
+       
           <button 
             onClick={() => {
               console.log('Bouton Nouvelle cliqué');
@@ -112,6 +135,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             <Plus className="mr-1 md:w-5 md:h-5 w-4 h-4" />
             Nouvelle
           </button>
+        
         </div>
         
         {/* Search */}
@@ -131,34 +155,28 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         {/* Filters */}
         <div className="flex gap-2 md:gap-3">
           <button 
-            onClick={() => setFilter('all')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-regular ${
-              filter === 'all' 
-                ? 'bg-orange-500 text-white' 
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            Toutes ({(conversations || []).length})
-          </button>
-          <button 
-            onClick={() => setFilter('client')}
+            onClick={() => setActiveFilter('all')}
             className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
-              filter === 'client' 
-                ? 'bg-orange-500 text-white' 
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+              activeFilter === 'all' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Clients ({(conversations || []).length})
+            Toutes ({conversations.length})
           </button>
           <button 
-            onClick={() => setFilter('internal')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-regular ${
-              filter === 'internal' 
-                ? 'bg-orange-500 text-white' 
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+            onClick={() => setActiveFilter('client')}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
+              activeFilter === 'client' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Internes (0)
+            Clients ({conversations.filter(c => c.customer).length})
+          </button>
+          <button 
+            onClick={() => setActiveFilter('internal')}
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${
+              activeFilter === 'internal' ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Internes ({conversations.filter(c => !c.customer).length})
           </button>
         </div>
       </div>
@@ -172,10 +190,8 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
           </div>
         )}
 
-        {/* React Query gère les erreurs automatiquement - pas d'affichage d'erreur manuel */}
-
         {/* Empty state */}
-        {!isLoading && displayConversations.length === 0 && (
+        {!isLoading && filteredConversations.length === 0 && (
           <div className="flex flex-col items-center justify-center p-8 text-gray-500">
             <Users className="w-12 h-12 mb-4" />
             <p className="text-center">
@@ -193,89 +209,109 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         )}
 
         {/* Conversations */}
-        {displayConversations.map((conversation) => (
-          <div
-            key={conversation.id}
-            onClick={() => onSelectConversation(conversation.id)}
-            className={`md:px-4 md:py-4 px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
-              selectedConversation === conversation.id ? 'bg-orange-50' : ''
-            }`}
-          >
-            <div className="flex items-start md:space-x-3 space-x-2">
-              {/* Avatar et indicateur */}
-              <div className="flex-shrink-0">
-                {conversation.type === 'client' ? (
-                  /* Conversations client - 2 avatars alignés horizontalement */
-                  <div className="relative md:w-14 w-12 md:h-12 h-10">
-                    {/* Avatar client - À gauche */}
-                    <div className="absolute left-0 top-0 md:w-12 md:h-12 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white z-10">
-                      <Image
-                        src="/icons/imageprofile.png"
-                        alt="Client"
-                        width={36}
-                        height={36}
-                        className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  /* Conversations internes - 3 avatars */
-                  <div className="relative md:w-16 w-14 md:h-16 h-14">
-                    {/* Avatar 1 - À gauche */}
-                    <div className="absolute left-0 top-0 md:w-10 md:h-10 w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white z-10">
-                      <Users className="md:w-6 md:h-6 w-5 h-5 text-slate-400" />
-                    </div>
-                    {/* Avatar 2 - À droite, chevauche légèrement l'avatar 1 */}
-                    <div className="absolute  md:left-8 left-8 top-0 md:w-10 md:h-10 w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center border-2 border-white z-20">
-                      <span className="md:text-xs text-[10px] font-bold text-gray-600">MD</span>
-                    </div>
-                    {/* Avatar 3 - En bas à droite, chevauche légèrement l'avatar 2 */}
-                    <div className="absolute md:left-8 left-7 md:top-6 top-5 md:w-10 md:h-10 w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center border-2 border-white z-30">
-                      <Image
-                        src="/icons/imageprofile.png"
-                        alt="Agent"
-                        width={32}
-                        height={32}
-                        className="md:w-8 md:h-8 w-7 h-7 rounded-full object-cover"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1  ml-3  min-w-0">
-                <div className="flex items-center justify-between md:mb-2 mb-1">
-                  <div className="flex items-center md:space-x-2 space-x-1">
-                    <span className="md:text-base text-sm font-medium text-black">
-                      {conversation.type === 'client' ? 'Client:' : 'Conversation interne'}
-                    </span>
-                    <span className="md:text-base text-sm font-semibold text-black">
-                      {conversation.clientName}
-                    </span>
-                    {conversation.unreadCount > 0 && (
-                      <span className="bg-red-500 text-white md:text-sm text-xs md:px-2 md:py-1 px-1.5 py-0.5 rounded-full font-medium md:min-w-[24px] md:h-6 min-w-[20px] h-5 flex items-center justify-center">
-                        {conversation.unreadCount}
-                      </span>
+        {filteredConversations.map((conversation) => {
+          const lastMessage = getLastMessage(conversation);
+          const displayName = getConversationDisplayName(conversation);
+          const secondaryInfo = getConversationSecondaryInfo(conversation);
+          const isInternal = !conversation.customer;
+          
+          return (
+            <div
+              key={conversation.id}
+              onClick={() => onSelectConversation(conversation.id)}
+              className={`md:px-4 md:py-4 px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
+                selectedConversation === conversation.id ? 'bg-orange-50' : ''
+              }`}
+            >
+              <div className="flex items-start md:space-x-3 space-x-2">
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  <div className="relative md:w-12 w-10 md:h-12 h-10">
+                    {isInternal ? (
+                      // Affichage pour conversation interne - deux avatars côte à côte
+                      <div className="relative w-full h-full">
+                        {conversation.users.slice(0, 2).map((user, index) => {
+                          const size = index === 0 ? 'md:w-8 md:h-8 w-7 h-7' : 'md:w-7 md:h-7 w-6 h-6';
+                          const position = index === 0 ? 'absolute top-0 left-0' : 'absolute bottom-0 right-0';
+                          
+                          return (
+                            <div key={user.id} className={`${size} ${position}`}>
+                              <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
+                                {user.image ? (
+                                  <Image
+                                    src={formatImageUrl(user.image)}
+                                    alt={user.fullName}
+                                    width={32}
+                                    height={32}
+                                    className="w-full h-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="md:text-xs text-xs font-bold text-gray-600 uppercase">
+                                    {user.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      // Affichage pour conversation avec client
+                      <div className="w-full h-full bg-gray-200 rounded-full flex items-center justify-center border-2 border-white overflow-hidden">
+                        {conversation.customer?.image ? (
+                          <Image
+                            src={formatImageUrl(conversation.customer.image)}
+                            alt={displayName}
+                            width={48}
+                            height={48}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="md:text-lg text-base font-bold text-gray-600 uppercase">
+                            {conversation.customer?.first_name?.[0] || '?'}
+                            {conversation.customer?.last_name?.[0] || ''}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
-                  <span className="md:text-sm text-xs text-gray-500 whitespace-nowrap">{conversation.timestamp}</span>
                 </div>
-                
-                <p className="md:text-base text-sm text-gray-600 truncate md:mb-3 mb-2 leading-relaxed">
-                  {conversation.lastMessage}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <span className="border-gray-200 border-1 text-gray-700 md:px-3 md:py-1 px-2 py-0.5 rounded-full md:text-sm text-xs font-medium">
-                    {conversation.restaurant}
-                  </span>
-                  <span className="md:text-sm text-xs text-gray-500 font-medium">{conversation.assignedTo}</span>
+
+                {/* Content */}
+                <div className="flex-1 ml-3 min-w-0">
+                  <div className="flex items-center justify-between md:mb-2 mb-1">
+                    <div className="flex items-center md:space-x-2 space-x-1">
+                      <span className="md:text-base text-sm font-semibold text-black">
+                        {displayName}
+                      </span>
+                      {conversation.unreadNumber > 0 && (
+                        <span className="bg-red-500 text-white md:text-sm text-xs md:px-2 md:py-1 px-1.5 py-0.5 rounded-full font-medium md:min-w-[24px] md:h-6 min-w-[20px] h-5 flex items-center justify-center">
+                          {conversation.unreadNumber}
+                        </span>
+                      )}
+                    </div>
+                    <span className="md:text-sm text-xs text-gray-500 whitespace-nowrap">
+                      {formatTimestamp(lastMessage.timestamp)}
+                    </span>
+                  </div>
+                  
+                  <p className="md:text-base text-sm text-gray-600 truncate md:mb-3 mb-2 leading-relaxed">
+                    {lastMessage.text}
+                  </p>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="border-gray-200 border text-gray-700 md:px-3 md:py-1 px-2 py-0.5 rounded-full md:text-sm text-xs font-medium">
+                      {conversation.restaurant?.name || 'Chicken Nation'}
+                    </span>
+                    <span className="md:text-sm text-xs text-gray-500 font-medium">
+                      {secondaryInfo}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   );
