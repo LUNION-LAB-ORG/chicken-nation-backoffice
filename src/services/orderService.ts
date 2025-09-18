@@ -266,6 +266,32 @@ export async function getOrderById(id: string): Promise<ApiOrderRaw> {
   }
 }
 
+export async function getRawOrderById(id: string): Promise<ApiOrderRaw> {
+  if (!id) throw new Error('ID commande manquant');
+  const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
+
+  try {
+    const token = getAuthToken();
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+}
+
 // Fonction pour mettre à jour le statut d'une commande
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<ApiOrderRaw> {
   if (!id || !status) throw new Error('ID ou statut manquant');
@@ -284,34 +310,11 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
       body: JSON.stringify({ status }),
     });
 
-
-
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-
-    // ✅ Si le statut atteint COLLECTED, passer automatiquement à COMPLETED
-    // if (status === 'COLLECTED') {
-    //   // Attendre un petit délai pour s'assurer que COLLECTED est bien enregistré
-    //   await new Promise(resolve => setTimeout(resolve, 100));
-
-    //   // Passer automatiquement à COMPLETED
-    //   const completedResponse = await fetch(url, {
-    //     method: 'PATCH',
-    //     headers: {
-    //       Authorization: `Bearer ${token}`,
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ status: 'COMPLETED' }),
-    //   });
-
-    //   if (completedResponse.ok) {
-    //     const completedData = await completedResponse.json();
-    //     return completedData;
-    //   }
-    // }
 
     return data;
   } catch (error) {
