@@ -12,7 +12,7 @@ interface RequestOptions {
 }
 
 
-function getTokenFromCookies(): string | null {
+export function getTokenFromCookies(): string | null {
   if (typeof document === 'undefined') return null;
 
   try {

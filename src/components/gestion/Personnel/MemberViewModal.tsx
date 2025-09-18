@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import type { Member } from './MemberView'
 import Image from 'next/image'
+import ResetPasswordButton from './ReinitializePassWord'
 
 
 interface MemberViewModalProps {
@@ -116,7 +117,7 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({ open, member, onClose
       {onDelete && (
         <div className="px-10 py-4 border-t border-[#ECECEC] bg-gray-50">
           {!showDeleteConfirm ? (
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4 items-center">
               <button
                 type="button"
                 onClick={handleDeleteClick}
@@ -124,6 +125,9 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({ open, member, onClose
               >
                 Zone dangereuse
               </button>
+            
+                 <ResetPasswordButton userId={member.id} />
+             
             </div>
           ) : (
             <div className="space-y-4">
