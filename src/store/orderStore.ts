@@ -9,7 +9,7 @@ import {
   getOrders,
   getOrderById,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder, getRawOrderById
 } from '@/services/orderService';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -47,6 +47,7 @@ interface OrderState {
   setCurrentPage: (page: number) => void;
   getOrderById: (id: string) => Order | null;
   printOrder: (order: Order) => void;
+  handlePrintOrder: (orderId: string) => Promise<boolean>;
 }
 
 const defaultPagination = {
@@ -142,7 +143,19 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   printOrder : (order: Order) => {
     if (typeof window !== "undefined") {
+      console.log("Printing order:", order);
       window.flutter_inappwebview.callHandler("printDocument", order);
+    }
+  },
+
+  handlePrintOrder: async (orderId: string) => {
+    const order = await getRawOrderById(orderId);
+    if (order) {
+      get().printOrder(order);
+      return true;
+    } else {
+      console.error("Impossible de récupérer la commande pour impression:", orderId);
+      return false;
     }
   },
 

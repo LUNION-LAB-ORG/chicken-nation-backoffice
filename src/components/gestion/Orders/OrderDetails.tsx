@@ -116,7 +116,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   onReject,
   onStatusChange,
 }) => {
-  const { getOrderById, fetchOrderById, updateOrderStatus, printOrder } = useOrderStore();
+  const { getOrderById, fetchOrderById, updateOrderStatus, handlePrintOrder } = useOrderStore();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   const [fullOrderDetails, setFullOrderDetails] = useState<{
@@ -1235,7 +1235,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               })()}
               <button
                 type="button"
-                onClick={() => printOrder(order)}
+                onClick={async () => {
+                  const result = await handlePrintOrder(order.id)
+                  console.log(result)
+                }}
                 className="w-full py-3 px-4 bg-[#F17922] hover:bg-[#F17972] text-white rounded-xl font-medium"
               >
                 {"Imprimer"}
