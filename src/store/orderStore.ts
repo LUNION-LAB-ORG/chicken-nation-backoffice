@@ -46,6 +46,7 @@ interface OrderState {
   resetFilters: () => void;
   setCurrentPage: (page: number) => void;
   getOrderById: (id: string) => Order | null;
+  printOrder: (order: Order) => void;
 }
 
 const defaultPagination = {
@@ -139,6 +140,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
     set({ selectedOrder: order });
   },
 
+  printOrder : (order: Order) => {
+    if (typeof window !== "undefined") {
+      window.flutter_inappwebview.callHandler("printDocument", order);
+    }
+  },
+
   updateOrderStatus: async (id: string, status: OrderStatus) => {
     set({ isLoading: true, error: null });
     try {
@@ -157,7 +164,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
       // TODO : Notifier le TPE de la commande acceptée
       if (status === "ACCEPTED" && typeof window !== "undefined") {
-        window.flutter_inappwebview.callHandler("printDocument", updatedOrder);
+        get().printOrder(updatedOrder);
       }
 
       const queryClient = useQueryClient();

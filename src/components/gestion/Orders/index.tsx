@@ -155,7 +155,7 @@ export default function Orders() {
   };
 
   return (
-    <div className="flex-1 overflow-auto">
+    <div className="flex-1">
       <div className="px-2 lg:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
         <OrderHeader
           currentView={view}

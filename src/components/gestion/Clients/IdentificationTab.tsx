@@ -72,7 +72,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
   }
  
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="flex flex-col lg:flex-row gap-6 ">
       <div className="space-y-4 w-full lg:w-1/3">
         <div className="flex flex-col space-y-1">
           <label className="text-xs font-light text-[#9796A1]">Nom et prénom</label>
@@ -90,6 +90,27 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
           <input
             type="text"
             value={formatDate(client.created_at)}
+            readOnly
+            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700 rounded-2xl text-sm"
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-light text-[#9796A1]">Téléphone</label>
+          <input
+            type="text"
+            value={client.phone}
+            readOnly
+            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700 rounded-2xl text-sm"
+            onBlur={handleSave}
+          />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-light text-[#9796A1]">Email</label>
+          <input
+            type="text"
+            value={client.email || ''}
             readOnly
             className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700 rounded-2xl text-sm"
           />

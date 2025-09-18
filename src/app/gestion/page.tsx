@@ -16,117 +16,95 @@ import Image from "next/image";
 import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
 import { useMessagesSound } from "@/hooks/useMessagesSound";
 
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
+  </div>
+);
+
 // ✅ PERFORMANCE: Lazy loading des composants lourds
 const Dashboard = dynamic(() => import("@/components/gestion/Dashboard"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Menus = dynamic(() => import("@/components/gestion/Menus"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Orders = dynamic(() => import("@/components/gestion/Orders"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Clients = dynamic(() => import("@/components/gestion/Clients"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Inventory = dynamic(() => import("@/components/gestion/Inventory"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Personnel = dynamic(() => import("@/components/gestion/Personnel"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Restaurants = dynamic(() => import("@/components/gestion/Restaurants"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Ads = dynamic(() => import("@/components/gestion/Ads"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Promos = dynamic(() => import("@/components/gestion/Promos"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Loyalty = dynamic(() => import("@/components/gestion/Loyalty"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const Apps = dynamic(() => import("@/components/gestion/Apps"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 // Composants Messages et Tickets
 const RapportModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Rapport"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const InboxModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
 const TicketsModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
   loading: () => (
-    <div className="flex items-center justify-center h-64">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
-    </div>
+    <LoadingSpinner/>
   ),
 });
 
