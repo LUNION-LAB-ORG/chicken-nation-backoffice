@@ -44,6 +44,8 @@ export function ClientsTable({
     restaurantId
   });
 
+  console.log("ClientsTable - customers:", customers);
+
   // ✅ Utiliser le loading du hook ou celui passé en props
   const actualLoading = queryLoading || isLoading;
 
