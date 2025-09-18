@@ -40,22 +40,22 @@ export const DashboardPeriodFilter: React.FC = () => {
           <span className="text-sm font-medium text-white">
             {currentOption.label}
           </span>
-        
+
         </div>
-        <ChevronDown 
-          size={16} 
-          className={`text-white transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          size={16}
+          className={`text-white transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
       {isOpen && (
         <>
           {/* Overlay pour fermer le dropdown */}
-          <div 
-            className="fixed inset-0 z-10" 
+          <div
+            className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
-          
+
           {/* Dropdown menu */}
           <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
             {periodOptions.map((option) => (
@@ -63,26 +63,24 @@ export const DashboardPeriodFilter: React.FC = () => {
                 key={option.value}
                 type="button"
                 onClick={() => handlePeriodChange(option.value)}
-                className={`w-full px-4 py-3 text-left cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
-                  selectedPeriod === option.value 
-                    ? 'bg-orange-50 border-orange-100' 
+                className={`w-full px-4 py-3 text-left cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${selectedPeriod === option.value
+                    ? 'bg-orange-50 border-orange-100'
                     : ''
-                }`}
+                  }`}
               >
                 <div className="flex flex-col">
-                  <span className={`text-sm font-medium ${
-                    selectedPeriod === option.value 
-                      ? 'text-[#F17922]' 
+                  <span className={`text-sm font-medium ${selectedPeriod === option.value
+                      ? 'text-[#F17922]'
                       : 'text-gray-700'
-                  }`}>
+                    }`}>
                     {option.label}
                   </span>
                   <span className="text-xs text-gray-500 mt-0.5">
                     {option.description}
                   </span>
                 </div>
-                
-                
+
+
               </button>
             ))}
           </div>

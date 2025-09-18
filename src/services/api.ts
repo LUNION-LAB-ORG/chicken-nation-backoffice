@@ -93,7 +93,7 @@ async function refreshAccessToken(): Promise<string | null> {
     const newToken = data.token || data.accessToken;
 
     if (newToken) {
-       updateAccessTokenInCookies(newToken);
+      updateAccessTokenInCookies(newToken);
       return newToken;
     }
 
@@ -120,7 +120,7 @@ export async function apiRequest<T>(
     }
   };
 
-   if (requiresAuth) {
+  if (requiresAuth) {
     const token = getTokenFromCookies();
     if (token) {
       options.headers = {
@@ -130,9 +130,9 @@ export async function apiRequest<T>(
     }
   }
 
-   if (data) {
+  if (data) {
     if (data instanceof FormData) {
-       options.body = data;
+      options.body = data;
     } else {
       options.headers = {
         ...options.headers,
@@ -175,26 +175,39 @@ export async function apiRequest<T>(
     // ✅ SÉCURITÉ: Messages d'erreur sécurisés selon le statut
     let errorMessage: string;
 
-    switch (response.status) {
-      case 401:
-        errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-        break;
-      case 403:
-        errorMessage = 'Accès non autorisé.';
-        break;
-      case 404:
-        errorMessage = 'Ressource non trouvée.';
-        break;
-      case 429:
-        errorMessage = 'Trop de requêtes. Veuillez patienter.';
-        break;
-      case 500:
-      case 502:
-      case 503:
-        errorMessage = 'Erreur temporaire du serveur. Réessayez plus tard.';
-        break;
-      default:
-        errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
+    // Pour debug: récupérer le message d'erreur du serveur pour les 400
+    if (response.status === 400) {
+      try {
+        const errorText = await response.text();
+        console.error('❌ [API] Erreur 400 détaillée:', errorText);
+        const errorData = JSON.parse(errorText);
+        console.error('❌ [API] Erreur 400 JSON:', errorData);
+        errorMessage = errorData.message || errorData.error || 'Requête invalide (400)';
+      } catch {
+        errorMessage = 'Requête invalide (400)';
+      }
+    } else {
+      switch (response.status) {
+        case 401:
+          errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+          break;
+        case 403:
+          errorMessage = 'Accès non autorisé.';
+          break;
+        case 404:
+          errorMessage = 'Ressource non trouvée.';
+          break;
+        case 429:
+          errorMessage = 'Trop de requêtes. Veuillez patienter.';
+          break;
+        case 500:
+        case 502:
+        case 503:
+          errorMessage = 'Erreur temporaire du serveur. Réessayez plus tard.';
+          break;
+        default:
+          errorMessage = 'Une erreur est survenue. Veuillez réessayer.';
+      }
     }
 
     throw new Error(errorMessage);
@@ -209,7 +222,7 @@ export async function apiRequest<T>(
 
 
 
- export const api = {
+export const api = {
   get: <T>(endpoint: string, requiresAuth: boolean = true): Promise<T> =>
     apiRequest<T>(endpoint, 'GET', undefined, requiresAuth),
 

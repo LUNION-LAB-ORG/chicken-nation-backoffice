@@ -103,6 +103,20 @@ export function useRBAC() {
     canDeletePaiement: () => hasPermission(userRole, 'paiement', 'remove'),
     canViewPaiement: () => hasPermission(userRole, 'paiement', 'view'),
     
+    // Messages
+    canCreateMessage: () => hasPermission(userRole, 'message', 'create'),
+    canUpdateMessage: () => hasPermission(userRole, 'message', 'update'),
+    canDeleteMessage: () => hasPermission(userRole, 'message', 'remove'),
+    canViewMessage: () => hasPermission(userRole, 'message', 'view'),
+    
+    // Tickets
+    canCreateTicket: () => hasPermission(userRole, 'ticket', 'create'),
+    canUpdateTicket: () => hasPermission(userRole, 'ticket', 'update'),
+    canDeleteTicket: () => hasPermission(userRole, 'ticket', 'remove'),
+    canViewTicket: () => hasPermission(userRole, 'ticket', 'view'),
+    canAcceptTicket: () => hasPermission(userRole, 'ticket', 'accept'),
+    canRejectTicket: () => hasPermission(userRole, 'ticket', 'reject'),
+    
     // Vérifications de rôles spécifiques
     isAdmin: () => userRole === 'ADMIN',
     isManager: () => userRole === 'MANAGER',

@@ -12,7 +12,7 @@ export interface RestaurantDetails {
   image?: string;
   latitude?: number;
   longitude?: number;
-  opening_hours?: string; 
+  opening_hours?: string;
   status?: string;
   created_at?: string;
   updated_at?: string;
@@ -24,15 +24,15 @@ export interface User {
   fullname: string;
   phone?: string;
   address?: string;
-  image?: string;  
-  password_is_updated?: boolean; 
+  image?: string;
+  password_is_updated?: boolean;
   role: string;
   type?: string;
-  restaurant_id?: string; 
-  restaurant?: RestaurantDetails; 
+  restaurant_id?: string;
+  restaurant?: RestaurantDetails;
   entity_status?: 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
-  created_at?: string; 
-  updated_at?: string; 
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateUserDto {
@@ -101,7 +101,7 @@ export async function createUser(data: {
   if (data.type) formData.append('type', String(data.type));
   if (data.restaurant_id) {
     formData.append('restaurant_id', String(data.restaurant_id));
-    formData.append('restaurantId', String(data.restaurant_id)); 
+    formData.append('restaurantId', String(data.restaurant_id));
   }
   if (data.image) formData.append('image', data.image);
 
@@ -135,7 +135,7 @@ export async function createMember(data: {
   if (data.type) formData.append('type', String(data.type));
   if (data.restaurant_id) {
     formData.append('restaurant_id', String(data.restaurant_id));
-    formData.append('restaurantId', String(data.restaurant_id));  
+    formData.append('restaurantId', String(data.restaurant_id));
   }
   if (data.image) formData.append('image', data.image);
 
@@ -150,7 +150,7 @@ export async function createMember(data: {
 export const updateUser = async (id: string, data: Partial<Omit<User, 'image'>> & { image?: File | string }): Promise<User> => {
   const formData = new FormData();
 
- 
+
   if (data.fullname !== undefined) formData.append('fullname', data.fullname);
   if (data.email !== undefined) formData.append('email', data.email);
   if (data.phone !== undefined) formData.append('phone', data.phone);
@@ -158,12 +158,12 @@ export const updateUser = async (id: string, data: Partial<Omit<User, 'image'>> 
   if (data.role !== undefined) formData.append('role', data.role);
   if (data.type !== undefined) formData.append('type', data.type);
   if (data.restaurant_id !== undefined) formData.append('restaurant_id', data.restaurant_id);
-  
+
   if (data.image) {
     if (typeof data.image === 'string') {
-      formData.append('image', data.image); 
+      formData.append('image', data.image);
     } else {
-      formData.append('image', data.image as File); 
+      formData.append('image', data.image as File);
     }
   }
 
@@ -179,7 +179,7 @@ export const updateUser = async (id: string, data: Partial<Omit<User, 'image'>> 
 
 export const updateUserJSON = async (id: string, data: Partial<User>): Promise<User> => {
   const cleanData: Partial<User> = {};
-  
+
 
   if (data.fullname !== undefined) cleanData.fullname = data.fullname;
   if (data.email !== undefined) cleanData.email = data.email;
@@ -198,11 +198,11 @@ export const updateUserJSON = async (id: string, data: Partial<User>): Promise<U
 };
 
 export const updateUserWithImage = async (id: string, formData: FormData): Promise<User> => {
-  
+
   if (formData.has('id')) {
     formData.delete('id');
   }
-  
+
   try {
     return api.patch<User>(USERS_ENDPOINT, formData, true);
   } catch (error) {

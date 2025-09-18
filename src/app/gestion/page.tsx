@@ -88,8 +88,7 @@ const Apps = dynamic(() => import("@/components/gestion/Apps"), {
     <LoadingSpinner/>
   ),
 });
-
-// Composants Messages et Tickets
+ 
 const RapportModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Rapport"), {
   loading: () => (
     <LoadingSpinner/>

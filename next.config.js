@@ -9,8 +9,9 @@ const nextConfig = {
 
   // ✅ PERFORMANCE: Optimisations du bundle (temporairement réduites)
   experimental: {
-    optimizeCss: false,
-    optimizePackageImports: ["lucide-react", "date-fns"],
+    serverExternalPackages: ['puppeteer'],
+    optimizeCss: false, 
+    optimizePackageImports: ['lucide-react', 'date-fns'],
     forceSwcTransforms: false,
     swcTraceProfiling: false,
   },
@@ -42,6 +43,9 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+ 
+
+ 
 };
 
 module.exports = nextConfig;

@@ -144,18 +144,18 @@ export default function Sidebar({
     //   defaultIcon: "/icons/sidebar/rapport-dark.png",
     //   whiteIcon: "/icons/sidebar/rapport.png",
     // },
-    // {
-    //   id: "inbox",
-    //   label: "Inbox", 
-    //   defaultIcon: "/icons/sidebar/message.png",
-    //   whiteIcon: "/icons/sidebar/inbox.png",
-    // },
-    // {
-    //   id: "tickets",
-    //   label: "Tickets",
-    //   defaultIcon: "/icons/sidebar/ticket-dark.png",
-    //   whiteIcon: "/icons/sidebar/ticket.png",
-    // }
+    {
+      id: "inbox",
+      label: "Inbox", 
+      defaultIcon: "/icons/sidebar/message.png",
+      whiteIcon: "/icons/sidebar/inbox.png",
+    },
+     {
+      id: "tickets",
+      label: "Tickets",
+      defaultIcon: "/icons/sidebar/ticket-dark.png",
+      whiteIcon: "/icons/sidebar/ticket.png",
+    }
   ];
 
   // Définir les éléments de navigation en fonction des permissions RBAC

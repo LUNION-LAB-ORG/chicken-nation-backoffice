@@ -389,8 +389,7 @@ export const mapApiPromotionToUnifiedFormData = (apiPromo: ApiPromotion): Unifie
    
   } else {
     baseData.selectedRestaurants = [];
-    console.log('⚠️ [mapApiPromotionToUnifiedFormData] Aucun restaurant trouvé');
-  }
+   }
   
   
 
@@ -1196,7 +1195,7 @@ export const getAllPromotions = async (): Promise<ApiPromotion[]> => {
   try {
     const response = await apiRequest<ApiPromotionListResponse>('/fidelity/promotions', 'GET');
     
-   
+  
     if (response.data && response.data.length > 0) {
       response.data.forEach((promo, index) => {
        
@@ -1833,8 +1832,7 @@ export {
 // ✅ NOUVELLE FONCTION : Récupérer toutes les promotions avec détails complets
 export const getAllPromotionsWithDetails = async (): Promise<ApiPromotion[]> => {
   try {
-    console.log('🔍 [getAllPromotionsWithDetails] === RÉCUPÉRATION AVEC DÉTAILS COMPLETS ===');
-    
+   
     // Récupérer d'abord la liste basique
     const basicPromotions = await getAllPromotions();
     
@@ -1849,7 +1847,7 @@ export const getAllPromotionsWithDetails = async (): Promise<ApiPromotion[]> => 
     );
     
     if (hasRestaurantIds) {
-      console.log('✅ [getAllPromotionsWithDetails] Les restaurant_ids sont déjà présents dans la liste');
+     
       return basicPromotions;
     }
     

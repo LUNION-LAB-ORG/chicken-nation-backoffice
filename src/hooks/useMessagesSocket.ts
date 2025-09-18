@@ -58,7 +58,7 @@ export const useMessagesSocket = ({
   // Gestionnaire pour les nouveaux messages
   const handleNewMessage = useCallback((data: SocketMessageData) => {
     console.log('🔄 [Socket] Nouveau message reçu:', data);
-    
+
     // Jouer le son immédiatement si activé
     if (playSound && audioRef.current) {
       const message = Array.isArray(data) ? data[0] : data;
@@ -75,7 +75,7 @@ export const useMessagesSocket = ({
         }
       }
     }
-    
+
     // Callback personnalisé
     if (onNewMessage) {
       try {
@@ -84,18 +84,18 @@ export const useMessagesSocket = ({
         console.warn('Erreur onNewMessage callback', err);
       }
     }
-    
+
     // Invalidation intelligente des queries (pas de refetch forcé)
     if (data.conversationId) {
       queryClient.invalidateQueries({
         queryKey: ['messages', data.conversationId],
       });
     }
-    
+
     queryClient.invalidateQueries({
       queryKey: ['conversations'],
     });
-    
+
     queryClient.invalidateQueries({
       queryKey: ['message-stats'],
     });
@@ -104,13 +104,13 @@ export const useMessagesSocket = ({
   // Gestionnaire pour les messages lus
   const handleMessagesRead = useCallback((data: SocketMessageData) => {
     console.log('📖 [Socket] Messages marqués comme lus:', data);
-    
+
     if (data.conversationId) {
       queryClient.invalidateQueries({
         queryKey: ['messages', data.conversationId],
       });
     }
-    
+
     queryClient.invalidateQueries({
       queryKey: ['conversations'],
     });
@@ -120,13 +120,13 @@ export const useMessagesSocket = ({
     if (!enabled) return;
 
     console.log('🔌 [Socket] Connexion WebSocket...');
-    
+
     // Initialiser l'audio si nécessaire
     if (playSound && !audioRef.current && typeof window !== 'undefined') {
       audioRef.current = new Audio('/musics/message.mp3');
       audioRef.current.volume = 0.5;
     }
-    
+
     const baseQuery: Record<string, string> = {
       token: NotificationAPI.getToken(),
       type: 'user',
@@ -155,11 +155,11 @@ export const useMessagesSocket = ({
     socket.on('message_created', handleNewMessage);
     socket.on('message:updated', handleNewMessage);
     socket.on('message_updated', handleNewMessage);
-    
+
     // Événements de lecture
     socket.on('message:read', handleMessagesRead);
     socket.on('messages:read', handleMessagesRead);
-    
+
     // Événements de conversations
     socket.on('conversation:updated', handleNewMessage);
     socket.on('conversation:new', handleNewMessage);
