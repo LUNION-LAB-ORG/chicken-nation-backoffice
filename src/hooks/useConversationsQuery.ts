@@ -17,9 +17,9 @@ export const useConversationsQuery = (enabled = true) => {
       return response;
     },
     enabled,
-    staleTime: 5 * 1000,
-    refetchInterval: 10 * 1000,
-    refetchIntervalInBackground: true,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes seulement
+    refetchIntervalInBackground: false, // Pas en arrière-plan
   });
 };
 
@@ -37,9 +37,9 @@ export const useConversationsInfiniteQuery = (enabled = true) => {
       return lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined;
     },
     enabled,
-    staleTime: 5 * 1000, 
-    refetchInterval: 10 * 1000,
-    refetchIntervalInBackground: true, 
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: 5 * 60 * 1000, // 5 minutes seulement  
+    refetchIntervalInBackground: false, // Pas en arrière-plan 
   });
 };
 
@@ -61,9 +61,9 @@ export const useMessagesQuery = (conversationId: string | null, enabled = true) 
       return next;
     },
     enabled: enabled && !!conversationId,
-    staleTime: 5 * 1000,
-    refetchInterval: 10 * 1000,
-    refetchIntervalInBackground: true,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchInterval: false, // Pas de refetch automatique pour les messages
+    refetchIntervalInBackground: false,
   });
 };
 
@@ -103,14 +103,14 @@ export const useSendMessageMutation = () => {
       // Snapshot de l'état actuel
       const previousMessages = queryClient.getQueryData(['messages', variables.conversationId]);
 
-      // Ajouter optimistiquement le message (compatible with infiniteQuery pages)
+      
       const optimisticMessage = {
         id: `temp-${Date.now()}`,
         content: variables.content,
         messageType: variables.messageType || 'TEXT',
         createdAt: new Date().toISOString(),
         isRead: true,
-        authorUser: { id: 'current-user', name: 'Moi' }, // Utilisateur actuel
+        authorUser: { id: 'current-user', name: 'Moi' },  
         conversationId: variables.conversationId,
       } as unknown as Message;
 

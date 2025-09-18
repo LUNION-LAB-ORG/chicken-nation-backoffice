@@ -489,6 +489,23 @@ export function OrdersTable({
     [onViewDetails]
   );
 
+  const handleSetPreparationTime = useCallback(
+    (orderId: string, preparationTime: number, deliveryTime: number) => {
+      // TODO: Implémenter l'appel API pour définir le temps de préparation
+      console.log('Définir temps de préparation:', {
+        orderId,
+        preparationTime,
+        deliveryTime,
+        totalTime: preparationTime + deliveryTime
+      });
+      
+      toast.success(
+        `Temps de préparation défini: ${preparationTime + deliveryTime} minutes (${preparationTime}min préparation + ${deliveryTime}min livraison)`
+      );
+    },
+    []
+  );
+
   // ✅ Pas de filtrage côté client - tout est géré côté serveur
   // Les commandes affichées sont directement celles retournées par l'API
 
@@ -606,6 +623,7 @@ export function OrdersTable({
               onRemoveFromList={
                 canDeleteCommande() ? handleRemoveOrder : undefined
               }
+              onSetPreparationTime={canAcceptCommande() ? handleSetPreparationTime : undefined}
               isMobile={true}
               showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
               paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
@@ -657,6 +675,7 @@ export function OrdersTable({
                     onRemoveFromList={
                       canDeleteCommande() ? handleRemoveOrder : undefined
                     }
+                    onSetPreparationTime={canAcceptCommande() ? handleSetPreparationTime : undefined}
                     showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
                     showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
                     paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement

@@ -17,7 +17,9 @@ export type Module =
   | 'restaurant'
   | 'commande'
   | 'offre_speciale'
-  | 'paiement';
+  | 'paiement'
+  | 'message'
+  | 'ticket';
 
 export type Action = 
   | 'create' 
@@ -35,137 +37,176 @@ export type Action =
  */
 export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean>>> = {
   ADMIN: {
-    // Tableau 1: Module Catégorie, Plat, Supplément
+    // ✅ ADMIN: voit tout et peut tout modifier SAUF informations commandes/clients
     categorie: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     plat: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     supplement: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     
-    // Tableau 2: Module Client, Adresse, Favoris
-    client: { create: false, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
+    // ✅ ADMIN: peut voir clients mais PAS modifier leurs informations
+    client: { create: false, update: false, remove: false, view: true, enable: true, disable: true, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 3: Module Utilisateur, Restaurant
-    utilisateur: { create: true, update: false, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
+    // ✅ ADMIN: contrôle total utilisateurs/restaurants
+    utilisateur: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     restaurant: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     
-    // Tableau 4: Module Commande, Offre Spéciale
+    // ✅ ADMIN: peut voir commandes mais PAS modifier informations commandes
     commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    offre_speciale: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
+    offre_speciale: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
 
-    // Tableau 5: Module Paiement
-    paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    // ✅ ADMIN: voit et contrôle paiements
+    paiement: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ ADMIN: contrôle total des messages
+    message: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ ADMIN: contrôle total des tickets
+    ticket: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: true, reject: true },
   },
 
   MARKETING: {
-    // Tableau 1
-    categorie: { create: true, update: true, remove: false, view: true, enable: true, disable: true, accept: false, reject: false },
-    plat: { create: true, update: true, remove: false, view: true, enable: true, disable: true, accept: false, reject: false },
-    supplement: { create: true, update: true, remove: false, view: true, enable: true, disable: true, accept: false, reject: false },
+    // ✅ MARKETING: voit tout SAUF CA, peut voir/modifier catégories, plats, promotions
+    categorie: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
+    plat: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
+    supplement: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     
-    // Tableau 2
+    // ✅ MARKETING: peut voir clients (pour comprendre la base client)
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 3
-    utilisateur: { create: true, update: false, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
-    restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
-    // Tableau 4
-    commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    offre_speciale: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
-
-    // Tableau 5: Module Paiement
-    paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-  },
-
-  COMPTABLE: {
-    // Tableau 1
-    categorie: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: true, reject: true },
-    plat: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: true, reject: true },
-    supplement: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: true, reject: true },
-    
-    // Tableau 2
-    client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
-    // Tableau 3
+    // ✅ MARKETING: peut voir utilisateurs/restaurants
     utilisateur: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 4
-    commande: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    // ✅ MARKETING: peut voir commandes (pas le CA mais les données commandes)
+    commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    offre_speciale: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
+
+    // ✅ MARKETING: PAS d'accès au CA (paiements)
+    paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ MARKETING: peut voir/envoyer messages pour communication client
+    message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ MARKETING: peut voir tickets pour insights client
+    ticket: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+  },
+
+  COMPTABLE: {
+    // ✅ COMPTABLE: ne voit QUE commandes et CA de tous restaurants
+    categorie: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    plat: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    supplement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ COMPTABLE: pas d'accès aux clients
+    client: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    adresse: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    favoris: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ COMPTABLE: peut voir restaurants (pour rapports CA par restaurant)
+    utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ COMPTABLE: accès total aux commandes et CA
+    commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
 
-    // Tableau 5: Module Paiement
-    paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    // ✅ COMPTABLE: accès total au CA (paiements)
+    paiement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ COMPTABLE: pas d'accès aux messages
+    message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ COMPTABLE: pas d'accès aux tickets
+    ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
 
   MANAGER: {
-    // Tableau 1
+    // ✅ MANAGER: voit tout du CA jusqu'au menu, SAUF menus et promotions (pas de modification)
     categorie: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 2
+    // ✅ MANAGER: peut voir clients
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 3
+    // ✅ MANAGER: contrôle utilisateurs et peut voir restaurants
     utilisateur: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
-    restaurant: { create: false, update: false, remove: false, view: false, enable: true, disable: true, accept: false, reject: false },
+    restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     
-    // Tableau 4
-    commande: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: true, reject: true },
+    // ✅ MANAGER: peut voir commandes et gérer le processus
+    commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
     offre_speciale: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
-    // Tableau 5: Module Paiement
-    paiement: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
+    // ✅ MANAGER: voit le CA (paiements)
+    paiement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ MANAGER: peut voir/envoyer messages store
+    message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ MANAGER: peut voir, assigner et résoudre tickets
+    ticket: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
   },
 
-  // Rôles Restaurant (à compléter avec tableau 5)
+  // Rôles Restaurant
   CAISSIER: {
+    // ✅ CAISSIER: peut voir le bouton "mes commandes" et traiter commandes (accepter, prêt, terminer)
     categorie: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    adresse: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
-    // ✅ PERSONNEL complètement retiré pour CAISSIER
+    // ✅ CAISSIER: pas d'accès au personnel/restaurants
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CAISSIER: peut traiter les commandes (accepter, prêt, terminer)
+    commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
 
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CAISSIER: pas d'accès aux messages
+    message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CAISSIER: pas d'accès aux tickets
+    ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
 
   CALL_CENTER: {
-    // ✅ Même config que CAISSIER pour menus/inventaire
+    // ✅ CALL_CENTER: mêmes écrans que caissière + peut voir messages du store
     categorie: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
-    // ✅ Même config que CAISSIER pour clients
+    // ✅ CALL_CENTER: même config que CAISSIER pour clients
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    adresse: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
-    // ✅ PERSONNEL complètement retiré pour CALL_CENTER
+    // ✅ CALL_CENTER: pas d'accès au personnel/restaurants
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     
-    // ✅ Même config que CAISSIER pour commandes
-    commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    // ✅ CALL_CENTER: même que caissier pour commandes + peut voir messages
+    commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
 
-    // ✅ CALL_CENTER peut voir les promotions (lecture seule)
+    // ✅ CALL_CENTER: peut voir les promotions pour informer clients
     offre_speciale: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CALL_CENTER: peut voir et envoyer messages du store
+    message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CALL_CENTER: rôle support principal - peut créer, voir et modifier tickets
+    ticket: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
   },
 
   CUISINE: {
@@ -189,6 +230,12 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     // ✅ CUISINE : Aucun accès aux promotions/paiements
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CUISINE: pas d'accès aux messages
+    message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CUISINE: pas d'accès aux tickets
+    ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
 
   CLIENT: {
@@ -212,6 +259,12 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
 
     // Tableau 5: Module Paiement
     paiement: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CLIENT: peut envoyer/recevoir messages
+    message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
+    
+    // ✅ CLIENT: peut créer des tickets pour ses problèmes
+    ticket: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
   },
 };
 

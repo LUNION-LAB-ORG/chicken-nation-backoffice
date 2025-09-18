@@ -104,8 +104,7 @@ const Apps = dynamic(() => import("@/components/gestion/Apps"), {
     </div>
   ),
 });
-
-// Composants Messages et Tickets
+ 
 const RapportModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Rapport"), {
   loading: () => (
     <div className="flex items-center justify-center h-64">
