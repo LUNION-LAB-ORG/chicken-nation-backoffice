@@ -212,7 +212,11 @@ export function OrderRow({
               <StatusBadge order={order} />
             </div>
             <div className="flex justify-between items-center mb-2">
-              <PaymentBadge status={paymentStatus} />
+              <PaymentBadge status={paymentStatus} mode={
+                order.paiements?.length > 0 ? (
+                  order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
+                ) : "Non renseigné"
+              } />
             </div>
             {showActionsColumn && (
               <div className="flex justify-end mt-2">
@@ -285,7 +289,11 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <PaymentBadge status={paymentStatus} />
+        <PaymentBadge status={paymentStatus} mode={
+          order.paiements?.length > 0 ? (
+            order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
+          ) : "Non renseigné"
+        } />
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <StatusBadge order={order} />

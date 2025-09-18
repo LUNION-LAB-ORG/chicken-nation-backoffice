@@ -76,7 +76,8 @@ export interface Order {
   paymentStatus?: string;
   paiements?: Array<{
     id?: string;
-    method?: string;
+    mode?: string;
+    source?: string;
     status?: string;
     amount?: number;
   }>;
