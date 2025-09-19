@@ -14,20 +14,8 @@ interface OrderContextMenuProps {
   onViewDetails: (order: Order) => void;     // ✅ Toujours disponible (lecture)
   onHideFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
   onRemoveFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onOpenPreparationModal?: () => void; // ✅ Nouveau : ouvrir le modal de temps de préparation
 }
 
-interface OrderContextMenuWithModalProps {
-  order: Order;
-  isOpen: boolean;
-  onClose: () => void;
-  onAccept?: (orderId: string) => void;
-  onReject?: (orderId: string) => void;
-  onViewDetails: (order: Order) => void;
-  onHideFromList?: (orderId: string) => void;
-  onRemoveFromList?: (orderId: string) => void;
-  onSetPreparationTime?: (orderId: string, preparationTime: number, deliveryTime: number) => void; // ✅ Version complète (sera dépréciée)
-}
 
 const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   order,
@@ -37,21 +25,24 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   onReject,
   onViewDetails,
   onHideFromList,
-  onRemoveFromList,
-  onOpenPreparationModal
+  onRemoveFromList
 }) => {
   const { canAcceptCommande, canRejectCommande, canViewCommande, canDeleteCommande } = useRBAC()
+  const [isPreparationTimeModalOpen, setIsPreparationTimeModalOpen] = useState(false);
   const isAccepted = order.status !== 'NOUVELLE';
 
   const handleAccept = () => {
     if (onAccept) {
       onAccept(order.id);
-      // ✅ Après acceptation, ouvrir le modal de temps de préparation
-      if (onOpenPreparationModal) {
-        onOpenPreparationModal();
-      }
+      // ✅ Après acceptation, ouvrir le modal de temps de préparation directement
+      setIsPreparationTimeModalOpen(true);
       onClose();
     }
+  };
+
+  const handleSetPreparationTime = (preparationTime: number) => {
+    // Le modal gère déjà la sauvegarde via la mutation
+    setIsPreparationTimeModalOpen(false);
   };
 
   const handleReject = () => {
@@ -99,119 +90,86 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
-    >
-      <div className="py-1">
+    <>
+      <div
+        className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
+      >
+        <div className="py-1">
 
-        {!isAccepted ? (
-          <>
-            {canAcceptCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
-                onClick={handleAccept}
-              >
-                <Image src="/icons/check.png" alt="Accepter" width={20} height={20} />
-                <span>Accepter la commande</span>
-              </button>
-            )}
-            {canRejectCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-gray-50 cursor-pointer"
-                onClick={handleReject}
-              >
-                <X size={16} />
-                <span>Refuser</span>
-              </button>
-            )}
-            {canViewCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
-                onClick={handleViewDetails}
-              >
-                <span>Voir les détails</span>
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            {/* ✅ Bouton 'Définir temps de préparation' supprimé - Maintenant intégré dans 'Accepter' */}
-            {canDeleteCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center font-bold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
-                onClick={handleHideFromList}
-              >
-                <span>Masquer de la liste</span>
-              </button>
-            )}
-            {canDeleteCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center font-bold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
-                onClick={handleRemoveFromList}
-              >
-                <span>Retirer de la liste</span>
-              </button>
-            )}
-            {canViewCommande && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
-                onClick={handleViewDetails}
-              >
-                <span>Voir les détails</span>
-              </button>
-            )}
-          </>
-        )}
+          {!isAccepted ? (
+            <>
+              {canAcceptCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
+                  onClick={handleAccept}
+                >
+                  <Image src="/icons/check.png" alt="Accepter" width={20} height={20} />
+                  <span>Accepter la commande</span>
+                </button>
+              )}
+              {canRejectCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-gray-50 cursor-pointer"
+                  onClick={handleReject}
+                >
+                  <X size={16} />
+                  <span>Refuser</span>
+                </button>
+              )}
+              {canViewCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  onClick={handleViewDetails}
+                >
+                  <span>Voir les détails</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {/* ✅ Bouton 'Définir temps de préparation' supprimé - Maintenant intégré dans 'Accepter' */}
+              {canDeleteCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center font-bold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  onClick={handleHideFromList}
+                >
+                  <span>Masquer de la liste</span>
+                </button>
+              )}
+              {canDeleteCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center font-bold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  onClick={handleRemoveFromList}
+                >
+                  <span>Retirer de la liste</span>
+                </button>
+              )}
+              {canViewCommande && (
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  onClick={handleViewDetails}
+                >
+                  <span>Voir les détails</span>
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-    </div>
-  );
-};
-
-// Composant séparé pour le modal au niveau racine
-export const OrderContextMenuWithModal: React.FC<OrderContextMenuWithModalProps> = (props) => {
-  const [isPreparationTimeModalOpen, setIsPreparationTimeModalOpen] = useState(false);
-  
-  console.log('🔄 [OrderContextMenuWithModal] Re-render, isPreparationTimeModalOpen:', isPreparationTimeModalOpen);
-
-  useEffect(() => {
-    console.log('🔄 [OrderContextMenuWithModal] useEffect - isPreparationTimeModalOpen changed to:', isPreparationTimeModalOpen);
-  }, [isPreparationTimeModalOpen]);
-
-  const handleSetPreparationTime = (preparationTime: number) => {
-    if (props.onSetPreparationTime) {
-      // ✅ Pour l'instant, on ne gère que le temps de préparation, pas de deliveryTime
-      props.onSetPreparationTime(props.order.id, preparationTime, 0); // deliveryTime = 0 temporairement
-    }
-    setIsPreparationTimeModalOpen(false);
-  };
-
-  return (
-    <>
-      <OrderContextMenu
-        {...props}
-        onOpenPreparationModal={() => {
-          console.log('🎯 [OrderContextMenuWithModal] Ouverture du modal de temps de préparation');
-          setIsPreparationTimeModalOpen(true);
-        }}
-      />
-
-      {/* Modal rendu au niveau racine */}
+      {/* Modal de temps de préparation intégré directement */}
       <PreparationTimeModal
         isOpen={isPreparationTimeModalOpen}
-        onClose={() => {
-          console.log('🔒 [OrderContextMenuWithModal] Fermeture du modal');
-          setIsPreparationTimeModalOpen(false);
-        }}
+        onClose={() => setIsPreparationTimeModalOpen(false)}
         onConfirm={handleSetPreparationTime}
-        orderReference={props.order.reference}
-        orderId={props.order.id}
+        orderReference={order.reference}
+        orderId={order.id}
       />
     </>
   );
