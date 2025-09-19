@@ -4,8 +4,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import { useTicketQuery, useSendTicketMessageMutation, useAssignTicketToCurrentUserMutation } from '@/hooks/useTicketsQuery';
+import { useTicketQuery, useSendTicketMessageMutation, useAssignTicketToCurrentUserMutation, useUpdateTicketStatusMutation, useUpdateTicketPriorityMutation } from '@/hooks/useTicketsQuery';
 import { useAuthStore } from '@/store/authStore';
+import { formatImageUrl } from '@/utils/imageHelpers';
 
 interface TicketViewProps {
   ticketId: string | null;
@@ -35,6 +36,8 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   // Mutations pour les messages et l'assignation
   const sendMessageMutation = useSendTicketMessageMutation();
   const assignTicketMutation = useAssignTicketToCurrentUserMutation();
+  const updateStatusMutation = useUpdateTicketStatusMutation();
+  const updatePriorityMutation = useUpdateTicketPriorityMutation();
 
   // Trier les messages par ordre chronologique (anciens vers nouveaux)
   const sortedMessages = useMemo(() => {
@@ -52,6 +55,44 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
       setSelectedAssignee(ticket.assignee?.id || '');
     }
   }, [ticket]);
+
+  // Handler pour changer le statut
+  const handleStatusChange = async (newStatus: string) => {
+    if (!ticket || !ticketId) return;
+    
+    try {
+      console.log('🔄 Changement de statut:', { ticketId, newStatus });
+      setSelectedStatus(newStatus);
+      await updateStatusMutation.mutateAsync({ 
+        id: ticketId, 
+        status: newStatus as any 
+      });
+      console.log('✅ Statut mis à jour avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors du changement de statut:', error);
+      // Restaurer l'ancien statut en cas d'erreur
+      setSelectedStatus(ticket.status);
+    }
+  };
+
+  // Handler pour changer la priorité
+  const handlePriorityChange = async (newPriority: string) => {
+    if (!ticket || !ticketId) return;
+    
+    try {
+      console.log('🔄 Changement de priorité:', { ticketId, newPriority });
+      setSelectedPriority(newPriority);
+      await updatePriorityMutation.mutateAsync({ 
+        id: ticketId, 
+        priority: newPriority as any 
+      });
+      console.log('✅ Priorité mise à jour avec succès');
+    } catch (error) {
+      console.error('❌ Erreur lors du changement de priorité:', error);
+      // Restaurer l'ancienne priorité en cas d'erreur
+      setSelectedPriority(ticket.priority);
+    }
+  };
 
   // Fonction pour envoyer un message
   const handleSendMessage = async () => {
@@ -132,18 +173,18 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     }
   };
 
-  // Options pour les dropdowns
+  // Options pour les dropdowns - correspondant aux valeurs API
   const statusOptions = [
-    { value: 'Ouvert', label: 'Ouvert' },
-    { value: 'En cours', label: 'En cours' },
-    { value: 'Résolu', label: 'Résolu' }
+    { value: 'OPEN', label: 'Ouvert' },
+    { value: 'IN_PROGRESS', label: 'En cours' },
+    { value: 'RESOLVED', label: 'Résolu' },
+    { value: 'CLOSED', label: 'Fermé' }
   ];
 
   const priorityOptions = [
-    { value: 'Urgent', label: 'Urgent' },
-    { value: 'Élevé', label: 'Élevé' },
-    { value: 'Moyen', label: 'Moyen' },
-    { value: 'Faible', label: 'Faible' }
+    { value: 'HIGH', label: 'Élevée' },
+    { value: 'MEDIUM', label: 'Moyenne' },
+    { value: 'LOW', label: 'Faible' }
   ];
 
   const assigneeOptions = [
@@ -194,7 +235,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
 
 
   return (
-    <div className="flex-1 bg-white flex flex-col">
+    <div className="flex-1 bg-white flex flex-col h-full">
       {/* Header */}
       <div className="px-3 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between mb-3 sm:mb-4 md:mb-6">
@@ -234,14 +275,12 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                   ticket.status === 'RESOLVED' ? 'Résolu' :
                     ticket.status}
             </span>
-            <span className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-6 md:py-2 rounded-full text-white font-medium text-xs sm:text-sm md:text-base ${ticket.priority === 'URGENT' ? 'bg-red-500' :
-              ticket.priority === 'HIGH' ? 'bg-orange-500' :
+            <span className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-6 md:py-2 rounded-full text-white font-medium text-xs sm:text-sm md:text-base ${ticket.priority === 'HIGH' ? 'bg-red-500' :
                 ticket.priority === 'MEDIUM' ? 'bg-yellow-500' :
                   'bg-green-500'
               }`}>
-              {ticket.priority === 'URGENT' ? 'Urgent' :
-                ticket.priority === 'HIGH' ? 'Élevé' :
-                  ticket.priority === 'MEDIUM' ? 'Moyen' :
+              {ticket.priority === 'HIGH' ? 'Élevée' :
+                  ticket.priority === 'MEDIUM' ? 'Moyenne' :
                     ticket.priority === 'LOW' ? 'Faible' :
                       ticket.priority}
             </span>
@@ -256,7 +295,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             <CustomDropdown
               options={statusOptions}
               value={selectedStatus}
-              onChange={setSelectedStatus}
+              onChange={handleStatusChange}
               className="min-w-[60px] sm:min-w-[100px] md:min-w-[120px] text-xs sm:text-sm md:text-base"
             />
           </div>
@@ -267,81 +306,85 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             <CustomDropdown
               options={priorityOptions}
               value={selectedPriority}
-              onChange={setSelectedPriority}
+              onChange={handlePriorityChange}
               className="min-w-[60px] sm:min-w-[100px] md:min-w-[120px] text-xs sm:text-sm md:text-base"
             />
           </div>
 
-          {/* Assigné à */}
-          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-3">
-            <span className="text-xs sm:text-sm md:text-base text-gray-800 font-normal whitespace-nowrap">Assigné:</span>
-            <CustomDropdown
-              options={assigneeOptions}
-              value={selectedAssignee}
-              onChange={setSelectedAssignee}
-              className="min-w-[70px] sm:min-w-[130px] md:min-w-[150px] text-xs sm:text-sm md:text-base"
-            />
-          </div>
+          {/* Assigné à - CACHÉ */}
+          {false && (
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-3">
+              <span className="text-xs sm:text-sm md:text-base text-gray-800 font-normal whitespace-nowrap">Assigné:</span>
+              <CustomDropdown
+                options={assigneeOptions}
+                value={selectedAssignee}
+                onChange={setSelectedAssignee}
+                className="min-w-[70px] sm:min-w-[130px] md:min-w-[150px] text-xs sm:text-sm md:text-base"
+              />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 bg-gray-50">
-        {/* Boutons Public/Interne */}
-        <div className="m-4">
-          <div className="bg-slate-100 p-2 rounded-2xl">
-            {/* Version mobile - compacte */}
-            <div className="flex sm:hidden gap-2">
-              <button
-                onClick={() => setMessageType('public')}
-                className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'public'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-600'
-                  }`}
-              >
-                <Eye className="w-3 h-3 mr-1" />
-                Public
-              </button>
-              <button
-                onClick={() => setMessageType('internal')}
-                className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'internal'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-600'
-                  }`}
-              >
-                <EyeOff className="w-3 h-3 mr-1" />
-                Interne
-              </button>
-            </div>
+      <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
+        {/* Boutons Public/Interne - CACHÉS */}
+        {false && (
+          <div className="m-4">
+            <div className="bg-slate-100 p-2 rounded-2xl">
+              {/* Version mobile - compacte */}
+              <div className="flex sm:hidden gap-2">
+                <button
+                  onClick={() => setMessageType('public')}
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'public'
+                    ? 'bg-white text-gray-700 shadow-sm'
+                    : 'text-gray-600'
+                    }`}
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  Public
+                </button>
+                <button
+                  onClick={() => setMessageType('internal')}
+                  className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'internal'
+                    ? 'bg-white text-gray-700 shadow-sm'
+                    : 'text-gray-600'
+                    }`}
+                >
+                  <EyeOff className="w-3 h-3 mr-1" />
+                  Interne
+                </button>
+              </div>
 
-            {/* Version tablette/desktop - normale */}
-            <div className="hidden sm:flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={() => setMessageType('public')}
-                className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'public'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-600'
-                  }`}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                Public (client voit)
-              </button>
-              <button
-                onClick={() => setMessageType('internal')}
-                className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'internal'
-                  ? 'bg-white text-gray-700 shadow-sm'
-                  : 'text-gray-600'
-                  }`}
-              >
-                <EyeOff className="w-4 h-4 mr-2" />
-                Interne (client ne voit pas)
-              </button>
+              {/* Version tablette/desktop - normale */}
+              <div className="hidden sm:flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={() => setMessageType('public')}
+                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'public'
+                    ? 'bg-white text-gray-700 shadow-sm'
+                    : 'text-gray-600'
+                    }`}
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  Public (client voit)
+                </button>
+                <button
+                  onClick={() => setMessageType('internal')}
+                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'internal'
+                    ? 'bg-white text-gray-700 shadow-sm'
+                    : 'text-gray-600'
+                    }`}
+                >
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Interne (client ne voit pas)
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto bg-gray-50 md:px-6 md:py-4 px-4 py-3">
+        <div className="flex-1 overflow-y-auto md:px-6 md:py-4 px-4 py-3">
           <div className="md:space-y-6 space-y-4">
             {sortedMessages && sortedMessages.length > 0 ? (
               sortedMessages.map((msg) => (
@@ -352,7 +395,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                       <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
                         {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
                           <Image
-                            src={`https://chicken.turbodeliveryapp.com/${ticket.customer.image}`}
+                            src={formatImageUrl(ticket.customer.image)}
                             alt={ticket.customer.name}
                             width={40}
                             height={40}
@@ -379,16 +422,27 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                     <div className="flex items-start md:space-x-3 space-x-2 md:max-w-2xl max-w-xs">
                       <div className="flex-1">
                         <div className="flex items-center justify-end md:space-x-2 space-x-1 mb-1">
-                          <span className="md:text-sm text-xs font-medium text-gray-500">Agent</span>
-                          <span className="md:text-sm text-xs text-gray-500">support</span>
+                          <span className="md:text-sm text-xs font-medium text-gray-500">{user?.fullname}</span> 
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
                         <div className="bg-orange-500 text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
                       </div>
-                      <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-orange-200 flex items-center justify-center">
-                        <span className="text-orange-700 font-medium text-sm">A</span>
+                     <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
+                        {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
+                          <Image
+                           src={formatImageUrl(user?.image)}
+                            alt={user?.fullname}
+                            width={40}
+                            height={40}
+                            className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-gray-600 font-medium text-sm">
+                            {ticket.customer?.first_name?.[0] || ticket.customer?.name?.[0] || 'C'}
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
@@ -403,31 +457,33 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
         </div>
       </div>
 
-      {/* Zone de saisie - Copiée exactement de ConversationView */}
+      {/* Zone de saisie */}
       <div className="md:px-6 md:py-4 px-4 py-3 bg-white border-t border-slate-300">
-        {/* Boutons Public/Interne */}
-        <div className="flex md:mb-4 mb-3">
-          <button
-            onClick={() => setMessageType('public')}
-            className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
-              ? 'bg-orange-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            <Eye className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-            Public
-          </button>
-          <button
-            onClick={() => setMessageType('internal')}
-            className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
-              ? 'bg-orange-500 text-white'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-          >
-            <EyeOff className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-            Interne
-          </button>
-        </div>
+        {/* Boutons Public/Interne - CACHÉS */}
+        {false && (
+          <div className="flex md:mb-4 mb-3">
+            <button
+              onClick={() => setMessageType('public')}
+              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              <Eye className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
+              Public
+            </button>
+            <button
+              onClick={() => setMessageType('internal')}
+              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
+                ? 'bg-orange-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+              <EyeOff className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
+              Interne
+            </button>
+          </div>
+        )}
 
         {/* Champ de saisie */}
         <div className="flex items-start md:space-x-3 space-x-2">
@@ -435,8 +491,8 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={messageType === 'public' ? "Écrire un message public..." : "Écrire un message interne..."}
-              className="w-full md:px-4 md:py-3 px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent md:text-sm text-xs bg-gray-50"
+              placeholder="Écrire un message..."
+              className="w-full md:px-4 md:py-3 px-3 py-2 border border-slate-400 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent md:text-sm text-xs bg-white"
               rows={3}
               onKeyDown={handleKeyPress}
             />

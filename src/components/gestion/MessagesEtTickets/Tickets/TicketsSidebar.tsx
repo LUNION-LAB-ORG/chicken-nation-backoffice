@@ -57,7 +57,6 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
 
   const priorityOptions = [
     { value: 'Toutes priorités', label: 'Toutes priorités' },
-    { value: 'URGENT', label: TICKET_PRIORITY_LABELS.URGENT },
     { value: 'HIGH', label: TICKET_PRIORITY_LABELS.HIGH },
     { value: 'MEDIUM', label: TICKET_PRIORITY_LABELS.MEDIUM },
     { value: 'LOW', label: TICKET_PRIORITY_LABELS.LOW }
@@ -82,10 +81,8 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   // Fonction pour obtenir la couleur de priorité
   const getPriorityColor = (priority: TicketPriority) => {
     switch (priority) {
-      case 'URGENT':
-        return 'bg-red-500 text-white';
       case 'HIGH':
-        return 'bg-orange-500 text-white';
+        return 'bg-red-500 text-white';
       case 'MEDIUM':
         return 'bg-yellow-500 text-white';
       case 'LOW':
@@ -124,13 +121,14 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
               <button
                 onClick={onNewCategory}
                 title="Créer une catégorie"
-                className="flex items-center space-x-1 bg-yellow-500 text-white px-2 py-2 cursor-pointer rounded-xl hover:bg-yellow-600 transition-colors text-xs"
+                className="flex items-center space-x-2 bg-orange-500 text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
               >
-                <Plus className="w-3 h-3" />
-                <span className="hidden lg:inline">Catégorie</span>
+                <Plus className="w-4 h-4" />
+                <span className="whitespace-nowrap">Créer une catégorie</span>
               </button>
             )}
-            {onNewTicket && (
+            {/* Bouton Nouveau - CACHÉ */}
+            {false && onNewTicket && (
               <button
                 onClick={onNewTicket}
                 className="flex items-center space-x-2 bg-orange-500 text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"

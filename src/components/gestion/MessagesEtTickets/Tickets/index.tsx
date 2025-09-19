@@ -43,7 +43,7 @@ function TicketsModule() {
 
   return (
     <>
-      <div className="h-full flex bg-gray-50">
+      <div className="h-full flex bg-gray-50 overflow-hidden">
         {/* Sidebar gauche avec la liste des tickets - Responsive */}
         <div className={`
           ${selectedTicket ? 'hidden lg:block' : 'block'} 

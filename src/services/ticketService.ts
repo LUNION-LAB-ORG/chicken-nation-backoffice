@@ -134,10 +134,21 @@ export const deleteTicket = async (id: string): Promise<void> => {
 // ✅ Mettre à jour le statut d'un ticket
 export const updateTicketStatus = async (id: string, status: TicketStatus): Promise<Ticket> => {
   try {
-    const response = await apiRequest<Ticket>(`/tickets/${id}/status`, 'PATCH', { status });
+    const response = await apiRequest<Ticket>(`/tickets/${id}`, 'PATCH', { status });
     return response;
   } catch (error) {
     console.error('❌ [updateTicketStatus] Erreur:', error);
+    throw error;
+  }
+};
+
+// ✅ Mettre à jour la priorité d'un ticket
+export const updateTicketPriority = async (id: string, priority: TicketPriority): Promise<Ticket> => {
+  try {
+    const response = await apiRequest<Ticket>(`/tickets/${id}`, 'PATCH', { priority });
+    return response;
+  } catch (error) {
+    console.error('❌ [updateTicketPriority] Erreur:', error);
     throw error;
   }
 };
@@ -178,7 +189,6 @@ export const getTicketStats = async (): Promise<{
   inProgress: number;
   resolved: number;
   closed: number;
-  urgent: number;
   high: number;
   medium: number;
   low: number;
@@ -193,7 +203,6 @@ export const getTicketStats = async (): Promise<{
       inProgress: number;
       resolved: number;
       closed: number;
-      urgent: number;
       high: number;
       medium: number;
       low: number;
@@ -212,7 +221,6 @@ export const getTicketStats = async (): Promise<{
       inProgress: 0,
       resolved: 0,
       closed: 0,
-      urgent: 0,
       high: 0,
       medium: 0,
       low: 0,

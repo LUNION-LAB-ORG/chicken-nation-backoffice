@@ -5,7 +5,7 @@
 
 // Énumérations pour les tickets
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
-export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type TicketCategory = 
   | 'PRODUCT_QUALITY' 
   | 'DELIVERY' 
@@ -185,7 +185,6 @@ export interface TicketStats {
   closed: number;
   
   // Par priorité
-  urgent: number;
   high: number;
   medium: number;
   low: number;
@@ -226,8 +225,7 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
 export const TICKET_PRIORITY_LABELS: Record<TicketPriority, string> = {
   LOW: 'Faible',
   MEDIUM: 'Moyen',
-  HIGH: 'Élevé',
-  URGENT: 'Urgent'
+  HIGH: 'Élevé'
 };
 
 export const TICKET_CATEGORY_LABELS: Record<TicketCategory, string> = {

@@ -6,6 +6,7 @@ import {
   updateTicket,
   deleteTicket,
   updateTicketStatus,
+  updateTicketPriority,
   assignTicket,
   escalateConversationToTicket,
   getTicketStats,
@@ -15,6 +16,7 @@ import {
 import {
   Ticket,
   TicketStatus,
+  TicketPriority,
   CreateTicketRequest,
   UpdateTicketRequest,
   TicketFilters
@@ -189,6 +191,30 @@ export const useUpdateTicketStatusMutation = () => {
     },
     onError: (error) => {
       console.error('❌ Erreur lors de la mise à jour du statut:', error);
+    },
+  });
+};
+
+// ✅ Hook pour mettre à jour la priorité d'un ticket
+export const useUpdateTicketPriorityMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, priority }: { id: string; priority: TicketPriority }) =>
+      updateTicketPriority(id, priority),
+    onSuccess: (updatedTicket, { id }) => {
+      // Mettre à jour le cache du ticket spécifique
+      queryClient.setQueryData(['ticket', id], updatedTicket);
+
+      // Invalider les queries des listes
+      queryClient.invalidateQueries({ queryKey: ['tickets'] });
+      queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
+      queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
+
+      console.log('✅ Priorité du ticket mis à jour avec succès:', updatedTicket);
+    },
+    onError: (error) => {
+      console.error('❌ Erreur lors de la mise à jour de la priorité:', error);
     },
   });
 };

@@ -341,7 +341,9 @@ export default function GestionPage() {
         )}
 
         {/* Scrollable content */}
-        <main className="flex-1 overflow-y-auto pt-14">
+        <main className={`flex-1 pt-14 ${
+          activeTab === "messages-tickets" ? "overflow-hidden" : "overflow-y-auto"
+        }`}>
           {activeTab === "messages-tickets" ? (
             <div className="h-full">{renderContent()}</div>
           ) : (

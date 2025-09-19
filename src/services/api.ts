@@ -122,11 +122,19 @@ export async function apiRequest<T>(
 
   if (requiresAuth) {
     const token = getTokenFromCookies();
+    console.log('🔍 [API] Token récupéré des cookies:', token ? `"${token.substring(0, 20)}..."` : 'null');
+    
     if (token) {
+      // Vérifier si le token contient déjà le préfixe "Bearer "
+      const authHeader = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      console.log('🔍 [API] Header Authorization généré:', authHeader.substring(0, 20) + '...');
+      
       options.headers = {
         ...options.headers,
-        'Authorization': `Bearer ${token}`
+        'Authorization': authHeader
       };
+    } else {
+      console.warn('⚠️ [API] Aucun token trouvé dans les cookies');
     }
   }
 
