@@ -280,3 +280,15 @@ export const restoreUser = async (id: string): Promise<void> => {
     throw new Error(userMessage);
   }
 };
+
+/**
+ * Réinitialise le mot de passe d'un utilisateur
+ */
+export const resetUserPassword = async (userId: string): Promise<{ email: string; password: string }> => {
+  try {
+    return await api.patch(`${USERS_ENDPOINT}/${userId}/reset-password`, {}, true);
+  } catch (error) {
+    const userMessage = getHumanReadableError(error);
+    throw new Error(userMessage);
+  }
+};

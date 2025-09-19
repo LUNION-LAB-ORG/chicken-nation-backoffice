@@ -3,7 +3,6 @@ import { type Order } from "./OrdersTable";
 import { Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import OrderContextMenu from "./OrderContextMenu";
-import PreparationTimeModal from "./PreparationTimeModal";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
@@ -17,11 +16,10 @@ interface OrderRowProps {
   onViewDetails: (order: Order) => void;
   onHideFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
   onRemoveFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onSetPreparationTime?: (orderId: string, preparationTime: number) => void; // ✅ Nouveau
   isMobile?: boolean;
-  showRestaurantColumn?: boolean;
-  showActionsColumn?: boolean;
-  paymentStatus?: PaymentStatus;
+  showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
+  showActionsColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Actions (menu hamburger)
+  paymentStatus?: PaymentStatus; // ✅ Statut de paiement pour le badge
 }
 
 const OrderTypeBadge = ({ type }: { type: Order["orderType"] }) => {
@@ -123,14 +121,12 @@ export function OrderRow({
   onViewDetails,
   onHideFromList,
   onRemoveFromList,
-  onSetPreparationTime,
   isMobile = false,
   showRestaurantColumn = true,
   showActionsColumn = true,
   paymentStatus = "PAID",
 }: OrderRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isPreparationTimeModalOpen, setIsPreparationTimeModalOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
     null
   );
@@ -140,21 +136,6 @@ export function OrderRow({
     // S'assurer que le portail est rendu dans le body
     setPortalContainer(document.body);
   }, []);
-
-  // Handlers pour le modal de temps de préparation
-  const handleOpenPreparationTimeModal = () => {
-    console.log('🎯 [OrderRow] Ouverture du modal de temps de préparation');
-    setIsPreparationTimeModalOpen(true);
-    setMenuOpen(false);
-  };
-
-  const handlePreparationTimeConfirm = (preparationTime: number) => {
-    console.log('✅ [OrderRow] Confirmation du temps de préparation:', { preparationTime });
-    if (onSetPreparationTime) {
-      onSetPreparationTime(order.id, preparationTime);
-    }
-    setIsPreparationTimeModalOpen(false);
-  };
 
   const renderMenu = () => {
     if (!menuOpen || !portalContainer || !buttonRef.current) return null;
@@ -182,7 +163,6 @@ export function OrderRow({
           onViewDetails={onViewDetails}
           onHideFromList={onHideFromList}
           onRemoveFromList={onRemoveFromList}
-          onOpenPreparationModal={onSetPreparationTime ? handleOpenPreparationTimeModal : undefined}
         />
       </div>,
       portalContainer
@@ -232,7 +212,11 @@ export function OrderRow({
               <StatusBadge order={order} />
             </div>
             <div className="flex justify-between items-center mb-2">
-              <PaymentBadge status={paymentStatus} />
+              <PaymentBadge status={paymentStatus} mode={
+                order.paiements?.length > 0 ? (
+                  order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
+                ) : "Non renseigné"
+              } />
             </div>
             {showActionsColumn && (
               <div className="flex justify-end mt-2">
@@ -258,84 +242,77 @@ export function OrderRow({
   }
 
   return (
-    <>
-      <tr className="hover:bg-[#FDEDD3]">
-        {onSelect && (
-          <td className="w-8 whitespace-nowrap py-3 px-3 sm:px-4">
-            <Checkbox
-              checked={isSelected}
-              onChange={(checked) => onSelect(order.id, checked)}
-            />
-          </td>
-        )}
+    <tr className="hover:bg-[#FDEDD3]">
+      {onSelect && (
+        <td className="w-8 whitespace-nowrap py-3 px-3 sm:px-4">
+          <Checkbox
+            checked={isSelected}
+            onChange={(checked) => onSelect(order.id, checked)}
+          />
+        </td>
+      )}
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span className="text-sm font-medium text-black">
+          {order.reference}
+        </span>
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span className="text-sm text-gray-500">{order.date}</span>
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span className="text-sm font-medium text-black">
+          {order.clientName}
+        </span>
+      </td>
+      {/* ✅ Colonne Restaurant conditionnelle */}
+      {showRestaurantColumn && (
         <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span className="text-sm font-medium text-black">
-            {order.reference}
+          <span className="text-sm text-gray-500">
+            {order.restaurant || "Restaurant inconnu"}
           </span>
         </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span className="text-sm text-gray-500">{order.date}</span>
-        </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span className="text-sm font-medium text-black">
-            {order.clientName}
-          </span>
-        </td>
-        {/* ✅ Colonne Restaurant conditionnelle */}
-        {showRestaurantColumn && (
-          <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-            <span className="text-sm text-gray-500">
-              {order.restaurant || "Restaurant inconnu"}
-            </span>
-          </td>
-        )}
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <OrderTypeBadge type={order.orderType} />
-        </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span
-            className="text-sm text-gray-500 max-w-[200px] truncate"
-            title={formatAddress(order.address).full}
+      )}
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <OrderTypeBadge type={order.orderType} />
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span
+          className="text-sm text-gray-500 max-w-[200px] truncate"
+          title={formatAddress(order.address).full}
+        >
+          {formatAddress(order.address).short}
+        </span>
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span className="text-sm font-medium text-black">
+          {(order.totalPrice || 0).toLocaleString()} F
+        </span>
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <PaymentBadge status={paymentStatus} mode={
+          order.paiements?.length > 0 ? (
+            order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
+          ) : "Non renseigné"
+        } />
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <StatusBadge order={order} />
+      </td>
+      {showActionsColumn && (
+        <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
+          <button
+            ref={buttonRef}
+            className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen(!menuOpen);
+            }}
           >
-            {formatAddress(order.address).short}
-          </span>
+            <Menu size={20} />
+          </button>
+          {renderMenu()}
         </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span className="text-sm font-medium text-black">
-            {(order.totalPrice || 0).toLocaleString()} F
-          </span>
-        </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <PaymentBadge status={paymentStatus} />
-        </td>
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <StatusBadge order={order} />
-        </td>
-        {showActionsColumn && (
-          <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
-            <button
-              ref={buttonRef}
-              className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setMenuOpen(!menuOpen);
-              }}
-            >
-              <Menu size={20} />
-            </button>
-            {renderMenu()}
-          </td>
-        )}
-      </tr>
-
-      {/* Modal de temps de préparation */}
-      <PreparationTimeModal
-        isOpen={isPreparationTimeModalOpen}
-        onClose={() => setIsPreparationTimeModalOpen(false)}
-        onConfirm={handlePreparationTimeConfirm}
-        orderReference={order.reference}
-        orderId={order.id}
-      />
-    </>
+      )}
+    </tr>
   );
 }

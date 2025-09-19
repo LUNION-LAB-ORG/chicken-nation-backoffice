@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
 import { OrderData } from "./types";
+import Button from "@/components/ui/Button";
 
 const getPaymentStatus = (orderDetails: any): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
@@ -115,7 +116,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   onReject,
   onStatusChange,
 }) => {
-  const { getOrderById, fetchOrderById, updateOrderStatus } = useOrderStore();
+  const { getOrderById, fetchOrderById, updateOrderStatus, handlePrintOrder } = useOrderStore();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   const [fullOrderDetails, setFullOrderDetails] = useState<{
@@ -781,10 +782,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl min-h-screen md:h-screen overflow-hidden md:overflow-auto shadow-sm">
-      <div className="h-full">
-        <div className="flex flex-col md:flex-row gap-4 md:gap-12 min-h-screen md:h-auto">
-          <div className="md:w-3/5 p-4 sm:p-6 h-auto md:h-screen overflow-y-auto md:overflow-visible">
+    <div className="bg-white rounded-xl min-h-screen shadow-sm">
+      <div className="">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-12 ">
+          <div className="md:w-3/5 p-4 sm:p-6 h-auto ">
             {/* En-tête avec informations générales */}
             <div className="mb-4 md:mb-6">
               <div className="flex justify-between items-center">
@@ -951,7 +952,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
           </div>
 
           {/* Partie droite (1/3) */}
-          <div className="md:w-3/6 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto md:h-screen overflow-y-auto md:overflow-visible">
+          <div className="md:w-3/6 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto overflow-y-auto md:overflow-visible">
             {/* Informations client */}
             <div className="mb-4 md:mb-8">
               <p className="text-[18px] font-medium text-[#F17922] mb-4">
@@ -1232,6 +1233,16 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   );
                 }
               })()}
+              <button
+                type="button"
+                onClick={async () => {
+                  const result = await handlePrintOrder(order.id)
+                  console.log(result)
+                }}
+                className="w-full py-3 px-4 bg-[#F17922] hover:bg-[#F17972] text-white rounded-xl font-medium"
+              >
+                {"Imprimer"}
+              </button>
             </div>
           </div>
         </div>

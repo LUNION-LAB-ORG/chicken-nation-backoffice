@@ -6,12 +6,14 @@ export type PaymentStatus = "PAID" | "REFUNDED" | "TO_REFUND";
 
 interface PaymentBadgeProps {
   status: PaymentStatus;
+  mode?: string;
   className?: string;
 }
 
 export default function PaymentBadge({
   status,
-  className = "",
+  mode,
+    className = "",
 }: PaymentBadgeProps) {
   const getStatusConfig = (status: PaymentStatus) => {
     switch (status) {
@@ -56,7 +58,7 @@ export default function PaymentBadge({
         ${className}
       `}
     >
-      {config.text}
+      {config.text}-<span className="text-xs uppercase">{mode}</span>
     </span>
   );
 }
