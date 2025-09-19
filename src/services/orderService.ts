@@ -345,8 +345,6 @@ export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promi
   if (!id || !data) throw new Error('ID ou données manquantes');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
 
-
-
   try {
     const token = getAuthToken();
     const response = await fetch(url, {
@@ -358,15 +356,32 @@ export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promi
       body: JSON.stringify(data),
     });
 
-
-
     if (!response.ok) {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    const data2 = await response.json();
-    return data2;
+    const responseData = await response.json();
+    return responseData;
   } catch (error) {
+    throw error;
+  }
+}
+
+// ✅ Fonction spécialisée pour mettre à jour le temps de préparation
+export async function updatePreparationTime(id: string, preparationTimeMinutes: number): Promise<ApiOrderRaw> {
+  if (!id || typeof preparationTimeMinutes !== 'number') {
+    throw new Error('ID de commande et temps de préparation requis');
+  }
+
+  // Convertir les minutes en format ISO string (pour être cohérent avec l'API)
+  const preparationTimeString = `${preparationTimeMinutes} minutes`;
+
+  try {
+    return await updateOrder(id, {
+      estimated_preparation_time: preparationTimeString
+    });
+  } catch (error) {
+    console.error('[orderService] Erreur lors de la mise à jour du temps de préparation:', error);
     throw error;
   }
 }

@@ -182,7 +182,7 @@ export function OrderRow({
           onViewDetails={onViewDetails}
           onHideFromList={onHideFromList}
           onRemoveFromList={onRemoveFromList}
-          onSetPreparationTime={onSetPreparationTime ? handleOpenPreparationTimeModal : undefined}
+          onOpenPreparationModal={onSetPreparationTime ? handleOpenPreparationTimeModal : undefined}
         />
       </div>,
       portalContainer
@@ -334,7 +334,7 @@ export function OrderRow({
         onClose={() => setIsPreparationTimeModalOpen(false)}
         onConfirm={handlePreparationTimeConfirm}
         orderReference={order.reference}
-        orderData={order}
+        orderId={order.id}
       />
     </>
   );

@@ -14,7 +14,7 @@ interface OrderContextMenuProps {
   onViewDetails: (order: Order) => void;     // ✅ Toujours disponible (lecture)
   onHideFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
   onRemoveFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onSetPreparationTime?: () => void; // ✅ Simplifié pour le menu contextuel
+  onOpenPreparationModal?: () => void; // ✅ Nouveau : ouvrir le modal de temps de préparation
 }
 
 interface OrderContextMenuWithModalProps {
@@ -26,7 +26,7 @@ interface OrderContextMenuWithModalProps {
   onViewDetails: (order: Order) => void;
   onHideFromList?: (orderId: string) => void;
   onRemoveFromList?: (orderId: string) => void;
-  onSetPreparationTime?: (orderId: string, preparationTime: number, deliveryTime: number) => void; // ✅ Version complète
+  onSetPreparationTime?: (orderId: string, preparationTime: number, deliveryTime: number) => void; // ✅ Version complète (sera dépréciée)
 }
 
 const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
@@ -38,7 +38,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   onViewDetails,
   onHideFromList,
   onRemoveFromList,
-  onSetPreparationTime
+  onOpenPreparationModal
 }) => {
   const { canAcceptCommande, canRejectCommande, canViewCommande, canDeleteCommande } = useRBAC()
   const isAccepted = order.status !== 'NOUVELLE';
@@ -46,6 +46,10 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   const handleAccept = () => {
     if (onAccept) {
       onAccept(order.id);
+      // ✅ Après acceptation, ouvrir le modal de temps de préparation
+      if (onOpenPreparationModal) {
+        onOpenPreparationModal();
+      }
       onClose();
     }
   };
@@ -134,21 +138,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
           </>
         ) : (
           <>
-            {canAcceptCommande && onSetPreparationTime && (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-orange-600 hover:bg-orange-50 cursor-pointer font-medium"
-                onClick={() => {
-                  console.log('🎯 [OrderContextMenu] Clic sur définir temps de préparation');
-                  if (onSetPreparationTime) {
-                    onSetPreparationTime();
-                  }
-                }}
-              >
-                <Clock size={16} />
-                <span>Définir temps de préparation</span>
-              </button>
-            )}
+            {/* ✅ Bouton 'Définir temps de préparation' supprimé - Maintenant intégré dans 'Accepter' */}
             {canDeleteCommande && (
               <button
                 type="button"
@@ -194,9 +184,10 @@ export const OrderContextMenuWithModal: React.FC<OrderContextMenuWithModalProps>
     console.log('🔄 [OrderContextMenuWithModal] useEffect - isPreparationTimeModalOpen changed to:', isPreparationTimeModalOpen);
   }, [isPreparationTimeModalOpen]);
 
-  const handleSetPreparationTime = (orderId: string, preparationTime: number, deliveryTime: number) => {
+  const handleSetPreparationTime = (preparationTime: number) => {
     if (props.onSetPreparationTime) {
-      props.onSetPreparationTime(orderId, preparationTime, deliveryTime);
+      // ✅ Pour l'instant, on ne gère que le temps de préparation, pas de deliveryTime
+      props.onSetPreparationTime(props.order.id, preparationTime, 0); // deliveryTime = 0 temporairement
     }
     setIsPreparationTimeModalOpen(false);
   };
@@ -205,13 +196,10 @@ export const OrderContextMenuWithModal: React.FC<OrderContextMenuWithModalProps>
     <>
       <OrderContextMenu
         {...props}
-        onSetPreparationTime={props.onSetPreparationTime ? () => {
-          console.log('🎯 [OrderContextMenuWithModal] Ouverture du modal');
-          console.log('📊 État avant:', isPreparationTimeModalOpen);
+        onOpenPreparationModal={() => {
+          console.log('🎯 [OrderContextMenuWithModal] Ouverture du modal de temps de préparation');
           setIsPreparationTimeModalOpen(true);
-          console.log('📊 État après setIsPreparationTimeModalOpen(true)');
-          props.onClose();
-        } : undefined}
+        }}
       />
 
       {/* Modal rendu au niveau racine */}
@@ -221,10 +209,9 @@ export const OrderContextMenuWithModal: React.FC<OrderContextMenuWithModalProps>
           console.log('🔒 [OrderContextMenuWithModal] Fermeture du modal');
           setIsPreparationTimeModalOpen(false);
         }}
-        onConfirm={(preparationTime: number, deliveryTime: number) =>
-          handleSetPreparationTime(props.order.id, preparationTime, deliveryTime)
-        }
+        onConfirm={handleSetPreparationTime}
         orderReference={props.order.reference}
+        orderId={props.order.id}
       />
     </>
   );
