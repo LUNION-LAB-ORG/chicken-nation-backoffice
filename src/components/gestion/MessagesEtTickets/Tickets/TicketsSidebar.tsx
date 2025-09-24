@@ -255,13 +255,8 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                     {ticket.category?.name || 'Catégorie inconnue'}
                   </span>
 
-                  <div className="flex items-center space-x-2 text-gray-500">
-                    {ticket.order?.reference && (
-                      <>
-                        <MessageCircle className="md:w-4 md:h-4 w-3 h-3" />
-                        <span className="md:text-sm text-xs">{ticket.order.reference}</span>
-                      </>
-                    )}
+                  <div className="flex items-center space-x-2 text-gray-500"> 
+                   <MessageCircle className="md:w-4 md:h-4 w-3 h-3" /> 
                     <span className="md:text-sm text-xs">
                       {ticket.messages && ticket.messages.length > 0 
                         ? `${ticket.messages.length} message${ticket.messages.length > 1 ? 's' : ''}`

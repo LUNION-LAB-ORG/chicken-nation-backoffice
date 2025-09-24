@@ -65,7 +65,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
       setSelectedStatus(newStatus);
       await updateStatusMutation.mutateAsync({ 
         id: ticketId, 
-        status: newStatus as any 
+        status: newStatus as 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
       });
       console.log('✅ Statut mis à jour avec succès');
     } catch (error) {
@@ -84,7 +84,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
       setSelectedPriority(newPriority);
       await updatePriorityMutation.mutateAsync({ 
         id: ticketId, 
-        priority: newPriority as any 
+        priority: newPriority as 'HIGH' | 'MEDIUM' | 'LOW'
       });
       console.log('✅ Priorité mise à jour avec succès');
     } catch (error) {
@@ -114,17 +114,9 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     try {
       // Essayer d'assigner le ticket si nécessaire (mais continuer même si ça échoue)
       if (!ticket?.assignee || ticket.assignee.id !== user.id) {
-        console.log('🎯 Tentative d\'attribution du ticket...');
-        console.log('📋 État actuel du ticket:');
-        console.log('  - Ticket ID:', ticketId);
-        console.log('  - Assignee actuel:', ticket?.assignee);
-        console.log('  - User connecté:', { id: user.id, email: user.email, role: user.role });
-        console.log('  - Condition assignation:', !ticket?.assignee ? 'Pas d\'assignee' : `Assignee différent (${ticket.assignee.id} vs ${user.id})`);
-
+ 
         try {
-          console.log('🚀 Appel de l\'API d\'assignation...');
-          console.log('🔍 Données d\'assignation:', { ticketId, assigneeId: user.id, userObject: user });
-          
+        
           if (!user.id) {
             console.error('❌ user.id est undefined ou vide:', user.id);
             throw new Error('ID utilisateur manquant');
@@ -132,17 +124,14 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           
           await assignTicketMutation.mutateAsync({ ticketId, assigneeId: user.id });
           console.log('✅ Ticket assigné avec succès');
-        } catch (assignError) {
-          console.warn('⚠️ Échec de l\'assignation, mais on continue avec l\'envoi du message:');
-          console.warn('  - Erreur:', assignError);
-          console.warn('  - Message d\'erreur:', assignError?.message);
+        } catch (assignError) { 
           console.warn('  - Status:', assignError?.status);
         }
       } else {
         console.log('✅ Ticket déjà assigné à l\'utilisateur actuel, pas besoin d\'assignation');
       }
 
-      console.log('📤 Envoi du message...');
+     
       // Envoyer le message
       const messagePayload = {
         ticketId,
@@ -153,7 +142,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           meta: 'dashboard'
         }
       };
-      console.log('📦 Payload du message:', messagePayload);
+     
 
       await sendMessageMutation.mutateAsync(messagePayload);
       console.log('✅ Message envoyé avec succès');
@@ -393,13 +382,20 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                     /* Message client à gauche */
                     <div className="flex items-start md:space-x-3 space-x-2 md:max-w-2xl max-w-xs">
                       <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                        {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
+                        {ticket.customer?.image && ticket.customer.image.trim() !== '' && formatImageUrl(ticket.customer.image) ? (
                           <Image
                             src={formatImageUrl(ticket.customer.image)}
                             alt={ticket.customer.name}
                             width={40}
                             height={40}
                             className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
+                            onError={(e) => { 
+                              (e.target as HTMLImageElement).style.display = 'none'; 
+                              const parent = (e.target as HTMLImageElement).parentElement;
+                              if (parent) {
+                                parent.innerHTML = `<span class="text-gray-600 font-medium text-sm">${ticket.customer?.first_name?.[0] || ticket.customer?.name?.[0] || 'C'}</span>`;
+                              }
+                            }}
                           />
                         ) : (
                           <span className="text-gray-600 font-medium text-sm">
@@ -430,18 +426,26 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                         </div>
                       </div>
                      <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                        {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
+                        {user?.image && user.image.trim() !== '' && formatImageUrl(user?.image) ? (
                           <Image
                            src={formatImageUrl(user?.image)}
                             alt={user?.fullname}
                             width={40}
                             height={40}
                             className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
+                            onError={(e) => {
+                              // Fallback vers l'image par défaut en cas d'erreur
+                              (e.target as HTMLImageElement).src = '/images/mascot.png';
+                            }}
                           />
                         ) : (
-                          <span className="text-gray-600 font-medium text-sm">
-                            {ticket.customer?.first_name?.[0] || ticket.customer?.name?.[0] || 'C'}
-                          </span>
+                          <Image
+                            src="/images/mascot.png"
+                            alt={user?.fullname || 'Agent'}
+                            width={40}
+                            height={40}
+                            className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
+                          />
                         )}
                       </div>
                     </div>

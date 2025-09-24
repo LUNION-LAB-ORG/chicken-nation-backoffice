@@ -81,7 +81,14 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
                   alt={ticket.customer.name}
                   width={48}
                   height={48}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover object-center"
+                  onError={(e) => { 
+                    (e.target as HTMLImageElement).style.display = 'none'; 
+                    const parent = (e.target as HTMLImageElement).parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<span class="text-gray-600 font-medium">${ticket.customer?.first_name?.[0] || ticket.customer?.name?.[0] || 'C'}</span>`;
+                    }
+                  }}
                 />
               ) : (
                 <span className="text-gray-600 font-medium">
@@ -113,7 +120,14 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
                       alt={ticket.assignee.name}
                       width={48}
                       height={48}
-                      className="w-full h-full object-cover rounded-full"
+                      className="w-full h-full object-cover object-center rounded-full"
+                      onError={(e) => { 
+                        (e.target as HTMLImageElement).style.display = 'none'; 
+                        const parent = (e.target as HTMLImageElement).parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-gray-700 font-medium text-sm">${ticket.assignee.name.split(' ').map(n => n[0]).join('').toUpperCase()}</span>`;
+                        }
+                      }}
                     />
                   ) : (
                     <span className="text-gray-700 font-medium text-sm">

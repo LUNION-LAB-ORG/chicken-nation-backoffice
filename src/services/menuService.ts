@@ -123,7 +123,8 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       is_promotion: validatedApiMenu.is_promotion || false,
       // ✅ Ajout des champs optionnels pour compatibilité API
       dish_supplements: validatedApiMenu.dish_supplements || [],
-      dish_restaurants: validatedApiMenu.dish_restaurants || []
+      dish_restaurants: validatedApiMenu.dish_restaurants || [],
+      is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false // ✅ Nom corrigé sans "s"
     };
 
     // ✅ Validation finale avec le schéma MenuItem
@@ -229,7 +230,7 @@ export const searchMenus = async (params: MenuSearchQuery = {}): Promise<Paginat
 export const getAllMenus = async (): Promise<ValidatedMenuItem[]> => {
   try {
     const responseData = await apiRequest<ApiMenuListResponse>('/dishes', 'GET');
-
+ 
     // ✅ Validation de la structure de réponse
     if (!responseData) {
       throw new Error('Aucune donnée reçue du serveur');
@@ -464,6 +465,9 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
         formData.append('promotion_price', '0');
       }
 
+      // ✅ Ajout du nouveau champ
+      formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
+
       // Pour UPDATE: NE PAS envoyer restaurants et supplements ici
       // Ils sont gérés séparément par les services dédiés
 
@@ -507,6 +511,9 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
     } else {
       formData.append('promotion_price', '0');
     }
+
+    // ✅ Ajout du nouveau champ
+    formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
 
     // ✅ Ajout sécurisé des restaurants pour CREATE
     // Gérer les restaurants multiples depuis selectedRestaurants ou restaurantId unique

@@ -255,6 +255,7 @@ export interface MenuItem {
     };
     [key: string]: unknown;
   }>;
+  is_alway_epice?: boolean; // ✅ Nom corrigé sans "s"
 }
 
 export interface Schedule {

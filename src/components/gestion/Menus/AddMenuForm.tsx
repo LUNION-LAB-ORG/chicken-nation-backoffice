@@ -38,6 +38,7 @@ interface MenuFormData {
       quantity: number;
     };
   };
+  is_alway_epice: boolean;  
 }
 
 interface AddMenuFormProps {
@@ -79,7 +80,8 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
       ingredients: { category: '', quantity: 0 },
       accompagnements: { category: '', quantity: 0 },
       boissons: { category: '', quantity: 0 }
-    }
+    },
+    is_alway_epice: false // ✅ Nom corrigé sans "s"
   });
 
   // ✅ ÉTATS POUR LA CRÉATION
@@ -545,23 +547,19 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         isAvailable: true,
         isNew: true, // Nouveau menu
         restaurant: '',
-        restaurantId: selectedRestaurants.length > 0 ? selectedRestaurants[0] : '', // ✅ Premier restaurant pour compatibilité
-        selectedRestaurants: selectedRestaurants, // ✅ TOUS les restaurants sélectionnés
+        restaurantId: selectedRestaurants.length > 0 ? selectedRestaurants[0] : '', 
+        selectedRestaurants: selectedRestaurants, 
         rating: 0,
         supplements: {},
         reviews: [],
         totalReviews: 0,
         is_promotion: formData.reduction === true,
         promotion_price: formData.reduction ? formData.reducedPrice : '0',
-        dish_supplements: dishSupplements
+        dish_supplements: dishSupplements,
+        is_alway_epice: formData.is_alway_epice  
       };
 
-      // ✅ DEBUG: Vérifier les données avant soumission
-      console.log('🔍 DEBUG AddMenuForm - Données du menu:', {
-        selectedRestaurants,
-        dishSupplements: dishSupplements.length,
-        supplementsDetails: dishSupplements
-      });
+       
 
       // ✅ Soumission sécurisée des données
       onSubmit(menuData as unknown as MenuItem);
@@ -716,7 +714,8 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
             </div>
           </motion.div>
 
-          {/* Réduction */}
+         <div className='flex flex-row justify-between items-center w-full gap-2'>
+           {/* Réduction */}
           <motion.div
             className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
@@ -769,7 +768,30 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               )}
             </AnimatePresence>
           </motion.div>
-
+          {/* Epicé */}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <div className="flex items-center">
+              <Checkbox
+                id="is_alway_epice"
+                checked={formData.is_alway_epice}
+                onChange={(checked) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    is_alway_epice: checked
+                  }));
+                }}
+              />
+              <label htmlFor="is_alway_epice" className="ml-2 text-[13px] font-semibold text-gray-700">
+                   Déjà épicé
+              </label>
+            </div>
+          </motion.div>
+         </div>
+          
           {/* Description */}
           <motion.div
             className=' w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent'
@@ -794,6 +816,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
         {/* Colonne droite */}
         <div className="space-y-6">
+         
           {/* Catégorie */}
           <motion.div
             className="  px-3 py-4 border-2 border-[#D9D9D9]/50 flex items-center justify-between rounded-2xl

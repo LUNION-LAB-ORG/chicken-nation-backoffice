@@ -9,15 +9,14 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
-import { OrderData } from "./types";
-import Button from "@/components/ui/Button";
+// import { OrderData } from "./types"; // Type non utilisé
 
-const getPaymentStatus = (orderDetails: any): PaymentStatus => {
+const getPaymentStatus = (orderDetails: unknown): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
   if (orderDetails?.status === "CANCELLED") {
     // Vérifier s'il y a un paiement avec le statut REVERTED
     const hasRevertedPayment = orderDetails?.paiements?.some(
-      (p: any) => p.status === "REVERTED"
+      (p: { status: string }) => p.status === "REVERTED"
     );
     return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
   }
@@ -131,7 +130,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [restaurantName, setRestaurantName] = useState<string>(
     order.restaurant || "Restaurant inconnu"
   );
-  const [orderData, setOrderData] = useState<OrderData | null>(null);
+  // const [orderData, setOrderData] = useState<OrderData | null>(null); // Variable non utilisée
   const [currentStatus, setCurrentStatus] = useState<string>(order.status);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
@@ -192,7 +191,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 
       const data = await response.json();
 
-      setOrderData(data);
+      // setOrderData(data); // Fonction non utilisée
 
       return data;
     }
@@ -237,7 +236,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                 } else {
                   setRestaurantName(String(response.restaurant_id || ""));
                 }
-              } catch (error) {
+              } catch (_error) {
                 setRestaurantName(String(response.restaurant_id || ""));
               }
             }
@@ -527,38 +526,37 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
         : "Adresse non spécifiée"
       : "Adresse non spécifiée");
 
-  let reservationTime = "";
-  if (fullOrderDetails?.time) {
-    // Si c'est déjà au format HH:MM, l'utiliser directement
-    if (
-      typeof fullOrderDetails.time === "string" &&
-      fullOrderDetails.time.match(/^\d{1,2}:\d{2}$/)
-    ) {
-      reservationTime = fullOrderDetails.time;
-    } else {
-      reservationTime = String(fullOrderDetails.time);
-    }
-  }
+  // let reservationTime = "";
+  // if (fullOrderDetails?.time) {
+  //   // Si c'est déjà au format HH:MM, l'utiliser directement
+  //   if (
+  //     typeof fullOrderDetails.time === "string" &&
+  //     fullOrderDetails.time.match(/^\d{1,2}:\d{2}$/)
+  //   ) {
+  //     reservationTime = fullOrderDetails.time;
+  //   } else {
+  //     reservationTime = String(fullOrderDetails.time);
+  //   }
+  // }
 
-  // Formater la date de réservation
-  const reservationDate = fullOrderDetails?.date || "";
-  let formattedReservationDate = "";
-  if (reservationDate) {
-    try {
-      const d = new Date(reservationDate);
-      formattedReservationDate = `${d.getDate().toString().padStart(2, "0")}/${(
-        d.getMonth() + 1
-      )
-        .toString()
-        .padStart(2, "0")}/${d.getFullYear()}`;
-    } catch (error) {
-      console.error(
-        "Erreur lors du formatage de la date de réservation:",
-        error
-      );
-      formattedReservationDate = reservationDate;
-    }
-  }
+  // // Formater la date de réservation
+  // const reservationDate = fullOrderDetails?.date || "";
+  // let formattedReservationDate = "";
+  // if (reservationDate) {
+  //   try {
+  //     const d = new Date(reservationDate);
+  //     formattedReservationDate = `${d.getDate().toString().padStart(2, "0")}/${(
+  //       d.getMonth() + 1
+  //     )
+  //       .toString()
+  //       .padStart(2, "0")}/${d.getFullYear()}`;
+  //   } catch (_error) {
+  //     console.error(
+  //       "Erreur lors du formatage de la date de réservation:"
+  //     );
+  //     formattedReservationDate = reservationDate;
+  //   }
+  // }
 
   // Utiliser les données étendues pour les dates
   const orderDate = order.date || "Date inconnue";
@@ -990,94 +988,98 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               )}
             </div>
 
-            {/* Section livraison */}
-            <div className="mb-4 md:mb-8">
-              <p className="text-[18px] font-medium text-[#F17922] mb-4">
-                {getDeliverySectionTitle()}
-              </p>
-              <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
-                <div className="flex justify-between items-center ">
-                  {/* Étape 1 - Restaurant */}
-                  <div
-                    className={`w-10 h-10 rounded-[12px] border-1 ${
-                      getProgressStyles().step1Border
-                    } ${
-                      getProgressStyles().step1Bg
-                    } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                  >
-                    <SafeImage
-                      src={getProgressStyles().step1Icon}
-                      alt="restaurant"
-                      width={24}
-                      height={24}
-                    />
-                  </div>
+            {/* Section livraison - Masquée pour PICKUP et TABLE */}
+            {fullOrderDetails?.type !== "PICKUP" && fullOrderDetails?.type !== "TABLE" && (
+              <div className="mb-4 md:mb-8">
+                <p className="text-[18px] font-medium text-[#F17922] mb-4">
+                  {getDeliverySectionTitle()}
+                </p>
+                <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
+                  <div className="flex justify-between items-center ">
+                    {/* Étape 1 - Restaurant */}
+                    <div
+                      className={`w-10 h-10 rounded-[12px] border-1 ${
+                        getProgressStyles().step1Border
+                      } ${
+                        getProgressStyles().step1Bg
+                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                    >
+                      <SafeImage
+                        src={getProgressStyles().step1Icon}
+                        alt="restaurant"
+                        width={24}
+                        height={24}
+                      />
+                    </div>
 
-                  {/* Ligne entre étape 1 et 2 */}
-                  <div
-                    className={`flex-1 h-1 ${
-                      getProgressStyles().line1
-                    } transition-all duration-500 ease-in-out`}
-                  ></div>
+                    {/* Ligne entre étape 1 et 2 */}
+                    <div
+                      className={`flex-1 h-1 ${
+                        getProgressStyles().line1
+                      } transition-all duration-500 ease-in-out`}
+                    ></div>
 
-                  {/* Étape 2 - Préparation */}
-                  <div
-                    className={`w-10 h-10 rounded-[12px] border-1 ${
-                      getProgressStyles().step2Border
-                    } ${
-                      getProgressStyles().step2Bg
-                    } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                  >
-                    <SafeImage
-                      src={getProgressStyles().step2Icon}
-                      alt="box"
-                      width={24}
-                      height={24}
-                    />
-                  </div>
+                    {/* Étape 2 - Préparation */}
+                    <div
+                      className={`w-10 h-10 rounded-[12px] border-1 ${
+                        getProgressStyles().step2Border
+                      } ${
+                        getProgressStyles().step2Bg
+                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                    >
+                      <SafeImage
+                        src={getProgressStyles().step2Icon}
+                        alt="box"
+                        width={24}
+                        height={24}
+                      />
+                    </div>
 
-                  {/* Ligne entre étape 2 et 3 */}
-                  <div
-                    className={`flex-1 h-1 ${
-                      getProgressStyles().line2
-                    } transition-all duration-500 ease-in-out`}
-                  ></div>
+                    {/* Ligne entre étape 2 et 3 */}
+                    <div
+                      className={`flex-1 h-1 ${
+                        getProgressStyles().line2
+                      } transition-all duration-500 ease-in-out`}
+                    ></div>
 
-                  {/* Étape 3 - Livraison */}
-                  <div
-                    className={`w-10 h-10 rounded-[12px] border-1 ${
-                      getProgressStyles().step3Border
-                    } ${
-                      getProgressStyles().step3Bg
-                    } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                  >
-                    <SafeImage
-                      src={getProgressStyles().step3Icon}
-                      alt="pin"
-                      width={24}
-                      height={24}
-                    />
+                    {/* Étape 3 - Livraison */}
+                    <div
+                      className={`w-10 h-10 rounded-[12px] border-1 ${
+                        getProgressStyles().step3Border
+                      } ${
+                        getProgressStyles().step3Bg
+                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                    >
+                      <SafeImage
+                        src={getProgressStyles().step3Icon}
+                        alt="pin"
+                        width={24}
+                        height={24}
+                      />
+                    </div>
                   </div>
                 </div>
+                <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
+                  Processus de livraison proposé par{" "}
+                  <span className="text-[#71717A] font-bold">
+                    {fullOrderDetails?.delivery_service === "TURBO" ? "Turbo Delivery" : "Chicken Nation"}
+                  </span>
+                </p>
+                <button
+                  type="button"
+                  className="w-full mt-3 md:mt-4 py-3 px-4 bg-[#F17922] hover:bg-[#F17972] cursor-pointer rounded-xl flex items-center justify-center text-sm font-medium text-white"
+                >
+                  <SafeImage
+                    src="/icons/external-link.png"
+                    alt="eye"
+                    width={20}
+                    height={20}
+                    className="mr-2"
+                  />
+                  <span>Voir le suivi de livraison</span>
+                </button>
               </div>
-              <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
-                Processus de livraison proposé par{" "}
-                <span className="text-[#71717A] font-bold">Turbo Delivery</span>
-              </p>
-              <button
-                type="button"
-                className="w-full mt-3 md:mt-4 py-3 px-4 bg-[#F17922] hover:bg-[#F17972] cursor-pointer rounded-xl flex items-center justify-center text-sm font-medium text-white"
-              >
-                <SafeImage
-                  src="/icons/external-link.png"
-                  alt="eye"
-                  width={20}
-                  height={20}
-                  className="mr-2"
-                />
-                <span>Voir le suivi de livraison</span>
-              </button>
-            </div>
+            )}
 
             {/* Informations de prix */}
             <div className="space-y-2 md:space-y-3">

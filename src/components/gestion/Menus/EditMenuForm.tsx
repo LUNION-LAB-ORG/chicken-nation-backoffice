@@ -13,7 +13,6 @@ import { formatImageUrl } from '@/utils/imageHelpers'
 import SelectWithCheckboxes from '@/components/ui/SelectWithCheckboxes'
 import SelectWithCheckboxesAndImages from '@/components/ui/SelectWithCheckboxesAndImages'
 import SimpleSelect from '@/components/ui/SimpleSelect'
-// ✅ Import SupplementType supprimé car non utilisé
 import { validateMenuItem, sanitizeMenuInput } from '@/schemas/menuSchemas'
 
 // ✅ INTERFACES STRICTES POUR LE FORMULAIRE
@@ -39,6 +38,7 @@ interface MenuFormData {
       quantity: number;
     };
   };
+  is_alway_epice: boolean; // ✅ Nom corrigé sans "s"
 }
 
 interface EditMenuFormProps {
@@ -69,10 +69,27 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ✅ INITIALISATION POUR L'ÉDITION AVEC LES DONNÉES EXISTANTES
-  const [formData, setFormData] = useState<MenuFormData>(() => {
+  const [formData, setFormData] = useState<MenuFormData>({
+    title: '',
+    description: '',
+    price: '',
+    reducedPrice: '',
+    reduction: false,
+    category: [],
+    restaurant: '',
+    supplements: {
+      ingredients: { category: '', quantity: 0 },
+      accompagnements: { category: '', quantity: 0 },
+      boissons: { category: '', quantity: 0 }
+    },
+    is_alway_epice: false // ✅ Valeur par défaut
+  });
+  
+  // Mise à jour avec les données existantes
+  useEffect(() => {
     try {
       const validatedData = validateMenuItem(initialData);
-      return {
+      setFormData({
         title: sanitizeMenuInput(validatedData.name || ''),
         description: sanitizeMenuInput(validatedData.description || ''),
         price: validatedData.price || '',
@@ -84,12 +101,13 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
           ingredients: { category: '', quantity: 0 },
           accompagnements: { category: '', quantity: 0 },
           boissons: { category: '', quantity: 0 }
-        }
-      };
+        },
+        is_alway_epice: (validatedData as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false 
+      });
     } catch (error) {
       console.error('Erreur lors de l\'initialisation du formulaire:', error);
       // Fallback avec les données brutes
-      return {
+      setFormData({
         title: initialData.name || '',
         description: initialData.description || '',
         price: initialData.price || '',
@@ -101,10 +119,11 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
           ingredients: { category: '', quantity: 0 },
           accompagnements: { category: '', quantity: 0 },
           boissons: { category: '', quantity: 0 }
-        }
-      };
+        },
+        is_alway_epice: (initialData as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false 
+      });
     }
-  });
+  }, [initialData]);
 
   // ✅ ÉTATS POUR L'ÉDITION
   const [imagePreview, setImagePreview] = useState<string | null>(() => {
@@ -812,7 +831,8 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
         supplements: supplementsStructure, // ✅ Structure des suppléments pour handleSaveEdit
         is_promotion: formData.reduction === true,
         promotion_price: formData.reduction ? formData.reducedPrice : '0',
-        dish_supplements: dishSupplements
+        dish_supplements: dishSupplements,
+        is_alway_epice: formData.is_alway_epice // ✅ Nom corrigé sans "s"
       };
 
       // ✅ Soumission sécurisée des données
@@ -968,7 +988,8 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
             </div>
           </motion.div>
 
-          {/* Réduction */}
+       <div className='flex flex-row items-center justify-between w-full gap-3 '>
+           {/* Réduction */}
           <motion.div
             className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
@@ -1021,7 +1042,29 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
               )}
             </AnimatePresence>
           </motion.div>
-
+              {/* Epice*/}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <div className="flex items-center">
+              <Checkbox
+                id="is_alway_epice"
+                checked={formData.is_alway_epice}
+                onChange={(checked) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    is_alway_epice: checked
+                  }));
+                }}
+              />
+              <label htmlFor="is_alway_epice" className="ml-2 text-[13px] font-semibold text-gray-700">
+                Déjà épicé
+              </label>
+            </div>
+          </motion.div>
+       </div>
           {/* Description */}
           <motion.div
             className=' w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent'
@@ -1046,6 +1089,8 @@ const EditMenuForm = ({ initialData, onCancel, onSubmit }: EditMenuFormProps) =>
 
         {/* Colonne droite */}
         <div className="space-y-6">
+         
+          
           {/* Catégorie */}
           <motion.div
             className="  px-3 py-4 border-2 border-[#D9D9D9]/50 flex items-center justify-between rounded-2xl
