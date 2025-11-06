@@ -22,9 +22,9 @@ export default function SupplementTabs({
   const getShortLabel = (label: string, id: string): string => {
     // Cas spéciaux pour certains onglets
     if (id === 'all') return 'Tous';
-    if (id === 'FOOD') return 'Acc.';
+    if (id === 'FOOD') return 'Sauc.';
     if (id === 'DRINK') return 'Bois.';
-    if (id === 'ACCESSORY') return 'Ing.';
+    if (id === 'ACCESSORY') return 'Supp.';
   
     return label.charAt(0).toUpperCase();
   };

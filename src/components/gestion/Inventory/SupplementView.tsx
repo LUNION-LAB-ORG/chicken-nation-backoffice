@@ -92,9 +92,9 @@ export default function SupplementView({
     }
 
     const translations: Record<string, string> = {
-      'FOOD': 'Accompagnements',
+      'FOOD': 'Sauces',
       'DRINK': 'Boissons',
-      'ACCESSORY': 'Ingrédients',
+      'ACCESSORY': 'Suppléments',
       'all': 'Tous les produits'
     };
     return translations[categoryStr] || categoryStr;
