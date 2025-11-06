@@ -97,7 +97,7 @@ const Dashboard = () => {
       }
     };
 
-    loadRestaurantInfo();
+    void loadRestaurantInfo();
   }, [isRestaurantManager, isViewingSpecificRestaurant, selectedRestaurantId, user?.restaurant_id]);
 
   // Charger les statistiques du dashboard
@@ -164,9 +164,6 @@ const Dashboard = () => {
 
   const { stats: statsData, revenue: revenueData } = getDisplayData();
 
-
-
- 
   return (
     <div className="flex-1 overflow-auto p-6">
       <div className='-mt-10'>

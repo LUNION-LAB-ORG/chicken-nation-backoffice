@@ -171,6 +171,13 @@ export default function Sidebar({
         user?.role === "MARKETING", // Dashboard spécial
     },
     {
+      id: "marketing",
+      label: "Marketing",
+      defaultIcon: "/icons/sidebar/marketing.png",
+      whiteIcon: "/icons/sidebar/marketing-white.png",
+      canAccess: () => user?.role === "ADMIN",
+    },
+    {
       id: "menus",
       label: "Menus",
       defaultIcon: "/icons/sidebar/menu.png",
@@ -200,8 +207,6 @@ export default function Sidebar({
       canAccess: () => true, 
       hasSubModules: true,
     },
-  
-  
     {
       id: "inventory",
       label: "Inventaires",

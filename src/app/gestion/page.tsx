@@ -107,6 +107,12 @@ const TicketsModule = dynamic(() => import("@/components/gestion/MessagesEtTicke
   ),
 });
 
+const MarketingModule = dynamic(() => import("@/components/gestion/Marketing"), {
+  loading: () => (
+    <LoadingSpinner/>
+  ),
+});
+
 export default function GestionPage() {
   const router = useRouter();
   const { isAuthenticated, user, setUser } = useAuthStore();
@@ -217,6 +223,8 @@ export default function GestionPage() {
         return <Restaurants />;
       case "personnel":
         return <Personnel />;
+      case "marketing":
+        return <MarketingModule />;
       case "messages-tickets":
         // Rendu conditionnel basé sur le sous-module actif
         switch (activeSubModule) {
