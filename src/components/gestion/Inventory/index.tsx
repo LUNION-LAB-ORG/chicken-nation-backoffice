@@ -208,7 +208,7 @@ export default function Inventory() {
     setShowEditSupplementModal(true);
   };
 
-  // Fonction pour mettre à jour la disponibilité d'un supplément
+  // Fonction pour mettre à jour la disponibilité d'un produit
   const handleUpdateAvailability = async (productId: string, available: boolean) => {
     // ✅ RBAC: Seuls les utilisateurs avec permission peuvent modifier la disponibilité
     if (!canUpdateSupplement()) {
@@ -233,7 +233,7 @@ export default function Inventory() {
     }
   };
 
-  // Supprimer un supplément
+  // Supprimer un produit
   const handleDeleteProduct = async (productId: string) => {
     // ✅ RBAC: Seuls les utilisateurs avec permission peuvent supprimer des produits
     if (!canDeleteSupplement()) {
@@ -243,7 +243,7 @@ export default function Inventory() {
     
     try {
       await deleteSupplement(productId);
-      toast.success('Supplément supprimé avec succès');
+      toast.success('produit supprimé avec succès');
 
       // ✅ Rafraîchir avec TanStack Query
       refetchDishes();
@@ -251,8 +251,8 @@ export default function Inventory() {
       setShowDeleteSupplementModal(false);
       setProductToDelete(null);
     } catch (error) {
-      console.error('Erreur lors de la suppression du supplément:', error);
-      toast.error('Impossible de supprimer le supplément');
+      console.error('Erreur lors de la suppression du produit:', error);
+      toast.error('Impossible de supprimer le produit');
     }
   };
 
@@ -262,7 +262,7 @@ export default function Inventory() {
     setShowDeleteSupplementModal(true);
   };
 
-  // Fonction pour gérer la mise à jour d'un supplément
+  // Fonction pour gérer la mise à jour d'un produit
   const handleUpdateSupplement = async () => {
     try {
       setIsLoading(true);
@@ -270,12 +270,12 @@ export default function Inventory() {
       // ✅ Rafraîchir avec TanStack Query
       refetchDishes();
 
-      toast.success(`Supplément mis à jour avec succès !`);
+      toast.success(`produit mis à jour avec succès !`);
       setShowEditSupplementModal(false);
       setSelectedProduct(null);
     } catch (error) {
-      console.error('Erreur lors de la mise à jour du supplément:', error);
-      toast.error('Erreur lors de la mise à jour du supplément');
+      console.error('Erreur lors de la mise à jour du produit:', error);
+      toast.error('Erreur lors de la mise à jour du produit');
     } finally {
       setIsLoading(false);
     }
@@ -313,9 +313,9 @@ export default function Inventory() {
               variant: "secondary" as const,
               className: "bg-white border border-[#F17922] text-[#F17922] hover:bg-white hover:opacity-80"
             }] : []),
-            // ✅ RBAC: Bouton d'ajout de supplément seulement si permission
+            // ✅ RBAC: Bouton d'ajout de produit seulement si permission
             ...(canCreateSupplement() ? [{
-              label: "Ajouter un supplément",
+              label: "Ajouter un produit",
               onClick: handleCreateProduct,
               variant: "primary" as const
             }] : [])
@@ -406,7 +406,7 @@ export default function Inventory() {
         <Modal
           isOpen={showAddProductModal}
           onClose={() => setShowAddProductModal(false)}
-          title="Ajouter un supplément"
+          title="Ajouter un produit"
         >
           <AddSupplement
             onCancel={() => setShowAddProductModal(false)}
@@ -433,7 +433,7 @@ export default function Inventory() {
         <Modal
           isOpen={showEditSupplementModal}
           onClose={() => setShowEditSupplementModal(false)}
-          title="Modifier un supplément"
+          title="Modifier un produit"
         >
           <EditSupplement
             onCancel={() => setShowEditSupplementModal(false)}
@@ -445,7 +445,7 @@ export default function Inventory() {
         <Modal
           isOpen={showDeleteSupplementModal}
           onClose={() => setShowDeleteSupplementModal(false)}
-          title="Supprimer un supplément"
+          title="Supprimer un produit"
         >
           <DeleteSupplementModal
             onCancel={() => setShowDeleteSupplementModal(false)}

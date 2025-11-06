@@ -259,7 +259,7 @@ export default function SupplementView({
                           ? product.image 
                           : `${API_URL}/${product.image}`)
                         : '/images/plat.png'}
-                      alt={product.name || 'Image du supplément'}
+                      alt={product.name || 'Image du produit'}
                       width={40}
                       height={40}
                       className="w-full h-full object-cover "
@@ -328,7 +328,7 @@ export default function SupplementView({
                 <td colSpan={(showSelectionColumn ? 1 : 0) + 4 + (showAvailabilityColumn ? 1 : 0) + (showActionsColumn ? 1 : 0)} className="py-8 text-center">
                   <div className='flex items-center justify-center flex-col gap-4'>
                     <span className='text-[14px] text-[#F17922]'>
-                      Aucun supplément trouvé
+                      Aucun produit trouvé
                     </span>
                     {onCreateProduct && (
                       <button 
@@ -336,7 +336,7 @@ export default function SupplementView({
                         className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
                         hover:bg-[#F17922]/90 transition-colors"
                       >
-                        Ajouter un supplément
+                        Ajouter un produit
                       </button>
                     )}
                   </div>
@@ -362,7 +362,7 @@ export default function SupplementView({
                     ? product.image 
                     : `${API_URL}/${product.image}`)
                   : '/images/plat.png'}
-                alt={product.name || 'Image du supplément'}
+                alt={product.name || 'Image du produit'}
                 width={56}
                 height={56}
                 className="object-cover w-full h-full"
@@ -417,7 +417,7 @@ export default function SupplementView({
         {paginatedProducts.length === 0 && filteredProducts.length === 0 && (
           <div key="empty-supplements-mobile" className="bg-white rounded-xl shadow-sm border border-[#ECECEC] p-6 flex flex-col items-center justify-center">
             <span className="text-[14px] text-[#F17922] mb-4">
-              Aucun supplément trouvé
+              Aucun produit trouvé
             </span>
             {onCreateProduct && (
               <button 
@@ -425,7 +425,7 @@ export default function SupplementView({
                 className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
                 hover:bg-[#F17922]/90 transition-colors"
               >
-                Ajouter un supplément
+                Ajouter un produit
               </button>
             )}
           </div>

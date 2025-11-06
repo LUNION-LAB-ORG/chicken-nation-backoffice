@@ -18,7 +18,7 @@ interface AddProductProps {
   dish?: Dish | null
 }
 
-// Types de suppléments disponibles
+// Types de produits disponibles
 const SUPPLEMENT_CATEGORIES = [
   { value: 'FOOD', label: 'Accompagnement' },
   { value: 'DRINK', label: 'Boisson' },
@@ -183,14 +183,14 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
       // Envoyer la requête avec le client API
       const newSupplement = await api.post<Dish>('/supplements', fd)
       
-      toast.success('Supplément créé avec succès')
+      toast.success('produit créé avec succès')
       
       if (onSuccess) {
         onSuccess(newSupplement)
       }
       onCancel()
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Impossible de créer le supplément';
+      const errorMessage = error instanceof Error ? error.message : 'Impossible de créer le produit';
       toast.error(`Erreur: ${errorMessage}`)
     } finally {
       setIsLoading(false)
@@ -201,7 +201,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div>
         <label className="block text-sm text-[#595959] font-light mb-2">
-          Nom du supplément
+          Nom du produit
         </label>
         <Input
           name="name"
@@ -209,7 +209,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
           value={formData.name}
           onChange={handleChange}
           required
-          placeholder="Nom du supplément"
+          placeholder="Nom du produit"
           className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.name ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
         />
         {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
@@ -242,13 +242,13 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
 
       <div>
         <label className="block text-sm text-[#595959] font-light mb-2">
-          Type de supplément
+          Type de produit
         </label>
         <Select
           options={SUPPLEMENT_CATEGORIES}
           value={formData.category}
           onChange={handleChange}
-          placeholder="Sélectionnez un type de supplément"
+          placeholder="Sélectionnez un type de produit"
           className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.category ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px]`}
         />
         {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
@@ -266,7 +266,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
 
         <div>
           <label className="block text-sm text-[#595959] font-light mb-2">
-            Photo du supplément
+            Photo du produit
           </label>
           <div 
             className="w-[192px] h-[166px] border-2 border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
@@ -276,7 +276,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
               <div className="relative w-full h-full rounded-xl overflow-hidden">
                 <Image 
                   src={imagePreview} 
-                  alt="Aperçu du supplément"
+                  alt="Aperçu du produit"
                   fill
                   className="object-contain"
                 />
@@ -295,7 +295,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
               accept="image/*" 
               className="hidden" 
               onChange={handleImageChange}
-              aria-label="Télécharger une image du supplément"
+              aria-label="Télécharger une image du produit"
             />
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
           disabled={isLoading}
           className="h-[32px] cursor-pointer px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Ajout en cours...' : 'Ajouter un supplément'}
+          {isLoading ? 'Ajout en cours...' : 'Ajouter un produit'}
         </Button>
       </div>
     </form>
