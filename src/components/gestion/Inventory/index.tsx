@@ -332,7 +332,7 @@ export default function Inventory() {
                 className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
               >
                 <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
-                  {currentView === 'products' ? 'produits' : 'Catégories'}
+                  {currentView === 'products' ? 'Produits' : 'Catégories'}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-500 " />
               </button>
