@@ -152,7 +152,7 @@ export default function DetailsMenu({ menu, onEdit, onDelete }: DetailsMenuProps
             <div className="flex-grow border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <Image src="/icons/chicken.png" alt="menu" width={12} height={12} className="w-3 h-3 sm:w-3.5 sm:h-3.5 lg:w-4 lg:h-4 mt-0.5" />
-                <h3 className="text-base sm:text-lg font-bold text-[#F17922]">Ingrédients</h3>
+                <h3 className="text-base sm:text-lg font-bold text-[#F17922]">Suppléments</h3>
               </div>
               <div className="space-y-2">
                 {ingredients && ingredients.length > 0 ? (
@@ -165,7 +165,7 @@ export default function DetailsMenu({ menu, onEdit, onDelete }: DetailsMenuProps
                     )
                   ))
                 ) : (
-                  <span className="text-sm text-gray-500">Aucun ingrédient disponible</span>
+                  <span className="text-sm text-gray-500">Aucun supplément</span>
                 )}
               </div>
             </div>

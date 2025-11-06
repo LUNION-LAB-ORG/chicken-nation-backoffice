@@ -75,11 +75,11 @@ export default function Inventory() {
   const translateCategory = (category: string): string => {
     switch (category) {
       case 'FOOD':
-        return 'Accompagnements';
+        return 'Sauces';
       case 'DRINK':
         return 'Boissons';
       case 'ACCESSORY':
-        return 'Ingrédient';
+        return 'Suppléments';
       case 'all':
         return 'Tous les produits';
       default:

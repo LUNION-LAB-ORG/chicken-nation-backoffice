@@ -20,9 +20,9 @@ interface AddProductProps {
 
 // Types de produits disponibles
 const SUPPLEMENT_CATEGORIES = [
-  { value: 'FOOD', label: 'Accompagnement' },
+  { value: 'FOOD', label: 'Sauce' },
   { value: 'DRINK', label: 'Boisson' },
-  { value: 'ACCESSORY', label: 'Accessoire/Ingrédient' }
+  { value: 'ACCESSORY', label: 'Supplément' }
 ];
 
 export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductProps) {

@@ -1,19 +1,22 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react'
-import Checkbox from '@/components/ui/Checkbox'
-import { motion, AnimatePresence } from 'framer-motion'
-import Image from 'next/image'
-import { MenuItem } from '@/types'
-import { getAllSupplements, convertSupplementsToOptions } from '@/services/supplementService'
-import { getAllCategories } from '@/services/categoryService'
-import { getAllRestaurants } from '@/services/restaurantService'
-import { toast } from 'react-hot-toast'
-import { formatImageUrl } from '@/utils/imageHelpers'
-import SelectWithCheckboxes from '@/components/ui/SelectWithCheckboxes'
-import SelectWithCheckboxesAndImages from '@/components/ui/SelectWithCheckboxesAndImages'
-import SimpleSelect from '@/components/ui/SimpleSelect'
-import { sanitizeMenuInput } from '@/schemas/menuSchemas'
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import Checkbox from "@/components/ui/Checkbox";
+import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import { MenuItem } from "@/types";
+import {
+  getAllSupplements,
+  convertSupplementsToOptions,
+} from "@/services/supplementService";
+import { getAllCategories } from "@/services/categoryService";
+import { getAllRestaurants } from "@/services/restaurantService";
+import { toast } from "react-hot-toast";
+import { formatImageUrl } from "@/utils/imageHelpers";
+import SelectWithCheckboxes from "@/components/ui/SelectWithCheckboxes";
+import SelectWithCheckboxesAndImages from "@/components/ui/SelectWithCheckboxesAndImages";
+import SimpleSelect from "@/components/ui/SimpleSelect";
+import { sanitizeMenuInput } from "@/schemas/menuSchemas";
 
 // ✅ INTERFACES POUR LE FORMULAIRE DE CRÉATION
 interface MenuFormData {
@@ -38,7 +41,7 @@ interface MenuFormData {
       quantity: number;
     };
   };
-  is_alway_epice: boolean;  
+  is_alway_epice: boolean;
 }
 
 interface AddMenuFormProps {
@@ -65,23 +68,23 @@ interface RestaurantOption {
 
 // ✅ COMPOSANT POUR LA CRÉATION DE MENUS
 const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ✅ INITIALISATION POUR LA CRÉATION (VALEURS VIDES)
   const [formData, setFormData] = useState<MenuFormData>({
-    title: '',
-    description: '',
-    price: '',
-    reducedPrice: '',
+    title: "",
+    description: "",
+    price: "",
+    reducedPrice: "",
     reduction: false,
     category: [],
-    restaurant: '',
+    restaurant: "",
     supplements: {
-      ingredients: { category: '', quantity: 0 },
-      accompagnements: { category: '', quantity: 0 },
-      boissons: { category: '', quantity: 0 }
+      ingredients: { category: "", quantity: 0 },
+      accompagnements: { category: "", quantity: 0 },
+      boissons: { category: "", quantity: 0 },
     },
-    is_alway_epice: false // ✅ Nom corrigé sans "s"
+    is_alway_epice: false, // ✅ Nom corrigé sans "s"
   });
 
   // ✅ ÉTATS POUR LA CRÉATION
@@ -94,18 +97,28 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
   // ✅ SÉLECTIONS DE SUPPLÉMENTS
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [selectedAccompagnements, setSelectedAccompagnements] = useState<string[]>([]);
+  const [selectedAccompagnements, setSelectedAccompagnements] = useState<
+    string[]
+  >([]);
   const [selectedBoissons, setSelectedBoissons] = useState<string[]>([]);
 
   // ✅ OPTIONS AVEC TYPES STRICTS
   const [ingredientOptions, setIngredientOptions] = useState<OptionItem[]>([]);
-  const [accompagnementOptions, setAccompagnementOptions] = useState<OptionItem[]>([]);
+  const [accompagnementOptions, setAccompagnementOptions] = useState<
+    OptionItem[]
+  >([]);
   const [boissonOptions, setBoissonOptions] = useState<OptionItem[]>([]);
 
   // ✅ QUANTITÉS AVEC VALIDATION
-  const [ingredientQuantities, setIngredientQuantities] = useState<Record<string, number>>({});
-  const [accompagnementQuantities, setAccompagnementQuantities] = useState<Record<string, number>>({});
-  const [boissonQuantities, setBoissonQuantities] = useState<Record<string, number>>({});
+  const [ingredientQuantities, setIngredientQuantities] = useState<
+    Record<string, number>
+  >({});
+  const [accompagnementQuantities, setAccompagnementQuantities] = useState<
+    Record<string, number>
+  >({});
+  const [boissonQuantities, setBoissonQuantities] = useState<
+    Record<string, number>
+  >({});
 
   // ✅ ÉTATS DE CHARGEMENT
   const [isLoadingSupplements, setIsLoadingSupplements] = useState(false);
@@ -114,42 +127,49 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-
   // ✅ FONCTION SÉCURISÉE POUR LES URLS D'IMAGES
   const getSafeImageUrl = (imageUrl: string | null): string => {
     try {
-      if (!imageUrl || typeof imageUrl !== 'string') return '/images/burger.png';
-      if (imageUrl.startsWith('data:')) return imageUrl;
+      if (!imageUrl || typeof imageUrl !== "string")
+        return "/images/burger.png";
+      if (imageUrl.startsWith("data:")) return imageUrl;
       return formatImageUrl(imageUrl);
     } catch {
-      return '/images/burger.png';
+      return "/images/burger.png";
     }
   };
 
   // ✅ INITIALISATION DES RESTAURANTS POUR LA CRÉATION
-  const initializeSelectedRestaurants = useCallback((availableRestaurants: RestaurantOption[]) => {
-    try {
-      // ✅ Pour la création, sélectionner le premier restaurant par défaut
-      if (availableRestaurants.length > 0) {
-        const firstRestaurant = availableRestaurants[0];
-        if (firstRestaurant.value && typeof firstRestaurant.value === 'string') {
-          const sanitizedId = sanitizeMenuInput(firstRestaurant.value);
-          if (sanitizedId.length > 0) {
-            setSelectedRestaurants([sanitizedId]);
-            return;
+  const initializeSelectedRestaurants = useCallback(
+    (availableRestaurants: RestaurantOption[]) => {
+      try {
+        // ✅ Pour la création, sélectionner le premier restaurant par défaut
+        if (availableRestaurants.length > 0) {
+          const firstRestaurant = availableRestaurants[0];
+          if (
+            firstRestaurant.value &&
+            typeof firstRestaurant.value === "string"
+          ) {
+            const sanitizedId = sanitizeMenuInput(firstRestaurant.value);
+            if (sanitizedId.length > 0) {
+              setSelectedRestaurants([sanitizedId]);
+              return;
+            }
           }
         }
+
+        // ✅ Fallback si aucun restaurant disponible
+        setSelectedRestaurants([]);
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'initialisation des restaurants:",
+          error
+        );
+        setSelectedRestaurants([]);
       }
-
-      // ✅ Fallback si aucun restaurant disponible
-      setSelectedRestaurants([]);
-    } catch (error) {
-      console.error('Erreur lors de l\'initialisation des restaurants:', error);
-      setSelectedRestaurants([]);
-    }
-  }, []);
-
-
+    },
+    []
+  );
 
   // ✅ CHARGEMENT SÉCURISÉ DES CATÉGORIES ET RESTAURANTS
   useEffect(() => {
@@ -166,40 +186,48 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
             for (const cat of categoriesData) {
               try {
                 // ✅ Validation et sanitisation de chaque catégorie
-                if (cat && typeof cat === 'object') {
+                if (cat && typeof cat === "object") {
                   const id = cat.id || cat.name;
                   const name = cat.name;
 
-                  if (id && name && typeof id === 'string' && typeof name === 'string') {
+                  if (
+                    id &&
+                    name &&
+                    typeof id === "string" &&
+                    typeof name === "string"
+                  ) {
                     const sanitizedId = sanitizeMenuInput(id);
                     const sanitizedName = sanitizeMenuInput(name);
 
                     if (sanitizedId.length > 0 && sanitizedName.length > 0) {
                       formattedCategories.push({
                         value: sanitizedId,
-                        label: sanitizedName
+                        label: sanitizedName,
                       });
                     }
                   }
                 }
               } catch (categoryError) {
-                console.warn('Catégorie ignorée lors du formatage:', categoryError);
+                console.warn(
+                  "Catégorie ignorée lors du formatage:",
+                  categoryError
+                );
               }
             }
 
             setCategories(formattedCategories);
           } else {
-            console.warn('Aucune catégorie trouvée');
+            console.warn("Aucune catégorie trouvée");
             setCategories([]);
           }
         } else {
-          console.error('Format de catégories invalide:', categoriesData);
+          console.error("Format de catégories invalide:", categoriesData);
           setCategories([]);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des catégories:', error);
+        console.error("Erreur lors du chargement des catégories:", error);
         setCategories([]);
-        toast.error('Impossible de charger les catégories');
+        toast.error("Impossible de charger les catégories");
       } finally {
         setIsLoadingCategories(false);
       }
@@ -208,43 +236,55 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
       try {
         const restaurantsData = await getAllRestaurants();
 
-        if (restaurantsData && Array.isArray(restaurantsData) && restaurantsData.length > 0) {
+        if (
+          restaurantsData &&
+          Array.isArray(restaurantsData) &&
+          restaurantsData.length > 0
+        ) {
           const formattedRestaurants: RestaurantOption[] = [];
 
           for (const restaurant of restaurantsData) {
             try {
               // ✅ Validation et sanitisation de chaque restaurant
-              if (restaurant && typeof restaurant === 'object') {
+              if (restaurant && typeof restaurant === "object") {
                 const id = restaurant.id;
                 const name = restaurant.name;
 
-                if (id && name && typeof id === 'string' && typeof name === 'string') {
+                if (
+                  id &&
+                  name &&
+                  typeof id === "string" &&
+                  typeof name === "string"
+                ) {
                   const sanitizedId = sanitizeMenuInput(id);
                   const sanitizedName = sanitizeMenuInput(name);
 
                   if (sanitizedId.length > 0 && sanitizedName.length > 0) {
                     formattedRestaurants.push({
                       value: sanitizedId,
-                      label: sanitizedName
+                      label: sanitizedName,
                     });
                   }
                 }
               }
             } catch (restaurantError) {
-              console.warn('Restaurant ignoré lors du formatage:', restaurantError);
+              console.warn(
+                "Restaurant ignoré lors du formatage:",
+                restaurantError
+              );
             }
           }
 
           setRestaurants(formattedRestaurants);
           initializeSelectedRestaurants(formattedRestaurants);
         } else {
-          console.warn('Aucun restaurant trouvé');
+          console.warn("Aucun restaurant trouvé");
           setRestaurants([]);
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des restaurants:', error);
+        console.error("Erreur lors du chargement des restaurants:", error);
         setRestaurants([]);
-        toast.error('Impossible de charger les restaurants');
+        toast.error("Impossible de charger les restaurants");
       }
     };
 
@@ -259,16 +299,21 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         const data = await getAllSupplements();
 
         // ✅ Validation et initialisation sécurisée des options
-        if (data && typeof data === 'object') {
+        if (data && typeof data === "object") {
           // ✅ Traitement sécurisé des ingrédients (ACCESSORY)
           if (data.ACCESSORY && Array.isArray(data.ACCESSORY)) {
             try {
-              const convertedOptions = convertSupplementsToOptions(data.ACCESSORY);
+              const convertedOptions = convertSupplementsToOptions(
+                data.ACCESSORY
+              );
               if (Array.isArray(convertedOptions)) {
                 setIngredientOptions(convertedOptions);
               }
             } catch (conversionError) {
-              console.warn('Erreur lors de la conversion des ingrédients:', conversionError);
+              console.warn(
+                "Erreur lors de la conversion des ingrédients:",
+                conversionError
+              );
               setIngredientOptions([]);
             }
           }
@@ -281,7 +326,10 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 setAccompagnementOptions(convertedOptions);
               }
             } catch (conversionError) {
-              console.warn('Erreur lors de la conversion des accompagnements:', conversionError);
+              console.warn(
+                "Erreur lors de la conversion des accompagnements:",
+                conversionError
+              );
               setAccompagnementOptions([]);
             }
           }
@@ -294,7 +342,10 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 setBoissonOptions(convertedOptions);
               }
             } catch (conversionError) {
-              console.warn('Erreur lors de la conversion des boissons:', conversionError);
+              console.warn(
+                "Erreur lors de la conversion des boissons:",
+                conversionError
+              );
               setBoissonOptions([]);
             }
           }
@@ -308,8 +359,8 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         setSelectedBoissons([]);
         setBoissonQuantities({});
       } catch (error) {
-        console.error('Erreur lors du chargement des suppléments:', error);
-        toast.error('Impossible de charger les suppléments');
+        console.error("Erreur lors du chargement des suppléments:", error);
+        toast.error("Impossible de charger les suppléments");
 
         // ✅ Fallback sécurisé en cas d'erreur
         setIngredientOptions([]);
@@ -323,14 +374,13 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     fetchSupplements();
   }, []);
 
-  // Mettre à jour les gestionnaires de changement pour maintenir les quantités
+  // ✅ Gestion des changements des ingrédients
   const handleIngredientChange = (selectedIds: string[]) => {
-    const limitedSelection = selectedIds.slice(0, 3);
-    setSelectedIngredients(limitedSelection);
+    setSelectedIngredients(selectedIds);
 
     // Mettre à jour les quantités pour les nouveaux ingrédients
     const newQuantities = { ...ingredientQuantities };
-    limitedSelection.forEach(id => {
+    selectedIds.forEach((id) => {
       if (!newQuantities[id]) {
         newQuantities[id] = 1;
       }
@@ -338,13 +388,13 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     setIngredientQuantities(newQuantities);
   };
 
+  // ✅ Gestion des changements des accompagnements
   const handleAccompagnementChange = (selectedIds: string[]) => {
-    const limitedSelection = selectedIds.slice(0, 3);
-    setSelectedAccompagnements(limitedSelection);
+    setSelectedAccompagnements(selectedIds);
 
     // Mettre à jour les quantités pour les nouveaux accompagnements
     const newQuantities = { ...accompagnementQuantities };
-    limitedSelection.forEach(id => {
+    selectedIds.forEach((id) => {
       if (!newQuantities[id]) {
         newQuantities[id] = 1;
       }
@@ -352,13 +402,13 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     setAccompagnementQuantities(newQuantities);
   };
 
+  // ✅ Gestion des changements des boissons
   const handleBoissonChange = (selectedIds: string[]) => {
-    const limitedSelection = selectedIds.slice(0, 3);
-    setSelectedBoissons(limitedSelection);
+    setSelectedBoissons(selectedIds);
 
     // Mettre à jour les quantités pour les nouvelles boissons
     const newQuantities = { ...boissonQuantities };
-    limitedSelection.forEach(id => {
+    selectedIds.forEach((id) => {
       if (!newQuantities[id]) {
         newQuantities[id] = 1;
       }
@@ -370,7 +420,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
   // ✅ FONCTION DE SOUMISSION SÉCURISÉE
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (isSubmitting) {
       return;
@@ -382,74 +432,80 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
       // ✅ VALIDATION STRICTE DES DONNÉES D'ENTRÉE
 
       // Validation et sanitisation du titre
-      const sanitizedTitle = sanitizeMenuInput(formData.title || '');
+      const sanitizedTitle = sanitizeMenuInput(formData.title || "");
       if (sanitizedTitle.length === 0) {
-        toast.error('Le titre est obligatoire');
+        toast.error("Le titre est obligatoire");
         setIsSubmitting(false);
         return;
       }
       if (sanitizedTitle.length > 100) {
-        toast.error('Le titre ne doit pas dépasser 100 caractères');
+        toast.error("Le titre ne doit pas dépasser 100 caractères");
         setIsSubmitting(false);
         return;
       }
 
       // Validation du prix
-      if (!formData.price || formData.price.trim() === '') {
-        toast.error('Le prix est obligatoire');
+      if (!formData.price || formData.price.trim() === "") {
+        toast.error("Le prix est obligatoire");
         setIsSubmitting(false);
         return;
       }
       if (!/^\d+(\.\d{1,2})?$/.test(formData.price)) {
-        toast.error('Format de prix invalide');
+        toast.error("Format de prix invalide");
         setIsSubmitting(false);
         return;
       }
       const priceValue = parseFloat(formData.price);
       if (priceValue <= 0 || priceValue > 1000000) {
-        toast.error('Le prix doit être entre 0 et 1,000,000 XOF');
+        toast.error("Le prix doit être entre 0 et 1,000,000 XOF");
         setIsSubmitting(false);
         return;
       }
 
       // Validation de la catégorie
-      if (!formData.category[0] || formData.category[0].trim() === '') {
-        toast.error('Veuillez sélectionner une catégorie');
+      if (!formData.category[0] || formData.category[0].trim() === "") {
+        toast.error("Veuillez sélectionner une catégorie");
         setIsSubmitting(false);
         return;
       }
 
       // Validation des restaurants
       if (selectedRestaurants.length === 0) {
-        toast.error('Veuillez sélectionner au moins un restaurant');
+        toast.error("Veuillez sélectionner au moins un restaurant");
         setIsSubmitting(false);
         return;
       }
 
       // Validation de la réduction
       if (formData.reduction) {
-        if (!formData.reducedPrice || formData.reducedPrice.trim() === '') {
-          toast.error('Le prix réduit est obligatoire quand la réduction est activée');
+        if (!formData.reducedPrice || formData.reducedPrice.trim() === "") {
+          toast.error(
+            "Le prix réduit est obligatoire quand la réduction est activée"
+          );
           setIsSubmitting(false);
           return;
         }
         if (!/^\d+(\.\d{1,2})?$/.test(formData.reducedPrice)) {
-          toast.error('Format de prix réduit invalide');
+          toast.error("Format de prix réduit invalide");
           setIsSubmitting(false);
           return;
         }
         const reducedPriceValue = parseFloat(formData.reducedPrice);
         if (reducedPriceValue <= 0 || reducedPriceValue >= priceValue) {
-          toast.error('Le prix réduit doit être positif et inférieur au prix normal');
+          toast.error(
+            "Le prix réduit doit être positif et inférieur au prix normal"
+          );
           setIsSubmitting(false);
           return;
         }
       }
 
       // Validation de la description
-      const sanitizedDescription = sanitizeMenuInput(formData.description || '');
+      const sanitizedDescription = sanitizeMenuInput(
+        formData.description || ""
+      );
       if (sanitizedDescription.length > 500) {
-        toast.error('La description ne doit pas dépasser 500 caractères');
+        toast.error("La description ne doit pas dépasser 500 caractères");
         setIsSubmitting(false);
         return;
       }
@@ -471,21 +527,26 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         try {
           const sanitizedId = sanitizeMenuInput(id);
           if (sanitizedId.length > 0 && /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)) {
-            const option = ingredientOptions.find(opt => opt.value === sanitizedId);
-            const quantity = Math.min(Math.max(1, ingredientQuantities[sanitizedId] || 1), 10);
+            const option = ingredientOptions.find(
+              (opt) => opt.value === sanitizedId
+            );
+            const quantity = Math.min(
+              Math.max(1, ingredientQuantities[sanitizedId] || 1),
+              10
+            );
 
             dishSupplements.push({
               supplement_id: sanitizedId,
               quantity,
               supplement: {
                 id: sanitizedId,
-                name: sanitizeMenuInput(option?.label || ''),
-                type: 'ACCESSORY'
-              }
+                name: sanitizeMenuInput(option?.label || ""),
+                type: "ACCESSORY",
+              },
             });
           }
         } catch (error) {
-          console.warn('Ingrédient ignoré lors de la préparation:', error);
+          console.warn("Ingrédient ignoré lors de la préparation:", error);
         }
       }
 
@@ -494,21 +555,26 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         try {
           const sanitizedId = sanitizeMenuInput(id);
           if (sanitizedId.length > 0 && /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)) {
-            const option = accompagnementOptions.find(opt => opt.value === sanitizedId);
-            const quantity = Math.min(Math.max(1, accompagnementQuantities[sanitizedId] || 1), 10);
+            const option = accompagnementOptions.find(
+              (opt) => opt.value === sanitizedId
+            );
+            const quantity = Math.min(
+              Math.max(1, accompagnementQuantities[sanitizedId] || 1),
+              10
+            );
 
             dishSupplements.push({
               supplement_id: sanitizedId,
               quantity,
               supplement: {
                 id: sanitizedId,
-                name: sanitizeMenuInput(option?.label || ''),
-                type: 'FOOD'
-              }
+                name: sanitizeMenuInput(option?.label || ""),
+                type: "FOOD",
+              },
             });
           }
         } catch (error) {
-          console.warn('Accompagnement ignoré lors de la préparation:', error);
+          console.warn("Accompagnement ignoré lors de la préparation:", error);
         }
       }
 
@@ -517,61 +583,65 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         try {
           const sanitizedId = sanitizeMenuInput(id);
           if (sanitizedId.length > 0 && /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)) {
-            const option = boissonOptions.find(opt => opt.value === sanitizedId);
-            const quantity = Math.min(Math.max(1, boissonQuantities[sanitizedId] || 1), 10);
+            const option = boissonOptions.find(
+              (opt) => opt.value === sanitizedId
+            );
+            const quantity = Math.min(
+              Math.max(1, boissonQuantities[sanitizedId] || 1),
+              10
+            );
 
             dishSupplements.push({
               supplement_id: sanitizedId,
               quantity,
               supplement: {
                 id: sanitizedId,
-                name: sanitizeMenuInput(option?.label || ''),
-                type: 'DRINK'
-              }
+                name: sanitizeMenuInput(option?.label || ""),
+                type: "DRINK",
+              },
             });
           }
         } catch (error) {
-          console.warn('Boisson ignorée lors de la préparation:', error);
+          console.warn("Boisson ignorée lors de la préparation:", error);
         }
       }
 
       // ✅ CRÉATION DE L'OBJET MENUITEM POUR NOUVEAU MENU
       const menuData = {
-        id: '', // Nouveau menu, pas d'ID
+        id: "", // Nouveau menu, pas d'ID
         name: sanitizedTitle,
         categoryId: formData.category[0],
         price: formData.price,
         description: sanitizedDescription,
-        image: imagePreview || '',
-        imageUrl: '', // Nouveau menu, pas d'URL existante
+        image: imagePreview || "",
+        imageUrl: "", // Nouveau menu, pas d'URL existante
         isAvailable: true,
         isNew: true, // Nouveau menu
-        restaurant: '',
-        restaurantId: selectedRestaurants.length > 0 ? selectedRestaurants[0] : '', 
-        selectedRestaurants: selectedRestaurants, 
+        restaurant: "",
+        restaurantId:
+          selectedRestaurants.length > 0 ? selectedRestaurants[0] : "",
+        selectedRestaurants: selectedRestaurants,
         rating: 0,
         supplements: {},
         reviews: [],
         totalReviews: 0,
         is_promotion: formData.reduction === true,
-        promotion_price: formData.reduction ? formData.reducedPrice : '0',
+        promotion_price: formData.reduction ? formData.reducedPrice : "0",
         dish_supplements: dishSupplements,
-        is_alway_epice: formData.is_alway_epice  
+        is_alway_epice: formData.is_alway_epice,
       };
-
-       
 
       // ✅ Soumission sécurisée des données
       onSubmit(menuData as unknown as MenuItem);
     } catch (error) {
-      console.error('Erreur lors de la soumission du formulaire:', error);
-      toast.error('Une erreur est survenue lors de la soumission du formulaire');
+      console.error("Erreur lors de la soumission du formulaire:", error);
+      toast.error(
+        "Une erreur est survenue lors de la soumission du formulaire"
+      );
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-
+  };
 
   return (
     <motion.form
@@ -610,7 +680,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-               Modifier
+                Modifier
               </motion.div>
             </motion.div>
           ) : (
@@ -622,7 +692,9 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               exit={{ opacity: 0 }}
             >
               <div className="p-2 px-3 bg-[#D9D9D9] rounded-xl">
-                <p className="text-sm text-gray-600">Ajouter une photo du menu</p>
+                <p className="text-sm text-gray-600">
+                  Ajouter une photo du menu
+                </p>
               </div>
               <input
                 ref={fileInputRef}
@@ -632,28 +704,28 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 accept="image/*"
                 aria-label="Ajouter une photo du menu"
                 onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
+                  const file = e.target.files?.[0];
+                  if (!file) return;
 
-                  if (!file.type.startsWith('image/')) {
-                    setImageError('Veuillez sélectionner une image valide')
-                    return
+                  if (!file.type.startsWith("image/")) {
+                    setImageError("Veuillez sélectionner une image valide");
+                    return;
                   }
 
                   if (file.size > 5 * 1024 * 1024) {
-                    setImageError('L\'image ne doit pas dépasser 5MB')
-                    return
+                    setImageError("L'image ne doit pas dépasser 5MB");
+                    return;
                   }
 
-                  const reader = new FileReader()
+                  const reader = new FileReader();
                   reader.onloadend = () => {
-                    setImagePreview(reader.result as string)
-                    setImageError(null)
-                  }
+                    setImagePreview(reader.result as string);
+                    setImageError(null);
+                  };
                   reader.onerror = () => {
-                    setImageError('Erreur lors de la lecture du fichier')
-                  }
-                  reader.readAsDataURL(file)
+                    setImageError("Erreur lors de la lecture du fichier");
+                  };
+                  reader.readAsDataURL(file);
                 }}
               />
             </motion.label>
@@ -681,7 +753,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         <div className="space-y-6">
           {/* Titre */}
           <motion.div
-            className='w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent'
+            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -689,7 +761,9 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               type="text"
               id="title"
               value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, title: e.target.value })
+              }
               className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
               placeholder="Ajouter un titre"
             />
@@ -697,7 +771,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
           {/* Prix de vente */}
           <motion.div
-            className='w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent'
+            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -706,102 +780,120 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 type="number"
                 id="price"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, price: e.target.value })
+                }
                 className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
                 placeholder="0.00"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">XOF</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
+                XOF
+              </span>
             </div>
           </motion.div>
 
-         <div className='flex flex-row justify-between items-center w-full gap-2'>
-           {/* Réduction */}
-          <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <div className="flex items-center">
-              <Checkbox
-                id="reduction"
-                checked={formData.reduction}
-                onChange={(checked) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    reduction: checked,
-                    reducedPrice: checked ? prev.reducedPrice || '' : ''
-                  }));
-                }}
-              />
-              <label htmlFor="reduction" className="ml-2 text-[13px] font-semibold text-gray-700">
-                Réduction
-              </label>
-            </div>
-            <AnimatePresence>
-              {formData.reduction && (
-                <motion.div
-                  className="relative"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
+          <div className="flex flex-row justify-between items-center w-full gap-2">
+            {/* Réduction */}
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <div className="flex items-center">
+                <Checkbox
+                  id="reduction"
+                  checked={formData.reduction}
+                  onChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      reduction: checked,
+                      reducedPrice: checked ? prev.reducedPrice || "" : "",
+                    }));
+                  }}
+                />
+                <label
+                  htmlFor="reduction"
+                  className="ml-2 text-[13px] font-semibold text-gray-700"
                 >
-                  <input
-                    type="number"
-                    value={formData.reducedPrice}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || (Number(value) >= 0 && Number(value) < Number(formData.price))) {
-                        setFormData(prev => ({
-                          ...prev,
-                          reducedPrice: value
-                        }));
-                      }
-                    }}
-                    className="w-full px-2 py-2 text-[13px] focus:outline-none text-[#595959] font-semibold focus:border-transparent"
-                    placeholder="0.00"
-                    min="0"
-                    max={formData.price}
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">XOF</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-          {/* Epicé */}
-          <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <div className="flex items-center">
-              <Checkbox
-                id="is_alway_epice"
-                checked={formData.is_alway_epice}
-                onChange={(checked) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    is_alway_epice: checked
-                  }));
-                }}
-              />
-              <label htmlFor="is_alway_epice" className="ml-2 text-[13px] font-semibold text-gray-700">
-                   Déjà épicé
-              </label>
-            </div>
-          </motion.div>
-         </div>
-          
+                  Réduction
+                </label>
+              </div>
+              <AnimatePresence>
+                {formData.reduction && (
+                  <motion.div
+                    className="relative"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <input
+                      type="number"
+                      value={formData.reducedPrice}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (
+                          value === "" ||
+                          (Number(value) >= 0 &&
+                            Number(value) < Number(formData.price))
+                        ) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            reducedPrice: value,
+                          }));
+                        }
+                      }}
+                      className="w-full px-2 py-2 text-[13px] focus:outline-none text-[#595959] font-semibold focus:border-transparent"
+                      placeholder="0.00"
+                      min="0"
+                      max={formData.price}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
+                      XOF
+                    </span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+            {/* Epicé */}
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <div className="flex items-center">
+                <Checkbox
+                  id="is_alway_epice"
+                  checked={formData.is_alway_epice}
+                  onChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      is_alway_epice: checked,
+                    }));
+                  }}
+                />
+                <label
+                  htmlFor="is_alway_epice"
+                  className="ml-2 text-[13px] font-semibold text-gray-700"
+                >
+                  Déjà épicé
+                </label>
+              </div>
+            </motion.div>
+          </div>
+
           {/* Description */}
           <motion.div
-            className=' w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent'
+            className=" w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
             <textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               className="w-full text-[#595959] font-semibold text-[13px] py-2 focus:outline-none
               focus:border-transparent"
               rows={4}
@@ -816,7 +908,6 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
         {/* Colonne droite */}
         <div className="space-y-6">
-         
           {/* Catégorie */}
           <motion.div
             className="  px-3 py-4 border-2 border-[#D9D9D9]/50 flex items-center justify-between rounded-2xl
@@ -824,7 +915,9 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-lg text-[#595959] font-semibold">Catégorie</span>
+            <span className="text-lg text-[#595959] font-semibold">
+              Catégorie
+            </span>
 
             <div className="ml-2 min-w-0 w-52 relative z-50">
               {isLoadingCategories ? (
@@ -834,8 +927,10 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               ) : (
                 <SimpleSelect
                   options={categories}
-                  value={formData.category[0] || ''}
-                  onChange={(value) => setFormData({ ...formData, category: [value] })}
+                  value={formData.category[0] || ""}
+                  onChange={(value) =>
+                    setFormData({ ...formData, category: [value] })
+                  }
                   placeholder="Choisissez une catégorie"
                 />
               )}
@@ -848,7 +943,9 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <h3 className="text-lg font-medium text-[#595959] mb-2">Choisissez les restaurants</h3>
+            <h3 className="text-lg font-medium text-[#595959] mb-2">
+              Choisissez les restaurants
+            </h3>
             <SelectWithCheckboxes
               value={selectedRestaurants}
               onChange={setSelectedRestaurants}
@@ -860,7 +957,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
 
           {/* Suppléments */}
           <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-4 space-y-4">
-            <h3 className="text-lg font-medium text-[#595959]">Suppléments</h3>
+            <h3 className="text-lg font-medium text-[#595959]">Produits</h3>
 
             {/* Ingrédients */}
             <motion.div
@@ -874,15 +971,14 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedIngredients}
                     onChange={handleIngredientChange}
                     options={isLoadingSupplements ? [] : ingredientOptions}
-                    placeholder="Sélectionnez une catégorie d'ingrédients"
+                    placeholder="Sélectionnez des suppléments"
                   />
-                 </div>
+                </div>
 
                 <div className="ml-2 text-[13px] text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
-                  {selectedIngredients.length}/3
+                  {selectedIngredients.length}
                 </div>
               </div>
-
             </motion.div>
 
             {/* Accompagnements */}
@@ -897,15 +993,14 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedAccompagnements}
                     onChange={handleAccompagnementChange}
                     options={isLoadingSupplements ? [] : accompagnementOptions}
-                    placeholder="Sélectionnez une catégorie d'accompagnements"
+                    placeholder="Sélectionnez des sauces"
                   />
-                 </div>
+                </div>
 
                 <div className="ml-2 text-[13px] text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
-                  {selectedAccompagnements.length}/3
+                  {selectedAccompagnements.length}
                 </div>
               </div>
-
             </motion.div>
 
             {/* Boissons */}
@@ -920,15 +1015,14 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedBoissons}
                     onChange={handleBoissonChange}
                     options={isLoadingSupplements ? [] : boissonOptions}
-                    placeholder="Sélectionnez une catégorie de boissons"
+                    placeholder="Sélectionnez des boissons"
                   />
-                 </div>
+                </div>
 
                 <div className="ml-2 text-[13px] text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
-                  {selectedBoissons.length}/3
+                  {selectedBoissons.length}
                 </div>
               </div>
-
             </motion.div>
           </div>
         </div>
@@ -956,7 +1050,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         </motion.button>
       </div>
     </motion.form>
-  )
-}
+  );
+};
 
-export default AddMenuForm
+export default AddMenuForm;
