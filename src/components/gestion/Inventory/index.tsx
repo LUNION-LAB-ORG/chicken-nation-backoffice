@@ -52,7 +52,7 @@ export default function Inventory() {
   // État pour la recherche
   const [searchQuery, setSearchQuery] = useState('');
 
-  // ✅ Utiliser TanStack Query pour les plats/suppléments
+  // ✅ Utiliser TanStack Query pour les plats/produits
   const {
     dishes: products,
     totalItems,
@@ -111,9 +111,9 @@ export default function Inventory() {
   // ✅ Plus besoin de fetchCategories - TanStack Query gère tout dans CategoriesTable
 
   const handleCreateProduct = () => {
-    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent créer des suppléments
+    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent créer des produits
     if (!canCreateSupplement()) {
-      toast.error('Vous n\'avez pas les permissions pour créer des suppléments');
+      toast.error('Vous n\'avez pas les permissions pour créer des produits');
       return;
     }
     setShowAddProductModal(true);
@@ -186,9 +186,9 @@ export default function Inventory() {
   };
 
   const handleEditProduct = (product: ProductViewProduct) => {
-    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent modifier des suppléments
+    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent modifier des produits
     if (!canUpdateSupplement()) {
-      toast.error('Vous n\'avez pas les permissions pour modifier des suppléments');
+      toast.error('Vous n\'avez pas les permissions pour modifier des produits');
       return;
     }
     
@@ -212,7 +212,7 @@ export default function Inventory() {
   const handleUpdateAvailability = async (productId: string, available: boolean) => {
     // ✅ RBAC: Seuls les utilisateurs avec permission peuvent modifier la disponibilité
     if (!canUpdateSupplement()) {
-      toast.error('Vous n\'avez pas les permissions pour modifier la disponibilité des suppléments');
+      toast.error('Vous n\'avez pas les permissions pour modifier la disponibilité des produits');
       return;
     }
     
@@ -235,9 +235,9 @@ export default function Inventory() {
 
   // Supprimer un supplément
   const handleDeleteProduct = async (productId: string) => {
-    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent supprimer des suppléments
+    // ✅ RBAC: Seuls les utilisateurs avec permission peuvent supprimer des produits
     if (!canDeleteSupplement()) {
-      toast.error('Vous n\'avez pas les permissions pour supprimer des suppléments');
+      toast.error('Vous n\'avez pas les permissions pour supprimer des produits');
       return;
     }
     
@@ -332,7 +332,7 @@ export default function Inventory() {
                 className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
               >
                 <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
-                  {currentView === 'products' ? 'Suppléments' : 'Catégories'}
+                  {currentView === 'products' ? 'produits' : 'Catégories'}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-500 " />
               </button>
@@ -347,7 +347,7 @@ export default function Inventory() {
                     }}
                     className="w-full px-4 py-2 hover:text-orange-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
                   >
-                    Supplément
+                    Produits
                   </button>
                   <button
                     onClick={() => {
