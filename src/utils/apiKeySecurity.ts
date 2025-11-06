@@ -113,7 +113,6 @@ export const SecureApiConfig = {
     }
     return url;
   },
-
   /**
    * Récupère le préfixe API de manière sécurisée
    */

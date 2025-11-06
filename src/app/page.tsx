@@ -1,14 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import LoginForm from '@/components/auth/LoginForm';
 import AuthHeader from '@/components/auth/AuthHeader';
-import styles from './page.module.css';
+import LoginForm from '@/components/auth/LoginForm';
 import { useAuthStore } from '@/store/authStore';
 import { LoginCredentials } from '@/types/auth';
-import { usePendingOrdersSound } from '@/hooks/usePendingOrdersSound';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import styles from './page.module.css';
 
 /**
  * Page de connexion
