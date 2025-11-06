@@ -1,9 +1,6 @@
-
-
 export interface Schedule {
   [day: string]: string;
 }
-
 
 export interface Restaurant {
   id?: string;
@@ -32,20 +29,6 @@ export interface Restaurant {
   updated_at?: string;
   createdAt?: string;
 }
-
-// interface RestaurantsResponse { // Non utilisé actuellement
-//   data: Restaurant[];
-//   meta: {
-//     total: number;
-//     page: number;
-//     limit: number;
-//     totalPages: number;
-//   };
-// }
-
-// interface RestaurantResponse { // Non utilisé actuellement
-//   data: Restaurant;
-// }
 
 import { getHumanReadableError, validateRestaurantError } from '@/utils/errorMessages';
 
