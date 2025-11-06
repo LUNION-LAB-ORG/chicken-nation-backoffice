@@ -1,23 +1,23 @@
-import {IAppClickSearchParams} from "../types/analytics.type";
-import {getAllAppClick, getAppClickStats} from "@/services/analytics-service";
-import {handleServerActionError} from "../../../utils/handleServerActionError";
+import { IAppClickSearchParams } from "../types/analytics.type";
+import { getAllAppClick, getAppClickStats } from "@/services/analytics-service";
+import { handleServerActionError } from "../../../utils/handleServerActionError";
 
 export async function getAllAnalyticsAction(params: IAppClickSearchParams) {
-	try{
+	try {
 		const analytics = await getAllAppClick(params)
 		return {
 			data: analytics,
 			success: true,
 			message: 'Analytics fetched successfully',
 		}
-	}catch (error) {
+	} catch (error) {
 		return handleServerActionError(error, 'Erreur lors de la récupération des analytics')
 	}
 }
 
-export async function getAnalyticsStatsAction(params: IAppClickSearchParams) {
+export async function getAnalyticsStatsAction() {
 	try {
-		const stats = await getAppClickStats(params);
+		const stats = await getAppClickStats();
 		return {
 			data: stats,
 			success: true,

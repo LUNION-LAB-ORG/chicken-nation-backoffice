@@ -24,7 +24,7 @@ export interface IAppClickSearchParams {
   dateTo?: string;
 }
 
-export interface IPaginatedResponse <T> {
+export interface IPaginatedResponse<T> {
   data: T[];
   totalCount: number;
   page: number;
@@ -33,5 +33,17 @@ export interface IPaginatedResponse <T> {
 }
 
 export interface IStatsResponse {
-  totalClicks: number;
+  total: {
+    allTime: number,
+    currentMonth: number,
+    last24Hours: number,
+  },
+  android: {
+    allTime: number,
+    currentMonth: number,
+  },
+  ios: {
+    allTime: number,
+    currentMonth: number,
+  },
 }

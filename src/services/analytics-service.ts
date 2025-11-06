@@ -58,5 +58,5 @@ const fetchAnalyticsData = async <T>(
 export const getAllAppClick = (query: IAppClickSearchParams) =>
 	fetchAnalyticsData<IPaginatedResponse<IAppClick>>('/app', query);
 
-export const getAppClickStats = (query: IAppClickSearchParams) =>
-	fetchAnalyticsData<IStatsResponse>('/app/count', query);
+export const getAppClickStats = () =>
+	fetchAnalyticsData<IStatsResponse>('/app/stats');

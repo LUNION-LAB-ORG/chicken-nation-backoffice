@@ -102,7 +102,7 @@ export default function Sidebar({
     canViewOffreSpeciale,
   } = useRBAC();
   const [isClient, setIsClient] = useState(false);
-  
+
   // États pour gérer l'expansion de la section Messages et tickets
   const [isMessagesExpanded, setIsMessagesExpanded] = useState(false);
 
@@ -123,7 +123,10 @@ export default function Sidebar({
 
     window.addEventListener("openInboxFromHeader", handleOpenInboxFromHeader);
     return () => {
-      window.removeEventListener("openInboxFromHeader", handleOpenInboxFromHeader);
+      window.removeEventListener(
+        "openInboxFromHeader",
+        handleOpenInboxFromHeader
+      );
     };
   }, [setActiveTab, setActiveSubModule]);
 
@@ -146,16 +149,16 @@ export default function Sidebar({
     // },
     {
       id: "inbox",
-      label: "Inbox", 
+      label: "Inbox",
       defaultIcon: "/icons/sidebar/message.png",
       whiteIcon: "/icons/sidebar/inbox.png",
     },
-     {
+    {
       id: "tickets",
       label: "Tickets",
       defaultIcon: "/icons/sidebar/ticket-dark.png",
       whiteIcon: "/icons/sidebar/ticket.png",
-    }
+    },
   ];
 
   // Définir les éléments de navigation en fonction des permissions RBAC
@@ -169,13 +172,6 @@ export default function Sidebar({
         user?.role === "ADMIN" ||
         user?.role === "MANAGER" ||
         user?.role === "MARKETING", // Dashboard spécial
-    },
-    {
-      id: "marketing",
-      label: "Marketing",
-      defaultIcon: "/icons/sidebar/marketing.png",
-      whiteIcon: "/icons/sidebar/marketing-white.png",
-      canAccess: () => user?.role === "ADMIN",
     },
     {
       id: "menus",
@@ -204,7 +200,7 @@ export default function Sidebar({
       label: "Messages et tickets",
       defaultIcon: "/icons/sidebar/message.png",
       whiteIcon: "/icons/sidebar/messages-white.png",
-      canAccess: () => true, 
+      canAccess: () => true,
       hasSubModules: true,
     },
     {
@@ -249,6 +245,16 @@ export default function Sidebar({
       whiteIcon: "/icons/sidebar/fidelisation-white.png",
       canAccess: () => false, // Désactivé pour l'instant
     },
+    {
+      id: "marketing",
+      label: "Marketing",
+      defaultIcon: "/icons/marketing.png",
+      whiteIcon: "/icons/marketing.png",
+      canAccess: () =>
+        user?.role === "ADMIN" ||
+        user?.role === "MANAGER" ||
+        user?.role === "MARKETING",
+    },
     // {
     //   id: 'apps',
     //   label: 'Apps et Widgets',
@@ -292,7 +298,6 @@ export default function Sidebar({
             ) : (
               // Après l'hydration, afficher le contenu réel
               navigationItems.map((item) => {
-            
                 if (!item.canAccess()) {
                   return null;
                 }
@@ -306,7 +311,7 @@ export default function Sidebar({
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
- 
+
                           const willExpand = !isMessagesExpanded;
                           setActiveTab(item.id);
                           setIsMessagesExpanded(willExpand);
@@ -332,7 +337,9 @@ export default function Sidebar({
                         />
                         <span
                           className={`text-sm font-sofia-regular -ml-6 font-normal cursor-pointer flex-1 ${
-                            activeTab === item.id ? "text-white" : "text-gray-600"
+                            activeTab === item.id
+                              ? "text-white"
+                              : "text-gray-600"
                           }`}
                         >
                           {item.label}
@@ -342,14 +349,18 @@ export default function Sidebar({
                           <ChevronDown
                             size={16}
                             className={`transition-transform ${
-                              activeTab === item.id ? "text-white" : "text-gray-400"
+                              activeTab === item.id
+                                ? "text-white"
+                                : "text-gray-400"
                             }`}
                           />
                         ) : (
                           <ChevronRight
                             size={16}
                             className={`transition-transform ${
-                              activeTab === item.id ? "text-white" : "text-gray-400"
+                              activeTab === item.id
+                                ? "text-white"
+                                : "text-gray-400"
                             }`}
                           />
                         )}
@@ -364,12 +375,15 @@ export default function Sidebar({
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                
+
                                 // Seulement fermer la sidebar si on navigue vers un sous-module différent
-                                if (activeSubModule !== subModule.id && isMobile) {
+                                if (
+                                  activeSubModule !== subModule.id &&
+                                  isMobile
+                                ) {
                                   setIsSidebarOpen(false);
                                 }
-                                
+
                                 setActiveTab("messages-tickets");
                                 if (setActiveSubModule) {
                                   setActiveSubModule(subModule.id);
@@ -391,9 +405,13 @@ export default function Sidebar({
                                 alt={subModule.label}
                                 active={activeSubModule === subModule.id}
                               />
-                              <span className={`text-sm font-sofia-regular ${
-                                activeSubModule === subModule.id ? "text-orange-500 font-medium" : ""
-                              }`}>
+                              <span
+                                className={`text-sm font-sofia-regular ${
+                                  activeSubModule === subModule.id
+                                    ? "text-orange-500 font-medium"
+                                    : ""
+                                }`}
+                              >
                                 {subModule.label}
                               </span>
                             </button>
