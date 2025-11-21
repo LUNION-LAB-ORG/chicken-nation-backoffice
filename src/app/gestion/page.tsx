@@ -300,7 +300,7 @@ export default function GestionPage() {
             <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full transform animate-in fade-in zoom-in duration-300">
               <div className="text-center">
                 {/* Icône de bienvenue */}
-                <div className="mx-auto w-16  h-16 bg-gradient-to-br from-[#F17922] to-orange-500 rounded-full flex items-center justify-center mb-4">
+                <div className="mx-auto w-16  h-16 bg-gradient-to-br from-[#F17922] to-primary-500 rounded-full flex items-center justify-center mb-4">
                   <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
@@ -317,7 +317,7 @@ export default function GestionPage() {
                 {/* Bouton OK */}
                 <button
                   onClick={() => setShowWelcomeBackModal(false)}
-                  className="w-full bg-gradient-to-r from-[#F17922] to-orange-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-orange-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="w-full bg-gradient-to-r from-[#F17922] to-primary-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                  Merci !
                 </button>
@@ -351,7 +351,7 @@ export default function GestionPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all duration-300 ease-out scale-100 overflow-hidden">
             {/* Header avec gradient */}
-            <div className="bg-gradient-to-r from-[#F17922] to-orange-500 px-8 py-6">
+            <div className="bg-gradient-to-r from-[#F17922] to-primary-500 px-8 py-6">
               <div className="flex flex-col items-center text-center">
                 <div className="bg-white rounded-full p-4 mb-4 shadow-lg">
                   <Image
@@ -426,7 +426,7 @@ export default function GestionPage() {
                     setShowPasswordChangeModal(false);
                     setShowEditProfile(true);
                   }}
-                  className="w-full bg-gradient-to-r cursor-pointer from-[#F17922] to-orange-500 hover:from-[#F17922 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-orange-400/50 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+                  className="w-full bg-gradient-to-r cursor-pointer from-[#F17922] to-primary-500 hover:from-[#F17922 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-orange-400/50 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
                 >
                   <svg
                     className="w-5 h-5 mr-2"

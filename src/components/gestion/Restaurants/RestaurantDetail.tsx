@@ -609,7 +609,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
                               )}
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-orange-500">{menu.name}</p>
+                              <p className="text-sm font-medium text-primary-500">{menu.name}</p>
                               <div className="flex items-center gap-2">
                                 <p className="text-xs text-gray-500">
                                   {(menu.isPromotion || menu.is_promotion) && menu.originalPrice && menu.discountedPrice ? (

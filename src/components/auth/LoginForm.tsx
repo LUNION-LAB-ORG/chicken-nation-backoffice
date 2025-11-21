@@ -115,7 +115,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) =>
         <button
           type="submit"
           disabled={isLoading}
-          className="w-44 py-3 px-4 bg-[#F17922] text-white font-sofia-medium rounded-2xl transition-all duration-300 hover:bg-[#F17922]/90 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed"
+          className="w-44 py-3 px-4 bg-[#F17922] text-white font-medium rounded-2xl transition-all duration-300 hover:bg-[#F17922]/90 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <span className="flex items-center justify-center">

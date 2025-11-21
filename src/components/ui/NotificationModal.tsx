@@ -85,7 +85,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-[600px] mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
-          <h2 className="text-base font-sofia-semibold text-[#F17922] mx-auto text-center">Détails de la notification</h2>
+          <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">Détails de la notification</h2>
           <Image
             src="/icons/close.png"
             width={20}

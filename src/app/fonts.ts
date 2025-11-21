@@ -1,42 +1,5 @@
 import localFont from 'next/font/local'
 
-export const sofia = localFont({
-  src: [
-    {
-      path: '../../public/fonts/SofiaProLight.ttf',
-      weight: '300',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/SofiaProRegular.ttf',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/SofiaProMedium.ttf',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/SofiaProSemiBold.ttf',
-      weight: '600',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/SofiaProBold.ttf',
-      weight: '700',
-      style: 'normal',
-    },
-    {
-      path: '../../public/fonts/SofiaProBlack.ttf',
-      weight: '900',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-sofia',
-  display: 'swap',
-})
-
 export const urbanist = localFont({
   src: [
     {

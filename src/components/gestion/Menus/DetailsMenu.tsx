@@ -159,7 +159,7 @@ export default function DetailsMenu({ menu, onEdit, onDelete }: DetailsMenuProps
                   ingredients.map((ingredient, index) => (
                     ingredient.supplement && (
                       <div key={ingredient.supplement.id || index} className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-orange-500" />
+                        <div className="w-2 h-2 rounded-full bg-primary-500" />
                         <span className="text-sm text-gray-600">{ingredient.supplement.name}</span>
                       </div>
                     )

@@ -103,7 +103,7 @@ export function OrdersTab({ client, formatDate }: OrdersTabProps) {
     <div className="w-full">
       <div className="flex justify-between items-center mb-4 px-4 sm:px-0">
         <h3 className="text-sm font-medium text-gray-700">
-          Total des commandes : <span className="text-orange-500">{client.orderHistory?.length || 0}</span>
+          Total des commandes : <span className="text-primary-500">{client.orderHistory?.length || 0}</span>
         </h3>
       </div>
 
@@ -137,9 +137,9 @@ export function OrdersTab({ client, formatDate }: OrdersTabProps) {
                         order.status?.toUpperCase() === 'DELIVERED' || order.status?.toUpperCase() === 'PICKED_UP' ? 'bg-[#4FCBBA] text-white' :
                         order.status?.toUpperCase() === 'COLLECTED' || order.status?.toUpperCase() === 'COLLECTED' ? 'bg-[#5bcb4f] text-white' :
                         order.status?.toUpperCase() === 'PENDING' || order.status?.toUpperCase() === 'NEW' ? 'bg-[#FBD2B5] text-slate-600' :
-                        order.status?.toUpperCase() === 'CANCELLED' ? 'bg-black text-[#FDE9DA]' :
+                        order.status?.toUpperCase() === 'CANCELLED' ? 'bg-black text-[#ff6200]' :
                         order.status?.toUpperCase() === 'IN_PROGRESS' || order.status?.toUpperCase() === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
-                        order.status?.toUpperCase() === 'COMPLETED' || order.status?.toUpperCase() === 'READY' ? 'bg-orange-500 text-white' :
+                        order.status?.toUpperCase() === 'COMPLETED' || order.status?.toUpperCase() === 'READY' ? 'bg-primary-500 text-white' :
                         'bg-gray-100 text-gray-800'
                       }`}>
                         {translateStatus(order.status)}
@@ -170,7 +170,7 @@ export function OrdersTab({ client, formatDate }: OrdersTabProps) {
                   <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                     order.status?.toUpperCase() === 'DELIVERED' || order.status?.toUpperCase() === 'PICKED_UP' ? 'bg-[#4FCBBA] text-white' :
                     order.status?.toUpperCase() === 'PENDING' || order.status?.toUpperCase() === 'NEW' ? 'bg-[#FBD2B5] text-slate-600' :
-                    order.status?.toUpperCase() === 'CANCELLED' ? 'bg-black text-[#FDE9DA]' :
+                    order.status?.toUpperCase() === 'CANCELLED' ? 'bg-black text-[#ff6200]' :
                     order.status?.toUpperCase() === 'IN_PROGRESS' || order.status?.toUpperCase() === 'PROCESSING' ? 'bg-blue-100 text-blue-800' :
                     order.status?.toUpperCase() === 'COMPLETED' || order.status?.toUpperCase() === 'READY' ? 'bg-green-100 text-green-800' :
                     'bg-gray-100 text-gray-800'

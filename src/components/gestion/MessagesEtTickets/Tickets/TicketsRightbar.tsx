@@ -49,7 +49,7 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
     return (
       <div className="w-80 bg-gray-50 border-l border-slate-300 flex items-center justify-center h-full">
         <div className="flex items-center space-x-2">
-          <Loader2 className="w-5 h-5 animate-spin text-orange-500" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary-500" />
           <span className="text-gray-600">Chargement...</span>
         </div>
       </div>
@@ -72,7 +72,7 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
       <div className="flex-1 overflow-y-auto p-6 space-y-8">
         {/* Client Section */}
         <div className=' lg:ml-3 ml-0'>
-          <h3 className="text-orange-500 font-semibold text-lg mb-4">Client</h3>
+          <h3 className="text-primary-500 font-semibold text-lg mb-4">Client</h3>
           <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
               {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
@@ -109,7 +109,7 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
 
         {/* Assigné à Section */}
         <div className='lg:ml-3 ml-0'>
-          <h3 className="text-orange-500 font-semibold text-lg mb-4 ">Assigné à</h3>
+          <h3 className="text-primary-500 font-semibold text-lg mb-4 ">Assigné à</h3>
           <div className="flex items-center space-x-4">
             {ticket.assignee ? (
               <>
@@ -164,7 +164,7 @@ function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
 
         {/* Informations Section */}
         <div className='lg:ml-3 ml-0'>
-          <h3 className="text-orange-500 font-semibold text-lg mb-4">Informations</h3>
+          <h3 className="text-primary-500 font-semibold text-lg mb-4">Informations</h3>
           <div className="space-y-4">
             {/* Créé */}
             <div className="flex items-start space-x-3">

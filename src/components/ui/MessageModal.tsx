@@ -130,7 +130,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
                   placeholder="Rechercher une conversation..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 bg-white focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
 
@@ -181,7 +181,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
             <div className="flex-1 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
                 </div>
               ) : error ? (
                 <div className="p-4 text-center text-red-600">

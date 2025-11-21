@@ -57,7 +57,7 @@ const AuthHeader: React.FC = () => {
               </button>
               <Link 
                 href="/" 
-                className="bg-amber-800 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-sm sm:text-base lg:text-lg font-sofia-medium inline-block"
+                className="bg-amber-800 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl text-sm sm:text-base lg:text-lg font-medium inline-block"
               >
                 Connexion
               </Link>
@@ -84,28 +84,28 @@ const AuthHeader: React.FC = () => {
           <nav className="flex flex-col py-2 sm:py-3 px-4 sm:px-6">
             <Link 
               href="/" 
-              className="text-sm font-sofia py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
+              className="text-sm py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
               onClick={() => setIsMenuOpen(false)}
             >
               Accueil
             </Link>
             <Link 
               href="/histoire" 
-              className="text-sm font-sofia py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
+              className="text-sm py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
               onClick={() => setIsMenuOpen(false)}
             >
               Histoire
             </Link>
             <Link 
               href="/restaurants" 
-              className="text-sm font-sofia py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
+              className="text-sm py-2 sm:py-3 border-b border-white/20 hover:bg-white/10 block"
               onClick={() => setIsMenuOpen(false)}
             >
               Nos restaurants
             </Link>
             <Link 
               href="/franchise" 
-              className="text-sm font-sofia py-2 sm:py-3 hover:bg-white/10 block"
+              className="text-sm py-2 sm:py-3 hover:bg-white/10 block"
               onClick={() => setIsMenuOpen(false)}
             >
               Franchise

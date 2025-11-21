@@ -141,7 +141,7 @@ function NewTicketModal({
       <div className="bg-white rounded-2xl md:w-[700px] lg:w-[750px] xl:w-[800px] w-[90%] max-w-[800px] mx-4 max-h-[96vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-4">
-          <h2 className="md:text-xl text-lg font-semibold text-orange-500">
+          <h2 className="md:text-xl text-lg font-semibold text-primary-500">
             {conversationId ? 'Escalader en ticket' : 'Créer un nouveau ticket'}
           </h2>
           <button
@@ -171,7 +171,7 @@ function NewTicketModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Problème de qualité produit"
-              className="w-full md:px-4 md:py-3 px-3 py-2.5 text-gray-700 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full md:px-4 md:py-3 px-3 py-2.5 text-gray-700 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
           </div>
 
@@ -185,7 +185,7 @@ function NewTicketModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Décrivez le problème en détail..."
               rows={4}
-              className="w-full md:px-4 md:py-3 text-gray-700 px-3 py-2.5 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+              className="w-full md:px-4 md:py-3 text-gray-700 px-3 py-2.5 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
             />
           </div>
 
@@ -265,7 +265,7 @@ function NewTicketModal({
             <button
               onClick={handleSubmit}
               disabled={!title.trim() || !selectedClientId || !category || createTicketMutation.isPending}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-orange-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-primary-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createTicketMutation.isPending ? 'Création...' : 'Créer le ticket'}
             </button>

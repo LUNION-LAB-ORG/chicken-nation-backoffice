@@ -72,7 +72,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     >
       {icon}
       <span
-        className={`text-sm font-sofia-regular font-normal cursor-pointer ${
+        className={`text-sm  font-normal cursor-pointer ${
           active ? "text-white" : "text-gray-600"
         }`}
       >
@@ -336,7 +336,7 @@ export default function Sidebar({
                           active={activeTab === item.id}
                         />
                         <span
-                          className={`text-sm font-sofia-regular -ml-6 font-normal cursor-pointer flex-1 ${
+                          className={`text-sm  -ml-6 font-normal cursor-pointer flex-1 ${
                             activeTab === item.id
                               ? "text-white"
                               : "text-gray-600"
@@ -393,7 +393,7 @@ export default function Sidebar({
                                 w-full flex items-center cursor-pointer space-x-3 px-4 py-2 rounded-[10px]
                                 ${
                                   activeSubModule === subModule.id
-                                    ? "text-orange-500"
+                                    ? "text-primary-500"
                                     : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                                 }
                                 transition-all duration-200
@@ -406,9 +406,9 @@ export default function Sidebar({
                                 active={activeSubModule === subModule.id}
                               />
                               <span
-                                className={`text-sm font-sofia-regular ${
+                                className={`text-sm  ${
                                   activeSubModule === subModule.id
-                                    ? "text-orange-500 font-medium"
+                                    ? "text-primary-500 font-medium"
                                     : ""
                                 }`}
                               >
@@ -462,7 +462,7 @@ export default function Sidebar({
             <div className="relative w-5 h-5 flex items-center justify-center">
               <LogOut size={20} className="text-[#F17922]" />
             </div>
-            <span className="text-sm font-sofia-regular font-normal cursor-pointer text-gray-600">
+            <span className="text-sm  font-normal cursor-pointer text-gray-600">
               Déconnexion
             </span>
           </button>

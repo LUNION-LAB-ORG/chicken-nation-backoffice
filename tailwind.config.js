@@ -17,14 +17,7 @@ module.exports = {
     },
     extend: {
       fontFamily: {
-        sofia: ['var(--font-sofia)'],
         urbanist: ['var(--font-urbanist)'],
-        'sofia-regular': ['SofiaPro-Regular', 'sans-serif'],
-        'sofia-medium': ['SofiaPro-Medium', 'sans-serif'],
-        'sofia-bold': ['SofiaPro-Bold', 'sans-serif'],
-        'sofia-black': ['SofiaPro-Black', 'sans-serif'],
-        'sofia-light': ['SofiaPro-Light', 'sans-serif'],
-        'sofia-semibold': ['SofiaPro-SemiBold', 'sans-serif'],
         'blocklyn': ['Blocklyn-Grunge', 'sans-serif'],
         'blocklyn-condensed': ['Blocklyn-Condensed', 'sans-serif']
       },

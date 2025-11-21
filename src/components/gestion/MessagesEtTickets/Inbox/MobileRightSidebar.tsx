@@ -73,7 +73,7 @@ function MobileRightSidebar({
       `}>
         {/* Header avec bouton fermer */}
         <div className="flex items-center justify-between p-4 border-b border-slate-300">
-          <h3 className="text-lg font-semibold text-orange-500">
+          <h3 className="text-lg font-semibold text-primary-500">
             {isInternal ? 'Discussion interne' : 'Informations client'}
           </h3>
           <button
@@ -127,7 +127,7 @@ function MobileRightSidebar({
 
           {/* Participants */}
           <div>
-            <h4 className="text-base font-semibold text-orange-500 mb-4">
+            <h4 className="text-base font-semibold text-primary-500 mb-4">
               Participants ({Math.max(1, participants.length)})
             </h4>
             <div className="space-y-3">

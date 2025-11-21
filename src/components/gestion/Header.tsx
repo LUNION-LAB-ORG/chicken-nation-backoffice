@@ -254,7 +254,7 @@ export default function Header({
                 <div className="max-h-96 overflow-y-auto">
                   {isLoadingConversations ? (
                     <div className="p-4 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
                       <p className="text-sm text-gray-500 mt-2">Chargement...</p>
                     </div>
                   ) : recentUnread.length === 0 ? (
@@ -325,7 +325,7 @@ export default function Header({
                                     queryClient.invalidateQueries({ queryKey: ['conversations'] });
                                     queryClient.invalidateQueries({ queryKey: ['messages', msg.conversationId] });
                                   }}
-                                  className={`p-1 rounded-full transition-colors text-gray-400 hover:text-orange-500`}
+                                  className={`p-1 rounded-full transition-colors text-gray-400 hover:text-primary-500`}
                                   title={msg.isRead ? 'Marquer comme non lue' : 'Marquer comme lue'}
                                 >
                                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">

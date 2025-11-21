@@ -65,7 +65,7 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ restaurantId, period = 'mon
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
           gradient.addColorStop(0, '#FA6345'); // Orange foncé en haut
-          gradient.addColorStop(0.5, '#FDE9DA'); // Orange clair au milieu
+          gradient.addColorStop(0.5, '#ff6200'); // Orange clair au milieu
           gradient.addColorStop(0.57, 'rgba(253, 233, 218, 0)'); // Transparent en bas
           return gradient;
         },

@@ -130,7 +130,7 @@ export function ClientRow({
 		}
 	};
 
-	const highlightClass = isHighlighted ? 'bg-[#FDE9DA]' : '';
+	const highlightClass = isHighlighted ? 'bg-[#ff6200]' : '';
 	const formattedCreationDate = formatDate(client.created_at || '');
 	const formattedLastOrderDate = formatLastOrderDate(client.lastOrderDate);
 	const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
@@ -139,7 +139,7 @@ export function ClientRow({
 		<>
 			{/* Version mobile (card) */}
 			<tr
-				className={`md:hidden hover:bg-[#FDE9DA] cursor-pointer ${highlightClass}`}
+				className={`md:hidden hover:bg-[#ff6200] cursor-pointer ${highlightClass}`}
 				onClick={handleClick}
 				onDoubleClick={onDoubleClick}
 			>
@@ -209,7 +209,7 @@ export function ClientRow({
 
 			{/* Version desktop (tableau) */}
 			<tr
-				className={`hidden md:table-row hover:bg-[#FDE9DA] cursor-pointer ${highlightClass}`}
+				className={`hidden md:table-row hover:bg-[#ff6200] cursor-pointer ${highlightClass}`}
 				onClick={handleClick}
 				onDoubleClick={onDoubleClick}
 			>

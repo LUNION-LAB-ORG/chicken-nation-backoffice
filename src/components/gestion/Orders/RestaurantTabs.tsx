@@ -33,7 +33,7 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
         {/* Tab "Tous les restaurants" (visible seulement pour ADMIN) */}
         {showAllTab && (
           <button
-            className={`transition-colors font-sofia-bold cursor-pointer text-[11px] lg:text-[14px]
+            className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap
               ${selectedRestaurant === null
                 ? 'bg-[#F17922] text-white font-bold shadow-none'
@@ -50,7 +50,7 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
         {restaurants.map((restaurant, idx) => (
           <button
             key={restaurant.id}
-            className={`transition-colors font-sofia-bold cursor-pointer text-[11px] lg:text-[14px]
+            className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap
               ${selectedRestaurant === restaurant.id
                 ? 'bg-[#F17922] text-white font-bold shadow-none'

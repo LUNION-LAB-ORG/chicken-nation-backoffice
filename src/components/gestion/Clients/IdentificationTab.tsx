@@ -80,7 +80,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
             type="text"
             value={displayName}
             onChange={(e) => handleNameChange(e.target.value)}
-            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700  rounded-2xl text-sm focus:border-orange-500 focus:outline-none"
+            className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700  rounded-2xl text-sm focus:border-primary-500 focus:outline-none"
             onBlur={handleSave}
           />
         </div>

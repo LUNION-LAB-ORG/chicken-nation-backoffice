@@ -93,7 +93,7 @@ const DashboardPageHeader = ({
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder={searchConfig.placeholder || "Rechercher..."}
-            className="w-full px-2 sm:px-3 font-sofia-regular font-light  py-1 text-sm text-gray-700 focus:outline-none bg-transparent"
+            className="w-full px-2 sm:px-3  font-light  py-1 text-sm text-gray-700 focus:outline-none bg-transparent"
           />
         </div>
         <button
@@ -128,7 +128,7 @@ const DashboardPageHeader = ({
               whileTap={{ scale: 0.98 }}
               onClick={action.onClick}
               className={`
-                px-3 py-1 sm:py-1 cursor-pointer text-sm font-sofia-regular font-light rounded-xl transition-colors flex items-center justify-center gap-2
+                px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2
                 ${action.className ||
                   (action.variant === 'secondary'
                     ? 'text-gray-700 bg-gray-100 hover:bg-gray-200'
@@ -168,7 +168,7 @@ const DashboardPageHeader = ({
               onClick={onBack}
               className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors"
             >
-              <ChevronLeft size={30} className="text-orange-500" />
+              <ChevronLeft size={30} className="text-primary-500" />
             </motion.button>
           )}
 

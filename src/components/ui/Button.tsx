@@ -25,7 +25,7 @@ const Button = ({
   ...props
 }: ButtonProps) => {
  
-  const baseStyles = 'font-sofia rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles = 'rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variantStyles = {
     primary: 'bg-accent hover:bg-accent/90 text-white focus:ring-accent',

@@ -28,7 +28,7 @@ const BuyXGetYPromoForm = ({
           placeholder="Ex: 2"
           value={buyQuantity}
           onChange={(e) => onBuyQuantityChange(e.target.value)}
-          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0'>
@@ -38,7 +38,7 @@ const BuyXGetYPromoForm = ({
           placeholder="Ex: 1"
           value={getQuantity}
           onChange={(e) => onGetQuantityChange(e.target.value)}
-          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0'>
@@ -48,7 +48,7 @@ const BuyXGetYPromoForm = ({
           placeholder="Ex: 5 000 FCFA"
           value={discountCeiling}
           onChange={(e) => onDiscountCeilingChange(e.target.value)}
-          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
       </div>
     </div>

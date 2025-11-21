@@ -200,7 +200,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     return (
       <div className="h-full flex flex-col items-center justify-center text-gray-400">
         <div className="mb-4">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary-500"></div>
         </div>
         <h3 className="text-lg font-medium text-gray-600 mb-2">Chargement du ticket...</h3>
       </div>
@@ -241,7 +241,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             )}
 
             <div>
-              <h1 className="text-base sm:text-xl md:text-2xl font-medium text-orange-500 mb-1 break-words leading-tight">
+              <h1 className="text-base sm:text-xl md:text-2xl font-medium text-primary-500 mb-1 break-words leading-tight">
                 {ticket.order?.reference || 'Ticket sans commande'}
               </h1>
               <p className="text-xs sm:text-sm md:text-base text-gray-500">
@@ -256,7 +256,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           {/* Partie droite - Badges colorés responsive */}
           <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
             <span className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-6 md:py-2 rounded-full text-white font-medium text-xs sm:text-sm md:text-base ${ticket.status === 'OPEN' ? 'bg-red-500' :
-              ticket.status === 'IN_PROGRESS' ? 'bg-orange-500' :
+              ticket.status === 'IN_PROGRESS' ? 'bg-primary-500' :
                 'bg-green-500'
               }`}>
               {ticket.status === 'OPEN' ? 'Ouvert' :
@@ -421,7 +421,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                           <span className="md:text-sm text-xs font-medium text-gray-500">{user?.fullname}</span> 
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
-                        <div className="bg-orange-500 text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
+                        <div className="bg-primary-500 text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
                       </div>
@@ -469,7 +469,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             <button
               onClick={() => setMessageType('public')}
               className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
-                ? 'bg-orange-500 text-white'
+                ? 'bg-primary-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
@@ -479,7 +479,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             <button
               onClick={() => setMessageType('internal')}
               className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
-                ? 'bg-orange-500 text-white'
+                ? 'bg-primary-500 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
@@ -496,7 +496,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Écrire un message..."
-              className="w-full md:px-4 md:py-3 px-3 py-2 border border-slate-400 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent md:text-sm text-xs bg-white"
+              className="w-full md:px-4 md:py-3 px-3 py-2 border border-slate-400 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent md:text-sm text-xs bg-white"
               rows={3}
               onKeyDown={handleKeyPress}
             />
@@ -505,7 +505,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             title="Envoyer le message"
             onClick={handleSendMessage}
             disabled={!message.trim() || sendMessageMutation.isPending}
-            className="bg-orange-500 text-white md:p-3 p-2 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            className="bg-primary-500 text-white md:p-3 p-2 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             {sendMessageMutation.isPending ? (
               <Loader2 className="md:w-5 md:h-5 w-4 h-4 animate-spin" />

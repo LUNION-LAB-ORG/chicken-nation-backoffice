@@ -76,7 +76,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
       <div className="bg-white rounded-2xl md:w-[600px] lg:w-[650px] w-[90%] max-w-[650px] mx-4 max-h-[96vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-4">
-          <h2 className="md:text-xl text-lg font-semibold text-orange-500">
+          <h2 className="md:text-xl text-lg font-semibold text-primary-500">
             Créer une catégorie de ticket
           </h2>
           <button
@@ -104,7 +104,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Livraison, Qualité produit, Service client..."
-              className="w-full md:px-4 md:py-3 px-3 py-2.5 border text-slate-700 border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              className="w-full md:px-4 md:py-3 px-3 py-2.5 border text-slate-700 border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               maxLength={100}
             />
             <div className="text-right text-xs text-gray-400 mt-1">
@@ -122,7 +122,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Décrivez le type de problèmes que cette catégorie couvre..."
               rows={4}
-              className="w-full md:px-4 md:py-3 px-3 py-2.5 text-slate-700 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none"
+              className="w-full md:px-4 md:py-3 px-3 py-2.5 text-slate-700 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
               maxLength={500}
             />
             <div className="text-right text-xs text-gray-400 mt-1">
@@ -142,7 +142,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
             <button
               onClick={handleSubmit}
               disabled={!name.trim() || createCategoryMutation.isPending}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-orange-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-primary-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createCategoryMutation.isPending ? 'Création...' : 'Créer la catégorie'}
             </button>

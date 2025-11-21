@@ -68,7 +68,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
       onClick={handleDirectExport}
       disabled={disabled || isExporting}
       className={`
-        px-3 py-1 sm:py-1 cursor-pointer text-sm font-sofia-regular font-light rounded-xl
+        px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl
         transition-all duration-200 flex items-center justify-center gap-2 min-w-[120px]
         ${disabled || orders.length === 0
           ? 'text-gray-400 bg-gray-100 cursor-not-allowed'

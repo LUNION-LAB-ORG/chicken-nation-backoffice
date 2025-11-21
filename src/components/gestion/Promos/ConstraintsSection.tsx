@@ -63,7 +63,7 @@ const ConstraintsSection = ({
             placeholder="Ex: 5 000"
             value={minOrderAmount}
             onChange={(e) => onMinOrderAmountChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div className="flex flex-row items-center justify-between">
@@ -73,7 +73,7 @@ const ConstraintsSection = ({
             placeholder="Ex: 5"
             value={maxUsagePerClient}
             onChange={(e) => onMaxUsagePerClientChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div className="flex flex-row items-center justify-between">
@@ -83,7 +83,7 @@ const ConstraintsSection = ({
             placeholder="Illimité"
             value={maxTotalUsage}
             onChange={(e) => onMaxTotalUsageChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         </div>
         <div className="flex flex-row items-center justify-between gap-6">
@@ -92,7 +92,7 @@ const ConstraintsSection = ({
             <button
               type="button"
               onClick={() => onShowPublicDropdownChange(!showPublicDropdown)}
-              className="w-full p-4 py-3 rounded-xl cursor-pointer flex justify-between items-center transition-colors focus:bg-[#FDE9DA] border-gray-200 border-1 focus:border-[#F17922] bg-white hover:bg-[#FDE9DA]"
+              className="w-full p-4 py-3 rounded-xl cursor-pointer flex justify-between items-center transition-colors focus:bg-[#ff6200] border-gray-200 border-1 focus:border-[#F17922] bg-white hover:bg-[#ff6200]"
             >
               <div className="flex-1 min-w-0">
                 <span className="text-sm text-slate-600 font-medium">Sélectionner visibilité</span>
@@ -115,8 +115,8 @@ const ConstraintsSection = ({
                   onClick={() => onPublicTypeToggle('Public')}
                   className={`w-full flex items-center px-4 py-3 border-b border-gray-100 transition-colors cursor-pointer text-left text-gray-900 ${
                     selectedPublicTypes.includes('Public')
-                      ? 'bg-[#FDE9DA]'
-                      : 'hover:bg-[#FDE9DA]'
+                      ? 'bg-[#ff6200]'
+                      : 'hover:bg-[#ff6200]'
                   }`}
                 >
                   <span className="text-gray-700">Public</span>
@@ -127,7 +127,7 @@ const ConstraintsSection = ({
                   <button
                     type="button"
                     onClick={() => setShowPrivateDropdown(!showPrivateDropdown)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#FDE9DA] transition-colors cursor-pointer text-left text-gray-900"
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#ff6200] transition-colors cursor-pointer text-left text-gray-900"
                   >
                     <span className="text-gray-700 font-medium">Privé</span>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showPrivateDropdown ? 'rotate-180' : ''}`} />
@@ -141,8 +141,8 @@ const ConstraintsSection = ({
                           key={publicType}
                           className={`flex items-center gap-3 px-6 py-3 transition-colors ${
                             selectedPublicTypes.includes(publicType)
-                              ? 'bg-[#FDE9DA]'
-                              : 'hover:bg-[#FDE9DA]'
+                              ? 'bg-[#ff6200]'
+                              : 'hover:bg-[#ff6200]'
                           }`}
                         >
                           <Checkbox

@@ -40,7 +40,7 @@ const VisibilitySelector = ({ selectedTypes, onTypesChange, className = '' }: Vi
   return (
     <div className={`mt-6 ${className}`}>
       {/* Header Public */}
-      <div className="bg-[#FDE9DA] p-4 rounded-t-xl">
+      <div className="bg-[#ff6200] p-4 rounded-t-xl">
         <span className="font-medium text-gray-800">Public</span>
       </div>
       
@@ -51,7 +51,7 @@ const VisibilitySelector = ({ selectedTypes, onTypesChange, className = '' }: Vi
           <button
             type="button"
             onClick={() => setShowPrivateDropdown(!showPrivateDropdown)}
-            className="w-full p-4 text-left flex justify-between items-center hover:bg-[#FDE9DA] transition-colors"
+            className="w-full p-4 text-left flex justify-between items-center hover:bg-[#ff6200] transition-colors"
           >
             <span className="text-gray-700">Privé</span>
             <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showPrivateDropdown ? 'rotate-180' : ''}`} />
@@ -62,7 +62,7 @@ const VisibilitySelector = ({ selectedTypes, onTypesChange, className = '' }: Vi
               {privateTypeOptions.map((privateType) => (
                 <div
                   key={privateType}
-                  className="flex items-center gap-3 px-6 py-3 hover:bg-[#FDE9DA] transition-colors"
+                  className="flex items-center gap-3 px-6 py-3 hover:bg-[#ff6200] transition-colors"
                 >
                   <Checkbox
                     checked={selectedTypes.includes(privateType)}

@@ -39,7 +39,7 @@ const PromoTypeButtons = ({ activePromoType, onPromoTypeChange }: PromoTypeButto
             onClick={() => onPromoTypeChange(promo.type)}
             className={`w-full p-4 rounded-2xl flex cursor-pointer justify-between items-center transition-colors ${
               activePromoType === promo.type
-                ? 'bg-[#FDE9DA] border-2 border-[#F17922]'
+                ? 'bg-[#ff6200] border-2 border-[#F17922]'
                 : 'bg-white border border-gray-200 hover:bg-gray-50'
             }`}
           >

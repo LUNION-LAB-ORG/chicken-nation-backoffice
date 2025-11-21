@@ -31,7 +31,7 @@ export default function AdDetail({ ad, onBack, onEdit, onResend }: AdDetailProps
         <div className="border border-gray-200 rounded-lg p-6">
           <div className="flex items-start gap-4">
             <div className="bg-orange-100 p-3 rounded-md">
-              <Calendar className="text-orange-500 h-6 w-6" />
+              <Calendar className="text-primary-500 h-6 w-6" />
             </div>
 
             <div className="flex-1">
@@ -72,14 +72,14 @@ export default function AdDetail({ ad, onBack, onEdit, onResend }: AdDetailProps
                   <button
                     type="button"
                     onClick={handleEdit}
-                    className="px-4 py-2 text-orange-500 border border-orange-500 rounded-md hover:bg-orange-50"
+                    className="px-4 py-2 text-primary-500 border border-primary-500 rounded-md hover:bg-orange-50"
                   >
                     Modifier
                   </button>
                   <button
                     type="button"
                     onClick={handleResend}
-                    className="px-4 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+                    className="px-4 py-2 bg-primary-500 text-white rounded-md hover:bg-orange-600"
                   >
                     Relancer
                   </button>

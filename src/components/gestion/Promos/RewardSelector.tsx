@@ -50,7 +50,7 @@ const RewardSelector = ({
         <button
           type="button"
           onClick={() => setShowRewardDropdown(!showRewardDropdown)}
-          className="w-full p-4 rounded-xl cursor-pointer flex justify-between items-start transition-colors focus:bg-[#FDE9DA] focus:border-2 border-1 border-gray-200 focus:border-[#F17922]"
+          className="w-full p-4 rounded-xl cursor-pointer flex justify-between items-start transition-colors focus:bg-[#ff6200] focus:border-2 border-1 border-gray-200 focus:border-[#F17922]"
         >
           <div className="flex-1 min-w-0">
             <span className="text-sm text-slate-600 font-medium">Sélectionnez produits</span>

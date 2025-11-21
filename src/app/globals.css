@@ -2,7 +2,6 @@
 
 @layer base {
   :root {
-    --font-sofia: "Sofia Sans", system-ui, sans-serif;
     --font-urbanist: "Urbanist", system-ui, sans-serif;
     --font-blocklyn-condensed: "Blocklyn Condensed", system-ui, sans-serif;
     --font-blocklyn-grunge: "Blocklyn Grunge", system-ui, sans-serif;
@@ -27,11 +26,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sofia);
-}
-
-.font-sofia {
-  font-family: var(--font-sofia);
 }
 
 .font-urbanist {

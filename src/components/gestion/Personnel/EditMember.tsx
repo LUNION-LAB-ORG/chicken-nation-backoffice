@@ -353,7 +353,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
-          <h2 className="text-base font-sofia-semibold text-[#F17922] mx-auto text-center">Modifier votre profil</h2>
+          <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">Modifier votre profil</h2>
           <Image src="/icons/close.png" width={20} height={20} alt="Fermer" onClick={onCancel}
             className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-4xl font-bold" />
         </div>

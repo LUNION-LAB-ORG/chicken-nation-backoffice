@@ -250,7 +250,7 @@ export function ClientProfile({ clientId, onClose }: ClientProfileProps) {
             )}
           </div>
 
-          <h2 className="text-base sm:text-lg mt-4 font-medium font-sofia-pro text-gray-900">{fullName}</h2>
+          <h2 className="text-base sm:text-lg mt-4 font-medium font-pro text-gray-900">{fullName}</h2>
         </div>
 
       <div className="mt-6 border-b border-gray-100">

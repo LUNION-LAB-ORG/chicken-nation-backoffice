@@ -1,6 +1,6 @@
 import type {Metadata} from "next";
 import "./globals.css";
-import {sofia, urbanist, blocklynCondensed, blocklynGrunge} from './fonts';
+import { urbanist, blocklynCondensed, blocklynGrunge} from './fonts';
 import {Toaster} from 'react-hot-toast';
 import {GoogleMapsProvider} from '@/contexts/GoogleMapsContext';
 import {QueryProvider} from '@/providers/QueryProvider';
@@ -25,11 +25,11 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="fr"
-		      className={`${sofia.variable} ${urbanist.variable} ${blocklynCondensed.variable} ${blocklynGrunge.variable}`}
+		      className={`${urbanist.variable} ${blocklynCondensed.variable} ${blocklynGrunge.variable}`}
 		      suppressHydrationWarning>
 		<head>
 		</head>
-		<body className="font-sofia" suppressHydrationWarning>
+		<body suppressHydrationWarning>
 		<Toaster position="top-right" toastOptions={{
 			duration: 3000,
 			style: {

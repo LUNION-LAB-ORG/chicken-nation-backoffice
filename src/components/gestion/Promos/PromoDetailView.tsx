@@ -188,7 +188,7 @@ const PromoDetailView = ({
               {/* Badge "Visibilité" en haut à droite */}
               <div className="absolute top-4 right-4 z-10">
                 <div className="bg-white rounded-xl lg:px-2 md:px-1 sm:px-2 sm:py-2 2xl:px-4 xl:px-4 2xl:py-1 py-[1px] px-1 xl:py-[1px] shadow-sm">
-                  <span className="text-orange-500 2xl:text-xs lg:text-[10px] text-xs font-medium">{promo.visibility || 'PUBLIC'}</span>
+                  <span className="text-primary-500 2xl:text-xs lg:text-[10px] text-xs font-medium">{promo.visibility || 'PUBLIC'}</span>
                 </div>
               </div>
 

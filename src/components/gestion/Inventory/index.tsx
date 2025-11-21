@@ -345,7 +345,7 @@ export default function Inventory() {
                       setCurrentView('products');
                       setIsDropdownOpen(false);
                     }}
-                    className="w-full px-4 py-2 hover:text-orange-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                    className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
                   >
                     Produits
                   </button>
@@ -354,7 +354,7 @@ export default function Inventory() {
                       setCurrentView('categories');
                       setIsDropdownOpen(false);
                     }}
-                    className="w-full px-4 py-2 hover:text-orange-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                    className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
                   >
                     Catégories
                   </button>

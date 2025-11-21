@@ -74,7 +74,7 @@ const ProductTargetSelector = ({
           onClick={() => onProductTargetChange('all')}
           className={`w-full p-4 cursor-pointer rounded-xl flex justify-between items-center transition-colors ${
             activeProductTarget === 'all'
-               ? 'bg-[#FDE9DA] border-2 border-[#F17922]'
+               ? 'bg-[#ff6200] border-2 border-[#F17922]'
                 : 'bg-white border border-gray-200 hover:bg-gray-50'
           }`}
         >
@@ -96,7 +96,7 @@ const ProductTargetSelector = ({
             }}
             className={`w-full p-4 cursor-pointer rounded-xl flex justify-between items-center transition-colors ${
               activeProductTarget === 'specific'
-                   ? 'bg-[#FDE9DA] border-2 border-[#F17922]'
+                   ? 'bg-[#ff6200] border-2 border-[#F17922]'
                   : 'bg-white border border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -188,7 +188,7 @@ const ProductTargetSelector = ({
             }}
             className={`w-full p-4 cursor-pointer rounded-xl flex justify-between items-center transition-colors ${
               activeProductTarget === 'categories'
-                  ? 'bg-[#FDE9DA] border-2 border-[#F17922]'
+                  ? 'bg-[#ff6200] border-2 border-[#F17922]'
                   : 'bg-white border border-gray-200 hover:bg-gray-50'
             }`}
           >

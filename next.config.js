@@ -18,6 +18,10 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
         protocol: "https",
         hostname: "kfy9qwx5yd.ufs.sh",
       },

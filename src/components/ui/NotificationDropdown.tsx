@@ -185,7 +185,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-400 hover:text-gray-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-lg"
+        className="relative p-2 text-gray-400 hover:text-gray-500 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 rounded-lg"
       >
         {/* Icône de notification */}
         <svg
@@ -237,7 +237,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           <div className="max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
                 <p className="text-sm text-gray-500 mt-2">Chargement...</p>
               </div>
             ) : error ? (
@@ -277,7 +277,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             </p>
                           </div>
                           {!notification.is_read && (
-                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            <span className="w-2 h-2 bg-primary-500 rounded-full"></span>
                           )}
                         </div>
                         <p className="text-sm text-gray-600 line-clamp-2">
@@ -296,8 +296,8 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                           }
                           className={`p-1 rounded-full transition-colors ${
                             notification.is_read
-                              ? "text-gray-400 hover:text-orange-500"
-                              : "text-orange-500 hover:text-orange-600"
+                              ? "text-gray-400 hover:text-primary-500"
+                              : "text-primary-500 hover:text-orange-600"
                           }`}
                           title={
                             notification.is_read

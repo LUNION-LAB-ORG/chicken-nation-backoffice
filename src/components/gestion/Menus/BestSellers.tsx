@@ -70,8 +70,8 @@ export default function BestSellers({ onEditMenu, onViewMenu }: BestSellersProps
              
 
               {loading && (
-                <div className="flex items-center gap-1 text-orange-500">
-                  <div className="w-3 h-3 border border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="flex items-center gap-1 text-primary-500">
+                  <div className="w-3 h-3 border border-primary-500 border-t-transparent rounded-full animate-spin"></div>
                   <span className="text-xs">Chargement...</span>
                 </div>
               )}

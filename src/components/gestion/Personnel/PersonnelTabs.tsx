@@ -19,7 +19,7 @@ const PersonnelTabs: React.FC<PersonnelTabsProps> = ({ tabs, selected, onSelect 
       {tabs.map((tab, idx) => (
         <button
           key={tab}
-          className={`transition-colors font-sofia-bold cursor-pointer text-[11px] lg:text-[14px]
+          className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
              px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap
             ${selected === tab
               ? 'bg-[#F17922] text-white font-bold shadow-none'
