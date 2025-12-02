@@ -191,7 +191,7 @@ export default function Inventory() {
       toast.error('Vous n\'avez pas les permissions pour modifier des produits');
       return;
     }
-    
+
     // Convert ProductViewProduct to Dish format for the edit modal
     const dishForEdit: Dish = {
       id: product.id,
@@ -215,7 +215,7 @@ export default function Inventory() {
       toast.error('Vous n\'avez pas les permissions pour modifier la disponibilité des produits');
       return;
     }
-    
+
     try {
       setIsLoading(true);
       const { updateSupplementAvailability } = await import('@/services/dishService');
@@ -240,7 +240,7 @@ export default function Inventory() {
       toast.error('Vous n\'avez pas les permissions pour supprimer des produits');
       return;
     }
-    
+
     try {
       await deleteSupplement(productId);
       toast.success('produit supprimé avec succès');
@@ -286,7 +286,7 @@ export default function Inventory() {
   // ✅ RBAC Hook
   const {
     canCreateCategory,
-    canUpdateCategory, 
+    canUpdateCategory,
     canDeleteCategory,
     canCreateSupplement,
     canUpdateSupplement,
@@ -294,195 +294,193 @@ export default function Inventory() {
   } = useRBAC();
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="px-2 lg:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
-        <DashboardPageHeader
-          mode="list"
-          title="Inventaires"
-          searchConfig={{
-            placeholder: "Rechercher un menu",
-            buttonText: "Chercher",
-            onSearch: handleSearch,
-            realTimeSearch: true  // ✅ Activer la recherche en temps réel
-          }}
-          actions={[
-            // ✅ RBAC: Bouton de création de catégorie seulement si permission
-            ...(canCreateCategory() ? [{
-              label: "Créer une catégorie",
-              onClick: handleCreateCategory,
-              variant: "secondary" as const,
-              className: "bg-white border border-[#F17922] text-[#F17922] hover:bg-white hover:opacity-80"
-            }] : []),
-            // ✅ RBAC: Bouton d'ajout de produit seulement si permission
-            ...(canCreateSupplement() ? [{
-              label: "Ajouter un produit",
-              onClick: handleCreateProduct,
-              variant: "primary" as const
-            }] : [])
-          ]}
-        />
+    <div className="flex-1 overflow-auto p-4">
+      <DashboardPageHeader
+        mode="list"
+        title="Inventaires"
+        searchConfig={{
+          placeholder: "Rechercher un menu",
+          buttonText: "Chercher",
+          onSearch: handleSearch,
+          realTimeSearch: true  // ✅ Activer la recherche en temps réel
+        }}
+        actions={[
+          // ✅ RBAC: Bouton de création de catégorie seulement si permission
+          ...(canCreateCategory() ? [{
+            label: "Créer une catégorie",
+            onClick: handleCreateCategory,
+            variant: "secondary" as const,
+            className: "bg-white border border-[#F17922] text-[#F17922] hover:bg-white hover:opacity-80"
+          }] : []),
+          // ✅ RBAC: Bouton d'ajout de produit seulement si permission
+          ...(canCreateSupplement() ? [{
+            label: "Ajouter un produit",
+            onClick: handleCreateProduct,
+            variant: "primary" as const
+          }] : [])
+        ]}
+      />
 
-        <div className="bg-white rounded-[20px] p-4 mt-4 shadow-sm">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
+      <div className="bg-white rounded-[20px] p-4 mt-4 shadow-sm">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
 
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
-              >
-                <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
-                  {currentView === 'products' ? 'Produits' : 'Catégories'}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-500 " />
-              </button>
-
-
-              {isDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-[10px] shadow-lg py-1 z-10">
-                  <button
-                    onClick={() => {
-                      setCurrentView('products');
-                      setIsDropdownOpen(false);
-                    }}
-                    className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
-                  >
-                    Produits
-                  </button>
-                  <button
-                    onClick={() => {
-                      setCurrentView('categories');
-                      setIsDropdownOpen(false);
-                    }}
-                    className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
-                  >
-                    Catégories
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
+            >
+              <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
+                {currentView === 'products' ? 'Produits' : 'Catégories'}
+              </span>
+              <ChevronDown className="h-4 w-4 text-gray-500 " />
+            </button>
 
 
-            {currentView === 'categories' ? (
-              <div />
-            ) : (
-              <SupplementTabs
-                tabs={tabs}
-                selectedTab={selectedTab}
-                onTabChange={(tabId) => setSelectedTab(tabId as ProductCategory)}
-              />
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 w-full bg-white rounded-[10px] shadow-lg py-1 z-10">
+                <button
+                  onClick={() => {
+                    setCurrentView('products');
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                >
+                  Produits
+                </button>
+                <button
+                  onClick={() => {
+                    setCurrentView('categories');
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                >
+                  Catégories
+                </button>
+              </div>
             )}
-
-
-            <div className="w-[120px]"></div>
           </div>
 
 
           {currentView === 'categories' ? (
-            <CategoriesTable
-              onEdit={canUpdateCategory() ? handleEditCategory : undefined}
-              onDelete={canDeleteCategory() ? handleDeleteCategory : undefined}
-              onCreateCategory={canCreateCategory() ? handleCreateCategory : undefined}
-              searchQuery={searchQuery}
-            />
+            <div />
           ) : (
-            <SupplementView
-              products={filteredProducts}
+            <SupplementTabs
+              tabs={tabs}
               selectedTab={selectedTab}
-              onEdit={canUpdateSupplement() ? handleEditProduct : undefined}
-              onCreateProduct={canCreateSupplement() ? handleCreateProduct : undefined}
-              onDelete={canDeleteSupplement() ? confirmDeleteProduct : undefined}
-              onUpdateAvailability={canUpdateSupplement() ? handleUpdateAvailability : undefined}
-              searchQuery={searchQuery}
-              totalItems={totalItems}
-              totalPages={totalPages}
-              currentPage={currentPage}
-              isLoading={dishesLoading}
-              onPageChange={setCurrentPage}
+              onTabChange={(tabId) => setSelectedTab(tabId as ProductCategory)}
             />
           )}
+
+
+          <div className="w-[120px]"></div>
         </div>
 
-        <Modal
-          isOpen={showAddProductModal}
-          onClose={() => setShowAddProductModal(false)}
-          title="Ajouter un produit"
-        >
-          <AddSupplement
-            onCancel={() => setShowAddProductModal(false)}
-            onSuccess={() => {
-              refetchDishes();
-              setShowAddProductModal(false);
-            }}
+
+        {currentView === 'categories' ? (
+          <CategoriesTable
+            onEdit={canUpdateCategory() ? handleEditCategory : undefined}
+            onDelete={canDeleteCategory() ? handleDeleteCategory : undefined}
+            onCreateCategory={canCreateCategory() ? handleCreateCategory : undefined}
+            searchQuery={searchQuery}
           />
-        </Modal>
-
-        <Modal
-          isOpen={showAddCategoryModal}
-          onClose={() => setShowAddCategoryModal(false)}
-          title="Ajouter une catégorie"
-        >
-          <AddCategory
-            onCancel={() => setShowAddCategoryModal(false)}
-            onSuccess={() => {
-              setShowAddCategoryModal(false);
-            }}
+        ) : (
+          <SupplementView
+            products={filteredProducts}
+            selectedTab={selectedTab}
+            onEdit={canUpdateSupplement() ? handleEditProduct : undefined}
+            onCreateProduct={canCreateSupplement() ? handleCreateProduct : undefined}
+            onDelete={canDeleteSupplement() ? confirmDeleteProduct : undefined}
+            onUpdateAvailability={canUpdateSupplement() ? handleUpdateAvailability : undefined}
+            searchQuery={searchQuery}
+            totalItems={totalItems}
+            totalPages={totalPages}
+            currentPage={currentPage}
+            isLoading={dishesLoading}
+            onPageChange={setCurrentPage}
           />
-        </Modal>
-
-        <Modal
-          isOpen={showEditSupplementModal}
-          onClose={() => setShowEditSupplementModal(false)}
-          title="Modifier un produit"
-        >
-          <EditSupplement
-            onCancel={() => setShowEditSupplementModal(false)}
-            onSuccess={handleUpdateSupplement}
-            product={selectedProduct}
-          />
-        </Modal>
-
-        <Modal
-          isOpen={showDeleteSupplementModal}
-          onClose={() => setShowDeleteSupplementModal(false)}
-          title="Supprimer un produit"
-        >
-          <DeleteSupplementModal
-            onCancel={() => setShowDeleteSupplementModal(false)}
-            onDelete={handleDeleteProduct}
-            product={productToDelete!}
-          />
-        </Modal>
-
-        <Modal
-          isOpen={isDeleteCategoryModalOpen}
-          onClose={() => setIsDeleteCategoryModalOpen(false)}
-          title="Supprimer une catégorie"
-        >
-          {categoryToDelete && (
-            <DeleteCategoryModal
-              category={categoryToDelete as ApiCategory}
-              onClose={() => setIsDeleteCategoryModalOpen(false)}
-              onConfirm={confirmDeleteCategory}
-              isLoading={isLoading}
-            />
-          )}
-        </Modal>
-
-        <Modal
-          isOpen={isEditCategoryModalOpen}
-          onClose={() => setIsEditCategoryModalOpen(false)}
-          title="Modifier une catégorie"
-        >
-          {categoryToEdit && (
-            <EditCategory
-              onClose={() => setIsEditCategoryModalOpen(false)}
-              onSave={handleSaveEditedCategory}
-              category={categoryToEdit as ApiCategory}
-            />
-          )}
-        </Modal>
+        )}
       </div>
+
+      <Modal
+        isOpen={showAddProductModal}
+        onClose={() => setShowAddProductModal(false)}
+        title="Ajouter un produit"
+      >
+        <AddSupplement
+          onCancel={() => setShowAddProductModal(false)}
+          onSuccess={() => {
+            refetchDishes();
+            setShowAddProductModal(false);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showAddCategoryModal}
+        onClose={() => setShowAddCategoryModal(false)}
+        title="Ajouter une catégorie"
+      >
+        <AddCategory
+          onCancel={() => setShowAddCategoryModal(false)}
+          onSuccess={() => {
+            setShowAddCategoryModal(false);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showEditSupplementModal}
+        onClose={() => setShowEditSupplementModal(false)}
+        title="Modifier un produit"
+      >
+        <EditSupplement
+          onCancel={() => setShowEditSupplementModal(false)}
+          onSuccess={handleUpdateSupplement}
+          product={selectedProduct}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={showDeleteSupplementModal}
+        onClose={() => setShowDeleteSupplementModal(false)}
+        title="Supprimer un produit"
+      >
+        <DeleteSupplementModal
+          onCancel={() => setShowDeleteSupplementModal(false)}
+          onDelete={handleDeleteProduct}
+          product={productToDelete!}
+        />
+      </Modal>
+
+      <Modal
+        isOpen={isDeleteCategoryModalOpen}
+        onClose={() => setIsDeleteCategoryModalOpen(false)}
+        title="Supprimer une catégorie"
+      >
+        {categoryToDelete && (
+          <DeleteCategoryModal
+            category={categoryToDelete as ApiCategory}
+            onClose={() => setIsDeleteCategoryModalOpen(false)}
+            onConfirm={confirmDeleteCategory}
+            isLoading={isLoading}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={isEditCategoryModalOpen}
+        onClose={() => setIsEditCategoryModalOpen(false)}
+        title="Modifier une catégorie"
+      >
+        {categoryToEdit && (
+          <EditCategory
+            onClose={() => setIsEditCategoryModalOpen(false)}
+            onSave={handleSaveEditedCategory}
+            category={categoryToEdit as ApiCategory}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

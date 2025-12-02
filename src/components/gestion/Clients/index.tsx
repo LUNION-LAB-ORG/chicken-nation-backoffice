@@ -42,18 +42,18 @@ export default function Clients({ setActiveTab }: ClientsProps) {
 
   // ✅ Utiliser le hook spécialisé pour le comptage
   const { totalCount: clientsCount, hasAccurateCount } = useCustomersCount({
-    restaurantId  
+    restaurantId
   });
- 
+
   const handleViewChange = (view: 'list' | 'create' | 'edit' | 'view' | 'reviews', clientId?: string | null) => {
     setClientState(prev => ({ ...prev, view, selectedClientId: clientId }));
   };
 
   const handleClientSelect = (clientId: string) => {
     if (clientState.selectedClientId === clientId) {
-       setClientState(prev => ({ ...prev, selectedClientId: null }));
+      setClientState(prev => ({ ...prev, selectedClientId: null }));
     } else {
-       setClientState(prev => ({ ...prev, selectedClientId: clientId }));
+      setClientState(prev => ({ ...prev, selectedClientId: clientId }));
     }
   };
 
@@ -74,7 +74,7 @@ export default function Clients({ setActiveTab }: ClientsProps) {
   };
 
   const toggleConnectedFilter = () => {
-     setClientState(prev => ({
+    setClientState(prev => ({
       ...prev,
       showConnectedOnly: !prev.showConnectedOnly,
       selectedClientId: null
@@ -92,62 +92,60 @@ export default function Clients({ setActiveTab }: ClientsProps) {
   };
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="p-6 px-8 space-y-6">
-        <div className="-mt-10">
-          <ClientHeader
-            currentView={clientState.view}
-            selectedClientId={clientState.selectedClientId}
-            onBack={clientState.view !== 'list' ? handleBack : undefined}
-            onViewReviews={handleViewReviews}
-            onToggleConnected={toggleConnectedFilter}
-            showingConnectedOnly={clientState.showConnectedOnly}
-            onViewOrders={handleViewOrders}
-            onSearch={handleSearch}
-          />
-
-          {clientState.view === 'list' && (
-            <UserCounter count={clientsCount} />
-          )}
-        </div>
+    <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="-mt-10">
+        <ClientHeader
+          currentView={clientState.view}
+          selectedClientId={clientState.selectedClientId}
+          onBack={clientState.view !== 'list' ? handleBack : undefined}
+          onViewReviews={handleViewReviews}
+          onToggleConnected={toggleConnectedFilter}
+          showingConnectedOnly={clientState.showConnectedOnly}
+          onViewOrders={handleViewOrders}
+          onSearch={handleSearch}
+        />
 
         {clientState.view === 'list' && (
-          <div className='bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]'>
-            <ClientsTable
-              selectedClientId={clientState.selectedClientId}
-              onClientClick={handleClientSelect}
-              onClientDoubleClick={handleClientDoubleClick}
-              onViewProfile={(clientId) => {
-                handleViewChange('view', clientId);
-              }}
-              connectedOnly={clientState.showConnectedOnly}
-              searchQuery={searchQuery}
-              restaurantId={restaurantId}
-            />
-          </div>
-        )}
-
-        {clientState.view === 'view' && clientState.selectedClientId && (
-          <ClientProfile
-            clientId={clientState.selectedClientId}
-            onClose={handleBack}
-          />
-        )}
-
-        {clientState.view === 'create' && (
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 lg:w-2/3">
-              <AddMenu onCancel={handleBack} />
-            </div>
-            <div className="w-full lg:w-1/3 invisible">
-            </div>
-          </div>
-        )}
-
-        {clientState.view === 'reviews' && (
-          <GlobalReviews />
+          <UserCounter count={clientsCount} />
         )}
       </div>
+
+      {clientState.view === 'list' && (
+        <div className='bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]'>
+          <ClientsTable
+            selectedClientId={clientState.selectedClientId}
+            onClientClick={handleClientSelect}
+            onClientDoubleClick={handleClientDoubleClick}
+            onViewProfile={(clientId) => {
+              handleViewChange('view', clientId);
+            }}
+            connectedOnly={clientState.showConnectedOnly}
+            searchQuery={searchQuery}
+            restaurantId={restaurantId}
+          />
+        </div>
+      )}
+
+      {clientState.view === 'view' && clientState.selectedClientId && (
+        <ClientProfile
+          clientId={clientState.selectedClientId}
+          onClose={handleBack}
+        />
+      )}
+
+      {clientState.view === 'create' && (
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 lg:w-2/3">
+            <AddMenu onCancel={handleBack} />
+          </div>
+          <div className="w-full lg:w-1/3 invisible">
+          </div>
+        </div>
+      )}
+
+      {clientState.view === 'reviews' && (
+        <GlobalReviews />
+      )}
     </div>
   );
 }

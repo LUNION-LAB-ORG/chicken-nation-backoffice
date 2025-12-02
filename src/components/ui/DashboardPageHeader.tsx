@@ -8,7 +8,7 @@ interface SearchConfig {
   placeholder?: string
   buttonText?: string
   onSearch?: (value: string) => void
-  realTimeSearch?: boolean  
+  realTimeSearch?: boolean
 }
 
 interface ActionButton {
@@ -69,7 +69,9 @@ const DashboardPageHeader = ({
 
     // Si la recherche en temps réel est activée, déclencher la recherche immédiatement
     if (searchConfig?.realTimeSearch) {
-      searchConfig?.onSearch?.(value);
+      setTimeout(() => {
+        searchConfig?.onSearch?.(value);
+      }, 1000);
     }
   }
 
@@ -130,10 +132,10 @@ const DashboardPageHeader = ({
               className={`
                 px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2
                 ${action.className ||
-                  (action.variant === 'secondary'
-                    ? 'text-gray-700 bg-gray-100 hover:bg-gray-200'
-                    : 'text-white bg-[#F17922] hover:bg-[#e06816]'
-                  )}
+                (action.variant === 'secondary'
+                  ? 'text-gray-700 bg-gray-100 hover:bg-gray-200'
+                  : 'text-white bg-[#F17922] hover:bg-[#e06816]'
+                )}
                 ${mode === 'list' ? 'w-full sm:w-auto' : ''}
               `}
             >

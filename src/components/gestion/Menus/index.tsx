@@ -57,18 +57,6 @@ const Menus = () => {
   // ✅ Les résultats de recherche viennent directement du serveur
   const filteredMenus = searchResults;
 
-  // Ces variables peuvent être utilisées plus tard pour d'autres fonctionnalités
-  // const bestSellers = [...menuItems]
-  //   .filter(item => item.isAvailable)
-  //   .sort((a, b) => (b.totalReviews || 0) - (a.totalReviews || 0))
-  //   .slice(0, 5);
-
-  // const promoMenus = menuItems.filter(item => {
-  //   return item.supplements &&
-  //     Object.values(item.supplements).some((supp: { isIncluded?: boolean }) => supp.isIncluded) ||
-  //     item.isNew;
-  // }).slice(0, 5);
-
   const handleViewChange = (view: 'list' | 'create' | 'edit' | 'view', menu?: MenuItem) => {
     setMenuState({
       view,
@@ -117,10 +105,10 @@ const Menus = () => {
 
                   // ✅ Extraction sécurisée de l'ID restaurant
                   if (typeof r === 'object' && r !== null) {
-                    const restaurantObj = r as { restaurant_id?: string; restaurant?: { id: string }; [key: string]: unknown };
+                    const restaurantObj = r as { restaurant_id?: string; restaurant?: { id: string };[key: string]: unknown };
                     id = restaurantObj.restaurant_id ||
-                        (restaurantObj.restaurant && typeof restaurantObj.restaurant === 'object' && restaurantObj.restaurant.id) ||
-                        null;
+                      (restaurantObj.restaurant && typeof restaurantObj.restaurant === 'object' && restaurantObj.restaurant.id) ||
+                      null;
                   } else if (typeof r === 'string') {
                     id = r;
                   }
@@ -150,7 +138,7 @@ const Menus = () => {
             // ✅ Gestion sécurisée des suppléments
             if (menuData.dish_supplements && Array.isArray(menuData.dish_supplements) && menuData.dish_supplements.length > 0) {
               interface ProcessedSupplement {
-                supplement?: { id: string; name?: string; type?: string; [key: string]: unknown };
+                supplement?: { id: string; name?: string; type?: string;[key: string]: unknown };
                 supplement_id?: string;
                 quantity?: number;
                 [key: string]: unknown;
@@ -162,7 +150,7 @@ const Menus = () => {
                   if (!supp || typeof supp !== 'object') continue;
 
                   const supplementObj = supp as {
-                    supplement?: { id: string; name?: string; type?: string; [key: string]: unknown };
+                    supplement?: { id: string; name?: string; type?: string;[key: string]: unknown };
                     supplement_id?: string;
                     quantity?: number;
                     [key: string]: unknown
@@ -328,9 +316,9 @@ const Menus = () => {
       // Extraire les IDs et IDs de relation des restaurants actuels
       const currentRestaurants = menuState.selectedMenu.dish_restaurants
         ? menuState.selectedMenu.dish_restaurants.map(r => ({
-            id: r.restaurant_id || (r.restaurant && r.restaurant.id) || '',
-            relationId: r.id
-          }))
+          id: r.restaurant_id || (r.restaurant && r.restaurant.id) || '',
+          relationId: r.id
+        }))
         : [];
 
       // Extraire les IDs des nouveaux restaurants
@@ -338,20 +326,20 @@ const Menus = () => {
       const newRestaurantIds = menuWithRestaurants.selectedRestaurants && Array.isArray(menuWithRestaurants.selectedRestaurants)
         ? menuWithRestaurants.selectedRestaurants
         : (updatedMenu.restaurantId
-            ? (Array.isArray(updatedMenu.restaurantId)
-                ? updatedMenu.restaurantId
-                : [updatedMenu.restaurantId])
-            : []);
+          ? (Array.isArray(updatedMenu.restaurantId)
+            ? updatedMenu.restaurantId
+            : [updatedMenu.restaurantId])
+          : []);
 
 
 
       // Extraire les suppléments actuels avec leurs quantités et IDs de relation
       const currentSupplements = menuState.selectedMenu.dish_supplements
         ? menuState.selectedMenu.dish_supplements.map(s => ({
-            id: s.supplement_id || (s.supplement && s.supplement.id) || '',
-            quantity: s.quantity || 1,
-            relationId: s.id
-          }))
+          id: s.supplement_id || (s.supplement && s.supplement.id) || '',
+          quantity: s.quantity || 1,
+          relationId: s.id
+        }))
         : [];
 
       // Extraire les nouveaux suppléments avec leurs quantités
@@ -517,163 +505,157 @@ const Menus = () => {
     }
   };
 
-  // Ces variables seront utilisées avec les données API au lieu des données mockées
-  // const similarMenus = apiMenus.filter(item =>
-  //   item.categoryId === menuState.selectedMenu?.categoryId && item.id !== menuState.selectedMenu?.id
-  // ).slice(0, 4);
-
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="px-2 2k:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 2k:px-8 2k:pb-8">
-        <MenuHeader
-          currentView={menuState.view}
-          onBack={() => handleViewChange('list')}
-          onCreateMenu={() => handleViewChange('create')}
-          onSearch={handleSearch}
-        />
+    <div className="flex-1 overflow-auto p-4">
 
-        {menuState.view === 'list' && (
-          <div className='bg-white rounded-xl sm:rounded-2xl overflow-hidden'>
-            {searchLoading ? (
-              <div className="flex justify-center items-center h-40">
-                <div className="text-gray-500">Chargement des données...</div>
-              </div>
-            ) : isSearching ? (
-              // Affichage des résultats de recherche basés sur les données API
-              <div className="p-4 sm:p-6 lg:p-8">
-                <div className="flex items-center mb-6">
-                  <Image src="/icons/chicken.png" alt="menu" width={12} height={12} className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5" />
-                  <h2 className="text-xs sm:text-sm font-medium text-[#F17922] pl-1.5 sm:pl-2">
-                    Résultats de recherche pour &ldquo;{searchQuery}&rdquo; ({filteredMenus.length} résultat{filteredMenus.length > 1 ? 's' : ''})
-                  </h2>
-                </div>
+      <MenuHeader
+        currentView={menuState.view}
+        onBack={() => handleViewChange('list')}
+        onCreateMenu={() => handleViewChange('create')}
+        onSearch={handleSearch}
+      />
 
-                {filteredMenus.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-40">
-                    <p className="text-gray-500 mb-2">Aucun plat trouvé pour &ldquo;{searchQuery}&rdquo;</p>
-                    <p className="text-gray-400 text-sm">Essayez avec d&apos;autres mots-clés</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
-                    {filteredMenus.map((menu) => (
-                      <MenuItemCard
-                        key={menu.id}
-                        menu={menu as unknown as MenuItem}
-                        onEdit={() => handleEditMenu(menu as unknown as MenuItem)}
-                        onView={() => handleViewMenu(menu as unknown as MenuItem)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Affichage normal avec BestSellers et MenuCategories (qui chargent leurs propres données API)
-              <>
-                <BestSellers
-                  menus={[]}
-                  onEditMenu={handleEditMenu}
-                  onViewMenu={handleViewMenu}
-                />
-                <div className="border-t border-gray-100 mt-4"></div>
-                <MenuCategories
-                  categories={[]}
-                  onEditMenu={handleEditMenu}
-                  onViewMenu={handleViewMenu}
-                />
-              </>
-            )}
-          </div>
-        )}
-
-        {menuState.view === 'create' && (
-          <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
-            <div className="w-full min-[1620px]:mr-56">
-              <AddMenuForm
-                onCancel={() => handleViewChange('list')}
-                onSubmit={async (newMenu: MenuItem) => {
-                  try {
-                    // ✅ DEBUG: Vérifier les données reçues dans index.tsx
-                    console.log('🔍 DEBUG index.tsx - Menu reçu:', {
-                      selectedRestaurants: (newMenu as MenuItem & { selectedRestaurants?: string[] }).selectedRestaurants,
-                      restaurantId: newMenu.restaurantId,
-                      dish_supplements: newMenu.dish_supplements?.length || 0,
-                      supplements: newMenu.supplements
-                    });
-
-                    // ✅ Import sécurisé des services
-                    const { createMenu, menuToFormData } = await import('@/services/menuService');
-
-                    // ✅ Conversion sécurisée en FormData pour création
-                    const formData = menuToFormData(newMenu, false);
-
-                    // ✅ DEBUG: Vérifier le FormData
-                    console.log('🔍 DEBUG index.tsx - FormData créé:', {
-                      restaurant_ids: formData.getAll('restaurant_ids'),
-                      supplement_ids: formData.getAll('supplement_ids'),
-                      supplement_quantities: formData.getAll('supplement_quantities')
-                    });
-
-                    // ✅ Création sécurisée du menu
-                    await createMenu(formData);
-
-                    toast.success('Menu créé avec succès');
-                    refetch(); // Recharger les données
-                    handleViewChange('list');
-                  } catch (error) {
-                    console.error('Erreur lors de la création du menu:', error);
-                    toast.error('Erreur lors de la création du menu');
-                  }
-                }}
-              />
+      {menuState.view === 'list' && (
+        <div className='bg-white rounded-xl sm:rounded-2xl overflow-hidden'>
+          {searchLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="text-gray-500">Chargement des données...</div>
             </div>
-          </div>
-        )}
+          ) : isSearching ? (
+            // Affichage des résultats de recherche basés sur les données API
+            <div className="p-4 sm:p-6 lg:p-8">
+              <div className="flex items-center mb-6">
+                <Image src="/icons/chicken.png" alt="menu" width={12} height={12} className="w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5" />
+                <h2 className="text-xs sm:text-sm font-medium text-[#F17922] pl-1.5 sm:pl-2">
+                  Résultats de recherche pour &ldquo;{searchQuery}&rdquo; ({filteredMenus.length} résultat{filteredMenus.length > 1 ? 's' : ''})
+                </h2>
+              </div>
 
-        {menuState.view === 'edit' && menuState.selectedMenu && (
-          <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
-            <div className="w-full min-[1620px]:mr-56">
-              {menuState.loadingMenu ? (
-                <div className="flex items-center justify-center h-96">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F17922]"></div>
+              {filteredMenus.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40">
+                  <p className="text-gray-500 mb-2">Aucun plat trouvé pour &ldquo;{searchQuery}&rdquo;</p>
+                  <p className="text-gray-400 text-sm">Essayez avec d&apos;autres mots-clés</p>
                 </div>
               ) : (
-                <EditMenuForm
-                  initialData={menuState.selectedMenu as unknown as MenuItem}
-                  onCancel={() => handleViewChange('list')}
-                  onSubmit={handleSaveEdit}
-                />
-              )}
-            </div>
-          </div>
-        )}
-
-        {menuState.view === 'view' && menuState.selectedMenu && (
-          <div className="flex flex-col xl:flex-row gap-4">
-            <div className="flex-1">
-              {menuState.loadingMenu ? (
-                <div className="flex items-center justify-center h-96">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F17922]"></div>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
+                  {filteredMenus.map((menu) => (
+                    <MenuItemCard
+                      key={menu.id}
+                      menu={menu as unknown as MenuItem}
+                      onEdit={() => handleEditMenu(menu as unknown as MenuItem)}
+                      onView={() => handleViewMenu(menu as unknown as MenuItem)}
+                    />
+                  ))}
                 </div>
-              ) : (
-                <DetailsMenu
-                  menu={menuState.selectedMenu as unknown as MenuItem}
-                  onEdit={() => handleEditMenu(menuState.selectedMenu! as unknown as MenuItem)}
-                  onDelete={() => handleDeleteMenu(menuState.selectedMenu! as unknown as MenuItem)}
-                />
               )}
             </div>
-            <div className="xl:w-1/3">
-              <MenuRightSide
-                similarMenus={searchResults.filter(item =>
-                  item.categoryId === (menuState.selectedMenu?.categoryId || '')
-                ).slice(0, 3) as unknown as MenuItem[]}
+          ) : (
+            // Affichage normal avec BestSellers et MenuCategories (qui chargent leurs propres données API)
+            <>
+              <BestSellers
+                menus={[]}
                 onEditMenu={handleEditMenu}
                 onViewMenu={handleViewMenu}
               />
-            </div>
+              <div className="border-t border-gray-100 mt-4"></div>
+              <MenuCategories
+                categories={[]}
+                onEditMenu={handleEditMenu}
+                onViewMenu={handleViewMenu}
+              />
+            </>
+          )}
+        </div>
+      )}
+
+      {menuState.view === 'create' && (
+        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
+          <div className="w-full min-[1620px]:mr-56">
+            <AddMenuForm
+              onCancel={() => handleViewChange('list')}
+              onSubmit={async (newMenu: MenuItem) => {
+                try {
+                  // ✅ DEBUG: Vérifier les données reçues dans index.tsx
+                  console.log('🔍 DEBUG index.tsx - Menu reçu:', {
+                    selectedRestaurants: (newMenu as MenuItem & { selectedRestaurants?: string[] }).selectedRestaurants,
+                    restaurantId: newMenu.restaurantId,
+                    dish_supplements: newMenu.dish_supplements?.length || 0,
+                    supplements: newMenu.supplements
+                  });
+
+                  // ✅ Import sécurisé des services
+                  const { createMenu, menuToFormData } = await import('@/services/menuService');
+
+                  // ✅ Conversion sécurisée en FormData pour création
+                  const formData = menuToFormData(newMenu, false);
+
+                  // ✅ DEBUG: Vérifier le FormData
+                  console.log('🔍 DEBUG index.tsx - FormData créé:', {
+                    restaurant_ids: formData.getAll('restaurant_ids'),
+                    supplement_ids: formData.getAll('supplement_ids'),
+                    supplement_quantities: formData.getAll('supplement_quantities')
+                  });
+
+                  // ✅ Création sécurisée du menu
+                  await createMenu(formData);
+
+                  toast.success('Menu créé avec succès');
+                  refetch(); // Recharger les données
+                  handleViewChange('list');
+                } catch (error) {
+                  console.error('Erreur lors de la création du menu:', error);
+                  toast.error('Erreur lors de la création du menu');
+                }
+              }}
+            />
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {menuState.view === 'edit' && menuState.selectedMenu && (
+        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
+          <div className="w-full min-[1620px]:mr-56">
+            {menuState.loadingMenu ? (
+              <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F17922]"></div>
+              </div>
+            ) : (
+              <EditMenuForm
+                initialData={menuState.selectedMenu as unknown as MenuItem}
+                onCancel={() => handleViewChange('list')}
+                onSubmit={handleSaveEdit}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {menuState.view === 'view' && menuState.selectedMenu && (
+        <div className="flex flex-col xl:flex-row gap-4">
+          <div className="flex-1">
+            {menuState.loadingMenu ? (
+              <div className="flex items-center justify-center h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F17922]"></div>
+              </div>
+            ) : (
+              <DetailsMenu
+                menu={menuState.selectedMenu as unknown as MenuItem}
+                onEdit={() => handleEditMenu(menuState.selectedMenu! as unknown as MenuItem)}
+                onDelete={() => handleDeleteMenu(menuState.selectedMenu! as unknown as MenuItem)}
+              />
+            )}
+          </div>
+          <div className="xl:w-1/3">
+            <MenuRightSide
+              similarMenus={searchResults.filter(item =>
+                item.categoryId === (menuState.selectedMenu?.categoryId || '')
+              ).slice(0, 3) as unknown as MenuItem[]}
+              onEditMenu={handleEditMenu}
+              onViewMenu={handleViewMenu}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

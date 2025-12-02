@@ -7,7 +7,7 @@ function MarketingModule() {
   const { data } = useAnalyticsStats();
 
   return (
-    <div className="flex-1 overflow-auto p-6">
+    <div className="flex-1 overflow-auto p-4">
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <GenericStatCard
           title={`${data?.total.allTime || 0} clic(s) au total`}

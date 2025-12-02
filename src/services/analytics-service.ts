@@ -8,7 +8,7 @@ import {
 } from "../../features/analytics/types/analytics.type";
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
-const ANALYTICS_URL = API_URL + '/analytics';
+const ANALYTICS_URL = API_URL + '/marketing';
 
 // Fonction utilitaire pour construire et exécuter les requêtes
 const fetchAnalyticsData = async <T>(
@@ -56,7 +56,7 @@ const fetchAnalyticsData = async <T>(
 };
 
 export const getAllAppClick = (query: IAppClickSearchParams) =>
-	fetchAnalyticsData<IPaginatedResponse<IAppClick>>('/app', query);
+	fetchAnalyticsData<IPaginatedResponse<IAppClick>>('/app-mobile', query);
 
 export const getAppClickStats = () =>
-	fetchAnalyticsData<IStatsResponse>('/app/stats');
+	fetchAnalyticsData<IStatsResponse>('/app-mobile/stats');

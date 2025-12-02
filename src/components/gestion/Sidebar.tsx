@@ -62,19 +62,17 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       onClick={onClick}
       className={`
         w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
-        ${
-          active
-            ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
-            : "text-gray-600 hover:bg-gray-100"
+        ${active
+          ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
+          : "text-gray-600 hover:bg-gray-100"
         }
         transition-all duration-200
       `}
     >
       {icon}
       <span
-        className={`text-sm  font-normal cursor-pointer ${
-          active ? "text-white" : "text-gray-600"
-        }`}
+        className={`text-sm  font-normal cursor-pointer ${active ? "text-white" : "text-gray-600"
+          }`}
       >
         {label}
       </span>
@@ -321,10 +319,9 @@ export default function Sidebar({
                         }}
                         className={`
                           w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
-                          ${
-                            activeTab === item.id
-                              ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
-                              : "text-gray-600 hover:bg-gray-100"
+                          ${activeTab === item.id
+                            ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
+                            : "text-gray-600 hover:bg-gray-100"
                           }
                           transition-all duration-200
                         `}
@@ -336,11 +333,10 @@ export default function Sidebar({
                           active={activeTab === item.id}
                         />
                         <span
-                          className={`text-sm  -ml-6 font-normal cursor-pointer flex-1 ${
-                            activeTab === item.id
+                          className={`text-sm  -ml-6 font-normal cursor-pointer flex-1 ${activeTab === item.id
                               ? "text-white"
                               : "text-gray-600"
-                          }`}
+                            }`}
                         >
                           {item.label}
                         </span>
@@ -348,20 +344,18 @@ export default function Sidebar({
                         {isMessagesExpanded ? (
                           <ChevronDown
                             size={16}
-                            className={`transition-transform ${
-                              activeTab === item.id
+                            className={`transition-transform ${activeTab === item.id
                                 ? "text-white"
                                 : "text-gray-400"
-                            }`}
+                              }`}
                           />
                         ) : (
                           <ChevronRight
                             size={16}
-                            className={`transition-transform ${
-                              activeTab === item.id
+                            className={`transition-transform ${activeTab === item.id
                                 ? "text-white"
                                 : "text-gray-400"
-                            }`}
+                              }`}
                           />
                         )}
                       </button>
@@ -391,10 +385,9 @@ export default function Sidebar({
                               }}
                               className={`
                                 w-full flex items-center cursor-pointer space-x-3 px-4 py-2 rounded-[10px]
-                                ${
-                                  activeSubModule === subModule.id
-                                    ? "text-primary-500"
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                                ${activeSubModule === subModule.id
+                                  ? "text-primary-500"
+                                  : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                                 }
                                 transition-all duration-200
                               `}
@@ -406,11 +399,10 @@ export default function Sidebar({
                                 active={activeSubModule === subModule.id}
                               />
                               <span
-                                className={`text-sm  ${
-                                  activeSubModule === subModule.id
+                                className={`text-sm  ${activeSubModule === subModule.id
                                     ? "text-primary-500 font-medium"
                                     : ""
-                                }`}
+                                  }`}
                               >
                                 {subModule.label}
                               </span>

@@ -25,91 +25,91 @@ const LoadingSpinner = () => (
 // ✅ PERFORMANCE: Lazy loading des composants lourds
 const Dashboard = dynamic(() => import("@/components/gestion/Dashboard"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Menus = dynamic(() => import("@/components/gestion/Menus"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Orders = dynamic(() => import("@/components/gestion/Orders"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Clients = dynamic(() => import("@/components/gestion/Clients"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Inventory = dynamic(() => import("@/components/gestion/Inventory"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Personnel = dynamic(() => import("@/components/gestion/Personnel"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Restaurants = dynamic(() => import("@/components/gestion/Restaurants"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Ads = dynamic(() => import("@/components/gestion/Ads"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Promos = dynamic(() => import("@/components/gestion/Promos"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Loyalty = dynamic(() => import("@/components/gestion/Loyalty"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const Apps = dynamic(() => import("@/components/gestion/Apps"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
- 
+
 const RapportModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Rapport"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const InboxModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const TicketsModule = dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
 const MarketingModule = dynamic(() => import("@/components/gestion/Marketing"), {
   loading: () => (
-    <LoadingSpinner/>
+    <LoadingSpinner />
   ),
 });
 
@@ -122,7 +122,7 @@ export default function GestionPage() {
   const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showWelcomeBackModal, setShowWelcomeBackModal] = useState(false);
-  
+
   // États pour gérer les sous-modules de Messages et Tickets
   const [activeSubModule, setActiveSubModule] = useState<string>("inbox");
   // Conversation initiale à sélectionner lorsque l'on ouvre l'inbox depuis le header
@@ -289,54 +289,52 @@ export default function GestionPage() {
         <Header
           toggleSidebar={toggleSidebar}
           isSidebarOpen={isSidebarOpen}
-          className={`fixed z-30 bg-white ${
-            isSidebarOpen && !isMobile ? "left-64" : "left-0"
-          } right-0 top-0`}
+          className={`fixed z-30 bg-white ${isSidebarOpen && !isMobile ? "left-64" : "left-0"
+            } right-0 top-0`}
         />
 
-        {/* Modal "Heureux de vous revoir" pour les utilisateurs existants */}
-        {showWelcomeBackModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full transform animate-in fade-in zoom-in duration-300">
-              <div className="text-center">
-                {/* Icône de bienvenue */}
-                <div className="mx-auto w-16  h-16 bg-gradient-to-br from-[#F17922] to-primary-500 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                
-                {/* Titre et message */}
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Heureux de vous revoir !
-                </h2>
-                <p className="text-gray-600 mb-6">
-                  Bon retour sur Chicken Nation. Bon service !
-                </p>
-                
-                {/* Bouton OK */}
-                <button
-                  onClick={() => setShowWelcomeBackModal(false)}
-                  className="w-full bg-gradient-to-r from-[#F17922] to-primary-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                 Merci !
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Scrollable content */}
-        <main className={`flex-1 pt-14 ${
-          activeTab === "messages-tickets" ? "overflow-hidden" : "overflow-y-auto"
-        }`}>
+        <main className={`flex-1 pt-14 ${activeTab === "messages-tickets" ? "overflow-hidden" : "overflow-y-auto"
+          }`}>
           {activeTab === "messages-tickets" ? (
             <div className="h-full">{renderContent()}</div>
           ) : (
-            <div className="container mx-auto px-4">{renderContent()}</div>
+            <div className="container mx-auto">{renderContent()}</div>
           )}
         </main>
       </div>
+
+      {/* Modal "Heureux de vous revoir" pour les utilisateurs existants */}
+      {showWelcomeBackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-md w-full transform animate-in fade-in zoom-in duration-300">
+            <div className="text-center">
+              {/* Icône de bienvenue */}
+              <div className="mx-auto w-16  h-16 bg-gradient-to-br from-[#F17922] to-primary-500 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+
+              {/* Titre et message */}
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Heureux de vous revoir !
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Bon retour sur Chicken Nation. Bon service !
+              </p>
+
+              {/* Bouton OK */}
+              <button
+                onClick={() => setShowWelcomeBackModal(false)}
+                className="w-full bg-gradient-to-r from-[#F17922] to-primary-500 cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Merci !
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Overlay for mobile */}
       {isSidebarOpen && isMobile && (

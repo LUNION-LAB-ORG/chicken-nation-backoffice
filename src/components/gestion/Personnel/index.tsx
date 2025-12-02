@@ -108,27 +108,27 @@ export default function Personnel() {
 
         // Si c'est un manager, on utilise l'endpoint spécifique
         if (currentUser?.role === 'MANAGER' && currentUser?.restaurant_id) {
-        
+
           const allRestaurantUsers = await getRestaurantUsers(currentUser.restaurant_id);
           // Filtrer pour exclure le manager lui-même
           data = allRestaurantUsers.filter(user => user.id !== currentUser.id) as User[];
-         
+
         } else {
           // Pour les autres utilisateurs, on récupère selon l'onglet sélectionné
           if (selectedTab === 'Tous') {
-         
+
             // Récupérer tous les users
             data = await getAllUsers();
           } else if (selectedTab === 'Back Office') {
-          
+
             // Récupérer tous les users et filtrer par type BACKOFFICE (EXCLURE les MANAGER)
             const allUsers = await getAllUsers();
             data = allUsers.filter(user =>
               user.type === 'BACKOFFICE' && user.role !== 'MANAGER'
             );
-       
+
           } else {
-         
+
             // Trouver l'ID du restaurant sélectionné
             let selectedRestaurant = restaurants.find(r => r.name === selectedTab);
 
@@ -180,10 +180,10 @@ export default function Personnel() {
     role: user.role,
     image: user.image || '',
     restaurant: typeof user.restaurant === 'object' && user.restaurant !== null
-                  ? { id: user.restaurant.id, name: user.restaurant.name }
-                  : typeof user.restaurant === 'string'
-                    ? user.restaurant
-                    : '',
+      ? { id: user.restaurant.id, name: user.restaurant.name }
+      : typeof user.restaurant === 'string'
+        ? user.restaurant
+        : '',
     phone: user.phone || '',
     address: user.address || '',
     entity_status: user.entity_status || 'ACTIVE'
@@ -266,7 +266,7 @@ export default function Personnel() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full p-4">
       <PersonnelHeader
         onAddPersonnel={hasAccess ? () => setOpenAdd(true) : undefined}
         onSearch={handleSearch}
@@ -299,7 +299,7 @@ export default function Personnel() {
                     email: member.email,
                     role: member.role,
                     image: member.image,
-                     restaurant: typeof member.restaurant === 'object' ? {id: member.restaurant.id, name: member.restaurant.name} : undefined,
+                    restaurant: typeof member.restaurant === 'object' ? { id: member.restaurant.id, name: member.restaurant.name } : undefined,
                     phone: member.phone,
                     address: member.address,
                     entity_status: member.entity_status,
@@ -324,7 +324,7 @@ export default function Personnel() {
             onSuccess={(updatedMember) => {
               setUsers(prevUsers =>
                 prevUsers.map(user =>
-                  user.id === updatedMember.id ? {...user, ...updatedMember} : user
+                  user.id === updatedMember.id ? { ...user, ...updatedMember } : user
                 )
               );
               setOpenAdd(false);

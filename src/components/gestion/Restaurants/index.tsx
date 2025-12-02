@@ -50,7 +50,7 @@ export default function Restaurants() {
     fetchRestaurants();
   }, []);
 
-   // const handleToggleActive = async (restaurantId: string, active: boolean) => {
+  // const handleToggleActive = async (restaurantId: string, active: boolean) => {
   //   try {
   //     await updateRestaurantStatus(restaurantId, active);
 
@@ -68,12 +68,12 @@ export default function Restaurants() {
   //   }
   // };
 
-   const formatSchedule = (schedule: Schedule[]) => {
+  const formatSchedule = (schedule: Schedule[]) => {
     if (!Array.isArray(schedule)) {
       return 'Horaires non disponibles';
     }
 
-    const daysMap: {[key: string]: string} = {
+    const daysMap: { [key: string]: string } = {
       '1': 'Lun',
       '2': 'Mar',
       '3': 'Mer',
@@ -89,13 +89,13 @@ export default function Restaurants() {
     }).join(' | ');
   };
 
-   const handleAddRestaurant = () => {
+  const handleAddRestaurant = () => {
     setOpenAdd(true);
   };
 
-   const handleRestaurantAdded = (restaurant: Restaurant) => {
-     if (restaurant.manager && typeof restaurant.manager === 'object' &&
-        restaurant.manager.email && restaurant.manager.password) {
+  const handleRestaurantAdded = (restaurant: Restaurant) => {
+    if (restaurant.manager && typeof restaurant.manager === 'object' &&
+      restaurant.manager.email && restaurant.manager.password) {
       setManagerCredentials({
         email: restaurant.manager.email,
         password: restaurant.manager.password
@@ -107,21 +107,21 @@ export default function Restaurants() {
     fetchRestaurants();
   };
 
-   const handleDeleteRestaurant = async (restaurantId: string) => {
-     const restaurant = restaurants.find(r => r.id === restaurantId);
+  const handleDeleteRestaurant = async (restaurantId: string) => {
+    const restaurant = restaurants.find(r => r.id === restaurantId);
     if (restaurant) {
       setRestaurantToDelete(restaurant);
       setDeleteModalOpen(true);
     }
   };
 
-   const confirmDeleteRestaurant = async () => {
+  const confirmDeleteRestaurant = async () => {
     if (!restaurantToDelete || !restaurantToDelete.id) return;
 
     try {
       await deleteRestaurant(restaurantToDelete.id);
 
-       setRestaurants(prevRestaurants =>
+      setRestaurants(prevRestaurants =>
         prevRestaurants.filter(restaurant => restaurant.id !== restaurantToDelete.id)
       );
 
@@ -134,12 +134,12 @@ export default function Restaurants() {
     }
   };
 
-   const handleViewRestaurant = (restaurantId: string) => {
+  const handleViewRestaurant = (restaurantId: string) => {
     setSelectedRestaurantId(restaurantId);
     setOpenDetail(true);
   };
 
-   const handleEditRestaurant = (restaurant: Restaurant) => {
+  const handleEditRestaurant = (restaurant: Restaurant) => {
     setSelectedRestaurant(restaurant);
     setOpenAdd(true);
     setOpenDetail(false);
@@ -183,7 +183,7 @@ export default function Restaurants() {
   }, [restaurants, searchQuery]);
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full p-4">
       <RestaurantHeader
         onAddRestaurant={handleAddRestaurant}
         onSearch={handleSearch}

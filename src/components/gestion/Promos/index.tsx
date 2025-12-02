@@ -17,7 +17,7 @@ import { toast } from 'react-hot-toast'
 import {
   getAllPromotionsWithDetails,
   deletePromotion,
- 
+
   createPromotionFromUnified,
   updatePromotionFromUnified,
   getPromotionById,
@@ -83,12 +83,14 @@ const Promos = () => {
       setPromoState(prev => ({ ...prev, loading: false }))
     }
   }
-    const handleViewChange = (view: 'list' | 'create' | 'edit' | 'view' | 'personalize' | 'editPersonalize' | 'allPromotions', promo?: PromoCardData, tempData?: PromoTransitData) => {
+  const handleViewChange = (view: 'list' | 'create' | 'edit' | 'view' | 'personalize' | 'editPersonalize' | 'allPromotions', promo?: PromoCardData, tempData?: PromoTransitData) => {
     setPromoState({
       ...promoState,
       view,
       selectedPromo: promo,
-      tempPromoData: tempData    })  }
+      tempPromoData: tempData
+    })
+  }
 
   // Fonction pour naviguer vers la vue "Toutes les promotions"
   const handleViewAllPromotions = () => {
@@ -102,11 +104,11 @@ const Promos = () => {
       searchQuery: query
     }))
   }
-    // ✅ FONCTION DE SAUVEGARDE BROUILLON AMÉLIORÉE - Utilise le système unifié
-    const handleSaveAsDraft = async (promoData: PromoTransitData) => {
+  // ✅ FONCTION DE SAUVEGARDE BROUILLON AMÉLIORÉE - Utilise le système unifié
+  const handleSaveAsDraft = async (promoData: PromoTransitData) => {
     try {
       setPromoState(prev => ({ ...prev, loading: true }))
- 
+
 
       // ✅ Convertir PromoTransitData vers UnifiedPromoFormData
       const unifiedData = convertTransitDataToUnifiedFormData(promoData);
@@ -154,10 +156,10 @@ const Promos = () => {
         textColor: draftUnifiedData.textColor,
         couponImageUrl: draftUnifiedData.couponImageUrl
       };
- 
- 
+
+
       const response = await createPromotionFromUnified(draftUnifiedData, null, 'DRAFT')
- 
+
       // Recharger les promotions pour afficher le nouveau brouillon
       await loadPromotions()
 
@@ -182,11 +184,11 @@ const Promos = () => {
     try {
       setPromoState(prev => ({ ...prev, loading: true }))
 
-    
+
       // ✅ Convertir PromoTransitData vers UnifiedPromoFormData
       const unifiedData = convertTransitDataToUnifiedFormData(promoData);
 
-    
+
       // ✅ S'assurer que la visibilité est DRAFT
       const draftUnifiedData: UnifiedPromoFormData = {
         ...unifiedData,
@@ -202,7 +204,7 @@ const Promos = () => {
           null,
           'DRAFT'
         )
- 
+
         // Recharger les promotions pour afficher les modifications
         await loadPromotions()
 
@@ -227,7 +229,7 @@ const Promos = () => {
   }
 
   const handlePersonalizePromo = (promoData: PromoTransitData) => {
-    
+
 
     // ✅ UTILISATION DES FONCTIONS DE MAPPING UNIFIÉES
     let tempData: PromoTransitData = { ...promoData };
@@ -236,22 +238,22 @@ const Promos = () => {
     // ✅ DÉTERMINER LA VUE CIBLE SELON LE CONTEXTE
     if (promoState.view === 'edit') {
       // Si on vient d'EditPromo → aller vers EditPersonalizedPromo
-      targetView = 'editPersonalize'; 
+      targetView = 'editPersonalize';
 
-    
+
 
       // Les données de promoData contiennent déjà les modifications de l'utilisateur
       tempData = { ...promoData };
       tempData.isEditing = true;
- 
+
     } else if (promoState.view === 'create') {
       // Si on vient de CreatePromo → aller vers PersonalizedPromo
-      targetView = 'personalize'; 
+      targetView = 'personalize';
 
       // Pour la création, utiliser les données du formulaire telles quelles
       tempData.isEditing = false;
     }
- 
+
     handleViewChange(targetView, undefined, tempData)
   }
 
@@ -321,7 +323,7 @@ const Promos = () => {
         selectedApiPromo: correspondingApiPromo
       }))
     } else {
-       
+
       handleViewChange('view', promo)
     }
   }
@@ -375,156 +377,150 @@ const Promos = () => {
   }
 
   if (promoState.view !== 'list') {
- 
-
     return (
-      <div className="flex-1 overflow-auto">
-        <div className="px-2 2k:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 2k:px-8 2k:pb-8">
-          <PromoHeader
-            currentView={promoState.view}
+      <div className="flex-1 overflow-auto p-4">
+        <PromoHeader
+          currentView={promoState.view}
+          onBack={() => handleViewChange('list')}
+          onSearch={promoState.view === 'allPromotions' ? handleSearch : undefined}
+        />          {promoState.view === 'create' && (
+          <CreatePromo
+            onSave={handlePersonalizePromo}
+            onSaveAsDraft={handleSaveAsDraft}
+            onCancel={() => handleViewChange('list')}
+          />
+        )}          {promoState.view === 'edit' && promoState.selectedApiPromo && (
+          <EditPromo
+            initialData={promoState.selectedApiPromo}
+            isEditing={true}
+            onSave={handlePersonalizePromo}
+            onSaveAsDraft={handleSaveAsDraftEdit}
+            onCancel={() => handleViewChange('list')}
+          />
+        )}{promoState.view === 'personalize' && (
+          <>
+
+            <PersonalizedPromo
+              promoData={promoState.tempPromoData}
+              onSave={handleSavePromo}
+              onCancel={() => handleViewChange('list')}
+            />
+          </>
+        )}
+        {promoState.view === 'editPersonalize' && (
+          <>
+
+            <EditPersonalizedPromo
+              promoData={promoState.tempPromoData}
+              onSave={handleSavePromo}
+              onCancel={() => handleViewChange('list')}
+            />
+          </>
+        )}
+
+        {promoState.view === 'view' && promoState.selectedApiPromo && (
+          <PromoDetailView
+            promo={promoState.selectedApiPromo}
+            onEdit={async (apiPromo) => {
+              try {
+
+                const detailedPromo = await getPromotionById(apiPromo.id!)
+
+                setPromoState(prev => ({
+                  ...prev,
+                  view: 'edit',
+                  selectedApiPromo: detailedPromo
+                }))
+              } catch (error) {
+                console.error('❌ [index] Erreur lors du chargement des données détaillées:', error)
+                const userMessage = getHumanReadableError(error);
+                toast.error(userMessage);
+
+                // Fallback : utiliser les données existantes
+                const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
+                if (correspondingPromoCard) {
+                  handleViewChange('edit', correspondingPromoCard)
+                }
+              }
+            }}
+            onDelete={(apiPromo) => {
+              // Trouver le PromoCardData correspondant pour la suppression
+              const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
+              if (correspondingPromoCard) {
+                handleDeletePromo(correspondingPromoCard)
+              }
+            }}
+            onDuplicate={(apiPromo) => {
+              // Trouver le PromoCardData correspondant pour la duplication
+              const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
+              if (correspondingPromoCard) {
+                handleDuplicatePromo(correspondingPromoCard)
+              }
+            }}
             onBack={() => handleViewChange('list')}
-            onSearch={promoState.view === 'allPromotions' ? handleSearch : undefined}
-          />          {promoState.view === 'create' && (
-            <CreatePromo
-              onSave={handlePersonalizePromo}
-              onSaveAsDraft={handleSaveAsDraft}
-              onCancel={() => handleViewChange('list')}
-            />
-          )}          {promoState.view === 'edit' && promoState.selectedApiPromo && (
-            <EditPromo
-              initialData={promoState.selectedApiPromo}
-              isEditing={true}
-              onSave={handlePersonalizePromo}
-              onSaveAsDraft={handleSaveAsDraftEdit}
-              onCancel={() => handleViewChange('list')}
-            />
-          )}{promoState.view === 'personalize' && (
-            <>
-            
-              <PersonalizedPromo
-                promoData={promoState.tempPromoData}
-                onSave={handleSavePromo}
-                onCancel={() => handleViewChange('list')}
-              />
-            </>
-          )}         
-           {promoState.view === 'editPersonalize' && (
-            <>
-              
-              <EditPersonalizedPromo
-                promoData={promoState.tempPromoData}
-                onSave={handleSavePromo}
-                onCancel={() => handleViewChange('list')}
-              />
-            </>
-          )}
+          />
+        )}
 
-          {promoState.view === 'view' && promoState.selectedApiPromo && (
-            <PromoDetailView
-              promo={promoState.selectedApiPromo}
-              onEdit={async (apiPromo) => {
-                try {
-                  
-                  const detailedPromo = await getPromotionById(apiPromo.id!)
- 
-                  setPromoState(prev => ({
-                    ...prev,
-                    view: 'edit',
-                    selectedApiPromo: detailedPromo
-                  }))
-                } catch (error) {
-                  console.error('❌ [index] Erreur lors du chargement des données détaillées:', error)
-                  const userMessage = getHumanReadableError(error);
-                  toast.error(userMessage);
-
-                  // Fallback : utiliser les données existantes
-                  const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
-                  if (correspondingPromoCard) {
-                    handleViewChange('edit', correspondingPromoCard)
-                  }
-                }
-              }}
-              onDelete={(apiPromo) => {
-                // Trouver le PromoCardData correspondant pour la suppression
-                const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
-                if (correspondingPromoCard) {
-                  handleDeletePromo(correspondingPromoCard)
-                }
-              }}
-              onDuplicate={(apiPromo) => {
-                // Trouver le PromoCardData correspondant pour la duplication
-                const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
-                if (correspondingPromoCard) {
-                  handleDuplicatePromo(correspondingPromoCard)
-                }
-              }}
-              onBack={() => handleViewChange('list')}
-            />
-          )}
-
-          {promoState.view === 'allPromotions' && (
-            <AllPromotions
-                promotions={apiPromotions}
-                searchQuery={promoState.searchQuery}
-                onViewPromo={(apiPromo) => {
-                  // Trouver le PromoCardData correspondant pour la vue
-                  const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
-                  if (correspondingPromoCard) {
-                    setPromoState(prev => ({
-                      ...prev,
-                      view: 'view',
-                      selectedPromo: correspondingPromoCard,
-                      selectedApiPromo: apiPromo
-                    }))
-                  }
-                }}
-              />
-          )}
-        </div>
+        {promoState.view === 'allPromotions' && (
+          <AllPromotions
+            promotions={apiPromotions}
+            searchQuery={promoState.searchQuery}
+            onViewPromo={(apiPromo) => {
+              // Trouver le PromoCardData correspondant pour la vue
+              const correspondingPromoCard = promoState.promos.find(p => p.id === apiPromo.id)
+              if (correspondingPromoCard) {
+                setPromoState(prev => ({
+                  ...prev,
+                  view: 'view',
+                  selectedPromo: correspondingPromoCard,
+                  selectedApiPromo: apiPromo
+                }))
+              }
+            }}
+          />
+        )}
       </div>
     )
   }
 
   return (
-    <div className="flex-1 overflow-auto">
-      <div className="px-2 2k:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 2k:px-8 2k:pb-8">
-        <PromoHeader
-          currentView={promoState.view}
-          onCreatePromo={() => handleViewChange('create')}
+    <div className="flex-1 overflow-auto p-4">
+      <PromoHeader
+        currentView={promoState.view}
+        onCreatePromo={() => handleViewChange('create')}
+      />
+
+      <div className="mt-4 space-y-6 border-1 p-8 bg-white border-slate-200 rounded-xl">
+
+        {/* Publicités en cours avec barre de recherche */}
+        <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4'>
+          <span className='text-[#F17922] text-[26px] text-md font-regular'>Publicitées récentes</span>
+
+        </div>
+        {/* Statistiques */}
+        <PromoStats
+          promotions={apiPromotions}
+          onViewAllPromotions={handleViewAllPromotions}
         />
 
-        <div className="mt-4 space-y-6 border-1 p-8 bg-white border-slate-200 rounded-xl">
+        {/* Onglets de navigation */}
+        <div className="bg-white rounded-xl p-6">
+          <PromoTabs
+            activeTab={promoState.activeTab}
+            onTabChange={handleTabChange}
+            onCreatePromo={() => handleViewChange('create')}
+            className="mb-6"
+          />
+          {/* Card des produits  */}
 
-              {/* Publicités en cours avec barre de recherche */}
-              <div className='flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-4'>
-                <span className='text-[#F17922] text-[26px] text-md font-regular'>Publicitées récentes</span>
-
-              </div>
-              {/* Statistiques */}
-              <PromoStats
-                promotions={apiPromotions}
-                onViewAllPromotions={handleViewAllPromotions}
-              />
-
-                {/* Onglets de navigation */}
-                <div className="bg-white rounded-xl p-6">
-                  <PromoTabs
-                    activeTab={promoState.activeTab}
-                    onTabChange={handleTabChange}
-                    onCreatePromo={() => handleViewChange('create')}
-                    className="mb-6"
-                  />
-                {/* Card des produits  */}
-
-                <div className="2xl:w-[80%] w-[100%]">                
-                  {/* Grille des promotions */}
-                <PromoGrid
-                  promos={filterPromotionsByTab(promoState.promos, promoState.activeTab)}
-                  onPromoClick={handlePromoClick}
-                  loading={promoState.loading}
-                />
-                </div>
-              </div>
+          <div className="2xl:w-[80%] w-[100%]">
+            {/* Grille des promotions */}
+            <PromoGrid
+              promos={filterPromotionsByTab(promoState.promos, promoState.activeTab)}
+              onPromoClick={handlePromoClick}
+              loading={promoState.loading}
+            />
+          </div>
         </div>
       </div>
     </div>

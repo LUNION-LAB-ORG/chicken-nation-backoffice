@@ -44,9 +44,9 @@ const Dashboard = () => {
   const displayMode = isSuperAdmin && isViewingSpecificRestaurant
     ? 'admin-viewing-restaurant'
     : isSuperAdmin
-    ? 'admin-global'
-    : 'manager-restaurant';
- 
+      ? 'admin-global'
+      : 'manager-restaurant';
+
   // Fonctions pour naviguer vers les différentes sections
   const handleMenusSoldClick = () => {
     setActiveTab('menus'); // Rediriger vers la section menus
@@ -77,13 +77,13 @@ const Dashboard = () => {
               const assignedRestaurant = restaurants.find(r => r.id === user.restaurant_id);
               if (assignedRestaurant) {
                 setCurrentRestaurant(assignedRestaurant);
-           
+
               } else {
-              
+
                 setCurrentRestaurant(null);
               }
             } else {
-            
+
               setCurrentRestaurant(null);
             }
           }
@@ -92,7 +92,7 @@ const Dashboard = () => {
           setCurrentRestaurant(null);
         }
       } else {
-         
+
         setCurrentRestaurant(null);
       }
     };
@@ -165,7 +165,7 @@ const Dashboard = () => {
   const { stats: statsData, revenue: revenueData } = getDisplayData();
 
   return (
-    <div className="flex-1 overflow-auto p-6">
+    <div className="flex-1 overflow-auto p-4">
       <div className='-mt-10'>
         <DashboardHeader
           currentView="list"

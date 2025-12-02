@@ -118,10 +118,9 @@ export default function Orders() {
     } catch (error) {
       console.error("Erreur lors de l'acceptation de la commande:", error);
       toast.error(
-        `Erreur: ${
-          error instanceof Error
-            ? error.message
-            : "Impossible d'accepter la commande"
+        `Erreur: ${error instanceof Error
+          ? error.message
+          : "Impossible d'accepter la commande"
         }`
       );
     }
@@ -140,10 +139,9 @@ export default function Orders() {
     } catch (error) {
       console.error("Erreur lors du refus de la commande:", error);
       toast.error(
-        `Erreur: ${
-          error instanceof Error
-            ? error.message
-            : "Impossible de refuser la commande"
+        `Erreur: ${error instanceof Error
+          ? error.message
+          : "Impossible de refuser la commande"
         }`
       );
     }
@@ -155,79 +153,77 @@ export default function Orders() {
   };
 
   return (
-    <div className="flex-1">
-      <div className="px-2 lg:pt-2 pb-2 sm:px-4 sm:pb-4 md:px-6 md:pb-6 lg:px-8 lg:pb-8">
-        <OrderHeader
-          currentView={view}
-          onBack={() => handleViewChange("list")}
-          onCreateMenu={() => handleViewChange("create")}
-          onSearch={handleSearch}
-          activeFilter={activeFilter}
-          selectedRestaurant={selectedRestaurant}
-          searchQuery={searchQuery}
-          selectedDate={selectedDate}
-          hasPendingOrders={hasPendingOrders}
-          pendingOrdersCount={pendingOrdersCount}
-          isSoundPlaying={isPlaying}
-        />
+    <div className="flex-1 p-4">
+      <OrderHeader
+        currentView={view}
+        onBack={() => handleViewChange("list")}
+        onCreateMenu={() => handleViewChange("create")}
+        onSearch={handleSearch}
+        activeFilter={activeFilter}
+        selectedRestaurant={selectedRestaurant}
+        searchQuery={searchQuery}
+        selectedDate={selectedDate}
+        hasPendingOrders={hasPendingOrders}
+        pendingOrdersCount={pendingOrdersCount}
+        isSoundPlaying={isPlaying}
+      />
 
-        {view === "list" && (
-          <div>
-            {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}
-            {!loading && restaurants.length > 0 && (
-              <RestaurantTabs
-                restaurants={restaurants
-                  .filter((r) => r.id)
-                  .map((r) => ({ ...r, id: r.id! }))}
-                selectedRestaurant={selectedRestaurant}
-                onSelectRestaurant={setSelectedRestaurant}
-                showAllTab={currentUser?.role === "ADMIN"} // Seulement pour ADMIN
-              />
-            )}
-
-            <OrdersTable
-              onViewDetails={handleViewOrderDetails}
-              searchQuery={searchQuery}
-              selectedRestaurant={selectedRestaurant} // ✅ Filtre par restaurant
-              currentUser={
-                currentUser
-                  ? {
-                      ...currentUser,
-                      id: currentUser.id || "",
-                      role: currentUser.role || "",
-                      restaurant_id: currentUser.restaurant_id,
-                    }
-                  : undefined
-              } // Typage sécurisé
-              activeFilter={activeFilter}
-              onActiveFilterChange={setActiveFilter}
-              selectedDate={selectedDate}
-              onSelectedDateChange={setSelectedDate}
+      {view === "list" && (
+        <div>
+          {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}
+          {!loading && restaurants.length > 0 && (
+            <RestaurantTabs
+              restaurants={restaurants
+                .filter((r) => r.id)
+                .map((r) => ({ ...r, id: r.id! }))}
+              selectedRestaurant={selectedRestaurant}
+              onSelectRestaurant={setSelectedRestaurant}
+              showAllTab={currentUser?.role === "ADMIN"} // Seulement pour ADMIN
             />
-          </div>
-        )}
+          )}
 
-        {view === "view" && selectedItem && (
-          <OrderDetails
-            order={selectedItem}
-            onBack={() => handleViewChange("list")}
-            onAccept={handleAcceptOrder}
-            onReject={handleRejectOrder}
-            onStatusChange={handleStatusChange}
+          <OrdersTable
+            onViewDetails={handleViewOrderDetails}
+            searchQuery={searchQuery}
+            selectedRestaurant={selectedRestaurant} // ✅ Filtre par restaurant
+            currentUser={
+              currentUser
+                ? {
+                  ...currentUser,
+                  id: currentUser.id || "",
+                  role: currentUser.role || "",
+                  restaurant_id: currentUser.restaurant_id,
+                }
+                : undefined
+            } // Typage sécurisé
+            activeFilter={activeFilter}
+            onActiveFilterChange={setActiveFilter}
+            selectedDate={selectedDate}
+            onSelectedDateChange={setSelectedDate}
           />
-        )}
+        </div>
+      )}
 
-        {view === "create" && canCreatePlat() && (
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 lg:w-2/3">
-              <AddMenu />
-            </div>
-            <div className="w-full lg:w-1/3 invisible">
-              {/* Espace vide comme dans Menus */}
-            </div>
+      {view === "view" && selectedItem && (
+        <OrderDetails
+          order={selectedItem}
+          onBack={() => handleViewChange("list")}
+          onAccept={handleAcceptOrder}
+          onReject={handleRejectOrder}
+          onStatusChange={handleStatusChange}
+        />
+      )}
+
+      {view === "create" && canCreatePlat() && (
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 lg:w-2/3">
+            <AddMenu />
           </div>
-        )}
-      </div>
+          <div className="w-full lg:w-1/3 invisible">
+            {/* Espace vide comme dans Menus */}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
