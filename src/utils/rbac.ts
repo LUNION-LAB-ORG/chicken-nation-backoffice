@@ -21,14 +21,14 @@ export type Module =
   | 'message'
   | 'ticket';
 
-export type Action = 
-  | 'create' 
-  | 'update' 
-  | 'remove' 
-  | 'view' 
-  | 'enable' 
-  | 'disable' 
-  | 'accept' 
+export type Action =
+  | 'create'
+  | 'update'
+  | 'remove'
+  | 'view'
+  | 'enable'
+  | 'disable'
+  | 'accept'
   | 'reject';
 
 /**
@@ -41,26 +41,26 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     categorie: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     plat: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     supplement: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
-    
+
     // ✅ ADMIN: peut voir clients mais PAS modifier leurs informations
     client: { create: false, update: false, remove: false, view: true, enable: true, disable: true, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ ADMIN: contrôle total utilisateurs/restaurants
     utilisateur: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     restaurant: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
-    
+
     // ✅ ADMIN: peut voir commandes mais PAS modifier informations commandes
     commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     offre_speciale: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
 
     // ✅ ADMIN: voit et contrôle paiements
     paiement: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ ADMIN: contrôle total des messages
     message: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ ADMIN: contrôle total des tickets
     ticket: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: true, reject: true },
   },
@@ -70,26 +70,26 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     categorie: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     plat: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     supplement: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
-    
+
     // ✅ MARKETING: peut voir clients (pour comprendre la base client)
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MARKETING: peut voir utilisateurs/restaurants
     utilisateur: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MARKETING: peut voir commandes (pas le CA mais les données commandes)
     commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     offre_speciale: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
 
     // ✅ MARKETING: PAS d'accès au CA (paiements)
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MARKETING: peut voir/envoyer messages pour communication client
     message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MARKETING: peut voir tickets pour insights client
     ticket: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
   },
@@ -99,26 +99,26 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     categorie: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ COMPTABLE: pas d'accès aux clients
     client: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ COMPTABLE: peut voir restaurants (pour rapports CA par restaurant)
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ COMPTABLE: accès total aux commandes et CA
     commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
 
     // ✅ COMPTABLE: accès total au CA (paiements)
     paiement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ COMPTABLE: pas d'accès aux messages
     message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ COMPTABLE: pas d'accès aux tickets
     ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
@@ -128,26 +128,26 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     categorie: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MANAGER: peut voir clients
     client: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MANAGER: contrôle utilisateurs et peut voir restaurants
     utilisateur: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MANAGER: peut voir commandes et gérer le processus
-    commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
+    commande: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: true, reject: true },
     offre_speciale: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
     // ✅ MANAGER: voit le CA (paiements)
     paiement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MANAGER: peut voir/envoyer messages store
     message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ MANAGER: peut voir, assigner et résoudre tickets
     ticket: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
   },
@@ -166,16 +166,16 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     // ✅ CAISSIER: pas d'accès au personnel/restaurants
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CAISSIER: peut traiter les commandes (accepter, prêt, terminer)
     commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
 
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CAISSIER: pas d'accès aux messages
     message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CAISSIER: pas d'accès aux tickets
     ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
@@ -194,17 +194,17 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     // ✅ CALL_CENTER: pas d'accès au personnel/restaurants
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CALL_CENTER: même que caissier pour commandes + peut voir messages
-    commande: { create: false, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
+    commande: { create: true, update: true, remove: true, view: true, enable: true, disable: true, accept: true, reject: true },
 
     // ✅ CALL_CENTER: peut voir les promotions pour informer clients
     offre_speciale: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CALL_CENTER: peut voir et envoyer messages du store
     message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CALL_CENTER: rôle support principal - peut créer, voir et modifier tickets
     ticket: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: true, reject: true },
   },
@@ -223,17 +223,17 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     // ✅ CUISINE : Aucun accès au personnel/restaurants
     utilisateur: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CUISINE : COMMANDES UNIQUEMENT
     commande: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
     // ✅ CUISINE : Aucun accès aux promotions/paiements
     offre_speciale: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
     paiement: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CUISINE: pas d'accès aux messages
     message: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CUISINE: pas d'accès aux tickets
     ticket: { create: false, update: false, remove: false, view: false, enable: false, disable: false, accept: false, reject: false },
   },
@@ -243,26 +243,26 @@ export const RBAC_MATRIX: Record<UserRole, Record<Module, Record<Action, boolean
     categorie: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     plat: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     supplement: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // Tableau 2
     client: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
     adresse: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
     favoris: { create: true, update: true, remove: true, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // Tableau 3
     utilisateur: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     restaurant: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // Tableau 4
     commande: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
     offre_speciale: { create: false, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
 
     // Tableau 5: Module Paiement
     paiement: { create: true, update: true, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CLIENT: peut envoyer/recevoir messages
     message: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
-    
+
     // ✅ CLIENT: peut créer des tickets pour ses problèmes
     ticket: { create: true, update: false, remove: false, view: true, enable: false, disable: false, accept: false, reject: false },
   },
@@ -323,10 +323,10 @@ export function getModulePermissions(
  */
 export function getAccessibleModules(userRole: UserRole | undefined): Module[] {
   if (!userRole) return [];
-  
+
   const modules: Module[] = [];
   const rolePermissions = RBAC_MATRIX[userRole];
-  
+
   for (const moduleKey in rolePermissions) {
     const modulePermissions = rolePermissions[moduleKey as Module];
     // Si l'utilisateur a au moins une permission sur le module
@@ -334,7 +334,7 @@ export function getAccessibleModules(userRole: UserRole | undefined): Module[] {
       modules.push(moduleKey as Module);
     }
   }
-  
+
   return modules;
 }
 
