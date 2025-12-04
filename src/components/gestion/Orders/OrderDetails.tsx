@@ -9,7 +9,6 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
-// import { OrderData } from "./types"; // Type non utilisé
 
 const getPaymentStatus = (orderDetails: unknown): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
@@ -197,6 +196,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     }
     getOrder();
   }, [order]);
+
   useEffect(() => {
     const fetchOrderDetails = async () => {
       if (!order.id) {
@@ -242,7 +242,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
             }
           } else {
             console.warn(
-              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:" 
+              "[OrderDetails] Aucune donnée retournée par l'API pour l'ID:"
             );
           }
         } else if (getOrderById) {
@@ -486,35 +486,35 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const customerName =
     order.clientName ||
     (fullOrderDetails?.customer &&
-    typeof fullOrderDetails.customer === "object" &&
-    "first_name" in fullOrderDetails.customer &&
-    "last_name" in fullOrderDetails.customer
+      typeof fullOrderDetails.customer === "object" &&
+      "first_name" in fullOrderDetails.customer &&
+      "last_name" in fullOrderDetails.customer
       ? `${String(fullOrderDetails.customer.first_name || "")} ${String(
-          fullOrderDetails.customer.last_name || ""
-        )}`.trim()
+        fullOrderDetails.customer.last_name || ""
+      )}`.trim()
       : typeof fullOrderDetails?.fullname === "string"
-      ? fullOrderDetails.fullname
-      : "Client inconnu");
+        ? fullOrderDetails.fullname
+        : "Client inconnu");
 
   const customerEmail =
     order.clientEmail ||
     (fullOrderDetails?.customer &&
-    typeof fullOrderDetails.customer === "object" &&
-    "email" in fullOrderDetails.customer
+      typeof fullOrderDetails.customer === "object" &&
+      "email" in fullOrderDetails.customer
       ? String(fullOrderDetails.customer.email || "")
       : typeof fullOrderDetails?.email === "string"
-      ? fullOrderDetails.email
-      : "");
+        ? fullOrderDetails.email
+        : "");
 
   const customerPhone =
     order.clientPhone ||
     (fullOrderDetails?.customer &&
-    typeof fullOrderDetails.customer === "object" &&
-    "phone" in fullOrderDetails.customer
+      typeof fullOrderDetails.customer === "object" &&
+      "phone" in fullOrderDetails.customer
       ? String(fullOrderDetails.customer.phone || "")
       : typeof fullOrderDetails?.phone === "string"
-      ? fullOrderDetails.phone
-      : "");
+        ? fullOrderDetails.phone
+        : "");
 
   const customerAddress =
     order.address ||
@@ -522,41 +522,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       ? typeof fullOrderDetails.address === "string"
         ? fullOrderDetails.address
         : typeof fullOrderDetails.address === "object"
-        ? JSON.stringify(fullOrderDetails.address)
-        : "Adresse non spécifiée"
+          ? JSON.stringify(fullOrderDetails.address)
+          : "Adresse non spécifiée"
       : "Adresse non spécifiée");
-
-  // let reservationTime = "";
-  // if (fullOrderDetails?.time) {
-  //   // Si c'est déjà au format HH:MM, l'utiliser directement
-  //   if (
-  //     typeof fullOrderDetails.time === "string" &&
-  //     fullOrderDetails.time.match(/^\d{1,2}:\d{2}$/)
-  //   ) {
-  //     reservationTime = fullOrderDetails.time;
-  //   } else {
-  //     reservationTime = String(fullOrderDetails.time);
-  //   }
-  // }
-
-  // // Formater la date de réservation
-  // const reservationDate = fullOrderDetails?.date || "";
-  // let formattedReservationDate = "";
-  // if (reservationDate) {
-  //   try {
-  //     const d = new Date(reservationDate);
-  //     formattedReservationDate = `${d.getDate().toString().padStart(2, "0")}/${(
-  //       d.getMonth() + 1
-  //     )
-  //       .toString()
-  //       .padStart(2, "0")}/${d.getFullYear()}`;
-  //   } catch (_error) {
-  //     console.error(
-  //       "Erreur lors du formatage de la date de réservation:"
-  //     );
-  //     formattedReservationDate = reservationDate;
-  //   }
-  // }
 
   // Utiliser les données étendues pour les dates
   const orderDate = order.date || "Date inconnue";
@@ -617,11 +585,13 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     (fullOrderDetails && typeof fullOrderDetails.tax === "number"
       ? fullOrderDetails.tax
       : 0);
+
   const subtotal =
     order.subtotal ||
     (fullOrderDetails && typeof fullOrderDetails.subtotal === "number"
       ? fullOrderDetails.subtotal
       : totalPrice - tax);
+
   const discount =
     order.discount ||
     (fullOrderDetails && typeof fullOrderDetails.discount === "number"
@@ -930,9 +900,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </div>
                       </div>
                       <p
-                        className={`text-sm font-bold ${
-                          item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
-                        }`}
+                        className={`text-sm font-bold ${item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
+                          }`}
                       >
                         {item.price === 0
                           ? "Offert"
@@ -998,11 +967,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                   <div className="flex justify-between items-center ">
                     {/* Étape 1 - Restaurant */}
                     <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${
-                        getProgressStyles().step1Border
-                      } ${
-                        getProgressStyles().step1Bg
-                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step1Border
+                        } ${getProgressStyles().step1Bg
+                        } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
                     >
                       <SafeImage
                         src={getProgressStyles().step1Icon}
@@ -1014,18 +981,15 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                     {/* Ligne entre étape 1 et 2 */}
                     <div
-                      className={`flex-1 h-1 ${
-                        getProgressStyles().line1
-                      } transition-all duration-500 ease-in-out`}
+                      className={`flex-1 h-1 ${getProgressStyles().line1
+                        } transition-all duration-500 ease-in-out`}
                     ></div>
 
                     {/* Étape 2 - Préparation */}
                     <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${
-                        getProgressStyles().step2Border
-                      } ${
-                        getProgressStyles().step2Bg
-                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step2Border
+                        } ${getProgressStyles().step2Bg
+                        } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
                     >
                       <SafeImage
                         src={getProgressStyles().step2Icon}
@@ -1037,18 +1001,15 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 
                     {/* Ligne entre étape 2 et 3 */}
                     <div
-                      className={`flex-1 h-1 ${
-                        getProgressStyles().line2
-                      } transition-all duration-500 ease-in-out`}
+                      className={`flex-1 h-1 ${getProgressStyles().line2
+                        } transition-all duration-500 ease-in-out`}
                     ></div>
 
                     {/* Étape 3 - Livraison */}
                     <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${
-                        getProgressStyles().step3Border
-                      } ${
-                        getProgressStyles().step3Bg
-                      } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
+                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step3Border
+                        } ${getProgressStyles().step3Bg
+                        } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
                     >
                       <SafeImage
                         src={getProgressStyles().step3Icon}

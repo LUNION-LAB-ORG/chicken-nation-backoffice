@@ -57,24 +57,17 @@ export default function Orders() {
         // ✅ Filtrer les restaurants selon les permissions
         let filteredRestaurants = activeRestaurants;
 
-        if (currentUser?.role === "MANAGER" && currentUser?.restaurant_id) {
-          // Manager : seulement son restaurant
+        if (currentUser?.restaurant_id) {
+          // Utilisateur Restaurant : seulement son restaurant
           filteredRestaurants = activeRestaurants.filter(
             (restaurant) => restaurant.id === currentUser.restaurant_id
           );
           setSelectedRestaurant(currentUser.restaurant_id);
-        } else if (currentUser?.restaurant_id) {
-          // Utilisateur restaurant : seulement son restaurant
-          filteredRestaurants = activeRestaurants.filter(
-            (restaurant) => restaurant.id === currentUser.restaurant_id
-          );
-          setSelectedRestaurant(currentUser.restaurant_id);
-        } else if (currentUser?.role === "ADMIN") {
+        } else {
           // Admin : tous les restaurants
           filteredRestaurants = activeRestaurants;
           setSelectedRestaurant(null);
         }
-
         setRestaurants(filteredRestaurants);
       } catch (error) {
         console.error("Erreur lors de la récupération des restaurants:", error);
@@ -178,7 +171,7 @@ export default function Orders() {
                 .map((r) => ({ ...r, id: r.id! }))}
               selectedRestaurant={selectedRestaurant}
               onSelectRestaurant={setSelectedRestaurant}
-              showAllTab={currentUser?.role === "ADMIN"} // Seulement pour ADMIN
+              showAllTab={!!currentUser?.restaurant_id == false} // Seulement pour ADMIN
             />
           )}
 

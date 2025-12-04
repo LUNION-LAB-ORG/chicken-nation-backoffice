@@ -227,7 +227,7 @@ export default function Sidebar({
     //   label: 'Publicités',
     //   defaultIcon: '/icons/sidebar/publicites.png',
     //   whiteIcon: '/icons/sidebar/publicites-white.png',
-    //   showForRoles: ['ADMIN']
+    //   canAccess: canViewUtilisateur,
     // },
     {
       id: "promos",
@@ -334,8 +334,8 @@ export default function Sidebar({
                         />
                         <span
                           className={`text-sm  -ml-6 font-normal cursor-pointer flex-1 ${activeTab === item.id
-                              ? "text-white"
-                              : "text-gray-600"
+                            ? "text-white"
+                            : "text-gray-600"
                             }`}
                         >
                           {item.label}
@@ -345,16 +345,16 @@ export default function Sidebar({
                           <ChevronDown
                             size={16}
                             className={`transition-transform ${activeTab === item.id
-                                ? "text-white"
-                                : "text-gray-400"
+                              ? "text-white"
+                              : "text-gray-400"
                               }`}
                           />
                         ) : (
                           <ChevronRight
                             size={16}
                             className={`transition-transform ${activeTab === item.id
-                                ? "text-white"
-                                : "text-gray-400"
+                              ? "text-white"
+                              : "text-gray-400"
                               }`}
                           />
                         )}
@@ -400,8 +400,8 @@ export default function Sidebar({
                               />
                               <span
                                 className={`text-sm  ${activeSubModule === subModule.id
-                                    ? "text-primary-500 font-medium"
-                                    : ""
+                                  ? "text-primary-500 font-medium"
+                                  : ""
                                   }`}
                               >
                                 {subModule.label}
