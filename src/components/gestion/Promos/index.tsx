@@ -59,6 +59,7 @@ const Promos = () => {
   useEffect(() => {
     loadPromotions()
   }, [])
+  
   const loadPromotions = async () => {
     setPromoState(prev => ({ ...prev, loading: true }))
     try {

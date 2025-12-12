@@ -1,9 +1,9 @@
 import { api } from './api';
-import {Dish} from '@/types/dish';
+import { Dish } from '@/types/dish';
 
 // Réexporter le type Dish pour l'utilisation dans d'autres modules
 export type { Dish };
- 
+
 const DISHES_ENDPOINT = '/supplements';
 
 export const createDish = async (formData: FormData): Promise<Dish> => {
@@ -29,7 +29,7 @@ export const createDish = async (formData: FormData): Promise<Dish> => {
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   try {
-     console.log('Contenu du FormData envoyé:');
+    console.log('Contenu du FormData envoyé:');
     for (const pair of formData.entries()) {
       console.log(`${pair[0]}: ${pair[1]}`);
     }

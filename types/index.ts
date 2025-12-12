@@ -25,3 +25,5 @@ export interface ActionResponse<T> {
 	message?: string;
 	error?: string;
 }
+
+export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';

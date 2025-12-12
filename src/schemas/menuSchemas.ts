@@ -141,7 +141,7 @@ export const validateApiMenuData = (data: unknown): ApiMenuData => {
 export const sanitizeMenuInput = (input: string): string => {
   return input
     .trim()
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')  
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')  // Supprimer les scripts
     .replace(/[<>]/g, '') // Supprimer < et >
     .substring(0, 1000); // Limiter la longueur
 };

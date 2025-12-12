@@ -6,6 +6,7 @@ import OrderContextMenu from "./OrderContextMenu";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
+import { format } from "date-fns";
 
 interface OrderRowProps {
   order: Order;
@@ -184,17 +185,15 @@ export function OrderRow({
           <div className="flex-1">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <div className="font-medium text-black">
-                  {order.reference}
+                <div className="font-medium text-black">{order.reference}</div>
+                <div className="text-xs text-gray-500">
+                  {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
                 </div>
-                <div className="text-xs text-gray-500">{order.date}</div>
               </div>
               <OrderTypeBadge type={order.orderType} />
             </div>
             <div className="mb-3">
-              <div className="font-medium text-black">
-                {order.clientName}
-              </div>
+              <div className="font-medium text-black">{order.clientName}</div>
               <div className="text-xs text-gray-500">
                 {order.restaurant || "Restaurant inconnu"}
               </div>
@@ -211,12 +210,26 @@ export function OrderRow({
               </div>
               <StatusBadge order={order} />
             </div>
-            <div className="flex justify-between items-center mb-2">
-              <PaymentBadge status={paymentStatus} mode={
-                order.paiements?.length > 0 ? (
-                  order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
-                ) : "Non renseigné"
-              } />
+
+            <span
+              className={`font-medium text-sm ${
+                !order.auto ? "bg-amber-100" : "bg-green-100"
+              } px-2 py-1 rounded-full`}
+            >
+              {order.auto ? "Auto" : "Manuel"}
+            </span>
+            <div className="flex justify-between items-center my-2">
+              <PaymentBadge
+                status={paymentStatus}
+                mode={
+                  order.paiements?.length > 0
+                    ? order.paiements[0].mode == "MOBILE_MONEY" &&
+                      order.paiements[0].source
+                      ? order.paiements?.[0].source
+                      : order.paiements?.[0].mode
+                    : ""
+                }
+              />
             </div>
             {showActionsColumn && (
               <div className="flex justify-end mt-2">
@@ -257,7 +270,9 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm text-gray-500">{order.date}</span>
+        <span className="text-sm text-gray-500">
+          {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
+        </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span className="text-sm font-medium text-black">
@@ -289,11 +304,26 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <PaymentBadge status={paymentStatus} mode={
-          order.paiements?.length > 0 ? (
-            order.paiements[0].mode == "MOBILE_MONEY" && order.paiements[0].source ? order.paiements?.[0].source : order.paiements?.[0].mode
-          ) : "Non renseigné"
-        } />
+        <PaymentBadge
+          status={paymentStatus}
+          mode={
+            order.paiements?.length > 0
+              ? order.paiements[0].mode == "MOBILE_MONEY" &&
+                order.paiements[0].source
+                ? order.paiements?.[0].source
+                : order.paiements?.[0].mode
+              : ""
+          }
+        />
+      </td>
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span
+          className={`font-medium text-sm ${
+            !order.auto ? "bg-amber-100" : "bg-green-100"
+          } px-2 py-1 rounded-full`}
+        >
+          {order.auto ? "Auto" : "Manuel"}
+        </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <StatusBadge order={order} />

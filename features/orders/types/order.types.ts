@@ -1,0 +1,150 @@
+import { EntityStatus } from "../../../types";
+import { Customer } from "../../customer/types/customer.types";
+import { Dish } from "../../menus/types/dish.types";
+import { Restaurant } from "../../restaurants/types/restaurant.types";
+
+// ✅ ENUMS
+export enum OrderStatus {
+    PENDING = 'PENDING',
+    CANCELLED = 'CANCELLED',
+    ACCEPTED = 'ACCEPTED',
+    IN_PROGRESS = 'IN_PROGRESS',
+    READY = 'READY',
+    PICKED_UP = 'PICKED_UP',
+    COLLECTED = 'COLLECTED',
+    COMPLETED = 'COMPLETED'
+}
+export enum DeliveryService {
+    TURBO = 'TURBO',
+    FREE = 'FREE'
+}
+export enum PaiementMode {
+    MOBILE_MONEY = 'MOBILE_MONEY',
+    WALLET = 'WALLET',
+    CARD = 'CARD',
+    CASH = 'CASH'
+}
+export enum PaiementStatus {
+    REVERTED = 'REVERTED',
+    SUCCESS = 'SUCCESS',
+    FAILED = 'FAILED'
+}
+export enum TypeTable {
+    TABLE_SQUARE = 'TABLE_SQUARE',
+    TABLE_RECTANGLE = 'TABLE_RECTANGLE',
+    TABLE_ROUND = 'TABLE_ROUND'
+}
+
+export enum OrderType {
+    DELIVERY = "DELIVERY",
+    PICKUP = "PICKUP",
+    TABLE = "TABLE",
+}
+
+// Structure pour le champ 'address' de Order (basé sur le commentaire)
+export interface OrderAddress {
+    title: string;
+    address: string;
+    street?: string;
+    city?: string;
+    longitude: number;
+    latitude: number;
+    note: string;
+}
+
+export interface Order {
+    id: string;
+    reference: string;
+    customer_id: string;
+    paied: boolean;
+    delivery_fee: number;
+    delivery_service: DeliveryService;
+    zone_id: string | null;
+    points: number;
+    type: OrderType;
+    table_type: TypeTable | null;
+    places: number | null;
+    address: OrderAddress; // Basé sur le JSON
+    code_promo: string | null;
+    tax: number;
+    amount: number;
+    net_amount: number;
+    discount: number;
+    date: Date | string | null;
+    time: string | null;
+    estimated_delivery_time: Date | string | null;
+    estimated_preparation_time: Date | string | null;
+    fullname: string | null;
+    phone: string | null;
+    email: string | null;
+    note: string | null;
+    auto: boolean;
+    status: OrderStatus;
+    restaurant_id: string;
+    // Relations
+    order_items?: OrderItem[];
+    paiements?: Paiement[];
+    customer?: Customer;
+    restaurant?: Restaurant;
+    promotion_id: string | null;
+    //   promotion?: Promotion | null;
+    //   promotion_usages?: PromotionUsage[];
+    //   loyalty_points?: LoyaltyPoint[];
+    //   Comment?: Comment[];
+    //   TicketThread?: TicketThread[];
+    //   Redemption?: Redemption[];
+    // Metadata
+    entity_status: EntityStatus;
+    completed_at: Date | string | null;
+    paied_at: Date | string | null;
+    created_at: Date | string;
+    updated_at: Date | string;
+}
+
+export interface OrderItem {
+    id: string;
+    quantity: number;
+    amount: number;
+    epice: boolean;
+    order_id: string;
+    dish_id: string;
+    supplements: any | null; // JSON
+    cooking_time: number | null;
+    // Relations
+    dish?: Dish;
+    order?: Order;
+    // Metadata
+    created_at: Date | string;
+    updated_at: Date | string;
+}
+
+export interface Paiement {
+    id: string;
+    amount: number;
+    total: number;
+    mode: PaiementMode;
+    source: string | null;
+    fees: number;
+    client: any | null; // JSON
+    client_id: string | null;
+    status: PaiementStatus;
+    reference: string;
+    failure_code: string | null;
+    failure_message: string | null;
+    order_id: string | null;
+    // Relations
+    order?: Order | null;
+    // Metadata
+    entity_status: EntityStatus;
+    created_at: Date | string;
+    updated_at: Date | string;
+}
+
+
+export interface DeliveryFee {
+    montant: number;
+    zone: string;
+    distance: number;
+    service: DeliveryService;
+    zone_id: string | null;
+  }

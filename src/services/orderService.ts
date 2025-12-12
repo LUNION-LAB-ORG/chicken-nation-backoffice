@@ -121,6 +121,7 @@ export interface ApiOrderRaw {
   estimated_delivery_time?: string | null;
   estimated_preparation_time?: string | null;
   completed_at?: string | null;
+  auto: boolean,
   [key: string]: unknown;
 }
 
@@ -230,8 +231,8 @@ export async function getOrderById(id: string): Promise<ApiOrderRaw> {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json(); 
- 
+    const data = await response.json();
+
     // Enrichir les données si nécessaire
     if (data) {
       // S'assurer que les informations client sont disponibles

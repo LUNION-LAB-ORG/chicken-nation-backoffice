@@ -1,22 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useDashboardStore } from "@/store/dashboardStore";
-import { useAuthStore } from "@/store/authStore";
-import { OrdersTable, Order } from "./OrdersTable";
-import OrderHeader from "./OrderHeader";
-import RestaurantTabs from "./RestaurantTabs";
-import AddMenu from "../Menus/AddMenu";
-import OrderDetails from "./OrderDetails";
-import { getAllRestaurants, Restaurant } from "@/services/restaurantService";
-import { updateOrderStatus } from "@/services/orderService";
-import { toast } from "react-hot-toast";
-import { useRBAC } from "@/hooks/useRBAC";
 import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
+import { useRBAC } from "@/hooks/useRBAC";
+import { updateOrderStatus } from "@/services/orderService";
+import { getAllRestaurants, Restaurant } from "@/services/restaurantService";
+import { useAuthStore } from "@/store/authStore";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import AddOrderForm from "../../../../features/orders/components/add-order-form";
+import OrderDetails from "./OrderDetails";
+import OrderHeader from "./OrderHeader";
+import { Order, OrdersTable } from "./OrdersTable";
+import RestaurantTabs from "./RestaurantTabs";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
-  const { canAcceptCommande, canRejectCommande, canCreatePlat } = useRBAC();
+
+  const { canCreateCommande, canAcceptCommande, canRejectCommande } = useRBAC();
+
   const {
     orders: { view, selectedItem },
     setSectionView,
@@ -111,9 +113,10 @@ export default function Orders() {
     } catch (error) {
       console.error("Erreur lors de l'acceptation de la commande:", error);
       toast.error(
-        `Erreur: ${error instanceof Error
-          ? error.message
-          : "Impossible d'accepter la commande"
+        `Erreur: ${
+          error instanceof Error
+            ? error.message
+            : "Impossible d'accepter la commande"
         }`
       );
     }
@@ -132,9 +135,10 @@ export default function Orders() {
     } catch (error) {
       console.error("Erreur lors du refus de la commande:", error);
       toast.error(
-        `Erreur: ${error instanceof Error
-          ? error.message
-          : "Impossible de refuser la commande"
+        `Erreur: ${
+          error instanceof Error
+            ? error.message
+            : "Impossible de refuser la commande"
         }`
       );
     }
@@ -150,7 +154,7 @@ export default function Orders() {
       <OrderHeader
         currentView={view}
         onBack={() => handleViewChange("list")}
-        onCreateMenu={() => handleViewChange("create")}
+        onCreateOrder={() => handleViewChange("create")}
         onSearch={handleSearch}
         activeFilter={activeFilter}
         selectedRestaurant={selectedRestaurant}
@@ -160,7 +164,6 @@ export default function Orders() {
         pendingOrdersCount={pendingOrdersCount}
         isSoundPlaying={isPlaying}
       />
-
       {view === "list" && (
         <div>
           {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}
@@ -182,11 +185,11 @@ export default function Orders() {
             currentUser={
               currentUser
                 ? {
-                  ...currentUser,
-                  id: currentUser.id || "",
-                  role: currentUser.role || "",
-                  restaurant_id: currentUser.restaurant_id,
-                }
+                    ...currentUser,
+                    id: currentUser.id || "",
+                    role: currentUser.role || "",
+                    restaurant_id: currentUser.restaurant_id,
+                  }
                 : undefined
             } // Typage sécurisé
             activeFilter={activeFilter}
@@ -207,16 +210,7 @@ export default function Orders() {
         />
       )}
 
-      {view === "create" && canCreatePlat() && (
-        <div className="flex flex-col lg:flex-row gap-4">
-          <div className="flex-1 lg:w-2/3">
-            <AddMenu />
-          </div>
-          <div className="w-full lg:w-1/3 invisible">
-            {/* Espace vide comme dans Menus */}
-          </div>
-        </div>
-      )}
+      {view === "create" && canCreateCommande() && <AddOrderForm />}
     </div>
   );
 }

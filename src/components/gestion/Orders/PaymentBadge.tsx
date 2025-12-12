@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type PaymentStatus = "PAID" | "REFUNDED" | "TO_REFUND";
+export type PaymentStatus = "PAID" | "UNPAID" | "REFUNDED" | "TO_REFUND";
 
 interface PaymentBadgeProps {
   status: PaymentStatus;
@@ -13,7 +13,7 @@ interface PaymentBadgeProps {
 export default function PaymentBadge({
   status,
   mode,
-    className = "",
+  className = "",
 }: PaymentBadgeProps) {
   const getStatusConfig = (status: PaymentStatus) => {
     switch (status) {
@@ -34,16 +34,16 @@ export default function PaymentBadge({
       case "TO_REFUND":
         return {
           text: "À rembourser",
-          bgColor: "bg-red-100",
-          textColor: "text-red-800",
-          borderColor: "border-red-200",
+          bgColor: "bg-orange-100",
+          textColor: "text-orange-800",
+          borderColor: "border-orange-200",
         };
       default:
         return {
-          text: "Payé",
-          bgColor: "bg-green-100",
-          textColor: "text-green-800",
-          borderColor: "border-green-200",
+          text: "Non payé",
+          bgColor: "bg-red-100",
+          textColor: "text-red-800",
+          borderColor: "border-red-200",
         };
     }
   };

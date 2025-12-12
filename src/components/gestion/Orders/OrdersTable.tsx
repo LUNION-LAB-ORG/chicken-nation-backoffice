@@ -91,8 +91,11 @@ export interface Order {
   platform?: string;
   estimatedDelivery?: string;
 
+  paied?: boolean;
   // État UI
   hidden?: boolean;
+
+  auto: boolean;
 }
 
 interface OrdersTableProps {
@@ -127,13 +130,14 @@ const getPaymentStatus = (order: Order): PaymentStatus => {
     );
     return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
   }
+  if (order.paied == false) {
+    return "UNPAID";
+  }
   // Pour toutes les autres commandes, elles sont considérées comme payées
   return "PAID";
 };
 
- 
 const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
- 
   const mapApiStatusToUiStatus = (apiStatus: string): Order["status"] => {
     const statusMapping: Record<string, Order["status"]> = {
       PENDING: "NOUVELLE",
@@ -319,7 +323,7 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
     paymentMethod: extractPaymentMethod(apiOrder.paiements),
     paymentStatus: apiOrder.paied ? "PAID" : "PENDING",
     paiements: apiOrder.paiements || [],
-
+    paied: apiOrder.paied,
     // ✅ Notes - EXTRACTION EXACTE
     notes: apiOrder.note || "",
     specialInstructions: "",
@@ -331,6 +335,8 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
 
     // ✅ État UI
     hidden: false,
+
+    auto: apiOrder.auto,
   };
 };
 
@@ -493,15 +499,17 @@ export function OrdersTable({
   const handleSetPreparationTime = useCallback(
     (orderId: string, preparationTime: number, deliveryTime: number) => {
       // TODO: Implémenter l'appel API pour définir le temps de préparation
-      console.log('Définir temps de préparation:', {
+      console.log("Définir temps de préparation:", {
         orderId,
         preparationTime,
         deliveryTime,
-        totalTime: preparationTime + deliveryTime
+        totalTime: preparationTime + deliveryTime,
       });
-      
+
       toast.success(
-        `Temps de préparation défini: ${preparationTime + deliveryTime} minutes (${preparationTime}min préparation + ${deliveryTime}min livraison)`
+        `Temps de préparation défini: ${
+          preparationTime + deliveryTime
+        } minutes (${preparationTime}min préparation + ${deliveryTime}min livraison)`
       );
     },
     []
@@ -624,7 +632,9 @@ export function OrdersTable({
               onRemoveFromList={
                 canDeleteCommande() ? handleRemoveOrder : undefined
               }
-              onSetPreparationTime={canAcceptCommande() ? handleSetPreparationTime : undefined}
+              onSetPreparationTime={
+                canAcceptCommande() ? handleSetPreparationTime : undefined
+              }
               isMobile={true}
               showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
               paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
@@ -676,7 +686,9 @@ export function OrdersTable({
                     onRemoveFromList={
                       canDeleteCommande() ? handleRemoveOrder : undefined
                     }
-                    onSetPreparationTime={canAcceptCommande() ? handleSetPreparationTime : undefined}
+                    onSetPreparationTime={
+                      canAcceptCommande() ? handleSetPreparationTime : undefined
+                    }
                     showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
                     showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
                     paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement

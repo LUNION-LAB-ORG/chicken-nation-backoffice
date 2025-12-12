@@ -9,15 +9,24 @@ import { useRBAC } from "@/hooks/useRBAC";
 import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
+import { format } from "date-fns";
 
-const getPaymentStatus = (orderDetails: unknown): PaymentStatus => {
+// 🎯 FONCTION POUR DÉTERMINER LE STATUT DE PAIEMENT
+const getPaymentStatus = (order: Order): PaymentStatus => {
   // Si la commande est annulée, vérifier le statut du paiement
-  if (orderDetails?.status === "CANCELLED") {
+  if (
+    order.status === "ANNULÉE" &&
+    order.paiements &&
+    order.paiements.length > 0
+  ) {
     // Vérifier s'il y a un paiement avec le statut REVERTED
-    const hasRevertedPayment = orderDetails?.paiements?.some(
-      (p: { status: string }) => p.status === "REVERTED"
+    const hasRevertedPayment = order.paiements?.some(
+      (p) => p.status === "REVERTED"
     );
     return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
+  }
+  if (order.paied == false) {
+    return "UNPAID";
   }
   // Pour toutes les autres commandes, elles sont considérées comme payées
   return "PAID";
@@ -114,7 +123,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   onReject,
   onStatusChange,
 }) => {
-  const { getOrderById, fetchOrderById, updateOrderStatus, handlePrintOrder } = useOrderStore();
+  const { getOrderById, fetchOrderById, updateOrderStatus, handlePrintOrder } =
+    useOrderStore();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   const [fullOrderDetails, setFullOrderDetails] = useState<{
@@ -486,35 +496,35 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const customerName =
     order.clientName ||
     (fullOrderDetails?.customer &&
-      typeof fullOrderDetails.customer === "object" &&
-      "first_name" in fullOrderDetails.customer &&
-      "last_name" in fullOrderDetails.customer
+    typeof fullOrderDetails.customer === "object" &&
+    "first_name" in fullOrderDetails.customer &&
+    "last_name" in fullOrderDetails.customer
       ? `${String(fullOrderDetails.customer.first_name || "")} ${String(
-        fullOrderDetails.customer.last_name || ""
-      )}`.trim()
+          fullOrderDetails.customer.last_name || ""
+        )}`.trim()
       : typeof fullOrderDetails?.fullname === "string"
-        ? fullOrderDetails.fullname
-        : "Client inconnu");
+      ? fullOrderDetails.fullname
+      : "Client inconnu");
 
   const customerEmail =
     order.clientEmail ||
     (fullOrderDetails?.customer &&
-      typeof fullOrderDetails.customer === "object" &&
-      "email" in fullOrderDetails.customer
+    typeof fullOrderDetails.customer === "object" &&
+    "email" in fullOrderDetails.customer
       ? String(fullOrderDetails.customer.email || "")
       : typeof fullOrderDetails?.email === "string"
-        ? fullOrderDetails.email
-        : "");
+      ? fullOrderDetails.email
+      : "");
 
   const customerPhone =
     order.clientPhone ||
     (fullOrderDetails?.customer &&
-      typeof fullOrderDetails.customer === "object" &&
-      "phone" in fullOrderDetails.customer
+    typeof fullOrderDetails.customer === "object" &&
+    "phone" in fullOrderDetails.customer
       ? String(fullOrderDetails.customer.phone || "")
       : typeof fullOrderDetails?.phone === "string"
-        ? fullOrderDetails.phone
-        : "");
+      ? fullOrderDetails.phone
+      : "");
 
   const customerAddress =
     order.address ||
@@ -522,8 +532,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
       ? typeof fullOrderDetails.address === "string"
         ? fullOrderDetails.address
         : typeof fullOrderDetails.address === "object"
-          ? JSON.stringify(fullOrderDetails.address)
-          : "Adresse non spécifiée"
+        ? JSON.stringify(fullOrderDetails.address)
+        : "Adresse non spécifiée"
       : "Adresse non spécifiée");
 
   // Utiliser les données étendues pour les dates
@@ -806,7 +816,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     Date de la commande
                   </p>
                   <p className="font-bold text-xs lg:text-sm text-[#71717A]">
-                    {orderDate}
+                    {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
                   </p>
                 </div>
 
@@ -835,7 +845,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     Statut paiement
                   </p>
                   <div className="flex items-center">
-                    <PaymentBadge status={getPaymentStatus(fullOrderDetails)} />
+                    <PaymentBadge status={getPaymentStatus(order)} />
                   </div>
                 </div>
               </div>
@@ -900,8 +910,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                         </div>
                       </div>
                       <p
-                        className={`text-sm font-bold ${item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
-                          }`}
+                        className={`text-sm font-bold ${
+                          item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
+                        }`}
                       >
                         {item.price === 0
                           ? "Offert"
@@ -958,89 +969,100 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
             </div>
 
             {/* Section livraison - Masquée pour PICKUP et TABLE */}
-            {fullOrderDetails?.type !== "PICKUP" && fullOrderDetails?.type !== "TABLE" && (
-              <div className="mb-4 md:mb-8">
-                <p className="text-[18px] font-medium text-[#F17922] mb-4">
-                  {getDeliverySectionTitle()}
-                </p>
-                <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
-                  <div className="flex justify-between items-center ">
-                    {/* Étape 1 - Restaurant */}
-                    <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step1Border
-                        } ${getProgressStyles().step1Bg
+            {fullOrderDetails?.type !== "PICKUP" &&
+              fullOrderDetails?.type !== "TABLE" && (
+                <div className="mb-4 md:mb-8">
+                  <p className="text-[18px] font-medium text-[#F17922] mb-4">
+                    {getDeliverySectionTitle()}
+                  </p>
+                  <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
+                    <div className="flex justify-between items-center ">
+                      {/* Étape 1 - Restaurant */}
+                      <div
+                        className={`w-10 h-10 rounded-[12px] border-1 ${
+                          getProgressStyles().step1Border
+                        } ${
+                          getProgressStyles().step1Bg
                         } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                    >
-                      <SafeImage
-                        src={getProgressStyles().step1Icon}
-                        alt="restaurant"
-                        width={24}
-                        height={24}
-                      />
-                    </div>
+                      >
+                        <SafeImage
+                          src={getProgressStyles().step1Icon}
+                          alt="restaurant"
+                          width={24}
+                          height={24}
+                        />
+                      </div>
 
-                    {/* Ligne entre étape 1 et 2 */}
-                    <div
-                      className={`flex-1 h-1 ${getProgressStyles().line1
+                      {/* Ligne entre étape 1 et 2 */}
+                      <div
+                        className={`flex-1 h-1 ${
+                          getProgressStyles().line1
                         } transition-all duration-500 ease-in-out`}
-                    ></div>
+                      ></div>
 
-                    {/* Étape 2 - Préparation */}
-                    <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step2Border
-                        } ${getProgressStyles().step2Bg
+                      {/* Étape 2 - Préparation */}
+                      <div
+                        className={`w-10 h-10 rounded-[12px] border-1 ${
+                          getProgressStyles().step2Border
+                        } ${
+                          getProgressStyles().step2Bg
                         } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                    >
-                      <SafeImage
-                        src={getProgressStyles().step2Icon}
-                        alt="box"
-                        width={24}
-                        height={24}
-                      />
-                    </div>
+                      >
+                        <SafeImage
+                          src={getProgressStyles().step2Icon}
+                          alt="box"
+                          width={24}
+                          height={24}
+                        />
+                      </div>
 
-                    {/* Ligne entre étape 2 et 3 */}
-                    <div
-                      className={`flex-1 h-1 ${getProgressStyles().line2
+                      {/* Ligne entre étape 2 et 3 */}
+                      <div
+                        className={`flex-1 h-1 ${
+                          getProgressStyles().line2
                         } transition-all duration-500 ease-in-out`}
-                    ></div>
+                      ></div>
 
-                    {/* Étape 3 - Livraison */}
-                    <div
-                      className={`w-10 h-10 rounded-[12px] border-1 ${getProgressStyles().step3Border
-                        } ${getProgressStyles().step3Bg
+                      {/* Étape 3 - Livraison */}
+                      <div
+                        className={`w-10 h-10 rounded-[12px] border-1 ${
+                          getProgressStyles().step3Border
+                        } ${
+                          getProgressStyles().step3Bg
                         } flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-                    >
-                      <SafeImage
-                        src={getProgressStyles().step3Icon}
-                        alt="pin"
-                        width={24}
-                        height={24}
-                      />
+                      >
+                        <SafeImage
+                          src={getProgressStyles().step3Icon}
+                          alt="pin"
+                          width={24}
+                          height={24}
+                        />
+                      </div>
                     </div>
                   </div>
+                  <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
+                    Processus de livraison proposé par{" "}
+                    <span className="text-[#71717A] font-bold">
+                      {fullOrderDetails?.delivery_service === "TURBO"
+                        ? "Turbo Delivery"
+                        : "Chicken Nation"}
+                    </span>
+                  </p>
+                  <button
+                    type="button"
+                    className="w-full mt-3 md:mt-4 py-3 px-4 bg-[#F17922] hover:bg-[#F17972] cursor-pointer rounded-xl flex items-center justify-center text-sm font-medium text-white"
+                  >
+                    <SafeImage
+                      src="/icons/external-link.png"
+                      alt="eye"
+                      width={20}
+                      height={20}
+                      className="mr-2"
+                    />
+                    <span>Voir le suivi de livraison</span>
+                  </button>
                 </div>
-                <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
-                  Processus de livraison proposé par{" "}
-                  <span className="text-[#71717A] font-bold">
-                    {fullOrderDetails?.delivery_service === "TURBO" ? "Turbo Delivery" : "Chicken Nation"}
-                  </span>
-                </p>
-                <button
-                  type="button"
-                  className="w-full mt-3 md:mt-4 py-3 px-4 bg-[#F17922] hover:bg-[#F17972] cursor-pointer rounded-xl flex items-center justify-center text-sm font-medium text-white"
-                >
-                  <SafeImage
-                    src="/icons/external-link.png"
-                    alt="eye"
-                    width={20}
-                    height={20}
-                    className="mr-2"
-                  />
-                  <span>Voir le suivi de livraison</span>
-                </button>
-              </div>
-            )}
+              )}
 
             {/* Informations de prix */}
             <div className="space-y-2 md:space-y-3">
@@ -1156,6 +1178,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                           {workflowConfig.buttonText}
                         </button>
                       )}
+
                       {!canUpdateCommande() && !canRejectCommande() && (
                         <div className="w-full text-center py-3 text-gray-500 text-sm">
                           Vous n&apos;avez pas les permissions pour modifier
@@ -1199,8 +1222,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               <button
                 type="button"
                 onClick={async () => {
-                  const result = await handlePrintOrder(order.id)
-                  console.log(result)
+                  const result = await handlePrintOrder(order.id);
+                  console.log(result);
                 }}
                 className="w-full py-3 px-4 bg-[#F17922] hover:bg-[#F17972] text-white rounded-xl font-medium"
               >

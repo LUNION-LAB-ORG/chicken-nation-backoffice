@@ -82,12 +82,10 @@ export class NotificationAPI {
       queryParams.append("isRead", filters.isRead.toString());
     if (filters?.target) queryParams.append("target", filters.target);
 
-    const endpoint = `/notifications/user/${userId}/USER${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
+    const endpoint = `/notifications/user/${userId}/USER${queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
 
     try {
-      console.log(`[NotificationAPI] Calling endpoint: ${endpoint}`);
 
       // ✅ Utiliser directement fetch pour plus de contrôle
       const baseUrl =
@@ -96,14 +94,12 @@ export class NotificationAPI {
 
       const token = NotificationAPI.getToken();
       if (!token) {
-        console.error("[NotificationAPI] No auth token found");
         return {
           data: [],
           meta: { limit: 0, page: 1, total: 0, totalPages: 0 },
         };
       }
 
-      console.log(`[NotificationAPI] Making request to: ${fullUrl}`);
 
       const response = await fetch(fullUrl, {
         method: "GET",
@@ -114,14 +110,10 @@ export class NotificationAPI {
         },
       });
 
-      console.log(`[NotificationAPI] Response status: ${response.status}`);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(
-          `[NotificationAPI] HTTP Error ${response.status}:`,
-          errorText
-        );
+
         return {
           data: [],
           meta: { limit: 0, page: 1, total: 0, totalPages: 0 },
@@ -129,14 +121,10 @@ export class NotificationAPI {
       }
 
       const data = await response.json();
-      console.log(`[NotificationAPI] Response data:`, data);
 
       return data;
     } catch (error) {
-      console.error(
-        `[NotificationAPI] getUserNotifications - Error for userId ${userId}:`,
-        error
-      );
+
       return { data: [], meta: { limit: 0, page: 1, total: 0, totalPages: 0 } }; // Retourner un tableau vide au lieu de throw en cas d'erreur
     }
   }
@@ -167,9 +155,8 @@ export class NotificationAPI {
       queryParams.append("is_read", filters.is_read.toString());
     if (filters.target) queryParams.append("target", filters.target);
 
-    const endpoint = `/notifications${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
+    const endpoint = `/notifications${queryParams.toString() ? `?${queryParams.toString()}` : ""
+      }`;
 
     try {
       const response = await apiRequest<NotificationResponse>(endpoint, "GET");
@@ -180,15 +167,12 @@ export class NotificationAPI {
         error instanceof TypeError &&
         error.message.includes("Failed to fetch")
       ) {
-        console.warn(
-          `[NotificationAPI] CORS/Network error - returning empty notifications for development`
-        );
+
         return {
           data: [],
           meta: { limit: 10, page: 1, total: 0, totalPages: 0 },
         };
       }
-      console.error(`[NotificationAPI] getAllNotifications - Error:`, error);
       return {
         data: [],
         meta: { limit: 10, page: 1, total: 0, totalPages: 0 },
@@ -210,7 +194,6 @@ export class NotificationAPI {
       const response = await apiRequest<Notification>(endpoint, "GET");
       return response;
     } catch (error) {
-      console.error(`[NotificationAPI] getNotificationById - Error:`, error);
       throw error;
     }
   }
@@ -234,12 +217,9 @@ export class NotificationAPI {
         error instanceof TypeError &&
         error.message.includes("Failed to fetch")
       ) {
-        console.warn(
-          `[NotificationAPI] CORS/Network error - returning default stats for development`
-        );
+
         return { total: 0, unread: 0, read: 0 };
       }
-      console.error(`[NotificationAPI] getNotificationStats - Error:`, error);
       return { total: 0, unread: 0, read: 0 }; // Retourner des stats par défaut
     }
   }
@@ -255,7 +235,6 @@ export class NotificationAPI {
     try {
       await apiRequest<void>(endpoint, "PATCH");
     } catch (error) {
-      console.error(`[NotificationAPI] markAsRead - Error:`, error);
       throw error;
     }
   }
@@ -271,7 +250,6 @@ export class NotificationAPI {
     try {
       await apiRequest<void>(endpoint, "PATCH");
     } catch (error) {
-      console.error(`[NotificationAPI] markAsUnread - Error:`, error);
       throw error;
     }
   }
@@ -287,7 +265,6 @@ export class NotificationAPI {
     try {
       await apiRequest<void>(endpoint, "PATCH");
     } catch (error) {
-      console.error(`[NotificationAPI] markAllAsRead - Error:`, error);
       throw error;
     }
   }
@@ -303,7 +280,6 @@ export class NotificationAPI {
     try {
       await apiRequest<void>(endpoint, "DELETE");
     } catch (error) {
-      console.error(`[NotificationAPI] deleteNotification - Error:`, error);
       throw error;
     }
   }
@@ -322,10 +298,7 @@ export class NotificationAPI {
       );
       await Promise.all(deletePromises);
     } catch (error) {
-      console.error(
-        `[NotificationAPI] deleteMultipleNotifications - Error:`,
-        error
-      );
+
       throw error;
     }
   }
