@@ -5,8 +5,8 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  react: ^19.0.0
-  react-dom: ^19.0.0
+  react: latest
+  react-dom: latest
   next: 15.2.2
 
 importers:
@@ -15,19 +15,19 @@ importers:
     dependencies:
       '@next/font':
         specifier: ^14.2.15
-        version: 14.2.15(next@15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))
+        version: 14.2.15(next@15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@react-google-maps/api':
         specifier: ^2.20.6
-        version: 2.20.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 2.20.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@react-pdf/renderer':
         specifier: ^4.3.0
-        version: 4.3.0(react@19.1.0)
+        version: 4.3.0(react@19.2.3)
       '@tanstack/react-query':
         specifier: ^5.81.2
-        version: 5.83.0(react@19.1.0)
+        version: 5.83.0(react@19.2.3)
       '@tanstack/react-table':
         specifier: ^8.21.3
-        version: 8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/dompurify':
         specifier: ^3.0.5
         version: 3.2.0
@@ -54,7 +54,7 @@ importers:
         version: 3.5.4
       framer-motion:
         specifier: ^12.5.0
-        version: 12.23.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 12.23.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       html2canvas:
         specifier: ^1.4.1
         version: 1.4.1
@@ -72,31 +72,31 @@ importers:
         version: 4.0.0
       lucide-react:
         specifier: ^0.482.0
-        version: 0.482.0(react@19.1.0)
+        version: 0.482.0(react@19.2.3)
       next:
         specifier: 15.2.2
-        version: 15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       nuqs:
         specifier: ^2.7.2
-        version: 2.7.2(next@15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+        version: 2.7.2(next@15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       puppeteer:
         specifier: ^24.17.0
         version: 24.17.0(typescript@5.8.3)
       react:
-        specifier: ^19.0.0
-        version: 19.1.0
+        specifier: latest
+        version: 19.2.3
       react-chartjs-2:
         specifier: ^5.3.0
-        version: 5.3.0(chart.js@4.5.0)(react@19.1.0)
+        version: 5.3.0(chart.js@4.5.0)(react@19.2.3)
       react-dom:
-        specifier: ^19.0.0
-        version: 19.1.0(react@19.1.0)
+        specifier: latest
+        version: 19.2.3(react@19.2.3)
       react-hot-toast:
         specifier: ^2.5.2
-        version: 2.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 2.5.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       recharts:
         specifier: ^2.15.1
-        version: 2.15.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       socket.io-client:
         specifier: ^4.8.1
         version: 4.8.1
@@ -108,7 +108,7 @@ importers:
         version: 3.25.76
       zustand:
         specifier: ^5.0.3
-        version: 5.0.6(@types/react@19.1.8)(react@19.1.0)
+        version: 5.0.6(@types/react@19.1.8)(react@19.2.3)
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -457,8 +457,8 @@ packages:
   '@react-google-maps/api@2.20.7':
     resolution: {integrity: sha512-ys7uri3V6gjhYZUI43srHzSKDC6/jiKTwHNlwXFTvjeaJE3M3OaYBt9FZKvJs8qnOhL6i6nD1BKJoi1KrnkCkg==}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: ^16.8 || ^17 || ^18 || ^19
+      react-dom: ^16.8 || ^17 || ^18 || ^19
 
   '@react-google-maps/infobox@2.20.0':
     resolution: {integrity: sha512-03PJHjohhaVLkX6+NHhlr8CIlvUxWaXhryqDjyaZ8iIqqix/nV8GFdz9O3m5OsjtxtNho09F/15j14yV0nuyLQ==}
@@ -490,7 +490,7 @@ packages:
   '@react-pdf/reconciler@1.1.4':
     resolution: {integrity: sha512-oTQDiR/t4Z/Guxac88IavpU2UgN7eR0RMI9DRKvKnvPz2DUasGjXfChAdMqDNmJJxxV26mMy9xQOUV2UU5/okg==}
     peerDependencies:
-      react: ^19.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@react-pdf/render@4.3.0':
     resolution: {integrity: sha512-MdWfWaqO6d7SZD75TZ2z5L35V+cHpyA43YNRlJNG0RJ7/MeVGDQv12y/BXOJgonZKkeEGdzM3EpAt9/g4E22WA==}
@@ -498,7 +498,7 @@ packages:
   '@react-pdf/renderer@4.3.0':
     resolution: {integrity: sha512-28gpA69fU9ZQrDzmd5xMJa1bDf8t0PT3ApUKBl2PUpoE/x4JlvCB5X66nMXrfFrgF2EZrA72zWQAkvbg7TE8zw==}
     peerDependencies:
-      react: ^19.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   '@react-pdf/stylesheet@6.1.0':
     resolution: {integrity: sha512-BGZ2sYNUp38VJUegjva/jsri3iiRGnVNjWI+G9dTwAvLNOmwFvSJzqaCsEnqQ/DW5mrTBk/577FhDY7pv6AidA==}
@@ -621,14 +621,14 @@ packages:
   '@tanstack/react-query@5.83.0':
     resolution: {integrity: sha512-/XGYhZ3foc5H0VM2jLSD/NyBRIOK4q9kfeml4+0x2DlL6xVuAcVEW+hTlTapAmejObg0i3eNqhkr2dT+eciwoQ==}
     peerDependencies:
-      react: ^19.0.0
+      react: ^18 || ^19
 
   '@tanstack/react-table@8.21.3':
     resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
     engines: {node: '>=12'}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: '>=16.8'
+      react-dom: '>=16.8'
 
   '@tanstack/table-core@8.21.3':
     resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
@@ -1594,8 +1594,8 @@ packages:
     resolution: {integrity: sha512-TqEHXj8LWfQSKqfdr5Y4mYltYLw96deu6/K9kGDd+ysqRJPNwF9nb5mZcrLmybHbU7gcJ+HQar41U3UTGanbbQ==}
     peerDependencies:
       '@emotion/is-prop-valid': '*'
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+      react-dom: ^18.0.0 || ^19.0.0
     peerDependenciesMeta:
       '@emotion/is-prop-valid':
         optional: true
@@ -2037,7 +2037,7 @@ packages:
   lucide-react@0.482.0:
     resolution: {integrity: sha512-XM8PzHzSrg8ATmmO+fzf+JyYlVVdQnJjuyLDj2p4V2zEtcKeBNAqAoJIGFv1x2HSBa7kT8gpYUxwdQ0g7nypfw==}
     peerDependencies:
-      react: ^19.0.0
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   magic-string@0.30.17:
     resolution: {integrity: sha512-sNPKHvyjVf7gyjwS4xGTaW/mCnF8wnjtifKBEhxfZ7E/S8tQ0rssrwGNn6q8JH/ohItJfSQp9mBtQYuTlH5QnA==}
@@ -2125,8 +2125,8 @@ packages:
       '@opentelemetry/api': ^1.1.0
       '@playwright/test': ^1.41.2
       babel-plugin-react-compiler: '*'
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
+      react-dom: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
       sass: ^1.3.0
     peerDependenciesMeta:
       '@opentelemetry/api':
@@ -2147,7 +2147,7 @@ packages:
       '@remix-run/react': '>=2'
       '@tanstack/react-router': ^1
       next: 15.2.2
-      react: ^19.0.0
+      react: '>=18.2.0 || ^19.0.0-0'
       react-router: ^6 || ^7
       react-router-dom: ^6 || ^7
     peerDependenciesMeta:
@@ -2328,19 +2328,19 @@ packages:
     resolution: {integrity: sha512-UfZZFnDsERI3c3CZGxzvNJd02SHjaSJ8kgW1djn65H1KK8rehwTjyrRKOG3VTMG8wtHZ5rgAO5oTHtHi9GCCmw==}
     peerDependencies:
       chart.js: ^4.1.1
-      react: ^19.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  react-dom@19.1.0:
-    resolution: {integrity: sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN/Gk6Vh/kupBTDLU11/nDk/g==}
+  react-dom@19.2.3:
+    resolution: {integrity: sha512-yELu4WmLPw5Mr/lmeEpox5rw3RETacE++JgHqQzd2dg+YbJuat3jH4ingc+WPZhxaoFzdv9y33G+F7Nl5O0GBg==}
     peerDependencies:
-      react: ^19.0.0
+      react: ^19.2.3
 
   react-hot-toast@2.5.2:
     resolution: {integrity: sha512-Tun3BbCxzmXXM7C+NI4qiv6lT0uwGh4oAfeJyNOjYUejTsm35mK9iCaYLGv8cBz9L5YxZLx/2ii7zsIwPtPUdw==}
     engines: {node: '>=10'}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: '>=16'
+      react-dom: '>=16'
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -2351,17 +2351,17 @@ packages:
   react-smooth@4.0.4:
     resolution: {integrity: sha512-gnGKTpYwqL0Iii09gHobNolvX4Kiq4PKx6eWBCYYix+8cdw+cGo3do906l1NBPKkSWx1DghC1dlWG9L2uGd61Q==}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   react-transition-group@4.4.5:
     resolution: {integrity: sha512-pZcd1MCJoiKiBR2NRxeCRg13uCXbydPnmB4EOeRrY7480qNWO8IIgQG6zlDkm6uRMsURXPuKq0GWtiM59a5Q6g==}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: '>=16.6.0'
+      react-dom: '>=16.6.0'
 
-  react@19.1.0:
-    resolution: {integrity: sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==}
+  react@19.2.3:
+    resolution: {integrity: sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==}
     engines: {node: '>=0.10.0'}
 
   recharts-scale@0.4.5:
@@ -2371,8 +2371,8 @@ packages:
     resolution: {integrity: sha512-UT/q6fwS3c1dHbXv2uFgYJ9BMFHu3fwnd7AYZaEQhXuYQ4hgsxLvsUXzGdKeZrW5xopzDCvuA2N41WJ88I7zIw==}
     engines: {node: '>=14'}
     peerDependencies:
-      react: ^19.0.0
-      react-dom: ^19.0.0
+      react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
@@ -2441,8 +2441,8 @@ packages:
   scheduler@0.25.0-rc-603e6108-20241029:
     resolution: {integrity: sha512-pFwF6H1XrSdYYNLfOcGlM28/j8CGLu8IvdrxqhjWULe2bPcKiKW4CV+OWqR/9fT52mywx65l7ysNkjLKBda7eA==}
 
-  scheduler@0.26.0:
-    resolution: {integrity: sha512-NlHwttCI/l5gCPR3D1nNXtWABUmBwvZpEQiD4IXSbIDq8BzLIK/7Ir5gTFSGZDUu37K5cMNp0hFtzO38sC7gWA==}
+  scheduler@0.27.0:
+    resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
   semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
@@ -2590,7 +2590,7 @@ packages:
     peerDependencies:
       '@babel/core': '*'
       babel-plugin-macros: '*'
-      react: ^19.0.0
+      react: '>= 16.8.0 || 17.x.x || ^18.0.0-0 || ^19.0.0-0'
     peerDependenciesMeta:
       '@babel/core':
         optional: true
@@ -2822,7 +2822,7 @@ packages:
     peerDependencies:
       '@types/react': '>=18.0.0'
       immer: '>=9.0.6'
-      react: ^19.0.0
+      react: '>=18.0.0'
       use-sync-external-store: '>=1.2.0'
     peerDependenciesMeta:
       '@types/react':
@@ -3041,9 +3041,9 @@ snapshots:
     dependencies:
       fast-glob: 3.3.1
 
-  '@next/font@14.2.15(next@15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))':
+  '@next/font@14.2.15(next@15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))':
     dependencies:
-      next: 15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next: 15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
   '@next/swc-darwin-arm64@15.2.2':
     optional: true
@@ -3102,7 +3102,7 @@ snapshots:
       - bare-buffer
       - supports-color
 
-  '@react-google-maps/api@2.20.7(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@react-google-maps/api@2.20.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@googlemaps/js-api-loader': 1.16.8
       '@googlemaps/markerclusterer': 2.5.3
@@ -3110,8 +3110,8 @@ snapshots:
       '@react-google-maps/marker-clusterer': 2.20.0
       '@types/google.maps': 3.58.1
       invariant: 2.2.4
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   '@react-google-maps/infobox@2.20.0': {}
 
@@ -3160,10 +3160,10 @@ snapshots:
 
   '@react-pdf/primitives@4.1.1': {}
 
-  '@react-pdf/reconciler@1.1.4(react@19.1.0)':
+  '@react-pdf/reconciler@1.1.4(react@19.2.3)':
     dependencies:
       object-assign: 4.1.1
-      react: 19.1.0
+      react: 19.2.3
       scheduler: 0.25.0-rc-603e6108-20241029
 
   '@react-pdf/render@4.3.0':
@@ -3179,7 +3179,7 @@ snapshots:
       parse-svg-path: 0.1.2
       svg-arc-to-cubic-bezier: 3.2.0
 
-  '@react-pdf/renderer@4.3.0(react@19.1.0)':
+  '@react-pdf/renderer@4.3.0(react@19.2.3)':
     dependencies:
       '@babel/runtime': 7.28.2
       '@react-pdf/fns': 3.1.2
@@ -3187,14 +3187,14 @@ snapshots:
       '@react-pdf/layout': 4.4.0
       '@react-pdf/pdfkit': 4.0.3
       '@react-pdf/primitives': 4.1.1
-      '@react-pdf/reconciler': 1.1.4(react@19.1.0)
+      '@react-pdf/reconciler': 1.1.4(react@19.2.3)
       '@react-pdf/render': 4.3.0
       '@react-pdf/types': 2.9.0
       events: 3.3.0
       object-assign: 4.1.1
       prop-types: 15.8.1
       queue: 6.0.2
-      react: 19.1.0
+      react: 19.2.3
 
   '@react-pdf/stylesheet@6.1.0':
     dependencies:
@@ -3306,16 +3306,16 @@ snapshots:
 
   '@tanstack/query-core@5.83.0': {}
 
-  '@tanstack/react-query@5.83.0(react@19.1.0)':
+  '@tanstack/react-query@5.83.0(react@19.2.3)':
     dependencies:
       '@tanstack/query-core': 5.83.0
-      react: 19.1.0
+      react: 19.2.3
 
-  '@tanstack/react-table@8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+  '@tanstack/react-table@8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
     dependencies:
       '@tanstack/table-core': 8.21.3
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   '@tanstack/table-core@8.21.3': {}
 
@@ -4441,14 +4441,14 @@ snapshots:
       dezalgo: 1.0.4
       once: 1.4.0
 
-  framer-motion@12.23.9(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  framer-motion@12.23.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       motion-dom: 12.23.9
       motion-utils: 12.23.6
       tslib: 2.8.1
     optionalDependencies:
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   function-bind@1.1.2: {}
 
@@ -4872,9 +4872,9 @@ snapshots:
 
   lru-cache@7.18.3: {}
 
-  lucide-react@0.482.0(react@19.1.0):
+  lucide-react@0.482.0(react@19.2.3):
     dependencies:
-      react: 19.1.0
+      react: 19.2.3
 
   magic-string@0.30.17:
     dependencies:
@@ -4933,7 +4933,7 @@ snapshots:
 
   netmask@2.0.2: {}
 
-  next@15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  next@15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@next/env': 15.2.2
       '@swc/counter': 0.1.3
@@ -4941,9 +4941,9 @@ snapshots:
       busboy: 1.6.0
       caniuse-lite: 1.0.30001727
       postcss: 8.4.31
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      styled-jsx: 5.1.6(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      styled-jsx: 5.1.6(react@19.2.3)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.2.2
       '@next/swc-darwin-x64': 15.2.2
@@ -4962,12 +4962,12 @@ snapshots:
     dependencies:
       svg-arc-to-cubic-bezier: 3.2.0
 
-  nuqs@2.7.2(next@15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
+  nuqs@2.7.2(next@15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
     dependencies:
       '@standard-schema/spec': 1.0.0
-      react: 19.1.0
+      react: 19.2.3
     optionalDependencies:
-      next: 15.2.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      next: 15.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
   object-assign@4.1.1: {}
 
@@ -5178,59 +5178,59 @@ snapshots:
       performance-now: 2.1.0
     optional: true
 
-  react-chartjs-2@5.3.0(chart.js@4.5.0)(react@19.1.0):
+  react-chartjs-2@5.3.0(chart.js@4.5.0)(react@19.2.3):
     dependencies:
       chart.js: 4.5.0
-      react: 19.1.0
+      react: 19.2.3
 
-  react-dom@19.1.0(react@19.1.0):
+  react-dom@19.2.3(react@19.2.3):
     dependencies:
-      react: 19.1.0
-      scheduler: 0.26.0
+      react: 19.2.3
+      scheduler: 0.27.0
 
-  react-hot-toast@2.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-hot-toast@2.5.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       csstype: 3.1.3
       goober: 2.1.16(csstype@3.1.3)
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   react-is@16.13.1: {}
 
   react-is@18.3.1: {}
 
-  react-smooth@4.0.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-smooth@4.0.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       fast-equals: 5.2.2
       prop-types: 15.8.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
-      react-transition-group: 4.4.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
+      react-transition-group: 4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
-  react-transition-group@4.4.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-transition-group@4.4.5(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@babel/runtime': 7.28.2
       dom-helpers: 5.2.1
       loose-envify: 1.4.0
       prop-types: 15.8.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
-  react@19.1.0: {}
+  react@19.2.3: {}
 
   recharts-scale@0.4.5:
     dependencies:
       decimal.js-light: 2.5.1
 
-  recharts@2.15.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  recharts@2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       clsx: 2.1.1
       eventemitter3: 4.0.7
       lodash: 4.17.21
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
       react-is: 18.3.1
-      react-smooth: 4.0.4(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react-smooth: 4.0.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       recharts-scale: 0.4.5
       tiny-invariant: 1.3.3
       victory-vendor: 36.9.2
@@ -5312,7 +5312,7 @@ snapshots:
 
   scheduler@0.25.0-rc-603e6108-20241029: {}
 
-  scheduler@0.26.0: {}
+  scheduler@0.27.0: {}
 
   semver@6.3.1: {}
 
@@ -5530,10 +5530,10 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  styled-jsx@5.1.6(react@19.1.0):
+  styled-jsx@5.1.6(react@19.2.3):
     dependencies:
       client-only: 0.0.1
-      react: 19.1.0
+      react: 19.2.3
 
   supercluster@8.0.1:
     dependencies:
@@ -5820,7 +5820,7 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zustand@5.0.6(@types/react@19.1.8)(react@19.1.0):
+  zustand@5.0.6(@types/react@19.1.8)(react@19.2.3):
     optionalDependencies:
       '@types/react': 19.1.8
-      react: 19.1.0
+      react: 19.2.3
