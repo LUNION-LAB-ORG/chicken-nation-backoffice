@@ -87,7 +87,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
     [onFormDataChange, onCustomerChange]
   );
 
-  // Détecter si les données ont changé (nouveau client)
+ // Détecter si les données ont changé (nouveau client)
   useEffect(() => {
     if (selectedCustomer) {
       const currentFullname = [
@@ -97,10 +97,13 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
         .filter(Boolean)
         .join(" ");
 
+      // Normaliser les valeurs vides pour comparaison
+      const normalizeValue = (val: string | null | undefined) => val || "";
+
       const hasChanged =
-        formData.fullname !== currentFullname ||
-        formData.phone !== selectedCustomer.phone ||
-        formData.email !== selectedCustomer.email;
+        normalizeValue(formData.fullname) !== normalizeValue(currentFullname) ||
+        normalizeValue(formData.phone) !== normalizeValue(selectedCustomer.phone) ||
+        normalizeValue(formData.email) !== normalizeValue(selectedCustomer.email);
 
       if (hasChanged) {
         setNeedsSave(true);
