@@ -78,5 +78,6 @@ export const prepareOrderData = (formData: OrderFormData): OrderFormData => {
     restaurant_id: formData.restaurant_id,
     auto: formData.auto,
     user_id: formData.user_id,
+    delivery_fee: formData.delivery_fee,
   };
 };

@@ -13,8 +13,8 @@ export const useOrderAddMutation = () => {
 			// Validation des données
 			const validate = validateOrderForm(data)
 			if (validate) {
-				// Appel de l'API avec l'action
-				const result = await addOrder(prepareOrderData(data));
+				const orderData = prepareOrderData(data)
+				const result = await addOrder(orderData);
 				return result;
 			} else {
 				throw new Error("Erreur lors de l'ajout de la commande");

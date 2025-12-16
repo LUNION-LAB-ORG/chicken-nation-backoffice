@@ -3,7 +3,6 @@
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { motion } from "framer-motion";
 import { useOrderForm } from "../../hooks/useOrderForm";
-import { OrderType } from "../../types/order.types";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";

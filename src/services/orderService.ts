@@ -1,5 +1,7 @@
 // --- Order Service ---
 
+import { Order } from "../../features/orders/types/order.types";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL
 const API_PREFIX = '/api/v1';
 const ORDERS_ENDPOINT = '/orders';
@@ -44,87 +46,6 @@ export interface OrderQuery {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
-
-// ✅ Interface qui correspond aux VRAIES données de l'API
-export interface ApiOrderRaw {
-  id: string;
-  reference: string;
-  order_number?: string;
-  status: OrderStatus;
-  type: OrderType;
-  amount: number;
-  net_amount?: number;
-  delivery_fee?: number;
-  tax?: number;
-  discount?: number;
-  created_at: string;
-  updated_at: string;
-  date?: string;
-  time?: string;
-  fullname: string;
-  email?: string | null;
-  phone?: string;
-  customer_id: string;
-  customer: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    email: string | null;
-    phone: string;
-    image?: string | null;
-  };
-  restaurant_id: string;
-  restaurant: {
-    id: string;
-    name: string;
-    image?: string;
-    address?: string;
-    phone?: string;
-    email?: string;
-    latitude?: number;
-    longitude?: number;
-  };
-  address: string; // JSON string
-  table_type?: string | null;
-  places?: number | null;
-  order_items: Array<{
-    id: string;
-    dish_id?: string;
-    name?: string;
-    amount?: number;
-    price?: number;
-    quantity?: number;
-    epice?: boolean;
-    dish?: {
-      id: string;
-      name: string;
-      description?: string;
-      price: number;
-      image?: string;
-      category?: string;
-    };
-  }>;
-  paiements: Array<{
-    id?: string;
-    method?: string;
-    status?: string;
-    amount?: number;
-    [key: string]: unknown;
-  }>;
-  paied: boolean;
-  paied_at?: string | null;
-  note?: string | null;
-  promotion_id?: string | null;
-  code_promo?: string | null;
-  points?: number;
-  entity_status: string;
-  estimated_delivery_time?: string | null;
-  estimated_preparation_time?: string | null;
-  completed_at?: string | null;
-  auto: boolean,
-  [key: string]: unknown;
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -137,7 +58,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Fonction pour récupérer les commandes avec filtres
-export async function getOrders(params: OrderQuery = {}): Promise<PaginatedResponse<ApiOrderRaw>> {
+export async function getOrders(params: OrderQuery = {}): Promise<PaginatedResponse<Order>> {
 
   const {
     page = 1,
@@ -208,7 +129,7 @@ export async function getOrders(params: OrderQuery = {}): Promise<PaginatedRespo
 }
 
 // Fonction pour récupérer une commande par son ID
-export async function getOrderById(id: string): Promise<ApiOrderRaw> {
+export async function getOrderById(id: string): Promise<Order> {
   if (!id) throw new Error('ID commande manquant');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
 
@@ -266,7 +187,7 @@ export async function getOrderById(id: string): Promise<ApiOrderRaw> {
   }
 }
 
-export async function getRawOrderById(id: string): Promise<ApiOrderRaw> {
+export async function getRawOrderById(id: string): Promise<Order> {
   if (!id) throw new Error('ID commande manquant');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
 
@@ -293,7 +214,7 @@ export async function getRawOrderById(id: string): Promise<ApiOrderRaw> {
 }
 
 // Fonction pour mettre à jour le statut d'une commande
-export async function updateOrderStatus(id: string, status: OrderStatus): Promise<ApiOrderRaw> {
+export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
   if (!id || !status) throw new Error('ID ou statut manquant');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}/status`;
 
@@ -344,7 +265,7 @@ export async function deleteOrder(id: string): Promise<void> {
 }
 
 // Fonction pour mettre à jour une commande
-export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promise<ApiOrderRaw> {
+export async function updateOrder(id: string, data: Partial<Order>): Promise<Order> {
   if (!id || !data) throw new Error('ID ou données manquantes');
   const url = `${API_URL}${API_PREFIX}${ORDERS_ENDPOINT}/${id}`;
 
@@ -371,7 +292,7 @@ export async function updateOrder(id: string, data: Partial<ApiOrderRaw>): Promi
 }
 
 // ✅ Fonction spécialisée pour mettre à jour le temps de préparation
-export async function updatePreparationTime(id: string, preparationTimeMinutes: number): Promise<ApiOrderRaw> {
+export async function updatePreparationTime(id: string, preparationTimeMinutes: number): Promise<Order> {
   if (!id || typeof preparationTimeMinutes !== 'number') {
     throw new Error('ID de commande et temps de préparation requis');
   }

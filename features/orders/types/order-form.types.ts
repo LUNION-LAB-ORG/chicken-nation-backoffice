@@ -22,6 +22,7 @@ export interface OrderFormData {
     restaurant_id?: string;
     auto: boolean;
     user_id: string;
+    delivery_fee?: number;
 }
 
 // ✅ TYPES POUR LES OPTIONS

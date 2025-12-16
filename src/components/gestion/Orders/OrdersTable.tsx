@@ -7,10 +7,14 @@ import { TableHeader } from "./TableHeader";
 import { OrderFilters } from "./OrderFilters";
 import { toast } from "react-hot-toast";
 import { useOrdersQuery } from "@/hooks/useOrdersQuery";
-import { deleteOrder, ApiOrderRaw } from "@/services/orderService";
+import { deleteOrder } from "@/services/orderService";
 import { useRBAC } from "@/hooks/useRBAC";
 import { PaymentStatus } from "./PaymentBadge";
 import { useOrderStore } from "@/store/orderStore";
+import {
+  Order as IOrder,
+  Paiement,
+} from "../../../../features/orders/types/order.types";
 
 // Interface étendue pour les commandes UI
 export interface Order {
@@ -69,6 +73,8 @@ export interface Order {
     price: number;
     image?: string;
     epice?: boolean;
+    supplemens?: string;
+    supplementsPrice?: number;
   }>;
 
   // Paiement
@@ -96,6 +102,8 @@ export interface Order {
   hidden?: boolean;
 
   auto: boolean;
+
+  note?: string;
 }
 
 interface OrdersTableProps {
@@ -137,7 +145,7 @@ const getPaymentStatus = (order: Order): PaymentStatus => {
   return "PAID";
 };
 
-const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
+const mapApiOrderToUiOrder = (apiOrder: IOrder): Order => {
   const mapApiStatusToUiStatus = (apiStatus: string): Order["status"] => {
     const statusMapping: Record<string, Order["status"]> = {
       PENDING: "NOUVELLE",
@@ -164,7 +172,7 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
   };
 
   // ✅ 3. EXTRACTION DU NOM CLIENT
-  const extractClientName = (apiOrder: ApiOrderRaw): string => {
+  const extractClientName = (apiOrder: IOrder): string => {
     if (apiOrder.customer?.first_name || apiOrder.customer?.last_name) {
       const firstName = apiOrder.customer.first_name || "";
       const lastName = apiOrder.customer.last_name || "";
@@ -215,33 +223,25 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
   };
 
   // ✅ 6. EXTRACTION DU MODE DE PAIEMENT
-  const extractPaymentMethod = (
-    paiements: Array<{ method?: string }>
-  ): string => {
+  const extractPaymentMethod = (paiements: Paiement[]): string => {
     if (!paiements || paiements.length === 0) return "Non renseigné";
 
     const firstPayment = paiements[0];
-    if (firstPayment.method) {
+    if (firstPayment.mode) {
       // Traduire les méthodes en français
       const methodMapping: Record<string, string> = {
+        MOBILE_MONEY: "Mobile Money",
         CASH: "Espèces",
         CARD: "Carte bancaire",
-        MOBILE_MONEY: "Mobile Money",
-        ONLINE: "Paiement en ligne",
-        WAVE: "Wave",
-        ORANGE_MONEY: "Orange Money",
-        MOOV_MONEY: "Moov Money",
       };
-      return methodMapping[firstPayment.method] || firstPayment.method;
+      return methodMapping[firstPayment.mode] || firstPayment.mode;
     }
 
     return "Non renseigné";
   };
 
   // ✅ 7. EXTRACTION DES ITEMS avec validation d'URL
-  const extractItems = (
-    orderItems: ApiOrderRaw["order_items"]
-  ): Order["items"] => {
+  const extractItems = (orderItems: IOrder["order_items"]): Order["items"] => {
     if (!Array.isArray(orderItems)) return [];
 
     // Fonction pour valider et nettoyer les URLs d'images
@@ -268,11 +268,18 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
 
     return orderItems.map((item) => ({
       id: item.id || "",
-      name: item.name || item.dish?.name || "Article inconnu",
+      name: item.dish?.name || "Article inconnu",
       quantity: item.quantity || 1,
-      price: item.price || item.amount || item.dish?.price || 0,
+      price: item.amount || item.dish?.price || 0,
       image: validateImageUrl(item.dish?.image),
       epice: item.epice,
+      supplemens:
+        item.supplements?.map((supplement) => supplement.name).join(", ") || "",
+      supplementsPrice:
+        item.supplements?.reduce(
+          (total, supplement) => total + supplement.price,
+          0
+        ) || 0,
     }));
   };
 
@@ -280,8 +287,8 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
   return {
     // ✅ Identifiants
     id: apiOrder.id || "",
-    reference: apiOrder.reference || apiOrder.order_number || "REF-INCONNUE",
-    orderNumber: apiOrder.order_number || "",
+    reference: apiOrder.reference || "REF-INCONNUE",
+    orderNumber: apiOrder.reference || "",
 
     // ✅ Informations client - EXTRACTION EXACTE
     clientName: extractClientName(apiOrder),
@@ -290,7 +297,7 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
     userId: apiOrder.customer_id || "",
 
     // ✅ Dates - EXTRACTION EXACTE
-    date: formatDate(apiOrder.created_at),
+    date: formatDate(apiOrder?.date!),
     createdAt: apiOrder.created_at || "",
     updatedAt: apiOrder.updated_at || "",
 
@@ -307,7 +314,7 @@ const mapApiOrderToUiOrder = (apiOrder: ApiOrderRaw): Order => {
     discount: apiOrder.discount || 0,
 
     // ✅ Localisation - EXTRACTION EXACTE
-    address: extractAddress(apiOrder.address),
+    address: extractAddress(JSON.stringify(apiOrder?.address || {})),
     tableNumber: "",
     tableType: apiOrder.table_type || "",
     numberOfGuests: apiOrder.places || 0,
@@ -632,9 +639,9 @@ export function OrdersTable({
               onRemoveFromList={
                 canDeleteCommande() ? handleRemoveOrder : undefined
               }
-              onSetPreparationTime={
-                canAcceptCommande() ? handleSetPreparationTime : undefined
-              }
+              // onSetPreparationTime={
+              //   canAcceptCommande() ? handleSetPreparationTime : undefined
+              // }
               isMobile={true}
               showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
               paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
@@ -658,7 +665,7 @@ export function OrdersTable({
                   selectedOrders.length > 0 &&
                   selectedOrders.length === ordersToDisplay.length
                 }
-                showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
+                showRestaurantColumn={!currentUser?.restaurant_id} // ✅ Seulement pour ADMIN
                 showActionsColumn={hasAnyActionPermission} // ✅ Cacher colonne Actions si aucune permission
               />
               <tbody>
@@ -686,10 +693,7 @@ export function OrdersTable({
                     onRemoveFromList={
                       canDeleteCommande() ? handleRemoveOrder : undefined
                     }
-                    onSetPreparationTime={
-                      canAcceptCommande() ? handleSetPreparationTime : undefined
-                    }
-                    showRestaurantColumn={currentUser?.role === "ADMIN"} // ✅ Seulement pour ADMIN
+                    showRestaurantColumn={!currentUser?.restaurant_id} // ✅ Seulement pour ADMIN
                     showActionsColumn={hasAnyActionPermission} // ✅ Cacher menu hamburger si aucune permission
                     paymentStatus={getPaymentStatus(order)} // ✅ Calculer le statut de paiement
                   />

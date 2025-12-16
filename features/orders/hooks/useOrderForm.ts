@@ -24,7 +24,8 @@ export const useOrderForm = () => {
         customer_id: "",
         restaurant_id: "",
         auto: false,
-        user_id: user.id
+        user_id: user.id,
+        delivery_fee: 0,
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -85,7 +86,6 @@ export const useOrderForm = () => {
                 return;
             }
 
-            // TODO: Appel API pour créer la commande
             await addOrder(formData);
             // Réinitialiser le formulaire
             setFormData({
@@ -101,7 +101,8 @@ export const useOrderForm = () => {
                 customer_id: "",
                 restaurant_id: "",
                 auto: false,
-                user_id: user.id
+                user_id: user.id,
+                delivery_fee: 0
             });
 
             setCustomerNeedsSave(false);
@@ -131,7 +132,9 @@ export const useOrderForm = () => {
                 customer_id: "",
                 restaurant_id: "",
                 auto: false,
-                user_id: user.id
+                user_id: user.id,
+                delivery_fee: 0
+
             });
         }
     };

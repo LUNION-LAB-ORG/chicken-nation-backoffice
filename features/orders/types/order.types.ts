@@ -1,6 +1,7 @@
 import { EntityStatus } from "../../../types";
 import { Customer } from "../../customer/types/customer.types";
 import { Dish } from "../../menus/types/dish.types";
+import { Supplement } from "../../menus/types/supplement.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 
 // ✅ ENUMS
@@ -70,10 +71,10 @@ export interface Order {
     amount: number;
     net_amount: number;
     discount: number;
-    date: Date | string | null;
+    date: string | null;
     time: string | null;
-    estimated_delivery_time: Date | string | null;
-    estimated_preparation_time: Date | string | null;
+    estimated_delivery_time: string | null;
+    estimated_preparation_time: string | null;
     fullname: string | null;
     phone: string | null;
     email: string | null;
@@ -95,10 +96,10 @@ export interface Order {
     //   Redemption?: Redemption[];
     // Metadata
     entity_status: EntityStatus;
-    completed_at: Date | string | null;
-    paied_at: Date | string | null;
-    created_at: Date | string;
-    updated_at: Date | string;
+    completed_at: string | null;
+    paied_at: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface OrderItem {
@@ -108,14 +109,14 @@ export interface OrderItem {
     epice: boolean;
     order_id: string;
     dish_id: string;
-    supplements: any | null; // JSON
+    supplements: Supplement[] | null; // JSON
     cooking_time: number | null;
     // Relations
     dish?: Dish;
     order?: Order;
     // Metadata
-    created_at: Date | string;
-    updated_at: Date | string;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Paiement {
@@ -136,8 +137,8 @@ export interface Paiement {
     order?: Order | null;
     // Metadata
     entity_status: EntityStatus;
-    created_at: Date | string;
-    updated_at: Date | string;
+    created_at: string;
+    updated_at: string;
 }
 
 
@@ -147,4 +148,4 @@ export interface DeliveryFee {
     distance: number;
     service: DeliveryService;
     zone_id: string | null;
-  }
+}

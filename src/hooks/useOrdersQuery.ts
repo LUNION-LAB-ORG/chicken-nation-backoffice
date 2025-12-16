@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getOrders, getOrderById, updatePreparationTime, OrderQuery, PaginatedResponse, ApiOrderRaw } from '@/services/orderService';
+import { getOrders, getOrderById, updatePreparationTime, OrderQuery, PaginatedResponse } from '@/services/orderService';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../../socket';
+import { Order } from '../../features/orders/types/order.types';
 
 interface UseOrdersQueryParams {
   activeFilter: string;
@@ -13,13 +14,13 @@ interface UseOrdersQueryParams {
 
 interface UseOrdersQueryReturn {
   // Données
-  orders: ApiOrderRaw[];
+  orders: Order[];
   totalItems: number;
   totalPages: number;
   currentPage: number;
   isLoading: boolean;
   error: Error | null;
-  
+
   // Actions
   setCurrentPage: (page: number) => void;
   refetch: () => void;
@@ -62,16 +63,16 @@ export function useOrdersQuery({
       const year = selectedDate.getFullYear();
       const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
       const day = String(selectedDate.getDate()).padStart(2, '0');
-      
+
       // Vérifier si c'est une sélection de mois entier (premier jour du mois)
       const isMonthSelection = selectedDate.getDate() === 1;
-      
+
       if (isMonthSelection) {
         // Filtrer par mois entier
         const startDate = `${year}-${month}-01`;
         const endDate = new Date(year, selectedDate.getMonth() + 1, 0); // Dernier jour du mois
         const endDateStr = `${year}-${month}-${String(endDate.getDate()).padStart(2, '0')}`;
-        
+
         apiFilters.startDate = startDate;
         apiFilters.endDate = endDateStr;
       } else {
@@ -100,13 +101,13 @@ export function useOrdersQuery({
     data,
     isLoading,
     error
-  } = useQuery<PaginatedResponse<ApiOrderRaw>>({
+  } = useQuery<PaginatedResponse<Order>>({
     queryKey,
     queryFn: async () => {
       const filters = buildApiFilters();
       const result = await getOrders(filters);
-      
-    
+
+
       return result;
     },
     staleTime: 30000, // 30 secondes
@@ -115,7 +116,7 @@ export function useOrdersQuery({
 
   // ✅ Reset page à 1 quand les filtres changent - approche stable
   const isPageChangeRef = useRef(false);
-  
+
   // ✅ Retourner à la page 1 quand les filtres changent
   const setCurrentPage = useCallback((page: number) => {
     isPageChangeRef.current = true; // Marquer comme changement de page intentionnel
@@ -129,7 +130,7 @@ export function useOrdersQuery({
       isPageChangeRef.current = false;
       return;
     }
-    
+
     // Sinon, reset à la page 1 car les filtres ont changé
     if (currentPage !== 1) {
       setCurrentPageState(1);
@@ -139,7 +140,7 @@ export function useOrdersQuery({
   // ✅ WebSocket pour temps réel
   useEffect(() => {
     socketRef.current = io(SOCKET_URL);
-    
+
     const handleOrderUpdate = () => {
       // Force un nouveau fetch en supprimant le cache
       queryClient.removeQueries({ queryKey: ['orders'] });
@@ -180,7 +181,7 @@ export function useOrdersQuery({
 
 // ✅ Hook pour récupérer une commande par ID
 export function useOrderByIdQuery(orderId: string | null) {
-  return useQuery<ApiOrderRaw>({
+  return useQuery<Order>({
     queryKey: ['order', orderId],
     queryFn: async () => {
       if (!orderId) throw new Error('Order ID is required');
@@ -202,10 +203,10 @@ export function useUpdatePreparationTimeMutation() {
     onSuccess: (updatedOrder, { orderId }) => {
       // Mettre à jour le cache de la commande spécifique
       queryClient.setQueryData(['order', orderId], updatedOrder);
-      
+
       // Invalider les listes de commandes pour forcer un refresh
       queryClient.invalidateQueries({ queryKey: ['orders'] });
-      
+
       console.log('✅ [useUpdatePreparationTimeMutation] Temps de préparation mis à jour:', updatedOrder);
     },
     onError: (error) => {

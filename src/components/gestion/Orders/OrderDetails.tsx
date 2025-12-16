@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import Modal from "@/components/ui/Modal";
 import { format } from "date-fns";
+import { Order as IOrder } from "../../../../features/orders/types/order.types";
 
 // 🎯 FONCTION POUR DÉTERMINER LE STATUT DE PAIEMENT
 const getPaymentStatus = (order: Order): PaymentStatus => {
@@ -139,10 +140,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const [restaurantName, setRestaurantName] = useState<string>(
     order.restaurant || "Restaurant inconnu"
   );
-  // const [orderData, setOrderData] = useState<OrderData | null>(null); // Variable non utilisée
+  const [orderData, setOrderData] = useState<IOrder | null>(null); // Variable non utilisée
   const [currentStatus, setCurrentStatus] = useState<string>(order.status);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
-
   // Fonction pour traduire le statut API en statut UI
   const convertApiStatusToUiStatus = useCallback(
     (apiStatus: string): Order["status"] => {
@@ -200,7 +200,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
 
       const data = await response.json();
 
-      // setOrderData(data); // Fonction non utilisée
+      setOrderData(data); // Fonction non utilisée
 
       return data;
     }
@@ -490,7 +490,10 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
   const orderType = order.orderType || "À livrer";
 
   // Utiliser les données étendues de l'objet order avec vérification supplémentaire
-  const paymentMethod = order.paymentMethod || "Non renseigné";
+  const paymentMethod =
+    order?.paiements && order.paiements.length > 0
+      ? `${order.paiements[0].mode} : ${order.paiements[0].source || ""}`
+      : "Non renseigné";
 
   // Informations client avec vérification de disponibilité
   const customerName =
@@ -607,7 +610,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
     (fullOrderDetails && typeof fullOrderDetails.discount === "number"
       ? fullOrderDetails.discount
       : 0);
-
+  console.log({ orderData, order });
   const getProgressStyles = () => {
     const styles = {
       // Étape 1 - Restaurant
@@ -839,6 +842,18 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                     </p>
                   </div>
                 </div>
+                {order.note && (
+                  <div className="flex gap-32  items-center">
+                    <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+                      Note
+                    </p>
+                    <div className="flex items-center">
+                      <p className="font-bold text-xs lg:text-sm text-[#71717A]">
+                        {order.note}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="flex gap-32  items-center">
                   <p className="lg:text-sm text-xs font-medium text-[#71717A]">
@@ -868,10 +883,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
               {orderItems && orderItems.length > 0 ? (
                 orderItems.map((item) => {
                   return (
-                    <div
-                      key={item.id || Math.random()}
-                      className="flex justify-between items-center"
-                    >
+                    <div key={item.id || Math.random()}>
                       <div className="flex items-center">
                         <div className="w-16 h-12 my-2 rounded-lg mr-3 relative overflow-hidden">
                           <SafeImage
@@ -888,36 +900,57 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({
                             </div>
                           )}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-slate-600">
-                              {item.name}
-                              {item.price === 0 && (
-                                <span className="ml-1 text-xs text-[#F17922] font-normal">
-                                  (Offert)
-                                </span>
-                              )}
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-slate-600">
+                                  {item.name}
+                                  {item.price === 0 && (
+                                    <span className="ml-1 text-xs text-[#F17922] font-normal">
+                                      (Offert)
+                                    </span>
+                                  )}
+                                </p>
+                                {item.epice && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                                    🌶️ Épicé
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                Quantité: {item.quantity}
+                              </p>
+                            </div>
+                            <p
+                              className={`text-sm font-bold ${
+                                item.price === 0
+                                  ? "text-[#F17922]"
+                                  : "text-[#71717A]"
+                              }`}
+                            >
+                              {item.price === 0
+                                ? "Offert"
+                                : `${item.price.toLocaleString()} F`}
                             </p>
-                            {item.epice && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-                                🌶️ Épicé
-                              </span>
-                            )}
                           </div>
-                          <p className="text-xs text-gray-500">
-                            Quantité: {item.quantity}
-                          </p>
+                          {item.supplemens && (
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <span className="text-xs text-gray-500">
+                                  Suppléments :
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  {item.supplemens}
+                                </span>
+                              </div>
+                              <p className={`text-sm font-medium text-[#71717A]`}>
+                                {`${item.supplementsPrice.toLocaleString()} F`}
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <p
-                        className={`text-sm font-bold ${
-                          item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
-                        }`}
-                      >
-                        {item.price === 0
-                          ? "Offert"
-                          : `${item.price.toLocaleString()}F`}
-                      </p>
                     </div>
                   );
                 })

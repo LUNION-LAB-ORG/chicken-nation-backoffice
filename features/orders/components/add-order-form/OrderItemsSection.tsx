@@ -800,7 +800,10 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     Frais de livraison
                   </span>
                   <span className="font-bold text-[#F17922]">
-                    {(deliveryFee?.montant || 0).toLocaleString()} XOF
+                    {formData?.delivery_fee
+                      ? formData?.delivery_fee?.toLocaleString()
+                      : (deliveryFee?.montant || 0).toLocaleString()}{" "}
+                    XOF
                   </span>
                 </div>
               </>
@@ -813,7 +816,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 {(
                   totalCart +
                   (formData.type == OrderType.DELIVERY
-                    ? deliveryFee?.montant || 0
+                    ? formData?.delivery_fee || deliveryFee?.montant || 0
                     : 0)
                 ).toLocaleString()}{" "}
                 XOF

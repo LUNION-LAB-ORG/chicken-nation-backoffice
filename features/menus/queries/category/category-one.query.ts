@@ -9,8 +9,6 @@ export const categoryOneQueryOption = (categoryId: string) => {
 	return {
 		queryKey: categoryKeyQuery("one", categoryId),
 		queryFn: async () => {
-			console.log({ categoryId }, "query one")
-
 			const result = await getCategorieById(categoryId);
 			return result;
 		},
