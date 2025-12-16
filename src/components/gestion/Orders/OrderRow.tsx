@@ -74,7 +74,6 @@ const StatusBadge = ({ order }: { order: Order }) => {
     </span>
   );
 };
-
 // Fonction utilitaire pour formater l'adresse
 const formatAddress = (addressString: string) => {
   try {
@@ -131,6 +130,7 @@ export function OrderRow({
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
     null
   );
+
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

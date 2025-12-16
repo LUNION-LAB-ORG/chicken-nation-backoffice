@@ -65,7 +65,7 @@ export interface Order {
     type: OrderType;
     table_type: TypeTable | null;
     places: number | null;
-    address: OrderAddress; // Basé sur le JSON
+    address: string; 
     code_promo: string | null;
     tax: number;
     amount: number;

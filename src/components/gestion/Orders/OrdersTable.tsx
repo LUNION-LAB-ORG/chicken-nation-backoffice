@@ -282,7 +282,6 @@ const mapApiOrderToUiOrder = (apiOrder: IOrder): Order => {
         ) || 0,
     }));
   };
-
   // 🎯 RETOURNER L'OBJET ORDER COMPLET
   return {
     // ✅ Identifiants
@@ -314,7 +313,7 @@ const mapApiOrderToUiOrder = (apiOrder: IOrder): Order => {
     discount: apiOrder.discount || 0,
 
     // ✅ Localisation - EXTRACTION EXACTE
-    address: extractAddress(JSON.stringify(apiOrder?.address || {})),
+    address: extractAddress(apiOrder?.address),
     tableNumber: "",
     tableType: apiOrder.table_type || "",
     numberOfGuests: apiOrder.places || 0,
