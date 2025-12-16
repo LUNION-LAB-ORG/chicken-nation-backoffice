@@ -10,7 +10,7 @@ export const validateOrderForm = (formData: OrderFormData): boolean => {
   }
 
   // Validation de l'adresse
-  if (formData.type == OrderType.DELIVERY && !formData.address || formData.address.trim() === "") {
+  if (!formData.address || formData.address.trim() === "") {
     toast.error("L'adresse est obligatoire");
     return false;
   }

@@ -66,13 +66,11 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
       </h3>
 
       {/* Adresse avec recherche Google Maps */}
-      {formData.type === OrderType.DELIVERY && (
-        <AddressSearchInput
-          value={getParsedAddress(formData.address)}
-          onChange={handleAddressChange}
-          placeholder="Rechercher votre adresse de livraison"
-        />
-      )}
+      <AddressSearchInput
+        value={getParsedAddress(formData.address)}
+        onChange={handleAddressChange}
+        placeholder="Rechercher votre adresse de livraison"
+      />
 
       <div className="grid grid-cols-2 gap-4">
         {/* Date */}
