@@ -1,6 +1,7 @@
 import { getAuthToken } from "@/utils/authUtils";
 import { OrderFormData } from '../types/order-form.types';
-import { DeliveryFee, Order } from "../types/order.types";
+import { DeliveryFee, Order, OrderQuery, OrderStatus } from "../types/order.types";
+import { PaginatedResponse, SortOrder } from "../../../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
 const BASE_URL = API_URL + '/orders';
@@ -38,6 +39,115 @@ const prepareRequest = async <T>(baseUrl: string, endpoint: string, query?: T) =
 
 };
 
+export async function getAllOrders(params: OrderQuery = {
+    page: 1,
+    limit: 10,
+    sortBy: 'created_at',
+    sortOrder: SortOrder.DESC
+}): Promise<PaginatedResponse<Order>> {
+
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/', params);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+        if (!response.ok) {
+            if (response.status === 404) {
+                return {
+                    data: [], meta: {
+                        total: 0,
+                        page: 0,
+                        limit: 0,
+                        totalPages: 0
+                    }
+                };
+            }
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as PaginatedResponse<Order>;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+export async function getOrderById(id: string): Promise<Order> {
+
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Order;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+export async function updateOrderStatus(id: string, status: OrderStatus): Promise<Order> {
+
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}/status`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ status }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Order;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+export async function deleteOrder(id: string): Promise<void> {
+
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+export async function updateOrder(id: string, data: Partial<OrderFormData>): Promise<Order> {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(data)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Order;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
 
 export const addOrder = async (formData: OrderFormData) => {
     try {

@@ -39,7 +39,7 @@ const prepareRequest = async <T>(baseUrl: string, endpoint: string, query?: T) =
 
 export const getAllDishes = async () => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, '/');
+    const { url, headers } = await prepareRequest(BASE_URL, '/get-all');
 
     const response = await fetch(url, {
       method: 'GET',

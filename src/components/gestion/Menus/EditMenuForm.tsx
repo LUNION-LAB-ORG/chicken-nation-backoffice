@@ -42,6 +42,7 @@ interface MenuFormData {
     };
   };
   is_alway_epice: boolean; // ✅ Nom corrigé sans "s"
+  private: boolean;
 }
 
 interface EditMenuFormProps {
@@ -90,6 +91,7 @@ const EditMenuForm = ({
       boissons: { category: "", quantity: 0 },
     },
     is_alway_epice: false, // ✅ Valeur par défaut
+    private: false,
   });
 
   // Mise à jour avec les données existantes
@@ -115,6 +117,8 @@ const EditMenuForm = ({
         is_alway_epice:
           (validatedData as unknown as { is_alway_epice?: boolean })
             .is_alway_epice ?? false,
+        private:
+          (validatedData as unknown as { private?: boolean }).private ?? false,
       });
     } catch (error) {
       console.error("Erreur lors de l'initialisation du formulaire:", error);
@@ -135,6 +139,8 @@ const EditMenuForm = ({
         is_alway_epice:
           (initialData as unknown as { is_alway_epice?: boolean })
             .is_alway_epice ?? false,
+        private:
+          (initialData as unknown as { private?: boolean }).private ?? false,
       });
     }
   }, [initialData]);
@@ -414,9 +420,9 @@ const EditMenuForm = ({
         }
 
         // ✅ Limitation sécurisée à 3 éléments maximum par catégorie
-        const limitedIngredients = ingredients.slice(0, 3);
-        const limitedAccompagnements = accompagnements.slice(0, 3);
-        const limitedBoissons = boissons.slice(0, 3);
+        const limitedIngredients = ingredients;
+        const limitedAccompagnements = accompagnements;
+        const limitedBoissons = boissons;
 
         // ✅ Mise à jour sécurisée des états avec les valeurs limitées
         setSelectedIngredients(limitedIngredients);
@@ -988,6 +994,7 @@ const EditMenuForm = ({
         promotion_price: formData.reduction ? formData.reducedPrice : "0",
         dish_supplements: dishSupplements,
         is_alway_epice: formData.is_alway_epice, // ✅ Nom corrigé sans "s"
+        private: formData.private,
       };
 
       // ✅ Soumission sécurisée des données
@@ -1239,6 +1246,24 @@ const EditMenuForm = ({
                 </label>
               </div>
             </motion.div>
+          </div>
+          <div className="flex items-center">
+            <Checkbox
+              id="private"
+              checked={formData.private}
+              onChange={(checked) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  private: checked,
+                }));
+              }}
+            />
+            <label
+              htmlFor="private"
+              className="ml-2 text-[13px] font-semibold text-gray-700"
+            >
+              Privé
+            </label>
           </div>
           {/* Description */}
           <motion.div

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Order } from '@/components/gestion/Orders/OrdersTable';
 import { MenuItem } from '@/types';
+import { Order } from '../../features/orders/types/ordersTable.types';
 
 type SectionKey = 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory' | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos' | 'loyalty' | 'apps' | 'messages-tickets';
 type ViewType = 'list' | 'create' | 'edit' | 'view';

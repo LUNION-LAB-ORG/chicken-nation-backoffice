@@ -42,6 +42,7 @@ interface MenuFormData {
     };
   };
   is_alway_epice: boolean;
+  private: boolean;
 }
 
 interface AddMenuFormProps {
@@ -85,6 +86,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
       boissons: { category: "", quantity: 0 },
     },
     is_alway_epice: false, // ✅ Nom corrigé sans "s"
+    private: false,
   });
 
   // ✅ ÉTATS POUR LA CRÉATION
@@ -629,6 +631,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         promotion_price: formData.reduction ? formData.reducedPrice : "0",
         dish_supplements: dishSupplements,
         is_alway_epice: formData.is_alway_epice,
+        private: formData.private,
       };
 
       // ✅ Soumission sécurisée des données
@@ -881,7 +884,32 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               </div>
             </motion.div>
           </div>
-
+          <div>
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <div className="flex items-center">
+                <Checkbox
+                  id="private"
+                  checked={formData.private}
+                  onChange={(checked) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      private: checked,
+                    }));
+                  }}
+                />
+                <label
+                  htmlFor="private"
+                  className="ml-2 text-[13px] font-semibold text-gray-700"
+                >
+                  Privé
+                </label>
+              </div>
+            </motion.div>
+          </div>
           {/* Description */}
           <motion.div
             className=" w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"

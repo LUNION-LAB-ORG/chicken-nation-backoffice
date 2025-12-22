@@ -67,7 +67,8 @@ export const MenuItemSchema = z.object({
   promotion_price: z.union([z.number(), z.string()]).optional(),
   dish_supplements: z.array(z.any()).optional(),  
   dish_restaurants: z.array(z.any()).optional(),
-  is_alway_epice: z.boolean().default(false) // ✅ Nom corrigé sans "s"
+  is_alway_epice: z.boolean().default(false), // ✅ Nom corrigé sans "s"
+  private: z.boolean().default(false) // ✅ Nom corrigé sans "s"
 });
 
 // Schémas pour les données API
@@ -92,7 +93,8 @@ export const ApiMenuDataSchema = z.object({
   dish_restaurants: z.array(z.any()).optional(),
   // ✅ Champ pour les restaurants multiples
   selectedRestaurants: z.array(z.string()).optional(),
-  is_alway_epice: z.boolean().optional() // ✅ Nom corrigé sans "s"
+  is_alway_epice: z.boolean().optional(), // ✅ Nom corrigé sans "s"
+  private: z.boolean().optional() // ✅ Nom corrigé sans "s"
 });
 
 // Schéma pour la création de menu

@@ -11,6 +11,7 @@ export interface Category {
   description?: string;
   image?: string;
   productCount?: number;
+  private?: boolean;
 }
 
 // Interface pour les paramètres de requête avec pagination
@@ -56,7 +57,7 @@ export interface UpdateCategoryDto {
  */
 export const getAllCategories = async (): Promise<Category[]> => {
   try {
-    const response = await api.get<Category[]>('/categories', false);
+    const response = await api.get<Category[]>('/categories/get-all', false);
     return response;
   } catch (error) {
     console.error('Erreur lors de la récupération des catégories:', error);
@@ -70,7 +71,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 export const getAllCategoriesWithProductCount = async (): Promise<Category[]> => {
   try { 
     // Récupérer toutes les catégories d'abord
-    const categories = await api.get<Category[]>('/categories', false);
+    const categories = await api.get<Category[]>('/categories/get-all', false);
     
     if (!categories || !Array.isArray(categories)) {
       console.warn('⚠️ Aucune catégorie trouvée ou format invalide');

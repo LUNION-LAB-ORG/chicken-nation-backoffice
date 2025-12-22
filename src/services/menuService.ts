@@ -10,7 +10,7 @@ import {
   ApiMenuData,
   ValidatedMenuItem
 } from '@/schemas/menuSchemas';
- 
+
 
 // ✅ TYPES STRICTS POUR LE SERVICE
 export interface Menu {
@@ -124,7 +124,8 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       // ✅ Ajout des champs optionnels pour compatibilité API
       dish_supplements: validatedApiMenu.dish_supplements || [],
       dish_restaurants: validatedApiMenu.dish_restaurants || [],
-      is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false // ✅ Nom corrigé sans "s"
+      is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false, // ✅ Nom corrigé sans "s"
+      private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false // ✅ Nom corrigé sans "s"
     };
 
     // ✅ Validation finale avec le schéma MenuItem
@@ -145,27 +146,27 @@ export const searchMenus = async (params: MenuSearchQuery = {}): Promise<Paginat
     const queryParams = new URLSearchParams();
     queryParams.append('page', page.toString());
     queryParams.append('limit', limit.toString());
-    
+
     if (search && search.trim()) {
       queryParams.append('search', search.trim());
     }
-    
+
     if (categoryId) {
       queryParams.append('categoryId', categoryId);
     }
-    
+
     if (restaurantId) {
       queryParams.append('restaurantId', restaurantId);
     }
-    
+
     if (available !== undefined) {
       queryParams.append('available', available.toString());
     }
-    
+
     if (sortBy) {
       queryParams.append('sortBy', sortBy);
     }
-    
+
     if (sortOrder) {
       queryParams.append('sortOrder', sortOrder);
     }
@@ -229,8 +230,8 @@ export const searchMenus = async (params: MenuSearchQuery = {}): Promise<Paginat
 // ✅ RÉCUPÉRATION SÉCURISÉE DE TOUS LES MENUS
 export const getAllMenus = async (): Promise<ValidatedMenuItem[]> => {
   try {
-    const responseData = await apiRequest<ApiMenuListResponse>('/dishes', 'GET');
- 
+    const responseData = await apiRequest<ApiMenuListResponse>('/dishes/search', 'GET');
+
     // ✅ Validation de la structure de réponse
     if (!responseData) {
       throw new Error('Aucune donnée reçue du serveur');
@@ -417,11 +418,11 @@ export const updateMenu = async (id: string, menuData: FormData): Promise<Valida
 // ✅ CONVERSION SÉCURISÉE MENU → FORMDATA
 export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = false): FormData => {
   try {
-    
+
 
     // ✅ Validation du menu d'entrée selon le contexte
     const validatedMenu = isUpdate ? validateUpdateMenu(menu) : validateCreateMenu(menu);
- 
+
     const formData = new FormData();
 
     if (isUpdate) {
@@ -467,127 +468,129 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
 
       // ✅ Ajout du nouveau champ
       formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
+      formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
 
       // Pour UPDATE: NE PAS envoyer restaurants et supplements ici
       // Ils sont gérés séparément par les services dédiés
 
-  } else {
-    // ✅ POUR CREATE: Validation et sanitisation des champs
-    const sanitizedName = sanitizeMenuInput(validatedMenu.name || '');
-    const sanitizedDescription = sanitizeMenuInput(validatedMenu.description || '');
-
-    if (sanitizedName.length === 0) {
-      throw new Error('Nom du menu requis');
-    }
-
-    formData.append('name', sanitizedName);
-    formData.append('description', sanitizedDescription);
-    formData.append('price', (validatedMenu.price || 0).toString());
-    formData.append('category_id', validatedMenu.categoryId || '');
-
-    // ✅ Gestion sécurisée de l'image
-    if (validatedMenu.image && typeof validatedMenu.image === 'object' && (validatedMenu.image as unknown) instanceof File) {
-      const imageFile = validatedMenu.image as File;
-      if (imageFile.size > 5 * 1024 * 1024) {
-        throw new Error('Image trop volumineuse (max 5MB)');
-      }
-      if (!imageFile.type.startsWith('image/')) {
-        throw new Error('Type de fichier invalide');
-      }
-      formData.append('image', imageFile);
-    } else if (validatedMenu.image && typeof validatedMenu.image === 'string' && validatedMenu.image.startsWith('data:image')) {
-      const blob = dataURLtoBlob(validatedMenu.image);
-      formData.append('image', blob, 'image.jpg');
-    }
-
-    // ✅ Gestion sécurisée des promotions
-    formData.append('is_promotion', validatedMenu.is_promotion ? 'true' : 'false');
-    if (validatedMenu.is_promotion && validatedMenu.promotion_price) {
-      const promoPrice = validatedMenu.promotion_price.toString();
-      if (!/^\d+(\.\d{1,2})?$/.test(promoPrice)) {
-        throw new Error('Prix de promotion invalide');
-      }
-      formData.append('promotion_price', promoPrice);
     } else {
-      formData.append('promotion_price', '0');
-    }
+      // ✅ POUR CREATE: Validation et sanitisation des champs
+      const sanitizedName = sanitizeMenuInput(validatedMenu.name || '');
+      const sanitizedDescription = sanitizeMenuInput(validatedMenu.description || '');
 
-    // ✅ Ajout du nouveau champ
-    formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
+      if (sanitizedName.length === 0) {
+        throw new Error('Nom du menu requis');
+      }
 
-    // ✅ Ajout sécurisé des restaurants pour CREATE
-    // Gérer les restaurants multiples depuis selectedRestaurants ou restaurantId unique
-    const restaurantIds: string[] = [];
+      formData.append('name', sanitizedName);
+      formData.append('description', sanitizedDescription);
+      formData.append('price', (validatedMenu.price || 0).toString());
+      formData.append('category_id', validatedMenu.categoryId || '');
 
-    const menuWithRestaurants = validatedMenu as unknown as { selectedRestaurants?: string[] };
-    if (menuWithRestaurants.selectedRestaurants && Array.isArray(menuWithRestaurants.selectedRestaurants)) {
-      // Cas des restaurants multiples
-      menuWithRestaurants.selectedRestaurants.forEach((restaurantId: string) => {
-        if (restaurantId && typeof restaurantId === 'string') {
-          const sanitizedRestaurantId = restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-          if (sanitizedRestaurantId.length > 0) {
-            restaurantIds.push(sanitizedRestaurantId);
-          }
+      // ✅ Gestion sécurisée de l'image
+      if (validatedMenu.image && typeof validatedMenu.image === 'object' && (validatedMenu.image as unknown) instanceof File) {
+        const imageFile = validatedMenu.image as File;
+        if (imageFile.size > 5 * 1024 * 1024) {
+          throw new Error('Image trop volumineuse (max 5MB)');
         }
+        if (!imageFile.type.startsWith('image/')) {
+          throw new Error('Type de fichier invalide');
+        }
+        formData.append('image', imageFile);
+      } else if (validatedMenu.image && typeof validatedMenu.image === 'string' && validatedMenu.image.startsWith('data:image')) {
+        const blob = dataURLtoBlob(validatedMenu.image);
+        formData.append('image', blob, 'image.jpg');
+      }
+
+      // ✅ Gestion sécurisée des promotions
+      formData.append('is_promotion', validatedMenu.is_promotion ? 'true' : 'false');
+      if (validatedMenu.is_promotion && validatedMenu.promotion_price) {
+        const promoPrice = validatedMenu.promotion_price.toString();
+        if (!/^\d+(\.\d{1,2})?$/.test(promoPrice)) {
+          throw new Error('Prix de promotion invalide');
+        }
+        formData.append('promotion_price', promoPrice);
+      } else {
+        formData.append('promotion_price', '0');
+      }
+
+      // ✅ Ajout du nouveau champ
+      formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
+      formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
+
+      // ✅ Ajout sécurisé des restaurants pour CREATE
+      // Gérer les restaurants multiples depuis selectedRestaurants ou restaurantId unique
+      const restaurantIds: string[] = [];
+
+      const menuWithRestaurants = validatedMenu as unknown as { selectedRestaurants?: string[] };
+      if (menuWithRestaurants.selectedRestaurants && Array.isArray(menuWithRestaurants.selectedRestaurants)) {
+        // Cas des restaurants multiples
+        menuWithRestaurants.selectedRestaurants.forEach((restaurantId: string) => {
+          if (restaurantId && typeof restaurantId === 'string') {
+            const sanitizedRestaurantId = restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+            if (sanitizedRestaurantId.length > 0) {
+              restaurantIds.push(sanitizedRestaurantId);
+            }
+          }
+        });
+      } else if (validatedMenu.restaurantId && validatedMenu.restaurantId.trim() !== '') {
+        // Cas d'un seul restaurant
+        const sanitizedRestaurantId = validatedMenu.restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+        if (sanitizedRestaurantId.length > 0) {
+          restaurantIds.push(sanitizedRestaurantId);
+        }
+      }
+
+      // Ajouter tous les restaurants au FormData
+      restaurantIds.forEach(restaurantId => {
+        formData.append('restaurant_ids', restaurantId);
       });
-    } else if (validatedMenu.restaurantId && validatedMenu.restaurantId.trim() !== '') {
-      // Cas d'un seul restaurant
-      const sanitizedRestaurantId = validatedMenu.restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-      if (sanitizedRestaurantId.length > 0) {
-        restaurantIds.push(sanitizedRestaurantId);
+
+
+      // ✅ Ajout sécurisé des suppléments pour CREATE
+      const supplementsAdded: Array<{ id: string, quantity: number }> = [];
+      const menuWithSupplements = validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string; quantity?: number }> };
+      if (menuWithSupplements.dish_supplements && Array.isArray(menuWithSupplements.dish_supplements)) {
+        menuWithSupplements.dish_supplements.forEach((supplement) => {
+          if (supplement.supplement_id && typeof supplement.supplement_id === 'string') {
+            const sanitizedSupplementId = supplement.supplement_id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+            if (sanitizedSupplementId.length > 0) {
+              formData.append('supplement_ids', sanitizedSupplementId);
+
+              // ✅ Ajouter la quantité pour chaque supplément
+              const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
+                ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
+                : 1;
+              formData.append('supplement_quantities', quantity.toString());
+
+              supplementsAdded.push({ id: sanitizedSupplementId, quantity });
+            }
+          }
+        });
+      } else if (validatedMenu.supplements) {
+        (['ACCESSORY', 'FOOD', 'DRINK'] as const).forEach(type => {
+          const supplements = validatedMenu.supplements?.[type];
+          if (supplements && Array.isArray(supplements)) {
+            supplements.forEach(supplement => {
+              if (supplement.id && typeof supplement.id === 'string') {
+                const sanitizedSupplementId = supplement.id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+                if (sanitizedSupplementId.length > 0) {
+                  formData.append('supplement_ids', sanitizedSupplementId);
+
+                  // ✅ Ajouter la quantité pour chaque supplément
+                  const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
+                    ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
+                    : 1;
+                  formData.append('supplement_quantities', quantity.toString());
+                }
+              }
+            });
+          }
+        });
       }
     }
 
-    // Ajouter tous les restaurants au FormData
-    restaurantIds.forEach(restaurantId => {
-      formData.append('restaurant_ids', restaurantId);
-    });
-
-  
-    // ✅ Ajout sécurisé des suppléments pour CREATE
-    const supplementsAdded: Array<{id: string, quantity: number}> = [];
-    const menuWithSupplements = validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string; quantity?: number }> };
-    if (menuWithSupplements.dish_supplements && Array.isArray(menuWithSupplements.dish_supplements)) {
-      menuWithSupplements.dish_supplements.forEach((supplement) => {
-        if (supplement.supplement_id && typeof supplement.supplement_id === 'string') {
-          const sanitizedSupplementId = supplement.supplement_id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-          if (sanitizedSupplementId.length > 0) {
-            formData.append('supplement_ids', sanitizedSupplementId);
-
-            // ✅ Ajouter la quantité pour chaque supplément
-            const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
-              ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
-              : 1;
-            formData.append('supplement_quantities', quantity.toString());
-
-            supplementsAdded.push({ id: sanitizedSupplementId, quantity });
-          }
-        }
-      });
-    } else if (validatedMenu.supplements) {
-      (['ACCESSORY', 'FOOD', 'DRINK'] as const).forEach(type => {
-        const supplements = validatedMenu.supplements?.[type];
-        if (supplements && Array.isArray(supplements)) {
-          supplements.forEach(supplement => {
-            if (supplement.id && typeof supplement.id === 'string') {
-              const sanitizedSupplementId = supplement.id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-              if (sanitizedSupplementId.length > 0) {
-                formData.append('supplement_ids', sanitizedSupplementId);
-
-                // ✅ Ajouter la quantité pour chaque supplément
-                const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
-                  ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
-                  : 1;
-                formData.append('supplement_quantities', quantity.toString());
-              }
-            }
-          });
-        }
-      });
-    } 
-  }
-
-  return formData;
+    return formData;
 
   } catch (error) {
     console.error('Erreur lors de la conversion menu vers FormData:', error);
@@ -626,7 +629,7 @@ export const deleteMenu = async (id: string): Promise<void> => {
 
     await apiRequest<void>(`/dishes/${sanitizedId}`, 'DELETE');
 
- 
+
   } catch (error) {
     console.error(`Erreur lors de la suppression du menu ${id}:`, error);
     throw new Error(`Impossible de supprimer le menu: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);

@@ -26,8 +26,8 @@ export interface User {
   address?: string;
   image?: string;
   password_is_updated?: boolean;
-  role: string;
-  type?: string;
+  role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'MARKETING' | 'COMPTABLE' | 'CAISSIER' | 'CALL_CENTER' | 'CUISINE';
+  type?: 'BACKOFFICE' | 'CUSTOMER' | 'RESTAURANT';
   restaurant_id?: string;
   restaurant?: RestaurantDetails;
   entity_status?: 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';

@@ -31,21 +31,6 @@ export function useCategoriesQuery({
   const queryClient = useQueryClient();
   const isPageChangeRef = useRef(false);
 
-  // ✅ Construire les filtres API (temporairement non utilisé)
-  // const buildApiFilters = useCallback((): CategoryQuery => {
-  //   const apiFilters: CategoryQuery = {
-  //     page: currentPage,
-  //     limit: 10,
-  //     sortBy,
-  //     sortOrder
-  //   };
-
-  //   if (searchQuery && searchQuery.trim()) {
-  //     apiFilters.search = searchQuery.trim();
-  //   }
-
-  //   return apiFilters;
-  // }, [currentPage, searchQuery, sortBy, sortOrder]);
 
   // ✅ Clé de requête unique basée sur tous les filtres
   const queryKey = [

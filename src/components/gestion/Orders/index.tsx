@@ -9,10 +9,11 @@ import { useDashboardStore } from "@/store/dashboardStore";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import AddOrderForm from "../../../../features/orders/components/add-order-form";
-import OrderDetails from "./OrderDetails";
 import OrderHeader from "./OrderHeader";
-import { Order, OrdersTable } from "./OrdersTable";
 import RestaurantTabs from "./RestaurantTabs";
+import { OrdersTable } from "../../../../features/orders/components/list-order";
+import { Order } from "../../../../features/orders/types/ordersTable.types";
+import OrderDetails from "../../../../features/orders/components/detail-order";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
@@ -203,7 +204,6 @@ export default function Orders() {
       {view === "view" && selectedItem && (
         <OrderDetails
           order={selectedItem}
-          onBack={() => handleViewChange("list")}
           onAccept={handleAcceptOrder}
           onReject={handleRejectOrder}
           onStatusChange={handleStatusChange}

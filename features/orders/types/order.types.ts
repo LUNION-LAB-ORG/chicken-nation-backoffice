@@ -1,4 +1,4 @@
-import { EntityStatus } from "../../../types";
+import { EntityStatus, SortOrder } from "../../../types";
 import { Customer } from "../../customer/types/customer.types";
 import { Dish } from "../../menus/types/dish.types";
 import { Supplement } from "../../menus/types/supplement.types";
@@ -65,7 +65,7 @@ export interface Order {
     type: OrderType;
     table_type: TypeTable | null;
     places: number | null;
-    address: string; 
+    address: string;
     code_promo: string | null;
     tax: number;
     amount: number;
@@ -148,4 +148,21 @@ export interface DeliveryFee {
     distance: number;
     service: DeliveryService;
     zone_id: string | null;
+}
+
+
+export interface OrderQuery {
+    status?: OrderStatus;
+    type?: OrderType;
+    customerId?: string;
+    restaurantId?: string;
+    startDate?: string;
+    endDate?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    reference?: string;
+    sortBy?: string;
+    sortOrder?: SortOrder;
+    page?: number;
+    limit?: number;
 }

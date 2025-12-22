@@ -43,12 +43,12 @@ export interface OrderHistory {
   }[];
   total: string;
   status:
-    | "pending"
-    | "confirmed"
-    | "preparing"
-    | "ready"
-    | "delivered"
-    | "cancelled";
+  | "pending"
+  | "confirmed"
+  | "preparing"
+  | "ready"
+  | "delivered"
+  | "cancelled";
   date: string;
   deliveryAddress?: string;
   paymentMethod: "cash" | "card" | "mobile_money";
@@ -256,17 +256,18 @@ export interface MenuItem {
     [key: string]: unknown;
   }>;
   is_alway_epice?: boolean; // ✅ Nom corrigé sans "s"
+  private: boolean;
 }
 
 export interface Schedule {
   day:
-    | "Lundi"
-    | "Mardi"
-    | "Mercredi"
-    | "Jeudi"
-    | "Vendredi"
-    | "Samedi"
-    | "Dimanche";
+  | "Lundi"
+  | "Mardi"
+  | "Mercredi"
+  | "Jeudi"
+  | "Vendredi"
+  | "Samedi"
+  | "Dimanche";
   openingTime: string;
   closingTime: string;
 }

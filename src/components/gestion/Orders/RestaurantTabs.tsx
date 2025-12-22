@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 
 interface Restaurant {
   id: string;
@@ -20,6 +21,8 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
   onSelectRestaurant,
   showAllTab = true,
 }) => {
+  const { data: restaurantsAll } = useRestaurantListQuery();
+  console.log(restaurantsAll);
   return (
     <div className="mb-6 w-full">
       <div className="w-full overflow-x-auto">

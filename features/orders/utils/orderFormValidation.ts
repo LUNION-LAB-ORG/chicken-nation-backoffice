@@ -2,7 +2,7 @@ import { toast } from "react-hot-toast";
 import { OrderFormData } from "../types/order-form.types";
 import { OrderType } from "../types/order.types";
 
-export const validateOrderForm = (formData: OrderFormData): boolean => {
+export const validateOrderForm = (formData: OrderFormData | Partial<OrderFormData>): boolean => {
   // Validation du restaurant
   if (formData.type !== OrderType.DELIVERY && !formData.restaurant_id || formData.restaurant_id.trim() === "") {
     toast.error("Veuillez sélectionner un restaurant");
@@ -58,7 +58,7 @@ export const validateOrderForm = (formData: OrderFormData): boolean => {
   return true;
 };
 
-export const prepareOrderData = (formData: OrderFormData): OrderFormData => {
+export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData>): OrderFormData => {
   return {
     type: formData.type,
     address: formData.address.trim(),

@@ -1,6 +1,6 @@
 "use client"
 import React, { useState } from 'react';
-import { User, Lock } from 'lucide-react'; 
+import { User, Lock, Eye, EyeOff } from 'lucide-react'; 
 import { LoginCredentials } from '@/types/auth';
 
 
@@ -13,6 +13,7 @@ interface LoginFormProps {
 
 
 const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) => {
+  const [showPassword,setShowPassword] = useState(false);
   const [formData, setFormData] = useState<LoginCredentials>({
     email: '',
     password: '',
@@ -98,7 +99,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) =>
           </div>
           <input
             name="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="Mot de passe"
             value={formData.password}
             onChange={handleChange}
@@ -106,6 +107,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, isLoading = false }) =>
             autoComplete="current-password"
             className="w-full py-3 pr-3 border-0 focus:outline-none focus:ring-0 text-gray-800"
           />
+          <button type="button" className="pr-3" onClick={() => setShowPassword(!showPassword)}>
+            {showPassword ? <EyeOff size={22} strokeWidth={1.5} /> : <Eye size={22} strokeWidth={1.5} />}
+          </button>
         </div>
         {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
       </div>

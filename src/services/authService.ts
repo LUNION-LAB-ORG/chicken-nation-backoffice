@@ -1,5 +1,6 @@
 import { api } from './api';
-import { LoginCredentials, LoginResponse, User } from '@/types/auth';
+import { LoginCredentials, LoginResponse } from '@/types/auth';
+import { User } from './userService';
 
  const AUTH_ENDPOINT = '/auth';
 

@@ -218,7 +218,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
       })
 
 
-      setUser(freshUser as import('@/types/auth').User)
+      setUser(freshUser as User)
 
       if (onSuccess) {
         onSuccess(freshUser)
@@ -316,7 +316,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
       toast.success(getPersonnelSuccessMessage('update'));
 
       // Mettre à jour le store d'authentification avec l'objet utilisateur
-      setUser(updatedUser as import('@/types/auth').User);
+      setUser(updatedUser as User);
 
       if (onSuccess) {
         onSuccess(updatedUser);

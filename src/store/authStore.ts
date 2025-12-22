@@ -1,10 +1,11 @@
 "use client";
 
 import { create } from 'zustand';
-import { AuthState, LoginCredentials, User } from '@/types/auth';
+import { AuthState, LoginCredentials } from '@/types/auth';
 import { login as apiLogin, refreshToken as apiRefreshToken, logout as apiLogout } from '@/services/authService';
 import { getCookie, setCookie, deleteCookie } from '@/utils/cookieHelpers';
 import { useDashboardStore } from '@/store/dashboardStore';
+import { User } from '@/services';
 
 interface AuthStore extends Omit<AuthState, 'refreshToken'> {
   refreshToken: string | null;
@@ -152,7 +153,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => {
                address: (data as unknown as Record<string, unknown>).address as string || undefined,
                image: (data as unknown as Record<string, unknown>).image as string || undefined,
                restaurant_id: data.restaurant_id || undefined,
-               restaurant: (data as unknown as Record<string, unknown>).restaurant_id as string || undefined,
+               restaurant: undefined,
                entity_status: (data as unknown as Record<string, unknown>).entity_status as string || undefined,
                created_at: (data as unknown as Record<string, unknown>).created_at as string || undefined,
                updated_at: (data as unknown as Record<string, unknown>).updated_at as string || undefined,
