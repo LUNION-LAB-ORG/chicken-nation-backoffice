@@ -2,17 +2,14 @@ import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
 import { useState, useEffect } from "react";
 import { formatImageUrl } from "@/utils/imageHelpers";
-import { useRBAC } from "@/hooks/useRBAC";
 
 interface MenuItemProps {
   menu: MenuItemType;
-  onEdit?: (menu: MenuItemType) => void;
   onView?: (menu: MenuItemType) => void;
 }
 
-export default function MenuItem({ menu, onEdit, onView }: MenuItemProps) {
-  const { canUpdatePlat } = useRBAC();
-  const [imageSrc, setImageSrc] = useState<string>("/images/food1.png");
+export default function MenuItem({ menu, onView }: MenuItemProps) {
+  const [imageSrc, setImageSrc] = useState<string>(formatImageUrl(menu.image));
 
   useEffect(() => {
     setImageSrc(formatImageUrl(menu.image));

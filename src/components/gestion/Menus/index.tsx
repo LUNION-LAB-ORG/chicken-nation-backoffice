@@ -542,7 +542,6 @@ const Menus = () => {
                     <MenuItemCard
                       key={menu.id}
                       menu={menu as unknown as MenuItem}
-                      onEdit={() => handleEditMenu(menu as unknown as MenuItem)}
                       onView={() => handleViewMenu(menu as unknown as MenuItem)}
                     />
                   ))}

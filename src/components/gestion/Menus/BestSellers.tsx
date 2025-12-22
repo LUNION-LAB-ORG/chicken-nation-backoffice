@@ -57,7 +57,6 @@ export default function BestSellers({ onEditMenu, onViewMenu }: BestSellersProps
               <MenuItemCard
                 key={menu.id}
                 menu={menu as unknown as MenuItemType}
-                onEdit={() => onEditMenu(menu as unknown as MenuItemType)}
                 onView={() => onViewMenu?.(menu as unknown as MenuItemType)}
               />
             ))}

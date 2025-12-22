@@ -213,7 +213,6 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
               <MenuItemCard 
                 key={menu.id} 
                 menu={menu} 
-                onEdit={onEditMenu}
                 onView={onViewMenu}
               />
             ))}

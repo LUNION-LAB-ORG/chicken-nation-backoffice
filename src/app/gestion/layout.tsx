@@ -74,7 +74,7 @@ export default function GestionLayout({
       <WelcomeBackModal isOpen={showWelcomeBackModal} />
       <PasswordChangeModal isOpen={showPasswordChangeModal} />
       <EditProfileModal isOpen={showEditProfile} />
-      <MobileOverlay />
+      {/* <MobileOverlay /> */}
     </div>
   );
 }

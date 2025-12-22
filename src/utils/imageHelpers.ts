@@ -4,8 +4,8 @@ export const formatImageUrl = (imageUrl?: string): string => {
   if (!imageUrl) return '';
 
   try {
-    // URLs complètes (http/https)
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    // URLs complètes
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
       return imageUrl;
     }
 
@@ -13,9 +13,8 @@ export const formatImageUrl = (imageUrl?: string): string => {
     if (imageUrl.startsWith('uploads/')) {
       return `${API_URL}/${imageUrl}`;
     }
- 
+
     if (/\.(jpg|jpeg|png|gif|webp|svg)$/i.test(imageUrl)) {
- 
       if (imageUrl.includes(':')) {
         return `${API_URL}/uploads/customer-avatar/${imageUrl}`;
       } else {
@@ -23,7 +22,7 @@ export const formatImageUrl = (imageUrl?: string): string => {
       }
     }
 
- 
+
     if (imageUrl.startsWith('/')) {
       return imageUrl;
     }
@@ -34,43 +33,43 @@ export const formatImageUrl = (imageUrl?: string): string => {
     return '';
   }
 };
- 
+
 export const formatPromotionImageUrl = (imageUrl?: string | null): string => {
-  
+
 
   if (!imageUrl) {
-  
+
     return '';
   }
 
   try {
     // URLs complètes (http/https)
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-    
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+
       return imageUrl;
     }
- 
+
     if (imageUrl.startsWith('uploads/promotions/')) {
       const result = `${API_URL}/${imageUrl}`;
-    
+
       return result;
     }
- 
+
     if (imageUrl.includes(':') && /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(imageUrl)) {
       const correctedUrl = `uploads/promotions/${imageUrl}`;
       const result = `${API_URL}/${correctedUrl}`;
-   
+
       return result;
     }
 
     // URLs relatives (commencent par /)
     if (imageUrl.startsWith('/')) {
-  
+
       return imageUrl;
     }
- 
+
     const fallbackResult = formatImageUrl(imageUrl);
-    
+
     return fallbackResult;
   } catch (error) {
     console.error('❌ [formatPromotionImageUrl] Erreur:', error);
@@ -95,25 +94,25 @@ export const addImageToFormData = async (
 ): Promise<FormData> => {
   if (!image) return formData;
 
-   if (image instanceof File) {
+  if (image instanceof File) {
     formData.append(fieldName, image);
     return formData;
   }
 
-   if (typeof image === 'string' && image.startsWith('data:')) {
+  if (typeof image === 'string' && image.startsWith('data:')) {
     try {
       const file = await base64ToFile(image);
       formData.append(fieldName, file);
-    } catch { 
+    } catch {
     }
   }
-   else if (typeof image === 'string') {
+  else if (typeof image === 'string') {
     formData.append('image_url', image);
   }
 
   return formData;
 };
- 
+
 export const isValidImageUrl = (url: string | null | undefined): boolean => {
   if (!url) return false;
 
@@ -125,7 +124,7 @@ export const isValidImageUrl = (url: string | null | undefined): boolean => {
     if (url.startsWith('http://') || url.startsWith('https://')) return true;
 
     // Check if it's a valid path starting with '/'
-    if (url.startsWith('/')) return true; 
+    if (url.startsWith('/')) return true;
 
     return false;
   } catch {
