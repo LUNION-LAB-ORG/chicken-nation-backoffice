@@ -13,6 +13,9 @@ import { OrdersTable } from "../../../../features/orders/components/list-order";
 import { Order } from "../../../../features/orders/types/ordersTable.types";
 import OrderHeader from "./OrderHeader";
 import RestaurantTabs from "./RestaurantTabs";
+import {
+  UserType,
+} from "../../../../features/users/types/user.types";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
@@ -129,7 +132,7 @@ export default function Orders() {
           <RestaurantTabs
             selectedRestaurant={selectedRestaurant}
             onSelectRestaurant={setSelectedRestaurant}
-            showAllTab={!!currentUser?.restaurant_id == false} // Seulement pour ADMIN
+            showAllTab={currentUser?.type == UserType.BACKOFFICE} // Seulement pour ADMIN
           />
 
           <OrdersTable

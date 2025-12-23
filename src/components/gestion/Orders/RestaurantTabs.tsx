@@ -17,6 +17,7 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
   const { data: restaurantsAll, isLoading } = useRestaurantListQuery();
 
   const restaurants = restaurantsAll?.data;
+  if (!showAllTab) return <></>;
   return (
     <div className="mb-6 w-full">
       <div className="w-full overflow-x-auto">
@@ -25,9 +26,8 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
           scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
           style={{ minHeight: 40 }}
         >
-          {showAllTab && (
-            <button
-              className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
+          <button
+            className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
                   selectedRestaurant === null
@@ -35,13 +35,11 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
                     : "bg-transparent text-[#71717A] font-normal"
                 }
               `}
-              style={{ minWidth: 75, height: 30 }}
-              onClick={() => onSelectRestaurant(null)}
-            >
-              Tous les restaurants
-            </button>
-          )}
-
+            style={{ minWidth: 75, height: 30 }}
+            onClick={() => onSelectRestaurant(null)}
+          >
+            Tous les restaurants
+          </button>
           {!isLoading &&
             restaurants.map((restaurant) => (
               <button
