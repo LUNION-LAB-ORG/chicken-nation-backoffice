@@ -13,9 +13,7 @@ import { OrdersTable } from "../../../../features/orders/components/list-order";
 import { Order } from "../../../../features/orders/types/ordersTable.types";
 import OrderHeader from "./OrderHeader";
 import RestaurantTabs from "./RestaurantTabs";
-import {
-  UserType,
-} from "../../../../features/users/types/user.types";
+import { UserType } from "../../../../features/users/types/user.types";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
@@ -37,9 +35,9 @@ export default function Orders() {
 
   // ✅ État du restaurant sélectionné et filtrage
   const [selectedRestaurant, setSelectedRestaurant] = useState<string | null>(
-    null
+    currentUser.restaurant_id
   );
-
+  console.log(selectedRestaurant);
   // ✅ Hook pour le son continu des commandes en attente
   const { hasPendingOrders, isPlaying, pendingOrdersCount } =
     usePendingOrdersSound({
