@@ -232,7 +232,7 @@ export const getAllMenus = async (query?: { page: number; limit: number }): Prom
   try {
     let url = '/dishes/search';
     if (query) {
-      url + `?page=${query.page}&limit=${query.limit}`
+      url = url + `?page=${query.page}&limit=${query.limit}`
     }
     const responseData = await apiRequest<ApiMenuListResponse>(url, 'GET');
 
