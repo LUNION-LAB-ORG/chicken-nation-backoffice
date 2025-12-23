@@ -11,7 +11,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <textarea
         className={`block w-full rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 focus:border-orange-400 focus:outline-none ${
-          error ? 'border-primary-500' : ''
+          error ? 'border-[#F17922]' : ''
         } ${className}`}
         ref={ref}
         {...props}

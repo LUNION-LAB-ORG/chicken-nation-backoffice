@@ -352,7 +352,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
               {/* Informations conversation */}
               <div className="flex-1">
-                <h3 className="md:text-lg text-base font-medium text-primary-500 mb-1">
+                <h3 className="md:text-lg text-base font-medium text-[#F17922] mb-1">
                   {getConversationInfo.name}
                 </h3>
                 <div className="flex items-center md:space-x-3 space-x-2">
@@ -379,7 +379,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             {/* 
             <button 
               onClick={() => setIsEscalateModalOpen(true)}
-              className="bg-primary-500 text-white md:px-6 md:py-4 px-3 py-2 rounded-2xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
+              className="bg-[#F17922] text-white md:px-6 md:py-4 px-3 py-2 rounded-2xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
             >
               <AlertTriangle className="md:w-5 md:h-5 w-4 h-4 md:mr-3 mr-2" />
               <span className="md:inline hidden lg:inline">Escalader en ticket</span>
@@ -394,7 +394,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           {/* Loading des messages */}
           {isLoadingMessages && (
             <div className="flex justify-center items-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
             </div>
           )}
 
@@ -462,7 +462,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                               'Support'}
                           </span>
                         </div>
-                        <div className="bg-primary-500 text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
+                        <div className="bg-[#F17922] text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
                       </div>
@@ -491,7 +491,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             <button
               onClick={() => setMessageType('public')}
               className={`flex items-center md:px-4 md:py-2 px-3 cursor-pointer py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
-                ? 'bg-primary-500 text-white'
+                ? 'bg-[#F17922] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
@@ -501,7 +501,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             <button
               onClick={() => setMessageType('internal')}
               className={`flex items-center md:px-4 md:py-2 cursor-pointer px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
-                ? 'bg-primary-500 text-white'
+                ? 'bg-[#F17922] text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
             >
@@ -518,7 +518,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={messageType === 'public' ? "Écrire un message public..." : "Écrire un message interne..."}
-                className="w-full md:px-4 md:py-3 text-slate-700  px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent md:text-sm text-xs bg-gray-50"
+                className="w-full md:px-4 md:py-3 text-slate-700  px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent md:text-sm text-xs bg-gray-50"
                 rows={3}
                 disabled={sendMessageMutation.isPending}
               />
@@ -527,7 +527,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               title="Envoyer le message"
               onClick={handleSendMessage}
               disabled={!message.trim() || sendMessageMutation.isPending}
-              className="bg-primary-500 text-white md:p-3 p-2 cursor-pointer rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 relative"
+              className="bg-[#F17922] text-white md:p-3 p-2 cursor-pointer rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 relative"
             >
               {sendMessageMutation.isPending ? (
                 <div className="animate-spin rounded-full md:w-5 md:h-5 w-4 h-4 border-b-2 border-white"></div>

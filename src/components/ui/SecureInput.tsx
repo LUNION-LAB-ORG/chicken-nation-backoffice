@@ -140,7 +140,7 @@ export function SecureInput({
   // Classes CSS dynamiques
   const inputClasses = `
     w-full px-3 py-2 border-2 rounded-lg transition-colors duration-200
-    focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+    focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent
     ${isValid 
       ? 'border-gray-300 hover:border-gray-400' 
       : 'border-red-300 bg-red-50'
@@ -186,7 +186,7 @@ export function SecureInput({
       {/* Compteur de caractères */}
       {showCharacterCount && (
         <div className={`text-xs mt-1 text-right ${
-          isNearLimit ? 'text-primary-500' : 'text-gray-500'
+          isNearLimit ? 'text-[#F17922]' : 'text-gray-500'
         }`}>
           {characterCount}/{maxLength}
         </div>
@@ -303,7 +303,7 @@ export function SecureTextarea({
         maxLength={maxLength}
         className={`
           w-full px-3 py-2 border-2 border-gray-300 rounded-lg transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent
           hover:border-gray-400 resize-vertical min-h-[100px]
           ${error ? 'border-red-300 bg-red-50' : ''}
           ${className}
@@ -313,7 +313,7 @@ export function SecureTextarea({
       {/* Compteur de caractères */}
       {showCharacterCount && (
         <div className={`text-xs mt-1 text-right ${
-          isNearLimit ? 'text-primary-500' : 'text-gray-500'
+          isNearLimit ? 'text-[#F17922]' : 'text-gray-500'
         }`}>
           {characterCount}/{maxLength}
         </div>

@@ -70,7 +70,7 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
       <div className="bg-white rounded-2xl md:w-[700px] lg:w-[750px] xl:w-[800px] w-[90%] max-w-[800px] mx-4 max-h-[96vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-4 ">
-          <h2 className="md:text-xl text-3xl font-semibold text-primary-500">
+          <h2 className="md:text-xl text-3xl font-semibold text-[#F17922]">
             Escalader en ticket
           </h2>
           <button
@@ -98,7 +98,7 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
               value={ticketSubject}
               onChange={(e) => setTicketSubject(e.target.value)}
               placeholder="Ex: Problème de qualité produit"
-              className="w-full md:px-4 md:py-3 px-3 py-2.5 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full md:px-4 md:py-3 px-3 py-2.5 border border-gray-300 rounded-xl md:text-sm text-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922]"
             />
           </div>
 
@@ -149,7 +149,7 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
             <button
               onClick={handleCreateTicket}
               disabled={!ticketSubject.trim()}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-primary-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-[#F17922] text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Créer le ticket
             </button>

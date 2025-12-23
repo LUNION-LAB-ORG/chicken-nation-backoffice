@@ -60,7 +60,7 @@ function InboxRightbar({
   return (
     <div className="h-full md:w-80 w-64 bg-white border-l border-slate-300 overflow-y-auto">
       <div className="md:p-6 p-4">
-        <h3 className="lg:text-lg md:text-base text-sm font-regular text-primary-500 md:mb-4 mb-3">
+        <h3 className="lg:text-lg md:text-base text-sm font-regular text-[#F17922] md:mb-4 mb-3">
           {isInternal ? 'Discussion interne' : 'Informations client'}
         </h3>
 
@@ -104,7 +104,7 @@ function InboxRightbar({
 
         {/* Participants */}
         <div>
-          <h4 className="lg:text-base md:text-sm text-xs font-regular text-primary-500 md:mb-4 mb-3">
+          <h4 className="lg:text-base md:text-sm text-xs font-regular text-[#F17922] md:mb-4 mb-3">
             Participants ({Math.max(1, participants.length)})
           </h4>
           <div className="md:space-y-3 space-y-2">

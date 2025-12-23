@@ -93,7 +93,7 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
         {promo.visibility && (
           <div className="absolute top-4 right-4 z-10">
             <div className="bg-white rounded-xl lg:px-1.5 lg:py-1 md:px-1 sm:px-2 sm:py-2 2xl:px-4 xl:px-4 2xl:py-1 py-[1px] px-2 xl:py-[1px] shadow-sm">
-              <span className="text-primary-500 2xl:text-xs lg:text-[8px] text-[8px] font-medium">{promo.visibility}</span>
+              <span className="text-[#F17922] 2xl:text-xs lg:text-[8px] text-[8px] font-medium">{promo.visibility}</span>
             </div>
           </div>
         )}

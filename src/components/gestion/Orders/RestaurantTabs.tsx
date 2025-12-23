@@ -3,26 +3,20 @@
 import React from "react";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 
-interface Restaurant {
-  id: string;
-  name: string;
-}
-
 interface RestaurantTabsProps {
-  restaurants: Restaurant[];
   selectedRestaurant: string | null;
   onSelectRestaurant: (restaurantId: string | null) => void;
   showAllTab?: boolean;
 }
 
 const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
-  restaurants,
   selectedRestaurant,
   onSelectRestaurant,
   showAllTab = true,
 }) => {
-  const { data: restaurantsAll } = useRestaurantListQuery();
-  console.log(restaurantsAll);
+  const { data: restaurantsAll, isLoading } = useRestaurantListQuery();
+
+  const restaurants = restaurantsAll?.data;
   return (
     <div className="mb-6 w-full">
       <div className="w-full overflow-x-auto">
@@ -48,10 +42,11 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
             </button>
           )}
 
-          {restaurants.map((restaurant, idx) => (
-            <button
-              key={restaurant.id}
-              className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
+          {!isLoading &&
+            restaurants.map((restaurant) => (
+              <button
+                key={restaurant.id}
+                className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
                   selectedRestaurant === restaurant.id
@@ -60,12 +55,12 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
                 }
                 ml-1
               `}
-              style={{ minWidth: 75, height: 30 }}
-              onClick={() => onSelectRestaurant(restaurant.id)}
-            >
-              {restaurant.name}
-            </button>
-          ))}
+                style={{ minWidth: 75, height: 30 }}
+                onClick={() => onSelectRestaurant(restaurant.id)}
+              >
+                {restaurant.name}
+              </button>
+            ))}
         </div>
       </div>
     </div>

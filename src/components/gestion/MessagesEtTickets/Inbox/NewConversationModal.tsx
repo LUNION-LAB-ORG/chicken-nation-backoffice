@@ -260,7 +260,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       <div className="bg-white rounded-2xl md:w-[800px] lg:w-[900px] xl:w-[1000px] w-[95%] max-w-[1000px] mx-4 max-h-[95vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-0">
-          <h2 className="md:text-xl text-3xl font-semibold text-primary-500">
+          <h2 className="md:text-xl text-3xl font-semibold text-[#F17922]">
             Nouvelle conversation
           </h2>
           <button
@@ -298,7 +298,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                   type="button"
                   onClick={() => setConversationType('Avec client')}
                   className={`px-6 py-2.5 rounded-xl border-2 transition-all  font-medium text-sm ${conversationType === 'Avec client'
-                    ? 'border-primary-500 bg-gradient-to-r from-primary-500 to-orange-600 text-white'
+                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-white'
                     : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
                     }`}
                 >
@@ -308,7 +308,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                   type="button"
                   onClick={() => setConversationType('Interne')}
                   className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
-                    ? 'border-primary-500 bg-gradient-to-r from-primary-500 to-orange-600 text-white'
+                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-white'
                     : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
                     }`}
                 >
@@ -369,7 +369,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex: Problème avec commande #12345"
-              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 ${errors.subject ? 'border-red-500' : 'border-gray-300'
+              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] ${errors.subject ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
             {errors.subject && (
@@ -387,7 +387,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               onChange={(e) => setInitialMessage(e.target.value)}
               placeholder="Tapez votre message initial..."
               rows={4}
-              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] resize-none"
             />
           </div>
 
@@ -403,7 +403,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
             <button
               onClick={handleCreateConversation}
               disabled={isCreating || !subject.trim()}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-primary-500 text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-[#F17922] text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {isCreating ? (
                 <>

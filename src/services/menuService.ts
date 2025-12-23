@@ -228,9 +228,13 @@ export const searchMenus = async (params: MenuSearchQuery = {}): Promise<Paginat
 };
 
 // ✅ RÉCUPÉRATION SÉCURISÉE DE TOUS LES MENUS
-export const getAllMenus = async (): Promise<ValidatedMenuItem[]> => {
+export const getAllMenus = async (query?: { page: number; limit: number }): Promise<ValidatedMenuItem[]> => {
   try {
-    const responseData = await apiRequest<ApiMenuListResponse>('/dishes/search', 'GET');
+    let url = '/dishes/search';
+    if (query) {
+      url + `?page=${query.page}&limit=${query.limit}`
+    }
+    const responseData = await apiRequest<ApiMenuListResponse>(url, 'GET');
 
     // ✅ Validation de la structure de réponse
     if (!responseData) {

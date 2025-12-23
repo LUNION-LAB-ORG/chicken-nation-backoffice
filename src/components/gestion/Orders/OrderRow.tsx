@@ -1,5 +1,4 @@
 import Checkbox from "@/components/ui/Checkbox";
-import { type Order } from "./OrdersTable";
 import { Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import OrderContextMenu from "./OrderContextMenu";
@@ -7,6 +6,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import { format } from "date-fns";
+import { Order } from "../../../../features/orders/types/ordersTable.types";
 
 interface OrderRowProps {
   order: Order;

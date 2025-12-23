@@ -158,7 +158,7 @@ const PromoStats = ({ className = '', promotions = [], onViewAllPromotions }: Pr
       case 'Expiré':
         return 'bg-red-100 text-red-600'
       case 'Public':
-        return 'bg-[#E4E4E7] text-primary-500'
+        return 'bg-[#E4E4E7] text-[#F17922]'
       case 'Privé':
         return 'bg-blue-100 text-blue-600' // ✅ AJOUT : Style pour les promotions privées
       default:

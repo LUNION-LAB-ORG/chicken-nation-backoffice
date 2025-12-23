@@ -21,7 +21,7 @@ const mockTempsReponse: TempsReponseData[] = [
     value: '2h 15min',
     type: 'time',
     badgeColor: '',
-    badgeTextColor: 'text-primary-500'
+    badgeTextColor: 'text-[#F17922]'
   },
   {
     id: '2',

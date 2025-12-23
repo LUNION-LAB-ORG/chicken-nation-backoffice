@@ -185,7 +185,7 @@ const AllPromotions = ({
                         setFilterStatus(status as 'all' | 'active' | 'expired' | 'draft');
                         setIsStatusDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                      className="w-full px-4 py-2 hover:text-[#F17922] cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
                     >
                       {getStatusLabel(status)}
                     </button>
@@ -217,7 +217,7 @@ const AllPromotions = ({
                         setFilterVisibility(visibility as 'all' | 'public' | 'private');
                         setIsVisibilityDropdownOpen(false);
                       }}
-                      className="w-full px-4 py-2 hover:text-primary-500 cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
+                      className="w-full px-4 py-2 hover:text-[#F17922] cursor-pointer text-left text-[10px] lg:text-[14px] text-gray-900 hover:bg-gray-50"
                     >
                       {getVisibilityLabel(visibility)}
                     </button>

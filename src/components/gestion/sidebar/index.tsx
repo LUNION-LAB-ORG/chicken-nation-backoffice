@@ -48,7 +48,13 @@ export default function Sidebar() {
 
   return (
     <>
-      <div className="h-full flex flex-col overflow-hidden">
+      {isSidebarOpen && isMobile && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+      <div className="relative z-10 h-full flex flex-col overflow-hidden">
         <aside className="w-64 bg-white shadow-lg h-screen flex flex-col transition-transform duration-300 ease-in-out">
           {/* Logo */}
           <div className="p-4">
@@ -89,12 +95,6 @@ export default function Sidebar() {
           </div>
         </aside>
       </div>
-      {isSidebarOpen && isMobile && (
-        <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
     </>
   );
 }

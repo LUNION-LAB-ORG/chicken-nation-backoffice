@@ -63,7 +63,7 @@ const ConstraintsSection = ({
             placeholder="Ex: 5 000"
             value={minOrderAmount}
             onChange={(e) => onMinOrderAmountChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]"
           />
         </div>
         <div className="flex flex-row items-center justify-between">
@@ -73,7 +73,7 @@ const ConstraintsSection = ({
             placeholder="Ex: 5"
             value={maxUsagePerClient}
             onChange={(e) => onMaxUsagePerClientChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]"
           />
         </div>
         <div className="flex flex-row items-center justify-between">
@@ -83,7 +83,7 @@ const ConstraintsSection = ({
             placeholder="Illimité"
             value={maxTotalUsage}
             onChange={(e) => onMaxTotalUsageChange(e.target.value)}
-            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-90 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]"
           />
         </div>
         <div className="flex flex-row items-center justify-between gap-6">

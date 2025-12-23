@@ -198,7 +198,7 @@ export function SearchableDropdown({
           className={`
             block w-full md:pl-12 pl-10 md:pr-12 pr-10 md:py-4 py-3 
             border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 
-            focus:outline-none focus:ring-2 focus:ring-primary-500 
+            focus:outline-none focus:ring-2 focus:ring-[#F17922] 
             ${error ? 'border-red-500' : 'border-gray-300'} 
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
             transition-colors
@@ -244,7 +244,7 @@ export function SearchableDropdown({
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 text-primary-500 animate-spin" />
+              <Loader2 className="h-6 w-6 text-[#F17922] animate-spin" />
               <span className="ml-2 text-sm text-gray-500">Recherche...</span>
             </div>
           ) : filteredOptions.length > 0 ? (
@@ -263,7 +263,7 @@ export function SearchableDropdown({
                   <div className={`
                     w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0
                     ${isSelected(option.id) 
-                      ? 'bg-primary-500 border-primary-500 text-white' 
+                      ? 'bg-[#F17922] border-[#F17922] text-white' 
                       : 'border-gray-300 bg-white'
                     }
                   `}>
@@ -274,7 +274,7 @@ export function SearchableDropdown({
                 )}
 
                 {/* Avatar ou initiales */}
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-primary-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-white font-bold flex-shrink-0">
                   {option.image && formatImageUrl(option.image) ? (
                     <Image
                       src={formatImageUrl(option.image)}
@@ -316,7 +316,7 @@ export function SearchableDropdown({
 
                 {/* Indicateur de sélection pour mode simple */}
                 {!multiSelect && value === option.id && (
-                  <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0" />
+                  <div className="w-2 h-2 bg-[#F17922] rounded-full flex-shrink-0" />
                 )}
               </div>
             ))

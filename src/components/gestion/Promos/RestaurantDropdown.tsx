@@ -44,7 +44,7 @@ const RestaurantDropdown = ({
       <button
         type="button"
         onClick={() => setShowDropdown(!showDropdown)}
-        className="w-full sm:w-170 px-4 py-2.5 border border-gray-300 rounded-xl text-left bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 flex items-center justify-between"
+        className="w-full sm:w-170 px-4 py-2.5 border border-gray-300 rounded-xl text-left bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922] flex items-center justify-between"
       >
         <div className="flex-1 min-w-0">
           {loading ? (

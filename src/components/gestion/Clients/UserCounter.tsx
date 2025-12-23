@@ -17,7 +17,7 @@ export function UserCounter({ count = 0 }: UserCounterProps) {
           
           <h2 className="text-xl font-medium text-[#9796A1]">{count} clients</h2>
       
-        <div className="text-primary-500">
+        <div className="text-[#F17922]">
           <Image src='/icons/client.png' alt='client' width={30} height={30} />
         </div>
       </div>

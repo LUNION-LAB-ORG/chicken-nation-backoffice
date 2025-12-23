@@ -1,3 +1,5 @@
+import { User } from "@/services";
+
 export interface Order {
   // Identifiants
   id: string;
@@ -82,22 +84,4 @@ export interface Order {
   hidden?: boolean;
   auto: boolean;
   note?: string;
-}
-
-export interface OrdersTableProps {
-  onViewDetails: (order: Order) => void;
-  searchQuery?: string;
-  onFilteredOrdersChange?: (orders: Order[]) => void;
-  selectedRestaurant?: string | null;
-  currentUser?: {
-    id: string;
-    role: string;
-    restaurant_id?: string;
-    [key: string]: unknown;
-  } | null;
-  filteredOrders?: Order[];
-  activeFilter?: string;
-  onActiveFilterChange?: (filter: string) => void;
-  selectedDate?: Date | null;
-  onSelectedDateChange?: (date: Date | null) => void;
 }

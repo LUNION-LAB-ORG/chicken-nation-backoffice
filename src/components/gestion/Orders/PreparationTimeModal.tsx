@@ -128,7 +128,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
         {orderLoading ? (
           <div className="mb-8 p-8 text-center">
             <div className="flex items-center justify-center space-x-2">
-              <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
               <span className="text-gray-600">Chargement des détails de la commande...</span>
             </div>
           </div>
@@ -143,7 +143,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
         ) : orderData?.order_items && orderData.order_items.length > 0 ? (
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <ChefHat className="w-5 h-5 mr-2 text-primary-500" />
+              <ChefHat className="w-5 h-5 mr-2 text-[#F17922]" />
               Plats à préparer 
             </h3>
             <div className="bg-gray-50 rounded-xl p-4">
@@ -215,7 +215,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
                 key={index}
                 onClick={() => handlePredefinedSelect(time.prep)}
                 className={`p-4 rounded-2xl border-2 cursor-pointer transition-all hover:shadow-md ${selectedPreparationTime === time.prep && !useCustom
-                  ? 'border-primary-500 bg-orange-50 shadow-md'
+                  ? 'border-[#F17922] bg-orange-50 shadow-md'
                   : 'border-gray-200 hover:border-orange-300'
                   }`}
               >
@@ -233,12 +233,12 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
         {/* Temps personnalisé   */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center">
-            <Clock className="w-5 h-5 mr-2 text-primary-500" />
+            <Clock className="w-5 h-5 mr-2 text-[#F17922]" />
             Temps personnalisé
           </h3>
           <div
             className={`p-8 rounded-2xl border-2 transition-all duration-300 ${useCustom
-              ? 'border-primary-500 bg-gradient-to-br from-orange-50 to-yellow-50 shadow-xl transform scale-[1.02]'
+              ? 'border-[#F17922] bg-gradient-to-br from-orange-50 to-yellow-50 shadow-xl transform scale-[1.02]'
               : 'border-gray-200 hover:border-orange-300 hover:shadow-lg'
               }`}
             onClick={handleCustomSelect}
@@ -247,7 +247,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-3">
                 <div className={`p-3 rounded-full transition-all duration-300 ${
-                  useCustom ? 'bg-primary-500 shadow-lg' : 'bg-gray-300'
+                  useCustom ? 'bg-[#F17922] shadow-lg' : 'bg-gray-300'
                 }`}>
                   <ChefHat className={`w-5 h-5 ${
                     useCustom ? 'text-white' : 'text-gray-600'
@@ -326,7 +326,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
                 >
                   <div className={`w-8 h-8 rounded-full border-4 border-white shadow-lg transition-all duration-200 ${
                     useCustom 
-                      ? 'bg-primary-500 shadow-orange-200 transform scale-110' 
+                      ? 'bg-[#F17922] shadow-orange-200 transform scale-110' 
                       : 'bg-gray-400 shadow-gray-200'
                   }`}>
                     {/* Indicateur central */}
@@ -368,7 +368,7 @@ const PreparationTimeModal: React.FC<PreparationTimeModalProps> = ({
           <button
             onClick={handleConfirm}
             disabled={!selectedPreparationTime || updatePreparationTimeMutation.isPending}
-            className="px-6 py-2 bg-primary-500 cursor-pointer text-white rounded-2xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+            className="px-6 py-2 bg-[#F17922] cursor-pointer text-white rounded-2xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
           >
             {updatePreparationTimeMutation.isPending ? (
               <>

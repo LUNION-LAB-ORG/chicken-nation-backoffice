@@ -11,15 +11,27 @@ import { LoadingState, ErrorState } from "./OrdersTableStates";
 import { OrdersPaginationInfo } from "./OrdersPaginationInfo";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import { getPaymentStatus } from "../../utils/paymentStatus";
-import { OrdersTableProps, Order } from "../../types/ordersTable.types";
+import { Order } from "../../types/ordersTable.types";
 import { OrderFilters } from "@/components/gestion/Orders/OrderFilters";
+import { User } from "@/services";
 
+export interface OrdersTableProps {
+  onViewDetails: (order: Order) => void;
+  searchQuery?: string;
+  onFilteredOrdersChange?: (orders: Order[]) => void;
+  selectedRestaurant?: string | null;
+  currentUser?: User;
+  filteredOrders?: Order[];
+  activeFilter?: string;
+  onActiveFilterChange?: (filter: string) => void;
+  selectedDate?: Date | null;
+  onSelectedDateChange?: (date: Date | null) => void;
+}
 export function OrdersTable({
   onViewDetails,
   searchQuery = "",
   selectedRestaurant = null,
   currentUser = null,
-  filteredOrders,
   activeFilter,
   onActiveFilterChange,
   selectedDate,
@@ -59,16 +71,12 @@ export function OrdersTable({
 
   // Conversion: Mapper les données API vers UI
   const ordersToDisplay = useMemo(() => {
-    if (filteredOrders && filteredOrders.length > 0) {
-      return filteredOrders;
-    }
-
     if (apiOrders.length > 0) {
       return apiOrders.map(mapApiOrderToUiOrder);
     }
 
     return [];
-  }, [apiOrders, filteredOrders]);
+  }, [apiOrders]);
 
   // Gestionnaires d'actions
   const {

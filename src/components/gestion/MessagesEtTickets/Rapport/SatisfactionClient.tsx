@@ -21,7 +21,7 @@ const mockSatisfaction: SatisfactionData[] = [
     value: '4.2/5',
     type: 'rating',
     badgeColor: '',
-    badgeTextColor: 'text-primary-500'
+    badgeTextColor: 'text-[#F17922]'
   },
   {
     id: '2',

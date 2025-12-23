@@ -133,15 +133,14 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
       {/* Header */}
       <div className="p-3 md:p-6 border-b border-slate-300 bg-white">
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h1 className="lg:text-2xl md:text-lg text-base font-bold text-primary-500">Conversations</h1>
+          <h1 className="lg:text-2xl md:text-lg text-base font-bold text-[#F17922]">Conversations</h1>
           {/* Bouton Nouvelle conversation - Temporairement désactivé */}
 
           <button
             onClick={() => {
-              console.log('Bouton Nouvelle cliqué');
               onNewConversation?.();
             }}
-            className="bg-primary-500 hover:bg-orange-600 text-white md:px-4 md:py-2 px-3 py-2.5 cursor-pointer rounded-xl md:text-sm text-xs font-medium flex items-center"
+            className="bg-[#F17922] hover:bg-orange-600 text-white md:px-4 md:py-2 px-3 py-2.5 cursor-pointer rounded-xl md:text-sm text-xs font-medium flex items-center"
           >
             <Plus className="mr-1 md:w-5 md:h-5 w-4 h-4" />
             Nouvelle
@@ -159,7 +158,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             placeholder="Rechercher une conversation..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block text-slate-700  w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-primary-500 focus:border-transparent bg-white"
+            className="block text-slate-700  w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-[#F17922] focus:border-transparent bg-white"
           />
         </div>
 
@@ -167,21 +166,21 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         <div className="flex gap-2 md:gap-3">
           <button
             onClick={() => setActiveFilter('all')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Toutes ({conversations.length})
           </button>
           <button
             onClick={() => setActiveFilter('client')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Clients ({conversations.filter(c => c.customer).length})
           </button>
           <button
             onClick={() => setActiveFilter('internal')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Internes ({conversations.filter(c => !c.customer).length})
@@ -194,7 +193,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         {/* Loading state */}
         {isLoading && (
           <div className="flex items-center justify-center p-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
           </div>
         )}
 
@@ -208,7 +207,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             {!searchTerm && (
               <button
                 onClick={onNewConversation}
-                className="mt-4 text-primary-500 text-sm underline"
+                className="mt-4 text-[#F17922] text-sm underline"
               >
                 Créer une nouvelle conversation
               </button>

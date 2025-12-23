@@ -784,7 +784,7 @@ const EditPersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: 
             <button
               type="button"
               onClick={() => setShowDatePicker(!showDatePicker)}
-              className="w-full px-3 py-3  border-2 border-gray-300 rounded-2xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-3 py-3  border-2 border-gray-300 rounded-2xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <span className={formData.startDate !== 'Sélectionnez une date' ? 'text-gray-900 text-center' : 'text-center text-gray-500'}>
                 {formData.startDate !== 'Sélectionnez une date' && formData.startDate.trim() !== ''
@@ -815,7 +815,7 @@ const EditPersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: 
             <button
               type="button"
               onClick={() => setShowExpirationDatePicker(!showExpirationDatePicker)}
-              className="w-full px-3 py-3  border-2 border-gray-300 rounded-2xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full px-3 py-3  border-2 border-gray-300 rounded-2xl text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition-colors"
             >
               <span className={formData.expirationDate !== 'Sélectionnez une date' ? 'text-gray-900 text-center' : 'text-center text-gray-500'}>
                 {formData.expirationDate !== 'Sélectionnez une date' && formData.expirationDate.trim() !== ''

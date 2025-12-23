@@ -49,7 +49,6 @@ export const usePendingOrdersSound = ({
 
   // Fonction d'invalidation de la cache de React Query
   const handleInvalidateQueries = (data) => {
-    console.log(data)
     queryClient.invalidateQueries({
       queryKey: ['orders'],
       exact: false,

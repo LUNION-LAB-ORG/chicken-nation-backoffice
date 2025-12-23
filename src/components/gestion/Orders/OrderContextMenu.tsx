@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { X, Clock } from 'lucide-react';
-import { Order } from './OrdersTable';
-import Image from 'next/image';
-import { useRBAC } from '@/hooks/useRBAC';
-import PreparationTimeModal from './PreparationTimeModal';
+import { useRBAC } from "@/hooks/useRBAC";
+import { X } from "lucide-react";
+import Image from "next/image";
+import React, { useState } from "react";
+import PreparationTimeModal from "./PreparationTimeModal";
+import { Order } from "../../../../features/orders/types/ordersTable.types";
 
 interface OrderContextMenuProps {
   order: Order;
   isOpen: boolean;
   onClose: () => void;
-  onAccept?: (orderId: string) => void;      // ✅ Optionnel pour contrôle RBAC
-  onReject?: (orderId: string) => void;      // ✅ Optionnel pour contrôle RBAC
-  onViewDetails: (order: Order) => void;     // ✅ Toujours disponible (lecture)
+  onAccept?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
+  onReject?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
+  onViewDetails: (order: Order) => void; // ✅ Toujours disponible (lecture)
   onHideFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
   onRemoveFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
 }
-
 
 const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   order,
@@ -25,11 +24,17 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   onReject,
   onViewDetails,
   onHideFromList,
-  onRemoveFromList
+  onRemoveFromList,
 }) => {
-  const { canAcceptCommande, canRejectCommande, canViewCommande, canDeleteCommande } = useRBAC()
-  const [isPreparationTimeModalOpen, setIsPreparationTimeModalOpen] = useState(false);
-  const isAccepted = order.status !== 'NOUVELLE';
+  const {
+    canAcceptCommande,
+    canRejectCommande,
+    canViewCommande,
+    canDeleteCommande,
+  } = useRBAC();
+  const [isPreparationTimeModalOpen, setIsPreparationTimeModalOpen] =
+    useState(false);
+  const isAccepted = order.status !== "NOUVELLE";
 
   const handleAccept = () => {
     if (onAccept) {
@@ -71,19 +76,20 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
     }
   };
 
-
-
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && !(event.target as Element).closest('.order-context-menu') &&
-        !(event.target as Element).closest('.menu-button')) {
+      if (
+        isOpen &&
+        !(event.target as Element).closest(".order-context-menu") &&
+        !(event.target as Element).closest(".menu-button")
+      ) {
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, onClose]);
 
@@ -91,11 +97,8 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
 
   return (
     <>
-      <div
-        className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
-      >
+      <div className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
         <div className="py-1">
-
           {!isAccepted ? (
             <>
               {canAcceptCommande && (
@@ -104,7 +107,12 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                   className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
                   onClick={handleAccept}
                 >
-                  <Image src="/icons/check.png" alt="Accepter" width={20} height={20} />
+                  <Image
+                    src="/icons/check.png"
+                    alt="Accepter"
+                    width={20}
+                    height={20}
+                  />
                   <span>Accepter la commande</span>
                 </button>
               )}

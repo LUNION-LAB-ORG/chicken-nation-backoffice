@@ -67,7 +67,7 @@ const PromoDesignCard = ({ promoData, onSave /* onCancel */, className = '' }: P
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
         {/* Section gauche - Prévisualisation */}
         <div>
-          <h3 className="text-2xl font-medium text-primary-500 mb-6">Personnaliser le thème du coupon</h3>
+          <h3 className="text-2xl font-medium text-[#F17922] mb-6">Personnaliser le thème du coupon</h3>
 
           {/* Prévisualisation de la carte */}
           <div className="relative flex gap-6 items-center  ">

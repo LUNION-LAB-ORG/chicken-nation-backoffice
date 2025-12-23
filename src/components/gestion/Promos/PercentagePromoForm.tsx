@@ -24,7 +24,7 @@ const PercentagePromoForm = ({
           placeholder="Ex: 10, 20, 30"
           value={percentageValue}
           onChange={(e) => onPercentageChange(e.target.value)}
-          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]"
         />
       </div>
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0'>
@@ -34,7 +34,7 @@ const PercentagePromoForm = ({
           placeholder="Ex: 5 000 FCFA"
           value={discountCeiling}
           onChange={(e) => onDiscountCeilingChange(e.target.value)}
-          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full sm:w-70 px-4 py-3 border border-gray-300 rounded-xl text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]"
         />
       </div>
     </div>

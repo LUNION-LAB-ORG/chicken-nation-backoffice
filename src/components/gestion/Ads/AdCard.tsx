@@ -74,7 +74,7 @@ export default function AdCard({ ad, onClick }: AdCardProps) {
         <div className="mt-3 text-center">
           <button
             type="button"
-            className="text-primary-500 border border-primary-500 rounded-full px-3 sm:px-4 py-1 text-[11px] sm:text-[12px] hover:bg-orange-50 w-full transition-colors"
+            className="text-[#F17922] border border-[#F17922] rounded-full px-3 sm:px-4 py-1 text-[11px] sm:text-[12px] hover:bg-orange-50 w-full transition-colors"
           >
             Voir les informations
           </button>

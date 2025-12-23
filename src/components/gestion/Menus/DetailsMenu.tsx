@@ -201,7 +201,7 @@ export default function DetailsMenu({
                           key={ingredient.supplement.id || index}
                           className="flex items-center gap-2"
                         >
-                          <div className="w-2 h-2 rounded-full bg-primary-500" />
+                          <div className="w-2 h-2 rounded-full bg-[#F17922]" />
                           <span className="text-sm text-gray-600">
                             {ingredient.supplement.name}
                           </span>

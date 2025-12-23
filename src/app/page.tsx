@@ -86,7 +86,7 @@ export default function LoginPage() {
               className="mx-auto"
             />
           </div>
-          <h2 className="text-xl font-bold text-primary-500 mb-4">
+          <h2 className="text-xl font-bold text-[#F17922] mb-4">
             {redirecting ? "Connexion réussie !" : "Vérification en cours..."}
           </h2>
           <p className="text-gray-600 mb-4">
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
           {/* Spinner de chargement */}
           <div className="flex justify-center mb-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
           </div>
 
         </div>
@@ -144,7 +144,7 @@ export default function LoginPage() {
 
             {/* Carte de connexion */}
             <div className="bg-white rounded-3xl shadow-lg p-8 z-10">
-              <h2 className="text-center text-2xl text-primary-500 font-bold text-primary mb-8">
+              <h2 className="text-center text-2xl text-[#F17922] font-bold text-primary mb-8">
                 Commençons
               </h2>
 

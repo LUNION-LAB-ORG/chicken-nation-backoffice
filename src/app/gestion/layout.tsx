@@ -8,7 +8,6 @@ import { useUIStore } from "@/store/uiStore";
 import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import PasswordChangeModal from "@/components/ui/PasswordChangeModal";
 import EditProfileModal from "@/components/ui/EditProfileModal";
-import MobileOverlay from "@/components/ui/MobileOverlay";
 import Sidebar from "@/components/gestion/sidebar";
 import Header from "@/components/gestion/header/Header";
 
@@ -74,7 +73,6 @@ export default function GestionLayout({
       <WelcomeBackModal isOpen={showWelcomeBackModal} />
       <PasswordChangeModal isOpen={showPasswordChangeModal} />
       <EditProfileModal isOpen={showEditProfile} />
-      {/* <MobileOverlay /> */}
     </div>
   );
 }

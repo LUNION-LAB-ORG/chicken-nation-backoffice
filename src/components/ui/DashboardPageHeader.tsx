@@ -170,7 +170,7 @@ const DashboardPageHeader = ({
               onClick={onBack}
               className="p-2 hover:bg-gray-100 cursor-pointer rounded-full transition-colors"
             >
-              <ChevronLeft size={30} className="text-primary-500" />
+              <ChevronLeft size={30} className="text-[#F17922]" />
             </motion.button>
           )}
 

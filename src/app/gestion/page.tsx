@@ -7,7 +7,7 @@ import DynamicModuleLoader from "@/components/gestion/DynamicModuleLoader";
 import { useEffect } from "react";
 
 export default function GestionPage() {
-  const { activeTab, setActiveTab } = useDashboardStore();
+  const { activeTab } = useDashboardStore();
   const { activeSubModule, setActiveSubModule } = useNavigationStore();
 
   useInboxNavigation();

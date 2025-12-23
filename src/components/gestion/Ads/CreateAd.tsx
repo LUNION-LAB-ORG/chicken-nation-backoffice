@@ -361,7 +361,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                 contentEditable
                 suppressContentEditableWarning={true}
                 onInput={handleContentChange}
-                className="min-h-[140px] p-3 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                className="min-h-[140px] p-3 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
                 style={{
                   lineHeight: '1.6',
                   fontSize: '14px'
@@ -557,7 +557,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                     value={linkUrl}
                     onChange={(e) => setLinkUrl(e.target.value)}
                     placeholder="https://exemple.com"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         applyLink()
@@ -570,7 +570,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                     <button
                       type="button"
                       onClick={applyLink}
-                      className="px-4 py-2 bg-primary-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
+                      className="px-4 py-2 bg-[#F17922] text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
                     >
                       Ajouter
                     </button>
@@ -593,7 +593,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
               <input
                 type="checkbox"
                 id="app-message"
-                className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                className="w-4 h-4 text-[#F17922] border-gray-300 rounded focus:ring-[#F17922]"
                 defaultChecked
               />
               <label htmlFor="app-message" className="ml-3 text-sm text-gray-700">
@@ -621,7 +621,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
               <span className="text-sm text-gray-600 mr-3">Limité</span>
               <div className="relative">
                 <select
-                  className="appearance-none bg-white border border-gray-300 rounded px-3 py-1 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="appearance-none bg-white border border-gray-300 rounded px-3 py-1 pr-8 text-sm text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#F17922]"
                   title="Sélectionner le public cible"
                   aria-label="Sélectionner le public cible"
                 >
@@ -645,14 +645,14 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex-1 py-3 bg-primary-500 text-white rounded-2xl font- cursor-pointer hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+            className="flex-1 py-3 bg-[#F17922] text-white rounded-2xl font- cursor-pointer hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-offset-2 transition-colors"
           >
             Envoyer la diffusion
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="px-8 py-3 border border-primary-500 text-primary-500 cursor-pointer rounded-2xl font-medium hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors whitespace-nowrap"
+            className="px-8 py-3 border border-[#F17922] text-[#F17922] cursor-pointer rounded-2xl font-medium hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-offset-2 transition-colors whitespace-nowrap"
           >
             Programmer
           </button>

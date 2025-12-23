@@ -36,8 +36,6 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
         dto.restaurant_id = conversationData.restaurantId
       }
 
-      console.log('📤 [InboxSidebar] DTO envoyé au backend:', dto);
-
       const created = await createConversationWithDto(dto)
 
       // Invalidate conversations and open the new conversation in the inbox
@@ -56,7 +54,6 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
         selectedConversation={selectedConversation}
         onSelectConversation={onSelectConversation}
         onNewConversation={() => {
-          console.log('Ouverture du modal');
           setIsNewConversationModalOpen(true);
         }}
       />

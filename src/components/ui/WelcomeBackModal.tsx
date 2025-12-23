@@ -34,7 +34,7 @@ export default function WelcomeBackModal({ isOpen }: WelcomeBackModalProps) {
 
           <button
             onClick={() => setShowWelcomeBackModal(false)}
-            className="w-full bg-[#F17922] cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-primary-500 hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="w-full bg-[#F17922] cursor-pointer text-white font-semibold py-3 px-6 rounded-lg hover:from-[#F17922] hover:to-[#F17922] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             Merci !
           </button>

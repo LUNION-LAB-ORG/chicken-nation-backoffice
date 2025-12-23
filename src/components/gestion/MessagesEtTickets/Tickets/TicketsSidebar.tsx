@@ -68,7 +68,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
       case 'OPEN':
         return 'bg-red-500 text-white';
       case 'IN_PROGRESS':
-        return 'bg-primary-500 text-white';
+        return 'bg-[#F17922] text-white';
       case 'RESOLVED':
         return 'bg-green-500 text-white';
       case 'CLOSED':
@@ -115,13 +115,13 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
       {/* Header */}
       <div className="p-3 md:p-6 border-b border-slate-300 bg-white">
         <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h1 className="lg:text-2xl md:text-lg text-base font-bold text-primary-500">Tickets</h1>
+          <h1 className="lg:text-2xl md:text-lg text-base font-bold text-[#F17922]">Tickets</h1>
           <div className="flex items-center space-x-2">
             {onNewCategory && (
               <button
                 onClick={onNewCategory}
                 title="Créer une catégorie"
-                className="flex items-center space-x-2 bg-primary-500 text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
+                className="flex items-center space-x-2 bg-[#F17922] text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span className="whitespace-nowrap">Créer une catégorie</span>
@@ -131,7 +131,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
             {false && onNewTicket && (
               <button
                 onClick={onNewTicket}
-                className="flex items-center space-x-2 bg-primary-500 text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
+                className="flex items-center space-x-2 bg-[#F17922] text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Nouveau</span>
@@ -150,7 +150,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
             placeholder="Rechercher un ticket..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-primary-500 focus:border-transparent bg-white"
+            className="block w-full md:pl-12 pl-10 md:pr-4 pr-3 md:py-3 py-2.5 border border-gray-200 rounded-xl md:text-sm text-xs placeholder-gray-600 focus:outline-none focus:ring-2 cursor-pointer focus:ring-[#F17922] focus:border-transparent bg-white"
           />
         </div>
 
@@ -181,7 +181,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
       <div className="flex-1 overflow-y-auto">
         {ticketsLoading ? (
           <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-6 h-6 animate-spin text-primary-500" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
             <span className="ml-2 text-gray-600">Chargement des tickets...</span>
           </div>
         ) : ticketsError ? (

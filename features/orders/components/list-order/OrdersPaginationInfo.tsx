@@ -27,8 +27,8 @@ export const OrdersPaginationInfo: React.FC<OrdersPaginationInfoProps> = ({
         )}
 
         {isLoading && (
-          <div className="flex items-center gap-1 text-primary-500">
-            <div className="w-3 h-3 border border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="flex items-center gap-1 text-[#F17922]">
+            <div className="w-3 h-3 border border-[#F17922] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-xs">Chargement...</span>
           </div>
         )}

@@ -117,7 +117,7 @@ export default function SidebarNavigation({
                     w-full flex items-center cursor-pointer space-x-3 px-4 py-2 rounded-[10px]
                     ${
                       subActive
-                        ? "text-primary-500"
+                        ? "text-[#F17922]"
                         : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                     }
                     transition-all duration-200
@@ -131,7 +131,7 @@ export default function SidebarNavigation({
                   />
                   <span
                     className={`text-sm ${
-                      subActive ? "text-primary-500 font-medium" : ""
+                      subActive ? "text-[#F17922] font-medium" : ""
                     }`}
                   >
                     {subModule.label}
