@@ -1,26 +1,3 @@
-
-import { PaymentStatus } from "@/components/gestion/Orders/PaymentBadge";
-import { OrderStatus } from "../types/order.types";
-import { Order } from "../types/ordersTable.types";
-
-// 🎯 Déterminer le statut de paiement
-export const getPaymentStatus = (order: Order): PaymentStatus => {
-    if (
-        order.status === "ANNULÉE" &&
-        order.paiements &&
-        order.paiements.length > 0
-    ) {
-        const hasRevertedPayment = order.paiements?.some(
-            (p) => p.status === "REVERTED"
-        );
-        return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
-    }
-    if (order.paied == false) {
-        return "UNPAID";
-    }
-    return "PAID";
-};
-
 // Récupération du token d'authentification
 export function getAuthToken() {
     try {

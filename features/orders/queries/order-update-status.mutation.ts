@@ -4,7 +4,7 @@ import { updateOrderStatus } from "../services/order-service";
 import { OrderStatus } from "../types/order.types";
 import { useInvalidateOrderQuery } from "./index.query";
 
-export const useOrderUpdateMutation = () => {
+export const useOrderUpdateStatusMutation = () => {
 	const invalidateOrderQuery = useInvalidateOrderQuery()
 
 	return useMutation({

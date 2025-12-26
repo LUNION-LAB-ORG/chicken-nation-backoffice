@@ -1,43 +1,51 @@
 
 import { WorkflowConfig } from "../types/orderDetails.types";
+import { OrderTableStatus, OrderTableType } from "../types/ordersTable.types";
 
 export const getWorkflowConfig = (
-    orderType: string,
-    currentStatus: string
+    orderType: OrderTableType,
+    currentStatus: OrderTableStatus
 ): WorkflowConfig => {
     switch (currentStatus) {
-        case "NOUVELLE":
+        case OrderTableStatus['ANNULÉE']:
+            return {
+                badgeText: "Annulée",
+                buttonText: null,
+                nextStatus: null,
+                nextBadgeText: null,
+            };
+        case OrderTableStatus['NOUVELLE']:
             return {
                 badgeText: "Nouvelle commande",
                 buttonText: "Accepter",
-                nextStatus: "EN COURS",
+                nextStatus: OrderTableStatus["EN COURS"],
                 nextBadgeText: "En cours",
             };
-        case "EN COURS":
+        case OrderTableStatus["EN COURS"]:
             return {
                 badgeText: "En cours",
                 buttonText: "En préparation",
-                nextStatus: "EN PRÉPARATION",
+                nextStatus: OrderTableStatus["EN PRÉPARATION"],
                 nextBadgeText: "En préparation",
             };
-        case "EN PRÉPARATION":
+        case OrderTableStatus["EN PRÉPARATION"]:
             return {
                 badgeText: "En préparation",
                 buttonText: "Prêt",
-                nextStatus: "PRÊT",
+                nextStatus: OrderTableStatus["PRÊT"],
                 nextBadgeText: "Prêt",
             };
-        case "PRÊT":
+        case OrderTableStatus["PRÊT"]:
             return {
                 badgeText: "Prêt",
                 buttonText: "Terminer",
-                nextStatus: "COLLECTÉ",
+                nextStatus: OrderTableStatus["COLLECTÉ"],
                 nextBadgeText: "Terminé",
             };
-        case "COLLECTÉ":
-        case "LIVRAISON":
-        case "LIVRÉ":
-        case "TERMINÉ":
+        case OrderTableStatus["COLLECTÉ"]:
+        case OrderTableStatus["LIVRAISON"]:
+        case OrderTableStatus["LIVRÉ"]:
+        case OrderTableStatus["TERMINÉ"]:
             return {
                 badgeText: "Terminé",
                 buttonText: null,
@@ -46,7 +54,7 @@ export const getWorkflowConfig = (
             };
         default:
             return {
-                badgeText: currentStatus,
+                badgeText: OrderTableStatus[currentStatus],
                 buttonText: null,
                 nextStatus: null,
                 nextBadgeText: null,

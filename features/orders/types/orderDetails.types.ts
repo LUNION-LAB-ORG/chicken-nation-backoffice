@@ -1,9 +1,10 @@
+import { OrderTableStatus } from "./ordersTable.types";
 
 
 export interface WorkflowConfig {
   badgeText: string;
   buttonText: string | null;
-  nextStatus: string | null;
+  nextStatus: OrderTableStatus;
   nextBadgeText: string | null;
 }
 

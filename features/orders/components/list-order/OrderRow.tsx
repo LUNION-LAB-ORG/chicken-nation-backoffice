@@ -1,130 +1,30 @@
 import Checkbox from "@/components/ui/Checkbox";
-import { Menu } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
-import OrderContextMenu from "./OrderContextMenu";
-import Image from "next/image";
-import { createPortal } from "react-dom";
-import PaymentBadge, { PaymentStatus } from "./PaymentBadge";
 import { format } from "date-fns";
-import { Order } from "../../../../features/orders/types/ordersTable.types";
+import { Menu } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { OrderStatusBadge } from "../OrderStatusBadge";
+import { OrderTypeBadge } from "../OrderTypeBadge";
+import { OrderTable } from "../../types/ordersTable.types";
+import { formatAddress } from "../../utils/formatAddress";
+import OrderContextMenu from "./OrderContextMenu";
+import PaymentBadge from "../PaymentBadge";
 
 interface OrderRowProps {
-  order: Order;
+  order: OrderTable;
   isSelected: boolean;
   onSelect?: (orderId: string, checked: boolean) => void; // ✅ Optionnel pour contrôle RBAC
-  onAccept?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onReject?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onViewDetails: (order: Order) => void;
-  onHideFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
-  onRemoveFromList?: (orderId: string) => void; // ✅ Optionnel pour contrôle RBAC
   isMobile?: boolean;
   showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
   showActionsColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Actions (menu hamburger)
-  paymentStatus?: PaymentStatus; // ✅ Statut de paiement pour le badge
 }
-
-const OrderTypeBadge = ({ type }: { type: Order["orderType"] }) => {
-  const styles = {
-    "À livrer": "bg-[#FBDBA7] text-[#71717A]",
-    "À table": "bg-[#CCE3FD] text-[#71717A]",
-    "À récupérer": "bg-[#C9A9E9] text-white",
-  };
-
-  const getIcon = () => {
-    if (type === "À livrer") return "/icons/deliver.png";
-    if (type === "À table") return "/icons/store.png";
-    return "/icons/resto.png";
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${styles[type]}`}
-    >
-      {type}{" "}
-      <Image
-        src={getIcon()}
-        alt={type}
-        width={15}
-        height={15}
-        className="ml-1"
-      />
-    </span>
-  );
-};
-
-const StatusBadge = ({ order }: { order: Order }) => {
-  const styles = {
-    NOUVELLE: "text-[#007AFF]",
-    "EN COURS": "text-[#F5A524]",
-    "EN PRÉPARATION": "text-[#F5A524]",
-    LIVRÉ: "text-[#17C964]",
-    COLLECTÉ: "text-[#17C964]",
-    ANNULÉE: "text-[#090909]",
-    LIVRAISON: "text-red-600",
-    PRÊT: "text-[#17C964]",
-    TERMINÉ: "text-[#17C964]",
-  };
-
-  // ✅ Utiliser statusDisplayText si disponible, sinon fallback sur status
-  const displayText = order.statusDisplayText || order.status;
-
-  return (
-    <span className={`font-medium text-sm ${styles[order.status]}`}>
-      {displayText}
-    </span>
-  );
-};
-// Fonction utilitaire pour formater l'adresse
-const formatAddress = (addressString: string) => {
-  try {
-    const addressObj = JSON.parse(addressString);
-    // Pour l'affichage court, on ne prend que la ville
-    const shortDisplay = addressObj.city || "Ville non disponible";
-
-    // Pour le tooltip, on garde l'adresse complète
-    const fullParts = [];
-    if (addressObj.formattedAddress) {
-      return {
-        short: shortDisplay,
-        full: addressObj.formattedAddress,
-      };
-    }
-
-    if (addressObj.title) fullParts.push(addressObj.title);
-    if (addressObj.address || addressObj.road)
-      fullParts.push(addressObj.address || addressObj.road);
-    if (addressObj.city) fullParts.push(addressObj.city);
-    if (addressObj.postalCode) fullParts.push(addressObj.postalCode);
-
-    return {
-      short: shortDisplay,
-      full: fullParts.join(", ") || "Adresse non disponible",
-    };
-  } catch {
-    // Si l'adresse n'est pas un JSON valide, retourner l'adresse brute
-    return {
-      short:
-        addressString.length > 20
-          ? addressString.substring(0, 20) + "..."
-          : addressString,
-      full: addressString,
-    };
-  }
-};
-
 export function OrderRow({
   order,
   isSelected,
   onSelect,
-  onAccept,
-  onReject,
-  onViewDetails,
-  onHideFromList,
-  onRemoveFromList,
   isMobile = false,
   showRestaurantColumn = true,
   showActionsColumn = true,
-  paymentStatus = "PAID",
 }: OrderRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
@@ -159,11 +59,6 @@ export function OrderRow({
           order={order}
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
-          onAccept={onAccept}
-          onReject={onReject}
-          onViewDetails={onViewDetails}
-          onHideFromList={onHideFromList}
-          onRemoveFromList={onRemoveFromList}
         />
       </div>,
       portalContainer
@@ -195,7 +90,7 @@ export function OrderRow({
             <div className="mb-3">
               <div className="font-medium text-black">{order.clientName}</div>
               <div className="text-xs text-gray-500">
-                {order.restaurant || "Restaurant inconnu"}
+                {order.restaurantName}
               </div>
               <div
                 className="text-xs text-gray-500 truncate"
@@ -206,9 +101,9 @@ export function OrderRow({
             </div>
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm font-bold text-black">
-                {(order.totalPrice || 0).toLocaleString()} F
+                {(order.amount - order.tax || 0).toLocaleString()} F
               </div>
-              <StatusBadge order={order} />
+              <OrderStatusBadge status={order.status} />
             </div>
 
             <span
@@ -220,15 +115,8 @@ export function OrderRow({
             </span>
             <div className="flex justify-between items-center my-2">
               <PaymentBadge
-                status={paymentStatus}
-                mode={
-                  order.paiements?.length > 0
-                    ? order.paiements[0].mode == "MOBILE_MONEY" &&
-                      order.paiements[0].source
-                      ? order.paiements?.[0].source
-                      : order.paiements?.[0].mode
-                    : ""
-                }
+                status={order.paymentStatus}
+                mode={order.paymentSource}
               />
             </div>
             {showActionsColumn && (
@@ -282,9 +170,7 @@ export function OrderRow({
       {/* ✅ Colonne Restaurant conditionnelle */}
       {showRestaurantColumn && (
         <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-          <span className="text-sm text-gray-500">
-            {order.restaurant || "Restaurant inconnu"}
-          </span>
+          <span className="text-sm text-gray-500">{order.restaurantName}</span>
         </td>
       )}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
@@ -300,20 +186,13 @@ export function OrderRow({
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span className="text-sm font-medium text-black">
-          {(order.totalPrice || 0).toLocaleString()} F
+          {(order.amount - order.tax || 0).toLocaleString()} F
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <PaymentBadge
-          status={paymentStatus}
-          mode={
-            order.paiements?.length > 0
-              ? order.paiements[0].mode == "MOBILE_MONEY" &&
-                order.paiements[0].source
-                ? order.paiements?.[0].source
-                : order.paiements?.[0].mode
-              : ""
-          }
+          status={order.paymentStatus}
+          mode={order.paymentSource}
         />
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
@@ -326,7 +205,7 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <StatusBadge order={order} />
+        <OrderStatusBadge status={order.status} />
       </td>
       {showActionsColumn && (
         <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">

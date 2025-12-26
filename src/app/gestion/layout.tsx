@@ -16,7 +16,7 @@ export default function GestionLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Redirection sur la page d'authentification si pas authentifié
+  // Redirection sur la page d'authentification si pas authentifié et sauvegarder l'ID du restaurant
   useAuthRedirect();
   // Responsive
   useResponsiveLayout();

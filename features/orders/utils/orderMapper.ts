@@ -1,207 +1,254 @@
+import { Order, OrderStatus, Paiement, OrderType } from "../types/order.types";
+import { OrderTable, OrderTableItem, OrderTableStatus, OrderTableType, PaymentStatus } from "../types/ordersTable.types";
 
-import {
-  Order as IOrder,
-  Paiement,
-} from "../types/order.types";
-import { Order } from "../types/ordersTable.types";
 
-// Mapper le statut API vers le statut UI
-export const mapApiStatusToUiStatus = (apiStatus: string): Order["status"] => {
-  const statusMapping: Record<string, Order["status"]> = {
-    PENDING: "NOUVELLE",
-    ACCEPTED: "EN COURS",
-    IN_PROGRESS: "EN PRÉPARATION",
-    READY: "PRÊT",
-    PICKED_UP: "LIVRAISON",
-    DELIVERED: "LIVRÉ",
-    COLLECTED: "COLLECTÉ",
-    CANCELLED: "ANNULÉE",
-    COMPLETED: "TERMINÉ",
-  };
-  return statusMapping[apiStatus] || "NOUVELLE";
+// ========================================
+// CONSTANTES DE MAPPING
+// ========================================
+
+const STATUS_MAP: Record<OrderStatus, OrderTableStatus> = {
+  [OrderStatus.PENDING]: OrderTableStatus["NOUVELLE"],
+  [OrderStatus.ACCEPTED]: OrderTableStatus["EN COURS"],
+  [OrderStatus.IN_PROGRESS]: OrderTableStatus["EN PRÉPARATION"],
+  [OrderStatus.READY]: OrderTableStatus["PRÊT"],
+  [OrderStatus.PICKED_UP]: OrderTableStatus["LIVRAISON"],
+  [OrderStatus.COLLECTED]: OrderTableStatus["COLLECTÉ"],
+  [OrderStatus.CANCELLED]: OrderTableStatus["ANNULÉE"],
+  [OrderStatus.COMPLETED]: OrderTableStatus["TERMINÉ"],
 };
 
-// Mapper le type API vers le type UI
-export const mapApiTypeToUiType = (apiType: string): Order["orderType"] => {
-  const typeMapping: Record<string, Order["orderType"]> = {
-    DELIVERY: "À livrer",
-    PICKUP: "À récupérer",
-    TABLE: "À table",
-  };
-  return typeMapping[apiType] || "À livrer";
+const TYPE_MAP: Record<OrderType, OrderTableType> = {
+  [OrderType.DELIVERY]: "À livrer",
+  [OrderType.PICKUP]: "À récupérer",
+  [OrderType.TABLE]: "À table",
 };
 
-// Extraire le nom du client
-export const extractClientName = (apiOrder: IOrder): string => {
-  if (apiOrder.customer?.first_name || apiOrder.customer?.last_name) {
-    const firstName = apiOrder.customer.first_name || "";
-    const lastName = apiOrder.customer.last_name || "";
-    return `${firstName} ${lastName}`.trim();
+const PAYMENT_METHOD_MAP: Record<string, string> = {
+  MOBILE_MONEY: "Mobile Money",
+  CASH: "Espèces",
+  CARD: "Carte bancaire",
+  WALLET: "Portefeuille",
+};
+
+const DELIVERY_SERVICE_MAP: Record<string, string> = {
+  TURBO: "Livraison Turbo",
+  FREE: "Livraison Standard",
+};
+
+const DEFAULT_IMAGE = "/images/food2.png";
+
+// ========================================
+// FONCTIONS UTILITAIRES
+// ========================================
+
+const extractClientName = (order: Order): string => {
+  const { customer, fullname } = order;
+
+  if (customer?.first_name || customer?.last_name) {
+    return `${customer.first_name || ""} ${customer.last_name || ""}`.trim();
   }
-  if (apiOrder.fullname) {
-    return apiOrder.fullname;
-  }
-  return "Client inconnu";
+
+  return fullname || "Client inconnu";
 };
 
-// Extraire et formater l'adresse
-export const extractAddress = (addressString: string): string => {
+const extractAddress = (addressString: string | null): string => {
   if (!addressString) return "Adresse non disponible";
 
   try {
-    if (addressString.startsWith("{") || addressString.startsWith("[")) {
-      const addressObj = JSON.parse(addressString);
-      if (addressObj.formattedAddress) return addressObj.formattedAddress;
+    const parsed = JSON.parse(addressString);
 
-      const parts = [];
-      if (addressObj.title) parts.push(addressObj.title);
-      if (addressObj.address || addressObj.road)
-        parts.push(addressObj.address || addressObj.road);
-      if (addressObj.city) parts.push(addressObj.city);
-      if (addressObj.postalCode) parts.push(addressObj.postalCode);
+    // Si formattedAddress existe, l'utiliser directement
+    if (parsed.formattedAddress) return parsed.formattedAddress;
 
-      return parts.join(", ") || "Adresse non disponible";
-    }
-    return addressString;
+    // Sinon construire l'adresse
+    const parts = [
+      parsed.title,
+      parsed.address || parsed.road,
+      parsed.city,
+      parsed.postalCode
+    ].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(", ") : "Adresse non disponible";
   } catch {
-    return addressString || "Adresse non disponible";
+    return addressString;
   }
 };
 
-// Formater la date
-export const formatDate = (dateString: string): string => {
+const extractPaymentMethod = (paiements?: Paiement[]): string => {
+  if (!paiements?.length) return "";
+
+  const mode = paiements[0].mode;
+
+  return PAYMENT_METHOD_MAP[mode] || mode;
+};
+
+const extractPaymentSource = (paiements?: Paiement[]): string => {
+  if (!paiements?.length) return "";
+
+  const source = paiements[0].source;
+
+  return (source || "").toUpperCase();
+};
+
+const extractPaymentMode = (paiements?: Paiement[]): string => {
+  if (!paiements?.length) return "Non renseigné";
+
+  const methode = extractPaymentMethod(paiements);
+  const source = extractPaymentSource(paiements);
+  return methode + " : " + source;
+};
+
+const validateImageUrl = (url?: string | null): string => {
+  if (!url?.trim()) return DEFAULT_IMAGE;
+
+  const cleanUrl = url.trim();
+  if (cleanUrl.startsWith("/") || cleanUrl.startsWith("http")) {
+    return cleanUrl;
+  }
+
+  return DEFAULT_IMAGE;
+};
+
+export const getPaymentStatus = (order: Order): PaymentStatus => {
+  if (
+    order.status === OrderStatus.CANCELLED &&
+    order.paiements &&
+    order.paiements.length > 0
+  ) {
+    const hasRevertedPayment = order.paiements?.some(
+      (p) => p.status === "REVERTED"
+    );
+    return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
+  }
+  if (order.paied == false) {
+    return "UNPAID";
+  }
+  return "PAID";
+};
+
+const formatDate = (dateString: string | null): string => {
   if (!dateString) return new Date().toLocaleDateString("fr-FR");
 
   try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("fr-FR");
+    return new Date(dateString).toLocaleDateString("fr-FR");
   } catch {
     return new Date().toLocaleDateString("fr-FR");
   }
 };
 
-// Extraire le mode de paiement
-export const extractPaymentMethod = (paiements: Paiement[]): string => {
-  if (!paiements || paiements.length === 0) return "Non renseigné";
+const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
+  if (!orderItems?.length) return [];
 
-  const firstPayment = paiements[0];
-  if (firstPayment.mode) {
-    const methodMapping: Record<string, string> = {
-      MOBILE_MONEY: "Mobile Money",
-      CASH: "Espèces",
-      CARD: "Carte bancaire",
+  return orderItems.map((item) => {
+    const supplementNames = item.supplements?.map(s => s.name).join(", ") || "";
+    const supplementsPrice = item.supplements?.reduce((sum, s) => sum + s.price, 0) || 0;
+
+    return {
+      id: item.id,
+      name: item.dish?.name || "Article inconnu",
+      quantity: item.quantity,
+      price: item.amount,
+      image: validateImageUrl(item.dish?.image),
+      epice: item.epice,
+      supplements: supplementNames,
+      supplementsPrice,
     };
-    return methodMapping[firstPayment.mode] || firstPayment.mode;
-  }
-
-  return "Non renseigné";
+  });
 };
 
-// Valider et nettoyer les URLs d'images
-export const validateImageUrl = (
-  imageUrl: string | undefined | null
-): string => {
-  if (!imageUrl || typeof imageUrl !== "string" || imageUrl.trim() === "") {
-    return "/images/food2.png";
-  }
+// ========================================
+// FONCTION DE MAPPING PRINCIPALE
+// ========================================
 
-  const cleanUrl = imageUrl.trim();
-
-  if (
-    cleanUrl.startsWith("/") ||
-    cleanUrl.startsWith("http://") ||
-    cleanUrl.startsWith("https://")
-  ) {
-    return cleanUrl;
-  }
-
-  return "/images/food2.png";
-};
-
-// Extraire les items de commande
-export const extractItems = (
-  orderItems: IOrder["order_items"]
-): Order["items"] => {
-  if (!Array.isArray(orderItems)) return [];
-
-  return orderItems.map((item) => ({
-    id: item.id || "",
-    name: item.dish?.name || "Article inconnu",
-    quantity: item.quantity || 1,
-    price: item.amount || item.dish?.price || 0,
-    image: validateImageUrl(item.dish?.image),
-    epice: item.epice,
-    supplemens:
-      item.supplements?.map((supplement) => supplement.name).join(", ") || "",
-    supplementsPrice:
-      item.supplements?.reduce(
-        (total, supplement) => total + supplement.price,
-        0
-      ) || 0,
-  }));
-};
-
-// Mapper une commande API complète vers une commande UI
-export const mapApiOrderToUiOrder = (apiOrder: IOrder): Order => {
+export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
   return {
     // Identifiants
-    id: apiOrder.id || "",
-    reference: apiOrder.reference || "REF-INCONNUE",
-    orderNumber: apiOrder.reference || "",
+    id: order.id,
+    reference: order.reference || "Référence non disponible",
 
-    // Informations client
-    clientName: extractClientName(apiOrder),
-    clientEmail: apiOrder.customer?.email || apiOrder.email || "",
-    clientPhone: apiOrder.customer?.phone || apiOrder.phone || "",
-    userId: apiOrder.customer_id || "",
+    // Client
+    clientName: extractClientName(order),
+    clientEmail: order.customer?.email || order.email || "",
+    clientPhone: order.customer?.phone || order.phone || "",
+    customerId: order.customer_id,
 
     // Dates
-    date: formatDate(apiOrder?.date!),
-    createdAt: apiOrder.created_at || "",
-    updatedAt: apiOrder.updated_at || "",
+    date: formatDate(order.date),
+    createdAt: order.created_at,
+    updatedAt: order.updated_at,
+    completedAt: order.completed_at,
+    paiedAt: order.paied_at,
 
-    // Statut et type
-    status: mapApiStatusToUiStatus(apiOrder.status),
-    statusDisplayText: mapApiStatusToUiStatus(apiOrder.status),
-    orderType: mapApiTypeToUiType(apiOrder.type),
+    // Statut
+    status: STATUS_MAP[order.status],
+    orderType: TYPE_MAP[order.type],
 
-    // Prix
-    totalPrice: apiOrder.amount || 0,
-    deliveryPrice: apiOrder.delivery_fee || 0,
-    subtotal: apiOrder.net_amount || apiOrder.amount || 0,
-    tax: apiOrder.tax || 0,
-    discount: apiOrder.discount || 0,
+    // Montants
+    amount: order.amount,
+    netAmount: order.net_amount,
+    deliveryFee: order.delivery_fee,
+    tax: order.tax,
+    discount: order.discount,
 
-    // Localisation
-    address: extractAddress(apiOrder?.address),
-    tableNumber: "",
-    tableType: apiOrder.table_type || "",
-    numberOfGuests: apiOrder.places || 0,
+    // Livraison/Table
+    address: extractAddress(order.address),
+    deliveryService: DELIVERY_SERVICE_MAP[order.delivery_service] || order.delivery_service,
+    estimatedDeliveryTime: order.estimated_delivery_time,
+    estimatedPreparationTime: order.estimated_preparation_time,
+    tableType: order.table_type,
+    places: order.places,
 
     // Restaurant
-    restaurant: apiOrder.restaurant?.name || "Restaurant inconnu",
-    restaurantId: apiOrder.restaurant_id || "",
+    restaurantId: order.restaurant_id,
+    restaurantName: order.restaurant?.name || "Restaurant inconnu",
 
     // Items
-    items: extractItems(apiOrder.order_items),
+    items: mapOrderItems(order.order_items),
 
     // Paiement
-    paymentMethod: extractPaymentMethod(apiOrder.paiements),
-    paymentStatus: apiOrder.paied ? "PAID" : "PENDING",
-    paiements: apiOrder.paiements || [],
-    paied: apiOrder.paied,
+    paied: order.paied,
+    paymentStatus: getPaymentStatus(order),
+    paymentMethod: extractPaymentMethod(order.paiements),
+    paymentSource: extractPaymentSource(order.paiements),
+    paymentMode: extractPaymentMode(order.paiements),
+    paiements: order.paiements || [],
+
+    // Bonus/Promo
+    points: order.points,
+    codePromo: order.code_promo,
+    promotionId: order.promotion_id,
+    zoneId: order.zone_id,
 
     // Notes
-    notes: apiOrder.note || "",
-    specialInstructions: "",
+    note: order.note,
 
     // Métadonnées
-    source: "APP",
-    platform: "WEB",
-    estimatedDelivery: apiOrder.estimated_delivery_time || "",
-
-    // État UI
-    hidden: false,
-    auto: apiOrder.auto,
+    auto: order.auto,
   };
+};
+
+// ========================================
+// FONCTIONS D'EXPORT SUPPLÉMENTAIRES
+// ========================================
+
+// Pour mapper plusieurs commandes
+export const mapApiOrdersToUiOrders = (orders: Order[]): OrderTable[] => {
+  return orders.map(mapApiOrderToUiOrder);
+};
+
+// Pour vérifier si une commande peut être modifiée
+export const canEditOrder = (status: OrderStatus): boolean => {
+  return ![
+    OrderStatus.CANCELLED,
+    OrderStatus.COMPLETED,
+    OrderStatus.COLLECTED
+  ].includes(status);
+};
+
+// Pour vérifier si une commande peut être annulée
+export const canCancelOrder = (status: OrderStatus): boolean => {
+  return [
+    OrderStatus.PENDING,
+    OrderStatus.ACCEPTED
+  ].includes(status);
 };

@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-
-export type PaymentStatus = "PAID" | "UNPAID" | "REFUNDED" | "TO_REFUND";
+import { PaymentStatus } from "../types/ordersTable.types";
 
 interface PaymentBadgeProps {
   status: PaymentStatus;
@@ -58,7 +57,8 @@ export default function PaymentBadge({
         ${className}
       `}
     >
-      {config.text}-<span className="text-xs uppercase">{mode}</span>
+      {config.text}
+      {mode && <span className="text-xs uppercase">-{mode}</span>}
     </span>
   );
 }

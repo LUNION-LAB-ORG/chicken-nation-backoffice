@@ -1,76 +1,51 @@
-import { useState, useCallback, useEffect } from "react";
-import { toast } from "react-hot-toast";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { Order } from "../types/ordersTable.types";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 interface UseOrderSelectionProps {
   orders: Order[];
-  canDeleteCommande: boolean;
-  canUpdateCommande: boolean;
-  searchQuery?: string;
 }
 
 export const useOrderSelection = ({
   orders,
-  canDeleteCommande,
-  canUpdateCommande,
-  searchQuery,
 }: UseOrderSelectionProps) => {
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const { orders: { filters, pagination } } = useDashboardStore();
 
-  // Vérifier les permissions
-  const hasSelectionPermission = canDeleteCommande || canUpdateCommande;
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
 
   // Sélectionner/Désélectionner toutes les commandes
   const handleSelectAll = useCallback(
     (checked: boolean) => {
-      if (!hasSelectionPermission) {
-        toast.error(
-          "Vous n'avez pas les permissions pour sélectionner les commandes"
-        );
-        return;
-      }
-
-      if (checked) {
-        setSelectedOrders(orders.map((order) => order.id));
-      } else {
-        setSelectedOrders([]);
-      }
+      setSelectedOrders(checked ? orders.map((order) => order.id) : []);
     },
-    [orders, hasSelectionPermission]
+    [orders]
   );
 
   // Sélectionner/Désélectionner une commande
   const handleSelectOrder = useCallback(
     (orderId: string, checked: boolean) => {
-      if (!hasSelectionPermission) {
-        toast.error(
-          "Vous n'avez pas les permissions pour sélectionner les commandes"
-        );
-        return;
-      }
-
-      if (checked) {
-        setSelectedOrders((prev) => [...prev, orderId]);
-      } else {
-        setSelectedOrders((prev) => prev.filter((id) => id !== orderId));
-      }
+      setSelectedOrders((prev) =>
+        checked ? [...prev, orderId] : prev.filter((id) => id !== orderId)
+      );
     },
-    [hasSelectionPermission]
+    [orders]
   );
 
-  // Vérifier si toutes les commandes sont sélectionnées
-  const isAllSelected =
-    selectedOrders.length > 0 && selectedOrders.length === orders.length;
+  // Mémoriser le calcul de isAllSelected
+  const isAllSelected = useMemo(
+    () => orders.length > 0 && selectedOrders.length === orders.length,
+    [selectedOrders.length, orders.length]
+  );
 
-  // Vider les sélections quand la recherche change
-  useEffect(() => {
-    setSelectedOrders([]);
-  }, [searchQuery]);
-
-  // Fonction pour vider les sélections manuellement
+  // Vider les sélections
   const clearSelection = useCallback(() => {
     setSelectedOrders([]);
   }, []);
+
+  // Effet unique pour vider les sélections lors des changements
+  useEffect(() => {
+    clearSelection();
+  }, [filters?.active_filter, filters?.date, filters?.search, pagination.page, pagination.limit, clearSelection]);
 
   return {
     selectedOrders,
@@ -78,6 +53,5 @@ export const useOrderSelection = ({
     handleSelectAll,
     handleSelectOrder,
     clearSelection,
-    hasSelectionPermission,
   };
 };

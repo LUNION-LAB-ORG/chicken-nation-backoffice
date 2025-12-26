@@ -5,7 +5,7 @@ import {  ImageIcon } from 'lucide-react'
 import { PromoCardData } from './PromoCard'
 import Image from 'next/image'
 import styles from './PersonalizedPromo.module.css'
-import DatePicker from '../Orders/DatePicker'
+import DatePicker from '../../../../features/orders/components/filtrage/DatePicker'
 import { toast } from 'react-hot-toast'
 import {
   createPromotionFromUnified,

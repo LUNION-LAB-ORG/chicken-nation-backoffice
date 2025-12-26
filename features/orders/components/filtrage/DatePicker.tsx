@@ -1,7 +1,12 @@
-"use client"
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, CalendarDays } from 'lucide-react'
+import React, { useState, useRef, useEffect } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  CalendarDays,
+} from "lucide-react";
 
 interface DatePickerProps {
   selectedDate: Date;
@@ -9,23 +14,32 @@ interface DatePickerProps {
   onClose: () => void;
 }
 
-type DatePickerMode = 'day' | 'month';
+type DatePickerMode = "day" | "month";
 
-const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose }) => {
-  const [currentMonth, setCurrentMonth] = useState<Date>(new Date(selectedDate));
-  const [mode, setMode] = useState<DatePickerMode>('day');
+const DatePicker: React.FC<DatePickerProps> = ({
+  selectedDate = new Date(),
+  onChange,
+  onClose,
+}) => {
+  const [currentMonth, setCurrentMonth] = useState<Date>(
+    new Date(selectedDate)
+  );
+  const [mode, setMode] = useState<DatePickerMode>("day");
   const pickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
+      if (
+        pickerRef.current &&
+        !pickerRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [onClose]);
 
@@ -46,7 +60,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       days.push({
         date: new Date(year, month - 1, prevMonthDays - i),
         isCurrentMonth: false,
-        isToday: false
+        isToday: false,
       });
     }
 
@@ -60,7 +74,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       days.push({
         date,
         isCurrentMonth: true,
-        isToday: date.getTime() === today.getTime()
+        isToday: date.getTime() === today.getTime(),
       });
     }
 
@@ -72,7 +86,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       days.push({
         date: new Date(year, month + 1, i),
         isCurrentMonth: false,
-        isToday: false
+        isToday: false,
       });
     }
 
@@ -91,7 +105,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       months.push({
         date,
         isCurrentMonth: year === currentYear && month === currentMonth,
-        isSelected: year === selectedDate.getFullYear() && month === selectedDate.getMonth()
+        isSelected:
+          year === selectedDate.getFullYear() &&
+          month === selectedDate.getMonth(),
       });
     }
 
@@ -100,24 +116,32 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
 
   // Navigation
   const goToPrevious = () => {
-    if (mode === 'day') {
-      setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    if (mode === "day") {
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1)
+      );
     } else {
-      setCurrentMonth(new Date(currentMonth.getFullYear() - 1, currentMonth.getMonth(), 1));
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear() - 1, currentMonth.getMonth(), 1)
+      );
     }
   };
 
   const goToNext = () => {
-    if (mode === 'day') {
-      setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+    if (mode === "day") {
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1)
+      );
     } else {
-      setCurrentMonth(new Date(currentMonth.getFullYear() + 1, currentMonth.getMonth(), 1));
+      setCurrentMonth(
+        new Date(currentMonth.getFullYear() + 1, currentMonth.getMonth(), 1)
+      );
     }
   };
 
   // Formatters
   const formatMonthYear = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return date.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
   };
 
   const formatYear = (date: Date) => {
@@ -125,44 +149,53 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
   };
 
   const formatMonthName = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', { month: 'long' });
+    return date.toLocaleDateString("fr-FR", { month: "long" });
   };
 
   // Vérifications
   const isSelectedDate = (date: Date) => {
-    return date.getDate() === selectedDate.getDate() &&
-           date.getMonth() === selectedDate.getMonth() &&
-           date.getFullYear() === selectedDate.getFullYear();
+    return (
+      date.getDate() === selectedDate.getDate() &&
+      date.getMonth() === selectedDate.getMonth() &&
+      date.getFullYear() === selectedDate.getFullYear()
+    );
   };
 
   // Sélection de mois entier
   const selectMonth = (monthDate: Date) => {
     // Sélectionner le premier jour du mois
-    const firstDayOfMonth = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+    const firstDayOfMonth = new Date(
+      monthDate.getFullYear(),
+      monthDate.getMonth(),
+      1
+    );
     onChange(firstDayOfMonth);
     onClose();
   };
 
   // Jours de la semaine (commençant par lundi)
-  const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const weekdays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
   // Obtenir les données à afficher selon le mode
-  const days = mode === 'day' ? getDaysInMonth(currentMonth) : [];
-  const months = mode === 'month' ? getMonthsInYear(currentMonth.getFullYear()) : [];
+  const days = mode === "day" ? getDaysInMonth(currentMonth) : [];
+  const months =
+    mode === "month" ? getMonthsInYear(currentMonth.getFullYear()) : [];
 
   return (
     <div
       ref={pickerRef}
       className="absolute z-50 top-full mt-1 right-0 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-3"
-      style={{ maxHeight: '400px', overflowY: 'auto' }}
+      style={{ maxHeight: "400px", overflowY: "auto" }}
     >
       {/* Toggle entre jour et mois */}
       <div className="flex items-center justify-center mb-3 bg-gray-100 rounded-lg p-1">
         <button
           type="button"
-          onClick={() => setMode('day')}
+          onClick={() => setMode("day")}
           className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-            mode === 'day' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+            mode === "day"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
           }`}
         >
           <CalendarDays size={12} />
@@ -170,9 +203,11 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
         </button>
         <button
           type="button"
-          onClick={() => setMode('month')}
+          onClick={() => setMode("month")}
           className={`flex items-center gap-1 px-3 py-1 rounded-md text-xs font-medium transition-colors ${
-            mode === 'month' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+            mode === "month"
+              ? "bg-white text-gray-900 shadow-sm"
+              : "text-gray-600 hover:text-gray-900"
           }`}
         >
           <Calendar size={12} />
@@ -190,7 +225,9 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
           <ChevronLeft size={16} />
         </button>
         <div className="text-sm font-medium text-gray-700">
-          {mode === 'day' ? formatMonthYear(currentMonth) : formatYear(currentMonth)}
+          {mode === "day"
+            ? formatMonthYear(currentMonth)
+            : formatYear(currentMonth)}
         </div>
         <button
           type="button"
@@ -202,11 +239,11 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       </div>
 
       {/* Mode jour */}
-      {mode === 'day' && (
+      {mode === "day" && (
         <>
           {/* Jours de la semaine */}
           <div className="grid grid-cols-7 gap-1 mb-1">
-            {weekdays.map(day => (
+            {weekdays.map((day) => (
               <div key={day} className="text-center text-xs text-gray-500 py-1">
                 {day}
               </div>
@@ -225,9 +262,13 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
                 }}
                 className={`
                   h-8 w-8 text-xs rounded-full flex items-center justify-center cursor-pointer transition-colors
-                  ${!day.isCurrentMonth ? 'text-gray-300' : ''}
-                  ${day.isToday ? 'bg-orange-100 text-orange-700' : ''}
-                  ${isSelectedDate(day.date) ? 'bg-[#F17922] text-white' : 'hover:bg-gray-100'}
+                  ${!day.isCurrentMonth ? "text-gray-300" : ""}
+                  ${day.isToday ? "bg-orange-100 text-orange-700" : ""}
+                  ${
+                    isSelectedDate(day.date)
+                      ? "bg-[#F17922] text-white"
+                      : "hover:bg-gray-100"
+                  }
                 `}
               >
                 {day.date.getDate()}
@@ -238,7 +279,7 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
       )}
 
       {/* Mode mois */}
-      {mode === 'month' && (
+      {mode === "month" && (
         <div className="grid grid-cols-3 gap-2">
           {months.map((month, index) => (
             <button
@@ -247,8 +288,12 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onChange, onClose
               onClick={() => selectMonth(month.date)}
               className={`
                 px-2 py-2 text-xs rounded-lg flex items-center justify-center cursor-pointer transition-colors font-medium
-                ${month.isCurrentMonth ? 'bg-orange-100 text-orange-700' : ''}
-                ${month.isSelected ? 'bg-[#F17922] text-white' : 'hover:bg-gray-100 text-gray-700'}
+                ${month.isCurrentMonth ? "bg-orange-100 text-orange-700" : ""}
+                ${
+                  month.isSelected
+                    ? "bg-[#F17922] text-white"
+                    : "hover:bg-gray-100 text-gray-700"
+                }
               `}
             >
               {formatMonthName(month.date)}

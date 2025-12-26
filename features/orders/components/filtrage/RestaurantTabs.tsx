@@ -1,22 +1,28 @@
 "use client";
 
 import React from "react";
-import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
+import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 interface RestaurantTabsProps {
-  selectedRestaurant: string | null;
-  onSelectRestaurant: (restaurantId: string | null) => void;
   showAllTab?: boolean;
 }
 
 const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
-  selectedRestaurant,
-  onSelectRestaurant,
   showAllTab = true,
 }) => {
+  const { selectedRestaurantId, setSelectedRestaurantId, setPagination } =
+    useDashboardStore();
+
   const { data: restaurantsAll, isLoading } = useRestaurantListQuery();
 
   const restaurants = restaurantsAll?.data;
+
+  const handleRestaurantChange = (restaurantId: string | null) => {
+    setSelectedRestaurantId(restaurantId);
+    setPagination("orders", 1, 10);
+  };
+
   if (!showAllTab) return <></>;
   return (
     <div className="mb-6 w-full">
@@ -30,13 +36,13 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
             className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
-                  selectedRestaurant === null
+                  selectedRestaurantId === null
                     ? "bg-[#F17922] text-white font-bold shadow-none"
                     : "bg-transparent text-[#71717A] font-normal"
                 }
               `}
             style={{ minWidth: 75, height: 30 }}
-            onClick={() => onSelectRestaurant(null)}
+            onClick={() => handleRestaurantChange(null)}
           >
             Tous les restaurants
           </button>
@@ -47,14 +53,14 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
                 className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
-                  selectedRestaurant === restaurant.id
+                  selectedRestaurantId === restaurant.id
                     ? "bg-[#F17922] text-white font-bold shadow-none"
                     : "bg-transparent text-[#71717A] font-normal"
                 }
                 ml-1
               `}
                 style={{ minWidth: 75, height: 30 }}
-                onClick={() => onSelectRestaurant(restaurant.id)}
+                onClick={() => handleRestaurantChange(restaurant.id)}
               >
                 {restaurant.name}
               </button>

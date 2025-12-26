@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Checkbox from '@/components/ui/Checkbox'
 import { type Client } from './ClientsTable'
-import { StatusBadge } from '@/components/gestion/Orders/StatusBadge'
+import { StatusBadge } from '@/components/gestion/Clients/StatusBadge'
 import { Menu, User } from 'lucide-react'
 import { useRBAC } from '@/hooks/useRBAC'
 

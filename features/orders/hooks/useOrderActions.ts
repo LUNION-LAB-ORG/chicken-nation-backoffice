@@ -1,131 +1,85 @@
-import { useCallback } from "react";
-import { toast } from "react-hot-toast";
-import { deleteOrder } from "@/services/orderService";
-import { useOrderStore } from "@/store/orderStore";
-import { useRBAC } from "@/hooks/useRBAC";
+import { getRawOrderById } from "@/services/orderService";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { useCallback, useState } from "react";
+import { useOrderUpdateStatusMutation } from "../queries/order-update-status.mutation";
+import { Order, OrderStatus } from "../types/order.types";
+import { OrderTable } from "../types/ordersTable.types";
 
-interface UseOrderActionsProps {
-  refetch: () => void;
-}
+export const useOrderActions = () => {
+  const { setSelectedItem, setSectionView } = useDashboardStore();
+  const [printingLoading, setPrintingLoading] = useState(false);
 
-export const useOrderActions = ({ refetch }: UseOrderActionsProps) => {
-  const { updateOrderStatus } = useOrderStore();
-  const { canAcceptCommande, canRejectCommande, canDeleteCommande } = useRBAC();
+  // mutation pour mise à jour du statut de la commande
+  const {
+    mutateAsync: updateOrderStatus,
+    isPending: isUpdateStatusLoading,
+  } = useOrderUpdateStatusMutation();
 
-  // Accepter une commande
-  const handleAcceptOrder = useCallback(
-    async (orderId: string) => {
-      if (!canAcceptCommande()) {
-        toast.error(
-          "Vous n'avez pas les permissions pour accepter les commandes"
-        );
-        return;
-      }
-
-      try {
-        await updateOrderStatus(orderId, "ACCEPTED");
-        toast.success(`Commande ${orderId} acceptée`);
-        refetch();
-      } catch (error) {
-        console.error("[handleAcceptOrder] Erreur:", error);
-        toast.error(
-          `Erreur: ${
-            error instanceof Error
-              ? error.message
-              : "Impossible d'accepter la commande"
-          }`
-        );
-      }
-    },
-    [refetch, canAcceptCommande, updateOrderStatus]
-  );
-
-  // Refuser une commande
-  const handleRejectOrder = useCallback(
-    async (orderId: string) => {
-      if (!canRejectCommande()) {
-        toast.error(
-          "Vous n'avez pas les permissions pour refuser les commandes"
-        );
-        return;
-      }
-
-      try {
-        await updateOrderStatus(orderId, "CANCELLED");
-        toast.success(`Commande ${orderId} refusée`);
-        refetch();
-      } catch (error) {
-        console.error("[handleRejectOrder] Erreur:", error);
-        toast.error(
-          `Erreur: ${
-            error instanceof Error
-              ? error.message
-              : "Impossible de refuser la commande"
-          }`
-        );
-      }
-    },
-    [refetch, canRejectCommande, updateOrderStatus]
-  );
-
-  // Masquer une commande
-  const handleHideOrder = useCallback((orderId: string) => {
-    toast.success(`Commande ${orderId} masquée de la liste`);
+  // fonction pour imprimer la commande
+  const printOrder = useCallback((order: Order) => {
+    if (
+      typeof window !== "undefined" &&
+      window.flutter_inappwebview?.callHandler
+    ) {
+      console.log("Printing order:", order);
+      window.flutter_inappwebview.callHandler("printDocument", order);
+    } else {
+      console.warn("Printing non disponible");
+    }
   }, []);
 
-  // Supprimer une commande
-  const handleRemoveOrder = useCallback(
-    async (orderId: string) => {
-      if (!canDeleteCommande()) {
-        toast.error(
-          "Vous n'avez pas les permissions pour supprimer les commandes"
-        );
-        return;
-      }
-
-      try {
-        await deleteOrder(orderId);
-        toast.success(`Commande ${orderId} retirée de la liste`);
-        refetch();
-      } catch (error) {
-        console.error("Erreur lors de la suppression:", error);
-        toast.error(
-          `Erreur: ${
-            error instanceof Error
-              ? error.message
-              : "Impossible de supprimer la commande"
-          }`
-        );
-      }
+  // handle pour voir les détails de la commande
+  const handleViewOrderDetails = useCallback(
+    (order: OrderTable) => {
+      setSelectedItem("orders", order);
+      setSectionView("orders", "view");
     },
-    [refetch, canDeleteCommande]
+    [setSelectedItem, setSectionView]
   );
 
-  // Définir le temps de préparation
-  const handleSetPreparationTime = useCallback(
-    (orderId: string, preparationTime: number, deliveryTime: number) => {
-      // TODO: Implémenter l'appel API
-      console.log("Définir temps de préparation:", {
-        orderId,
-        preparationTime,
-        deliveryTime,
-        totalTime: preparationTime + deliveryTime,
-      });
+  // handle de mise à jour de statut de la commande
+  const handleOrderUpdateStatus = useCallback(
+    async (orderId: string, status: OrderStatus) => {
+      try {
+        const order = await updateOrderStatus({ id: orderId, status });
 
-      toast.success(
-        `Temps de préparation défini: ${
-          preparationTime + deliveryTime
-        } minutes (${preparationTime}min préparation + ${deliveryTime}min livraison)`
-      );
+        if (status === OrderStatus.ACCEPTED) {
+          printOrder(order);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour du statut :", error);
+      }
     },
-    []
+    [updateOrderStatus, printOrder]
+  );
+
+  // handle pour imprimer la commande
+  const handlePrintOrder = useCallback(
+    async (orderId: string) => {
+      try {
+        setPrintingLoading(true);
+        const order = await getRawOrderById(orderId);
+
+        if (!order) {
+          throw new Error("Commande introuvable");
+        }
+
+        printOrder(order);
+        return true;
+      } catch (error) {
+        console.error("Erreur impression commande :", error);
+        return false;
+      } finally {
+        setPrintingLoading(false);
+      }
+    },
+    [printOrder]
   );
 
   return {
-    handleAcceptOrder,
-    handleRejectOrder,
-    handleHideOrder,
-    handleRemoveOrder,
-    handleSetPreparationTime,
+    handleViewOrderDetails,
+    handleOrderUpdateStatus,
+    handlePrintOrder,
+    isLoading: isUpdateStatusLoading || printingLoading,
   };
 };

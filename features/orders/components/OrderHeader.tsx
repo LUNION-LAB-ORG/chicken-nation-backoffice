@@ -3,49 +3,39 @@
 import React from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import ExportDropdown from "@/components/ui/ExportDropdown";
-import { useOrdersQuery } from "@/hooks/useOrdersQuery";
 import { useRBAC } from "@/hooks/useRBAC";
+import { useDashboardStore, ViewType } from "@/store/dashboardStore";
+import { Order } from "../types/order.types";
 
 interface OrderHeaderProps {
-  currentView: "list" | "create" | "edit" | "view";
-  onBack?: () => void;
-  onCreateOrder: () => void;
-  onSearch?: (searchQuery: string) => void;
-  // ✅ Paramètres nécessaires pour useOrdersQuery
-  activeFilter?: string;
-  selectedRestaurant?: string;
-  searchQuery?: string;
-  selectedDate?: Date | null;
-  // ✅ Nouveaux props pour les commandes en attente
+  orders: Order[];
+  currentView: ViewType;
   hasPendingOrders?: boolean;
   pendingOrdersCount?: number;
-  isSoundPlaying?: boolean;
 }
 
 function OrderHeader({
+  orders,
   currentView = "list",
-  onBack,
-  onSearch,
-  onCreateOrder,
-  activeFilter = "all",
-  selectedRestaurant,
-  searchQuery = "",
-  selectedDate = null,
   hasPendingOrders = false,
   pendingOrdersCount = 0,
-  isSoundPlaying = false,
 }: OrderHeaderProps) {
-  const { orders: realOrders } = useOrdersQuery({
-    activeFilter,
-    selectedRestaurant,
-    searchQuery,
-    selectedDate,
-  });
+  const {
+    orders: { filters },
+    setFilter,
+    setSectionView,
+    setPagination,
+  } = useDashboardStore();
 
   const { canCreateCommande } = useRBAC();
 
   const handleSearch = (query: string) => {
-    onSearch?.(query);
+    setFilter("orders", "search", query);
+    setPagination("orders", 1, 10);
+  };
+
+  const handleViewChange = (newView: "list" | "create" | "edit" | "view") => {
+    setSectionView("orders", newView);
   };
 
   if (currentView === "list") {
@@ -57,6 +47,7 @@ function OrderHeader({
           searchConfig={{
             placeholder: "Rechercher par référence...",
             buttonText: "Chercher",
+            value: filters?.search,
             onSearch: handleSearch,
             realTimeSearch: true,
           }}
@@ -66,7 +57,7 @@ function OrderHeader({
               ? [
                   {
                     label: "Créer une commande",
-                    onClick: onCreateOrder,
+                    onClick: () => handleViewChange("create"),
                     variant: "secondary" as const,
                     className:
                       "bg-white border border-[#F17922] text-[#F17922] hover:bg-white hover:opacity-80",
@@ -77,7 +68,7 @@ function OrderHeader({
               label: "Exporter",
               onClick: () => {}, // Sera remplacé par le dropdown
               customComponent: (
-                <ExportDropdown orders={realOrders} buttonText="Exporter" />
+                <ExportDropdown orders={orders} buttonText="Exporter" />
               ),
             },
           ]}
@@ -99,7 +90,7 @@ function OrderHeader({
   return (
     <DashboardPageHeader
       mode={currentView === "view" ? "detail" : currentView}
-      onBack={onBack}
+      onBack={() => handleViewChange("list")}
       title={
         currentView === "create"
           ? "Créer une commande"
@@ -113,7 +104,7 @@ function OrderHeader({
           label: "Exporter",
           onClick: () => {}, // Sera remplacé par le dropdown
           customComponent: (
-            <ExportDropdown orders={realOrders} buttonText="Exporter" />
+            <ExportDropdown orders={orders} buttonText="Exporter" />
           ),
         },
       ]}

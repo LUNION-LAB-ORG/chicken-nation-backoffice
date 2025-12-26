@@ -1,49 +1,43 @@
 import React from "react";
 import { format } from "date-fns";
 import SafeImage from "@/components/ui/SafeImage";
-import PaymentBadge from "@/components/gestion/Orders/PaymentBadge";
-import { getPaymentStatus } from "../../utils/orderUtils";
-import { getWorkflowConfig } from "../../utils/workflowConfig";
-import { Order } from "../../types/ordersTable.types";
+import PaymentBadge from "../PaymentBadge";
+import { OrderTable } from "../../types/ordersTable.types";
+import { useOrderWorkFlow } from "../../hooks/useOrderWorkFlow";
 
 interface OrderInfoSectionProps {
-  order: Order;
-  restaurantName: string;
-  orderType: string;
-  orderReference: string;
-  paymentMethod: string;
-  currentStatus: string;
+  order: OrderTable;
 }
 
-const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({
-  order,
-  restaurantName,
-  orderType,
-  orderReference,
-  paymentMethod,
-  currentStatus,
-}) => {
-  const workflowConfig = getWorkflowConfig(orderType, currentStatus);
-
+const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
+  const {
+    getWorkFlow: { badgeText },
+  } = useOrderWorkFlow({
+    order,
+  });
   return (
     <div className="mb-4 md:mb-6">
       <div className="flex justify-between items-center">
         <h2 className="xl:text-lg text-sm font-medium text-[#F17922]">
           Information sur la commande{" "}
-          <span className="text-xs font-bold ">#{orderReference}</span>
+          <span className="text-xs font-bold ">#{order.reference}</span>
         </h2>
         <div className="flex items-center space-x-2">
-          <span className="px-3 py-1.5 border-1 border-[#FBD2B5] font-bold text-[#FF3B30] text-[10px] lg:text-xs rounded-lg">
-            {workflowConfig.badgeText}
-          </span>
+          {badgeText && (
+            <span className="px-3 py-1.5 border-1 border-[#FBD2B5] font-bold text-[#FF3B30] text-[10px] lg:text-xs rounded-lg">
+              {badgeText}
+            </span>
+          )}
         </div>
       </div>
 
       <div className="mt-3 md:mt-4 space-y-3 md:space-y-4">
         <div className="flex gap-40 items-center">
-          <p className="lg:text-sm text-xs text-gray-500">Restaurant</p>
+          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            Restaurant
+          </p>
           <p className="font-bold text-[#F17922] lg:text-sm text-xs">
-            {restaurantName}
+            {order.restaurantName}
           </p>
         </div>
 
@@ -52,7 +46,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({
             Type de commande
           </p>
           <div className="inline-flex items-center rounded-[10px] px-3 py-[4px] text-xs font-medium bg-[#FBDBA7] text-[#71717A]">
-            {orderType}
+            {order.orderType}
             <SafeImage
               className="ml-2"
               src="/icons/deliver.png"
@@ -77,20 +71,21 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({
             Référence
           </p>
           <p className="font-bold text-xs lg:text-sm text-[#71717A]">
-            {orderReference}
+            {order.reference}
           </p>
         </div>
-
-        <div className="flex gap-32 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
-            Mode paiement
-          </p>
-          <div className="flex items-center">
-            <p className="font-bold text-xs lg:text-sm text-[#71717A]">
-              {paymentMethod}
+        {order.paymentMethod && (
+          <div className="flex gap-32 items-center">
+            <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+              Mode paiement
             </p>
+            <div className="flex items-center">
+              <p className="font-bold text-xs lg:text-sm text-[#71717A]">
+                {order.paymentMethod}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {order.note && (
           <div className="flex gap-32 items-center">
@@ -110,7 +105,10 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({
             Statut paiement
           </p>
           <div className="flex items-center">
-            <PaymentBadge status={getPaymentStatus(order)} />
+            <PaymentBadge
+              status={order.paymentStatus}
+              mode={order.paymentSource}
+            />
           </div>
         </div>
       </div>

@@ -1,33 +1,29 @@
-
 import SafeImage from "@/components/ui/SafeImage";
 import React from "react";
+import { OrderTable } from "../../types/ordersTable.types";
 import { getProgressStyles } from "../../utils/progressStyles";
 import { getDeliverySectionTitle } from "../../utils/workflowConfig";
 
 interface DeliveryProgressSectionProps {
-  orderType: string | undefined;
-  currentStatus: string;
-  deliveryService?: string;
+  order: OrderTable;
 }
 
 const DeliveryProgressSection: React.FC<DeliveryProgressSectionProps> = ({
-  orderType,
-  currentStatus,
-  deliveryService,
+  order,
 }) => {
-  const progressStyles = getProgressStyles(orderType, currentStatus);
+  const progressStyles = getProgressStyles(order.orderType, order.status);
 
   // Masquer pour PICKUP et TABLE
-  if (orderType === "PICKUP" || orderType === "TABLE") {
+  if (order.orderType === "À récupérer" || order.orderType === "À table") {
     return null;
   }
 
   return (
     <div className="mb-4 md:mb-8">
       <p className="text-[18px] font-medium text-[#F17922] mb-4">
-        {getDeliverySectionTitle(orderType, currentStatus)}
+        {getDeliverySectionTitle(order.orderType, order.status)}
       </p>
-      
+
       <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
         <div className="flex justify-between items-center">
           {/* Étape 1 - Restaurant */}
@@ -81,7 +77,7 @@ const DeliveryProgressSection: React.FC<DeliveryProgressSectionProps> = ({
       <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
         Processus de livraison proposé par{" "}
         <span className="text-[#71717A] font-bold">
-          {deliveryService === "TURBO" ? "Turbo Delivery" : "Chicken Nation"}
+          {order.deliveryService}
         </span>
       </p>
 

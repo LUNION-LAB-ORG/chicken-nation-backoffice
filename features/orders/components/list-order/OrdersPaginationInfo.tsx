@@ -1,21 +1,23 @@
 import React from "react";
 import { Pagination } from "@/components/ui/pagination";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 interface OrdersPaginationInfoProps {
   totalItems: number;
-  currentPage: number;
   totalPages: number;
   isLoading: boolean;
-  onPageChange: (page: number) => void;
 }
 
 export const OrdersPaginationInfo: React.FC<OrdersPaginationInfoProps> = ({
   totalItems,
-  currentPage,
   totalPages,
   isLoading,
-  onPageChange,
 }) => {
+  const {
+    orders: { pagination },
+    setPagination,
+  } = useDashboardStore();
+
   return (
     <div className="flex flex-col items-center py-4 px-2 space-y-2">
       {/* Statistiques avec indicateur de chargement */}
@@ -36,9 +38,9 @@ export const OrdersPaginationInfo: React.FC<OrdersPaginationInfoProps> = ({
 
       {/* Pagination - Toujours affichée, même avec 1 seule page */}
       <Pagination
-        currentPage={currentPage}
+        currentPage={pagination.page}
         totalPages={Math.max(1, totalPages)}
-        onPageChange={onPageChange}
+        onPageChange={(page) => setPagination("orders", page, pagination.limit)}
         isLoading={isLoading}
       />
     </div>

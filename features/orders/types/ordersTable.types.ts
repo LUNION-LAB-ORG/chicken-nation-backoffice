@@ -1,87 +1,109 @@
-import { User } from "@/services";
+import { Paiement, TypeTable } from "./order.types";
 
-export interface Order {
-  // Identifiants
+/**
+ * Représente un item d'une commande dans le tableau
+ */
+export interface OrderTableItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  image: string;
+  epice: boolean;
+  supplements: string;
+  supplementsPrice: number;
+}
+
+/**
+ * Statuts possibles d'une commande dans l'interface utilisateur
+ */
+export enum OrderTableStatus {
+  "NOUVELLE",
+  "EN COURS",
+  "EN PRÉPARATION",
+  "PRÊT",
+  "LIVRAISON",
+  "COLLECTÉ",
+  "ANNULÉE",
+  "TERMINÉ"
+}
+
+
+/**
+ * Types de commande affichés dans l'interface
+ */
+export type OrderTableType = "À livrer" | "À récupérer" | "À table";
+
+/**
+ * Statut de paiement dans l'interface
+ */
+export type PaymentStatus = "PAID" | "UNPAID" | "REFUNDED" | "TO_REFUND" | "PENDING" | "FAILED";
+
+/**
+ * Interface principale pour les commandes affichées dans le tableau
+ * Représente une commande API mappée pour l'affichage UI
+ */
+export interface OrderTable {
+  // ========== IDENTIFIANTS ==========
   id: string;
   reference: string;
-  orderNumber?: string;
 
-  // Informations client
+  // ========== CLIENT ==========
   clientName: string;
-  clientEmail?: string;
-  clientPhone?: string;
-  userId: string;
+  clientEmail: string;
+  clientPhone: string;
+  customerId: string;
 
-  // Dates
+  // ========== DATES ==========
   date: string;
-  createdAt?: string;
-  updatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  paiedAt: string | null;
 
-  // Statut et type
-  status:
-    | "NOUVELLE"
-    | "EN COURS"
-    | "EN PRÉPARATION"
-    | "LIVRÉ"
-    | "COLLECTÉ"
-    | "ANNULÉE"
-    | "LIVRAISON"
-    | "PRÊT"
-    | "TERMINÉ";
-  statusDisplayText?: string;
-  orderType: "À livrer" | "À table" | "À récupérer";
+  // ========== STATUT ==========
+  status: OrderTableStatus;
+  orderType: OrderTableType;
 
-  // Prix
-  totalPrice: number;
-  deliveryPrice: number;
-  subtotal?: number;
-  tax?: number;
-  discount?: number;
+  // ========== MONTANTS ==========
+  amount: number;
+  netAmount: number;
+  deliveryFee: number;
+  tax: number;
+  discount: number;
 
-  // Localisation
+  // ========== LIVRAISON/TABLE ==========
   address: string;
-  tableNumber?: string;
-  tableType?: string;
-  numberOfGuests?: number;
+  deliveryService: string;
+  estimatedDeliveryTime: string | null;
+  estimatedPreparationTime: string | null;
+  tableType: TypeTable | null;
+  places: number | null;
 
-  // Restaurant
-  restaurant?: string;
-  restaurantId?: string;
+  // ========== RESTAURANT ==========
+  restaurantId: string;
+  restaurantName: string;
 
-  // Items
-  items?: Array<{
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-    image?: string;
-    epice?: boolean;
-    supplemens?: string;
-    supplementsPrice?: number;
-  }>;
+  // ========== ITEMS ==========
+  items: OrderTableItem[];
 
-  // Paiement
-  paymentMethod?: string;
-  paymentStatus?: string;
-  paiements?: Array<{
-    id?: string;
-    mode?: string;
-    source?: string;
-    status?: string;
-    amount?: number;
-  }>;
+  // ========== PAIEMENT ==========
+  paied: boolean;
+  paymentStatus: PaymentStatus;
+  paymentMethod: string;
+  paymentSource: string;
+  paymentMode: string;
+  paiements: Paiement[];
 
-  // Notes
-  notes?: string;
-  specialInstructions?: string;
+  // ========== BONUS/PROMO ==========
+  points: number;
+  codePromo: string | null;
+  promotionId: string | null;
+  zoneId: string | null;
 
-  // Métadonnées
-  source?: string;
-  platform?: string;
-  estimatedDelivery?: string;
+  // ========== NOTES ==========
+  note: string | null;
 
-  paied?: boolean;
-  hidden?: boolean;
+  // ========== MÉTADONNÉES ==========
   auto: boolean;
-  note?: string;
 }
