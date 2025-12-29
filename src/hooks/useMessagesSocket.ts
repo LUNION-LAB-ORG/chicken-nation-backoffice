@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, Socket } from 'socket.io-client';
-import { SOCKET_URL } from '../../socket';
 import { NotificationAPI } from '@/services/notificationService';
+import { SOCKET_URL } from '@/config';
 
 interface SocketMessageData {
   conversationId?: string;

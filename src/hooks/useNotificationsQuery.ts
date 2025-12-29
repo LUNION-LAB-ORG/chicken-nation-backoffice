@@ -7,7 +7,7 @@ import {
 import { NotificationAPI, Notification } from "@/services/notificationService";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { SOCKET_URL } from "../../socket";
+import { SOCKET_URL } from "@/config";
 
 interface UseNotificationsQueryProps {
   userId: string;

@@ -22,6 +22,7 @@ export default function GestionLayout({
   useResponsiveLayout();
   // Gestion du modal de bienvenue
   useWelcomeModals();
+
   // Sounds
   useNotificationSounds(); // Sons gérés UNE SEULE FOIS ici
 
