@@ -1,12 +1,12 @@
-import { getRawOrderById } from "@/services/orderService";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useCallback, useState } from "react";
 import { useOrderUpdateStatusMutation } from "../queries/order-update-status.mutation";
 import { Order, OrderStatus } from "../types/order.types";
 import { OrderTable } from "../types/ordersTable.types";
+import { getOrderById } from "../services/order-service";
 
 export const useOrderActions = () => {
-  const { setSelectedItem, setSectionView } = useDashboardStore();
+  const { setSelectedItem, setSectionView, toggleModal } = useDashboardStore();
   const [printingLoading, setPrintingLoading] = useState(false);
 
   // mutation pour mise à jour du statut de la commande
@@ -46,6 +46,9 @@ export const useOrderActions = () => {
         if (status === OrderStatus.ACCEPTED) {
           printOrder(order);
         }
+        if (status === OrderStatus.CANCELLED) {
+          toggleModal("orders", "to_cancel")
+        }
       } catch (error) {
         console.error("Erreur lors de la mise à jour du statut :", error);
       }
@@ -58,7 +61,8 @@ export const useOrderActions = () => {
     async (orderId: string) => {
       try {
         setPrintingLoading(true);
-        const order = await getRawOrderById(orderId);
+
+        const order = await getOrderById(orderId);
 
         if (!order) {
           throw new Error("Commande introuvable");
@@ -76,10 +80,17 @@ export const useOrderActions = () => {
     [printOrder]
   );
 
+  const handleToggleOrderModal = useCallback(
+    (order: OrderTable, modalName: string) => {
+      toggleModal('orders', modalName)
+      setSelectedItem("orders", order)
+    }, [toggleModal, setSelectedItem])
+
   return {
     handleViewOrderDetails,
     handleOrderUpdateStatus,
     handlePrintOrder,
     isLoading: isUpdateStatusLoading || printingLoading,
+    handleToggleOrderModal
   };
 };

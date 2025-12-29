@@ -2,12 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { io } from 'socket.io-client';
 import { SOCKET_URL } from '../../socket';
-import { getOrders } from '@/services/orderService';
 import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import NotificationAPI from '@/services/notificationService';
+import { getAllOrders } from '../../features/orders/services/order-service';
+import { OrderStatus } from '../../features/orders/types/order.types';
 
 interface UsePendingOrdersSoundParams {
   activeFilter: string;
@@ -33,8 +34,8 @@ export const usePendingOrdersSound = ({
   const { data: ordersPending } = useQuery({
     queryKey: ['orders', selectedRestaurant],
     queryFn: async () => {
-      const result = await getOrders({
-        status: 'PENDING',
+      const result = await getAllOrders({
+        status: OrderStatus.PENDING,
         restaurantId: selectedRestaurant,
         limit: 1,
       });

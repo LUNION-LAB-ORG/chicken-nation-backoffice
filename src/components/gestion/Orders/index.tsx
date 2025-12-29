@@ -12,6 +12,7 @@ import { useOrderListQuery } from "../../../../features/orders/queries/order-lis
 import { OrderType } from "../../../../features/orders/types/order.types";
 import OrderHeader from "../../../../features/orders/components/OrderHeader";
 import { OrderFilters } from "../../../../features/orders/components/filtrage/OrderFilters";
+import { CancelOrderModal } from "../../../../features/orders/components/modals/CancelOrderModal";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
@@ -19,7 +20,7 @@ export default function Orders() {
   const { canCreateCommande } = useRBAC();
 
   const {
-    orders: { view, selectedItem, filters, pagination },
+    orders: { view, selectedItem, filters, pagination, modals },
     selectedRestaurantId,
   } = useDashboardStore();
 
@@ -38,7 +39,11 @@ export default function Orders() {
     restaurantId: selectedRestaurantId,
     page: pagination.page,
     reference: filters?.search,
-    startDate: filters?.date ? filters?.date.toISOString() : undefined,
+    startDate: filters?.date
+      ? typeof filters?.date == "string"
+        ? filters?.date
+        : filters?.date.toISOString()
+      : undefined,
     type:
       filters?.active_filter &&
       [OrderType.DELIVERY, OrderType.PICKUP, OrderType.TABLE].includes(
@@ -84,6 +89,10 @@ export default function Orders() {
       )}
 
       {view === "create" && canCreateCommande() && <AddOrderForm />}
+
+      {modals?.to_cancel && selectedItem && (
+        <CancelOrderModal isOpen={true} order={selectedItem} />
+      )}
     </div>
   );
 }

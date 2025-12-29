@@ -17,8 +17,13 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { handleViewOrderDetails, handleOrderUpdateStatus, isLoading } =
-    useOrderActions();
+  const {
+    handleViewOrderDetails,
+    handleOrderUpdateStatus,
+    handlePrintOrder,
+    isLoading,
+    handleToggleOrderModal,
+  } = useOrderActions();
 
   const { canAcceptCommande, canRejectCommande, canViewCommande } = useRBAC();
 
@@ -30,10 +35,8 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   };
 
   const handleReject = () => {
-    handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED);
-    if (!isLoading) {
-      onClose();
-    }
+    handleToggleOrderModal(order, "to_cancel");
+    onClose();
   };
 
   const handleViewDetails = () => {
@@ -109,6 +112,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
             <>
               <button
                 type="button"
+                onClick={() => handlePrintOrder(order.id)}
                 className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
               >
                 <span>Imprimer</span>
@@ -126,15 +130,6 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
           )}
         </div>
       </div>
-
-      {/* Modal de temps de préparation intégré directement */}
-      {/* <PreparationTimeModal
-        isOpen={isPreparationTimeModalOpen}
-        onClose={() => setIsPreparationTimeModalOpen(false)}
-        onConfirm={()=>{}}
-        orderReference={order.reference}
-        orderId={order.id}
-      /> */}
     </>
   );
 };

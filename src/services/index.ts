@@ -8,7 +8,6 @@ export * from './dishRestaurantService';
 export * from './dishService';
 export * from './dishSupplementService';
 export * from './menuService';
-export * from './orderService';
 export * from './productService';
 export * from './restaurantService';
 export * from './supplementService';

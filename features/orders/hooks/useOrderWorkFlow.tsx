@@ -19,8 +19,12 @@ export const useOrderWorkFlow = ({ order }: { order: OrderTable }) => {
 };
 
 export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
-  const { handleOrderUpdateStatus, handlePrintOrder, isLoading } =
-    useOrderActions();
+  const {
+    handleOrderUpdateStatus,
+    handlePrintOrder,
+    handleToggleOrderModal,
+    isLoading,
+  } = useOrderActions();
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   switch (order.status) {
@@ -30,8 +34,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
         actions: [
           {
             label: "Refuser",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED),
+            onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {
@@ -53,8 +56,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
         actions: [
           {
             label: "Refuser",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED),
+            onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {
@@ -76,8 +78,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
         actions: [
           {
             label: "Refuser",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED),
+            onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {

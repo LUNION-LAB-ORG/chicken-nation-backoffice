@@ -126,10 +126,14 @@ export const useDashboardStore = create<DashboardState>()(
         state[section].pagination = { page, limit };
       }),
 
-      toggleModal: (section, modalName) => set((state) => {
-        const current = state[section].modals[modalName];
-        state[section].modals[modalName] = !current;
-      }),
+      toggleModal: (section, modalName) =>
+        set((state) => {
+          const sectionState = state[section];
+
+          sectionState.modals ??= {};
+          sectionState.modals[modalName] =
+            !sectionState.modals[modalName];
+        }),
 
       resetSection: (section) => set((state) => {
         state[section] = createInitialSectionState() as any;
