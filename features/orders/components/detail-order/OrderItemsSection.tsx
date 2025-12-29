@@ -25,7 +25,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         </div>
       </div>
 
-      <div>
+      <div className="flex flex-col gap-4">
         {order.items && order.items.length > 0 ? (
           order.items.map((item) => {
             return (
