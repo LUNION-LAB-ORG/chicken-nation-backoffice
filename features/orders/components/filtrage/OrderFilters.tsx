@@ -111,7 +111,13 @@ export function OrderFilters() {
 
           {showDatePicker && (
             <DatePicker
-              selectedDate={filters?.date ?? new Date()}
+              selectedDate={
+                filters?.date
+                  ? typeof filters?.date == "string"
+                    ? new Date(filters?.date)
+                    : filters?.date
+                  : new Date()
+              }
               onChange={(date) => {
                 handleDateChange(date);
                 setShowDatePicker(false);
