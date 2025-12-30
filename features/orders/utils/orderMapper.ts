@@ -86,7 +86,7 @@ const extractPaymentMethod = (paiements?: Paiement[]): string => {
 const extractPaymentSource = (paiements?: Paiement[]): string => {
   if (!paiements?.length) return "";
 
-  const sources = paiements.map((p) => p.source.toUpperCase() || "");
+  const sources = paiements.map((p) => p.source ? p.source.toUpperCase() : "");
 
   return sources.length > 1 ? sources.join(", ") : sources[0];
 };
