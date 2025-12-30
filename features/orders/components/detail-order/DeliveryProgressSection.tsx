@@ -2,7 +2,7 @@ import SafeImage from "@/components/ui/SafeImage";
 import React from "react";
 import { OrderTable } from "../../types/ordersTable.types";
 import { getProgressStyles } from "../../utils/progressStyles";
-import { getDeliverySectionTitle } from "../../utils/workflowConfig";
+import { getDeliverySectionTitle } from "../../hooks/getDeliverySectionTitle";
 
 interface DeliveryProgressSectionProps {
   order: OrderTable;

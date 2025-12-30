@@ -26,7 +26,7 @@ export interface User {
   address?: string;
   image?: string;
   password_is_updated?: boolean;
-  role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'MARKETING' | 'COMPTABLE' | 'CAISSIER' | 'CALL_CENTER' | 'CUISINE';
+  role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'MARKETING' | 'COMPTABLE' | 'CAISSIER' | 'CALL_CENTER' | 'CUISINE' | "ASSISTANT_MANAGER";
   type?: 'BACKOFFICE' | 'CUSTOMER' | 'RESTAURANT';
   restaurant_id?: string;
   restaurant?: RestaurantDetails;

@@ -1,18 +1,18 @@
 "use client";
-import { usePendingOrdersSound } from "@/hooks/usePendingOrdersSound";
 import { useRBAC } from "@/hooks/useRBAC";
 import { useAuthStore } from "@/store/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
+import OrderHeader from "../../../../features/orders/components/OrderHeader";
 import AddOrderForm from "../../../../features/orders/components/add-order-form";
 import OrderDetails from "../../../../features/orders/components/detail-order";
-import { OrdersTable } from "../../../../features/orders/components/list-order";
-import { UserType } from "../../../../features/users/types/user.types";
+import { OrderFilters } from "../../../../features/orders/components/filtrage/OrderFilters";
 import RestaurantTabs from "../../../../features/orders/components/filtrage/RestaurantTabs";
+import { OrdersTable } from "../../../../features/orders/components/list-order";
+import { AddPaiementModal } from "../../../../features/orders/components/modals/AddPaiementModal";
+import { CancelOrderModal } from "../../../../features/orders/components/modals/CancelOrderModal";
 import { useOrderListQuery } from "../../../../features/orders/queries/order-list.query";
 import { OrderType } from "../../../../features/orders/types/order.types";
-import OrderHeader from "../../../../features/orders/components/OrderHeader";
-import { OrderFilters } from "../../../../features/orders/components/filtrage/OrderFilters";
-import { CancelOrderModal } from "../../../../features/orders/components/modals/CancelOrderModal";
+import { UserType } from "../../../../features/users/types/user.types";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
@@ -23,13 +23,6 @@ export default function Orders() {
     orders: { view, selectedItem, filters, pagination, modals },
     selectedRestaurantId,
   } = useDashboardStore();
-
-  // ✅ Hook pour le son continu des commandes en attente
-  const { hasPendingOrders, pendingOrdersCount } = usePendingOrdersSound({
-    activeFilter: "nouvelle", // Utiliser 'nouvelle' pour les commandes PENDING
-    selectedRestaurant: selectedRestaurantId || undefined,
-    disabledSound: true, // Toujours activé pour l'instant
-  });
 
   const {
     data: orders,
@@ -61,12 +54,7 @@ export default function Orders() {
   });
   return (
     <div className="flex-1 p-4">
-      <OrderHeader
-        orders={orders?.data || []}
-        currentView={view}
-        hasPendingOrders={hasPendingOrders}
-        pendingOrdersCount={pendingOrdersCount}
-      />
+      <OrderHeader orders={orders?.data || []} currentView={view} />
       {view === "list" && (
         <div>
           {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}
@@ -92,6 +80,9 @@ export default function Orders() {
 
       {modals?.to_cancel && selectedItem && (
         <CancelOrderModal isOpen={true} order={selectedItem} />
+      )}
+      {modals?.add_paiement && selectedItem && (
+        <AddPaiementModal isOpen={true} order={selectedItem} />
       )}
     </div>
   );

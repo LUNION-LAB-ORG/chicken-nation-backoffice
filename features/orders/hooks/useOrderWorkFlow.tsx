@@ -1,15 +1,16 @@
 import { useRBAC } from "@/hooks/useRBAC";
-import { OrderTable, OrderTableStatus } from "../types/ordersTable.types";
-import { useOrderActions } from "./useOrderActions";
 import { OrderStatus } from "../types/order.types";
+import { OrderTable } from "../types/ordersTable.types";
+import { useOrderActions } from "./useOrderActions";
 
+interface WorkflowAction {
+  label: string;
+  variant?: "danger" | "secondary" | "primary";
+  onClick?: () => void;
+}
 interface WorkflowConfig {
   badgeText: string;
-  actions?: {
-    label: string | null;
-    variant?: "danger" | "secondary" | "primary";
-    onClick?: () => void;
-  }[];
+  actions?: WorkflowAction[];
 }
 
 export const useOrderWorkFlow = ({ order }: { order: OrderTable }) => {
@@ -28,87 +29,97 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
   const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   switch (order.status) {
-    case OrderTableStatus["NOUVELLE"]:
+    case "NOUVELLE":
       return {
         badgeText: "Nouvelle commande",
         actions: [
           {
-            label: "Refuser",
+            label: isLoading ? "Chargement..." : "Refuser",
             onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {
-            label: "Accepter",
+            label: isLoading ? "Chargement..." : "Accepter",
             onClick: () =>
               handleOrderUpdateStatus(order.id, OrderStatus.ACCEPTED),
             variant: "primary",
           },
         ],
       };
-    case OrderTableStatus["ANNULÉE"]:
+    case "ANNULÉE":
       return {
         badgeText: "Commande annulée",
         actions: [],
       };
-    case OrderTableStatus["EN COURS"]:
+    case "EN COURS":
       return {
         badgeText: "Commande acceptée",
         actions: [
           {
-            label: "Refuser",
+            label: isLoading ? "Chargement..." : "Refuser",
             onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "secondary",
           },
           {
-            label: "Préparer",
+            label: isLoading ? "Chargement" : "Préparer",
             onClick: () =>
               handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS),
             variant: "primary",
           },
         ],
       };
-    case OrderTableStatus["EN PRÉPARATION"]:
+    case "EN PRÉPARATION":
       return {
         badgeText: "Commande en préparation",
         actions: [
           {
-            label: "Refuser",
+            label: isLoading ? "Chargement..." : "Refuser",
             onClick: () => handleToggleOrderModal(order, "to_cancel"),
             variant: "danger",
           },
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "secondary",
           },
           {
-            label: "Prêt",
+            label: isLoading ? "Chargement..." : "Prêt",
             onClick: () => handleOrderUpdateStatus(order.id, OrderStatus.READY),
             variant: "primary",
           },
         ],
       };
-    case OrderTableStatus["PRÊT"]: {
+    case "PRÊT": {
       if (order.orderType == "À récupérer" || order.orderType == "À table") {
         return {
           badgeText: "Commande prête",
           actions: [
             {
-              label: "Imprimer",
+              label: isLoading ? "Chargement..." : "Imprimer",
               onClick: () => handlePrintOrder(order.id),
               variant: "secondary",
             },
             {
-              label: "Client a récupéré",
+              label: isLoading ? "Chargement..." : "Client a récupéré",
               onClick: () =>
                 handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED),
               variant: "primary",
             },
+            ...(!order.paied
+              ? [
+                  {
+                    label: isLoading ? "Chargement..." : "Payer",
+                    onClick: () =>
+                      handleToggleOrderModal(order, "add_paiement"),
+                    variant: "primary",
+                  } as WorkflowAction,
+                ]
+              : []),
           ],
         };
       }
@@ -116,60 +127,82 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
         badgeText: "Commande prête",
         actions: [
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "secondary",
           },
           {
-            label: "Marquer en Livraison",
+            label: isLoading ? "Chargement..." : "En Livraison",
             onClick: () =>
               handleOrderUpdateStatus(order.id, OrderStatus.PICKED_UP),
             variant: "primary",
           },
+          ...(!order.paied
+            ? [
+                {
+                  label: isLoading ? "Chargement..." : "Payer",
+                  onClick: () => handleToggleOrderModal(order, "add_paiement"),
+                  variant: "primary",
+                } as WorkflowAction,
+              ]
+            : []),
         ],
       };
     }
 
-    case OrderTableStatus["LIVRAISON"]:
+    case "LIVRAISON":
       return {
         badgeText: "Commande en livraison",
         actions: [
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "secondary",
           },
           {
-            label: "Client a récupéré",
+            label: isLoading ? "Chargement..." : "Chez le client",
             onClick: () =>
               handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED),
             variant: "primary",
           },
+          ...(!order.paied
+            ? [
+                {
+                  label: isLoading ? "Chargement..." : "Payer",
+                  onClick: () => handleToggleOrderModal(order, "add_paiement"),
+                  variant: "primary",
+                } as WorkflowAction,
+              ]
+            : []),
         ],
       };
-    case OrderTableStatus["COLLECTÉ"]:
+    case "COLLECTÉ":
       return {
         badgeText: "Commande récupérée par le client",
         actions: [
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "secondary",
           },
           {
-            label: "Terminer",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED),
+            label: isLoading ? "Chargement..." : "Terminer",
+            onClick: () => {
+              if (order.paiements.length > 0) {
+                return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
+              }
+              return handleToggleOrderModal(order, "add_paiement");
+            },
             variant: "primary",
           },
         ],
       };
-    case OrderTableStatus["TERMINÉ"]:
+    case "TERMINÉ":
       return {
         badgeText: "Commande terminée",
         actions: [
           {
-            label: "Imprimer",
+            label: isLoading ? "Chargement..." : "Imprimer",
             onClick: () => handlePrintOrder(order.id),
             variant: "primary",
           },

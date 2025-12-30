@@ -116,7 +116,6 @@ export function OrderRow({
             <div className="flex justify-between items-center my-2">
               <PaymentBadge
                 status={order.paymentStatus}
-                mode={order.paymentSource}
               />
             </div>
             {showActionsColumn && (
@@ -192,7 +191,6 @@ export function OrderRow({
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <PaymentBadge
           status={order.paymentStatus}
-          mode={order.paymentSource}
         />
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">

@@ -2,9 +2,9 @@ import { useRBAC } from "@/hooks/useRBAC";
 import { X } from "lucide-react";
 import Image from "next/image";
 import React from "react";
-import { OrderTable, OrderTableStatus } from "../../types/ordersTable.types";
 import { useOrderActions } from "../../hooks/useOrderActions";
 import { OrderStatus } from "../../types/order.types";
+import { OrderTable } from "../../types/ordersTable.types";
 
 interface OrderContextMenuProps {
   order: OrderTable;
@@ -27,7 +27,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
 
   const { canAcceptCommande, canRejectCommande, canViewCommande } = useRBAC();
 
-  const isAccepted = order.status !== OrderTableStatus.NOUVELLE;
+  const isAccepted = order.status !== "NOUVELLE";
 
   const handleAccept = () => {
     handleOrderUpdateStatus(order.id, OrderStatus.ACCEPTED);

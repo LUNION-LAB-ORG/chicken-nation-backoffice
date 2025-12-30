@@ -1,25 +1,19 @@
 "use client";
 
-import React from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import ExportDropdown from "@/components/ui/ExportDropdown";
 import { useRBAC } from "@/hooks/useRBAC";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { Order } from "../types/order.types";
+import { useNotificationStateStore } from "../../websocket/stores/notificationState.store";
+import { OrderAlertsBar } from "./alerts/order-alerts-bar";
 
 interface OrderHeaderProps {
   orders: Order[];
   currentView: ViewType;
-  hasPendingOrders?: boolean;
-  pendingOrdersCount?: number;
 }
 
-function OrderHeader({
-  orders,
-  currentView = "list",
-  hasPendingOrders = false,
-  pendingOrdersCount = 0,
-}: OrderHeaderProps) {
+function OrderHeader({ orders, currentView = "list" }: OrderHeaderProps) {
   const {
     orders: { filters },
     setFilter,
@@ -27,6 +21,7 @@ function OrderHeader({
     setPagination,
   } = useDashboardStore();
 
+  const activeOrders = useNotificationStateStore((s) => s.activeOrders);
   const { canCreateCommande } = useRBAC();
 
   const handleSearch = (query: string) => {
@@ -37,10 +32,9 @@ function OrderHeader({
   const handleViewChange = (newView: "list" | "create" | "edit" | "view") => {
     setSectionView("orders", newView);
   };
-
   if (currentView === "list") {
     return (
-      <div>
+      <div className="mb-4">
         <DashboardPageHeader
           mode="list"
           title="Commandes"
@@ -73,16 +67,7 @@ function OrderHeader({
             },
           ]}
         />
-
-        {/* ✅ Indicateur visuel pour les commandes en attente */}
-        {hasPendingOrders && (
-          <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <span className="text-orange-800 font-medium">
-              🔔 {pendingOrdersCount} commande
-              {pendingOrdersCount > 1 ? "s" : ""} en attente
-            </span>
-          </div>
-        )}
+        <OrderAlertsBar />
       </div>
     );
   }

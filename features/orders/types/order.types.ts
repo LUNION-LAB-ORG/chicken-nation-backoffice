@@ -3,6 +3,7 @@ import { Customer } from "../../customer/types/customer.types";
 import { Dish } from "../../menus/types/dish.types";
 import { Supplement } from "../../menus/types/supplement.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
+import { Paiement } from "./paiement.types";
 
 // ✅ ENUMS
 export enum OrderStatus {
@@ -19,17 +20,7 @@ export enum DeliveryService {
     TURBO = 'TURBO',
     FREE = 'FREE'
 }
-export enum PaiementMode {
-    MOBILE_MONEY = 'MOBILE_MONEY',
-    WALLET = 'WALLET',
-    CARD = 'CARD',
-    CASH = 'CASH'
-}
-export enum PaiementStatus {
-    REVERTED = 'REVERTED',
-    SUCCESS = 'SUCCESS',
-    FAILED = 'FAILED'
-}
+
 export enum TypeTable {
     TABLE_SQUARE = 'TABLE_SQUARE',
     TABLE_RECTANGLE = 'TABLE_RECTANGLE',
@@ -118,29 +109,6 @@ export interface OrderItem {
     created_at: string;
     updated_at: string;
 }
-
-export interface Paiement {
-    id: string;
-    amount: number;
-    total: number;
-    mode: PaiementMode;
-    source: string | null;
-    fees: number;
-    client: any | null; // JSON
-    client_id: string | null;
-    status: PaiementStatus;
-    reference: string;
-    failure_code: string | null;
-    failure_message: string | null;
-    order_id: string | null;
-    // Relations
-    order?: Order | null;
-    // Metadata
-    entity_status: EntityStatus;
-    created_at: string;
-    updated_at: string;
-}
-
 
 export interface DeliveryFee {
     montant: number;

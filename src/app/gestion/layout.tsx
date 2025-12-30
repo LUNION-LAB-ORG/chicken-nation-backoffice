@@ -3,7 +3,7 @@
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useWelcomeModals } from "@/hooks/useWelcomeModals";
-import { useNotificationSounds } from "@/hooks/useNotificationSounds";
+import { useNotificationBootstrap } from "../../../features/websocket/hooks/useNotificationBootstrap";
 import { useUIStore } from "@/store/uiStore";
 import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import PasswordChangeModal from "@/components/ui/PasswordChangeModal";
@@ -24,7 +24,7 @@ export default function GestionLayout({
   useWelcomeModals();
 
   // Sounds
-  useNotificationSounds(); // Sons gérés UNE SEULE FOIS ici
+  useNotificationBootstrap(); // Sons gérés UNE SEULE FOIS ici
 
   // États UI depuis le store
   const {

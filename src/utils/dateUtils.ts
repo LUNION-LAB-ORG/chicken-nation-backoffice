@@ -220,3 +220,10 @@ export function getCurrentWeekRange(): string {
   
   return `${startValue}_${endValue}`;
 }
+
+// Helper pour formater le temps
+export const formatTime = (seconds: number): string => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+};

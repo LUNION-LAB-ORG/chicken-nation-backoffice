@@ -1,4 +1,5 @@
-import { Paiement, TypeTable } from "./order.types";
+import { TypeTable } from "./order.types";
+import { Paiement } from "./paiement.types";
 
 /**
  * Représente un item d'une commande dans le tableau
@@ -17,16 +18,15 @@ export interface OrderTableItem {
 /**
  * Statuts possibles d'une commande dans l'interface utilisateur
  */
-export enum OrderTableStatus {
-  "NOUVELLE",
-  "EN COURS",
-  "EN PRÉPARATION",
-  "PRÊT",
-  "LIVRAISON",
-  "COLLECTÉ",
-  "ANNULÉE",
+export type OrderTableStatus =
+  "NOUVELLE" |
+  "EN COURS" |
+  "EN PRÉPARATION" |
+  "PRÊT" |
+  "LIVRAISON" |
+  "COLLECTÉ" |
+  "ANNULÉE" |
   "TERMINÉ"
-}
 
 
 /**

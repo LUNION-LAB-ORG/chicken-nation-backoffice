@@ -64,52 +64,54 @@ export function OrdersTable({
   }
 
   return (
-    <div className="min-w-full bg-white min-h-screen border border-slate-300 p-2 rounded-xl overflow-auto">
-      <div className="min-w-full mt-4">
-        <div className="md:hidden px-2 space-y-3 overflow-x-auto">
-          {ordersToDisplay.map((order) => (
-            <OrderRow
-              key={order.id}
-              order={order}
-              isSelected={selectedOrders.includes(order.id)}
-              onSelect={handleSelectOrder}
-              isMobile={true}
-              showActionsColumn={hasAnyActionPermission}
-            />
-          ))}
-        </div>
-        <div className="hidden md:block overflow-x-auto">
-          <div className="min-w-[1200px]">
-            <table className="min-w-full">
-              <TableHeader
-                onSelectAll={handleSelectAll}
-                isAllSelected={isAllSelected}
-                showRestaurantColumn={!currentUser?.restaurant_id}
+    <>
+      <div className="min-w-full bg-white min-h-screen border border-slate-300 p-2 rounded-xl overflow-auto">
+        <div className="min-w-full mt-4">
+          <div className="md:hidden px-2 space-y-3 overflow-x-auto">
+            {ordersToDisplay.map((order) => (
+              <OrderRow
+                key={order.id}
+                order={order}
+                isSelected={selectedOrders.includes(order.id)}
+                onSelect={handleSelectOrder}
+                isMobile={true}
                 showActionsColumn={hasAnyActionPermission}
               />
-              <tbody>
-                {ordersToDisplay.map((order) => (
-                  <OrderRow
-                    key={order.id}
-                    order={order}
-                    isSelected={selectedOrders.includes(order.id)}
-                    onSelect={handleSelectOrder}
-                    showRestaurantColumn={!currentUser?.restaurant_id}
-                    showActionsColumn={hasAnyActionPermission}
-                  />
-                ))}
-              </tbody>
-            </table>
+            ))}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
+            <div className="min-w-[1200px]">
+              <table className="min-w-full">
+                <TableHeader
+                  onSelectAll={handleSelectAll}
+                  isAllSelected={isAllSelected}
+                  showRestaurantColumn={!currentUser?.restaurant_id}
+                  showActionsColumn={hasAnyActionPermission}
+                />
+                <tbody>
+                  {ordersToDisplay.map((order) => (
+                    <OrderRow
+                      key={order.id}
+                      order={order}
+                      isSelected={selectedOrders.includes(order.id)}
+                      onSelect={handleSelectOrder}
+                      showRestaurantColumn={!currentUser?.restaurant_id}
+                      showActionsColumn={hasAnyActionPermission}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Pagination et statistiques */}
-      <OrdersPaginationInfo
-        totalItems={orders?.meta?.total}
-        totalPages={orders?.meta?.totalPages}
-        isLoading={isLoading}
-      />
-    </div>
+        {/* Pagination et statistiques */}
+        <OrdersPaginationInfo
+          totalItems={orders?.meta?.total}
+          totalPages={orders?.meta?.totalPages}
+          isLoading={isLoading}
+        />
+      </div>
+    </>
   );
 }

@@ -28,7 +28,7 @@ interface SectionState<T = any> {
   modals: Record<string, boolean>;
 }
 
-interface DashboardState {
+export interface DashboardState {
   // Navigation & Global Context
   activeTab: TabKey | null;
   selectedRestaurantId: string | null;

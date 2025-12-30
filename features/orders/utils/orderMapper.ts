@@ -1,5 +1,6 @@
-import { Order, OrderStatus, Paiement, OrderType } from "../types/order.types";
+import { Order, OrderStatus, OrderType } from "../types/order.types";
 import { OrderTable, OrderTableItem, OrderTableStatus, OrderTableType, PaymentStatus } from "../types/ordersTable.types";
+import { Paiement } from "../types/paiement.types";
 
 
 // ========================================
@@ -7,14 +8,14 @@ import { OrderTable, OrderTableItem, OrderTableStatus, OrderTableType, PaymentSt
 // ========================================
 
 const STATUS_MAP: Record<OrderStatus, OrderTableStatus> = {
-  [OrderStatus.PENDING]: OrderTableStatus["NOUVELLE"],
-  [OrderStatus.ACCEPTED]: OrderTableStatus["EN COURS"],
-  [OrderStatus.IN_PROGRESS]: OrderTableStatus["EN PRÉPARATION"],
-  [OrderStatus.READY]: OrderTableStatus["PRÊT"],
-  [OrderStatus.PICKED_UP]: OrderTableStatus["LIVRAISON"],
-  [OrderStatus.COLLECTED]: OrderTableStatus["COLLECTÉ"],
-  [OrderStatus.CANCELLED]: OrderTableStatus["ANNULÉE"],
-  [OrderStatus.COMPLETED]: OrderTableStatus["TERMINÉ"],
+  [OrderStatus.PENDING]: "NOUVELLE",
+  [OrderStatus.ACCEPTED]: "EN COURS",
+  [OrderStatus.IN_PROGRESS]: "EN PRÉPARATION",
+  [OrderStatus.READY]: "PRÊT",
+  [OrderStatus.PICKED_UP]: "LIVRAISON",
+  [OrderStatus.COLLECTED]: "COLLECTÉ",
+  [OrderStatus.CANCELLED]: "ANNULÉE",
+  [OrderStatus.COMPLETED]: "TERMINÉ",
 };
 
 const TYPE_MAP: Record<OrderType, OrderTableType> = {
@@ -77,17 +78,17 @@ const extractAddress = (addressString: string | null): string => {
 const extractPaymentMethod = (paiements?: Paiement[]): string => {
   if (!paiements?.length) return "";
 
-  const mode = paiements[0].mode;
+  const modes = paiements.map((p) => PAYMENT_METHOD_MAP[p.mode] || p.mode).join(", ");
 
-  return PAYMENT_METHOD_MAP[mode] || mode;
+  return modes;
 };
 
 const extractPaymentSource = (paiements?: Paiement[]): string => {
   if (!paiements?.length) return "";
 
-  const source = paiements[0].source;
+  const sources = paiements.map((p) => p.source.toUpperCase() || "");
 
-  return (source || "").toUpperCase();
+  return sources.length > 1 ? sources.join(", ") : sources[0];
 };
 
 const extractPaymentMode = (paiements?: Paiement[]): string => {
