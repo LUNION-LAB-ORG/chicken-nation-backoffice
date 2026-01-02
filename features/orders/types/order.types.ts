@@ -1,7 +1,10 @@
 import { EntityStatus, SortOrder } from "../../../types";
-import { Customer } from "../../customer/types/customer.types";
+import { Comment } from "../../comments/types/comment.types";
+import { Customer, LoyaltyPoint } from "../../customer/types/customer.types";
 import { Dish } from "../../menus/types/dish.types";
 import { Supplement } from "../../menus/types/supplement.types";
+import { TicketThread } from "../../messages/types/messages.types";
+import { Promotion, PromotionUsage } from "../../promotion/types/promotion.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Paiement } from "./paiement.types";
 
@@ -79,11 +82,11 @@ export interface Order {
     customer?: Customer;
     restaurant?: Restaurant;
     promotion_id: string | null;
-    //   promotion?: Promotion | null;
-    //   promotion_usages?: PromotionUsage[];
-    //   loyalty_points?: LoyaltyPoint[];
-    //   Comment?: Comment[];
-    //   TicketThread?: TicketThread[];
+    promotion?: Promotion | null;
+    promotion_usages?: PromotionUsage[];
+    loyalty_points?: LoyaltyPoint[];
+    Comment?: Comment[];
+    TicketThread?: TicketThread[];
     //   Redemption?: Redemption[];
     // Metadata
     entity_status: EntityStatus;

@@ -5,23 +5,20 @@ import ExportDropdown from "@/components/ui/ExportDropdown";
 import { useRBAC } from "@/hooks/useRBAC";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { Order } from "../types/order.types";
-import { useNotificationStateStore } from "../../websocket/stores/notificationState.store";
 import { OrderAlertsBar } from "./alerts/order-alerts-bar";
 
 interface OrderHeaderProps {
   orders: Order[];
-  currentView: ViewType;
 }
 
-function OrderHeader({ orders, currentView = "list" }: OrderHeaderProps) {
+function OrderHeader({ orders }: OrderHeaderProps) {
   const {
-    orders: { filters },
+    orders: { view, filters },
     setFilter,
     setSectionView,
     setPagination,
   } = useDashboardStore();
 
-  const activeOrders = useNotificationStateStore((s) => s.activeOrders);
   const { canCreateCommande } = useRBAC();
 
   const handleSearch = (query: string) => {
@@ -29,10 +26,11 @@ function OrderHeader({ orders, currentView = "list" }: OrderHeaderProps) {
     setPagination("orders", 1, 10);
   };
 
-  const handleViewChange = (newView: "list" | "create" | "edit" | "view") => {
+  const handleViewChange = (newView: ViewType) => {
     setSectionView("orders", newView);
   };
-  if (currentView === "list") {
+
+  if (view === "list") {
     return (
       <div className="mb-4">
         <DashboardPageHeader
@@ -60,7 +58,7 @@ function OrderHeader({ orders, currentView = "list" }: OrderHeaderProps) {
               : []),
             {
               label: "Exporter",
-              onClick: () => {}, // Sera remplacé par le dropdown
+              onClick: () => {},
               customComponent: (
                 <ExportDropdown orders={orders} buttonText="Exporter" />
               ),
@@ -71,15 +69,15 @@ function OrderHeader({ orders, currentView = "list" }: OrderHeaderProps) {
       </div>
     );
   }
-
+  
   return (
     <DashboardPageHeader
-      mode={currentView === "view" ? "detail" : currentView}
+      mode={view}
       onBack={() => handleViewChange("list")}
       title={
-        currentView === "create"
+        view === "create"
           ? "Créer une commande"
-          : currentView === "edit"
+          : view === "edit"
           ? "Modifier la commande"
           : "Détails "
       }

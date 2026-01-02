@@ -52,9 +52,10 @@ export default function Orders() {
         ? filters?.active_filter
         : undefined,
   });
+
   return (
     <div className="flex-1 p-4">
-      <OrderHeader orders={orders?.data || []} currentView={view} />
+      <OrderHeader orders={orders?.data || []} />
       {view === "list" && (
         <div>
           {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}

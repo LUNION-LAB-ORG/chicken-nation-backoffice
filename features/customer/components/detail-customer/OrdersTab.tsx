@@ -35,7 +35,7 @@ interface Client {
 
 interface OrdersTabProps {
   client: Client;
-  formatDate: (date: string) => string;
+  formatDate: (date: Date) => string;
 }
 
 export function OrdersTab({ client, formatDate }: OrdersTabProps) {
@@ -125,7 +125,7 @@ export function OrdersTab({ client, formatDate }: OrdersTabProps) {
                 client.orderHistory.map((order) => (
                   <tr key={order.reference} className="hover:bg-gray-50">
                     <td className="px-3 py-4 sm:px-6 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">#{order.reference}</td>
-                    <td className="px-3 py-4 sm:px-6 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatDate(order.date)}</td>
+                    <td className="px-3 py-4 sm:px-6 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatDate(new Date(order.date))}</td>
                     <td className="px-3 py-4 sm:px-6 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                       {(order.amount || order.total || 0).toLocaleString('fr-FR')} F
                     </td>
@@ -182,7 +182,7 @@ export function OrdersTab({ client, formatDate }: OrdersTabProps) {
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
                     <p className="text-gray-500 mb-1">Date</p>
-                    <p className="font-medium">{formatDate(order.date)}</p>
+                    <p className="font-medium">{formatDate(new Date(order.date))}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 mb-1">Montant</p>

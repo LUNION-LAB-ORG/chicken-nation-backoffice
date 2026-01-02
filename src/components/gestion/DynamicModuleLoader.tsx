@@ -62,7 +62,7 @@ const MarketingModule = dynamic(
 );
 
 export default function DynamicModuleLoader() {
-  const { activeTab, setActiveTab } = useDashboardStore();
+  const { activeTab } = useDashboardStore();
   const { activeSubModule, initialConversationId } = useNavigationStore();
 
   // Gestion des Messages et Tickets
@@ -88,7 +88,7 @@ export default function DynamicModuleLoader() {
     case "orders":
       return <Orders />;
     case "clients":
-      return <Clients setActiveTab={setActiveTab} />;
+      return <Clients/>;
     case "inventory":
       return <Inventory />;
     case "restaurants":

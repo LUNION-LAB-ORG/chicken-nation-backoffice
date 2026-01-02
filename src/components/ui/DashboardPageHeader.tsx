@@ -3,6 +3,7 @@
 import { ChevronLeft, Search, LucideIcon } from "lucide-react";
 import React from "react";
 import { motion } from "framer-motion";
+import { ViewType } from "@/store/dashboardStore";
 
 interface SearchConfig {
   placeholder?: string;
@@ -23,7 +24,7 @@ interface ActionButton {
 
 interface DashboardPageHeaderProps {
   // Mode et navigation
-  mode?: "list" | "detail" | "create" | "edit";
+  mode?: ViewType;
   onBack?: () => void;
 
   // Contenu
@@ -167,7 +168,7 @@ const DashboardPageHeader = ({
       <div className="flex flex-col sm:flex-row pt-5 items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
         {/* Bouton retour et titre de la section*/}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {mode !== "list" && onBack && (
+          {onBack && (
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}

@@ -42,7 +42,7 @@ function MenuHeader({ currentView = 'list', onBack, onCreateMenu, onSearch }: Me
 
   return (
     <DashboardPageHeader
-      mode={currentView === 'view' ? 'detail' : currentView}
+      mode={currentView}
       onBack={onBack}
       title={
         currentView === 'create'

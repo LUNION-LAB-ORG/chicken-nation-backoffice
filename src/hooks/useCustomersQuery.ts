@@ -17,7 +17,7 @@ interface UseCustomersQueryReturn {
   currentPage: number;
   isLoading: boolean;
   error: Error | null;
-  
+
   // Actions
   setCurrentPage: (page: number) => void;
   refetch: () => void;
@@ -87,7 +87,7 @@ export function useCustomersQuery({
 
   // ✅ Reset page à 1 quand les filtres changent - exactement comme OrdersQuery
   const isPageChangeRef = useRef(false);
-  
+
   // ✅ Retourner à la page 1 quand les filtres changent
   const setCurrentPage = useCallback((page: number) => {
     isPageChangeRef.current = true; // Marquer comme changement de page intentionnel
@@ -101,7 +101,7 @@ export function useCustomersQuery({
       isPageChangeRef.current = false;
       return;
     }
-    
+
     // Sinon, reset à la page 1 car les filtres ont changé
     if (currentPage !== 1) {
       setCurrentPageState(1);
@@ -117,7 +117,7 @@ export function useCustomersQuery({
   const customers = data?.data || [];
 
 
-
+  console.log({ data })
   // ✅ Calculer totalPages si l'API ne le fournit pas
   const totalItems = data?.meta?.totalItems || 0;
   const itemsPerPage = data?.meta?.itemsPerPage || 10;
@@ -136,32 +136,3 @@ export function useCustomersQuery({
   };
 }
 
-// ✅ Hook spécialisé pour compter le nombre total de clients
-export function useCustomersCount(params: Omit<UseCustomersQueryParams, 'searchQuery'> = {}) {
-  const { data } = useQuery({
-    queryKey: ['customers-count', params.restaurantId, params.status],
-    queryFn: async () => {
-      const filters: CustomerQuery = {
-        page: 1,
-        limit: 1000, // ✅ Limite élevée pour récupérer un maximum de clients
-        status: params.status,
-        restaurantId: params.restaurantId
-      };
-      
-      const result = await getCustomers(filters);
-      
-      return result;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes - plus long car le comptage change moins souvent
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
-
-  // ✅ Retourner le total avec fallback intelligent
-  const totalCount = data?.meta?.totalItems || data?.data?.length || 0;
-  
-  return {
-    totalCount,
-    isLoading: !data,
-    hasAccurateCount: !!(data?.meta?.totalItems)
-  };
-}

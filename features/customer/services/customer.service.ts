@@ -59,6 +59,25 @@ export const getAllCustomers = async (query?: CustomerQuery) => {
     }
 };
 
+export const getCustomerById = async (id: string) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as PaginatedResponse<Customer>;
+    } catch (error) {
+        console.error(error);
+        const userMessage = getHumanReadableError(error);
+        throw new Error(userMessage);
+    }
+};
+
 
 export const addCustomer = async (formData: CustomerAddForm) => {
     try {

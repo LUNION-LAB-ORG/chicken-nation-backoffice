@@ -38,7 +38,6 @@ function OrderHeader({ currentView = 'list', onBack }: OrderHeaderProps) {
 
   return (
     <DashboardPageHeader
-   
       onBack={onBack}
       title={
         "Tableau de bord"

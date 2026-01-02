@@ -320,7 +320,7 @@ export default function RestaurantDetail({ open, restaurantId, onClose, onEdit }
       {/* Header */}
       <DashboardPageHeader
         title={restaurant?.name || "Détails du restaurant"}
-        mode="detail"
+        mode="view"
         onBack={onClose}
         actions={restaurant ? [
           {

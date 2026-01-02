@@ -5,12 +5,15 @@ import { useMemo } from "react";
 import { useOrderSelection } from "../../hooks/useOrderSelection";
 import { Order as IOrder } from "../../types/order.types";
 import { mapApiOrdersToUiOrders } from "../../utils/orderMapper";
-import { OrdersPaginationInfo } from "./OrdersPaginationInfo";
-import { ErrorState, LoadingState } from "./OrdersTableStates";
+import {
+  ErrorState,
+  LoadingState,
+  PaginationInfo,
+} from "../../../../src/components/TableStates";
 
 import { User } from "@/services";
 import { PaginatedResponse } from "../../../../types";
-import { TableHeader } from "../TableHeader";
+import { TableHeader } from "./TableHeader";
 import { OrderRow } from "./OrderRow";
 
 export interface OrdersTableProps {
@@ -106,7 +109,9 @@ export function OrdersTable({
         </div>
 
         {/* Pagination et statistiques */}
-        <OrdersPaginationInfo
+        <PaginationInfo
+          tabKey="orders"
+          label="commande"
           totalItems={orders?.meta?.total}
           totalPages={orders?.meta?.totalPages}
           isLoading={isLoading}

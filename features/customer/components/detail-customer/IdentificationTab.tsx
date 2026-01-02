@@ -37,7 +37,7 @@ interface Client {
 interface IdentificationTabProps {
   client: Client;
   fullName: string;
-  formatDate: (date: string) => string;
+  formatDate: (date: Date) => string;
 }
 
 export function IdentificationTab({ client, fullName, formatDate }: IdentificationTabProps) {
@@ -89,7 +89,7 @@ export function IdentificationTab({ client, fullName, formatDate }: Identificati
           <label className="text-xs font-light text-[#9796A1]">Date d&apos;inscription</label>
           <input
             type="text"
-            value={formatDate(client.created_at)}
+            value={formatDate(new Date(client.created_at))}
             readOnly
             className="p-2 px-3 border-2 border-[#3C3C434A] text-slate-700 rounded-2xl text-sm"
           />

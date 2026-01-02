@@ -1,45 +1,45 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useDashboardStore } from "@/store/dashboardStore";
-import { OrderTable } from "../types/ordersTable.types";
+import { Customer } from "../types/customer.types";
 
-interface UseOrderSelectionProps {
-  orders: OrderTable[];
+interface UseClientsSelectionProps {
+  clients: Customer[];
 }
 
-export const useOrderSelection = ({
-  orders,
-}: UseOrderSelectionProps) => {
-  const { orders: { filters, pagination } } = useDashboardStore();
+export const useClientsSelection = ({
+  clients,
+}: UseClientsSelectionProps) => {
+  const { clients: { filters, pagination } } = useDashboardStore();
 
-  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [selectedClients, setSelectedClients] = useState<string[]>([]);
 
   // Sélectionner/Désélectionner toutes les commandes
   const handleSelectAll = useCallback(
     (checked: boolean) => {
-      setSelectedOrders(checked ? orders.map((order) => order.id) : []);
+      setSelectedClients(checked ? clients.map((client) => client.id) : []);
     },
-    [orders]
+    [clients]
   );
 
   // Sélectionner/Désélectionner une commande
-  const handleSelectOrder = useCallback(
+  const handleSelectClient = useCallback(
     (orderId: string, checked: boolean) => {
-      setSelectedOrders((prev) =>
+      setSelectedClients((prev) =>
         checked ? [...prev, orderId] : prev.filter((id) => id !== orderId)
       );
     },
-    [orders]
+    [clients]
   );
 
   // Mémoriser le calcul de isAllSelected
   const isAllSelected = useMemo(
-    () => orders.length > 0 && selectedOrders.length === orders.length,
-    [selectedOrders.length, orders.length]
+    () => clients.length > 0 && selectedClients.length === clients.length,
+    [selectedClients.length, clients.length]
   );
 
   // Vider les sélections
   const clearSelection = useCallback(() => {
-    setSelectedOrders([]);
+    setSelectedClients([]);
   }, []);
 
   // Effet unique pour vider les sélections lors des changements
@@ -48,10 +48,10 @@ export const useOrderSelection = ({
   }, [filters?.active_filter, filters?.date, filters?.search, pagination.page, pagination.limit, clearSelection]);
 
   return {
-    selectedOrders,
+    selectedClients,
     isAllSelected,
     handleSelectAll,
-    handleSelectOrder,
+    handleSelectClient,
     clearSelection,
   };
 };

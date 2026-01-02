@@ -6,14 +6,12 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 
 // --- TYPES ---
 
-export type SectionKey =
-  | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
+export type TabKey =
+  'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
   | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos'
   | 'loyalty' | 'apps' | 'messages-tickets';
 
-export type ViewType = 'list' | 'create' | 'edit' | 'view';
-
-export type TabKey = 'dashboard' | SectionKey;
+export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'reviews';
 
 export type PeriodFilter = 'today' | 'week' | 'month' | 'lastMonth' | 'year';
 
@@ -35,9 +33,12 @@ export interface DashboardState {
   selectedPeriod: PeriodFilter;
 
   // Sections
+  dashboard: SectionState;
+  marketing: SectionState;
+  "messages-tickets": SectionState;
   orders: SectionState<OrderTable>;
   menus: SectionState<MenuItem>;
-  clients: SectionState;
+  clients: SectionState<string>;
   inventory: SectionState;
   program: SectionState;
   restaurants: SectionState;
@@ -51,13 +52,13 @@ export interface DashboardState {
   setActiveTab: (tab: TabKey) => void;
   setSelectedRestaurantId: (id: string | null) => void;
   setSelectedPeriod: (period: PeriodFilter) => void;
-  setSectionView: (section: SectionKey, view: ViewType) => void;
-  setSelectedItem: <T>(section: SectionKey, item: T) => void;
-  setFilter: (section: SectionKey, key: string, value: any) => void;
-  resetFilters: (section: SectionKey) => void;
-  setPagination: (section: SectionKey, page: number, limit: number) => void;
-  toggleModal: (section: SectionKey, modalName: string) => void;
-  resetSection: (section: SectionKey) => void;
+  setSectionView: (section: TabKey, view: ViewType) => void;
+  setSelectedItem: <T>(section: TabKey, item: T) => void;
+  setFilter: (section: TabKey, key: string, value: any) => void;
+  resetFilters: (section: TabKey) => void;
+  setPagination: (section: TabKey, page: number, limit: number) => void;
+  toggleModal: (section: TabKey, modalName: string) => void;
+  resetSection: (section: TabKey) => void;
 }
 
 // --- HELPERS ---
@@ -70,7 +71,7 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
   modals: {}
 });
 
-const SECTION_KEYS: SectionKey[] = [
+const SECTION_KEYS: TabKey[] = ['dashboard',
   'orders', 'menus', 'marketing', 'clients', 'inventory',
   'program', 'restaurants', 'personnel', 'ads', 'promos',
   'loyalty', 'apps'
@@ -86,6 +87,9 @@ export const useDashboardStore = create<DashboardState>()(
       selectedRestaurantId: null,
       selectedPeriod: 'month',
 
+      dashboard: createInitialSectionState(),
+      marketing: createInitialSectionState(),
+      "messages-tickets": createInitialSectionState(),
       orders: createInitialSectionState<OrderTable>(),
       menus: createInitialSectionState<MenuItem>(),
       clients: createInitialSectionState(),

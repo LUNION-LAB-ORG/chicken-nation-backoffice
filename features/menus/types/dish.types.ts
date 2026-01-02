@@ -1,5 +1,7 @@
 import { EntityStatus } from "../../../types";
 import { Favorite } from "../../customer/types/favorite.types";
+import { OrderItem } from "../../orders/types/order.types";
+import { PromotionDish, PromotionTargetedDish } from "../../promotion/types/promotion.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Category } from "./category.types";
 import { Supplement } from "./supplement.types";
@@ -20,9 +22,9 @@ export interface Dish {
   dish_restaurants?: DishRestaurant[];
   dish_supplements?: DishSupplement[];
   favorites?: Favorite[];
-  // order_items?: OrderItem[];
-  // promotion_dishes?: PromotionDish[];
-  // promotion_targeted_dishes?: PromotionTargetedDish[];
+  order_items?: OrderItem[];
+  promotion_dishes?: PromotionDish[];
+  promotion_targeted_dishes?: PromotionTargetedDish[];
   // Metadata
   entity_status: EntityStatus;
   created_at: Date | string;

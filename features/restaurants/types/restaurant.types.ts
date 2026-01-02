@@ -1,6 +1,8 @@
 import { EntityStatus } from "../../../types";
 import { DishRestaurant } from "../../menus/types/dish.types";
+import { Conversation } from "../../messages/types/messages.types";
 import { Order } from "../../orders/types/order.types";
+import { RestaurantPromotion } from "../../promotion/types/promotion.types";
 
 export interface Restaurant {
     id: string;
@@ -18,8 +20,8 @@ export interface Restaurant {
     dish_restaurants?: DishRestaurant[];
     //   users?: User[];
     orders?: Order[];
-    //   restaurantPromotions?: RestaurantPromotion[];
-    //   Conversation?: Conversation[];
+    restaurantPromotions?: RestaurantPromotion[];
+    Conversation?: Conversation[];
     // Metadata
     entity_status: EntityStatus;
     created_at: Date | string;

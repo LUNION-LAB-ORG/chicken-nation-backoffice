@@ -20,7 +20,7 @@ interface ReviewsTabProps {
     [key: string]: unknown;
   };
   fullName: string;
-  formatDate: (date: string) => string;
+  formatDate: (date: Date) => string;
 }
 
 export function ReviewsTab({ clientReviews, client, fullName, formatDate }: ReviewsTabProps) {
@@ -148,7 +148,7 @@ export function ReviewsTab({ clientReviews, client, fullName, formatDate }: Revi
                         }
                       </h4>
                       <span className="text-xs text-gray-500">
-                        {formatDate(comment?.created_at || review?.date || '')}
+                        {formatDate(new Date(comment?.created_at || review?.date || ''))}
                       </span>
                     </div>
                   </div>

@@ -37,7 +37,7 @@ function AdsHeader({ currentView = 'list', onBack, onCreateAd }: AdsHeaderProps)
 
   return (
     <DashboardPageHeader
-      mode={currentView === 'view' ? 'detail' : currentView}
+      mode={currentView}
       onBack={onBack}
       title={
         currentView === 'create'
