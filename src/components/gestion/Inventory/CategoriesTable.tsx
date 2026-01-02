@@ -7,6 +7,7 @@ import { Category as ApiCategory } from "@/services";
 import { Pagination } from "@/components/ui/pagination";
 import { useCategoriesQuery } from "@/hooks/useCategoriesQuery";
 import { useRBAC } from "@/hooks/useRBAC";
+import { formatImageUrl } from "@/utils/imageHelpers";
 
 // Adapter l'interface Category de l'API pour le composant
 interface Category extends ApiCategory {
@@ -124,14 +125,7 @@ export default function CategoriesTable({
                         {/* Image de la catégorie */}
                         <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 mr-3 flex-shrink-0">
                           <Image
-                            src={
-                              category.image
-                                ? category.image.startsWith("http") ||
-                                  category.image.startsWith("/")
-                                  ? category.image
-                                  : `https://chicken.turbodeliveryapp.com/${category.image}`
-                                : "/images/plat.png"
-                            }
+                            src={formatImageUrl(category.image)}
                             alt={category.name}
                             width={48}
                             height={48}
@@ -279,14 +273,7 @@ export default function CategoriesTable({
                         <td className="py-4">
                           <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto">
                             <Image
-                              src={
-                                category.image
-                                  ? category.image.startsWith("http") ||
-                                    category.image.startsWith("/")
-                                    ? category.image
-                                    : `https://chicken.turbodeliveryapp.com/${category.image}`
-                                  : "/images/plat.png"
-                              }
+                              src={formatImageUrl(category.image)}
                               alt={category.name}
                               width={40}
                               height={40}

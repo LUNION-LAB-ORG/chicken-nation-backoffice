@@ -6,7 +6,7 @@ import { Edit, Trash2, Share, Calendar, Target, Palette, Eye, Users } from 'luci
 import styles from './PromoDetailView.module.css'
 import Image from 'next/image'
 import PromoDeleteModal from './PromoDeleteModal'
-import { formatPromotionImageUrl } from '@/utils/imageHelpers'
+import { formatImageUrl } from '@/utils/imageHelpers'
 import { useRBAC } from '@/hooks/useRBAC'
 
 interface PromoDetailViewProps {
@@ -221,7 +221,7 @@ const PromoDetailView = ({
               {promo.coupon_image_url && (
                 <div className="absolute -bottom-1 -mt-4 -right-1 w-16 h-16 sm:w-28 sm:h-28 md:w-24 md:h-24 lg:w-35 lg:h-35 xl:w-40 xl:h-40 2xl:w-55 2xl:h-46">
                   <Image
-                    src={formatPromotionImageUrl(promo.coupon_image_url)}
+                    src={formatImageUrl(promo.coupon_image_url)}
                     alt={promo.title || 'Promo'}
                     className="w-full h-full object-contain"
                     width={200}

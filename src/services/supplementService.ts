@@ -1,6 +1,7 @@
 import { API_URL } from '@/config';
+import { formatImageUrl } from '@/utils/imageHelpers';
 
- 
+
 export interface Supplement {
   id: string;
   name: string;
@@ -11,7 +12,7 @@ export interface Supplement {
   description?: string;
 }
 
- export const getSupplementsByCategory = async (category: string): Promise<Supplement[]> => {
+export const getSupplementsByCategory = async (category: string): Promise<Supplement[]> => {
   try {
     const response = await fetch(`${API_URL}/api/v1/supplements?category=${category}`);
     if (!response.ok) {
@@ -24,7 +25,7 @@ export interface Supplement {
   }
 };
 
- export const getAllSupplements = async (): Promise<Record<string, Supplement[]>> => {
+export const getAllSupplements = async (): Promise<Record<string, Supplement[]>> => {
   try {
     const response = await fetch(`${API_URL}/api/v1/supplements`);
     if (!response.ok) {
@@ -37,16 +38,12 @@ export interface Supplement {
   }
 };
 
- export const convertSupplementsToOptions = (supplements: Supplement[]) => {
+export const convertSupplementsToOptions = (supplements: Supplement[]) => {
   return supplements.map(supplement => ({
     value: supplement.id,
     label: supplement.name,
     price: `${supplement.price} XOF`,
-    image: supplement.image ? 
-      (supplement.image.startsWith('http') || supplement.image.startsWith('/') 
-        ? supplement.image 
-        : `https://chicken.turbodeliveryapp.com/${supplement.image}`)
-      : '/images/plat.png',
+    image: formatImageUrl(supplement.image),
     category: supplement.category,
     available: supplement.available
   }));

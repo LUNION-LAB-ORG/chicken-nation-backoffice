@@ -17,6 +17,7 @@ import { useDishListQuery } from "../../../menus/queries/dish-list.query";
 import { getParsedAddress } from "../../utils/getParsedAddress";
 import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
 import { OrderType } from "../../types/order.types";
+import { formatImageUrl } from "@/utils/imageHelpers";
 
 interface OrderItemsSectionProps {
   formData: OrderFormData;
@@ -111,12 +112,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
       value: ds.supplement_id,
       label: ds.supplement?.name || "",
       price: ds.supplement?.price || 0,
-      image: ds.supplement?.image
-        ? ds.supplement.image.startsWith("http") ||
-          ds.supplement.image.startsWith("/")
-          ? ds.supplement.image
-          : `https://chicken.turbodeliveryapp.com/${ds.supplement.image}`
-        : "/images/plat.png",
+      image: formatImageUrl(ds?.supplement?.image),
       type: ds.supplement?.category || "ACCESSORY",
     }));
   };
@@ -244,14 +240,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     <div className="flex items-center gap-2">
                       {category.image && (
                         <Image
-                          src={
-                            category.image
-                              ? category.image.startsWith("http") ||
-                                category.image.startsWith("/")
-                                ? category.image
-                                : `https://chicken.turbodeliveryapp.com/${category.image}`
-                              : "/images/plat.png"
-                          }
+                          src={formatImageUrl(category.image)}
                           alt={category.name}
                           width={32}
                           height={32}
@@ -310,14 +299,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                   >
                     {dish.image && (
                       <Image
-                        src={
-                          dish.image
-                            ? dish.image.startsWith("http") ||
-                              dish.image.startsWith("/")
-                              ? dish.image
-                              : `https://chicken.turbodeliveryapp.com/${dish.image}`
-                            : "/images/plat.png"
-                        }
+                        src={formatImageUrl(dish.image)}
                         alt={dish.name}
                         width={120}
                         height={80}
@@ -394,14 +376,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
               <div className="mb-4">
                 {selectedDishForConfig.image && (
                   <Image
-                    src={
-                      selectedDishForConfig.image
-                        ? selectedDishForConfig.image.startsWith("http") ||
-                          selectedDishForConfig.image.startsWith("/")
-                          ? selectedDishForConfig.image
-                          : `https://chicken.turbodeliveryapp.com/${selectedDishForConfig.image}`
-                        : "/images/plat.png"
-                    }
+                    src={formatImageUrl(selectedDishForConfig.image)}
                     alt={selectedDishForConfig.name}
                     width={400}
                     height={200}
@@ -728,14 +703,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 >
                   {dish.image && (
                     <Image
-                      src={
-                        dish.image
-                          ? dish.image.startsWith("http") ||
-                            dish.image.startsWith("/")
-                            ? dish.image
-                            : `https://chicken.turbodeliveryapp.com/${dish.image}`
-                          : "/images/plat.png"
-                      }
+                      src={formatImageUrl(dish.image)}
                       alt={dish.name}
                       width={60}
                       height={60}

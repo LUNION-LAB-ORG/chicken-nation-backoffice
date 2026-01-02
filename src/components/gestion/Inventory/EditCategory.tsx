@@ -10,6 +10,7 @@ import { updateCategory, Category } from "@/services";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
 import Checkbox from "@/components/ui/Checkbox";
+import { formatImageUrl } from "@/utils/imageHelpers";
 
 interface EditCategoryProps {
   onClose: () => void;
@@ -137,14 +138,7 @@ export default function EditCategory({
             {imagePreview ? (
               <div className="relative w-full h-full rounded-xl overflow-hidden">
                 <Image
-                  src={
-                    imagePreview.startsWith("data:")
-                      ? imagePreview
-                      : imagePreview.startsWith("http") ||
-                        imagePreview.startsWith("/")
-                      ? imagePreview
-                      : `https://chicken.turbodeliveryapp.com/${imagePreview}`
-                  }
+                  src={formatImageUrl(imagePreview)}
                   alt="Aperçu de la catégorie"
                   fill
                   className="object-cover"

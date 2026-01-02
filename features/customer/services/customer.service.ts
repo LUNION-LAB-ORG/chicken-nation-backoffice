@@ -70,7 +70,7 @@ export const getCustomerById = async (id: string) => {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json() as PaginatedResponse<Customer>;
+        return await response.json() as Customer;
     } catch (error) {
         console.error(error);
         const userMessage = getHumanReadableError(error);

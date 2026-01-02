@@ -10,6 +10,7 @@ import { updateSupplementAvailability } from '@/services/dishService'
 import { Dish } from '@/types/dish' 
 import { ImageIcon } from 'lucide-react'
 import { toast } from 'react-hot-toast'
+import { formatImageUrl } from '@/utils/imageHelpers'
 
 interface EditSupplementProps {
   onCancel: () => void
@@ -284,11 +285,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
             {imagePreview ? (
               <div className="relative w-full h-full rounded-xl overflow-hidden">
                 <Image 
-                  src={imagePreview.startsWith('data:') 
-                    ? imagePreview // Si c'est un fichier local (data URL)
-                    : imagePreview.startsWith('http') || imagePreview.startsWith('/') 
-                      ? imagePreview // Si c'est une URL complète ou un chemin absolu
-                      : `https://chicken.turbodeliveryapp.com/${imagePreview}`}  
+                  src={formatImageUrl(imagePreview)}  
                   alt="Aperçu du supplément"
                   fill
                   className="object-cover"

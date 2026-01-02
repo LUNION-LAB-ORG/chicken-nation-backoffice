@@ -4,25 +4,6 @@ import { Dish } from "../../menus/types/dish.types";
 import { Order } from "../../orders/types/order.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 
-export enum LoyaltyPointIsUsed {
-    YES = 'YES',
-    NO = 'NO'
-}
-
-export enum LoyaltyPointType {
-    EARNED = 'EARNED',
-    REDEEMED = 'REDEEMED',
-    EXPIRED = 'EXPIRED',
-    ADJUSTMENT = 'ADJUSTMENT'
-}
-
-export enum LoyaltyLevel {
-    BRONZE = 'BRONZE',
-    SILVER = 'SILVER',
-    GOLD = 'GOLD',
-    PLATINUM = 'PLATINUM'
-}
-
 export enum PromotionStatus {
     DRAFT = 'DRAFT',
     ACTIVE = 'ACTIVE',

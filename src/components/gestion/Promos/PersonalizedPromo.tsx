@@ -16,7 +16,7 @@ import {
   convertTransitDataToUnifiedFormData,
   validateCompletePromoData
 } from '@/services/promotionService'
-import { formatPromotionImageUrl } from '@/utils/imageHelpers'
+import { formatImageUrl } from '@/utils/imageHelpers'
 import { getHumanReadableError, getPromotionSuccessMessage, getInfoMessage } from '@/utils/errorMessages'
 
 interface PersonalizedPromoProps {
@@ -523,7 +523,7 @@ const PersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: Pers
               >
                 {uploadedImage && (
                   <Image
-                    src={uploadedImage.startsWith('data:') ? uploadedImage : formatPromotionImageUrl(uploadedImage)}
+                    src={uploadedImage.startsWith('data:') ? uploadedImage : formatImageUrl(uploadedImage)}
                     alt="Promo"
                     className=" 2xl:w-[70%] 2xl:h-[70%] xl:h-[70%] xl:mt-4 xl:w-[100%] lg:w-[100%] mt-6 lg:h-[90%] md:h-[90%] sm:h-[70%] xs:h-[90%] md:-mt-4 sm:-mb-4 w-full h-full object-contain "
                     width={100}

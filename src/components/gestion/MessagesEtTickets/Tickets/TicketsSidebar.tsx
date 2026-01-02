@@ -10,6 +10,7 @@ import { Ticket, TicketStatus, TicketPriority } from '@/types/tickets';
 import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/types/tickets';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { formatImageUrl } from '@/utils/imageHelpers';
 
 interface TicketsSidebarProps {
   selectedTicket: string | null;
@@ -224,7 +225,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                   <div className="md:w-12 md:h-12 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                     {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
                       <Image
-                        src={`https://chicken.turbodeliveryapp.com/${ticket.customer.image}`}
+                        src={formatImageUrl(ticket.customer.image)}
                         alt={ticket.customer?.name || 'Client'}
                         width={40}
                         height={40}

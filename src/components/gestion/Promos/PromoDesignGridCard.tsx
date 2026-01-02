@@ -3,7 +3,7 @@
 import React from 'react'
 import { PromoCardData } from './PromoCard'
 import Image from 'next/image'
-import { formatPromotionImageUrl } from '@/utils/imageHelpers'
+import { formatImageUrl } from '@/utils/imageHelpers'
 
 interface PromoDesignGridCardProps {
   promo: PromoCardData
@@ -196,7 +196,7 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
         {promo.coupon_image_url && (
           <div className="absolute -bottom-1 -mt-4 -right-1 w-16 h-16 sm:w-26 sm:h-26 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 2xl:w-36 2xl:h-36">
             <Image
-              src={formatPromotionImageUrl(promo.coupon_image_url)}
+              src={formatImageUrl(promo.coupon_image_url)}
               alt="Promo"
               className="w-full h-full object-contain"
               width={144}
