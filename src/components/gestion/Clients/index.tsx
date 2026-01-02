@@ -36,7 +36,7 @@ export default function Clients() {
       <div className="-mt-10">
         <ClientHeader />
         {view === "list" && (
-          <UserCounter count={clientResponse?.data?.length} />
+          <UserCounter count={clientResponse?.meta?.total ?? 0} />
         )}
       </div>
 
