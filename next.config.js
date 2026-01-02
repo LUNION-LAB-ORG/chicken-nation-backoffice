@@ -29,6 +29,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "chicken.turbodeliveryapp.com",
       },
+      {
+        protocol: "https",
+        hostname: "images.bfmtv.com",
+      },
+      {
+        protocol: "https",
+        hostname: "upload.wikimedia.org",
+      },
     ],
     // ✅ PERFORMANCE: Formats d'images modernes
     formats: ["image/webp", "image/avif"],

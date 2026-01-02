@@ -1,6 +1,14 @@
 interface ClientTabsProps {
-  activeTab: "overview" | "orders" | "favorites" | "reviews" | "addresses";
-  onTabChange: (tab: "overview" | "orders" | "favorites" | "reviews" | "addresses") => void;
+  activeTab:
+    | "overview"
+    | "orders"
+    | "favorites"
+    | "reviews"
+    | "addresses"
+    | "card";
+  onTabChange: (
+    tab: "overview" | "orders" | "favorites" | "reviews" | "addresses" | "card"
+  ) => void;
 }
 
 export function ClientTabs({ activeTab, onTabChange }: ClientTabsProps) {
@@ -10,6 +18,7 @@ export function ClientTabs({ activeTab, onTabChange }: ClientTabsProps) {
     { id: "favorites", label: "Favoris" },
     { id: "reviews", label: "Avis" },
     { id: "addresses", label: "Adresses" },
+    { id: "card", label: "Carte Nation" },
   ] as const;
 
   return (

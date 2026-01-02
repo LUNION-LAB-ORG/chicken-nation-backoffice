@@ -11,6 +11,7 @@ import { OrdersTab } from "./OrdersTab";
 import { FavoritesTab } from "./FavoritesTab";
 import { ReviewsTab } from "./ReviewsTab";
 import { AddressesTab } from "./AddressesTab";
+import { CarteTab } from "./CarteTab";
 
 interface ClientDetailPageProps {
   clientId: string;
@@ -18,7 +19,7 @@ interface ClientDetailPageProps {
 
 export function ClientDetail({ clientId }: ClientDetailPageProps) {
   const [activeTab, setActiveTab] = useState<
-    "overview" | "orders" | "favorites" | "reviews" | "addresses"
+    "overview" | "orders" | "favorites" | "reviews" | "addresses" | "card"
   >("overview");
 
   const { data, isLoading, error } = useCustomerDetailQuery(clientId);
@@ -28,7 +29,7 @@ export function ClientDetail({ clientId }: ClientDetailPageProps) {
   if (isLoading) {
     return <LoadingState />;
   }
-  
+
   if (error) {
     return (
       <ErrorState error={error} title="Erreur lors du chargement du client" />
@@ -45,11 +46,18 @@ export function ClientDetail({ clientId }: ClientDetailPageProps) {
 
       {/* Tab Content */}
       <div className="space-y-6">
-        {activeTab === "overview" && <OverviewTab customerData={customerData} />}
+        {activeTab === "overview" && (
+          <OverviewTab customerData={customerData} />
+        )}
         {activeTab === "orders" && <OrdersTab customerData={customerData} />}
-        {activeTab === "favorites" && <FavoritesTab customerData={customerData} />}
+        {activeTab === "favorites" && (
+          <FavoritesTab customerData={customerData} />
+        )}
         {activeTab === "reviews" && <ReviewsTab customerData={customerData} />}
-        {activeTab === "addresses" && <AddressesTab customerData={customerData} />}
+        {activeTab === "addresses" && (
+          <AddressesTab customerData={customerData} />
+        )}
+        {activeTab === "card" && <CarteTab customerData={customerData} />}
       </div>
     </div>
   );

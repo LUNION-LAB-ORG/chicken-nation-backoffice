@@ -42,6 +42,10 @@ export default function ClientHeader() {
             label: "Notes & avis",
             onClick: () => handleViewChange("reviews"),
           },
+          {
+            label: "Demandes de carte",
+            onClick: () => handleViewChange("card"),
+          },
         ]}
       />
     );
@@ -49,15 +53,7 @@ export default function ClientHeader() {
 
   return (
     <DashboardPageHeader
-      mode={
-        view === "reviews"
-          ? "view"
-          : view === "create"
-          ? "create"
-          : view === "edit"
-          ? "edit"
-          : "list"
-      }
+      mode={view === "reviews" || view === "card" ? "view" : view}
       onBack={() => handleViewChange("list")}
       title={
         view === "create"
@@ -66,6 +62,8 @@ export default function ClientHeader() {
           ? "Modifier le client"
           : view === "reviews"
           ? "Commentaires"
+          : view === "card"
+          ? "Demandes de Carte Nation"
           : "Détails du client"
       }
       gradient={true}

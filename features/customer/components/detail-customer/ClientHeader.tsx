@@ -33,7 +33,7 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Banner Background */}
-      <div className="h-36 bg-gradient-to-r from-[#F17922] to-[#ff9f5a]" />
+      <div className="h-32 bg-gradient-to-r from-[#F17922] to-[#ff9f5a]" />
 
       <div className="px-6 md:px-8 pb-6">
         {/* Profile Section */}
@@ -63,11 +63,11 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
           </div>
 
           {/* Info */}
-          <div className="flex-1 mt-16 md:mt-0">
+          <div className="flex-1 mt-16 md:-mt-2">
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  <h1 className="text-2xl md:text-3xl font-bold text-white">
                     {customerData.fullName}
                   </h1>
                   <span
@@ -79,7 +79,7 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-white">
                   {customerData.email && (
                     <div className="flex items-center gap-1.5">
                       <Mail className="w-4 h-4" />

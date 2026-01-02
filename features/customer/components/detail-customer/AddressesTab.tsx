@@ -14,8 +14,8 @@ export function AddressesTab({ customerData }: AddressesTabProps) {
           className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
-              <MapPin className="w-6 h-6 text-blue-600" />
+            <div className="bg-gradient-to-br from-[#F17922] to-[#ff9f5a] rounded-lg flex-shrink-0">
+              <MapPin className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-gray-900 mb-1">
@@ -30,7 +30,7 @@ export function AddressesTab({ customerData }: AddressesTabProps) {
                     {address.city}
                   </span>
                 )}
-                <span className="inline-flex items-center px-2 py-1 bg-blue-100 rounded-md text-xs text-blue-700">
+                <span className="inline-flex items-center px-2 py-1 bg-orange-100 rounded-md text-xs text-orange-700">
                   📍 {address.latitude.toFixed(4)},{" "}
                   {address.longitude.toFixed(4)}
                 </span>

@@ -10,6 +10,7 @@ import { useCustomerListQuery } from "../../../../features/customer/queries/cust
 import { UserType } from "../../../../features/users/types/user.types";
 import { ClientsTable } from "../../../../features/customer/components/list-customer";
 import { ClientDetail } from "../../../../features/customer/components/detail-customer";
+import { DemandeCarteList } from "../../../../features/customer/components/liste-demandes-carte";
 
 export default function Clients() {
   const { user } = useAuthStore();
@@ -54,6 +55,7 @@ export default function Clients() {
         <ClientDetail clientId={selectedItem} />
       )}
       {view === "reviews" && <GlobalReviews />}
+      {view === "card" && <DemandeCarteList />}
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function UserMenu() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const displayName = user?.fullname || "Utilisateur";
-  const avatarUrl = formatImageUrl(user?.image,'/icons/account.png');
+  const avatarUrl = formatImageUrl(user?.image, "/icons/account.png");
 
   const handleLogout = async () => {
     try {
@@ -62,19 +62,24 @@ export default function UserMenu() {
               width={32}
               height={32}
               className="w-full h-full cursor-pointer object-cover"
-              unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
+              unoptimized={!user?.image || user?.image?.startsWith("/icons/")}
             />
           </div>
           <ChevronDown
             size={16}
-            className={`text-gray-500 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
+            className={`text-gray-500 transition-transform ${
+              isDropdownOpen ? "rotate-180" : ""
+            }`}
           />
         </button>
 
         {/* Dropdown */}
         {isDropdownOpen && (
           <>
-            <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setIsDropdownOpen(false)}
+            />
             <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center space-x-3">
@@ -85,7 +90,9 @@ export default function UserMenu() {
                       width={40}
                       height={40}
                       className="w-full h-full object-cover"
-                      unoptimized={!user?.image || user?.image?.startsWith('/icons/')}
+                      unoptimized={
+                        !user?.image || user?.image?.startsWith("/icons/")
+                      }
                     />
                   </div>
                   <div>

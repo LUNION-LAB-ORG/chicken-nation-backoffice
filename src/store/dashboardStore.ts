@@ -11,7 +11,7 @@ export type TabKey =
   | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos'
   | 'loyalty' | 'apps' | 'messages-tickets';
 
-export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'reviews';
+export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'reviews' | "card";
 
 export type PeriodFilter = 'today' | 'week' | 'month' | 'lastMonth' | 'year';
 
