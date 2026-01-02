@@ -15,7 +15,7 @@ export default function UserMenu() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const displayName = user?.fullname || "Utilisateur";
-  const avatarUrl = formatImageUrl(user?.image) || "/icons/header/default-avatar.png";
+  const avatarUrl = formatImageUrl(user?.image,'/icons/account.png');
 
   const handleLogout = async () => {
     try {

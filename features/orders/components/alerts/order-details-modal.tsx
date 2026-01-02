@@ -149,7 +149,7 @@ export function OrderDetailsModal({
                         Temps Moyen
                       </p>
                       <p className="text-2xl font-bold text-green-900">
-                        {stats.avgTime}min
+                        {stats.avgTime.toFixed(1)}min
                       </p>
                     </div>
                   </div>

@@ -1,7 +1,7 @@
 import { formatImageUrl } from "@/utils/imageHelpers"
 import { dateToLocalString } from "../../../utils/date/format-date"
 import { Comment } from "../../comments/types/comment.types"
-import { Order } from "../../orders/types/order.types"
+import { Order, OrderStatus } from "../../orders/types/order.types"
 import { mapApiOrdersToUiOrders } from "../../orders/utils/orderMapper"
 import { Address } from "../types/address.type"
 import { CUSTOMER_LOYALTY_POINT_TYPE_MAP, CustomerMapperData, CUSTOMER_STATUS_MAP } from "../types/customer-mapper.types"
@@ -40,7 +40,7 @@ const formatMemberSince = (dateString: string): string => {
  * Calcule les statistiques du client
  */
 const calculateStats = (customer: Customer) => {
-    const orders = customer.orders || []
+    const orders = customer.orders.filter(order => order.status == OrderStatus.COMPLETED) || []
     const favorites = customer.favorites || []
     const loyaltyPoints = customer.total_points || 0
 
@@ -155,7 +155,7 @@ export const mapCustomerData = (customer: Customer): CustomerMapperData => {
         fullName: extractFullName(customer),
         email: customer.email,
         phone: customer.phone,
-        image: formatImageUrl(customer.image),
+        image: formatImageUrl(customer.image,"/icons/account.png"),
 
         // Statut et niveau
         status: CUSTOMER_STATUS_MAP[customer.entity_status],
