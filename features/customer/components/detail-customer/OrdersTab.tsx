@@ -1,13 +1,12 @@
-import { CreditCard } from "lucide-react";
 import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
+import PaymentBadge from "../../../orders/components/PaymentBadge";
 
 interface OrdersTabProps {
   customerData: CustomerMapperData;
 }
 
 export function OrdersTab({ customerData }: OrdersTabProps) {
- 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -57,10 +56,10 @@ export function OrdersTab({ customerData }: OrdersTabProps) {
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <CreditCard className="w-3.5 h-3.5" />
-                    {order.paymentMode}
-                  </div>
+                  <PaymentBadge
+                    status={order.paymentStatus}
+                    mode={order.paymentSource}
+                  />
                 </td>
                 <td className="py-4 px-4">
                   <OrderStatusBadge status={order.status} />
