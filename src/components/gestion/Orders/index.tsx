@@ -32,25 +32,23 @@ export default function Orders() {
     restaurantId: selectedRestaurantId,
     page: pagination.page,
     reference: filters?.search,
-    startDate: filters?.date
-      ? typeof filters?.date == "string"
-        ? filters?.date
-        : filters?.date.toISOString()
+    startDate: filters?.startDate
+      ? typeof filters?.startDate == "string"
+        ? filters?.startDate
+        : filters?.startDate.toISOString()
       : undefined,
-    type:
-      filters?.active_filter &&
-      [OrderType.DELIVERY, OrderType.PICKUP, OrderType.TABLE].includes(
-        filters?.active_filter
-      )
-        ? filters?.active_filter
-        : undefined,
-    status:
-      filters?.active_filter &&
-      ![OrderType.DELIVERY, OrderType.PICKUP, OrderType.TABLE].includes(
-        filters?.active_filter
-      )
-        ? filters?.active_filter
-        : undefined,
+    endDate: filters?.endDate
+      ? typeof filters?.endDate == "string"
+        ? filters?.endDate
+        : filters?.endDate.toISOString()
+      : undefined,
+    type: filters?.type ? filters?.type : undefined,
+    status: filters?.status ? filters?.status : undefined,
+    auto: filters?.source
+      ? filters?.source == "auto"
+        ? true
+        : false
+      : undefined,
   });
 
   return (

@@ -125,6 +125,7 @@ export interface DeliveryFee {
 export interface OrderQuery {
     status?: OrderStatus;
     type?: OrderType;
+    auto?: boolean;
     customerId?: string;
     restaurantId?: string;
     startDate?: string;

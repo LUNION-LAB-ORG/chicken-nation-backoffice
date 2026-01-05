@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:analyze": "ANALYZE=true next build",
-    "start": "next start",
-    "lint": "next lint",
-    "lint:fix": "next lint --fix",
-    "type-check": "tsc --noEmit",
-    "vercel-build": "next build",
-    "security-audit": "npm audit --audit-level moderate"
+    "dev": "bun run --bun next dev",
+    "build": "bun run --bun next build",
+    "start": "bun run --bun next start",
+    "lint": "bun lint",
+    "lint:fix": "bun lint --fix",
+    "type-check": "bun tsc --noEmit",
+    "build:analyze": "ANALYZE=true bun build",
+    "vercel-build": "bun build",
+    "security-audit": "bun audit --audit-level moderate"
   },
   "dependencies": {
     "@next/font": "^14.2.15",
