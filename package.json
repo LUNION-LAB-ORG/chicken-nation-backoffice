@@ -6,12 +6,12 @@
     "dev": "bun run --bun next dev",
     "build": "bun run --bun next build",
     "start": "bun run --bun next start",
-    "lint": "bun lint",
-    "lint:fix": "bun lint --fix",
+    "lint": "bun run --bun lint",
+    "lint:fix": "bun run --bun lint --fix",
     "type-check": "bun tsc --noEmit",
     "build:analyze": "ANALYZE=true bun build",
-    "vercel-build": "bun build",
-    "security-audit": "bun audit --audit-level moderate"
+    "vercel-build": "bun run --bun build",
+    "security-audit": "bun run --bun audit --audit-level moderate"
   },
   "dependencies": {
     "@next/font": "^14.2.15",
