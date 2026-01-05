@@ -116,7 +116,7 @@ function prepareDailyData(orders: Order[]): {
     }
 }
 
-export async function generateOrderReport(orders: Order[]): Promise<void> {
+export async function generateOrderReport(orders: Order[], date?: string): Promise<void> {
     const { dayStats, restaurantNames, totals, grandTotals } = prepareDailyData(orders)
 
     const doc = new jsPDF({
@@ -130,7 +130,7 @@ export async function generateOrderReport(orders: Order[]): Promise<void> {
     doc.rect(0, 0, 297, 15, "F")
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(16)
-    doc.text("Restaurants", 10, 10)
+    doc.text(`RAPPORT${date ? ` : ${date}` : ""}`, 10, 10)
 
     // Préparer les données du tableau
     const tableData: any[] = []

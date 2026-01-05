@@ -1,7 +1,7 @@
 "use client";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
-import ExportDropdown from "@/components/ui/ExportDropdown";
+import ExportDropdown from "./ExportDropdown";
 import { useRBAC } from "@/hooks/useRBAC";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { Order } from "../types/order.types";
@@ -60,7 +60,11 @@ function OrderHeader({ orders }: OrderHeaderProps) {
               label: "Exporter",
               onClick: () => {},
               customComponent: (
-                <ExportDropdown orders={orders} buttonText="Exporter" />
+                <ExportDropdown
+                  orders={orders}
+                  filters={filters}
+                  buttonText="Exporter"
+                />
               ),
             },
           ]}
@@ -69,7 +73,7 @@ function OrderHeader({ orders }: OrderHeaderProps) {
       </div>
     );
   }
-  
+
   return (
     <DashboardPageHeader
       mode={view}
@@ -87,7 +91,11 @@ function OrderHeader({ orders }: OrderHeaderProps) {
           label: "Exporter",
           onClick: () => {}, // Sera remplacé par le dropdown
           customComponent: (
-            <ExportDropdown orders={orders} buttonText="Exporter" />
+            <ExportDropdown
+              orders={orders}
+              filters={filters}
+              buttonText="Exporter"
+            />
           ),
         },
       ]}
