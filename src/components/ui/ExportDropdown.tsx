@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { FileText } from 'lucide-react';
 import { exportOrders, convertOrdersForExport, ExportFormat } from '@/services/exportService';
 import { toast } from 'react-hot-toast';
+import { generateOrderReport } from '../../../features/orders/lib/pdf/order-report-generator';
+import { Order } from '../../../features/orders/types/order.types';
  
 
 interface ExportDropdownProps {
-  orders: unknown[];
+  orders: Order[];
   disabled?: boolean;
   className?: string;
   buttonText?: string;
@@ -60,12 +62,26 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
       toast.error('Aucune commande à exporter');
     }
   };
+ const handleExportPDF = async () => {
+    try {
+      if (!orders || orders.length === 0) {
+        toast.error("Aucune commande à exporter")
+        return
+      }
+
+      await generateOrderReport(orders)
+      toast.success("Rapport PDF généré avec succès")
+    } catch (error) {
+      console.error("[v0] Error generating PDF:", error)
+      toast.error("Erreur lors de la génération du PDF")
+    }
+  }
 
   return (
     <motion.button
       whileHover={{ scale: disabled ? 1 : 1.02 }}
       whileTap={{ scale: disabled ? 1 : 0.98 }}
-      onClick={handleDirectExport}
+      onClick={handleExportPDF}
       disabled={disabled || isExporting}
       className={`
         px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl
@@ -86,7 +102,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
       ) : (
         <>
           <FileText size={16} />
-          {buttonText} CSV
+          {buttonText} PDF
         </>
       )}
     </motion.button>
