@@ -155,7 +155,7 @@ export const mapCustomerData = (customer: Customer): CustomerMapperData => {
         fullName: extractFullName(customer),
         email: customer.email,
         phone: customer.phone,
-        image: formatImageUrl(customer.image,"/icons/account.png"),
+        image: formatImageUrl(customer.image, "/icons/account.png"),
 
         // Statut et niveau
         status: CUSTOMER_STATUS_MAP[customer.entity_status],
@@ -179,6 +179,11 @@ export const mapCustomerData = (customer: Customer): CustomerMapperData => {
 
         // Adresses
         addresses: mapAddresses(customer.addresses),
+
+        // Cartes nationales
+        cardRequests: customer.cardRequests || [],
+        nationCards: customer.nationCards || [],
+
     }
 }
 
