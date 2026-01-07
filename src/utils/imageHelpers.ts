@@ -17,7 +17,7 @@ export const formatImageUrl = (imageUrl?: string, placeholder?: string): string 
 
     // URLs avec uploads/ (cloudfront)
     if (imageUrl.startsWith('chicken-nation/') || imageUrl.includes('chicken-nation/')) {
-      return `${CLOUDFRONT_URL}/${imageUrl}`;
+      return `https://${CLOUDFRONT_URL}/${imageUrl}`;
     }
 
     if (imageUrl.startsWith('/')) {
