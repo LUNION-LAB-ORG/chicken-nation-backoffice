@@ -10,14 +10,14 @@ export const formatImageUrl = (imageUrl?: string, placeholder?: string): string 
       return imageUrl;
     }
 
-    // URLs avec uploads/ (format classique)
-    if (imageUrl.startsWith('uploads/') || imageUrl.includes('uploads/')) {
-      return `${API_URL}/${imageUrl}`;
-    }
-
     // URLs avec uploads/ (cloudfront)
     if (imageUrl.startsWith('chicken-nation/') || imageUrl.includes('chicken-nation/')) {
       return `https://${CLOUDFRONT_URL}/${imageUrl}`;
+    }
+
+    // URLs avec uploads/ (format classique)
+    if (imageUrl.startsWith('uploads/') || imageUrl.includes('uploads/')) {
+      return `${API_URL}/${imageUrl}`;
     }
 
     if (imageUrl.startsWith('/')) {
