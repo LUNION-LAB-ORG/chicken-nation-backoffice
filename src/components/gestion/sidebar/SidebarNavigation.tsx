@@ -68,7 +68,7 @@ export default function SidebarNavigation({
             w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
             ${
               isActive
-                ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
+                ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
                 : "text-gray-600 hover:bg-gray-100"
             }
             transition-all duration-200

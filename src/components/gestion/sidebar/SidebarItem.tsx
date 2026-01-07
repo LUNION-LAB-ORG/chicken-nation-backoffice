@@ -9,13 +9,6 @@ interface SidebarItemProps {
   onClick: () => void;
 }
 
-interface SidebarIconProps {
-  defaultIcon: string;
-  whiteIcon: string;
-  alt: string;
-  active: boolean;
-}
-
 export const SidebarItem: React.FC<SidebarItemProps> = ({
   icon,
   label,
@@ -28,7 +21,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
       w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
       ${
         active
-          ? "bg-gradient-to-r from-[#F17922] to-[#FA6345]"
+          ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
           : "text-gray-600 hover:bg-gray-100"
       }
       transition-all duration-200

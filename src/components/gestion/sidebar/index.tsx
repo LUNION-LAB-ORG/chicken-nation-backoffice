@@ -73,7 +73,11 @@ export default function Sidebar() {
             <SidebarNavigation
               isClient={isClient}
               navigationItems={navigationItems}
-              activeTab={activeTab}
+              activeTab={
+                activeTab == "card-requests" || activeTab == "reviews"
+                  ? "clients"
+                  : activeTab
+              }
               activeSubModule={activeSubModule}
               onNavigationChange={handleNavigationChange}
             />

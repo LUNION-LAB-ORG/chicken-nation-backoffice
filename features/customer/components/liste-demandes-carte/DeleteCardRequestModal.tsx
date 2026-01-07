@@ -1,35 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
 import { CardRequest } from "../../types/carte-nation.types";
+import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 
 interface DeleteCardRequestModalProps {
   isOpen: boolean;
   request: CardRequest;
   onClose: () => void;
-  onSuccess: (deletedId: string) => void;
 }
 
 export function DeleteCardRequestModal({
   isOpen,
   request,
   onClose,
-  onSuccess,
 }: DeleteCardRequestModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = false;
 
   if (!isOpen) return null;
 
-  const handleDelete = async () => {
-    setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      onSuccess(request.id);
-      setIsLoading(false);
-    }, 1000);
-  };
+  const handleDelete = async () => {};
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -52,7 +42,7 @@ export function DeleteCardRequestModal({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Client :</span>
               <span className="text-sm font-medium text-gray-900">
-                {request.customer?.firstname} {request.customer?.lastname}
+                {request.customer?.first_name} {request.customer?.last_name}
               </span>
             </div>
             <div className="flex justify-between">
@@ -64,7 +54,7 @@ export function DeleteCardRequestModal({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Statut :</span>
               <span className="text-sm font-medium text-gray-900">
-                {request.status}
+                {getStatusBadgeRequestCard(request.status)}
               </span>
             </div>
           </div>

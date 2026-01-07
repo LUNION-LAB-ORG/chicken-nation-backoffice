@@ -1,132 +1,27 @@
-import {
-  Calendar,
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  Eye,
-  QrCode,
-  XCircle,
-} from "lucide-react";
-import { CustomerMapperData } from "../../types/customer-mapper.types";
-import Image from "next/image";
 import { formatImageUrl } from "@/utils/imageHelpers";
+import { Calendar, CreditCard, Eye, QrCode } from "lucide-react";
+import Image from "next/image";
 import { dateToLocalString } from "../../../../utils/date/format-date";
+import { CustomerMapperData } from "../../types/customer-mapper.types";
+import { getStatusBadgeCard } from "../../utils/getStatusBadgeCard";
 
 interface CarteTabProps {
   customerData: CustomerMapperData;
 }
 
-interface MockNationCard {
-  id: string;
-  cardNumber: string;
-  nickname: string | null;
-  qrCodeValue: string;
-  cardImageUrl: string;
-  status: "ACTIVE" | "SUSPENDED" | "REVOKED";
-  createdAt: string;
-}
-
-interface MockCardRequest {
-  id: string;
-  institution: string;
-  studentCardUrl: string;
-  status: "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED";
-  createdAt: string;
-  rejectionReason?: string;
-}
-
-const mockNationCard: MockNationCard = {
-  id: "nc-1",
-  cardNumber: "NC-2025-001234",
-  nickname: "JP",
-  qrCodeValue: "https://upload.wikimedia.org/wikipedia/commons/6/6a/QRcode_Wikipedia_FRA.png",
-  cardImageUrl: "https://images.bfmtv.com/w-ERrWRBeOaeZl2UpMSPzuHAHN8=/4x3:1252x705/1248x0/images/La-nouvelle-carte-didentite-biometrique-988102.jpg",
-  status: "ACTIVE",
-  createdAt: "2025-01-13T14:00:00",
-};
-
-const mockCardRequests: MockCardRequest[] = [
-  {
-    id: "cr-1",
-    institution: "Université Félix Houphouët-Boigny",
-    studentCardUrl: "https://images.bfmtv.com/w-ERrWRBeOaeZl2UpMSPzuHAHN8=/4x3:1252x705/1248x0/images/La-nouvelle-carte-didentite-biometrique-988102.jpg",
-    status: "APPROVED",
-    createdAt: "2025-01-12T09:15:00",
-  },
-  {
-    id: "cr-2",
-    institution: "Institut National Polytechnique",
-    studentCardUrl: "https://images.bfmtv.com/w-ERrWRBeOaeZl2UpMSPzuHAHN8=/4x3:1252x705/1248x0/images/La-nouvelle-carte-didentite-biometrique-988102.jpg",
-    status: "REJECTED",
-    createdAt: "2024-12-20T10:30:00",
-    rejectionReason:
-      "La carte étudiante n'est pas lisible. Veuillez soumettre une photo plus claire.",
-  },
-];
 export function CarteTab({ customerData }: CarteTabProps) {
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-            <Clock className="w-3 h-3" />
-            En attente
-          </span>
-        );
-      case "IN_REVIEW":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-            <Eye className="w-3 h-3" />
-            En révision
-          </span>
-        );
-      case "APPROVED":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-            <CheckCircle2 className="w-3 h-3" />
-            Approuvée
-          </span>
-        );
-      case "REJECTED":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
-            <XCircle className="w-3 h-3" />
-            Rejetée
-          </span>
-        );
-      case "ACTIVE":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
-            <CheckCircle2 className="w-3 h-3" />
-            Active
-          </span>
-        );
-      case "SUSPENDED":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-            <Clock className="w-3 h-3" />
-            Suspendue
-          </span>
-        );
-      case "REVOKED":
-        return (
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-            <XCircle className="w-3 h-3" />
-            Révoquée
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
+  const nationCards =
+    customerData?.nationCards && customerData?.nationCards.length
+      ? customerData?.nationCards[0]
+      : null;
+  const cardRequests = customerData?.cardRequests || [];
   return (
     <div className="space-y-6">
       {/* Nation Card if exists */}
-      {mockNationCard && (
-        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-orange-200 p-6">
+      {nationCards && (
+        <div className="bg-linear-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-orange-200 p-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-3 bg-gradient-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg">
+            <div className="p-3 bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg">
               <CreditCard className="w-7 h-7 text-white" />
             </div>
             <div>
@@ -141,7 +36,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
             {/* Card Image */}
             <div className="bg-white rounded-xl p-4 shadow-md">
               <Image
-                src={formatImageUrl(mockNationCard.cardImageUrl)}
+                src={formatImageUrl(nationCards.card_image_url)}
                 alt="Nation Card"
                 width={500}
                 height={300}
@@ -154,7 +49,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
               <div className="bg-white rounded-xl p-4 shadow-sm">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-gray-600">Statut</span>
-                  {getStatusBadge(mockNationCard.status)}
+                  {getStatusBadgeCard(nationCards.status)}
                 </div>
                 <div className="space-y-3">
                   <div>
@@ -162,16 +57,16 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       Numéro de carte
                     </span>
                     <span className="text-lg font-bold text-gray-900">
-                      {mockNationCard.cardNumber}
+                      {nationCards.card_number}
                     </span>
                   </div>
-                  {mockNationCard.nickname && (
+                  {nationCards.nickname && (
                     <div>
                       <span className="text-xs text-gray-500 block mb-1">
                         Surnom
                       </span>
                       <span className="text-sm font-medium text-[#ff9f5a] bg-orange-100 px-3 py-1 rounded-full inline-block">
-                        {mockNationCard.nickname}
+                        {nationCards.nickname}
                       </span>
                     </div>
                   )}
@@ -180,7 +75,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       Date d&apos;activation
                     </span>
                     <span className="text-sm text-gray-900">
-                      {dateToLocalString(new Date(mockNationCard.createdAt))}
+                      {dateToLocalString(new Date(nationCards.created_at))}
                     </span>
                   </div>
                 </div>
@@ -196,14 +91,14 @@ export function CarteTab({ customerData }: CarteTabProps) {
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <Image
-                    src={formatImageUrl(mockNationCard.qrCodeValue)}
+                    src={formatImageUrl(nationCards.qr_code_value)}
                     alt="QR Code"
                     width={150}
                     height={150}
                     className="mx-auto"
                   />
                   <p className="text-xs text-gray-500 text-center mt-2 break-all">
-                    {mockNationCard.qrCodeValue}
+                    {nationCards.qr_code_value}
                   </p>
                 </div>
               </div>
@@ -220,7 +115,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
         </h3>
 
         <div className="space-y-4">
-          {mockCardRequests.map((request) => (
+          {cardRequests.map((request) => (
             <div
               key={request.id}
               className="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition-colors"
@@ -228,9 +123,9 @@ export function CarteTab({ customerData }: CarteTabProps) {
               <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    {getStatusBadge(request.status)}
+                    {getStatusBadgeCard(request.status)}
                     <span className="text-xs text-gray-500">
-                      {dateToLocalString(new Date(request.createdAt))}
+                      {dateToLocalString(new Date(request.created_at))}
                     </span>
                   </div>
                   <div className="space-y-1">
@@ -238,19 +133,19 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       <span className="font-medium">Institution :</span>{" "}
                       {request.institution}
                     </div>
-                    {request.rejectionReason && (
+                    {request.rejection_reason && (
                       <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                         <p className="text-sm text-red-800">
                           <span className="font-semibold">
                             Raison du rejet :
                           </span>{" "}
-                          {request.rejectionReason}
+                          {request.rejection_reason}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                   <button className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex items-center gap-2">
                     <Eye className="w-4 h-4" />
                     Voir la carte

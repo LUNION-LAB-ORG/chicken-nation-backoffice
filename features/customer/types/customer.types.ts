@@ -5,7 +5,7 @@ import { Order } from "../../orders/types/order.types";
 import { PromotionUsage } from "../../promotion/types/promotion.types";
 import { Address } from "./address.type";
 import { Favorite } from "./favorite.types";
-
+import { NationCard, CardRequest } from "./carte-nation.types"
 
 export enum LoyaltyPointIsUsed {
   YES = 'YES',
@@ -50,6 +50,8 @@ export interface Customer {
   Message?: Message[];
   TicketThread?: TicketThread[];
   Conversation?: Conversation[];
+  cardRequests?: CardRequest[];
+  nationCards?: NationCard[];
   //   Voucher?: Voucher[];
   // Metadata
   entity_status: EntityStatus;

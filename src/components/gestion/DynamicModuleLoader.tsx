@@ -88,7 +88,9 @@ export default function DynamicModuleLoader() {
     case "orders":
       return <Orders />;
     case "clients":
-      return <Clients/>;
+    case "reviews":
+    case "card-requests":
+      return <Clients />;
     case "inventory":
       return <Inventory />;
     case "restaurants":

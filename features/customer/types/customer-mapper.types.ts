@@ -1,6 +1,7 @@
 import { EntityStatus } from "../../../types"
 import { OrderTable } from "../../orders/types/ordersTable.types"
 import { LoyaltyLevel, LoyaltyPointType } from "../types/customer.types"
+import { CardRequest, NationCard } from "./carte-nation.types"
 
 export type CustomerMapperStatus = "Nouveau" | "Active" | "Inactif" | "Supprimé"
 export type LoyaltyPointTypeMapper = "Gagné" | "Utilisé" | "Expiré" | "Bonus"
@@ -52,6 +53,8 @@ export interface CustomerMapperData {
         latitude: number;
         longitude: number;
     }>;
+    cardRequests?: CardRequest[];
+    nationCards?: NationCard[];
 }
 export const CUSTOMER_STATUS_MAP: Record<EntityStatus, CustomerMapperStatus> = {
     "NEW": "Nouveau",

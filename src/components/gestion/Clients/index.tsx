@@ -16,7 +16,9 @@ export default function Clients() {
   const { user } = useAuthStore();
 
   const {
-    clients: { view, selectedItem, filters, pagination, modals },
+    activeTab,
+    "card-requests": { view: viewCardRequest },
+    clients: { view, selectedItem, filters, pagination },
   } = useDashboardStore();
 
   const {
@@ -29,19 +31,21 @@ export default function Clients() {
         ? undefined
         : user?.restaurant_id,
     page: pagination.page,
-    search: filters?.search,
+    search: filters?.search as string,
   });
 
   return (
     <div className="flex-1 overflow-auto p-4 space-y-6">
       <div className="-mt-10">
         <ClientHeader />
-        {view === "list" && (
+        {/* Clients */}
+        {activeTab == "clients" && view === "list" && (
           <UserCounter count={clientResponse?.meta?.total ?? 0} />
         )}
       </div>
 
-      {view === "list" && (
+      {/* Clients */}
+      {activeTab == "clients" && view === "list" && (
         <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]">
           <ClientsTable
             clientResponse={clientResponse}
@@ -51,11 +55,16 @@ export default function Clients() {
         </div>
       )}
 
-      {view === "view" && selectedItem && (
+      {activeTab == "clients" && view === "view" && selectedItem && (
         <ClientDetail clientId={selectedItem} />
       )}
-      {view === "reviews" && <GlobalReviews />}
-      {view === "card" && <DemandeCarteList />}
+      {/* Review */}
+      {activeTab == "reviews" && view === "list" && <GlobalReviews />}
+
+      {/* Carte Nation */}
+      {activeTab == "card-requests" && viewCardRequest === "list" && (
+        <DemandeCarteList />
+      )}
     </div>
   );
 }

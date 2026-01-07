@@ -1,57 +1,37 @@
 "use client";
 
+import { Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
-import { XCircle, Loader2 } from "lucide-react";
+import { useReviewRequestMutation } from "../../queries/carte-nation/card-nation.mutation";
 import { CardRequest } from "../../types/carte-nation.types";
 
 interface RejectCardModalProps {
   isOpen: boolean;
   request: CardRequest;
   onClose: () => void;
-  onSuccess: (updatedRequest: CardRequest) => void;
 }
 
 export function RejectCardModal({
   isOpen,
   request,
   onClose,
-  onSuccess,
 }: RejectCardModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const error = "";
   const [reason, setReason] = useState("");
-  const [error, setError] = useState("");
 
-  if (!isOpen) return null;
-
+  const { mutateAsync: rejectMutaion, isPending } = useReviewRequestMutation();
   const handleReject = async () => {
-    if (!reason.trim()) {
-      setError("Veuillez fournir une raison pour le rejet");
-      return;
-    }
-
-    if (reason.trim().length < 10) {
-      setError("La raison doit contenir au moins 10 caractères");
-      return;
-    }
-
-    setIsLoading(true);
-    setError("");
-
-    // Simulate API call
-    setTimeout(() => {
-      const updatedRequest: CardRequest = {
-        ...request,
+    await rejectMutaion({
+      id: request.id,
+      data: {
         status: "REJECTED",
-        rejection_reason: reason.trim(),
-        reviewed_at: new Date().toISOString(),
-        reviewed_by: "admin-current-user",
-      };
-
-      onSuccess(updatedRequest);
-      setIsLoading(false);
-    }, 1000);
+        rejection_reason: reason,
+      },
+    });
+    onClose();
   };
 
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4">
@@ -72,7 +52,7 @@ export function RejectCardModal({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Client :</span>
               <span className="text-sm font-medium text-gray-900">
-                {request.customer?.firstname} {request.customer?.lastname}
+                {request.customer?.first_name} {request.customer?.last_name}
               </span>
             </div>
             <div className="flex justify-between">
@@ -95,7 +75,6 @@ export function RejectCardModal({
               value={reason}
               onChange={(e) => {
                 setReason(e.target.value);
-                setError("");
               }}
               placeholder="Expliquez pourquoi cette demande est rejetée (min. 10 caractères)..."
               rows={4}
@@ -112,17 +91,17 @@ export function RejectCardModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            disabled={isLoading}
-            className="w-full py-3 rounded-lg border border-gray-300 font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isPending}
+            className="w-full cursor-pointer py-3 rounded-lg border border-gray-300 font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Annuler
           </button>
           <button
             onClick={handleReject}
-            disabled={isLoading}
-            className="w-full py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={isPending}
+            className="w-full cursor-pointer py-3 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isLoading ? (
+            {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Traitement...

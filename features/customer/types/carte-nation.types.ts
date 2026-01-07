@@ -1,4 +1,6 @@
-// Status types as string literals
+import { Customer } from "./customer.types"
+
+
 export type CardRequestStatus = "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED" | "EXPIRED"
 
 export type NationCardStatus = "ACTIVE" | "SUSPENDED" | "REVOKED"
@@ -17,14 +19,7 @@ export interface CardRequest {
     updated_at: string
     nation_card?: NationCard | null
     // Relations
-    customer?: {
-        id: string
-        firstname: string
-        lastname: string
-        email: string | null
-        phone: string
-        image: string | null
-    }
+    customer?: Customer
 }
 
 export interface NationCard {
@@ -40,4 +35,20 @@ export interface NationCard {
     updated_at: string
     // Relations
     card_request?: CardRequest
+}
+
+export interface CardRequestQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: CardRequestStatus;
+    institution?: string;
+}
+
+export interface NationCardQuery {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: NationCardStatus;
+    institution?: string;
 }

@@ -9,16 +9,16 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
   | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos'
-  | 'loyalty' | 'apps' | 'messages-tickets';
+  | 'loyalty' | 'apps' | 'messages-tickets' | 'card-requests' | "reviews";
 
-export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'reviews' | "card";
+export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
 export type PeriodFilter = 'today' | 'week' | 'month' | 'lastMonth' | 'year';
 
-interface SectionState<T = any> {
+interface SectionState<T = unknown> {
   view: ViewType;
   selectedItem?: T;
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   pagination: {
     page: number;
     limit: number;
@@ -47,6 +47,8 @@ export interface DashboardState {
   promos: SectionState;
   loyalty: SectionState;
   apps: SectionState;
+  'card-requests': SectionState;
+  reviews: SectionState;
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
@@ -54,7 +56,7 @@ export interface DashboardState {
   setSelectedPeriod: (period: PeriodFilter) => void;
   setSectionView: (section: TabKey, view: ViewType) => void;
   setSelectedItem: <T>(section: TabKey, item: T) => void;
-  setFilter: (section: TabKey, key: string, value: any) => void;
+  setFilter: (section: TabKey, key: string, value: unknown) => void;
   resetFilters: (section: TabKey) => void;
   setPagination: (section: TabKey, page: number, limit: number) => void;
   toggleModal: (section: TabKey, modalName: string) => void;
@@ -101,6 +103,8 @@ export const useDashboardStore = create<DashboardState>()(
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
       apps: createInitialSectionState(),
+      "card-requests": createInitialSectionState(),
+      reviews: createInitialSectionState(),
 
       // Actions Globales
       setActiveTab: (tab) => set((state) => {
@@ -140,7 +144,7 @@ export const useDashboardStore = create<DashboardState>()(
         }),
 
       resetSection: (section) => set((state) => {
-        state[section] = createInitialSectionState() as any;
+        state[section] = createInitialSectionState();
       }),
     })),
     {
