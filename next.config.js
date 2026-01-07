@@ -37,6 +37,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "upload.wikimedia.org",
       },
+      {
+        protocol: "https",
+        hostname: "dvsxt5681pvqm.cloudfront.net",
+      },
     ],
     // ✅ PERFORMANCE: Formats d'images modernes
     formats: ["image/webp", "image/avif"],
