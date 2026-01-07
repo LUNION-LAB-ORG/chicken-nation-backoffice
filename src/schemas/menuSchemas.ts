@@ -1,5 +1,5 @@
 import { z } from 'zod';
- 
+
 // Validation des suppléments
 export const SupplementItemSchema = z.object({
   id: z.string().min(1, 'ID du supplément requis'),
@@ -34,17 +34,15 @@ export const MenuItemSchema = z.object({
   id: z.string().min(1, 'ID du menu requis'),
   name: z.string()
     .min(1, 'Nom du menu requis')
-    .max(100, 'Nom trop long')
-    .regex(/^[a-zA-ZÀ-ÿ0-9\s\-']+$/, 'Caractères invalides dans le nom'),
+    .max(100, 'Nom trop long'),
   description: z.string()
-    .max(500, 'Description trop longue')
-    .regex(/^[a-zA-ZÀ-ÿ0-9\s\-'.,!?]+$/, 'Caractères invalides dans la description'),
-  restaurant: z.string(),  
-  restaurantId: z.string(),  
+    .max(200, 'Description trop longue'),
+  restaurant: z.string(),
+  restaurantId: z.string(),
   price: z.string()
     .regex(/^\d+(\.\d{1,2})?$/, 'Format de prix invalide')
     .refine(val => parseFloat(val) > 0, 'Prix doit être positif'),
-  categoryId: z.string(),  
+  categoryId: z.string(),
   category_id: z.string().optional(),
   category: z.union([MenuCategorySchema, z.string()]).optional(),
   isAvailable: z.boolean(),
@@ -65,7 +63,7 @@ export const MenuItemSchema = z.object({
   totalReviews: z.number().min(0),
   is_promotion: z.boolean(),
   promotion_price: z.union([z.number(), z.string()]).optional(),
-  dish_supplements: z.array(z.any()).optional(),  
+  dish_supplements: z.array(z.any()).optional(),
   dish_restaurants: z.array(z.any()).optional(),
   is_alway_epice: z.boolean().default(false), // ✅ Nom corrigé sans "s"
   private: z.boolean().default(false) // ✅ Nom corrigé sans "s"

@@ -679,7 +679,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               <motion.div
                 onClick={() => setImagePreview(null)}
                 className="absolute top-3 right-3 p-1 bg-white cursor-pointer rounded-xl text-[#F17922]
-                 border-[#F17922] border-1 hover:border-[#F17922] text-sm px-[10px]"
+                 border-[#F17922] border hover:border-[#F17922] text-sm px-[10px]"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >

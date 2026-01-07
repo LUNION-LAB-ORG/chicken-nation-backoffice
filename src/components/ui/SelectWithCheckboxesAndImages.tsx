@@ -44,8 +44,6 @@ const SelectWithCheckboxesAndImages = ({
       
       if (hasRealDifference) {
         onChange(validValues);
-      } else {
-        
       }
     }
   }, [options, value, onChange]);
@@ -57,7 +55,7 @@ const SelectWithCheckboxesAndImages = ({
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false)
-        setSearchTerm('') // Réinitialiser la recherche à la fermeture
+        setSearchTerm('')
       }
     }
 
@@ -78,11 +76,14 @@ const SelectWithCheckboxesAndImages = ({
     onChange(newValue)
   }
 
-  // Filtrer les options en fonction du terme de recherche
-  const filteredOptions = options.filter(option => 
-    option.label.toLowerCase().includes(searchTerm.toLowerCase()) && 
-    // Ne montrer que les suppléments disponibles (available: true)
-    (option.available === undefined || option.available === true)
+  // Filtrer les options disponibles
+  const availableOptions = options.filter(option => 
+    option.available === undefined || option.available === true
+  )
+
+  // Filtrer en fonction du terme de recherche
+  const filteredOptions = availableOptions.filter(option => 
+    option.label.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const renderDropdown = () => {
@@ -136,6 +137,55 @@ const SelectWithCheckboxesAndImages = ({
           </div>
           
           <div className="py-0">
+            {/* Option "Tout sélectionner" */}
+            <div
+              className="flex items-center justify-between px-4 py-3 bg-[#f5f5f5] hover:bg-[#e5e5e5] cursor-pointer border-b-2 border-white"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                // Si tous sont sélectionnés, on désélectionne tout, sinon on sélectionne tout
+                onChange(
+                  value.length === availableOptions.length
+                    ? []
+                    : availableOptions.map((opt) => opt.value)
+                );
+                return false;
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <span className="text-[#595959] font-regular text-[13px]">
+                Tout sélectionner
+              </span>
+              <div
+                className={`w-6 h-6 rounded-md ${
+                  value.length === availableOptions.length
+                    ? "bg-[#F17922]"
+                    : "border-2 border-gray-300"
+                } flex items-center justify-center`}
+              >
+                {value.length === availableOptions.length && (
+                  <svg
+                    width="14"
+                    height="10"
+                    viewBox="0 0 14 10"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M1 5L5 9L13 1"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              </div>
+            </div>
+
             {/* Message si aucun résultat */}
             {filteredOptions.length === 0 && (
               <div className="px-4 py-3 text-center text-gray-500 text-sm">
@@ -193,7 +243,6 @@ const SelectWithCheckboxesAndImages = ({
                         <path d="M1 5L5 9L13 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
-                   
                   </div>
                 </div>
               ))}
