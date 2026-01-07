@@ -1,4 +1,5 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const CLOUDFRONT_URL = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
 
 export const formatImageUrl = (imageUrl?: string, placeholder?: string): string => {
   if (!imageUrl) return formatImageUrl(placeholder || '/icons/image.png');
@@ -12,6 +13,11 @@ export const formatImageUrl = (imageUrl?: string, placeholder?: string): string 
     // URLs avec uploads/ (format classique)
     if (imageUrl.startsWith('uploads/') || imageUrl.includes('uploads/')) {
       return `${API_URL}/${imageUrl}`;
+    }
+
+    // URLs avec uploads/ (cloudfront)
+    if (imageUrl.startsWith('chicken-nation/') || imageUrl.includes('chicken-nation/')) {
+      return `${CLOUDFRONT_URL}/${imageUrl}`;
     }
 
     if (imageUrl.startsWith('/')) {
