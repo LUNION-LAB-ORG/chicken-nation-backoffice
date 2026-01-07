@@ -213,6 +213,7 @@ export function DemandeCarteList() {
               alt="Carte étudiante"
               width={1200}
               height={800}
+              unoptimized={true}
               className="w-full h-auto rounded-xl shadow-2xl"
             />
           </div>

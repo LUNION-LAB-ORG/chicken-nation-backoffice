@@ -40,6 +40,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
                 alt="Nation Card"
                 width={500}
                 height={300}
+                unoptimized={true}
                 className="w-full h-auto object-center rounded-lg"
               />
             </div>
@@ -95,6 +96,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
                     alt="QR Code"
                     width={150}
                     height={150}
+                    unoptimized={true}
                     className="mx-auto"
                   />
                   <p className="text-xs text-gray-500 text-center mt-2 break-all">
