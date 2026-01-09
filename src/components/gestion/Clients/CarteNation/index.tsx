@@ -79,18 +79,24 @@ export default function CarteNation() {
               (selectedItem as NationCard).customer?.last_name
             }
             action={
-              (modals?.activate ||
-                modals?.suspend ||
-                modals?.revoke ||
-                "activate") as "activate" | "suspend" | "revoke"
+              (modals?.activate
+                ? "activate"
+                : modals?.suspend
+                ? "suspend"
+                : modals?.revoke
+                ? "revoke"
+                : "activate") as "activate" | "suspend" | "revoke"
             }
             onClose={() => {
               handleToggleCardModal(
                 null,
-                (modals?.activate ||
-                  modals?.suspend ||
-                  modals?.revoke ||
-                  "activate") as "activate" | "suspend" | "revoke"
+                (modals?.activate
+                  ? "activate"
+                  : modals?.suspend
+                  ? "suspend"
+                  : modals?.revoke
+                  ? "revoke"
+                  : "activate") as "activate" | "suspend" | "revoke"
               );
             }}
           />
