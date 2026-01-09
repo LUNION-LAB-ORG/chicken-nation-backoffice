@@ -59,7 +59,7 @@ export default function SidebarNavigation({
                     active={isParentActive}
                   />
                   <span
-                    className={`text-sm ${isParentActive ? "text-white" : ""}`}
+                    className={`text-sm ${isParentActive ? "text-white" : "text-gray-600"}`}
                   >
                     {item.label}
                   </span>
@@ -99,7 +99,7 @@ export default function SidebarNavigation({
                       className={`text-sm ${
                         sub.id.includes(activeTab)
                           ? "text-[#F17922]"
-                          : "text-gray-500"
+                          : "text-gray-600"
                       }`}
                     >
                       {sub.label}
