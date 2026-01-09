@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { toast } from "react-hot-toast";
 import { cardNationKeyQuery } from "./index.query";
-import { getAllRequests, getRequestById } from "../../services/carte-nation.service";
-import { CardRequestQuery } from "../../types/carte-nation.types";
+import { getAllRequests, getRequestById } from "../services/carte-nation.service";
+import { CardRequestQuery } from "../types/carte-nation.types";
 
 // Options pour la liste des demandes
 export const requestListQueryOption = (query?: CardRequestQuery) => ({

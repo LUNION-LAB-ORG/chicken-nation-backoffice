@@ -1,6 +1,6 @@
 import { getAuthToken } from "@/utils/authUtils";
 import { getHumanReadableError } from '@/utils/errorMessages';
-import { PaginatedResponse } from '../../../types';
+import { PaginatedResponse } from '../../../../types';
 import {
     CardRequest,
     CardRequestQuery,

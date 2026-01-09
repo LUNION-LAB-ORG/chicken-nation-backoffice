@@ -1,7 +1,7 @@
 import { EntityStatus } from "../../../types"
 import { OrderTable } from "../../orders/types/ordersTable.types"
+import { CardRequest, NationCard } from "../carte-nation/types/carte-nation.types"
 import { LoyaltyLevel, LoyaltyPointType } from "../types/customer.types"
-import { CardRequest, NationCard } from "./carte-nation.types"
 
 export type CustomerMapperStatus = "Nouveau" | "Active" | "Inactif" | "Supprimé"
 export type LoyaltyPointTypeMapper = "Gagné" | "Utilisé" | "Expiré" | "Bonus"

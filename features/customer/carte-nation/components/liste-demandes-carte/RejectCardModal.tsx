@@ -2,7 +2,7 @@
 
 import { Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
-import { useReviewRequestMutation } from "../../queries/carte-nation/card-nation.mutation";
+import { useReviewRequestMutation } from "../../queries/card-nation.mutation";
 import { CardRequest } from "../../types/carte-nation.types";
 
 interface RejectCardModalProps {

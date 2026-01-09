@@ -3,10 +3,10 @@ import { Calendar, CreditCard, Eye, QrCode, XCircle } from "lucide-react";
 import Image from "next/image";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
-import { getStatusBadgeCard } from "../../utils/getStatusBadgeCard";
+import { getStatusBadgeCard } from "../../carte-nation/utils/getStatusBadgeCard";
 import { QRCode } from "@/components/kibo-ui/qr-code";
 import { useState } from "react";
-import { CardRequest } from "../../types/carte-nation.types";
+import { CardRequest } from "../../carte-nation/types/carte-nation.types";
 
 interface CarteTabProps {
   customerData: CustomerMapperData;
@@ -162,7 +162,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      Voir la carte
+                      Voir le document
                     </button>
                   </div>
                 </div>

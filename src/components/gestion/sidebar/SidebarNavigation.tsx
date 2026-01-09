@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useGetMenuConfig } from "@/hooks/useMenuConfig";
 import { SidebarIcon } from "./SidebarIcon";
 import { SidebarItem } from "./SidebarItem";
 
@@ -10,150 +9,105 @@ interface SidebarNavigationProps {
   isClient: boolean;
   navigationItems: any[];
   activeTab: string;
-  activeSubModule: string;
-  onNavigationChange: (itemId: string, subModuleId?: string) => void;
+  onNavigationChange: (id: string) => void;
 }
 
 export default function SidebarNavigation({
   isClient,
   navigationItems,
   activeTab,
-  activeSubModule,
   onNavigationChange,
 }: SidebarNavigationProps) {
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
-  const { messageSubModules } = useGetMenuConfig();
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({});
 
-  const handleSectionToggle = (sectionId: string, e: React.MouseEvent) => {
+  const toggleSection = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    setExpandedSections(prev => ({
-      ...prev,
-      [sectionId]: !prev[sectionId]
-    }));
-    onNavigationChange(sectionId);
+    setExpandedSections((p) => ({ ...p, [id]: !p[id] }));
   };
 
-  const handleSubModuleClick = (sectionId: string, subModuleId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onNavigationChange(sectionId, subModuleId);
-  };
-
-  const renderSkeleton = () => (
-    <div className="space-y-1">
-      {[...Array(8)].map((_, index) => (
-        <div
-          key={index}
-          className="w-full flex items-center space-x-3 px-4 py-[10px] rounded-[14px] opacity-0"
-        >
-          <div className="relative w-5 h-5 bg-gray-200 rounded" />
-          <span className="text-sm bg-gray-200 rounded h-4 w-20" />
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderExpandableSection = (item: any) => {
-    const isActive = activeTab === item.id;
-    const isExpanded = expandedSections[item.id];
-    const isSubActive = (subModuleId: string) => activeTab === item.id && activeSubModule === subModuleId;
-
-    return (
-      <div key={item.id}>
-        <button
-          onClick={(e) => handleSectionToggle(item.id, e)}
-          className={`
-            w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
-            ${
-              isActive
-                ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
-                : "text-gray-600 hover:bg-gray-100"
-            }
-            transition-all duration-200
-          `}
-        >
-          <SidebarIcon
-            defaultIcon={item.defaultIcon}
-            whiteIcon={item.whiteIcon}
-            alt={item.label}
-            active={isActive}
-          />
-          <span
-            className={`text-sm -ml-6 font-normal cursor-pointer flex-1 ${
-              isActive ? "text-white" : "text-gray-600"
-            }`}
-          >
-            {item.label}
-          </span>
-          {isExpanded ? (
-            <ChevronDown
-              size={16}
-              className={`transition-transform ${
-                isActive ? "text-white" : "text-gray-400"
-              }`}
-            />
-          ) : (
-            <ChevronRight
-              size={16}
-              className={`transition-transform ${
-                isActive ? "text-white" : "text-gray-400"
-              }`}
-            />
-          )}
-        </button>
-
-        {isExpanded && messageSubModules && (
-          <div className="ml-6 mt-1 space-y-1">
-            {messageSubModules.map((subModule) => {
-              const subActive = isSubActive(subModule.id);
-
-              return (
-                <button
-                  key={subModule.id}
-                  onClick={(e) => handleSubModuleClick(item.id, subModule.id, e)}
-                  className={`
-                    w-full flex items-center cursor-pointer space-x-3 px-4 py-2 rounded-[10px]
-                    ${
-                      subActive
-                        ? "text-[#F17922]"
-                        : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                    }
-                    transition-all duration-200
-                  `}
-                >
-                  <SidebarIcon
-                    defaultIcon={subModule.defaultIcon}
-                    whiteIcon={subModule.whiteIcon}
-                    alt={subModule.label}
-                    active={subActive}
-                  />
-                  <span
-                    className={`text-sm ${
-                      subActive ? "text-[#F17922] font-medium" : ""
-                    }`}
-                  >
-                    {subModule.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  if (!isClient) return renderSkeleton();
+  if (!isClient) return null;
 
   return (
     <div className="space-y-1">
       {navigationItems.map((item) => {
         if (!item.canAccess()) return null;
 
-        if (item.hasSubModules) {
-          return renderExpandableSection(item);
+        const hasItems = item.items?.length > 0;
+        if (hasItems) {
+          const isParentActive = item.items.some((sub: any) =>
+            sub.id.includes(activeTab)
+          );
+          return (
+            <div key={item.id}>
+              <button
+                onClick={(e) => toggleSection(item.id, e)}
+                className={`w-full flex justify-between gap-2 items-center px-4 py-[10px] rounded-[14px]
+                  ${
+                    isParentActive
+                      ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
+                      : "hover:bg-gray-100"
+                  }`}
+              >
+                <div className="flex-1 flex items-center gap-2">
+                  <SidebarIcon
+                    defaultIcon={item.defaultIcon}
+                    whiteIcon={item.whiteIcon}
+                    alt={item.label}
+                    active={isParentActive}
+                  />
+                  <span
+                    className={`text-sm ${isParentActive ? "text-white" : ""}`}
+                  >
+                    {item.label}
+                  </span>
+                </div>
+                {expandedSections[item.id] ? (
+                  <ChevronDown
+                    className={`text-sm ${
+                      isParentActive ? "text-white" : "text-gray-400"
+                    }`}
+                  />
+                ) : (
+                  <ChevronRight
+                    className={`text-sm ${
+                      isParentActive ? "text-white" : "text-gray-400"
+                    }`}
+                  />
+                )}
+              </button>
+
+              {expandedSections[item.id] &&
+                item.items.map((sub: any) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => onNavigationChange(sub.id)}
+                    className={`ml-[10%] w-[90%] flex gap-2 px-4 py-[10px] rounded-[14px] ${
+                      sub.id.includes(activeTab) ? "" : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <SidebarIcon
+                      defaultIcon={sub.defaultIcon}
+                      whiteIcon={sub.whiteIcon}
+                      alt={sub.label}
+                      active={sub.id.includes(activeTab)}
+                      className="size-4"
+                    />
+                    <span
+                      className={`text-sm ${
+                        sub.id.includes(activeTab)
+                          ? "text-[#F17922]"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {sub.label}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          );
         }
 
         return (

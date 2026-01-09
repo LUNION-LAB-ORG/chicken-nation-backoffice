@@ -40,7 +40,6 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
 
       // Invalidate conversations and open the new conversation in the inbox
       queryClient.invalidateQueries({ queryKey: ['conversations'] })
-      window.dispatchEvent(new CustomEvent('openInboxFromHeader', { detail: { conversationId: created.id } }))
     } catch (error) {
       console.error('Erreur création conversation:', error)
     } finally {

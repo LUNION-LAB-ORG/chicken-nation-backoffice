@@ -6,14 +6,14 @@ import { CardRequestStatus } from "../../types/carte-nation.types";
 
 const StatutCardRequestTab: React.FC = () => {
   const {
-    "card-requests": { filters },
+    card_requests: { filters },
     setFilter,
     setPagination,
   } = useDashboardStore();
 
   const handleStatusChange = (key: CardRequestStatus) => {
-    setFilter("card-requests", "status", key);
-    setPagination("card-requests", 1, 10);
+    setFilter("card_requests", "status", key);
+    setPagination("card_requests", 1, 10);
   };
 
   const listStatus: { key: CardRequestStatus; label: string }[] = [

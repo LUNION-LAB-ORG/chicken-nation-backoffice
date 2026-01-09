@@ -3,16 +3,17 @@ import { useCallback, useState } from "react";
 import { Customer } from "../types/customer.types";
 
 export const useClientActions = () => {
-    const { setSelectedItem, setSectionView, toggleModal } = useDashboardStore();
+    const { setActiveTab, setSelectedItem, setSectionView, toggleModal } = useDashboardStore();
     const [isLoading, setIsLoading] = useState(false);
 
     // Handle pour voir le profil du client
     const handleViewClientProfile = useCallback(
         (client: Customer) => {
+            setActiveTab("clients");
             setSelectedItem("clients", client.id);
             setSectionView("clients", "view");
         },
-        [setSelectedItem, setSectionView]
+        [setActiveTab, setSelectedItem, setSectionView]
     );
 
 

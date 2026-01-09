@@ -4,11 +4,11 @@ import React from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { TabKey, useDashboardStore, ViewType } from "@/store/dashboardStore";
 
-export default function ClientHeader() {
+export default function CarteNationHeader() {
   const {
     activeTab,
-    reviews: { view: viewReviews, filters: filtersReviews },
-    clients: { view, filters },
+    card_nation: { view, filters },
+    card_requests: { view: viewCardRequest, filters: filtersCardRequest },
     setActiveTab,
     setFilter,
     setSectionView,
@@ -25,23 +25,27 @@ export default function ClientHeader() {
     setSectionView(newTab, newView);
   };
 
-  if (activeTab == "reviews") {
-    if (viewReviews === "list") {
+  if (activeTab == "card_nation") {
+    if (view === "list") {
       return (
         <DashboardPageHeader
           mode="list"
-          title={"Commentaires"}
+          title={"Carte de la nation"}
           searchConfig={{
-            placeholder: "Rechercher un commentaire",
+            placeholder: "Rechercher une carte",
             buttonText: "Chercher",
-            value: filtersReviews?.search as string,
-            onSearch: (search) => handleSearch("reviews", search),
+            value: filters?.search as string,
+            onSearch: (search) => handleSearch("card_nation", search),
             realTimeSearch: true,
           }}
           actions={[
             {
-              label: "Clients",
-              onClick: () => handleViewChange("clients", "list"),
+              label: "Demandes de carte",
+              onClick: () => handleViewChange("card_requests", "list"),
+            },
+            {
+              label: "Exporter en excel",
+              onClick: () => {},
             },
           ]}
         />
@@ -49,36 +53,36 @@ export default function ClientHeader() {
     }
     return (
       <DashboardPageHeader
-        mode={viewReviews}
-        onBack={() => handleViewChange("reviews", "list")}
+        mode={view}
+        onBack={() => handleViewChange("card_nation", "list")}
         title={
           view === "create"
-            ? "Ajouter un commentaire"
+            ? "Créer une carte"
             : view === "edit"
-            ? "Modifier le commentaire"
-            : "Détails du commentaire"
+            ? "Modifier la carte"
+            : "Détails de la carte"
         }
         gradient={true}
       />
     );
   }
 
-  if (view === "list") {
+  if (viewCardRequest === "list") {
     return (
       <DashboardPageHeader
         mode="list"
-        title={"Clients"}
+        title={"Demandes"}
         searchConfig={{
-          placeholder: "Rechercher un client",
+          placeholder: "Rechercher",
           buttonText: "Chercher",
-          value: filters?.search as string,
-          onSearch: (search) => handleSearch("clients", search),
+          value: filtersCardRequest?.search as string,
+          onSearch: (search) => handleSearch("card_requests", search),
           realTimeSearch: true,
         }}
         actions={[
           {
-            label: "Notes & avis",
-            onClick: () => handleViewChange("reviews", "list"),
+            label: "Carte de la nation",
+            onClick: () => handleViewChange("card_nation", "list"),
           },
         ]}
       />
@@ -86,14 +90,14 @@ export default function ClientHeader() {
   }
   return (
     <DashboardPageHeader
-      mode={view}
-      onBack={() => handleViewChange("clients", "list")}
+      mode={viewCardRequest}
+      onBack={() => handleViewChange("card_requests", "list")}
       title={
         view === "create"
-          ? "Créer un client"
+          ? "Soumettre une demande"
           : view === "edit"
-          ? "Modifier le client"
-          : "Détails du client"
+          ? "Modifier la demande"
+          : "Détails de la demande"
       }
       gradient={true}
     />

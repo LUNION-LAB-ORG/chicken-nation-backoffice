@@ -1,0 +1,98 @@
+"use client";
+
+import { useAuthStore } from "@/store/authStore";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { formatImageUrl } from "@/utils/imageHelpers";
+import { XCircle } from "lucide-react";
+import Image from "next/image";
+import { useCallback } from "react";
+import CarteNationHeader from "../../../../../features/customer/carte-nation/components/CarteNationHeader";
+import { CarteNationTable } from "../../../../../features/customer/carte-nation/components/liste-carte-nation";
+import { DemandeCarteList } from "../../../../../features/customer/carte-nation/components/liste-demandes-carte";
+import { useCardListQuery } from "../../../../../features/customer/carte-nation/queries/cards.query";
+import {
+  NationCard,
+  NationCardStatus,
+} from "../../../../../features/customer/carte-nation/types/carte-nation.types";
+import StatutCardTab from "../../../../../features/customer/carte-nation/components/liste-carte-nation/StatutCardTab";
+
+export default function CarteNation() {
+  const { user } = useAuthStore();
+
+  const {
+    activeTab,
+    card_nation: { selectedItem, view, filters, pagination, modals },
+    card_requests: { view: viewCardRequest },
+    toggleModal,
+    setSelectedItem,
+  } = useDashboardStore();
+
+  const handleToggleCardModal = useCallback(
+    (carte: NationCard, modalName: string) => {
+      toggleModal("card_nation", modalName);
+      setSelectedItem("card_nation", carte);
+    },
+    [toggleModal, setSelectedItem]
+  );
+  const {
+    data: cartesNation,
+    isLoading,
+    error,
+  } = useCardListQuery({
+    page: pagination.page,
+    search: filters?.search as string,
+    status: filters?.status as NationCardStatus,
+    institution: filters?.institution as string,
+  });
+  return (
+    <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="-mt-10">
+        <CarteNationHeader />
+      </div>
+
+      {/* Clients */}
+      {activeTab == "card_nation" && view === "list" && (
+        <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]">
+          <StatutCardTab />
+          <CarteNationTable
+            cartesNationResponse={cartesNation}
+            isLoading={isLoading}
+            error={error}
+          />
+        </div>
+      )}
+
+      {/* Carte Nation */}
+      {activeTab == "card_requests" && viewCardRequest === "list" && (
+        <DemandeCarteList />
+      )}
+      {/* Image Viewer Modal */}
+      {selectedItem && modals?.viewCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => handleToggleCardModal(null, "viewCard")}
+        >
+          <div
+            className="relative max-w-4xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => handleToggleCardModal(null, "viewCard")}
+              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+            >
+              <XCircle className="w-8 h-8" />
+            </button>
+            <Image
+              src={formatImageUrl((selectedItem as NationCard)?.card_image_url)}
+              alt="Carte de la nation"
+              width={1200}
+              height={800}
+              unoptimized={true}
+              className="w-full h-auto rounded-xl shadow-2xl"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

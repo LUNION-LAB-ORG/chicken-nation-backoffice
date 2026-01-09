@@ -10,14 +10,14 @@ import { useCustomerListQuery } from "../../../../features/customer/queries/cust
 import { UserType } from "../../../../features/users/types/user.types";
 import { ClientsTable } from "../../../../features/customer/components/list-customer";
 import { ClientDetail } from "../../../../features/customer/components/detail-customer";
-import { DemandeCarteList } from "../../../../features/customer/components/liste-demandes-carte";
+import { DemandeCarteList } from "../../../../features/customer/carte-nation/components/liste-demandes-carte";
 
 export default function Clients() {
   const { user } = useAuthStore();
 
   const {
     activeTab,
-    "card-requests": { view: viewCardRequest },
+    "card_requests": { view: viewCardRequest },
     clients: { view, selectedItem, filters, pagination },
   } = useDashboardStore();
 
@@ -62,7 +62,7 @@ export default function Clients() {
       {activeTab == "reviews" && view === "list" && <GlobalReviews />}
 
       {/* Carte Nation */}
-      {activeTab == "card-requests" && viewCardRequest === "list" && (
+      {activeTab == "card_requests" && viewCardRequest === "list" && (
         <DemandeCarteList />
       )}
     </div>

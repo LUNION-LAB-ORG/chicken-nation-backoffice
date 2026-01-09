@@ -3,9 +3,9 @@ import { Comment } from "../../comments/types/comment.types";
 import { Conversation, Message, TicketMessage, TicketThread } from "../../messages/types/messages.types";
 import { Order } from "../../orders/types/order.types";
 import { PromotionUsage } from "../../promotion/types/promotion.types";
+import { CardRequest, NationCard } from "../carte-nation/types/carte-nation.types";
 import { Address } from "./address.type";
 import { Favorite } from "./favorite.types";
-import { NationCard, CardRequest } from "./carte-nation.types"
 
 export enum LoyaltyPointIsUsed {
   YES = 'YES',

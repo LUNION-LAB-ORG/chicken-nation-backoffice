@@ -8,12 +8,7 @@ interface SidebarIconProps {
   whiteIcon: string;
   alt: string;
   active: boolean;
-}
-
-interface SidebarProps {
-  isMobile: boolean;
-  isSidebarOpen: boolean;
-  setIsSidebarOpen: (open: boolean) => void;
+  className?: string;
 }
 
 export const SidebarIcon: React.FC<SidebarIconProps> = ({
@@ -21,14 +16,14 @@ export const SidebarIcon: React.FC<SidebarIconProps> = ({
   whiteIcon,
   alt,
   active,
+  className,
 }) => (
-  <div className="relative w-5 h-5">
+  <div className={`relative ${className || "size-5"}`}>
     <Image
       src={active ? whiteIcon : defaultIcon}
       alt={alt}
-      width={20}
-      height={20}
-      className="absolute inset-0"
+      fill
+      className={`inset-0`}
     />
   </div>
 );

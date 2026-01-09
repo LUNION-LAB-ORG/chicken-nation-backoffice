@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useInvalidateCardNationQuery } from "./index.query";
-import { reviewRequest, updateCardStatus } from "../../services/carte-nation.service";
-import { CardRequestStatus } from "../../types/carte-nation.types";
+import { reviewRequest, updateCardStatus } from "../services/carte-nation.service";
+import { CardRequestStatus } from "../types/carte-nation.types";
 
 export const useReviewRequestMutation = () => {
     const invalidate = useInvalidateCardNationQuery();

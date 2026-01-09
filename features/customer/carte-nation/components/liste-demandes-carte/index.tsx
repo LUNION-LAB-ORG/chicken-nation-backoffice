@@ -5,8 +5,8 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import { CheckCircle2, Eye, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
-import { dateToLocalString } from "../../../../utils/date/format-date";
-import { useRequestListQuery } from "../../queries/carte-nation/requests.query";
+import { dateToLocalString } from "../../../../../utils/date/format-date";
+import { useRequestListQuery } from "../../queries/requests.query";
 import { CardRequest, CardRequestStatus } from "../../types/carte-nation.types";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 import { ApproveCardModal } from "./ApproveCardModal";
@@ -15,7 +15,7 @@ import StatutCardRequestTab from "./StatutCardRequestTab";
 
 export function DemandeCarteList() {
   const {
-    "card-requests": { filters, selectedItem, modals },
+    card_requests: { filters, selectedItem, modals },
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
@@ -26,8 +26,8 @@ export function DemandeCarteList() {
 
   const handleToggleOrderModal = useCallback(
     (card_request: CardRequest, modalName: string) => {
-      toggleModal("card-requests", modalName);
-      setSelectedItem("card-requests", card_request);
+      toggleModal("card_requests", modalName);
+      setSelectedItem("card_requests", card_request);
     },
     [toggleModal, setSelectedItem]
   );

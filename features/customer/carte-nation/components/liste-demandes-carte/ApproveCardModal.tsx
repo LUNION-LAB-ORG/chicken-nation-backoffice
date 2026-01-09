@@ -2,7 +2,7 @@
 
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { CardRequest } from "../../types/carte-nation.types";
-import { useReviewRequestMutation } from "../../queries/carte-nation/card-nation.mutation";
+import { useReviewRequestMutation } from "../../queries/card-nation.mutation";
 
 interface ApproveCardModalProps {
   isOpen: boolean;

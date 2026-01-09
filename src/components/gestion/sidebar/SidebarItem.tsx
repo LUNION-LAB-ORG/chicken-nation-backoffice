@@ -18,7 +18,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
   <button
     onClick={onClick}
     className={`
-      w-full flex items-center cursor-pointer space-x-3 px-4 py-[10px] rounded-[14px]
+      w-full flex items-center space-x-3 px-4 py-[10px] rounded-[14px]
       ${
         active
           ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
@@ -28,11 +28,7 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     `}
   >
     {icon}
-    <span
-      className={`text-sm font-normal cursor-pointer ${
-        active ? "text-white" : "text-gray-600"
-      }`}
-    >
+    <span className={`text-sm ${active ? "text-white" : "text-gray-600"}`}>
       {label}
     </span>
   </button>

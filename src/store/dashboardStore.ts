@@ -9,7 +9,7 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
   | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos'
-  | 'loyalty' | 'apps' | 'messages-tickets' | 'card-requests' | "reviews";
+  | 'loyalty' | 'apps' | 'inbox' | 'card_requests' | 'card_nation' | "reviews";
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
@@ -35,7 +35,7 @@ export interface DashboardState {
   // Sections
   dashboard: SectionState;
   marketing: SectionState;
-  "messages-tickets": SectionState;
+  inbox: SectionState;
   orders: SectionState<OrderTable>;
   menus: SectionState<MenuItem>;
   clients: SectionState<string>;
@@ -47,7 +47,8 @@ export interface DashboardState {
   promos: SectionState;
   loyalty: SectionState;
   apps: SectionState;
-  'card-requests': SectionState;
+  card_requests: SectionState;
+  card_nation: SectionState;
   reviews: SectionState;
 
   // Actions
@@ -91,7 +92,7 @@ export const useDashboardStore = create<DashboardState>()(
 
       dashboard: createInitialSectionState(),
       marketing: createInitialSectionState(),
-      "messages-tickets": createInitialSectionState(),
+      inbox: createInitialSectionState(),
       orders: createInitialSectionState<OrderTable>(),
       menus: createInitialSectionState<MenuItem>(),
       clients: createInitialSectionState(),
@@ -103,7 +104,8 @@ export const useDashboardStore = create<DashboardState>()(
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
       apps: createInitialSectionState(),
-      "card-requests": createInitialSectionState(),
+      card_requests: createInitialSectionState(),
+      card_nation: createInitialSectionState(),
       reviews: createInitialSectionState(),
 
       // Actions Globales

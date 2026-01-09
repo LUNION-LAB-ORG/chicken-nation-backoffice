@@ -14,7 +14,7 @@ export function AddressesTab({ customerData }: AddressesTabProps) {
           className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
         >
           <div className="flex items-start gap-4">
-            <div className="bg-gradient-to-br from-[#F17922] to-[#ff9f5a] rounded-lg flex-shrink-0">
+            <div className="bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-lg shrink-0">
               <MapPin className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
