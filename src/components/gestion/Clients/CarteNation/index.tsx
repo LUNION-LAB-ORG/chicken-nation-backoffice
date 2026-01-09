@@ -15,6 +15,7 @@ import {
   NationCardStatus,
 } from "../../../../../features/customer/carte-nation/types/carte-nation.types";
 import StatutCardTab from "../../../../../features/customer/carte-nation/components/liste-carte-nation/StatutCardTab";
+import { UpdateCardStatusModal } from "../../../../../features/customer/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
 
 export default function CarteNation() {
   const { user } = useAuthStore();
@@ -66,6 +67,35 @@ export default function CarteNation() {
       {activeTab == "card_requests" && viewCardRequest === "list" && (
         <DemandeCarteList />
       )}
+      {/* Update Card Status Modal */}
+      {selectedItem &&
+        (modals?.activate || modals?.suspend || modals?.revoke) && (
+          <UpdateCardStatusModal
+            isOpen={true}
+            cardId={(selectedItem as NationCard).id}
+            customerName={
+              (selectedItem as NationCard).customer?.first_name +
+              " " +
+              (selectedItem as NationCard).customer?.last_name
+            }
+            action={
+              (modals?.activate ||
+                modals?.suspend ||
+                modals?.revoke ||
+                "activate") as "activate" | "suspend" | "revoke"
+            }
+            onClose={() => {
+              handleToggleCardModal(
+                null,
+                (modals?.activate ||
+                  modals?.suspend ||
+                  modals?.revoke ||
+                  "activate") as "activate" | "suspend" | "revoke"
+              );
+            }}
+          />
+        )}
+
       {/* Image Viewer Modal */}
       {selectedItem && modals?.viewCard && (
         <div

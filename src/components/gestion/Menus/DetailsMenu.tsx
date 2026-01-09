@@ -76,14 +76,14 @@ export default function DetailsMenu({
           <div className="flex items-center gap-2 w-full xs:w-auto justify-between xs:justify-end">
             <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold">
               {menu.is_promotion ? (
-                <>
+                <div className="flex gap-2 flex-wrap">
                   <span className="text-[#F17922]">
                     {menu.promotion_price} FCFA
                   </span>
-                  <span className="text-xs text-gray-400 line-through">
+                  <span className="text-gray-400 line-through">
                     {menu.price} FCFA
                   </span>
-                </>
+                </div>
               ) : (
                 <span className="text-[#F17922]">{menu.price} FCFA</span>
               )}

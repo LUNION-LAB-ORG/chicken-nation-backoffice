@@ -1,20 +1,22 @@
 "use client";
 
 import {
-  LayoutDashboard,
   BookOpen,
-  ClipboardList,
-  Users,
-  Map,
-  MessageSquare,
-  Ticket,
   Boxes,
-  Store,
-  Megaphone,
-  TrendingUp,
+  ClipboardList,
+  CreditCard,
+  LayoutDashboard,
   LucideIcon,
-  UserCog,
+  Megaphone,
   MessageCircleMore,
+  MessageSquare,
+  Store,
+  BadgePercent,
+  TicketPercent,
+  TrendingUp,
+  UserCog,
+  Users,
+  Tag,
 } from "lucide-react";
 
 import { useRBAC } from "@/hooks/useRBAC";
@@ -41,6 +43,7 @@ export const useGetMenuConfig = (): {
     canViewUtilisateur,
     canViewRestaurant,
     canViewOffreSpeciale,
+    canViewMessage,
   } = useRBAC();
 
   const navigationItems: NavigationItem[] = [
@@ -78,7 +81,7 @@ export const useGetMenuConfig = (): {
         {
           id: "customers-card_nation",
           label: "Carte de la nation",
-          icon: Map,
+          icon: CreditCard,
           canAccess: canViewClient,
         },
       ],
@@ -87,7 +90,7 @@ export const useGetMenuConfig = (): {
       id: "messages_tickets",
       label: "Messages et tickets",
       icon: MessageSquare,
-      canAccess: () => true,
+      canAccess: canViewMessage,
       items: [
         {
           id: "messages_tickets-inbox",
@@ -120,10 +123,30 @@ export const useGetMenuConfig = (): {
       canAccess: canViewUtilisateur,
     },
     {
-      id: "promos",
-      label: "Promotions",
-      icon: Megaphone,
+      id: "fidelisation",
+      label: "Fidélisation",
+      icon: Tag,
       canAccess: canViewOffreSpeciale,
+      items: [
+        {
+          id: "fidelisation-promos",
+          label: "Promotion",
+          icon: Megaphone,
+          canAccess: canViewOffreSpeciale,
+        },
+        {
+          id: "fidelisation-voucher",
+          label: "Bons de réduction",
+          icon: TicketPercent,
+          canAccess: canViewOffreSpeciale,
+        },
+        {
+          id: "fidelisation-promo_code",
+          label: "Codes promo",
+          icon: BadgePercent,
+          canAccess: canViewOffreSpeciale,
+        },
+      ],
     },
     {
       id: "marketing",
