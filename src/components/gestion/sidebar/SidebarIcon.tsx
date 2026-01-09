@@ -24,7 +24,7 @@ export const SidebarIcon: React.FC<SidebarIconProps> = ({
       src={active ? formatImageUrl(whiteIcon) : formatImageUrl(defaultIcon)}
       alt={alt}
       fill
-      className={`inset-0`}
+      className="object-contain"
     />
   </div>
 );
