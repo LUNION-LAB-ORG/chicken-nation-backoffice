@@ -2,12 +2,12 @@
 
 import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { SidebarIcon } from "./SidebarIcon";
 import { SidebarItem } from "./SidebarItem";
+import { NavigationItem } from "@/hooks/useMenuConfig";
 
 interface SidebarNavigationProps {
   isClient: boolean;
-  navigationItems: any[];
+  navigationItems: NavigationItem[];
   activeTab: string;
   onNavigationChange: (id: string) => void;
 }
@@ -33,46 +33,52 @@ export default function SidebarNavigation({
   return (
     <div className="space-y-1">
       {navigationItems.map((item) => {
-        if (!item.canAccess()) return null;
+        if (item.canAccess && !item.canAccess()) return null;
 
-        const hasItems = item.items?.length > 0;
+        const Icon = item.icon;
+        const hasItems = item.items && item.items.length > 0;
+
+        // ---------- PARENT WITH CHILDREN ----------
         if (hasItems) {
-          const isParentActive = item.items.some((sub: any) =>
+          const isParentActive = item.items!.some((sub) =>
             sub.id.includes(activeTab)
           );
+
           return (
             <div key={item.id}>
               <button
                 onClick={(e) => toggleSection(item.id, e)}
-                className={`w-full flex justify-between gap-2 items-center px-4 py-[10px] rounded-[14px]
+                className={`w-full flex justify-between items-center gap-2 px-4 py-[10px] rounded-[14px]
                   ${
                     isParentActive
                       ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
                       : "hover:bg-gray-100"
                   }`}
               >
-                <div className="flex-1 flex items-center gap-2">
-                  <SidebarIcon
-                    defaultIcon={item.defaultIcon}
-                    whiteIcon={item.whiteIcon}
-                    alt={item.label}
-                    active={isParentActive}
+                <div className="flex items-center gap-2">
+                  <Icon
+                    className={`h-5 w-5 ${
+                      isParentActive ? "text-white" : "text-gray-500"
+                    }`}
                   />
                   <span
-                    className={`text-sm ${isParentActive ? "text-white" : "text-gray-600"}`}
+                    className={`text-sm ${
+                      isParentActive ? "text-white" : "text-gray-600"
+                    }`}
                   >
                     {item.label}
                   </span>
                 </div>
+
                 {expandedSections[item.id] ? (
                   <ChevronDown
-                    className={`text-sm ${
+                    className={`h-4 w-4 ${
                       isParentActive ? "text-white" : "text-gray-400"
                     }`}
                   />
                 ) : (
                   <ChevronRight
-                    className={`text-sm ${
+                    className={`h-4 w-4 ${
                       isParentActive ? "text-white" : "text-gray-400"
                     }`}
                   />
@@ -80,45 +86,45 @@ export default function SidebarNavigation({
               </button>
 
               {expandedSections[item.id] &&
-                item.items.map((sub: any) => (
-                  <button
-                    key={sub.id}
-                    onClick={() => onNavigationChange(sub.id)}
-                    className={`ml-[10%] w-[90%] flex gap-2 px-4 py-[10px] rounded-[14px] ${
-                      sub.id.includes(activeTab) ? "" : "hover:bg-gray-50"
-                    }`}
-                  >
-                    <SidebarIcon
-                      defaultIcon={sub.defaultIcon}
-                      whiteIcon={sub.whiteIcon}
-                      alt={sub.label}
-                      active={sub.id.includes(activeTab)}
-                      className="size-4"
-                    />
-                    <span
-                      className={`text-sm ${
-                        sub.id.includes(activeTab)
-                          ? "text-[#F17922]"
-                          : "text-gray-600"
-                      }`}
+                item.items!.map((sub) => {
+                  const SubIcon = sub.icon;
+                  const isActive = sub.id.includes(activeTab);
+
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => onNavigationChange(sub.id)}
+                      className={`ml-[10%] w-[90%] flex items-center gap-2 px-4 py-[10px] rounded-[14px]
+                        ${isActive ? "bg-orange-50" : "hover:bg-gray-50"}`}
                     >
-                      {sub.label}
-                    </span>
-                  </button>
-                ))}
+                      <SubIcon
+                        className={`h-4 w-4 ${
+                          isActive ? "text-[#F17922]" : "text-gray-500"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm ${
+                          isActive ? "text-[#F17922]" : "text-gray-600"
+                        }`}
+                      >
+                        {sub.label}
+                      </span>
+                    </button>
+                  );
+                })}
             </div>
           );
         }
 
+        // ---------- SIMPLE ITEM ----------
         return (
           <SidebarItem
             key={item.id}
             icon={
-              <SidebarIcon
-                defaultIcon={item.defaultIcon}
-                whiteIcon={item.whiteIcon}
-                alt={item.label}
-                active={activeTab === item.id}
+              <Icon
+                className={`h-5 w-5 ${
+                  activeTab === item.id ? "text-white" : "text-gray-500"
+                }`}
               />
             }
             label={item.label}

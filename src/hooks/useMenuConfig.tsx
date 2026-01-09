@@ -1,10 +1,38 @@
 "use client";
 
+import {
+  LayoutDashboard,
+  BookOpen,
+  ClipboardList,
+  Users,
+  Map,
+  MessageSquare,
+  Ticket,
+  Boxes,
+  Store,
+  Megaphone,
+  TrendingUp,
+  LucideIcon,
+  UserCog,
+} from "lucide-react";
+
 import { useRBAC } from "@/hooks/useRBAC";
 import { useAuthStore } from "@/store/authStore";
 
-export const useGetMenuConfig = () => {
+export type CanAccessFn = () => boolean;
+
+export interface NavigationItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  canAccess?: CanAccessFn;
+  items?: NavigationItem[];
+}
+export const useGetMenuConfig = (): {
+  navigationItems: NavigationItem[];
+} => {
   const { user } = useAuthStore();
+
   const {
     canViewPlat,
     canViewCommande,
@@ -14,48 +42,42 @@ export const useGetMenuConfig = () => {
     canViewOffreSpeciale,
   } = useRBAC();
 
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     {
       id: "dashboard",
       label: "Tableau de bord",
-      defaultIcon: "/icons/sidebar/home.png",
-      whiteIcon: "/icons/sidebar/home-white.png",
+      icon: LayoutDashboard,
       canAccess: () =>
         ["ADMIN", "MANAGER", "MARKETING"].includes(user?.role ?? ""),
     },
     {
       id: "menus",
       label: "Menus",
-      defaultIcon: "/icons/sidebar/menu.png",
-      whiteIcon: "/icons/sidebar/menu-white.png",
+      icon: BookOpen,
       canAccess: canViewPlat,
     },
     {
       id: "orders",
       label: "Commandes",
-      defaultIcon: "/icons/sidebar/commande.png",
-      whiteIcon: "/icons/sidebar/commande-white.png",
+      icon: ClipboardList,
       canAccess: canViewCommande,
     },
     {
       id: "customers",
       label: "Clients",
-      defaultIcon: "/icons/sidebar/client.png",
-      whiteIcon: "/icons/sidebar/client-white.png",
+      icon: Users,
       canAccess: canViewClient,
       items: [
         {
           id: "customers-clients",
           label: "Clients",
-          defaultIcon: "/icons/sidebar/client.png",
-          whiteIcon: "/icons/sidebar/client-white.png",
+          icon: Users,
           canAccess: canViewClient,
         },
         {
           id: "customers-card_nation",
           label: "Carte de la nation",
-          defaultIcon: "/icons/sidebar/fidelisation.png",
-          whiteIcon: "/icons/sidebar/fidelisation-white.png",
+          icon: Map,
           canAccess: canViewClient,
         },
       ],
@@ -63,55 +85,44 @@ export const useGetMenuConfig = () => {
     {
       id: "messages_tickets",
       label: "Messages et tickets",
-      defaultIcon: "/icons/sidebar/message.png",
-      whiteIcon: "/icons/sidebar/messages-white.png",
+      icon: MessageSquare,
       canAccess: () => true,
       items: [
         {
           id: "messages_tickets-inbox",
           label: "Inbox",
-          defaultIcon: "/icons/sidebar/message.png",
-          whiteIcon: "/icons/sidebar/inbox.png",
+          icon: Ticket,
         },
-        // {
-        //   id: "messages_tickets-rapport",
-        //   label: "Rapport",
-        // },
       ],
     },
     {
       id: "inventory",
       label: "Inventaires",
-      defaultIcon: "/icons/sidebar/inventaire.png",
-      whiteIcon: "/icons/sidebar/inventaire-white.png",
-      canAccess: () => canViewPlat(),
+      icon: Boxes,
+      canAccess: canViewPlat,
     },
     {
       id: "restaurants",
       label: "Restaurants",
-      defaultIcon: "/icons/sidebar/restaurants.png",
-      whiteIcon: "/icons/sidebar/restaurants-white.png",
+      icon: Store,
       canAccess: canViewRestaurant,
     },
     {
       id: "personnel",
       label: "Personnel",
-      defaultIcon: "/icons/sidebar/client.png",
-      whiteIcon: "/icons/sidebar/client-white.png",
+      icon: UserCog,
       canAccess: canViewUtilisateur,
     },
     {
       id: "promos",
       label: "Promotions",
-      defaultIcon: "/icons/sidebar/promotions.png",
-      whiteIcon: "/icons/sidebar/promotions-white.png",
+      icon: Megaphone,
       canAccess: canViewOffreSpeciale,
     },
     {
       id: "marketing",
       label: "Marketing",
-      defaultIcon: "/icons/marketing.png",
-      whiteIcon: "/icons/marketing.png",
+      icon: TrendingUp,
       canAccess: () =>
         ["ADMIN", "MANAGER", "MARKETING"].includes(user?.role ?? ""),
     },
