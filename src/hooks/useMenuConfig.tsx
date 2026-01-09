@@ -14,6 +14,7 @@ import {
   TrendingUp,
   LucideIcon,
   UserCog,
+  MessageCircleMore,
 } from "lucide-react";
 
 import { useRBAC } from "@/hooks/useRBAC";
@@ -91,8 +92,13 @@ export const useGetMenuConfig = (): {
         {
           id: "messages_tickets-inbox",
           label: "Inbox",
-          icon: Ticket,
+          icon: MessageCircleMore,
         },
+        // {
+        //   id: "messages_tickets-ticket",
+        //   label: "Inbox",
+        //   icon: Ticket,
+        // },
       ],
     },
     {

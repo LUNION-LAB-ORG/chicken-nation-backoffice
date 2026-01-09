@@ -1,7 +1,7 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const CLOUDFRONT_URL = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
 
 export const formatImageUrl = (imageUrl?: string, placeholder?: string): string => {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  const CLOUDFRONT_URL = process.env.NEXT_PUBLIC_CLOUDFRONT_URL;
   if (!imageUrl) return formatImageUrl(placeholder || '/icons/image.png');
 
   try {

@@ -74,8 +74,19 @@ export default function DetailsMenu({
             </p>
           </div>
           <div className="flex items-center gap-2 w-full xs:w-auto justify-between xs:justify-end">
-            <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold text-[#F17922]">
-              {menu.price} FCFA
+            <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold">
+              {menu.is_promotion ? (
+                <>
+                  <span className="text-[#F17922]">
+                    {menu.promotion_price} FCFA
+                  </span>
+                  <span className="text-xs text-gray-400 line-through">
+                    {menu.price} FCFA
+                  </span>
+                </>
+              ) : (
+                <span className="text-[#F17922]">{menu.price} FCFA</span>
+              )}
             </span>
             {canUpdatePlat() && (
               <button

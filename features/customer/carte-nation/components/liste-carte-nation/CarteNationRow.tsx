@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import Checkbox from "@/components/ui/Checkbox";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { createPortal } from "react-dom";
 import CarteNationContextMenu from "./CarteNationContextMenu";
 import { dateToLocalString } from "../../../../../utils/date/format-date";
 import { getStatusBadgeCard } from "../../utils/getStatusBadgeCard";
 import { NationCard } from "../../types/carte-nation.types";
+import { formatImageUrl } from "@/utils/imageHelpers";
 
 interface ClientRowProps {
   carteNation: NationCard;
@@ -140,12 +141,14 @@ export function CarteNationRow({
       </td>
       <td className="py-3 px-4">
         <div className="flex items-center gap-3">
-          {carteNation?.customer?.image && (
+          {carteNation?.customer?.image ? (
             <img
-              src={carteNation.customer.image}
+              src={formatImageUrl(carteNation.customer.image)}
               alt=""
               className="w-8 h-8 rounded-full object-cover"
             />
+          ) : (
+            <User className="h-8 w-8 rounded-full object-cover" />
           )}
           <span className="text-sm font-medium text-gray-900">
             {displayName}
@@ -158,9 +161,7 @@ export function CarteNationRow({
       <td className="py-3 px-4 text-sm text-gray-600">
         {carteNation.card_request?.institution || "---"}
       </td>
-      <td className="py-3 px-4">
-        {getStatusBadgeCard(carteNation.status)}
-      </td>
+      <td className="py-3 px-4">{getStatusBadgeCard(carteNation.status)}</td>
       <td className="py-3 px-4 text-sm text-gray-500">{formattedDate}</td>
       <td className="py-3 px-4 text-center relative">
         <button
