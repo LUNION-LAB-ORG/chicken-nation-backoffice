@@ -1,5 +1,6 @@
 "use client";
 
+import { formatImageUrl } from "@/utils/imageHelpers";
 import Image from "next/image";
 import React from "react";
 
@@ -20,7 +21,7 @@ export const SidebarIcon: React.FC<SidebarIconProps> = ({
 }) => (
   <div className={`relative ${className || "size-5"}`}>
     <Image
-      src={active ? whiteIcon : defaultIcon}
+      src={active ? formatImageUrl(whiteIcon) : formatImageUrl(defaultIcon)}
       alt={alt}
       fill
       className={`inset-0`}
