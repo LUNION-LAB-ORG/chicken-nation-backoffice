@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 export default function OneSignalProvider() {
   useEffect(() => {
+    const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
     if (typeof window === 'undefined') return;
 
     const script = document.createElement('script');
@@ -14,7 +15,7 @@ export default function OneSignalProvider() {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function (OneSignal) {
         await OneSignal.init({
-          appId: '84ad1a4a-379f-477a-b498-4d51766dde9e',
+          appId,
         });
       });
     };
