@@ -10,108 +10,91 @@ import {
 } from "@/services/exportService";
 import { toast } from "react-hot-toast";
 import { generateOrderReport } from "../lib/pdf/order-report-generator";
-import { Order } from "../types/order.types";
+import { OrderStatus, OrderType } from "../types/order.types";
 import { dateRangeToLocalString } from "../../../utils/date/format-date";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { useOrderListQuery } from "../queries/order-list.query";
+import { getAllOrders } from "../services/order-service";
+import { startOfMonth } from "date-fns";
 
 interface ExportDropdownProps {
-  orders: Order[];
-  filters: Record<string, any>;
-  disabled?: boolean;
   className?: string;
   buttonText?: string;
 }
 
 const ExportDropdown: React.FC<ExportDropdownProps> = ({
-  orders,
-  filters,
-  disabled = false,
   buttonText = "Exporter",
+  className,
 }) => {
-  const [isExporting, setIsExporting] = useState(false);
+  const {
+    orders: { filters, pagination },
+    selectedRestaurantId,
+  } = useDashboardStore();
 
-  const handleExport = async (format: ExportFormat) => {
-    if (orders.length === 0) {
-      toast.error("Aucune commande à exporter");
-      return;
-    }
+  const [isExporting, setIsExporting] = useState(false);
+  const handleExportPDF = async () => {
+    const startDate = !filters?.startDate
+      ? startOfMonth(new Date())
+      : typeof filters?.startDate == "string"
+      ? new Date(filters?.startDate as string)
+      : (filters?.startDate as Date);
+
+    const endDate = !filters?.endDate
+      ? new Date()
+      : typeof filters?.endDate == "string"
+      ? new Date(filters?.endDate as string)
+      : (filters?.endDate as Date);
 
     setIsExporting(true);
-
     try {
-      const exportData = convertOrdersForExport(orders);
+      const result = await getAllOrders({
+        restaurantId: selectedRestaurantId,
+        pagination: false,
+        page: pagination.page,
+        reference: filters?.search as string,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        type: filters?.type ? (filters?.type as OrderType) : undefined,
+        status: filters?.status ? (filters?.status as OrderStatus) : undefined,
+        auto: filters?.source
+          ? filters?.source == "auto"
+            ? true
+            : false
+          : undefined,
+      });
 
-      // Ajouter un petit délai pour l'UX
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const orders = result.data;
 
-      exportOrders(exportData, format);
-
-      toast.success(
-        `Export ${format.toUpperCase()} réussi ! ${orders.length} commande${
-          orders.length > 1 ? "s" : ""
-        } exportée${orders.length > 1 ? "s" : ""}.`
-      );
-    } catch (error) {
-      console.error("Erreur lors de l'export:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Erreur lors de l'export des commandes"
-      );
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleDirectExport = () => {
-    if (!disabled && orders.length > 0) {
-      handleExport("csv");
-    } else if (orders.length === 0) {
-      toast.error("Aucune commande à exporter");
-    }
-  };
-
-  const handleExportPDF = async () => {
-    try {
       if (!orders || orders.length === 0) {
         toast.error("Aucune commande à exporter");
         return;
       }
-      const date =
-        filters?.startDate && filters?.endDate
-          ? dateRangeToLocalString(
-              typeof filters.startDate === "string"
-                ? new Date(filters.startDate)
-                : filters.startDate,
-              typeof filters.endDate === "string"
-                ? new Date(filters.endDate)
-                : filters.endDate
-            )
-          : "";
+      const date = startDate && endDate ? dateRangeToLocalString(startDate, endDate) : "";
+
       await generateOrderReport(orders, date);
       toast.success("Rapport PDF généré avec succès");
     } catch (error) {
       console.error("[v0] Error generating PDF:", error);
       toast.error("Erreur lors de la génération du PDF");
     }
+    setIsExporting(false);
   };
 
   return (
     <motion.button
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
       onClick={handleExportPDF}
-      disabled={disabled || isExporting}
+      disabled={isExporting}
       className={`
         px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl
         transition-all duration-200 flex items-center justify-center gap-2 min-w-[120px]
         ${
-          disabled || orders.length === 0
-            ? "text-gray-400 bg-gray-100 cursor-not-allowed"
-            : isExporting
+          isExporting
             ? "text-white bg-orange-400 cursor-wait"
             : "text-white bg-[#F17922] hover:bg-[#e06816] hover:shadow-md"
         }
-      `}
+       ${className}`}
     >
       {isExporting ? (
         <>

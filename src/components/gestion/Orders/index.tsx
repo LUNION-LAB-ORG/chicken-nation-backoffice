@@ -11,7 +11,10 @@ import { OrdersTable } from "../../../../features/orders/components/list-order";
 import { AddPaiementModal } from "../../../../features/orders/components/modals/AddPaiementModal";
 import { CancelOrderModal } from "../../../../features/orders/components/modals/CancelOrderModal";
 import { useOrderListQuery } from "../../../../features/orders/queries/order-list.query";
-import { OrderType } from "../../../../features/orders/types/order.types";
+import {
+  OrderStatus,
+  OrderType,
+} from "../../../../features/orders/types/order.types";
 import { UserType } from "../../../../features/users/types/user.types";
 
 export default function Orders() {
@@ -31,19 +34,19 @@ export default function Orders() {
   } = useOrderListQuery({
     restaurantId: selectedRestaurantId,
     page: pagination.page,
-    reference: filters?.search,
+    reference: filters?.search as string,
     startDate: filters?.startDate
       ? typeof filters?.startDate == "string"
         ? filters?.startDate
-        : filters?.startDate.toISOString()
+        : (filters?.startDate as Date).toISOString()
       : undefined,
     endDate: filters?.endDate
       ? typeof filters?.endDate == "string"
         ? filters?.endDate
-        : filters?.endDate.toISOString()
+        : (filters?.endDate as Date).toISOString()
       : undefined,
-    type: filters?.type ? filters?.type : undefined,
-    status: filters?.status ? filters?.status : undefined,
+    type: filters?.type ? (filters?.type as OrderType) : undefined,
+    status: filters?.status ? (filters?.status as OrderStatus) : undefined,
     auto: filters?.source
       ? filters?.source == "auto"
         ? true
@@ -53,7 +56,7 @@ export default function Orders() {
 
   return (
     <div className="flex-1 p-4">
-      <OrderHeader orders={orders?.data || []} />
+      <OrderHeader />
       {view === "list" && (
         <div>
           {/* ✅ Tabs Restaurant - Au-dessus des filtres existants */}

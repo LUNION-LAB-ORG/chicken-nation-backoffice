@@ -137,4 +137,5 @@ export interface OrderQuery {
     sortOrder?: SortOrder;
     page?: number;
     limit?: number;
+    pagination?: boolean;
 }

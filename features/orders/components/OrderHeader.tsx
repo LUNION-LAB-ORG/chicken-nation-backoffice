@@ -1,17 +1,12 @@
 "use client";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
-import ExportDropdown from "./ExportDropdown";
 import { useRBAC } from "@/hooks/useRBAC";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
-import { Order } from "../types/order.types";
 import { OrderAlertsBar } from "./alerts/order-alerts-bar";
+import ExportDropdown from "./ExportDropdown";
 
-interface OrderHeaderProps {
-  orders: Order[];
-}
-
-function OrderHeader({ orders }: OrderHeaderProps) {
+function OrderHeader() {
   const {
     orders: { view, filters },
     setFilter,
@@ -39,7 +34,7 @@ function OrderHeader({ orders }: OrderHeaderProps) {
           searchConfig={{
             placeholder: "Rechercher par référence...",
             buttonText: "Chercher",
-            value: filters?.search,
+            value: filters?.search as string,
             onSearch: handleSearch,
             realTimeSearch: true,
           }}
@@ -59,13 +54,7 @@ function OrderHeader({ orders }: OrderHeaderProps) {
             {
               label: "Exporter",
               onClick: () => {},
-              customComponent: (
-                <ExportDropdown
-                  orders={orders}
-                  filters={filters}
-                  buttonText="Exporter"
-                />
-              ),
+              customComponent: <ExportDropdown buttonText="Exporter" />,
             },
           ]}
         />
@@ -90,13 +79,7 @@ function OrderHeader({ orders }: OrderHeaderProps) {
         {
           label: "Exporter",
           onClick: () => {}, // Sera remplacé par le dropdown
-          customComponent: (
-            <ExportDropdown
-              orders={orders}
-              filters={filters}
-              buttonText="Exporter"
-            />
-          ),
+          customComponent: <ExportDropdown buttonText="Exporter" />,
         },
       ]}
     />
