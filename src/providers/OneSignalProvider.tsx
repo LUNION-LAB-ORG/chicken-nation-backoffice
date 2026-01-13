@@ -14,7 +14,7 @@ export default function OneSignalProvider() {
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       window.OneSignalDeferred.push(async function (OneSignal) {
         await OneSignal.init({
-          appId: '84ad14a4-379f-477a-b498-4d51766dde9e',
+          appId: '84ad1a4a-379f-477a-b498-4d51766dde9e',
         });
       });
     };
