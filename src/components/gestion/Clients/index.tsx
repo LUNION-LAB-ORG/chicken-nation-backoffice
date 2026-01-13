@@ -10,7 +10,7 @@ import { useCustomerListQuery } from "../../../../features/customer/queries/cust
 import { UserType } from "../../../../features/users/types/user.types";
 import { ClientsTable } from "../../../../features/customer/components/list-customer";
 import { ClientDetail } from "../../../../features/customer/components/detail-customer";
-import { DemandeCarteList } from "../../../../features/customer/carte-nation/components/liste-demandes-carte";
+import { DemandeCarteList } from "../../../../features/carte-nation/components/liste-demandes-carte";
 
 export default function Clients() {
   const { user } = useAuthStore();

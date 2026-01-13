@@ -1,7 +1,7 @@
 import { useRBAC } from "@/hooks/useRBAC";
 import { CreditCard, Lock, Trash2, Unlock, User } from "lucide-react";
 import React, { useCallback } from "react";
-import { useClientActions } from "../../../hooks/useClientActions";
+import { useClientActions } from "../../../customer/hooks/useClientActions";
 import { NationCard } from "../../types/carte-nation.types";
 import { useDashboardStore } from "@/store/dashboardStore";
 

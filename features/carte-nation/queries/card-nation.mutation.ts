@@ -4,6 +4,7 @@ import { useInvalidateCardNationQuery } from "./index.query";
 import { reviewRequest, updateCardStatus } from "../services/carte-nation.service";
 import { CardRequestStatus } from "../types/carte-nation.types";
 
+// Mutation pour traiter une demande de carte
 export const useReviewRequestMutation = () => {
     const invalidate = useInvalidateCardNationQuery();
 
@@ -18,6 +19,7 @@ export const useReviewRequestMutation = () => {
     });
 };
 
+// Mutation pour mettre à jour le statut d'une carte
 export const useUpdateCardStatusMutation = () => {
     const invalidate = useInvalidateCardNationQuery();
 

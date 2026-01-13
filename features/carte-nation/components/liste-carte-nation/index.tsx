@@ -4,7 +4,7 @@ import {
   PaginationInfo,
 } from "@/components/TableStates";
 import { useMemo } from "react";
-import { PaginatedResponse } from "../../../../../types";
+import { PaginatedResponse } from "../../../../types";
 import { useCartesNationSelection } from "../../hooks/useCartesNationSelection";
 import { NationCard } from "../../types/carte-nation.types";
 import { CarteNationRow } from "./CarteNationRow";

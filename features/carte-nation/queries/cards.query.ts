@@ -11,7 +11,7 @@ export const cardListQueryOption = (query?: NationCardQuery) => ({
     keepPreviousData: true,
     staleTime: 5 * 60 * 1000,
 });
-
+// Liste des cartes
 export const useCardListQuery = (query?: NationCardQuery) => {
     const result = useQuery(cardListQueryOption(query));
     React.useEffect(() => {
@@ -20,6 +20,7 @@ export const useCardListQuery = (query?: NationCardQuery) => {
     return result;
 };
 
+// Statistiques des cartes
 export const useCardStatsQuery = () => {
     return useQuery({
         queryKey: cardNationKeyQuery("stats"),

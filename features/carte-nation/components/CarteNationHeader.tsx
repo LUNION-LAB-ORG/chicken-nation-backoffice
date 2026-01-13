@@ -3,6 +3,7 @@
 import React from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { TabKey, useDashboardStore, ViewType } from "@/store/dashboardStore";
+import { exportCardsToExcel } from "../services/carte-nation.service";
 
 export default function CarteNationHeader() {
   const {
@@ -45,7 +46,7 @@ export default function CarteNationHeader() {
             },
             {
               label: "Exporter en excel",
-              onClick: () => {},
+              onClick: () => exportCardsToExcel(),
             },
           ]}
         />

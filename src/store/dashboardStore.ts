@@ -8,7 +8,7 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
-  | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos'
+  | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos' | "points"
   | 'loyalty' | 'apps' | 'inbox' | 'card_requests' | 'card_nation' | "reviews";
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
@@ -45,6 +45,7 @@ export interface DashboardState {
   personnel: SectionState;
   ads: SectionState;
   promos: SectionState;
+  points: SectionState;
   loyalty: SectionState;
   apps: SectionState;
   card_requests: SectionState;
@@ -102,6 +103,7 @@ export const useDashboardStore = create<DashboardState>()(
       personnel: createInitialSectionState(),
       ads: createInitialSectionState(),
       promos: createInitialSectionState(),
+      points: createInitialSectionState(),
       loyalty: createInitialSectionState(),
       apps: createInitialSectionState(),
       card_requests: createInitialSectionState(),

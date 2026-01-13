@@ -3,7 +3,7 @@ import Checkbox from "@/components/ui/Checkbox";
 import { Menu, User } from "lucide-react";
 import { createPortal } from "react-dom";
 import CarteNationContextMenu from "./CarteNationContextMenu";
-import { dateToLocalString } from "../../../../../utils/date/format-date";
+import { dateToLocalString } from "../../../../utils/date/format-date";
 import { getStatusBadgeCard } from "../../utils/getStatusBadgeCard";
 import { NationCard } from "../../types/carte-nation.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
@@ -127,7 +127,6 @@ export function CarteNationRow({
       </div>
     );
   }
-
   return (
     <tr
       className={`hover:bg-orange-50/50 cursor-pointer border-b border-gray-50 transition-colors ${highlightClass}`}

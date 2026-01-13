@@ -1,4 +1,4 @@
-import { Customer } from "../../types/customer.types"
+import { Customer } from "../../customer/types/customer.types"
 
 
 export type CardRequestStatus = "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED" | "EXPIRED"

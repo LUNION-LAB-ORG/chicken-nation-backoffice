@@ -1,6 +1,6 @@
 import { EntityStatus } from "../../../types"
 import { OrderTable } from "../../orders/types/ordersTable.types"
-import { CardRequest, NationCard } from "../carte-nation/types/carte-nation.types"
+import { CardRequest, NationCard } from "../../carte-nation/types/carte-nation.types"
 import { LoyaltyLevel, LoyaltyPointType } from "../types/customer.types"
 
 export type CustomerMapperStatus = "Nouveau" | "Active" | "Inactif" | "Supprimé"

@@ -17,6 +17,7 @@ import {
   UserCog,
   Users,
   Tag,
+  BadgeDollarSign,
 } from "lucide-react";
 
 import { useRBAC } from "@/hooks/useRBAC";
@@ -138,6 +139,12 @@ export const useGetMenuConfig = (): {
           id: "fidelisation-voucher",
           label: "Bons de réduction",
           icon: TicketPercent,
+          canAccess: canViewOffreSpeciale,
+        },
+        {
+          id: "fidelisation-points",
+          label: "Point de fidélisation",
+          icon: BadgeDollarSign,
           canAccess: canViewOffreSpeciale,
         },
         {

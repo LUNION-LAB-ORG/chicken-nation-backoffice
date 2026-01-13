@@ -1,25 +1,22 @@
 "use client";
 
-import { useAuthStore } from "@/store/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
-import CarteNationHeader from "../../../../../features/customer/carte-nation/components/CarteNationHeader";
-import { CarteNationTable } from "../../../../../features/customer/carte-nation/components/liste-carte-nation";
-import { DemandeCarteList } from "../../../../../features/customer/carte-nation/components/liste-demandes-carte";
-import { useCardListQuery } from "../../../../../features/customer/carte-nation/queries/cards.query";
+import CarteNationHeader from "../../../../features/carte-nation/components/CarteNationHeader";
+import { CarteNationTable } from "../../../../features/carte-nation/components/liste-carte-nation";
+import StatutCardTab from "../../../../features/carte-nation/components/liste-carte-nation/StatutCardTab";
+import { UpdateCardStatusModal } from "../../../../features/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
+import { DemandeCarteList } from "../../../../features/carte-nation/components/liste-demandes-carte";
+import { useCardListQuery } from "../../../../features/carte-nation/queries/cards.query";
 import {
   NationCard,
   NationCardStatus,
-} from "../../../../../features/customer/carte-nation/types/carte-nation.types";
-import StatutCardTab from "../../../../../features/customer/carte-nation/components/liste-carte-nation/StatutCardTab";
-import { UpdateCardStatusModal } from "../../../../../features/customer/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
+} from "../../../../features/carte-nation/types/carte-nation.types";
 
 export default function CarteNation() {
-  const { user } = useAuthStore();
-
   const {
     activeTab,
     card_nation: { selectedItem, view, filters, pagination, modals },
@@ -51,7 +48,7 @@ export default function CarteNation() {
         <CarteNationHeader />
       </div>
 
-      {/* Clients */}
+      {/* Carte Nation */}
       {activeTab == "card_nation" && view === "list" && (
         <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]">
           <StatutCardTab />
@@ -63,11 +60,11 @@ export default function CarteNation() {
         </div>
       )}
 
-      {/* Carte Nation */}
+      {/* Demande Carte */}
       {activeTab == "card_requests" && viewCardRequest === "list" && (
         <DemandeCarteList />
       )}
-      {/* Update Card Status Modal */}
+      {/* Update Carte Status Modal */}
       {selectedItem &&
         (modals?.activate || modals?.suspend || modals?.revoke) && (
           <UpdateCardStatusModal

@@ -3,10 +3,10 @@ import { Calendar, CreditCard, Eye, QrCode, XCircle } from "lucide-react";
 import Image from "next/image";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
-import { getStatusBadgeCard } from "../../carte-nation/utils/getStatusBadgeCard";
+import { getStatusBadgeCard } from "../../../carte-nation/utils/getStatusBadgeCard";
 import { QRCode } from "@/components/kibo-ui/qr-code";
 import { useState } from "react";
-import { CardRequest } from "../../carte-nation/types/carte-nation.types";
+import { CardRequest } from "../../../carte-nation/types/carte-nation.types";
 
 interface CarteTabProps {
   customerData: CustomerMapperData;

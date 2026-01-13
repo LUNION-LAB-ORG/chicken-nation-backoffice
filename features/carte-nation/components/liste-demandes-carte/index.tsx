@@ -5,7 +5,7 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import { CheckCircle2, Eye, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
-import { dateToLocalString } from "../../../../../utils/date/format-date";
+import { dateToLocalString } from "../../../../utils/date/format-date";
 import { useRequestListQuery } from "../../queries/requests.query";
 import { CardRequest, CardRequestStatus } from "../../types/carte-nation.types";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
