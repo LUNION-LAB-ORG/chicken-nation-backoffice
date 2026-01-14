@@ -2,13 +2,11 @@ import { Customer } from "../../customer/types/customer.types";
 import { Order } from "../../orders/types/order.types";
 
 export type LoyaltyPointType = "EARNED" | "REDEEMED" | "EXPIRED" | "BONUS";
-export type LoyaltyPointIsUsed = "YES" | "NO" | "PARTIAL";
 export type LoyaltyLevel = "STANDARD" | "PREMIUM" | "GOLD";
 
 export interface LoyaltyPoint {
     id: string;
     customer_id: string;
-    is_used: LoyaltyPointIsUsed;
     points_used: number;
     points: number;
     type: LoyaltyPointType;
@@ -94,7 +92,7 @@ export interface LoyaltyPointQuery {
     limit?: number;
     customer_id?: string;
     type?: LoyaltyPointType;
-    is_used?: LoyaltyPointIsUsed;
+    is_used?: "all" | "available" | "used" | "partial";
     search?: string;
 }
 

@@ -2,6 +2,7 @@ import { getAuthToken } from "@/utils/authUtils";
 import { OrderFormData } from '../types/order-form.types';
 import { DeliveryFee, Order, OrderQuery, OrderStatus } from "../types/order.types";
 import { PaginatedResponse, SortOrder } from "../../../types";
+import { getHumanReadableError } from "@/utils/errorMessages";
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
 const BASE_URL = API_URL + '/orders';
@@ -183,5 +184,35 @@ export const getDeliveryFee = async (query?: { lat: number, long: number, restau
         return await response.json() as DeliveryFee;
     } catch (error) {
         throw new Error(error.message);
+    }
+};
+
+
+// --- Export et Statistiques ---
+
+export const exportReportOrdersToExcel = async (query: OrderQuery = {
+    page: 1,
+    limit: 10,
+    sortBy: 'created_at',
+    sortOrder: SortOrder.DESC
+}) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/export-report-to-excel', query);
+        const response = await fetch(url, { method: 'GET', headers });
+
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+
+        // Extraction du nom de fichier depuis les headers si possible
+        link.setAttribute('download', `export-orders-${new Date().getTime()}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
     }
 };

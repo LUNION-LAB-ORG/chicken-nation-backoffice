@@ -6,8 +6,7 @@ import { TabKey, useDashboardStore, ViewType } from "@/store/dashboardStore";
 
 export default function PointFideliteHeader() {
   const {
-    activeTab,
-    points: { view, filters },
+    loyalty: { view, filters },
     setActiveTab,
     setFilter,
     setSectionView,
@@ -33,13 +32,13 @@ export default function PointFideliteHeader() {
           placeholder: "Rechercher un point de fidélisation",
           buttonText: "Chercher",
           value: filters?.search as string,
-          onSearch: (search) => handleSearch("points", search),
+          onSearch: (search) => handleSearch("loyalty", search),
           realTimeSearch: true,
         }}
         actions={[
           {
             label: "Configuration",
-            onClick: () => handleViewChange("points", "view"),
+            onClick: () => handleViewChange("loyalty", "view"),
           },
         ]}
       />
@@ -48,7 +47,7 @@ export default function PointFideliteHeader() {
   return (
     <DashboardPageHeader
       mode={view}
-      onBack={() => handleViewChange("points", "list")}
+      onBack={() => handleViewChange("loyalty", "list")}
       title={
         view === "create"
           ? "Créer un point de fidélisation"

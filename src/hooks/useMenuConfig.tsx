@@ -142,7 +142,7 @@ export const useGetMenuConfig = (): {
           canAccess: canViewOffreSpeciale,
         },
         {
-          id: "fidelisation-points",
+          id: "fidelisation-loyalty",
           label: "Point de fidélisation",
           icon: BadgeDollarSign,
           canAccess: canViewOffreSpeciale,
