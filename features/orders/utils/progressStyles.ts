@@ -40,16 +40,15 @@ export const getProgressStyles = (
         styles.line1 = "bg-[#F17922]";
         styles.step2Bg = "bg-[#F17922]";
         styles.step2Icon = "/icons/package.png";
-    } else if (currentStatus === "LIVRAISON") {
+    } else if (currentStatus === "COLLECTÉE") {
         styles.step1Bg = "bg-[#F17922]";
         styles.step1Icon = "/icons/poulet-blanc.png";
         styles.line1 = "bg-[#F17922]";
         styles.step2Bg = "bg-[#F17922]";
         styles.step2Icon = "/icons/package.png";
     } else if (
-        currentStatus === "LIVRÉ" ||
-        currentStatus === "COLLECTÉ" ||
-        currentStatus === "TERMINÉ" ||
+        currentStatus === "LIVRÉE" ||
+        currentStatus === "TERMINÉE" ||
         currentStatus === "COMPLETED"
     ) {
         styles.step1Bg = "bg-[#F17922]";

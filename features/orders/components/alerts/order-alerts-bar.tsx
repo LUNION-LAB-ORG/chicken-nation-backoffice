@@ -31,7 +31,7 @@ export function OrderAlertsBar() {
           </div>
 
           <div className="leading-tight">
-            <p className="text-xs text-gray-500">En attente</p>
+            <p className="text-xs text-gray-500">En cours</p>
             <p className="text-lg font-bold text-orange-600">
               {activeOrders.length}
             </p>
@@ -83,7 +83,7 @@ export function OrderAlertsBar() {
       <OrderDetailsModal
         isOpen={activeModal === "pending"}
         onClose={() => setActiveModal(null)}
-        title="Commandes en Attente"
+        title="Commandes en Cours"
         orders={activeOrders}
         type="pending"
       />

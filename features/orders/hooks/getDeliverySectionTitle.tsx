@@ -8,7 +8,7 @@ export const getDeliverySectionTitle = (
         switch (currentStatus) {
             case "PRÊT":
                 return "Prêt à récupérer";
-            case "RÉCUPÉRÉ":
+            case "COLLECTÉE":
                 return "Récupéré";
             case "EN COURS":
                 return "En cours de préparation";
@@ -22,10 +22,10 @@ export const getDeliverySectionTitle = (
     }
 
     switch (currentStatus) {
-        case "LIVRAISON":
+        case "COLLECTÉE":
             return "En livraison";
-        case "LIVRÉ":
-            return "Livré";
+        case "LIVRÉE":
+            return "Livrée";
         case "RÉCUPÉRÉ":
             return "Récupéré";
         case "PRÊT":

@@ -12,10 +12,10 @@ const STATUS_MAP: Record<OrderStatus, OrderTableStatus> = {
   [OrderStatus.ACCEPTED]: "EN COURS",
   [OrderStatus.IN_PROGRESS]: "EN PRÉPARATION",
   [OrderStatus.READY]: "PRÊT",
-  [OrderStatus.PICKED_UP]: "LIVRAISON",
-  [OrderStatus.COLLECTED]: "COLLECTÉ",
+  [OrderStatus.PICKED_UP]: "COLLECTÉE",
+  [OrderStatus.COLLECTED]: "LIVRÉE",
   [OrderStatus.CANCELLED]: "ANNULÉE",
-  [OrderStatus.COMPLETED]: "TERMINÉ",
+  [OrderStatus.COMPLETED]: "TERMINÉE",
 };
 
 const TYPE_MAP: Record<OrderType, OrderTableType> = {

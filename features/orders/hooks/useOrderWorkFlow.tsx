@@ -104,20 +104,17 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
             },
             {
               label: isLoading ? "Chargement..." : "Client a récupéré",
-              onClick: () =>
-                handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED),
+              onClick: () => {
+                if (order.paied) {
+                  return handleOrderUpdateStatus(
+                    order.id,
+                    OrderStatus.COMPLETED
+                  );
+                }
+                return handleToggleOrderModal(order, "add_paiement");
+              },
               variant: "primary",
             },
-            ...(!order.paied
-              ? [
-                  {
-                    label: isLoading ? "Chargement..." : "Payer",
-                    onClick: () =>
-                      handleToggleOrderModal(order, "add_paiement"),
-                    variant: "primary",
-                  } as WorkflowAction,
-                ]
-              : []),
           ],
         };
       }
@@ -148,7 +145,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
       };
     }
 
-    case "LIVRAISON":
+    case "COLLECTÉE":
       return {
         badgeText: "Commande en livraison",
         actions: [
@@ -159,8 +156,12 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
           {
             label: isLoading ? "Chargement..." : "Chez le client",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED),
+            onClick: () => {
+              if (order.paied) {
+                return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
+              }
+              return handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED);
+            },
             variant: "primary",
           },
           ...(!order.paied
@@ -174,7 +175,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
             : []),
         ],
       };
-    case "COLLECTÉ":
+    case "LIVRÉE":
       return {
         badgeText: "Commande récupérée par le client",
         actions: [
@@ -186,7 +187,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           {
             label: isLoading ? "Chargement..." : "Terminer",
             onClick: () => {
-              if (order.paiements.length > 0) {
+              if (order.paied) {
                 return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
               }
               return handleToggleOrderModal(order, "add_paiement");
@@ -195,7 +196,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
         ],
       };
-    case "TERMINÉ":
+    case "TERMINÉE":
       return {
         badgeText: "Commande terminée",
         actions: [

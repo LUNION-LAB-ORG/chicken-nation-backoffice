@@ -23,10 +23,10 @@ export type OrderTableStatus =
   "EN COURS" |
   "EN PRÉPARATION" |
   "PRÊT" |
-  "LIVRAISON" |
-  "COLLECTÉ" |
+  "COLLECTÉE" |
+  "LIVRÉE" |
   "ANNULÉE" |
-  "TERMINÉ"
+  "TERMINÉE"
 
 
 /**

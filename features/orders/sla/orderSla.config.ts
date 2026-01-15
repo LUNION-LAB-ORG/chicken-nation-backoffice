@@ -41,22 +41,22 @@ export const ORDER_SLA: Partial<Record<OrderTableStatus, SlaRule>> = {
   },
 
   "PRÊT": {
-    next: "LIVRAISON",
+    next: "COLLECTÉE",
     delayMinutes: (order) =>
       order.orderType === "À livrer" ? 5 : 60,
     reason: "Commande prête, en attente de livraison ou de retrait",
     lateReason: "La commande est prête mais n'a pas été récupérée à temps",
   },
 
-  "LIVRAISON": {
-    next: "COLLECTÉ",
+  "COLLECTÉE": {
+    next: "LIVRÉE",
     delayMinutes: 30,
     reason: "Commande en cours de livraison",
     lateReason: "La livraison de la commande prend trop de temps",
   },
 
-  "COLLECTÉ": {
-    next: "TERMINÉ",
+  "LIVRÉE": {
+    next: "TERMINÉE",
     delayMinutes: 10,
     reason: "Commande collectée, en attente de clôture",
     lateReason: "La commande collectée n’a pas été clôturée à temps",
