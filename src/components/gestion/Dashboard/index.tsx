@@ -103,7 +103,7 @@ const Dashboard = () => {
           onCreateMenu={() => setActiveTab("menus")}
         />
       </div>
-      <RestaurantTabs showAllTab={user.type == UserType.BACKOFFICE} />
+      <RestaurantTabs showAllTab={user && user.type == UserType.BACKOFFICE} />
       {/* Indicateur de chargement */}
       {isLoadingStats && (
         <div className="flex items-center justify-center py-8">
