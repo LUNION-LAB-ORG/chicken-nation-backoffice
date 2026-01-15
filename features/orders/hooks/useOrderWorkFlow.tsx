@@ -127,7 +127,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
             variant: "secondary",
           },
           {
-            label: isLoading ? "Chargement..." : "En Livraison",
+            label: isLoading ? "Chargement..." : "Livreur a récupéré",
             onClick: () =>
               handleOrderUpdateStatus(order.id, OrderStatus.PICKED_UP),
             variant: "primary",
@@ -155,7 +155,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
             variant: "secondary",
           },
           {
-            label: isLoading ? "Chargement..." : "Chez le client",
+            label: isLoading ? "Chargement..." : "Client a reçu",
             onClick: () => {
               if (order.paied) {
                 return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
