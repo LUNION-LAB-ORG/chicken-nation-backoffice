@@ -12,7 +12,7 @@ export function useAuthRedirect() {
     activeTab,
     setActiveTab
   } = useDashboardStore();
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, logout } = useAuthStore();
 
   // Réridiger sur la page de connexion si pas authentifié
   useEffect(() => {
@@ -26,7 +26,10 @@ export function useAuthRedirect() {
     if (user && user.restaurant_id && !selectedRestaurantId) {
       setSelectedRestaurantId(user.restaurant_id)
     }
-    if (user && user.permissions.modules && !activeTab) {
+    if (user && !user?.permissions) {
+      logout();
+    }
+    if (user && user?.permissions?.modules && !activeTab) {
       setActiveTab(Object.keys(user.permissions.modules)[0] as TabKey || "dashboard")
     }
   }, [user, activeTab])
