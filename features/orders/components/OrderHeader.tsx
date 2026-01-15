@@ -1,10 +1,11 @@
 "use client";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
-import { useRBAC } from "@/hooks/useRBAC";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { OrderAlertsBar } from "./alerts/order-alerts-bar";
 import ExportDropdown from "./ExportDropdown";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 function OrderHeader() {
   const {
@@ -14,7 +15,7 @@ function OrderHeader() {
     setPagination,
   } = useDashboardStore();
 
-  const { canCreateCommande } = useRBAC();
+  const { can } = useAuthStore();
 
   const handleSearch = (query: string) => {
     setFilter("orders", "search", query);
@@ -39,8 +40,7 @@ function OrderHeader() {
             realTimeSearch: true,
           }}
           actions={[
-            // ✅ RBAC: Bouton de création de catégorie seulement si permission
-            ...(canCreateCommande()
+            ...(can(Modules.COMMANDES, Action.CREATE)
               ? [
                   {
                     label: "Créer une commande",
@@ -51,11 +51,15 @@ function OrderHeader() {
                   },
                 ]
               : []),
-            {
-              label: "Exporter",
-              onClick: () => {},
-              customComponent: <ExportDropdown buttonText="Exporter" />,
-            },
+            ...(can(Modules.COMMANDES, Action.EXPORT)
+              ? [
+                  {
+                    label: "Exporter",
+                    onClick: () => {},
+                    customComponent: <ExportDropdown buttonText="Exporter" />,
+                  },
+                ]
+              : []),
           ]}
         />
         <OrderAlertsBar />
@@ -76,11 +80,15 @@ function OrderHeader() {
       }
       gradient={true}
       actions={[
-        {
-          label: "Exporter",
-          onClick: () => {}, // Sera remplacé par le dropdown
-          customComponent: <ExportDropdown buttonText="Exporter" />,
-        },
+        ...(can(Modules.COMMANDES, Action.EXPORT)
+          ? [
+              {
+                label: "Exporter",
+                onClick: () => {},
+                customComponent: <ExportDropdown buttonText="Exporter" />,
+              },
+            ]
+          : []),
       ]}
     />
   );

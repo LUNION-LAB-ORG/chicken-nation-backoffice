@@ -1,4 +1,3 @@
-import { useRBAC } from "@/hooks/useRBAC";
 import { OrderStatus } from "../types/order.types";
 import { OrderTable } from "../types/ordersTable.types";
 import { useOrderActions } from "./useOrderActions";
@@ -26,7 +25,6 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
     handleToggleOrderModal,
     isLoading,
   } = useOrderActions();
-  const { canAcceptCommande, canRejectCommande, canUpdateCommande } = useRBAC();
 
   switch (order.status) {
     case "NOUVELLE":

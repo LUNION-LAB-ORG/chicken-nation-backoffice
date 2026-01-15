@@ -3,7 +3,8 @@
 import React from 'react'
 import DashboardPageHeader from '@/components/ui/DashboardPageHeader'
 import { Plus } from 'lucide-react'
-import { useRBAC } from '@/hooks/useRBAC'
+import { useAuthStore } from '../../../../features/users/hook/authStore'
+import { Action, Modules } from '../../../../features/users/types/auth.type'
 
 interface AdsHeaderProps {
   currentView: 'list' | 'create' | 'edit' | 'view'
@@ -12,18 +13,16 @@ interface AdsHeaderProps {
 }
 
 function AdsHeader({ currentView = 'list', onBack, onCreateAd }: AdsHeaderProps) {
-  const { canCreateOffreSpeciale } = useRBAC()
+
+const {can} = useAuthStore()
 
   if (currentView === 'list') {
-    // ✅ RBAC: Vérifier les permissions pour créer une publicité (offre spéciale)
-    const canAddAd = canCreateOffreSpeciale() && onCreateAd
-
     return (
       <DashboardPageHeader
         mode="list"
         title="Publicités"
 
-        actions={canAddAd ? [
+        actions={can(Modules.FIDELITE, Action.CREATE) ? [
           {
             label: "Créer une diffusion",
             onClick: onCreateAd,

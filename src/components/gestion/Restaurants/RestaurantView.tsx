@@ -5,8 +5,6 @@ import Image from "next/image";
 import { toast } from "react-hot-toast";
 import RestaurantActionsMenu from "./RestaurantActionsMenu";
 import { createPortal } from "react-dom";
-// import { updateRestaurantStatus } from '@/services/restaurantService'
-import { useRBAC } from "@/hooks/useRBAC";
 import { Menu } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 
@@ -51,8 +49,6 @@ export default function RestaurantView({
 RestaurantViewProps) {
   const { setActiveTab, setSelectedRestaurantId } = useDashboardStore();
   const [filter] = useState<"all" | "active" | "inactive">("all");
-  const { canViewRestaurant, canUpdateRestaurant, canDeleteRestaurant } =
-    useRBAC();
 
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [menuPosition, setMenuPosition] = useState<{
@@ -123,12 +119,12 @@ RestaurantViewProps) {
   }, [menuOpen]);
 
   return (
-    <div className="flex-1 bg-white border-[1px]  border-[#ECECEC] rounded-[15px] p-6 flex-col h-full w-full">
+    <div className="flex-1 bg-white border border-[#ECECEC] rounded-[15px] p-6 flex-col h-full w-full">
       {/* Tableau des restaurants */}
       {filteredRestaurants.map((restaurant) => (
         <div
           key={restaurant.id || Math.random().toString()}
-          className="bg-white p-4 py-3 border-[1px] border-[#ECECEC]/50 rounded-2xl shadow-sm flex justify-between items-center mb-3"
+          className="bg-white p-4 py-3 border border-[#ECECEC]/50 rounded-2xl shadow-sm flex justify-between items-center mb-3"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 relative">
@@ -155,17 +151,13 @@ RestaurantViewProps) {
               Tableau de bord
             </button>
 
-            {(canViewRestaurant() ||
-              canUpdateRestaurant() ||
-              canDeleteRestaurant()) && (
-              <span
-                className="text-[#71717A] text-lg cursor-pointer select-none px-2 ml-1"
-                ref={menuBtnRef}
-                onClick={(e) => handleMenuOpen(e, restaurant)}
-              >
-                <Menu size={20} />
-              </span>
-            )}
+            <span
+              className="text-[#71717A] text-lg cursor-pointer select-none px-2 ml-1"
+              ref={menuBtnRef}
+              onClick={(e) => handleMenuOpen(e, restaurant)}
+            >
+              <Menu size={20} />
+            </span>
           </div>
         </div>
       ))}

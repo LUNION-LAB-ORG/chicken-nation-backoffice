@@ -1,9 +1,10 @@
-import { useRBAC } from "@/hooks/useRBAC";
 import { CreditCard, Lock, Trash2, Unlock, User } from "lucide-react";
 import React, { useCallback } from "react";
 import { useClientActions } from "../../../customer/hooks/useClientActions";
 import { NationCard } from "../../types/carte-nation.types";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { HasPermission } from "../../../users/components/HasPermission";
+import { Action, Modules } from "../../../users/types/auth.type";
 
 interface CarteNationContextMenuProps {
   carteNation: NationCard;
@@ -19,7 +20,6 @@ const CarteNationContextMenu: React.FC<CarteNationContextMenuProps> = ({
   const { toggleModal, setSelectedItem } = useDashboardStore();
 
   const { handleViewClientProfile } = useClientActions();
-  const { canViewClient } = useRBAC();
 
   const handleViewProfile = () => {
     // Note: On passe l'objet customer directement depuis la carte
@@ -39,7 +39,7 @@ const CarteNationContextMenu: React.FC<CarteNationContextMenuProps> = ({
   return (
     <div className="client-context-menu w-56 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
       <div className="py-1">
-        {canViewClient() && (
+        <HasPermission module={Modules.CARD_NATION} action={Action.READ}>
           <>
             <button
               type="button"
@@ -99,7 +99,7 @@ const CarteNationContextMenu: React.FC<CarteNationContextMenuProps> = ({
               </>
             )}
           </>
-        )}
+        </HasPermission>
       </div>
     </div>
   );

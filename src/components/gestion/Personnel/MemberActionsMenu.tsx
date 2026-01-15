@@ -1,96 +1,107 @@
-﻿"use client"
+﻿"use client";
 
-import React from "react"
-import { useRBAC } from '@/hooks/useRBAC'
+import React from "react";
+import { HasPermission } from "../../../../features/users/components/HasPermission";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface MemberActionsMenuProps {
- memberStatus?: 'active' | 'blocked' | 'deleted'
- onBlock?: () => void
- onUnblock?: () => void
- onReactivate?: () => void
- onViewProfile?: () => void
- onClose: () => void
+  memberStatus?: "active" | "blocked" | "deleted";
+  onBlock?: () => void;
+  onUnblock?: () => void;
+  onReactivate?: () => void;
+  onViewProfile?: () => void;
+  onClose: () => void;
 }
 
 export default function MemberActionsMenu({
- memberStatus = 'active',
- onBlock,
- onUnblock,
- onReactivate,
- onViewProfile
+  memberStatus = "active",
+  onBlock,
+  onUnblock,
+  onReactivate,
+  onViewProfile,
 }: MemberActionsMenuProps) {
-  const { canUpdateUtilisateur, canDeleteUtilisateur } = useRBAC()
-
   const renderActions = () => {
     switch (memberStatus) {
-      case 'active':
+      case "active":
         return (
           <>
-            {canUpdateUtilisateur && onViewProfile && (
-              <button
-                type="button"
-                className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
-                onClick={onViewProfile}
-              >
-                Voir le profil
-              </button>
+            {onViewProfile && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.READ}>
+                <button
+                  type="button"
+                  className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
+                  onClick={onViewProfile}
+                >
+                  Voir le profil
+                </button>
+              </HasPermission>
             )}
-            {canDeleteUtilisateur && onBlock && (
-              <button
-                type="button"
-                className="block w-full text-[#f12222] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#FFF6E9] rounded-b-xl outline-none"
-                onClick={onBlock}
-              >
+            {onBlock && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.DELETE}>
+                <button
+                  type="button"
+                  className="block w-full text-[#f12222] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#FFF6E9] rounded-b-xl outline-none"
+                  onClick={onBlock}
+                >
                   Supprimer l&apos;utilisateur
-              </button>
+                </button>
+              </HasPermission>
             )}
           </>
         );
 
-      case 'blocked':
+      case "blocked":
         return (
           <>
-            {canUpdateUtilisateur && onViewProfile && (
-              <button
-                type="button"
-                className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
-                onClick={onViewProfile}
-              >
-                Voir le profil
-              </button>
+            {onViewProfile && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.READ}>
+                <button
+                  type="button"
+                  className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
+                  onClick={onViewProfile}
+                >
+                  Voir le profil
+                </button>
+              </HasPermission>
             )}
-            {canUpdateUtilisateur && onUnblock && (
-              <button
-                type="button"
-                className="block w-full text-[#34C759] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#E5F9EB] rounded-b-xl outline-none"
-                onClick={onUnblock}
-              >
-                 Restorer l&apos;utilisateur
-              </button>
+            {onUnblock && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
+                <button
+                  type="button"
+                  className="block w-full text-[#34C759] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#E5F9EB] rounded-b-xl outline-none"
+                  onClick={onUnblock}
+                >
+                  Restorer l&apos;utilisateur
+                </button>
+              </HasPermission>
             )}
           </>
         );
 
-      case 'deleted':
+      case "deleted":
         return (
           <>
-            {canUpdateUtilisateur && onViewProfile && (
-              <button
-                type="button"
-                className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
-                onClick={onViewProfile}
-              >
-                Voir le profil
-              </button>
+            {onViewProfile && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.READ}>
+                <button
+                  type="button"
+                  className="block w-full text-[#232323] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F5F5F5] outline-none"
+                  onClick={onViewProfile}
+                >
+                  Voir le profil
+                </button>
+              </HasPermission>
             )}
-            {canUpdateUtilisateur && onReactivate && (
-              <button
-                type="button"
-                className="block w-full text-[#34C759] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-[#E5F9EB] rounded-b-xl outline-none"
-                onClick={onReactivate}
-              >
-                Réactiver l&apos;utilisateur
-              </button>
+            {onReactivate && (
+              <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
+                <button
+                  type="button"
+                  className="block w-full text-[#34C759] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-[#E5F9EB] rounded-b-xl outline-none"
+                  onClick={onReactivate}
+                >
+                  Réactiver l&apos;utilisateur
+                </button>
+              </HasPermission>
             )}
           </>
         );
@@ -103,10 +114,10 @@ export default function MemberActionsMenu({
   return (
     <div
       className="bg-white rounded-xl shadow-lg px-0 py-0 min-w-[200px] border border-[#ECECEC] select-none z-[120]"
-      style={{ boxShadow: '0 4px 28px 0 rgba(44, 44, 44, 0.10)' }}
-      onClick={e => e.stopPropagation()}
+      style={{ boxShadow: "0 4px 28px 0 rgba(44, 44, 44, 0.10)" }}
+      onClick={(e) => e.stopPropagation()}
     >
       {renderActions()}
     </div>
-  )
+  );
 }

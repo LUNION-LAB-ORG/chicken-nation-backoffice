@@ -1,8 +1,9 @@
 "use client";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
-import { useRBAC } from "@/hooks/useRBAC";
 import { Plus } from "lucide-react";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface RestaurantHeaderProps {
   onAddRestaurant: () => void;
@@ -13,11 +14,7 @@ export default function RestaurantHeader({
   onAddRestaurant,
   onSearch,
 }: RestaurantHeaderProps) {
-  const { canCreateRestaurant } = useRBAC();
-
-  // ✅ RBAC: Vérifier les permissions pour créer un restaurant
-  const canAddRestaurant = canCreateRestaurant();
-
+  const { can } = useAuthStore();
   return (
     <DashboardPageHeader
       mode="list"
@@ -35,7 +32,7 @@ export default function RestaurantHeader({
         realTimeSearch: true, // ✅ Activer la recherche en temps réel
       }}
       actions={
-        canAddRestaurant
+        can(Modules.RESTAURANTS, Action.CREATE)
           ? [
               {
                 label: "Ajouter un restaurant",

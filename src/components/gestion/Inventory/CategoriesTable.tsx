@@ -2,12 +2,13 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { MoreHorizontal, Loader2, Menu, ChevronDown } from "lucide-react";
+import { MoreHorizontal, Loader2, Menu } from "lucide-react";
 import { Category as ApiCategory } from "@/services";
 import { Pagination } from "@/components/ui/pagination";
 import { useCategoriesQuery } from "@/hooks/useCategoriesQuery";
-import { useRBAC } from "@/hooks/useRBAC";
 import { formatImageUrl } from "@/utils/imageHelpers";
+import { HasPermission } from "../../../../features/users/components/HasPermission";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 // Adapter l'interface Category de l'API pour le composant
 interface Category extends ApiCategory {
@@ -28,17 +29,12 @@ export default function CategoriesTable({
   searchQuery = "",
 }: CategoriesTableProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const { canUpdateCategory, canDeleteCategory } = useRBAC();
 
   // ✅ Utiliser TanStack Query pour les catégories
   const { categories, totalPages, currentPage, isLoading, setCurrentPage } =
     useCategoriesQuery({
       searchQuery,
     });
-
-  // ✅ Déterminer si la colonne Actions doit être affichée
-  const showActionsColumn =
-    canUpdateCategory() || canDeleteCategory() || Boolean(onEdit || onDelete);
 
   // Fonction pour gérer le changement de page
   const handlePageChange = (page: number) => {
@@ -123,7 +119,7 @@ export default function CategoriesTable({
                     >
                       <div className="flex items-center">
                         {/* Image de la catégorie */}
-                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 mr-3 flex-shrink-0">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 mr-3 shrink-0">
                           <Image
                             src={formatImageUrl(category.image)}
                             alt={category.name}
@@ -148,54 +144,56 @@ export default function CategoriesTable({
                         </div>
 
                         {/* Menu d'actions - conditionnel */}
-                        {showActionsColumn && (
-                          <div className="relative">
-                            <button
-                              onClick={() =>
-                                setOpenMenuId(
-                                  openMenuId === category.id
-                                    ? null
-                                    : category.id
-                                )
-                              }
-                              className="p-2 hover:bg-gray-50 rounded-full"
-                              aria-label="Options de catégorie"
-                              title="Options de catégorie"
-                            >
-                              <MoreHorizontal className="h-5 w-5 text-gray-500" />
-                            </button>
+                        <div className="relative">
+                          <button
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === category.id ? null : category.id
+                              )
+                            }
+                            className="p-2 hover:bg-gray-50 rounded-full"
+                            aria-label="Options de catégorie"
+                            title="Options de catégorie"
+                          >
+                            <MoreHorizontal className="h-5 w-5 text-gray-500" />
+                          </button>
 
-                            {/* Dropdown menu */}
-                            {openMenuId === category.id && (
-                              <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
-                                {canUpdateCategory && onEdit && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onEdit(category);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
-                                  >
-                                    Modifier cette catégorie
-                                  </button>
-                                )}
-                                {canDeleteCategory && onDelete && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onDelete(category);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
-                                  >
-                                    Supprimer
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          {/* Dropdown menu */}
+                          {openMenuId === category.id && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                              <HasPermission
+                                module={Modules.INVENTAIRE}
+                                action={Action.UPDATE}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onEdit(category);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                                >
+                                  Modifier cette catégorie
+                                </button>
+                              </HasPermission>
+                              <HasPermission
+                                module={Modules.INVENTAIRE}
+                                action={Action.DELETE}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onDelete(category);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                >
+                                  Supprimer
+                                </button>
+                              </HasPermission>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Description (si disponible) */}
@@ -229,20 +227,15 @@ export default function CategoriesTable({
                     <div className="flex items-center">Visibilité</div>
                   </th>
                   {/* Colonne Actions - conditionnelle */}
-                  {showActionsColumn && (
-                    <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
-                      Actions
-                    </th>
-                  )}
+                  <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {categories.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={5 + (showActionsColumn ? 1 : 0)}
-                      className="text-center py-8"
-                    >
+                    <td colSpan={5} className="text-center py-8">
                       <div className="flex items-center justify-center flex-col gap-4">
                         <span className="text-[14px] text-[#F17922]">
                           Aucune catégorie trouvée
@@ -294,57 +287,58 @@ export default function CategoriesTable({
                           {category.private ? "Privée" : "Publique"}
                         </td>
                         {/* Cellule Actions - conditionnelle */}
-                        {showActionsColumn && (
-                          <td className="py-4 relative text-center">
-                            <button
-                              onClick={() =>
-                                setOpenMenuId(
-                                  openMenuId === category.id
-                                    ? null
-                                    : category.id
-                                )
-                              }
-                              className="p-1 cursor-pointer hover:bg-gray-50 rounded"
-                              aria-label="Options de catégorie"
-                              title="Options de catégorie"
-                            >
-                              <Menu
-                                size={20}
-                                className="text-slate-500 hover:text-slate-600"
-                              />
-                            </button>
-
-                            {/* Dropdown menu */}
-                            {openMenuId === category.id && (
-                              <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
-                                {canUpdateCategory && onEdit && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onEdit(category);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
-                                  >
-                                    Modifier cette catégorie
-                                  </button>
-                                )}
-                                {canDeleteCategory && onDelete && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      onDelete(category);
-                                      setOpenMenuId(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
-                                  >
-                                    Supprimer
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </td>
-                        )}
+                        <td className="py-4 relative text-center">
+                          <button
+                            onClick={() =>
+                              setOpenMenuId(
+                                openMenuId === category.id ? null : category.id
+                              )
+                            }
+                            className="p-1 cursor-pointer hover:bg-gray-50 rounded"
+                            aria-label="Options de catégorie"
+                            title="Options de catégorie"
+                          >
+                            <Menu
+                              size={20}
+                              className="text-slate-500 hover:text-slate-600"
+                            />
+                          </button>
+                          {/* Dropdown menu */}
+                          {openMenuId === category.id && (
+                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                              <HasPermission
+                                module={Modules.INVENTAIRE}
+                                action={Action.UPDATE}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onEdit(category);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                                >
+                                  Modifier cette catégorie
+                                </button>
+                              </HasPermission>
+                              <HasPermission
+                                module={Modules.INVENTAIRE}
+                                action={Action.DELETE}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    onDelete(category);
+                                    setOpenMenuId(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                >
+                                  Supprimer
+                                </button>
+                              </HasPermission>
+                            </div>
+                          )}
+                        </td>
                       </tr>
                     ))
                 )}

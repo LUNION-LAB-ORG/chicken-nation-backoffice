@@ -47,7 +47,7 @@ const RestaurantTabs: React.FC<RestaurantTabsProps> = ({
             Tous les restaurants
           </button>
           {!isLoading &&
-            restaurants.map((restaurant) => (
+            restaurants?.map((restaurant) => (
               <button
                 key={restaurant.id}
                 className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px]

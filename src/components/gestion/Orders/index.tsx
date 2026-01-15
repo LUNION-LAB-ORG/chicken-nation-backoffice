@@ -1,5 +1,4 @@
 "use client";
-import { useRBAC } from "@/hooks/useRBAC";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import OrderHeader from "../../../../features/orders/components/OrderHeader";
@@ -19,8 +18,6 @@ import { UserType } from "../../../../features/users/types/user.types";
 
 export default function Orders() {
   const { user: currentUser } = useAuthStore();
-
-  const { canCreateCommande } = useRBAC();
 
   const {
     orders: { view, selectedItem, filters, pagination, modals },
@@ -78,7 +75,7 @@ export default function Orders() {
         <OrderDetails selectedItem={selectedItem} />
       )}
 
-      {view === "create" && canCreateCommande() && <AddOrderForm />}
+      {view === "create" && <AddOrderForm />}
 
       {modals?.to_cancel && selectedItem && (
         <CancelOrderModal isOpen={true} order={selectedItem} />

@@ -1,20 +1,19 @@
 "use client";
 
-import { useRBAC } from "@/hooks/useRBAC";
 import { useMemo } from "react";
-import { useOrderSelection } from "../../hooks/useOrderSelection";
-import { Order as IOrder } from "../../types/order.types";
-import { mapApiOrdersToUiOrders } from "../../utils/orderMapper";
 import {
   ErrorState,
   LoadingState,
   PaginationInfo,
 } from "../../../../src/components/TableStates";
+import { useOrderSelection } from "../../hooks/useOrderSelection";
+import { Order as IOrder } from "../../types/order.types";
+import { mapApiOrdersToUiOrders } from "../../utils/orderMapper";
 
 import { PaginatedResponse } from "../../../../types";
-import { TableHeader } from "./TableHeader";
-import { OrderRow } from "./OrderRow";
 import { User } from "../../../users/types/user.types";
+import { OrderRow } from "./OrderRow";
+import { TableHeader } from "./TableHeader";
 
 export interface OrdersTableProps {
   currentUser?: User;
@@ -28,21 +27,6 @@ export function OrdersTable({
   isLoading,
   error,
 }: OrdersTableProps) {
-  // Contrôles RBAC
-  const {
-    canAcceptCommande,
-    canRejectCommande,
-    canDeleteCommande,
-    canUpdateCommande,
-  } = useRBAC();
-
-  // Déterminer si on affiche la colonne Actions
-  const hasAnyActionPermission =
-    canAcceptCommande() ||
-    canRejectCommande() ||
-    canDeleteCommande() ||
-    canUpdateCommande();
-
   // Conversion: Mapper les données API vers UI
   const ordersToDisplay = useMemo(() => {
     return orders?.data && orders?.data.length > 0
@@ -78,7 +62,6 @@ export function OrdersTable({
                 isSelected={selectedOrders.includes(order.id)}
                 onSelect={handleSelectOrder}
                 isMobile={true}
-                showActionsColumn={hasAnyActionPermission}
               />
             ))}
           </div>
@@ -89,7 +72,6 @@ export function OrdersTable({
                   onSelectAll={handleSelectAll}
                   isAllSelected={isAllSelected}
                   showRestaurantColumn={!currentUser?.restaurant_id}
-                  showActionsColumn={hasAnyActionPermission}
                 />
                 <tbody>
                   {ordersToDisplay.map((order) => (
@@ -99,7 +81,6 @@ export function OrdersTable({
                       isSelected={selectedOrders.includes(order.id)}
                       onSelect={handleSelectOrder}
                       showRestaurantColumn={!currentUser?.restaurant_id}
-                      showActionsColumn={hasAnyActionPermission}
                     />
                   ))}
                 </tbody>

@@ -1,10 +1,11 @@
-import { useRBAC } from "@/hooks/useRBAC";
 import { X } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { useOrderActions } from "../../hooks/useOrderActions";
 import { OrderStatus } from "../../types/order.types";
 import { OrderTable } from "../../types/ordersTable.types";
+import { Action, Modules } from "../../../users/types/auth.type";
+import { HasPermission } from "../../../users/components/HasPermission";
 
 interface OrderContextMenuProps {
   order: OrderTable;
@@ -24,8 +25,6 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
     isLoading,
     handleToggleOrderModal,
   } = useOrderActions();
-
-  const { canAcceptCommande, canRejectCommande, canViewCommande } = useRBAC();
 
   const isAccepted = order.status !== "NOUVELLE";
 
@@ -73,7 +72,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
         <div className="py-1">
           {!isAccepted ? (
             <>
-              {canAcceptCommande && (
+              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE}>
                 <button
                   type="button"
                   className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
@@ -87,8 +86,8 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                   />
                   <span>Accepter la commande</span>
                 </button>
-              )}
-              {canRejectCommande && (
+              </HasPermission>
+              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE}>
                 <button
                   type="button"
                   className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold  gap-2 text-red-600 hover:bg-gray-50 cursor-pointer"
@@ -97,8 +96,8 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                   <X size={16} />
                   <span>Refuser</span>
                 </button>
-              )}
-              {canViewCommande && (
+              </HasPermission>
+              <HasPermission module={Modules.COMMANDES} action={Action.READ}>
                 <button
                   type="button"
                   className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
@@ -106,7 +105,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                 >
                   <span>Voir les détails</span>
                 </button>
-              )}
+              </HasPermission>
             </>
           ) : (
             <>
@@ -117,7 +116,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
               >
                 <span>Imprimer</span>
               </button>
-              {canViewCommande && (
+              <HasPermission module={Modules.COMMANDES} action={Action.READ}>
                 <button
                   type="button"
                   className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
@@ -125,7 +124,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                 >
                   <span>Voir les détails</span>
                 </button>
-              )}
+              </HasPermission>
             </>
           )}
         </div>

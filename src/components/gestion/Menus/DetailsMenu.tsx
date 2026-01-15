@@ -4,7 +4,8 @@ import { Mail } from "lucide-react";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
 import MenuComments from "./MenuComments";
-import { useRBAC } from "@/hooks/useRBAC";
+import { HasPermission } from "../../../../features/users/components/HasPermission";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface DetailsMenuProps {
   menu: MenuItemType;
@@ -17,8 +18,6 @@ export default function DetailsMenu({
   onEdit,
   onDelete,
 }: DetailsMenuProps) {
-  const { canUpdatePlat, canDeletePlat } = useRBAC();
-
   // ✅ État pour gérer l'onglet actif
   const [activeTab, setActiveTab] = useState<"description" | "comments">(
     "description"
@@ -88,7 +87,7 @@ export default function DetailsMenu({
                 <span className="text-[#F17922]">{menu.price} FCFA</span>
               )}
             </span>
-            {canUpdatePlat() && (
+            <HasPermission module={Modules.MENUS} action={Action.UPDATE}>
               <button
                 type="button"
                 onClick={onEdit}
@@ -103,7 +102,7 @@ export default function DetailsMenu({
                   className="w-5 h-5 sm:w-6 sm:h-6"
                 />
               </button>
-            )}
+            </HasPermission>
           </div>
         </div>
 
@@ -148,7 +147,7 @@ export default function DetailsMenu({
             </div>
 
             {/* Contenu des onglets */}
-            <div className="flex-grow mb-4 sm:mb-6">
+            <div className="grow mb-4 sm:mb-6">
               {activeTab === "description" && (
                 <div>
                   <div className="flex items-center mb-3 sm:mb-4 gap-2">
@@ -175,7 +174,7 @@ export default function DetailsMenu({
             </div>
 
             {/* Bouton Supprimer */}
-            {canDeletePlat() && (
+            <HasPermission module={Modules.MENUS} action={Action.DELETE}>
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -185,12 +184,12 @@ export default function DetailsMenu({
                   Supprimer
                 </button>
               </div>
-            )}
+            </HasPermission>
           </div>
 
           <div className="w-full lg:w-1/3 flex flex-col">
             {/* Ingrédients */}
-            <div className="flex-grow border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
+            <div className="grow border border-slate-200 rounded-xl sm:rounded-2xl p-3 sm:p-4">
               <div className="flex items-center gap-2 mb-3 sm:mb-4">
                 <Image
                   src="/icons/chicken.png"
@@ -228,7 +227,7 @@ export default function DetailsMenu({
             </div>
 
             {/* Bouton Modifier */}
-            {canUpdatePlat() && (
+            <HasPermission module={Modules.MENUS} action={Action.UPDATE}>
               <button
                 type="button"
                 onClick={onEdit}
@@ -236,7 +235,7 @@ export default function DetailsMenu({
               >
                 Modifier le menu
               </button>
-            )}
+            </HasPermission>
           </div>
         </div>
       </div>

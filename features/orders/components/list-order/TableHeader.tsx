@@ -1,17 +1,15 @@
 import Checkbox from "@/components/ui/Checkbox";
 
 interface TableHeaderProps {
-  onSelectAll?: (checked: boolean) => void; // ✅ Optionnel pour contrôle RBAC
+  onSelectAll?: (checked: boolean) => void;
   isAllSelected: boolean;
   showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
-  showActionsColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Actions
 }
 
 export function TableHeader({
   onSelectAll,
   isAllSelected,
   showRestaurantColumn = true,
-  showActionsColumn = true,
 }: TableHeaderProps) {
   return (
     <thead className="bg-gray-50">
@@ -87,14 +85,12 @@ export function TableHeader({
         >
           Statut
         </th>
-        {showActionsColumn && (
-          <th
-            scope="col"
-            className="whitespace-nowrap py-3 px-3 sm:px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
-          >
-            Actions
-          </th>
-        )}
+        <th
+          scope="col"
+          className="whitespace-nowrap py-3 px-3 sm:px-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+        >
+          Actions
+        </th>
       </tr>
     </thead>
   );

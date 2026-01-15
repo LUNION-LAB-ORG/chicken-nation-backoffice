@@ -1,24 +1,26 @@
-"use client"
+"use client";
 
-import React from 'react'
-import DashboardPageHeader from '@/components/ui/DashboardPageHeader'
-import { Plus } from 'lucide-react'
-import { useRBAC } from '@/hooks/useRBAC'
+import React from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import { Plus } from "lucide-react";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface MenuHeaderProps {
-  currentView: 'list' | 'create' | 'edit' | 'view'
-  onBack?: () => void
-  onCreateMenu?: () => void
-  onSearch?: (searchQuery: string) => void
+  currentView: "list" | "create" | "edit" | "view";
+  onBack?: () => void;
+  onCreateMenu?: () => void;
+  onSearch?: (searchQuery: string) => void;
 }
 
-function MenuHeader({ currentView = 'list', onBack, onCreateMenu, onSearch }: MenuHeaderProps) {
-  const { canCreatePlat } = useRBAC()
-
-  if (currentView === 'list') {
-    // ✅ RBAC: Vérifier les permissions pour créer un plat
-    const canAddMenu = canCreatePlat() && onCreateMenu
-
+function MenuHeader({
+  currentView = "list",
+  onBack,
+  onCreateMenu,
+  onSearch,
+}: MenuHeaderProps) {
+  const { can } = useAuthStore();
+  if (currentView === "list") {
     return (
       <DashboardPageHeader
         mode="list"
@@ -26,18 +28,22 @@ function MenuHeader({ currentView = 'list', onBack, onCreateMenu, onSearch }: Me
         searchConfig={{
           placeholder: "Rechercher un plat",
           buttonText: "Chercher",
-          onSearch: onSearch || ((value) => console.log('Searching:', value)),
-          realTimeSearch: true  // ✅ Activer la recherche en temps réel
+          onSearch: onSearch || ((value) => console.log("Searching:", value)),
+          realTimeSearch: true, // ✅ Activer la recherche en temps réel
         }}
-        actions={canAddMenu ? [
-          {
-            label: "Créer un plat",
-            onClick: onCreateMenu,
-            icon: Plus,
-          }
-        ] : []}
+        actions={
+          can(Modules.MENUS, Action.CREATE)
+            ? [
+                {
+                  label: "Créer un plat",
+                  onClick: onCreateMenu,
+                  icon: Plus,
+                },
+              ]
+            : []
+        }
       />
-    )
+    );
   }
 
   return (
@@ -45,15 +51,15 @@ function MenuHeader({ currentView = 'list', onBack, onCreateMenu, onSearch }: Me
       mode={currentView}
       onBack={onBack}
       title={
-        currentView === 'create'
-          ? 'Créer un plat'
-          : currentView === 'edit'
-            ? 'Modifier le plat'
-            : 'Détails du plat'
+        currentView === "create"
+          ? "Créer un plat"
+          : currentView === "edit"
+          ? "Modifier le plat"
+          : "Détails du plat"
       }
       gradient={true}
     />
-  )
+  );
 }
 
-export default MenuHeader
+export default MenuHeader;

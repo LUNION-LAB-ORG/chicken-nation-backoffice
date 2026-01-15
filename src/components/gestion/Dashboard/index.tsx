@@ -19,6 +19,7 @@ import { GenericStatCard } from "./GenericStatCard";
 import RevenueChart from "./RevenueChart";
 import WeeklyOrdersChart from "./WeeklyOrdersChart";
 import RestaurantTabs from "../../../../features/orders/components/filtrage/RestaurantTabs";
+import { UserType } from "../../../../features/users/types/user.types";
 
 const Dashboard = () => {
   const { setActiveTab, selectedRestaurantId, selectedPeriod } =
@@ -102,7 +103,7 @@ const Dashboard = () => {
           onCreateMenu={() => setActiveTab("menus")}
         />
       </div>
-      <RestaurantTabs showAllTab={true} />
+      <RestaurantTabs showAllTab={user.type == UserType.BACKOFFICE} />
       {/* Indicateur de chargement */}
       {isLoadingStats && (
         <div className="flex items-center justify-center py-8">

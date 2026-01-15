@@ -211,7 +211,7 @@ export function OrderDetailsModal({
                           : "bg-white border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex flex-col sm:flex-row items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-mono text-sm font-semibold text-gray-900">
@@ -242,7 +242,7 @@ export function OrderDetailsModal({
 
                         {/* Timer */}
                         <div
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                          className={`mt-2 flex justify-self-end items-center gap-2 px-3 py-1.5 rounded-lg ${
                             isLate
                               ? "bg-red-100 text-red-700 animate-pulse-subtle"
                               : "bg-gray-100 text-gray-700"

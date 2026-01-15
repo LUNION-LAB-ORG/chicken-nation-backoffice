@@ -1,8 +1,9 @@
-import { useRBAC } from "@/hooks/useRBAC";
 import { User } from "lucide-react";
 import React from "react";
 import { useClientActions } from "../../hooks/useClientActions";
 import { Customer } from "../../types/customer.types";
+import { Action, Modules } from "../../../users/types/auth.type";
+import { HasPermission } from "../../../users/components/HasPermission";
 
 interface ClientContextMenuProps {
   client: Customer;
@@ -16,9 +17,6 @@ const ClientContextMenu: React.FC<ClientContextMenuProps> = ({
   onClose,
 }) => {
   const { handleViewClientProfile, isLoading } = useClientActions();
-
-  // ✅ Appeler les fonctions RBAC avec ()
-  const { canViewClient } = useRBAC();
 
   const handleViewProfile = () => {
     handleViewClientProfile(client);
@@ -51,7 +49,7 @@ const ClientContextMenu: React.FC<ClientContextMenuProps> = ({
   return (
     <div className="client-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
       <div className="py-1">
-        {canViewClient() && (
+        <HasPermission module={Modules.CLIENTS} action={Action.READ}>
           <button
             type="button"
             className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
@@ -60,7 +58,7 @@ const ClientContextMenu: React.FC<ClientContextMenuProps> = ({
             <User size={16} />
             <span>Voir le profil</span>
           </button>
-        )}
+        </HasPermission>
       </div>
     </div>
   );

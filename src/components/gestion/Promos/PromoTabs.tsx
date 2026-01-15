@@ -1,33 +1,39 @@
-"use client"
+"use client";
 
-import React from 'react'
-import { useRBAC } from '@/hooks/useRBAC'
+import React from "react";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface PromoTabsProps {
-  activeTab: string
-  onTabChange: (tab: string) => void
-  onCreatePromo?: () => void
-  className?: string
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  onCreatePromo?: () => void;
+  className?: string;
 }
 
-const PromoTabs = ({ activeTab, onTabChange, onCreatePromo, className = '' }: PromoTabsProps) => {
-  const { canCreateOffreSpeciale } = useRBAC()
-
+const PromoTabs = ({
+  activeTab,
+  onTabChange,
+  onCreatePromo,
+  className = "",
+}: PromoTabsProps) => {
+  const { can } = useAuthStore();
   const tabs = [
-    { id: 'all', label: 'Toutes les promos' },
-    { id: 'public', label: 'Public' },
-    { id: 'private', label: 'Privées' },
-    { id: 'expired', label: 'Expirées' }
-  ]
+    { id: "all", label: "Toutes les promos" },
+    { id: "public", label: "Public" },
+    { id: "private", label: "Privées" },
+    { id: "expired", label: "Expirées" },
+  ];
 
-  // ✅ RBAC: Vérifier les permissions pour créer une promotion
-  const canAddPromo = canCreateOffreSpeciale() && onCreatePromo
+  const canAddPromo = can(Modules.PROMOTIONS, Action.CREATE) && onCreatePromo;
 
   return (
     <div className={className}>
       {/* Titre de la section */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className='text-[#F17922] lg:text-[26px] text-md font-regular'>Gestions des promotions</h2>
+        <h2 className="text-[#F17922] lg:text-[26px] text-md font-regular">
+          Gestions des promotions
+        </h2>
         {canAddPromo && (
           <button
             type="button"
@@ -48,9 +54,10 @@ const PromoTabs = ({ activeTab, onTabChange, onCreatePromo, className = '' }: Pr
             onClick={() => onTabChange(tab.id)}
             className={`
               lg:px-4 p-2 py-1 cursor-pointer rounded-xl text-xs font-medium transition-all duration-200
-              ${activeTab === tab.id
-                ? 'bg-gradient-to-r from-[#F17922] to-[#FA6345] text-white'
-                : 'bg-white border-slate-200 border-1 text-gray-500 hover:bg-gray-200'
+              ${
+                activeTab === tab.id
+                  ? "bg-linear-to-r from-[#F17922] to-[#FA6345] text-white"
+                  : "bg-white border-slate-200 border text-gray-500 hover:bg-gray-200"
               }
             `}
           >
@@ -59,7 +66,7 @@ const PromoTabs = ({ activeTab, onTabChange, onCreatePromo, className = '' }: Pr
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PromoTabs
+export default PromoTabs;

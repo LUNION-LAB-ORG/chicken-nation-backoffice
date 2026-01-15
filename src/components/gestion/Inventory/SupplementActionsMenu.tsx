@@ -1,26 +1,24 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useRBAC } from '@/hooks/useRBAC'
+import React from "react";
+import { HasPermission } from "../../../../features/users/components/HasPermission";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface SupplementActionsMenuProps {
-  menuPosition: { top: number, left: number } | null
-  menuRef: React.RefObject<HTMLDivElement | null>
-  productId: string
-  onEdit?: () => void
-  onDelete?: () => void
+  menuPosition: { top: number; left: number } | null;
+  menuRef: React.RefObject<HTMLDivElement | null>;
+  productId: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 export default function SupplementActionsMenu({
   menuPosition,
   menuRef,
   onEdit,
-  onDelete
+  onDelete,
 }: SupplementActionsMenuProps) {
-  const { canUpdateSupplement, canDeleteSupplement } = useRBAC()
-
   if (!menuPosition) return null;
-
 
   return (
     <div
@@ -29,28 +27,32 @@ export default function SupplementActionsMenu({
       style={{
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,
-        boxShadow: '0 4px 28px 0 rgba(44, 44, 44, 0.10)'
+        boxShadow: "0 4px 28px 0 rgba(44, 44, 44, 0.10)",
       }}
-      onClick={e => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
     >
-      {canUpdateSupplement && onEdit && (
-        <button
-          type="button"
-          className="block w-full text-[#484848] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F7F7F7] rounded-t-xl outline-none"
-          onClick={onEdit}
-        >
-          Modifier le supplément
-        </button>
+      {onEdit && (
+        <HasPermission module={Modules.INVENTAIRE} action={Action.UPDATE}>
+          <button
+            type="button"
+            className="block w-full text-[#484848] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F7F7F7] rounded-t-xl outline-none"
+            onClick={onEdit}
+          >
+            Modifier le supplément
+          </button>
+        </HasPermission>
       )}
-      {canDeleteSupplement && onDelete && (
-        <button
-          type="button"
-          className="block w-full text-[#F04438] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-[#FFF3F2] rounded-b-xl outline-none"
-          onClick={onDelete}
-        >
-          Supprimer le supplément
-        </button>
+      {onDelete && (
+        <HasPermission module={Modules.INVENTAIRE} action={Action.DELETE}>
+          <button
+            type="button"
+            className="block w-full text-[#F04438] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-[#FFF3F2] rounded-b-xl outline-none"
+            onClick={onDelete}
+          >
+            Supprimer le supplément
+          </button>
+        </HasPermission>
       )}
     </div>
-  )
+  );
 }

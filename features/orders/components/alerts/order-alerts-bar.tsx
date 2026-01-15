@@ -44,7 +44,7 @@ export function OrderAlertsBar() {
           className={`flex shrink-0 items-center gap-3 px-3 py-2 rounded-lg border transition-all min-w-[110px]
     ${
       overdueOrders.length > 0
-        ? "bg-red-50 border-red-200 hover:bg-red-100 animate-ding-gong"
+        ? "bg-red-50 border-red-200 hover:bg-red-100"
         : "bg-gray-50 border-gray-200"
     }
   `}

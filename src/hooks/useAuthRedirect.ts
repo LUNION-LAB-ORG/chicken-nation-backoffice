@@ -17,7 +17,7 @@ export function useAuthRedirect() {
   // Réridiger sur la page de connexion si pas authentifié
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("/");
+      router.push("/");
     }
   }, [isAuthenticated, router]);
 

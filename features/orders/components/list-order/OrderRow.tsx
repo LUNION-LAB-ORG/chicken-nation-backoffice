@@ -13,10 +13,9 @@ import PaymentBadge from "../PaymentBadge";
 interface OrderRowProps {
   order: OrderTable;
   isSelected: boolean;
-  onSelect?: (orderId: string, checked: boolean) => void; // ✅ Optionnel pour contrôle RBAC
+  onSelect?: (orderId: string, checked: boolean) => void; 
   isMobile?: boolean;
   showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
-  showActionsColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Actions (menu hamburger)
 }
 export function OrderRow({
   order,
@@ -24,7 +23,6 @@ export function OrderRow({
   onSelect,
   isMobile = false,
   showRestaurantColumn = true,
-  showActionsColumn = true,
 }: OrderRowProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
@@ -114,27 +112,23 @@ export function OrderRow({
               {order.auto ? "Auto" : "Manuel"}
             </span>
             <div className="flex justify-between items-center my-2">
-              <PaymentBadge
-                status={order.paymentStatus}
-              />
+              <PaymentBadge status={order.paymentStatus} />
             </div>
-            {showActionsColumn && (
-              <div className="flex justify-end mt-2">
-                <div className="relative">
-                  <button
-                    ref={buttonRef}
-                    className="p-1.5 text-gray-500 hover:text-[#F17922] rounded-lg hover:bg-orange-100 menu-button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpen(!menuOpen);
-                    }}
-                  >
-                    <Menu size={20} />
-                  </button>
-                  {renderMenu()}
-                </div>
+            <div className="flex justify-end mt-2">
+              <div className="relative">
+                <button
+                  ref={buttonRef}
+                  className="p-1.5 text-gray-500 hover:text-[#F17922] rounded-lg hover:bg-orange-100 menu-button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(!menuOpen);
+                  }}
+                >
+                  <Menu size={20} />
+                </button>
+                {renderMenu()}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -189,9 +183,7 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <PaymentBadge
-          status={order.paymentStatus}
-        />
+        <PaymentBadge status={order.paymentStatus} />
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span
@@ -205,21 +197,19 @@ export function OrderRow({
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <OrderStatusBadge status={order.status} />
       </td>
-      {showActionsColumn && (
-        <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
-          <button
-            ref={buttonRef}
-            className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen(!menuOpen);
-            }}
-          >
-            <Menu size={20} />
-          </button>
-          {renderMenu()}
-        </td>
-      )}
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
+        <button
+          ref={buttonRef}
+          className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen(!menuOpen);
+          }}
+        >
+          <Menu size={20} />
+        </button>
+        {renderMenu()}
+      </td>
     </tr>
   );
 }
