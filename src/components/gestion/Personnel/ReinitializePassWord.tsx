@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { resetUserPassword } from "@/services/userService";
+import { resetUserPassword } from "../../../../features/users/services/user.service";
 import UserCredentialsModal from "./UserCredentialsModal";
 
 interface ResetPasswordButtonProps {

@@ -13,7 +13,7 @@ interface Participant {
   avatar: string;
 }
 
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 
 // Données mockées pour les participants - remplacées par l'utilisateur connecté
 

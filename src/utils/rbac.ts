@@ -30,7 +30,7 @@ export type Action =
   | 'disable'
   | 'accept'
   | 'reject';
-
+  
 /**
  * ✅ MATRICE COMPLÈTE DES PERMISSIONS
  * Basée sur les 5 tableaux de spécifications

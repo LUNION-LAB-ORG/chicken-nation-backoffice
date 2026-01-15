@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useRBAC } from '@/hooks/useRBAC'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '../../../features/users/hook/authStore'
 
 /**
  * 🧪 COMPOSANT DE TEST RBAC

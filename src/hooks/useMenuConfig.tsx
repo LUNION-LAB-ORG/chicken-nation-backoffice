@@ -20,8 +20,8 @@ import {
   BadgeDollarSign,
 } from "lucide-react";
 
-import { useRBAC } from "@/hooks/useRBAC";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../features/users/hook/authStore";
+import { Modules, Action } from "../../features/users/types/auth.type";
 
 export type CanAccessFn = () => boolean;
 
@@ -32,58 +32,48 @@ export interface NavigationItem {
   canAccess?: CanAccessFn;
   items?: NavigationItem[];
 }
+
 export const useGetMenuConfig = (): {
   navigationItems: NavigationItem[];
 } => {
-  const { user } = useAuthStore();
-
-  const {
-    canViewPlat,
-    canViewCommande,
-    canViewClient,
-    canViewUtilisateur,
-    canViewRestaurant,
-    canViewOffreSpeciale,
-    canViewMessage,
-  } = useRBAC();
+  const can = useAuthStore((state) => state.can);
 
   const navigationItems: NavigationItem[] = [
     {
       id: "dashboard",
       label: "Tableau de bord",
       icon: LayoutDashboard,
-      canAccess: () =>
-        ["ADMIN", "MANAGER", "MARKETING"].includes(user?.role ?? ""),
+      canAccess: () => can(Modules.DASHBOARD, Action.READ),
     },
     {
       id: "menus",
       label: "Menus",
       icon: BookOpen,
-      canAccess: canViewPlat,
+      canAccess: () => can(Modules.MENUS, Action.READ),
     },
     {
       id: "orders",
       label: "Commandes",
       icon: ClipboardList,
-      canAccess: canViewCommande,
+      canAccess: () => can(Modules.COMMANDES, Action.READ),
     },
     {
       id: "customers",
       label: "Clients",
       icon: Users,
-      canAccess: canViewClient,
+      canAccess: () => can(Modules.CLIENTS, Action.READ),
       items: [
         {
           id: "customers-clients",
           label: "Clients",
           icon: Users,
-          canAccess: canViewClient,
+          canAccess: () => can(Modules.CLIENTS, Action.READ),
         },
         {
           id: "customers-card_nation",
           label: "Carte de la nation",
           icon: CreditCard,
-          canAccess: canViewClient,
+          canAccess: () => can(Modules.CARD_NATION, Action.READ),
         },
       ],
     },
@@ -91,67 +81,63 @@ export const useGetMenuConfig = (): {
       id: "messages_tickets",
       label: "Messages et tickets",
       icon: MessageSquare,
-      canAccess: canViewMessage,
+      canAccess: () => can(Modules.MESSAGES, Action.READ),
       items: [
         {
           id: "messages_tickets-inbox",
           label: "Inbox",
           icon: MessageCircleMore,
+          canAccess: () => can(Modules.MESSAGES, Action.READ),
         },
-        // {
-        //   id: "messages_tickets-ticket",
-        //   label: "Inbox",
-        //   icon: Ticket,
-        // },
       ],
     },
     {
       id: "inventory",
       label: "Inventaires",
       icon: Boxes,
-      canAccess: canViewPlat,
+      canAccess: () => can(Modules.INVENTAIRE, Action.READ),
     },
     {
       id: "restaurants",
       label: "Restaurants",
       icon: Store,
-      canAccess: canViewRestaurant,
+      canAccess: () => can(Modules.RESTAURANTS, Action.READ),
     },
     {
       id: "personnel",
       label: "Personnel",
       icon: UserCog,
-      canAccess: canViewUtilisateur,
+      canAccess: () => can(Modules.PERSONNELS, Action.READ),
     },
     {
       id: "fidelisation",
       label: "Fidélisation",
       icon: Tag,
-      canAccess: canViewOffreSpeciale,
+      canAccess: () => can(Modules.PROMOTIONS, Action.READ),
       items: [
         {
           id: "fidelisation-promos",
           label: "Promotion",
           icon: Megaphone,
-          canAccess: canViewOffreSpeciale,
+          canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },
         {
           id: "fidelisation-voucher",
           label: "Bons de réduction",
           icon: TicketPercent,
-          canAccess: canViewOffreSpeciale,
+          canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },
         {
           id: "fidelisation-loyalty",
           label: "Point de fidélisation",
           icon: BadgeDollarSign,
-          canAccess: canViewOffreSpeciale,
+          canAccess: () => can(Modules.FIDELITE, Action.READ),
         },
         {
           id: "fidelisation-promo_code",
           label: "Codes promo",
           icon: BadgePercent,
-          canAccess: canViewOffreSpeciale,
+          canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },
       ],
     },
@@ -159,8 +145,7 @@ export const useGetMenuConfig = (): {
       id: "marketing",
       label: "Marketing",
       icon: TrendingUp,
-      canAccess: () =>
-        ["ADMIN", "MANAGER", "MARKETING"].includes(user?.role ?? ""),
+      canAccess: () => can(Modules.MARKETING, Action.READ),
     },
   ];
 

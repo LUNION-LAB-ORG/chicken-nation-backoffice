@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../features/users/hook/authStore";
 import { useUIStore } from "@/store/uiStore";
 import EditMember from "@/components/gestion/Personnel/EditMember";
-import { User } from "@/services/userService";
+import { User } from "../../../features/users/types/user.types";
 
 interface EditProfileModalProps {
   isOpen: boolean;

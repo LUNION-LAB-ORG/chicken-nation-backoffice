@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getWeeklyOrdersData } from '@/services/dashboardService';
+import { getWeeklyOrdersData } from '../../features/statistics/services/statistics.service';
 
 interface UseWeeklyOrdersQueryProps {
   restaurantId?: string;

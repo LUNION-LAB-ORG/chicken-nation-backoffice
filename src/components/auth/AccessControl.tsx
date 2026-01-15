@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuthStore } from '@/store/authStore'; 
+import { useAuthStore } from '../../../features/users/hook/authStore'; 
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'CAISSIER' | 'CALL_CENTER' | 'CUISINE' | 'MARKETING' | 'COMPTABLE';
 export type UserType = 'BACKOFFICE' | 'RESTAURANT';

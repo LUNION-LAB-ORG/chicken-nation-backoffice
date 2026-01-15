@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
-import { Search } from 'lucide-react';
-import { useGoogleMaps } from '@/contexts/GoogleMapsContext';
+import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
+import { Autocomplete, GoogleMap, Marker } from "@react-google-maps/api";
+import { Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface RestaurantMapProps {
   initialLat?: number;
@@ -14,27 +14,28 @@ interface RestaurantMapProps {
 }
 
 const containerStyle = {
-  width: '100%',
-  height: '170px',
-  borderRadius: '12px'
+  width: "100%",
+  height: "170px",
+  borderRadius: "12px",
 };
 
 const defaultCenter = {
-  lat: 5.359952,  // Abidjan coordinates
-  lng: -4.008256
+  lat: 5.359952, // Abidjan coordinates
+  lng: -4.008256,
 };
 
-export default function RestaurantMap({ 
-  initialLat, 
-  initialLng, 
+export default function RestaurantMap({
+  initialLat,
+  initialLng,
   onLocationChange,
-  className = '',
-  isViewOnly = false
+  className = "",
+  isViewOnly = false,
 }: RestaurantMapProps) {
   const { isScriptLoaded, map, setMap } = useGoogleMaps();
   const [marker, setMarker] = useState<google.maps.LatLng | null>(null);
-  const [searchBox, setSearchBox] = useState<google.maps.places.Autocomplete | null>(null);
-  const [address, setAddress] = useState<string>('');
+  const [searchBox, setSearchBox] =
+    useState<google.maps.places.Autocomplete | null>(null);
+  const [address, setAddress] = useState<string>("");
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMapReady, setIsMapReady] = useState(false);
 
@@ -44,55 +45,76 @@ export default function RestaurantMap({
       const position = { lat: initialLat, lng: initialLng };
       const newMarker = new google.maps.LatLng(position.lat, position.lng);
       setMarker(newMarker);
-      
+
       // Center map on marker
       if (map) {
         map.panTo(newMarker);
         map.setZoom(15);
       }
-      
+
       // Reverse geocode to get address
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ location: position }, (results, status) => {
-        if (status === 'OK' && results?.[0]) {
+        if (status === "OK" && results?.[0]) {
           setAddress(results[0].formatted_address);
           if (!isViewOnly) {
-            onLocationChange(position.lat, position.lng, results[0].formatted_address);
+            onLocationChange(
+              position.lat,
+              position.lng,
+              results[0].formatted_address
+            );
           }
         }
       });
     }
-  }, [initialLat, initialLng, isScriptLoaded, isMapReady, map, isViewOnly, onLocationChange]);
+  }, [
+    initialLat,
+    initialLng,
+    isScriptLoaded,
+    isMapReady,
+    map,
+    isViewOnly,
+    onLocationChange,
+  ]);
 
-  const handleMapLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-    setIsMapReady(true);
-  }, [setMap]);
+  const handleMapLoad = useCallback(
+    (map: google.maps.Map) => {
+      setMap(map);
+      setIsMapReady(true);
+    },
+    [setMap]
+  );
 
-  const onMarkerLoad = useCallback((marker: google.maps.Marker) => {
-    if (!isViewOnly) {
-      marker.addListener('dragend', () => {
-        const position = marker.getPosition();
-        if (position) {
-          const lat = position.lat();
-          const lng = position.lng();
-          
-          // Reverse geocode to get address
-          const geocoder = new google.maps.Geocoder();
-          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-            if (status === 'OK' && results?.[0]) {
-              setAddress(results[0].formatted_address);
-              onLocationChange(lat, lng, results[0].formatted_address);
-            }
-          });
-        }
-      });
-    }
-  }, [onLocationChange, isViewOnly]);
+  const onMarkerLoad = useCallback(
+    (marker: google.maps.Marker) => {
+      if (!isViewOnly) {
+        marker.addListener("dragend", () => {
+          const position = marker.getPosition();
+          if (position) {
+            const lat = position.lat();
+            const lng = position.lng();
 
-  const onSearchBoxLoad = useCallback((autocomplete: google.maps.places.Autocomplete) => {
-    setSearchBox(autocomplete);
-  }, []);
+            // Reverse geocode to get address
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+              if (status === "OK" && results?.[0]) {
+                setAddress(results[0].formatted_address);
+                onLocationChange(lat, lng, results[0].formatted_address);
+              }
+            });
+          }
+        });
+      }
+    },
+    [onLocationChange, isViewOnly]
+  );
+
+  const onSearchBoxLoad = useCallback(
+    (autocomplete: google.maps.places.Autocomplete) => {
+      setSearchBox(autocomplete);
+    },
+    []
+  );
 
   const onPlaceChanged = useCallback(() => {
     if (searchBox) {
@@ -100,17 +122,17 @@ export default function RestaurantMap({
       if (place.geometry?.location) {
         const lat = place.geometry.location.lat();
         const lng = place.geometry.location.lng();
-        
+
         // Update marker position
         const newPosition = new google.maps.LatLng(lat, lng);
         setMarker(newPosition);
-        
+
         // Update map center
         map?.panTo(newPosition);
         map?.setZoom(15);
-        
+
         // Update address and notify parent
-        const formattedAddress = place.formatted_address || '';
+        const formattedAddress = place.formatted_address || "";
         setAddress(formattedAddress);
         if (!isViewOnly) {
           onLocationChange(lat, lng, formattedAddress);
@@ -121,7 +143,9 @@ export default function RestaurantMap({
 
   if (!isScriptLoaded) {
     return (
-      <div className={`${className} bg-gray-100 rounded-xl flex items-center justify-center`}>
+      <div
+        className={`${className} bg-gray-100 rounded-xl flex items-center justify-center`}
+      >
         <p className="text-gray-500">Chargement de la carte...</p>
       </div>
     );
@@ -148,7 +172,7 @@ export default function RestaurantMap({
             </div>
           </div>
         )}
-        
+
         <GoogleMap
           mapContainerStyle={containerStyle}
           center={marker || defaultCenter}
@@ -159,12 +183,12 @@ export default function RestaurantMap({
               {
                 featureType: "poi",
                 elementType: "labels",
-                stylers: [{ visibility: "off" }]
-              }
+                stylers: [{ visibility: "off" }],
+              },
             ],
             mapTypeControl: false,
             streetViewControl: false,
-            fullscreenControl: false
+            fullscreenControl: false,
           }}
         >
           {marker && (
@@ -186,4 +210,4 @@ export default function RestaurantMap({
       )}
     </div>
   );
-} 
+}

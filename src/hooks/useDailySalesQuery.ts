@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getDailySalesData } from '@/services/dashboardService';
+import { getDailySalesData } from '../../features/statistics/services/statistics.service';
 
 interface UseDailySalesQueryProps {
   restaurantId?: string;

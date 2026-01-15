@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../users/hook/authStore';
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { mapToValueLabel } from "../../../utils/list/mapToValueLabel";

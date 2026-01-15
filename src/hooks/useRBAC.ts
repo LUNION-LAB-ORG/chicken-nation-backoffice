@@ -3,7 +3,7 @@
  * Interface simple pour vérifier les permissions utilisateur
  */
 
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../features/users/hook/authStore';
 import { 
   hasPermission, 
   hasModulePermissions, 

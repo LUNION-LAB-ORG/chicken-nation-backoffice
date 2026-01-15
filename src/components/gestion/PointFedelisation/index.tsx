@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { LoyaltyPointsList } from "../../../../features/points_fedelite/components/LoyaltyPointsList";
 import PointFideliteHeader from "../../../../features/points_fedelite/components/PointFideliteHeader";

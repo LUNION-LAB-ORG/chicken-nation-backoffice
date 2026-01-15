@@ -11,10 +11,10 @@ import {
   PaginationInfo,
 } from "../../../../src/components/TableStates";
 
-import { User } from "@/services";
 import { PaginatedResponse } from "../../../../types";
 import { TableHeader } from "./TableHeader";
 import { OrderRow } from "./OrderRow";
+import { User } from "../../../users/types/user.types";
 
 export interface OrdersTableProps {
   currentUser?: User;

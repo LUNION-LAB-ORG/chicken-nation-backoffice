@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import { useTicketQuery, useSendTicketMessageMutation, useAssignTicketToCurrentUserMutation, useUpdateTicketStatusMutation, useUpdateTicketPriorityMutation } from '@/hooks/useTicketsQuery';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
 interface TicketViewProps {

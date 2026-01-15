@@ -1,42 +1,53 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react'
-import RestaurantHeader from './RestaurantHeader'
-import AddRestaurant from './AddRestaurant'
-import EditRestaurant from './EditRestaurant'
-import RestaurantView from '../Restaurants/RestaurantView'
-import RestaurantDetail from '../Restaurants/RestaurantDetail'
-import RestaurantDeleteModal from '../Restaurants/RestaurantDeleteModal'
-import ManagerCredentialsCustomModal from '../Restaurants/ManagerCredentialsCustomModal'
-import { toast } from 'react-hot-toast'
-import Modal from '@/components/ui/Modal'
-import { Restaurant, getAllRestaurants, deleteRestaurant } from '@/services/restaurantService'
-
+import Modal from "@/components/ui/Modal";
+import {
+  Restaurant,
+  deleteRestaurant,
+  getAllRestaurants,
+} from "@/services/restaurantService";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
+import ManagerCredentialsCustomModal from "../Restaurants/ManagerCredentialsCustomModal";
+import RestaurantDeleteModal from "../Restaurants/RestaurantDeleteModal";
+import RestaurantDetail from "../Restaurants/RestaurantDetail";
+import RestaurantView from "../Restaurants/RestaurantView";
+import AddRestaurant from "./AddRestaurant";
+import EditRestaurant from "./EditRestaurant";
+import RestaurantHeader from "./RestaurantHeader";
 
 interface Schedule {
   [day: string]: string;
 }
 
 export default function Restaurants() {
-  const [openAdd, setOpenAdd] = useState(false)
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('')
-  const [openDetail, setOpenDetail] = useState(false)
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
-  const [restaurantToDelete, setRestaurantToDelete] = useState<Restaurant | null>(null)
-  const [managerCredentials, setManagerCredentials] = useState<{ email: string; password: string } | null>(null)
-  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [openAdd, setOpenAdd] = useState(false);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<Restaurant | null>(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>("");
+  const [openDetail, setOpenDetail] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [restaurantToDelete, setRestaurantToDelete] =
+    useState<Restaurant | null>(null);
+  const [managerCredentials, setManagerCredentials] = useState<{
+    email: string;
+    password: string;
+  } | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Fonction pour charger les restaurants
   const fetchRestaurants = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const data = await getAllRestaurants();
       setRestaurants(data);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Impossible de charger les restaurants';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Impossible de charger les restaurants";
       toast.error(`Erreur: ${errorMessage}`);
 
       setRestaurants([]);
@@ -54,7 +65,6 @@ export default function Restaurants() {
   //   try {
   //     await updateRestaurantStatus(restaurantId, active);
 
-
   //     setRestaurants(prevRestaurants =>
   //       prevRestaurants.map(restaurant =>
   //         restaurant.id === restaurantId ? { ...restaurant, active } : restaurant
@@ -70,23 +80,25 @@ export default function Restaurants() {
 
   const formatSchedule = (schedule: Schedule[]) => {
     if (!Array.isArray(schedule)) {
-      return 'Horaires non disponibles';
+      return "Horaires non disponibles";
     }
 
     const daysMap: { [key: string]: string } = {
-      '1': 'Lun',
-      '2': 'Mar',
-      '3': 'Mer',
-      '4': 'Jeu',
-      '5': 'Ven',
-      '6': 'Sam',
-      '7': 'Dim'
+      "1": "Lun",
+      "2": "Mar",
+      "3": "Mer",
+      "4": "Jeu",
+      "5": "Ven",
+      "6": "Sam",
+      "7": "Dim",
     };
 
-    return schedule.map(item => {
-      const day = Object.keys(item)[0];
-      return `${daysMap[day]}: ${item[day]}`;
-    }).join(' | ');
+    return schedule
+      .map((item) => {
+        const day = Object.keys(item)[0];
+        return `${daysMap[day]}: ${item[day]}`;
+      })
+      .join(" | ");
   };
 
   const handleAddRestaurant = () => {
@@ -94,21 +106,25 @@ export default function Restaurants() {
   };
 
   const handleRestaurantAdded = (restaurant: Restaurant) => {
-    if (restaurant.manager && typeof restaurant.manager === 'object' &&
-      restaurant.manager.email && restaurant.manager.password) {
+    if (
+      restaurant.manager &&
+      typeof restaurant.manager === "object" &&
+      restaurant.manager.email &&
+      restaurant.manager.password
+    ) {
       setManagerCredentials({
         email: restaurant.manager.email,
-        password: restaurant.manager.password
+        password: restaurant.manager.password,
       });
     }
 
-    setRestaurants(prev => [...prev, restaurant]);
+    setRestaurants((prev) => [...prev, restaurant]);
     setOpenAdd(false);
     fetchRestaurants();
   };
 
   const handleDeleteRestaurant = async (restaurantId: string) => {
-    const restaurant = restaurants.find(r => r.id === restaurantId);
+    const restaurant = restaurants.find((r) => r.id === restaurantId);
     if (restaurant) {
       setRestaurantToDelete(restaurant);
       setDeleteModalOpen(true);
@@ -121,15 +137,20 @@ export default function Restaurants() {
     try {
       await deleteRestaurant(restaurantToDelete.id);
 
-      setRestaurants(prevRestaurants =>
-        prevRestaurants.filter(restaurant => restaurant.id !== restaurantToDelete.id)
+      setRestaurants((prevRestaurants) =>
+        prevRestaurants.filter(
+          (restaurant) => restaurant.id !== restaurantToDelete.id
+        )
       );
 
-      toast.success('Restaurant supprimé avec succès');
+      toast.success("Restaurant supprimé avec succès");
       setDeleteModalOpen(false);
       setRestaurantToDelete(null);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Impossible de supprimer le restaurant';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Impossible de supprimer le restaurant";
       toast.error(`Erreur: ${errorMessage}`);
     }
   };
@@ -156,27 +177,27 @@ export default function Restaurants() {
 
     const query = searchQuery.toLowerCase().trim();
 
-    return restaurants.filter(restaurant => {
+    return restaurants.filter((restaurant) => {
       // Tous les champs de recherche pour les restaurants
       const searchableFields = [
-        restaurant.name || '',
-        restaurant.address || '',
-        restaurant.phone || '',
-        restaurant.email || '',
-        restaurant.managerFullname || '',
-        restaurant.managerEmail || '',
-        (restaurant as { city?: string }).city || '',
-        restaurant.description || '',
+        restaurant.name || "",
+        restaurant.address || "",
+        restaurant.phone || "",
+        restaurant.email || "",
+        restaurant.managerFullname || "",
+        restaurant.managerEmail || "",
+        (restaurant as { city?: string }).city || "",
+        restaurant.description || "",
         // Statut du restaurant
-        restaurant.active ? 'actif' : 'inactif',
-        restaurant.active ? 'ouvert' : 'fermé',
+        restaurant.active ? "actif" : "inactif",
+        restaurant.active ? "ouvert" : "fermé",
         // ID pour utilisateurs avancés
-        restaurant.id || '',
+        restaurant.id || "",
         // Recherche par horaires si disponibles
-        restaurant.schedule ? formatSchedule(restaurant.schedule) : ''
+        restaurant.schedule ? formatSchedule(restaurant.schedule) : "",
       ];
 
-      return searchableFields.some(field =>
+      return searchableFields.some((field) =>
         field.toLowerCase().includes(query)
       );
     });
@@ -204,25 +225,26 @@ export default function Restaurants() {
           setOpenAdd(false);
           setSelectedRestaurant(null);
         }}
-        title={`${selectedRestaurant ? 'Modifier' : 'Ajouter'} un restaurant`}
+        title={`${selectedRestaurant ? "Modifier" : "Ajouter"} un restaurant`}
         size="large"
       >
         {selectedRestaurant ? (
           <EditRestaurant
-            restaurantId={selectedRestaurant.id || ''}
+            restaurantId={selectedRestaurant.id || ""}
             onCancel={() => {
               setOpenAdd(false);
               setSelectedRestaurant(null);
             }}
             onSuccess={(updatedRestaurant) => {
-
-              setRestaurants(prevRestaurants =>
-                prevRestaurants.map(restaurant =>
-                  restaurant.id === updatedRestaurant.id ? updatedRestaurant : restaurant
+              setRestaurants((prevRestaurants) =>
+                prevRestaurants.map((restaurant) =>
+                  restaurant.id === updatedRestaurant.id
+                    ? updatedRestaurant
+                    : restaurant
                 )
               );
 
-              toast.success('Restaurant mis à jour avec succès');
+              toast.success("Restaurant mis à jour avec succès");
               setOpenAdd(false);
               setSelectedRestaurant(null);
             }}
@@ -253,7 +275,6 @@ export default function Restaurants() {
         restaurant={restaurantToDelete}
       />
 
-
       {/* ✅ UTILISATION DU MODAL CUSTOM POUR LES CREDENTIALS */}
       {managerCredentials && (
         <ManagerCredentialsCustomModal
@@ -264,5 +285,5 @@ export default function Restaurants() {
         />
       )}
     </div>
-  )
+  );
 }

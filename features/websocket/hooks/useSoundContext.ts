@@ -1,6 +1,6 @@
-import { User } from "@/services";
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../users/hook/authStore';
 import { DashboardState, useDashboardStore } from "@/store/dashboardStore";
+import { User } from '../../users/types/user.types';
 
 
 export interface SoundContext {

@@ -1,23 +1,28 @@
-"use client"
+"use client";
 
-import React from "react"
-import { useRBAC } from '@/hooks/useRBAC'
+import React from "react";
+import { useRBAC } from "@/hooks/useRBAC";
 
 interface RestaurantActionsMenuProps {
-  onView: () => void
-  onEdit: () => void
-  onDelete: () => void
-  onClose: () => void
+  onView: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClose: () => void;
 }
 
-export default function RestaurantActionsMenu({ onView, onEdit, onDelete }: Omit<RestaurantActionsMenuProps, 'onClose'>) {
-  const { canViewRestaurant, canUpdateRestaurant, canDeleteRestaurant } = useRBAC()
+export default function RestaurantActionsMenu({
+  onView,
+  onEdit,
+  onDelete,
+}: Omit<RestaurantActionsMenuProps, "onClose">) {
+  const { canViewRestaurant, canUpdateRestaurant, canDeleteRestaurant } =
+    useRBAC();
 
   return (
     <div
       className="bg-white rounded-xl shadow-lg px-0 py-0 min-w-[200px] border border-[#ECECEC] select-none z-[120]"
-      style={{ boxShadow: '0 4px 28px 0 rgba(44, 44, 44, 0.10)' }}
-      onClick={e => e.stopPropagation()}
+      style={{ boxShadow: "0 4px 28px 0 rgba(44, 44, 44, 0.10)" }}
+      onClick={(e) => e.stopPropagation()}
     >
       {canViewRestaurant && (
         <button
@@ -47,5 +52,5 @@ export default function RestaurantActionsMenu({ onView, onEdit, onDelete }: Omit
         </button>
       )}
     </div>
-  )
+  );
 }

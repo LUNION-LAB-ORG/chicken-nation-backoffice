@@ -1,6 +1,6 @@
 "use client";
 import { useRBAC } from "@/hooks/useRBAC";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import OrderHeader from "../../../../features/orders/components/OrderHeader";
 import AddOrderForm from "../../../../features/orders/components/add-order-form";

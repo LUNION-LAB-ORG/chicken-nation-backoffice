@@ -4,7 +4,7 @@ import React from "react";
 import ClientHeader from "../../../../features/customer/components/ClientHeader";
 import { UserCounter } from "../../../../features/customer/components/UserCounter";
 import { GlobalReviews } from "../../../../features/customer/components/GlobalReviews";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useCustomerListQuery } from "../../../../features/customer/queries/customer-list.query";
 import { UserType } from "../../../../features/users/types/user.types";

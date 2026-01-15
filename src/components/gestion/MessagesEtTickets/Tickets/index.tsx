@@ -7,7 +7,7 @@ import TicketsRightbar from './TicketsRightbar';
 import NewTicketModal from './NewTicketModal';
 import NewCategoryModal from './NewCategoryModal';
 import { useTicketsSocket } from '@/hooks/useTicketsSocket';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { useTicketStore } from '@/store/ticketStore';
 
 function TicketsModule() {

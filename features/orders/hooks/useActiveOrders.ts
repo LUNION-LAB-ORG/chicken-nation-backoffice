@@ -3,7 +3,7 @@ import { useNotificationStateStore } from "../../websocket/stores/notificationSt
 import { mapApiOrdersToUiOrders } from "../utils/orderMapper";
 import { useOrderListQuery } from "../queries/order-list.query";
 import { ACTIVE_ORDER_STATUSES } from "../constantes/activeOrderStatuses";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../users/hook/authStore";
 
 export const useActiveOrders = () => {
   const { user } = useAuthStore();

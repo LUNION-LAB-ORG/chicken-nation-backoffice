@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getApiDashboardStats } from '@/services/dashboardService';
+import { getApiDashboardStats } from '../../features/statistics/services/statistics.service';
 
 interface UseRevenueDataQueryProps {
   restaurantId?: string;

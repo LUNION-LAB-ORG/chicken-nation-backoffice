@@ -1,15 +1,15 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
-import Input from '../../ui/Input'  
-import Button from '../../ui/Button'    
 import Toggle from '@/components/ui/Toggle'
-import ScheduleSelector from './ScheduleSelector'
+import { getRestaurantById, Restaurant, Schedule, updateRestaurant } from '@/services/restaurantService'
 import { ImageIcon, Loader2 } from 'lucide-react'
+import Image from 'next/image'
+import React, { useEffect, useState } from 'react'
 import { toast } from 'react-hot-toast'
-import { updateRestaurant, getRestaurantById, Restaurant, Schedule } from '@/services/restaurantService'
+import Button from '../../ui/Button'
+import Input from '../../ui/Input'
 import RestaurantMap from './RestaurantMap'
+import ScheduleSelector from './ScheduleSelector'
 
 interface EditRestaurantProps {
   restaurantId: string;

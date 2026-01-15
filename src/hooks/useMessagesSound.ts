@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../features/users/hook/authStore';
 import { useConversationsQuery } from '@/hooks/useConversationsQuery';
 import { useMessagesSocket } from '@/hooks/useMessagesSocket';
 

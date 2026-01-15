@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../features/users/hook/authStore";
 import { Notification } from "@/services/notificationService";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";

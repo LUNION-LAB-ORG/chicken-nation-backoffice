@@ -1,7 +1,7 @@
 "use client";
 
 import { useGetMenuConfig } from "@/hooks/useMenuConfig";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { TabKey, useDashboardStore } from "@/store/dashboardStore";
 import { useUIStore } from "@/store/uiStore";
 import { LogOut } from "lucide-react";

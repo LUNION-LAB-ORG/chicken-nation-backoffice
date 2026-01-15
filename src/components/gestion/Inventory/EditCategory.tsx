@@ -8,7 +8,7 @@ import Textarea from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { updateCategory, Category } from "@/services";
 import { toast } from "react-hot-toast";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import Checkbox from "@/components/ui/Checkbox";
 import { formatImageUrl } from "@/utils/imageHelpers";
 

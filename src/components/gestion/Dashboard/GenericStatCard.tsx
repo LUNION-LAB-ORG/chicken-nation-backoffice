@@ -1,9 +1,7 @@
 "use client"
 
-import Image from "next/image"
 import { LucideIcon } from "lucide-react"
 import React from "react"
-import { formatImageUrl } from '@/utils/imageHelpers'
 
 interface CircularProgressProps {
   percentage: number

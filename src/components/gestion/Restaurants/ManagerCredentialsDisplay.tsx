@@ -1,37 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import Modal from '@/components/ui/Modal';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import Modal from "@/components/ui/Modal";
+import toast from "react-hot-toast";
 
 interface ManagerCredentialsDisplayProps {
   email: string;
   password: string;
 }
 
-const ManagerCredentialsDisplay: React.FC<ManagerCredentialsDisplayProps> = ({ email, password }) => {
+const ManagerCredentialsDisplay: React.FC<ManagerCredentialsDisplayProps> = ({
+  email,
+  password,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
- 
     const timer = setTimeout(() => {
       setIsOpen(true);
-      
+
       // Afficher un toast pour informer l'utilisateur
-      toast.success(
-        'Veuillez noter les identifiants du gérant',
-        {
-          duration: 5000,
-          position: 'bottom-left',
-          style: {
-            background: '#F17922',
-            color: '#fff',
-            padding: '16px',
-            borderRadius: '10px',
-          },
-          icon: '🔑',
-        }
-      );
+      toast.success("Veuillez noter les identifiants du gérant", {
+        duration: 5000,
+        position: "bottom-left",
+        style: {
+          background: "#F17922",
+          color: "#fff",
+          padding: "16px",
+          borderRadius: "10px",
+        },
+        icon: "🔑",
+      });
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -45,12 +44,14 @@ const ManagerCredentialsDisplay: React.FC<ManagerCredentialsDisplayProps> = ({ e
         <div className="w-full flex flex-col gap-4 px-16 py-3">
           <div className="flex items-center justify-between bg-[#F7F7F7] rounded-xl px-4 py-2">
             <span className="text-[#595959] text-[13px]">Utilisateur</span>
-            <span className="text-[#F17922] font-mono text-[15px]">{email}</span>
+            <span className="text-[#F17922] font-mono text-[15px]">
+              {email}
+            </span>
             <button
               className="bg-[#F17922] text-white text-xs px-6 py-1 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b]"
               onClick={() => {
                 navigator.clipboard.writeText(email);
-                toast.success('Email copié !');
+                toast.success("Email copié !");
               }}
             >
               Copier
@@ -58,12 +59,14 @@ const ManagerCredentialsDisplay: React.FC<ManagerCredentialsDisplayProps> = ({ e
           </div>
           <div className="flex items-center justify-between bg-[#F7F7F7] rounded-xl px-4 py-2">
             <span className="text-[#595959] text-[13px]">Mot de passe</span>
-            <span className="text-[#F17922] font-regular text-[15px]">{password}</span>
+            <span className="text-[#F17922] font-regular text-[15px]">
+              {password}
+            </span>
             <button
               className="bg-[#F17922] text-white text-xs px-6 py-1 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b]"
               onClick={() => {
                 navigator.clipboard.writeText(password);
-                toast.success('Mot de passe copié !');
+                toast.success("Mot de passe copié !");
               }}
             >
               Copier

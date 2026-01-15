@@ -4,16 +4,16 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import Input from "../../ui/Input";
 import Button from "../../ui/Button";
-import { createUser, createMember } from "@/services";
 import UserCredentialsModal from "./UserCredentialsModal";
 import toast from "react-hot-toast";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import {
   getHumanReadableError,
   getPersonnelSuccessMessage,
   getInfoMessage,
 } from "@/utils/errorMessages";
 import { validateCreateUser } from "@/schemas/personnelSchemas";
+import { createMember, createUser } from "../../../../features/users/services/user.service";
 
 interface CreatedMember {
   id: string;

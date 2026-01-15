@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import AuthHeader from '@/components/auth/AuthHeader';
-import LoginForm from '@/components/auth/LoginForm';
-import { useAuthStore } from '@/store/authStore';
-import { LoginCredentials } from '@/types/auth';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import styles from './page.module.css';
+import AuthHeader from "@/components/auth/AuthHeader";
+import LoginForm from "@/components/auth/LoginForm";
+import { useAuthStore } from "../../features/users/hook/authStore";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import styles from "./page.module.css";
+import { LoginCredentials } from "../../features/users/types/auth.type";
 
 /**
  * Page de connexion
@@ -29,7 +29,7 @@ export default function LoginPage() {
     const checkAuthentication = () => {
       if (isAuthenticated && !redirecting) {
         setRedirecting(true);
-        router.push('/gestion');
+        router.push("/gestion");
       } else {
         // Marquer que la vérification est terminée
         setCheckingAuth(false);
@@ -66,9 +66,11 @@ export default function LoginPage() {
       setRedirecting(true);
 
       // Rediriger vers le tableau de bord
-      router.push('/gestion');
+      router.push("/gestion");
     } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Erreur de connexion');
+      setLoginError(
+        error instanceof Error ? error.message : "Erreur de connexion"
+      );
     }
   };
 
@@ -92,15 +94,13 @@ export default function LoginPage() {
           <p className="text-gray-600 mb-4">
             {redirecting
               ? "Vous allez être redirigé vers votre tableau de bord"
-              : "Nous vérifions vos informations d'authentification"
-            }
+              : "Nous vérifions vos informations d'authentification"}
           </p>
 
           {/* Spinner de chargement */}
           <div className="flex justify-center mb-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]"></div>
           </div>
-
         </div>
       </div>
     );
@@ -117,11 +117,11 @@ export default function LoginPage() {
       <main
         className={`${styles.fullHeightContainer} flex flex-col md:flex-row`}
         style={{
-          backgroundColor: 'black',
+          backgroundColor: "black",
           backgroundImage: 'url("/images/background.png")',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       >
         {/* Section gauche avec mascotte - cachée sur mobile */}
@@ -140,8 +140,6 @@ export default function LoginPage() {
         {/* Section droite avec formulaire - pleine largeur sur mobile */}
         <div className="flex-1 flex items-center justify-center p-6 md:p-12">
           <div className="w-full max-w-md">
-
-
             {/* Carte de connexion */}
             <div className="bg-white rounded-3xl shadow-lg p-8 z-10">
               <h2 className="text-center text-2xl text-[#F17922] font-bold text-primary mb-8">

@@ -1,59 +1,8 @@
-import { api } from './api';
+import { api } from '../../../src/services/api';
 import { getHumanReadableError, validatePersonnelError } from '@/utils/errorMessages';
+import { CreateUserDto, User } from '../types/user.types';
 
 const USERS_ENDPOINT = '/users';
-
-export interface RestaurantDetails {
-  id: string;
-  name: string;
-  description?: string;
-  address?: string;
-  phone?: string;
-  image?: string;
-  latitude?: number;
-  longitude?: number;
-  opening_hours?: string;
-  status?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface User {
-  id: string;
-  email: string;
-  fullname: string;
-  phone?: string;
-  address?: string;
-  image?: string;
-  password_is_updated?: boolean;
-  role: 'ADMIN' | 'MANAGER' | 'EMPLOYEE' | 'MARKETING' | 'COMPTABLE' | 'CAISSIER' | 'CALL_CENTER' | 'CUISINE' | "ASSISTANT_MANAGER";
-  type?: 'BACKOFFICE' | 'CUSTOMER' | 'RESTAURANT';
-  restaurant_id?: string;
-  restaurant?: RestaurantDetails;
-  entity_status?: 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface CreateUserDto {
-  email: string;
-  fullname: string;
-  phone?: string;
-  address?: string;
-  password: string;
-  role: string;
-  type?: string;
-  restaurant?: string;
-}
-
-export interface UpdateUserDto {
-  email?: string;
-  fullname?: string;
-  password?: string;
-  role?: string;
-  type?: string;
-  restaurant?: string;
-}
 
 /**
  * Récupère tous les utilisateurs
@@ -116,16 +65,7 @@ export async function createUser(data: {
 /**
  * Crée un nouveau membre (utilisé par les managers) - endpoint spécifique /users/member
  */
-export async function createMember(data: {
-  fullname: string;
-  email: string;
-  phone?: string;
-  address?: string;
-  image?: File;
-  role: string;
-  type?: string;
-  restaurant_id?: string;
-}) {
+export async function createMember(data: CreateUserDto) {
   const formData = new FormData();
   formData.append('fullname', String(data.fullname));
   formData.append('email', String(data.email));
@@ -147,7 +87,7 @@ export async function createMember(data: {
   }
 }
 
-export const updateUser = async (id: string, data: Partial<Omit<User, 'image'>> & { image?: File | string }): Promise<User> => {
+export const updateUser = async (id: string, data: Partial<Omit<CreateUserDto, 'image'>> & { image?: File | string }): Promise<User> => {
   const formData = new FormData();
 
 

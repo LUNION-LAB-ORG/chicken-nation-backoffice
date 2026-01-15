@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCreateTicketMutation } from '@/hooks/useTicketsQuery';
 import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
 import { useCustomersQuery } from '@/hooks/useCustomersQuery';
-import { useAuthStore } from '@/store/authStore';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { getRestaurantUsers } from '@/services/restaurantService';
 import { CreateTicketRequest, TicketPriority } from '@/types/tickets';
 import { TICKET_PRIORITY_LABELS, TICKET_CATEGORY_LABELS } from '@/types/tickets';

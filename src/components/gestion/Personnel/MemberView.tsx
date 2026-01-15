@@ -9,8 +9,8 @@ import MemberBlockModal from './MemberBlockModal'
 import MemberViewModal from './MemberViewModal'
 import EditMember from './EditMember'
 import { createPortal } from 'react-dom'
-import { User, deleteUser, blockUser, restoreUser } from '@/services/userService';
-import { useAuthStore } from '@/store/authStore';
+import { User, deleteUser, blockUser, restoreUser } from '../../../../features/users/services/user.service';
+import { useAuthStore } from '../../../../features/users/hook/authStore';
 import toast from 'react-hot-toast';
 import { getHumanReadableError, getPersonnelSuccessMessage } from '@/utils/errorMessages';
 import { useRBAC } from '@/hooks/useRBAC';

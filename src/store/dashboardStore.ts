@@ -5,11 +5,10 @@ import { MenuItem } from '@/types';
 import { OrderTable } from '../../features/orders/types/ordersTable.types';
 
 // --- TYPES ---
-
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
-  | 'program' | 'restaurants' | 'personnel' | 'ads' | 'promos' | 'loyalty'
-  | 'apps' | 'inbox' | 'card_requests' | 'card_nation' | "reviews";
+  | 'restaurants' | 'personnel' | 'promos' | 'loyalty'
+  | 'inbox' | 'card_requests' | 'card_nation' | "reviews";
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
@@ -40,13 +39,10 @@ export interface DashboardState {
   menus: SectionState<MenuItem>;
   clients: SectionState<string>;
   inventory: SectionState;
-  program: SectionState;
   restaurants: SectionState;
   personnel: SectionState;
-  ads: SectionState;
   promos: SectionState;
   loyalty: SectionState;
-  apps: SectionState;
   card_requests: SectionState;
   card_nation: SectionState;
   reviews: SectionState;
@@ -74,14 +70,11 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
   modals: {}
 });
 
-const SECTION_KEYS: TabKey[] = ['dashboard',
-  'orders', 'menus', 'marketing', 'clients', 'inventory',
-  'program', 'restaurants', 'personnel', 'ads', 'promos',
-  'loyalty', 'apps'
-];
+const SECTION_KEYS: TabKey[] = ['dashboard', 'orders', 'menus', 'marketing', 'clients', 'inventory',
+  'restaurants', 'personnel', 'promos', 'loyalty', 'inbox',
+  'card_requests', 'card_nation', 'reviews'];
 
 // --- STORE ---
-
 export const useDashboardStore = create<DashboardState>()(
   persist(
     immer((set) => ({
@@ -97,13 +90,10 @@ export const useDashboardStore = create<DashboardState>()(
       menus: createInitialSectionState<MenuItem>(),
       clients: createInitialSectionState(),
       inventory: createInitialSectionState(),
-      program: createInitialSectionState(),
       restaurants: createInitialSectionState(),
       personnel: createInitialSectionState(),
-      ads: createInitialSectionState(),
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
-      apps: createInitialSectionState(),
       card_requests: createInitialSectionState(),
       card_nation: createInitialSectionState(),
       reviews: createInitialSectionState(),

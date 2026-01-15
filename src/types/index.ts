@@ -138,43 +138,6 @@ export interface NotificationSettings {
     };
   };
 }
-
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  username: string;
-  email: string;
-  phone: string;
-  isConnected: boolean;
-  password: string;
-  profilePicture: string;
-  favorites: {
-    restaurants: string[];
-    products: string[];
-  };
-  addresses: {
-    id: string;
-    name: string;
-    address: string;
-    details?: string;
-    isDefault: boolean;
-  }[];
-  notificationPreferences: {
-    specialOffers: boolean;
-    promotion: boolean;
-    orders: boolean;
-    appUpdates: boolean;
-    newService: boolean;
-  };
-  orderHistory: OrderHistory[];
-  reviews: string[];
-  notifications: Notification[];
-  notificationSettings: NotificationSettings;
-  createdAt: string;
-  lastLogin: string;
-}
-
 // ✅ TYPES STRICTS POUR LES SUPPLÉMENTS - UNIFIÉ
 export interface SupplementItem {
   id: string;

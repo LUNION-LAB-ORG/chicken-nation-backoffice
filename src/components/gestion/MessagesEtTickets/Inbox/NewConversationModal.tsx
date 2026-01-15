@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { X, Users, Loader2 } from 'lucide-react';
 import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { getRestaurantCustomers } from '@/services/customerService';
-import { getAllUsers } from '@/services/userService';
-import { useAuthStore } from '@/store/authStore';
+import { getAllUsers } from '../../../../../features/users/services/user.service';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import toast from 'react-hot-toast';
 
 interface NewConversationModalProps {

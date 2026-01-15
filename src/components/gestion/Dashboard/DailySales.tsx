@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import React from 'react';
-import { DailySalesData } from '@/services/dashboardService';
+import { DailySalesData } from '../../../../features/statistics/services/statistics.service';
 import { useDailySalesQuery } from '@/hooks/useDailySalesQuery';
 import './DailySales.css';
  

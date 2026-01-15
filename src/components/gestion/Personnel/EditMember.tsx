@@ -4,12 +4,14 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
-import {User, updateUser, softDeleteUser, updateUserPassword, getUserById } from '@/services/userService'
+import {updateUser, softDeleteUser, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
 import toast from 'react-hot-toast'
 import type { Member } from './MemberView'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore } from '../../../../features/users/hook/authStore'
 import { formatImageUrl } from '@/utils/imageHelpers'
 import { getHumanReadableError, getPersonnelSuccessMessage, getInfoMessage } from '@/utils/errorMessages'
+import { User } from '../../../../features/users/types/user.types'
+import { LoginResponse } from '../../../../features/users/types/auth.type'
 
 // Type qui accepte soit un User soit un Member
 
@@ -218,7 +220,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
       })
 
 
-      setUser(freshUser as User)
+      setUser(freshUser as LoginResponse)
 
       if (onSuccess) {
         onSuccess(freshUser)
@@ -316,7 +318,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
       toast.success(getPersonnelSuccessMessage('update'));
 
       // Mettre à jour le store d'authentification avec l'objet utilisateur
-      setUser(updatedUser as User);
+      setUser(updatedUser as LoginResponse);
 
       if (onSuccess) {
         onSuccess(updatedUser);

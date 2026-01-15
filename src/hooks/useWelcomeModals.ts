@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "../../features/users/hook/authStore";
 import { useUIStore } from "@/store/uiStore";
 import { useEffect } from "react";
 
