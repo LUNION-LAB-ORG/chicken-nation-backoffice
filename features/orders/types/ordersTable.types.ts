@@ -58,8 +58,11 @@ export interface OrderTable {
   date: string;
   createdAt: string;
   updatedAt: string;
-  completedAt: string | null;
   paiedAt: string | null;
+  readyAt: string | null;
+  pickedUpAt: string | null;
+  collectedAt: string | null;
+  completedAt: string | null;
 
   // ========== STATUT ==========
   status: OrderTableStatus;

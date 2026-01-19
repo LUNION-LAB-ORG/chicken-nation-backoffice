@@ -2,6 +2,46 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { Order, OrderType } from "../../types/order.types"
 
+type StatLevel = "LOW" | "NORMAL" | "GOOD" | "EXCELLENT"
+
+function getDayStatLevel(value: number): StatLevel {
+    if (value >= 100) return "EXCELLENT"
+    if (value > 50) return "GOOD"
+    if (value < 50) return "LOW"
+    return "NORMAL"
+}
+
+function getTotalStatLevel(value: number): StatLevel {
+    if (value >= 700) return "EXCELLENT"
+    if (value > 350) return "GOOD"
+    if (value < 350) return "LOW"
+    return "NORMAL"
+}
+
+function applyStatColor(
+    cell: any,
+    level: StatLevel
+) {
+    switch (level) {
+        case "LOW":
+            cell.styles.fillColor = [255, 230, 230]   // rouge clair
+            cell.styles.textColor = [180, 0, 0]
+            break
+        case "GOOD":
+            cell.styles.fillColor = [230, 255, 230]   // vert clair
+            cell.styles.textColor = [0, 120, 0]
+            break
+        case "EXCELLENT":
+            cell.styles.fillColor = [230, 240, 255]   // bleu clair
+            cell.styles.textColor = [0, 70, 160]
+            break
+        default:
+            // NORMAL → rien
+            break
+    }
+}
+
+
 interface DayStats {
     date: string
     restaurants: {
@@ -176,7 +216,9 @@ export async function generateOrderReport(
         ])
 
         const addRow = (label: string, key: keyof TotalStats) => {
-            const row = [label]
+            const row: any[] = [
+                { content: label, rawKey: key }
+            ]
             let total = 0
 
             restaurantNames.forEach((name) => {
@@ -189,6 +231,7 @@ export async function generateOrderReport(
             tableData.push(row)
         }
 
+
         addRow("Commandes application", "app")
         addRow("Commandes par téléphone", "phone")
         addRow("Total commande (brut)", "total")
@@ -199,7 +242,9 @@ export async function generateOrderReport(
 
     // ===== TOTAUX GÉNÉRAUX =====
     const addTotalRow = (label: string, key: keyof TotalStats) => {
-        const row = [label]
+        const row: any[] = [
+            { content: label, rawKey: key, isTotal: true }
+        ]
         let total = 0
 
         restaurantNames.forEach((name) => {
@@ -211,6 +256,7 @@ export async function generateOrderReport(
         row.push(total.toString())
         tableData.push(row)
     }
+
 
     addTotalRow("TOTAL Commandes application", "app")
     addTotalRow("TOTAL Commandes par téléphone", "phone")
@@ -240,15 +286,31 @@ export async function generateOrderReport(
             },
         },
         didParseCell: (data) => {
-            if (
-                data.section === "body" &&
-                data.row.index >= tableData.length - 6
-            ) {
-                data.cell.styles.fillColor = [241, 121, 34]
-                data.cell.styles.textColor = [255, 255, 255]
+            const row = data.row.raw as any[]
+            const firstCell = row?.[0]
+
+            if (!firstCell || data.column.index === 0) return
+
+            const value = Number(data.cell.text?.[0])
+            if (isNaN(value)) return
+
+            const key = firstCell.rawKey
+            const isTotal = firstCell.isTotal
+
+            if (key === "completed" || key === "delivery") {
+                const level = isTotal
+                    ? getTotalStatLevel(value)
+                    : getDayStatLevel(value)
+
+                applyStatColor(data.cell, level)
+            }
+
+            // Mise en valeur des lignes TOTAL
+            if (isTotal) {
                 data.cell.styles.fontStyle = "bold"
             }
-        },
+        }
+
     })
 
     const filename = `rapport_commandes_${new Date()

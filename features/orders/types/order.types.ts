@@ -69,6 +69,9 @@ export interface Order {
     time: string | null;
     estimated_delivery_time: string | null;
     estimated_preparation_time: string | null;
+    ready_at: string | null;
+    picked_up_at: string | null;
+    collected_at: string | null;
     fullname: string | null;
     phone: string | null;
     email: string | null;

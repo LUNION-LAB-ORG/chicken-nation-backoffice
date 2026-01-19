@@ -179,6 +179,9 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     updatedAt: order.updated_at,
     completedAt: order.completed_at,
     paiedAt: order.paied_at,
+    readyAt: order.ready_at,
+    pickedUpAt: order.picked_up_at,
+    collectedAt: order.collected_at,
 
     // Statut
     status: STATUS_MAP[order.status],
