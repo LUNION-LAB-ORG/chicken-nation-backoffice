@@ -2,45 +2,9 @@ import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 import { Order, OrderType } from "../../types/order.types"
 
-type StatLevel = "LOW" | "NORMAL" | "GOOD" | "EXCELLENT"
-
-function getDayStatLevel(value: number): StatLevel {
-    if (value >= 100) return "EXCELLENT"
-    if (value > 50) return "GOOD"
-    if (value < 50) return "LOW"
-    return "NORMAL"
-}
-
-function getTotalStatLevel(value: number): StatLevel {
-    if (value >= 700) return "EXCELLENT"
-    if (value > 350) return "GOOD"
-    if (value < 350) return "LOW"
-    return "NORMAL"
-}
-
-function applyStatColor(
-    cell: any,
-    level: StatLevel
-) {
-    switch (level) {
-        case "LOW":
-            cell.styles.fillColor = [255, 230, 230]   // rouge clair
-            cell.styles.textColor = [180, 0, 0]
-            break
-        case "GOOD":
-            cell.styles.fillColor = [230, 255, 230]   // vert clair
-            cell.styles.textColor = [0, 120, 0]
-            break
-        case "EXCELLENT":
-            cell.styles.fillColor = [230, 240, 255]   // bleu clair
-            cell.styles.textColor = [0, 70, 160]
-            break
-        default:
-            // NORMAL → rien
-            break
-    }
-}
-
+/* ======================================================
+   TYPES
+====================================================== */
 
 interface DayStats {
     date: string
@@ -48,7 +12,7 @@ interface DayStats {
         [restaurantName: string]: {
             app: number
             phone: number
-            total: number // total brut (inclut annulées)
+            total: number
             delivery: number
             completed: number
             cancelled: number
@@ -59,18 +23,76 @@ interface DayStats {
 interface TotalStats {
     app: number
     phone: number
-    total: number // total brut
+    total: number
     delivery: number
     completed: number
     cancelled: number
 }
 
-function prepareDailyData(orders: Order[]): {
-    dayStats: DayStats[]
-    restaurantNames: string[]
-    totals: { [restaurantName: string]: TotalStats }
-    grandTotals: TotalStats
-} {
+type StatLevel = "LOW" | "NORMAL" | "GOOD" | "EXCELLENT"
+
+/* ======================================================
+   COULEURS & SEUILS
+====================================================== */
+
+const COLORS = {
+    ORANGE: [241, 121, 34] as [number, number, number],
+    LIGHT_GRAY: [245, 245, 245] as [number, number, number],
+
+    RED_BG: [255, 230, 230] as [number, number, number],
+    RED_TXT: [180, 0, 0] as [number, number, number],
+
+    GREEN_BG: [230, 255, 230] as [number, number, number],
+    GREEN_TXT: [0, 120, 0] as [number, number, number],
+
+    BLUE_BG: [230, 240, 255] as [number, number, number],
+    BLUE_TXT: [0, 70, 160] as [number, number, number],
+}
+
+const SEUIL = 50;
+function getDayStatLevel(value: number): StatLevel {
+    if (value >= SEUIL * 2) return "EXCELLENT"
+    if (value > SEUIL) return "GOOD"
+    if (value < SEUIL) return "LOW"
+    return "NORMAL"
+}
+
+function getTotalStatLevel(
+    value: number,
+    numberOfDays: number
+): StatLevel {
+    const target = SEUIL * numberOfDays
+
+    if (value >= target * 2) return "EXCELLENT"
+    if (value > target) return "GOOD"
+    if (value < target) return "LOW"
+    return "NORMAL"
+}
+
+function applyStatColor(cell: any, level: StatLevel) {
+    switch (level) {
+        case "LOW":
+            cell.styles.fillColor = COLORS.RED_BG
+            cell.styles.textColor = COLORS.RED_TXT
+            break
+        case "GOOD":
+            cell.styles.fillColor = COLORS.GREEN_BG
+            cell.styles.textColor = COLORS.GREEN_TXT
+            break
+        case "EXCELLENT":
+            cell.styles.fillColor = COLORS.BLUE_BG
+            cell.styles.textColor = COLORS.BLUE_TXT
+            break
+        default:
+            break
+    }
+}
+
+/* ======================================================
+   PRÉPARATION DES DONNÉES
+====================================================== */
+
+function prepareDailyData(orders: Order[]) {
     const daysMap = new Map<string, DayStats>()
     const restaurantNamesSet = new Set<string>()
     const totals: { [restaurantName: string]: TotalStats } = {}
@@ -95,10 +117,8 @@ function prepareDailyData(orders: Order[]): {
             })
         }
 
-        const dayData = daysMap.get(dayKey)!
-
-        if (!dayData.restaurants[restaurantName]) {
-            dayData.restaurants[restaurantName] = {
+        if (!daysMap.get(dayKey)!.restaurants[restaurantName]) {
+            daysMap.get(dayKey)!.restaurants[restaurantName] = {
                 app: 0,
                 phone: 0,
                 total: 0,
@@ -119,10 +139,9 @@ function prepareDailyData(orders: Order[]): {
             }
         }
 
-        const stats = dayData.restaurants[restaurantName]
+        const stats = daysMap.get(dayKey)!.restaurants[restaurantName]
         const totalStats = totals[restaurantName]
 
-        // Canal de commande
         if (order.auto) {
             stats.app++
             totalStats.app++
@@ -131,17 +150,9 @@ function prepareDailyData(orders: Order[]): {
             totalStats.phone++
         }
 
-        // Total brut
         stats.total++
         totalStats.total++
 
-        // Type livraison
-        if (order.type === OrderType.DELIVERY && order.status === "COMPLETED") {
-            stats.delivery++
-            totalStats.delivery++
-        }
-
-        // Statut commande
         if (order.status === "COMPLETED") {
             stats.completed++
             totalStats.completed++
@@ -151,40 +162,31 @@ function prepareDailyData(orders: Order[]): {
             stats.cancelled++
             totalStats.cancelled++
         }
-    })
 
-    // Totaux généraux
-    const grandTotals: TotalStats = {
-        app: 0,
-        phone: 0,
-        total: 0,
-        delivery: 0,
-        completed: 0,
-        cancelled: 0,
-    }
-
-    Object.values(totals).forEach((stats) => {
-        grandTotals.app += stats.app
-        grandTotals.phone += stats.phone
-        grandTotals.total += stats.total
-        grandTotals.delivery += stats.delivery
-        grandTotals.completed += stats.completed
-        grandTotals.cancelled += stats.cancelled
+        if (order.type === OrderType.DELIVERY && order.status === "COMPLETED") {
+            stats.delivery++
+            totalStats.delivery++
+        }
     })
 
     return {
         dayStats: Array.from(daysMap.values()),
         restaurantNames: Array.from(restaurantNamesSet).sort(),
         totals,
-        grandTotals,
+        numberOfDays: daysMap.size,
     }
 }
+
+/* ======================================================
+   GÉNÉRATION DU PDF
+====================================================== */
 
 export async function generateOrderReport(
     orders: Order[],
     date?: string
 ): Promise<void> {
-    const { dayStats, restaurantNames, totals } = prepareDailyData(orders)
+    const { dayStats, restaurantNames, totals, numberOfDays } =
+        prepareDailyData(orders)
 
     const doc = new jsPDF({
         orientation: "landscape",
@@ -192,37 +194,40 @@ export async function generateOrderReport(
         format: "a4",
     })
 
-    // Titre
-    doc.setFillColor(241, 121, 34)
+    /* ===== TITRE ===== */
+    doc.setFillColor(...COLORS.ORANGE)
     doc.rect(0, 0, 297, 15, "F")
     doc.setTextColor(255, 255, 255)
     doc.setFontSize(16)
-    doc.text(`RAPPORT${date ? ` : ${date}` : ""}`, 10, 10)
+    doc.text(
+        `RAPPORT DES COMMANDES${date ? ` : ${date}` : ""}`,
+        10,
+        10
+    )
 
+    const columns = ["Restaurants", ...restaurantNames, "TOTAL"]
     const tableData: any[] = []
-    const columns = ["Restaurants", ...restaurantNames, "TOTAUX"]
 
-    // ===== PAR JOUR =====
+    /* ===== DONNÉES JOURNALIÈRES ===== */
     dayStats.forEach((day) => {
         tableData.push([
             {
                 content: day.date.toUpperCase(),
                 colSpan: columns.length,
                 styles: {
-                    fillColor: [241, 121, 34],
+                    fillColor: COLORS.ORANGE,
                     textColor: [255, 255, 255],
+                    fontStyle: "bold",
                 },
             },
         ])
 
         const addRow = (label: string, key: keyof TotalStats) => {
-            const row: any[] = [
-                { content: label, rawKey: key }
-            ]
+            const row: any[] = [{ content: label, rawKey: key }]
             let total = 0
 
             restaurantNames.forEach((name) => {
-                const value = (day.restaurants[name] as any)?.[key] || 0
+                const value = day.restaurants[name]?.[key] || 0
                 row.push(value.toString())
                 total += value
             })
@@ -231,20 +236,30 @@ export async function generateOrderReport(
             tableData.push(row)
         }
 
-
         addRow("Commandes application", "app")
         addRow("Commandes par téléphone", "phone")
-        addRow("Total commande (brut)", "total")
+        addRow("Total commandes (brut)", "total")
         addRow("Commandes terminées", "completed")
         addRow("Commandes annulées", "cancelled")
-        addRow("Livraison", "delivery")
+        addRow("Livraisons", "delivery")
     })
 
-    // ===== TOTAUX GÉNÉRAUX =====
+    /* ===== SÉPARATEUR DES TOTAUX ===== */
+    tableData.push([
+        {
+            content: "TOTAUX DE LA PÉRIODE",
+            colSpan: columns.length,
+            styles: {
+                fillColor: COLORS.LIGHT_GRAY,
+                fontStyle: "bold",
+                halign: "center",
+            },
+        },
+    ])
+
+    /* ===== TOTAUX ===== */
     const addTotalRow = (label: string, key: keyof TotalStats) => {
-        const row: any[] = [
-            { content: label, rawKey: key, isTotal: true }
-        ]
+        const row: any[] = [{ content: label, rawKey: key, isTotal: true }]
         let total = 0
 
         restaurantNames.forEach((name) => {
@@ -257,15 +272,14 @@ export async function generateOrderReport(
         tableData.push(row)
     }
 
-
     addTotalRow("TOTAL Commandes application", "app")
-    addTotalRow("TOTAL Commandes par téléphone", "phone")
-    addTotalRow("TOTAL commande (brut)", "total")
+    addTotalRow("TOTAL Commandes téléphone", "phone")
+    addTotalRow("TOTAL commandes (brut)", "total")
     addTotalRow("TOTAL Commandes terminées", "completed")
     addTotalRow("TOTAL Commandes annulées", "cancelled")
-    addTotalRow("TOTAL Livraison", "delivery")
+    addTotalRow("TOTAL Livraisons", "delivery")
 
-    // Génération du tableau
+    /* ===== TABLE ===== */
     autoTable(doc, {
         head: [columns],
         body: tableData,
@@ -276,19 +290,16 @@ export async function generateOrderReport(
             cellPadding: 2,
         },
         headStyles: {
-            fillColor: [241, 121, 34],
+            fillColor: COLORS.ORANGE,
             textColor: [255, 255, 255],
             fontStyle: "bold",
         },
         columnStyles: {
-            0: {
-                fillColor: [245, 245, 245],
-            },
+            0: { fillColor: COLORS.LIGHT_GRAY },
         },
         didParseCell: (data) => {
             const row = data.row.raw as any[]
             const firstCell = row?.[0]
-
             if (!firstCell || data.column.index === 0) return
 
             const value = Number(data.cell.text?.[0])
@@ -299,23 +310,20 @@ export async function generateOrderReport(
 
             if (key === "completed" || key === "delivery") {
                 const level = isTotal
-                    ? getTotalStatLevel(value)
+                    ? getTotalStatLevel(value, numberOfDays)
                     : getDayStatLevel(value)
 
                 applyStatColor(data.cell, level)
             }
 
-            // Mise en valeur des lignes TOTAL
             if (isTotal) {
                 data.cell.styles.fontStyle = "bold"
+                data.cell.styles.lineWidth = 0.3
             }
-        }
-
+        },
     })
 
-    const filename = `rapport_commandes_${new Date()
-        .toISOString()
-        .split("T")[0]}.pdf`
-
-    doc.save(filename)
+    doc.save(
+        `rapport_commandes_${new Date().toISOString().split("T")[0]}.pdf`
+    )
 }
