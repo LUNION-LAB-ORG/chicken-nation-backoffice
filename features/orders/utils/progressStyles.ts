@@ -1,75 +1,179 @@
-import { ProgressStyles } from "../types/orderDetails.types";
+import { OrderTable } from "../types/ordersTable.types";
+import { differenceInMinutes, isSameDay, format } from "date-fns";
 
-export const getProgressStyles = (
-    orderType: string | undefined,
-    currentStatus: string
-): ProgressStyles => {
-    const styles: ProgressStyles = {
-        step1Border: "border-[#F17922]",
-        step1Bg: "bg-white",
-        step1Icon: "/icons/poulet.png",
-        line1: "bg-[#FFE8D7]",
-        step2Border: "border-[#F17922]",
-        step2Bg: "bg-white",
-        step2Icon: "/icons/package_orange.png",
-        line2: "bg-[#FFE8D7]",
-        step3Border: "border-[#F17922]",
-        step3Bg: "bg-white",
-        step3Icon: "/icons/location-outline.png",
-    };
-
-    // Pour les commandes TABLE, si le statut est PRÊT, tout est complété
-    if (orderType === "TABLE" && currentStatus === "PRÊT") {
-        styles.step1Bg = "bg-[#F17922]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-        styles.line1 = "bg-[#F17922]";
-        styles.step2Bg = "bg-[#F17922]";
-        styles.step2Icon = "/icons/package.png";
-        styles.line2 = "bg-[#F17922]";
-        styles.step3Bg = "bg-[#F17922]";
-        styles.step3Icon = "/icons/location_white.png";
-        return styles;
-    }
-
-    if (currentStatus === "EN COURS" || currentStatus === "EN PRÉPARATION") {
-        styles.step1Bg = "bg-[#F17922]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-    } else if (currentStatus === "PRÊT") {
-        styles.step1Bg = "bg-[#F17922]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-        styles.line1 = "bg-[#F17922]";
-        styles.step2Bg = "bg-[#F17922]";
-        styles.step2Icon = "/icons/package.png";
-    } else if (currentStatus === "COLLECTÉE") {
-        styles.step1Bg = "bg-[#F17922]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-        styles.line1 = "bg-[#F17922]";
-        styles.step2Bg = "bg-[#F17922]";
-        styles.step2Icon = "/icons/package.png";
-    } else if (
-        currentStatus === "LIVRÉE" ||
-        currentStatus === "TERMINÉE" ||
-        currentStatus === "COMPLETED"
-    ) {
-        styles.step1Bg = "bg-[#F17922]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-        styles.line1 = "bg-[#F17922]";
-        styles.step2Bg = "bg-[#F17922]";
-        styles.step2Icon = "/icons/package.png";
-        styles.line2 = "bg-[#F17922]";
-        styles.step3Bg = "bg-[#F17922]";
-        styles.step3Icon = "/icons/location_white.png";
-    } else if (currentStatus === "ANNULÉE") {
-        styles.step1Border = "border-[#FF3B30]";
-        styles.step1Bg = "bg-[#FF3B30]";
-        styles.step1Icon = "/icons/poulet-blanc.png";
-        styles.line1 = "bg-[#FFE8D7]";
-        styles.step2Border = "border-[#FF3B30]";
-        styles.step2Bg = "bg-white";
-        styles.line2 = "bg-[#FFE8D7]";
-        styles.step3Border = "border-[#FF3B30]";
-        styles.step3Bg = "bg-white";
-    }
-
-    return styles;
+/* =====================================================
+   DESIGN TOKENS
+===================================================== */
+const UI = {
+    bg: {
+        active: "bg-[#F17922]",
+        inactive: "bg-white",
+        lineActive: "bg-[#F17922]",
+        lineInactive: "bg-[#FFE8D7]",
+        danger: "bg-[#FF3B30]",
+    },
+    border: {
+        active: "border-[#F17922]",
+        inactive: "border-[#F17922]",
+        danger: "border-[#FF3B30]",
+    },
 };
+
+const ICONS = [
+    {
+        default: "/icons/poulet.png",
+        active: "/icons/poulet-blanc.png",
+    },
+    {
+        default: "/icons/package_orange.png",
+        active: "/icons/package.png",
+    },
+    {
+        default: "/icons/location-outline.png",
+        active: "/icons/location_white.png",
+    },
+];
+
+/* =====================================================
+   TYPES
+===================================================== */
+
+type ProgressStep = {
+    title: string;
+    date?: string;
+    icon: string;
+    isActive: boolean;
+    duration?: string;
+};
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+/**
+ * Formate la date selon le contexte
+ * - Si même jour que la création : affiche uniquement l'heure
+ * - Sinon : affiche date + heure
+ */
+const formatStepDate = (dateStr: string, createdAt: string): string => {
+    const date = new Date(dateStr);
+    const creationDate = new Date(createdAt);
+
+    if (isSameDay(date, creationDate)) {
+        return format(date, "HH:mm");
+    }
+    return format(date, "dd/MM/yyyy HH:mm");
+};
+
+/**
+ * Calcule la durée entre deux dates
+ * Retourne un format lisible (ex: "15 min", "1h 30min")
+ */
+const calculateDuration = (startDate: string, endDate: string): string => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const minutes = differenceInMinutes(end, start);
+
+    if (minutes < 60) {
+        return `${minutes} min`;
+    }
+
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+
+    if (remainingMinutes === 0) {
+        return `${hours}h`;
+    }
+
+    return `${hours}h ${remainingMinutes}min`;
+};
+
+/* =====================================================
+   LOGIQUE PRINCIPALE
+===================================================== */
+
+const buildSteps = (order: OrderTable): ProgressStep[] => {
+    // ❌ Cas spécial : Commande annulée
+    if (order.status === "ANNULÉE") {
+        return [
+            {
+                title: "Commande annulée",
+                icon: ICONS[0].active,
+                isActive: true,
+            },
+            {
+                title: "Prêt",
+                icon: ICONS[1].default,
+                isActive: false,
+            },
+            {
+                title: "Récupérée",
+                icon: ICONS[2].default,
+                isActive: false,
+            },
+            {
+                title: "Livrée",
+                icon: ICONS[2].default,
+                isActive: false,
+            },
+        ];
+    }
+
+    const steps: ProgressStep[] = [];
+
+    // ========== STEP 1 : CRÉATION ==========
+    steps.push({
+        title: "Création",
+        date: formatStepDate(order.createdAt, order.createdAt),
+        icon: ICONS[0].active,
+        isActive: true,
+        duration: order.readyAt
+            ? calculateDuration(order.createdAt, order.readyAt)
+            : undefined,
+    });
+
+    // ========== STEP 2 : PRÊT ==========
+    const isReady = !!order.readyAt;
+    steps.push({
+        title: "Prêt",
+        date: order.readyAt
+            ? formatStepDate(order.readyAt, order.createdAt)
+            : undefined,
+        icon: isReady ? ICONS[1].active : ICONS[1].default,
+        isActive: isReady,
+        duration:
+            order.readyAt && order.pickedUpAt
+                ? calculateDuration(order.readyAt, order.pickedUpAt)
+                : undefined,
+    });
+
+    // ========== STEP 3 : RÉCUPÉRÉE ==========
+    const isPickedUp = !!order.pickedUpAt;
+    steps.push({
+        title: "Récupérée",
+        date: order.pickedUpAt
+            ? formatStepDate(order.pickedUpAt, order.createdAt)
+            : undefined,
+        icon: isPickedUp ? ICONS[2].active : ICONS[2].default,
+        isActive: isPickedUp,
+        duration:
+            order.pickedUpAt && order.collectedAt
+                ? calculateDuration(order.pickedUpAt, order.collectedAt)
+                : undefined,
+    });
+
+    // ========== STEP 4 : LIVRÉE ==========
+    const isDelivered = !!order.collectedAt;
+    steps.push({
+        title: "Livrée",
+        date: order.collectedAt
+            ? formatStepDate(order.collectedAt, order.createdAt)
+            : undefined,
+        icon: isDelivered ? ICONS[2].active : ICONS[2].default,
+        isActive: isDelivered,
+    });
+
+    return steps;
+};
+
+export { buildSteps, UI, ICONS };

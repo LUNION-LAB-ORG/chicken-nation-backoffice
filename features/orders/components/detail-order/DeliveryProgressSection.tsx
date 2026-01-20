@@ -1,99 +1,85 @@
 import SafeImage from "@/components/ui/SafeImage";
 import React from "react";
 import { OrderTable } from "../../types/ordersTable.types";
-import { getProgressStyles } from "../../utils/progressStyles";
 import { getDeliverySectionTitle } from "../../hooks/getDeliverySectionTitle";
+import { buildSteps, UI } from "../../utils/progressStyles";
 
-interface DeliveryProgressSectionProps {
-  order: OrderTable;
-}
-
-const DeliveryProgressSection: React.FC<DeliveryProgressSectionProps> = ({
+const DeliveryProgressSection: React.FC<{ order: OrderTable }> = ({
   order,
 }) => {
-  const progressStyles = getProgressStyles(order.orderType, order.status);
-
-  // Masquer pour PICKUP et TABLE
   if (order.orderType === "À récupérer" || order.orderType === "À table") {
     return null;
   }
 
+  const steps = buildSteps(order);
+
   return (
-    <div className="mb-4 md:mb-8">
+    <div className="mb-6">
       <p className="text-[18px] font-medium text-[#F17922] mb-4">
         {getDeliverySectionTitle(order.orderType, order.status)}
       </p>
 
-      <div className="bg-white p-5 px-2 border-[#F17922] border-1 rounded-xl">
-        <div className="flex justify-between items-center">
-          {/* Étape 1 - Restaurant */}
-          <div
-            className={`w-10 h-10 rounded-[12px] border-1 ${progressStyles.step1Border} ${progressStyles.step1Bg} flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-          >
-            <SafeImage
-              src={progressStyles.step1Icon}
-              alt="restaurant"
-              width={24}
-              height={24}
-            />
-          </div>
+      <div className="bg-white p-5 border border-[#F17922] rounded-xl">
+        {/* STEPS */}
+        <div className="flex items-start">
+          {steps.map((step, index) => (
+            <React.Fragment key={index}>
+              {/* STEP CONTAINER */}
+              <div className="flex flex-col items-center flex-1">
+                {/* ICON */}
+                <div
+                  className={`w-10 h-10 rounded-xl border flex items-center justify-center
+                  ${step.isActive ? UI.bg.active : UI.bg.inactive}
+                  ${step.isActive ? UI.border.active : UI.border.inactive}`}
+                >
+                  <SafeImage
+                    src={step.icon}
+                    alt={step.title}
+                    width={24}
+                    height={24}
+                  />
+                </div>
 
-          {/* Ligne entre étape 1 et 2 */}
-          <div
-            className={`flex-1 h-1 ${progressStyles.line1} transition-all duration-500 ease-in-out`}
-          ></div>
+                {/* TITLE */}
+                <p
+                  className={`mt-2 text-xs font-medium text-center ${
+                    step.isActive ? "text-[#F17922]" : "text-[#A1A1AA]"
+                  }`}
+                >
+                  {step.title}
+                </p>
 
-          {/* Étape 2 - Préparation */}
-          <div
-            className={`w-10 h-10 rounded-[12px] border-1 ${progressStyles.step2Border} ${progressStyles.step2Bg} flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-          >
-            <SafeImage
-              src={progressStyles.step2Icon}
-              alt="box"
-              width={24}
-              height={24}
-            />
-          </div>
+                {/* DATE */}
+                {step.date && (
+                  <p className="mt-1 text-[11px] text-center text-[#71717A]">
+                    {step.date}
+                  </p>
+                )}
+              </div>
 
-          {/* Ligne entre étape 2 et 3 */}
-          <div
-            className={`flex-1 h-1 ${progressStyles.line2} transition-all duration-500 ease-in-out`}
-          ></div>
+              {/* LINE + DURATION */}
+              {index < steps.length - 1 && (
+                <div className="flex flex-col items-center justify-center flex-1 px-1 mt-5">
+                  {/* LINE */}
+                  <div
+                    className={`w-full h-1 rounded
+                    ${step.isActive && steps[index + 1].isActive 
+                      ? UI.bg.lineActive 
+                      : UI.bg.lineInactive}`}
+                  />
 
-          {/* Étape 3 - Livraison */}
-          <div
-            className={`w-10 h-10 rounded-[12px] border-1 ${progressStyles.step3Border} ${progressStyles.step3Bg} flex items-center justify-center transition-all duration-500 ease-in-out transform hover:scale-110`}
-          >
-            <SafeImage
-              src={progressStyles.step3Icon}
-              alt="pin"
-              width={24}
-              height={24}
-            />
-          </div>
+                  {/* DURATION */}
+                  {step.duration && (
+                    <p className="mt-1 text-[10px] text-[#71717A] whitespace-nowrap">
+                      {step.duration}
+                    </p>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
-
-      <p className="text-xs text-center mt-3 md:mt-4 text-[#71717A]">
-        Processus de livraison proposé par{" "}
-        <span className="text-[#71717A] font-bold">
-          {order.deliveryService}
-        </span>
-      </p>
-
-      <button
-        type="button"
-        className="w-full mt-3 md:mt-4 py-3 px-4 bg-[#F17922] hover:bg-[#F17972] cursor-pointer rounded-xl flex items-center justify-center text-sm font-medium text-white"
-      >
-        <SafeImage
-          src="/icons/external-link.png"
-          alt="eye"
-          width={20}
-          height={20}
-          className="mr-2"
-        />
-        <span>Voir le suivi de livraison</span>
-      </button>
     </div>
   );
 };
