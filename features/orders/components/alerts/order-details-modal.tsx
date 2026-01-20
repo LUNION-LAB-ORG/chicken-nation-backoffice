@@ -1,9 +1,12 @@
 "use client";
 
-import { AlertTriangle, Clock, TrendingUp, X } from "lucide-react";
+import { AlertTriangle, Clock, TrendingUp, X, ChefHat, Truck } from "lucide-react";
 import { useNotificationStateStore } from "../../../websocket/stores/notificationState.store";
-import { OrderTable } from "../../types/ordersTable.types";
+import { useOrderActions } from "../../hooks/useOrderActions";
 import { ORDER_SLA } from "../../sla/orderSla.config";
+import { OrderTable } from "../../types/ordersTable.types";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface OrderDetailsModalProps {
   isOpen: boolean;
@@ -28,8 +31,7 @@ export function OrderDetailsModal({
   stats,
 }: OrderDetailsModalProps) {
   const { orderTimers } = useNotificationStateStore();
-
-  if (!isOpen) return null;
+  const { handleViewOrderDetails } = useOrderActions();
 
   // ======================
   // LOGIQUE
@@ -65,6 +67,42 @@ export function OrderDetailsModal({
     return `${minutes}m ${secs}s`;
   };
 
+  const formatDate = (dateStr: string) => {
+    return format(new Date(dateStr), "dd/MM à HH:mm", { locale: fr });
+  };
+
+  /**
+   * Détermine qui est responsable du retard
+   * - Restaurant : NOUVELLE → PRÊT
+   * - Livraison : PRÊT → LIVRÉE
+   */
+  const getResponsibility = (order: OrderTable) => {
+    const restaurantSteps = ["NOUVELLE", "EN COURS", "EN PRÉPARATION"];
+    const deliverySteps = ["PRÊT", "COLLECTÉE"];
+
+    if (restaurantSteps.includes(order.status)) {
+      return {
+        type: "restaurant" as const,
+        icon: ChefHat,
+        label: "Restaurant",
+        color: "amber",
+      };
+    }
+
+    if (deliverySteps.includes(order.status)) {
+      return {
+        type: "delivery" as const,
+        icon: Truck,
+        label: "Livraison",
+        color: "purple",
+      };
+    }
+
+    return null;
+  };
+
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
@@ -74,7 +112,7 @@ export function OrderDetailsModal({
       />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden border border-gray-200">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
           <h2 className="text-xl font-bold text-gray-900">{title}</h2>
@@ -87,7 +125,7 @@ export function OrderDetailsModal({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(80vh-80px)]">
+        <div className="overflow-y-auto max-h-[calc(85vh-80px)]">
           {type === "stats" && stats ? (
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -201,19 +239,22 @@ export function OrderDetailsModal({
                   const remainingSeconds = getRemainingSeconds(order.id);
                   const isLate = timer?.isOverdue ?? false;
                   const progress = getProgressPercentage(order.id);
+                  const responsibility = getResponsibility(order);
 
                   return (
                     <div
                       key={order.id}
-                      className={`rounded-lg border p-4 transition-all ${
+                      onClick={() => handleViewOrderDetails(order)}
+                      className={`rounded-lg border p-4 transition-all cursor-pointer shadow ${
                         isLate
-                          ? "bg-red-50 border-red-200"
-                          : "bg-white border-gray-200 hover:border-gray-300"
+                          ? "bg-red-50 border-red-300 hover:border-red-400"
+                          : "bg-white border-gray-200 hover:border-[#F17922]"
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row items-start justify-between mb-3">
+                      {/* En-tête */}
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="font-mono text-sm font-semibold text-gray-900">
                               {order.reference}
                             </span>
@@ -226,25 +267,33 @@ export function OrderDetailsModal({
                             >
                               {order.status}
                             </span>
+                            
+                            {/* Badge de responsabilité */}
+                            {responsibility && isLate && (
+                              <span
+                                className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium
+                                  ${responsibility.color === "amber" 
+                                    ? "bg-amber-100 text-amber-700" 
+                                    : "bg-purple-100 text-purple-700"}`}
+                              >
+                                <responsibility.icon className="w-3 h-3" />
+                                {responsibility.label}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-gray-600 font-medium">
                             {order.clientName}
                           </p>
                           <p className="text-xs text-gray-500 mt-1">
                             {order.restaurantName}
                           </p>
-                          <p className="text-sm font-semibold mt-1">
-                            {!isLate
-                              ? ORDER_SLA[order.status].reason
-                              : ORDER_SLA[order.status].lateReason}
-                          </p>
                         </div>
 
                         {/* Timer */}
                         <div
-                          className={`mt-2 flex justify-self-end items-center gap-2 px-3 py-1.5 rounded-lg ${
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
                             isLate
-                              ? "bg-red-100 text-red-700 animate-pulse-subtle"
+                              ? "bg-red-100 text-red-700 animate-pulse"
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
@@ -259,9 +308,56 @@ export function OrderDetailsModal({
                         </div>
                       </div>
 
+                      {/* Raison du retard / état */}
+                      <div className={`text-sm mb-3 p-2 rounded ${
+                        isLate ? "bg-red-100/50" : "bg-gray-50"
+                      }`}>
+                        <p className={`font-medium ${isLate ? "text-red-800" : "text-gray-700"}`}>
+                          {isLate
+                            ? ORDER_SLA[order.status]?.lateReason
+                            : ORDER_SLA[order.status]?.reason}
+                        </p>
+                      </div>
+
+                      {/* Timeline des dates */}
+                      <div className="space-y-2 text-xs border-t border-gray-400 pt-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-gray-500">Créée :</span>
+                            <span className="ml-1 font-medium text-gray-700">
+                              {formatDate(order.createdAt)}
+                            </span>
+                          </div>
+                          {order.readyAt && (
+                            <div>
+                              <span className="text-gray-500">Prête :</span>
+                              <span className="ml-1 font-medium text-green-600">
+                                {formatDate(order.readyAt)}
+                              </span>
+                            </div>
+                          )}
+                          {order.pickedUpAt && (
+                            <div>
+                              <span className="text-gray-500">Récupérée :</span>
+                              <span className="ml-1 font-medium text-blue-600">
+                                {formatDate(order.pickedUpAt)}
+                              </span>
+                            </div>
+                          )}
+                          {order.collectedAt && (
+                            <div>
+                              <span className="text-gray-500">Livrée :</span>
+                              <span className="ml-1 font-medium text-purple-600">
+                                {formatDate(order.collectedAt)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
                       {/* Progress Bar */}
                       {!isLate && timer && (
-                        <div className="space-y-1">
+                        <div className="space-y-1 mt-3">
                           <div className="flex justify-between text-xs text-gray-500">
                             <span>Progression</span>
                             <span>{Math.round(progress)}%</span>

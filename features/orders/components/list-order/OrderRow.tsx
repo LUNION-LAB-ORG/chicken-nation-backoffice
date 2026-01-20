@@ -9,11 +9,12 @@ import { OrderTable } from "../../types/ordersTable.types";
 import { formatAddress } from "../../utils/formatAddress";
 import OrderContextMenu from "./OrderContextMenu";
 import PaymentBadge from "../PaymentBadge";
+import { useOrderActions } from "../../hooks/useOrderActions";
 
 interface OrderRowProps {
   order: OrderTable;
   isSelected: boolean;
-  onSelect?: (orderId: string, checked: boolean) => void; 
+  onSelect?: (orderId: string, checked: boolean) => void;
   isMobile?: boolean;
   showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
 }
@@ -24,9 +25,11 @@ export function OrderRow({
   isMobile = false,
   showRestaurantColumn = true,
 }: OrderRowProps) {
+  const { handleViewOrderDetails } = useOrderActions();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
-    null
+    null,
   );
 
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -59,13 +62,16 @@ export function OrderRow({
           onClose={() => setMenuOpen(false)}
         />
       </div>,
-      portalContainer
+      portalContainer,
     );
   };
 
   if (isMobile) {
     return (
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-3 border border-gray-100">
+      <div
+        className="bg-white rounded-xl shadow-sm p-4 mb-3 border border-gray-100"
+        onDoubleClick={() => handleViewOrderDetails(order)}
+      >
         <div className="flex items-start gap-3">
           {onSelect && (
             <div className="pt-1">
@@ -136,7 +142,10 @@ export function OrderRow({
   }
 
   return (
-    <tr className="hover:bg-[#FDEDD3]">
+    <tr
+      className="hover:bg-[#FDEDD3]"
+      onDoubleClick={() => handleViewOrderDetails(order)}
+    >
       {onSelect && (
         <td className="w-8 whitespace-nowrap py-3 px-3 sm:px-4">
           <Checkbox
