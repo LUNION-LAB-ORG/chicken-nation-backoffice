@@ -10,6 +10,7 @@ import PasswordChangeModal from "@/components/ui/PasswordChangeModal";
 import EditProfileModal from "@/components/ui/EditProfileModal";
 import Sidebar from "@/components/gestion/sidebar";
 import Header from "@/components/gestion/header/Header";
+import { useOfflineBanner } from "@/hooks/useOfflineBanner";
 
 export default function GestionLayout({
   children,
@@ -34,6 +35,7 @@ export default function GestionLayout({
     showEditProfile,
     showWelcomeBackModal,
   } = useUIStore();
+  const OfflineBanner = useOfflineBanner();
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -67,6 +69,7 @@ export default function GestionLayout({
             isSidebarOpen && !isMobile ? "left-64" : "left-0"
           } right-0 top-0`}
         />
+        <OfflineBanner /> 
         {children}
       </div>
 
