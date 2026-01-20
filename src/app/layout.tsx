@@ -7,6 +7,8 @@ import { QueryProvider } from "@/providers/QueryProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import OneSignalProvider from "@/providers/OneSignalProvider";
 
+
+
 // Métadonnées de l'application
 export const metadata: Metadata = {
   title: "Chicken Nation",
@@ -43,7 +45,7 @@ export default function RootLayout({
         />
         <NuqsAdapter>
           <QueryProvider>
-            <GoogleMapsProvider>{children}</GoogleMapsProvider>
+            <GoogleMapsProvider> {children}</GoogleMapsProvider>
           </QueryProvider>
         </NuqsAdapter>
       </body>

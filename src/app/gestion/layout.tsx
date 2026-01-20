@@ -1,16 +1,17 @@
 "use client";
 
+import Header from "@/components/gestion/header/Header";
+import Sidebar from "@/components/gestion/sidebar";
+import EditProfileModal from "@/components/ui/EditProfileModal";
+import PasswordChangeModal from "@/components/ui/PasswordChangeModal";
+import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useWelcomeModals } from "@/hooks/useWelcomeModals";
-import { useNotificationBootstrap } from "../../../features/websocket/hooks/useNotificationBootstrap";
 import { useUIStore } from "@/store/uiStore";
-import WelcomeBackModal from "@/components/ui/WelcomeBackModal";
-import PasswordChangeModal from "@/components/ui/PasswordChangeModal";
-import EditProfileModal from "@/components/ui/EditProfileModal";
-import Sidebar from "@/components/gestion/sidebar";
-import Header from "@/components/gestion/header/Header";
-import { useOfflineBanner } from "@/hooks/useOfflineBanner";
+
+import { NetworkToastTrigger } from "../../../common-component/NetworkToastTrigger";
+import { useNotificationBootstrap } from "../../../features/websocket/hooks/useNotificationBootstrap";
 
 export default function GestionLayout({
   children,
@@ -35,7 +36,7 @@ export default function GestionLayout({
     showEditProfile,
     showWelcomeBackModal,
   } = useUIStore();
-  const OfflineBanner = useOfflineBanner();
+
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -69,7 +70,7 @@ export default function GestionLayout({
             isSidebarOpen && !isMobile ? "left-64" : "left-0"
           } right-0 top-0`}
         />
-        <OfflineBanner /> 
+     <NetworkToastTrigger />
         {children}
       </div>
 
