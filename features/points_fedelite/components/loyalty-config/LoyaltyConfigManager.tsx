@@ -7,12 +7,12 @@ import { useAddOrUpdateLoyaltyConfigMutation } from "../../queries/loyalty.mutat
 import { LoyaltyConfigDetails } from "./LoyaltyConfigDetails";
 import { LoyaltyConfigForm } from "./LoyaltyConfigForm";
 import { useAuthStore } from "../../../users/hook/authStore";
-import { Action, Modules } from "../../../users/types/auth.type";
+import { UserRole } from "../../../users/types/user.types";
 
 const LoyaltyConfigManager = () => {
   const [showForm, setShowForm] = useState(false);
   const { data: config, isLoading, refetch } = useConfigQuery();
-  const { can } = useAuthStore();
+  const { user } = useAuthStore();
   const mutation = useAddOrUpdateLoyaltyConfigMutation();
 
   const defaultFormData = {
@@ -55,18 +55,16 @@ const LoyaltyConfigManager = () => {
           <h1 className="text-2xl font-bold text-[#595959]">
             Configuration de Fidélité
           </h1>
-          {(can(Modules.FIDELITE, Action.CREATE) ||
-            can(Modules.FIDELITE, Action.UPDATE)) &&
-            !showForm && (
-              <motion.button
-                onClick={() => setShowForm(true)}
-                className="px-6 py-2 bg-[#F17922] text-white rounded-xl"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {config ? "Modifier" : "Créer"}
-              </motion.button>
-            )}
+          {user && user.role == UserRole.ADMIN && !showForm && (
+            <motion.button
+              onClick={() => setShowForm(true)}
+              className="px-6 py-2 bg-[#F17922] text-white rounded-xl"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {config ? "Modifier" : "Créer"}
+            </motion.button>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
