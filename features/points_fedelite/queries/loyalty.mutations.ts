@@ -4,9 +4,24 @@ import { useInvalidateLoyaltyQuery } from "./index.query";
 import {
     addPoints,
     redeemPoints,
-    expirePoints
+    expirePoints,
+    AddUpdateConfig
 } from "../services/loyalty.service";
-import { AddLoyaltyPointDto, RedeemPointsDto } from "../types/loyalty.types";
+import { AddLoyaltyPointDto, LoyaltyConfigFormData, RedeemPointsDto } from "../types/loyalty.types";
+
+// Add ou update loyalty config
+export const useAddOrUpdateLoyaltyConfigMutation = () => {
+    const invalidate = useInvalidateLoyaltyQuery();
+
+    return useMutation({
+        mutationFn: (data: LoyaltyConfigFormData) => AddUpdateConfig(data),
+        onSuccess: () => {
+            invalidate("config");
+            toast.success("Configuration mise à jour avec succès");
+        },
+        onError: (e: Error) => toast.error(e.message),
+    });
+};
 
 // Mutation pour ajouter des points
 export const useAddPointsMutation = () => {

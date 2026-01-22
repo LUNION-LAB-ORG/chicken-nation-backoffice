@@ -1,3 +1,5 @@
+import { PaginatedResponse } from "../../types";
+
 // Types pour les auteurs de messages (Users du back-office)
 export interface MessageAuthorUser {
   id: string;
@@ -70,15 +72,6 @@ export interface MessageStats {
   unread_messages: number
 }
 
-export interface PaginatedResponse<T> {
-  data: T[]
-  meta: {
-    limit: number
-    page: number
-    total: number
-    totalPages: number
-  }
-}
 
 // Types spécialisés pour les réponses API
 export type ConversationsResponse = PaginatedResponse<Conversation>

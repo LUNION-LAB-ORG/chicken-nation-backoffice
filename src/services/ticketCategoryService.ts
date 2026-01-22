@@ -1,3 +1,4 @@
+import { PaginatedResponse } from '../../types';
 import { apiRequest } from './api';
 
 // Types pour les catégories de tickets
@@ -32,16 +33,6 @@ export interface TicketCategoryFilters {
   sort?: 'asc' | 'desc';
   orderBy?: string;
   search?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    limit: number;
-    page: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 // ✅ Récupérer toutes les catégories avec filtres et pagination

@@ -10,7 +10,8 @@ interface CustomerLoyaltyCardProps {
 }
 
 export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
-  const { data: loyaltyInfo, isLoading } = useCustomerLoyaltyInfoQuery(customerId);
+  const { data: loyaltyInfo, isLoading } =
+    useCustomerLoyaltyInfoQuery(customerId);
 
   if (isLoading) {
     return (
@@ -32,7 +33,7 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg p-6 text-white">
+    <div className="bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg p-6 text-white">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -57,7 +58,9 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
             <TrendingUp className="w-4 h-4" />
             <div className="text-xs opacity-80">Total</div>
           </div>
-          <div className="font-semibold">{formatPoints(loyaltyInfo.total_points)}</div>
+          <div className="font-semibold">
+            {formatPoints(loyaltyInfo.total_points)}
+          </div>
         </div>
 
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
@@ -65,7 +68,9 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
             <Gift className="w-4 h-4" />
             <div className="text-xs opacity-80">Utilisés</div>
           </div>
-          <div className="font-semibold">{formatPoints(loyaltyInfo.used_points)}</div>
+          <div className="font-semibold">
+            {formatPoints(loyaltyInfo.used_points)}
+          </div>
         </div>
 
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
@@ -73,7 +78,9 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
             <Clock className="w-4 h-4" />
             <div className="text-xs opacity-80">Expirés</div>
           </div>
-          <div className="font-semibold">{formatPoints(loyaltyInfo.expired_points)}</div>
+          <div className="font-semibold">
+            {formatPoints(loyaltyInfo.expired_points)}
+          </div>
         </div>
       </div>
 
@@ -81,7 +88,9 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
       {loyaltyInfo.next_level && loyaltyInfo.points_to_next_level !== null && (
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm">Prochain niveau: {loyaltyInfo.next_level}</span>
+            <span className="text-sm">
+              Prochain niveau: {loyaltyInfo.next_level}
+            </span>
             <span className="text-sm font-semibold">
               {formatPoints(loyaltyInfo.points_to_next_level)} pts
             </span>
@@ -92,9 +101,10 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
               style={{
                 width: `${Math.min(
                   100,
-                  ((loyaltyInfo.total_points /
-                    (loyaltyInfo.total_points + loyaltyInfo.points_to_next_level)) *
-                    100)
+                  (loyaltyInfo.total_points /
+                    (loyaltyInfo.total_points +
+                      loyaltyInfo.points_to_next_level)) *
+                    100,
                 )}%`,
               }}
             ></div>

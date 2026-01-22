@@ -3,6 +3,8 @@
  * Définition complète des interfaces pour les tickets de support
  */
 
+import { PaginatedResponse } from "../../types";
+
 // Énumérations pour les tickets
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -127,17 +129,6 @@ export interface TicketComment {
   
   // Objets liés
   user?: TicketAssignee;
-}
-
-// Types pour les réponses API paginées
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    limit: number;
-    page: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 export type TicketsResponse = PaginatedResponse<Ticket>;

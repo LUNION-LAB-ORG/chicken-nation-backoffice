@@ -100,3 +100,14 @@ export interface CalculatePointsResponse {
     points: number;
     amount: number;
 }
+
+export interface LoyaltyConfigFormData {
+  points_per_xof: string;
+  points_expiration_days: string;
+  minimum_redemption_points: string;
+  point_value_in_xof: string;
+  standard_threshold: string;
+  premium_threshold: string;
+  gold_threshold: string;
+  is_active: boolean;
+}

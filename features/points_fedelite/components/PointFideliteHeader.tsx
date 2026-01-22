@@ -49,11 +49,7 @@ export default function PointFideliteHeader() {
       mode={view}
       onBack={() => handleViewChange("loyalty", "list")}
       title={
-        view === "create"
-          ? "Créer un point de fidélisation"
-          : view === "edit"
-          ? "Modifier un point de fidélisation"
-          : "Détails d'un point de fidélisation"
+        view === "create" ? "Créer un point de fidélisation" : "Configuration"
       }
       gradient={true}
     />

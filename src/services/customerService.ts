@@ -1,3 +1,4 @@
+import { PaginatedResponse } from "../../types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://chicken.turbodeliveryapp.com';
 const API_PREFIX = '/api/v1';
@@ -70,17 +71,6 @@ export interface CustomerQuery {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   restaurantId?: string;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    totalItems: number;
-    itemCount: number;
-    itemsPerPage: number;
-    totalPages: number;
-    currentPage: number;
-  };
 }
 
 // Fonction pour gérer les erreurs d'authentification
@@ -340,7 +330,7 @@ async function enrichCustomerWithOrderInfo(customer: Customer): Promise<Customer
       return {
         ...defaultEnrichment,
 
-        totalOrders: ordersResponse.meta?.totalItems || ordersResponse.data.length,
+        totalOrders: ordersResponse.meta?.total || ordersResponse.data.length,
 
         lastOrderDate: sortedOrders[0]?.created_at || sortedOrders[0]?.date
       };
@@ -483,7 +473,7 @@ async function getCustomerOrdersLegacy(id: string, params: { page?: number; limi
 
   // Gérer spécifiquement l'erreur 404 pour les commandes
   if (response.status === 404) {
-    return { data: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 10, totalPages: 0, currentPage: 1 } };
+    return { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
   }
 
   if (!response.ok) {
@@ -520,7 +510,7 @@ export async function getCustomerReviews(id: string, params: { page?: number; li
   // Gérer spécifiquement l'erreur 404 pour les avis
   if (response.status === 404) {
 
-    return { data: [], meta: { totalItems: 0, itemCount: 0, itemsPerPage: 10, totalPages: 0, currentPage: 1 } };
+    return { data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } };
   }
 
   if (!response.ok) {

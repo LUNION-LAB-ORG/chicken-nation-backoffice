@@ -42,6 +42,7 @@ export default function CarteNation() {
     status: filters?.status as NationCardStatus,
     institution: filters?.institution as string,
   });
+  
   return (
     <div className="flex-1 overflow-auto p-4 space-y-6">
       <div className="-mt-10">

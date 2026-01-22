@@ -7,6 +7,7 @@ import {
     CalculatePointsResponse,
     CustomerLoyaltyInfo,
     LoyaltyConfig,
+    LoyaltyConfigFormData,
     LoyaltyPoint,
     LoyaltyPointQuery,
     RedeemPointsDto,
@@ -46,6 +47,16 @@ export const getConfig = async () => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/config');
         const response = await fetch(url, { method: 'GET', headers });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json() as LoyaltyConfig;
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+export const AddUpdateConfig = async (config: LoyaltyConfigFormData) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/config');
+        const response = await fetch(url, { method: 'POST', headers, body: JSON.stringify(config) });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json() as LoyaltyConfig;
     } catch (error) {

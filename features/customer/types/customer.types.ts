@@ -6,23 +6,12 @@ import { PromotionUsage } from "../../promotion/types/promotion.types";
 import { CardRequest, NationCard } from "../../carte-nation/types/carte-nation.types";
 import { Address } from "./address.type";
 import { Favorite } from "./favorite.types";
+import { LoyaltyLevel, LoyaltyLevelHistory, LoyaltyPoint, LoyaltyPointType } from "../../points_fedelite/types/loyalty.types";
 
 export enum LoyaltyPointIsUsed {
   YES = 'YES',
   NO = 'NO',
   PARTIAL = 'PARTIAL'
-}
-
-export enum LoyaltyPointType {
-  EARNED = 'EARNED',
-  REDEEMED = 'REDEEMED',
-  EXPIRED = 'EXPIRED',
-  BONUS = 'BONUS'
-}
-export enum LoyaltyLevel {
-  STANDARD = 'STANDARD',
-  PREMIUM = 'PREMIUM',
-  GOLD = 'GOLD'
 }
 
 export interface Customer {
@@ -58,38 +47,6 @@ export interface Customer {
   created_at: string;
   updated_at: string;
   last_login_at: string | null;
-}
-
-export interface LoyaltyPoint {
-  id: string;
-  customer_id: string;
-  is_used: LoyaltyPointIsUsed;
-  points_used: number;
-  points: number;
-  type: LoyaltyPointType;
-  reason?: string | null;
-  order_id?: string | null;
-  expires_at?: string | null;
-  created_at: string;
-  updated_at: string;
-
-  // Relations 
-  customer?: Customer;
-  order?: Order;
-}
-
-export interface LoyaltyLevelHistory {
-  id: string;
-  customer_id: string;
-  previous_level?: LoyaltyLevel | null;
-  new_level: LoyaltyLevel;
-  points_at_time: number;
-  reason?: string | null;
-  created_at: string;
-  updated_at: string;
-
-  // Relation
-  customer?: Customer;
 }
 
 export interface NotificationSetting {
