@@ -87,7 +87,7 @@ const LoyaltyFilterTab: React.FC = () => {
       {/* Filtres Statut d'utilisation */}
       <div className="w-full">
         <div className="text-xs font-semibold text-gray-600 mb-2">
-          STATUT D'UTILISATION
+          STATUT D&apos;UTILISATION
         </div>
         <div className="w-full overflow-x-auto">
           <div

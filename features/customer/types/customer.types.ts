@@ -6,7 +6,7 @@ import { PromotionUsage } from "../../promotion/types/promotion.types";
 import { CardRequest, NationCard } from "../../carte-nation/types/carte-nation.types";
 import { Address } from "./address.type";
 import { Favorite } from "./favorite.types";
-import { LoyaltyLevel, LoyaltyLevelHistory, LoyaltyPoint, LoyaltyPointType } from "../../points_fedelite/types/loyalty.types";
+import { LoyaltyLevel, LoyaltyLevelHistory, LoyaltyPoint } from "../../points_fedelite/types/loyalty.types";
 
 export enum LoyaltyPointIsUsed {
   YES = 'YES',

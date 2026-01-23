@@ -5,7 +5,8 @@ import { Order, OrderStatus } from "../../orders/types/order.types"
 import { mapApiOrdersToUiOrders } from "../../orders/utils/orderMapper"
 import { Address } from "../types/address.type"
 import { CUSTOMER_LOYALTY_POINT_TYPE_MAP, CustomerMapperData, CUSTOMER_STATUS_MAP } from "../types/customer-mapper.types"
-import { Customer, LoyaltyLevel, LoyaltyPointType } from "../types/customer.types"
+import { Customer} from "../types/customer.types"
+
 import { Favorite } from "../types/favorite.types"
 
 /**
@@ -65,13 +66,13 @@ const mapLoyaltyHistory = (loyaltyPoints?: Customer["loyalty_points"]) => {
     const sortedPoints = [...loyaltyPoints].sort((a, b) => {
         const dateA = new Date(a.created_at).getTime()
         const dateB = new Date(b.created_at).getTime()
-        return dateB - dateA
+        return dateB - dateA;
     })
 
     return sortedPoints.map((point) => ({
         id: point.id,
         type: CUSTOMER_LOYALTY_POINT_TYPE_MAP[point.type] || "Gagné",
-        points: point.type === LoyaltyPointType.REDEEMED ? point.points_used : point.points,
+        points: point.type === "REDEEMED" ? point.points_used : point.points,
         reason: point.reason || `Transaction ${point.order_id ? `#${point.order_id.slice(0, 8)}` : ""}`,
         date: dateToLocalString(new Date(point?.created_at)),
     }))
@@ -202,12 +203,12 @@ export const mapCustomersData = (customers: Customer[]): CustomerMapperData[] =>
  * Vérifie si un client est éligible pour une mise à niveau de niveau de fidélité
  */
 export const isEligibleForLoyaltyUpgrade = (customer: Customer): boolean => {
-    const currentLevel = customer.loyalty_level || LoyaltyLevel.STANDARD
+    const currentLevel = customer.loyalty_level || "STANDARD"
     const points = customer.total_points || 0
 
     // Logique de mise à niveau (exemple)
-    if (currentLevel === LoyaltyLevel.STANDARD && points >= 1000) return true
-    if (currentLevel === LoyaltyLevel.PREMIUM && points >= 5000) return true
+    if (currentLevel === 'STANDARD' && points >= 1000) return true
+    if (currentLevel === "PREMIUM" && points >= 5000) return true
 
     return false
 }
@@ -216,15 +217,15 @@ export const isEligibleForLoyaltyUpgrade = (customer: Customer): boolean => {
  * Calcule le pourcentage vers le niveau suivant
  */
 export const calculateLoyaltyProgress = (customer: Customer): number => {
-    const currentLevel = customer.loyalty_level || LoyaltyLevel.STANDARD
+    const currentLevel = customer.loyalty_level || "STANDARD"
     const points = customer.total_points || 0
 
-    if (currentLevel === LoyaltyLevel.GOLD) return 100 // Niveau max atteint
+    if (currentLevel === "GOLD") return 100 // Niveau max atteint
 
     const thresholds = {
-        [LoyaltyLevel.STANDARD]: { next: 1000 },
-        [LoyaltyLevel.PREMIUM]: { next: 5000 },
-        [LoyaltyLevel.GOLD]: { next: 0 },
+        "STANDARD": { next: 1000 },
+        "PREMIUM": { next: 5000 },
+        "GOLD": { next: 0 },
     }
 
     const threshold = thresholds[currentLevel].next
