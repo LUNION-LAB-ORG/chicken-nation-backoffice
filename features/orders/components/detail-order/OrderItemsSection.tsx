@@ -5,12 +5,10 @@ import SafeImage from "@/components/ui/SafeImage";
 import { OrderTable } from "../../types/ordersTable.types";
 
 interface OrderItemsSectionProps {
- order:OrderTable;
+  order: OrderTable;
 }
 
-const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
-  order,
-}) => {
+const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -57,9 +55,13 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                               </span>
                             )}
                           </p>
-                          {item.epice && (
+                          {item.epice ? (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
                               🌶️ Épicé
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                              🌿 Non épicé
                             </span>
                           )}
                         </div>
