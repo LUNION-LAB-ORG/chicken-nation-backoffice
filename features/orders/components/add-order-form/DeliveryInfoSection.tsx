@@ -43,7 +43,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   }, [formData.date, formData.time, onFormDataChange]);
 
   // Gérer le changement d'adresse
-  const handleAddressChange = (addressData: any) => {
+  const handleAddressChange = (addressData: unknown) => {
     if (addressData) {
       // Convertir AddressData en string JSON pour OrderFormData
       onFormDataChange({
@@ -61,16 +61,18 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
         {formData.type === OrderType.DELIVERY
           ? "livraison"
           : formData.type === OrderType.PICKUP
-          ? "retrait"
-          : "service"}
+            ? "retrait"
+            : "service"}
       </h3>
 
       {/* Adresse avec recherche Google Maps */}
-      <AddressSearchInput
-        value={getParsedAddress(formData.address)}
-        onChange={handleAddressChange}
-        placeholder="Rechercher votre adresse de livraison"
-      />
+      {formData.type === OrderType.DELIVERY && (
+        <AddressSearchInput
+          value={getParsedAddress(formData.address)}
+          onChange={handleAddressChange}
+          placeholder="Rechercher votre adresse de livraison"
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         {/* Date */}
