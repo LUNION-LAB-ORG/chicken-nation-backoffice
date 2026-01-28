@@ -92,7 +92,11 @@ export interface ApiDashboardResponse {
         comparedTo: string;
         isPositive: boolean;
       };
+      // ✅ AJOUT : Définition des valeurs horaires (optionnel)
+      hourlyValues?: Array<{ hour: string; value: number }>; 
     };
+    // ✅ AJOUT : Définition des données mensuelles (optionnel, au niveau racine de revenue)
+    monthlyData?: Array<{ name: string; value: number }>;
   };
   weeklyOrders: {
     dateRanges: string[];
@@ -119,7 +123,6 @@ export interface ApiDashboardResponse {
       percentage: number;
     }>;
   };
-  // ✅ AJOUT ICI : Les stats de livraison
   deliveryStats: DeliveryStatsData;
 }
 

@@ -1,11 +1,18 @@
 import { getPeriodDateRange } from '@/utils/dateUtils';
-import { DashboardStatsParams, ApiDashboardResponse, DashboardStats, RevenueData, WeeklyOrdersData, BestSalesItem, DailySalesData } from '../types/statistics.types';
+import {
+  DashboardStatsParams,
+  ApiDashboardResponse,
+  DashboardStats,
+  RevenueData,
+  WeeklyOrdersData,
+  BestSalesItem,
+  DailySalesData
+} from '../types/statistics.types';
 import { api } from '../../../src/services/api';
 
 // Fonction pour récupérer les vraies statistiques depuis l'API
 export async function getApiDashboardStats(params: DashboardStatsParams = {}): Promise<ApiDashboardResponse> {
   try {
-    // Construire les paramètres de requête
     const queryParams = new URLSearchParams();
 
     if (params.restaurantId) {
@@ -21,7 +28,6 @@ export async function getApiDashboardStats(params: DashboardStatsParams = {}): P
       const convertedParams = convertPeriodToApiParams(params.period);
       finalPeriod = convertedParams.period;
 
-      // Utiliser les dates converties si elles existent
       if (convertedParams.startDate && !params.startDate) {
         startDate = convertedParams.startDate;
       }
@@ -30,24 +36,12 @@ export async function getApiDashboardStats(params: DashboardStatsParams = {}): P
       }
     }
 
-    if (startDate) {
-      queryParams.append('startDate', startDate);
-    }
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    if (finalPeriod) queryParams.append('period', finalPeriod);
 
-    if (endDate) {
-      queryParams.append('endDate', endDate);
-    }
-
-    if (finalPeriod) {
-      queryParams.append('period', finalPeriod);
-    }
-
-    // Construire l'endpoint avec les paramètres
     const endpoint = `/statistics/dashboard${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
 
-
-
-    // Effectuer la requête
     const response = await api.get<ApiDashboardResponse>(endpoint);
 
     return response;
@@ -60,8 +54,7 @@ export async function getApiDashboardStats(params: DashboardStatsParams = {}): P
 // Fonction pour transformer les données API en format DashboardStats
 export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse): DashboardStats {
   try {
-
-    // Les valeurs de l'API sont déjà formatées, on les utilise directement
+    // Les valeurs de l'API sont déjà formatées
     const revenueValue = apiData.stats.revenue.value || "0";
     const menusSoldValue = apiData.stats.menusSold.value || "0";
     let ordersValue = apiData.stats.totalOrders.value || "0";
@@ -75,25 +68,24 @@ export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse):
       }
     }
 
-    // Extraire les pourcentages depuis les badges (ex: "0.0%" -> 0)
+    // Extraire les pourcentages depuis les badges
     const revenuePercentage = parseFloat(apiData.stats.revenue.badgeText.replace('%', '')) || 0;
     const menuPercentage = parseFloat(apiData.stats.menusSold.badgeText.replace('%', '')) || 0;
 
-    // Pour les objectifs, on utilise les valeurs numériques pour calculer
+    // Calculs numériques pour les objectifs
     let revenueNumeric = parseInt(revenueValue.replace(/[^\d]/g, '')) || 0;
     const menuNumeric = parseInt(menusSoldValue.replace(/[^\d]/g, '')) || 0;
 
-    // Si les stats principales sont à 0, essayer d'extraire des données de dailySales
+    // Fallback revenue depuis dailySales si nécessaire
     if (revenueNumeric === 0 && apiData.dailySales && apiData.dailySales.subtitle) {
       const dailySalesMatch = apiData.dailySales.subtitle.match(/(\d[\d\s]*)/);
       if (dailySalesMatch) {
         revenueNumeric = parseInt(dailySalesMatch[1].replace(/\s/g, '')) || 0;
-
       }
     }
 
-    // Aussi essayer d'extraire depuis les catégories de dailySales
-    if (revenueNumeric === 0 && apiData.dailySales && apiData.dailySales.categories && apiData.dailySales.categories.length > 0) {
+    // Fallback revenue depuis les catégories
+    if (revenueNumeric === 0 && apiData.dailySales?.categories?.length > 0) {
       let totalFromCategories = 0;
       apiData.dailySales.categories.forEach(category => {
         const categoryMatch = category.value.match(/(\d[\d\s]*)/);
@@ -103,14 +95,13 @@ export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse):
       });
       if (totalFromCategories > 0) {
         revenueNumeric = totalFromCategories;
-
       }
     }
 
     const revenueObjective = revenuePercentage > 0 ? Math.round(revenueNumeric / (revenuePercentage / 100)) : 25000000;
     const menuObjective = menuPercentage > 0 ? Math.round(menuNumeric / (menuPercentage / 100)) : 200;
 
-    const finalResult = {
+    const finalResult: DashboardStats = {
       revenue: {
         value: revenueNumeric > 0 ? `${formatCurrency(revenueNumeric)}` : "0",
         objective: `Objectif : ${formatCurrency(revenueObjective)} xof`,
@@ -126,7 +117,9 @@ export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse):
       },
       clients: {
         value: clientsValue !== "0" ? `${clientsValue} clients` : "0 clients"
-      }
+      },
+      // ✅ AJOUT ICI : Mapper les statistiques de livraison
+      deliveryStats: apiData.deliveryStats
     };
 
     return finalResult;
@@ -136,9 +129,8 @@ export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse):
   }
 }
 
-// Calculer les statistiques globales (super admin)
+// Calculer les statistiques globales
 export async function getDashboardStats(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<DashboardStats> {
-  // Essayer d'abord de récupérer les vraies données API
   try {
     const apiData = await getApiDashboardStats({
       restaurantId,
@@ -151,14 +143,28 @@ export async function getDashboardStats(restaurantId?: string, period: 'today' |
   }
 }
 
-// Récupérer les données de revenus pour les graphiques depuis l'API
+// Récupérer les données de revenus pour les graphiques
 export async function getRevenueData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<RevenueData[]> {
   try {
-    await getApiDashboardStats({
+    const apiData = await getApiDashboardStats({
       restaurantId,
       period
     });
 
+    // ✅ CORRECTION : Mapper les données de revenu au lieu de renvoyer un tableau vide
+    if (period === 'year' && apiData.revenue?.monthlyData) {
+      return apiData.revenue.monthlyData;
+    }
+
+    // Pour today, week, month, on utilise dailyData (ou on adapte selon ce que le graph attend)
+    // Ici je suppose que le graph attend un tableau simple, mais l'API renvoie une structure complexe pour dailyData
+    // Si votre graph attend HourlyValue[], il faut mapper apiData.revenue.dailyData.hourlyValues
+    if (period === 'today' && apiData.revenue?.dailyData?.hourlyValues) {
+      // Adaptation possible selon le type RevenueData attendu par le graph
+      return apiData.revenue.dailyData.hourlyValues.map(h => ({ name: h.hour, value: h.value }));
+    }
+
+    // Par défaut/fallback
     return [];
 
   } catch (err) {
@@ -167,10 +173,9 @@ export async function getRevenueData(restaurantId?: string, period: 'today' | 'w
   }
 }
 
-// Récupérer les données des commandes hebdomadaires depuis l'API
+// Récupérer les données des commandes hebdomadaires
 export async function getWeeklyOrdersData(restaurantId?: string, dateRange?: string): Promise<WeeklyOrdersData[]> {
   try {
-    // ✅ Convertir dateRange en startDate/endDate
     let startDate: string | undefined, endDate: string | undefined;
     if (dateRange) {
       const [start, end] = dateRange.split('_');
@@ -181,31 +186,24 @@ export async function getWeeklyOrdersData(restaurantId?: string, dateRange?: str
     const apiData = await getApiDashboardStats({
       restaurantId,
       period: 'week',
-      startDate, // ✅ Utiliser startDate au lieu de dateRange
-      endDate    // ✅ Utiliser endDate au lieu de dateRange
+      startDate,
+      endDate
     });
 
-
-
-    // Transformer les données API en format WeeklyOrdersData
     if (apiData.weeklyOrders && apiData.weeklyOrders.dailyOrders) {
-      const transformedData = apiData.weeklyOrders.dailyOrders.map(dayData => ({
-        name: dayData.day.charAt(0).toUpperCase() + dayData.day.slice(1), // Capitaliser
+      return apiData.weeklyOrders.dailyOrders.map(dayData => ({
+        name: dayData.day.charAt(0).toUpperCase() + dayData.day.slice(1),
         value: dayData.count
       }));
-
-
-      return transformedData;
     }
 
     return [];
-
   } catch {
     return [];
   }
 }
 
-// Récupérer les données des meilleures ventes depuis l'API
+// Récupérer les données des meilleures ventes
 export async function getBestSalesData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<BestSalesItem[]> {
   try {
     const apiData = await getApiDashboardStats({
@@ -213,7 +211,6 @@ export async function getBestSalesData(restaurantId?: string, period: 'today' | 
       period
     });
 
-    // Transformer les données API en format BestSalesItem
     if (apiData.bestSellingMenus && apiData.bestSellingMenus.length > 0) {
       return apiData.bestSellingMenus.map((menu, index) => ({
         id: menu.id || `menu-${index}`,
@@ -225,16 +222,13 @@ export async function getBestSalesData(restaurantId?: string, period: 'today' | 
       }));
     }
 
-    console.log('⚠️ Données des meilleures ventes non disponibles');
     return [];
-
   } catch {
-    console.error('❌ Échec de récupération API pour les meilleures ventes');
     return [];
   }
 }
 
-// Récupérer les données des ventes journalières depuis l'API
+// Récupérer les données des ventes journalières
 export async function getDailySalesData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'today'): Promise<DailySalesData[]> {
   try {
     const apiData = await getApiDashboardStats({
@@ -242,7 +236,6 @@ export async function getDailySalesData(restaurantId?: string, period: 'today' |
       period
     });
 
-    // Transformer les données API en format DailySalesData
     if (apiData.dailySales && apiData.dailySales.categories) {
       return apiData.dailySales.categories.map(category => ({
         label: category.label,
@@ -252,21 +245,16 @@ export async function getDailySalesData(restaurantId?: string, period: 'today' |
       }));
     }
 
-    console.log('⚠️ Données des ventes journalières non disponibles');
     return [];
-
   } catch {
-    console.error('❌ Échec de récupération API pour les ventes journalières');
-    return []; // Retourner un tableau vide au lieu de données simulées
+    return [];
   }
 }
 
-// Fonction utilitaire pour formater les montants
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-FR').format(amount);
 }
 
-// Fonction utilitaire pour convertir les périodes en paramètres API
 function convertPeriodToApiParams(period: 'today' | 'week' | 'month' | 'lastMonth' | 'year') {
   return getPeriodDateRange(period);
 }
