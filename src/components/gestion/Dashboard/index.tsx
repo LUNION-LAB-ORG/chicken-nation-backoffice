@@ -11,8 +11,8 @@ import {
   RevenueData,
 } from "../../../../features/statistics/types/statistics.types";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
-import BestSalesChart from "./BestSalesChart";
 import DailySales from "./DailySales";
+import DeliveryStats from "./DeliveryStats"; // ✅ Import du nouveau composant
 import "./Dashboard.css";
 import DashboardHeader from "./DashboardHeader";
 import { GenericStatCard } from "./GenericStatCard";
@@ -20,23 +20,21 @@ import RevenueChart from "./RevenueChart";
 import WeeklyOrdersChart from "./WeeklyOrdersChart";
 import RestaurantTabs from "../../../../features/orders/components/filtrage/RestaurantTabs";
 import { UserType } from "../../../../features/users/types/user.types";
+// import BestSalesChart from "./BestSalesChart";
 
 const Dashboard = () => {
   const { setActiveTab, selectedRestaurantId, selectedPeriod } =
     useDashboardStore();
   const { user } = useAuthStore();
 
-  // ✅ Nettoyer les caches lors des changements d'auth
   useAuthCleanup();
 
-  // États pour les vraies données
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(
-    null
+    null,
   );
   const [revenueChartData, setRevenueChartData] = useState<RevenueData[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  // Charger les statistiques du dashboard
   useEffect(() => {
     const loadDashboardData = async () => {
       if (!user) return;
@@ -47,21 +45,20 @@ const Dashboard = () => {
         let revenueData: RevenueData[];
 
         if (!selectedRestaurantId) {
-          // Type Backoffice
           stats = await getDashboardStats(undefined, selectedPeriod);
           revenueData = await getRevenueData(undefined, selectedPeriod);
         } else {
-          // Type Restaurant
           stats = await getDashboardStats(selectedRestaurantId, selectedPeriod);
           revenueData = await getRevenueData(
             selectedRestaurantId,
-            selectedPeriod
+            selectedPeriod,
           );
         }
 
         setDashboardStats(stats);
         setRevenueChartData(revenueData);
       } catch (error) {
+        console.error(error);
         setDashboardStats(null);
         setRevenueChartData([]);
       } finally {
@@ -72,7 +69,6 @@ const Dashboard = () => {
     loadDashboardData();
   }, [user, selectedRestaurantId, selectedPeriod]);
 
-  // Utiliser uniquement les vraies données - pas de fallback
   const getDisplayData = () => {
     if (dashboardStats) {
       return {
@@ -81,13 +77,14 @@ const Dashboard = () => {
       };
     }
 
-    // Données vides pendant le chargement
+    // Données vides par défaut
     return {
       stats: {
         revenue: { value: "0", objective: "Chargement...", percentage: 0 },
         menusSold: { value: "0", objective: "Chargement...", percentage: 0 },
         orders: { value: "0" },
         clients: { value: "0" },
+        deliveryStats: undefined, // ✅ Initialisé
       },
       revenue: [],
     };
@@ -96,15 +93,15 @@ const Dashboard = () => {
   const { stats: statsData, revenue: revenueData } = getDisplayData();
 
   return (
-    <div className="flex-1 overflow-auto p-4">
+    <div className="flex-1 overflow-auto p-4 custom-scrollbar pb-20">
       <div className="-mt-10">
         <DashboardHeader
           currentView="list"
           onCreateMenu={() => setActiveTab("menus")}
         />
       </div>
-      <RestaurantTabs showAllTab={user && user.type == UserType.BACKOFFICE} />
-      {/* Indicateur de chargement */}
+      <RestaurantTabs showAllTab={user && user.type === UserType.BACKOFFICE} />
+
       {isLoadingStats && (
         <div className="flex items-center justify-center py-8">
           <div className="text-gray-500">
@@ -115,7 +112,8 @@ const Dashboard = () => {
         </div>
       )}
 
-      <div className="dashboard-container">
+      <div className="dashboard-container space-y-6">
+        {/* --- LIGNE 1 : CARDS --- */}
         <div className="grid lg:grid-cols-4 lg:gap-10 md:grid-cols-2 grid-cols-1 gap-6">
           <GenericStatCard
             title=""
@@ -165,7 +163,8 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-10 mt-3 grid-cols-1">
+        {/* --- LIGNE 2 : GRAPHIQUES --- */}
+        <div className="grid lg:grid-cols-2 gap-10 grid-cols-1">
           <RevenueChart
             data={revenueData}
             restaurantId={selectedRestaurantId}
@@ -176,17 +175,23 @@ const Dashboard = () => {
             period={selectedPeriod}
           />
         </div>
-        <div className="grid grid-cols-1 mt-3">
-          {/* <BestSalesChart
+        {/* <div className="grid grid-cols-1 mt-3">
+          <BestSalesChart
             title="Résumé des menus les plus vendus"
             restaurantId={selectedRestaurantId}
             period={selectedPeriod}
-          /> */}
-        </div>
-        <div className="lg:grid grid-cols-2 mt-2">
+          />
+        </div> */}
+        {/* --- LIGNE 3 : DÉTAILS VENTES & LIVRAISON (Cote à cote) --- */}
+        <div className="grid lg:grid-cols-2 gap-10 grid-cols-1">
           <DailySales
             restaurantId={selectedRestaurantId}
             period={selectedPeriod}
+          />
+          {/* ✅ Ajout du composant DeliveryStats ici */}
+          <DeliveryStats
+            data={statsData.deliveryStats}
+            isLoading={isLoadingStats}
           />
         </div>
       </div>

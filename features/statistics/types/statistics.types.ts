@@ -1,4 +1,3 @@
-
 // Types pour les statistiques du dashboard
 export interface DashboardStats {
   revenue: {
@@ -17,6 +16,7 @@ export interface DashboardStats {
   clients: {
     value: string;
   };
+  deliveryStats?: DeliveryStatsData;
 }
 
 export interface RevenueData {
@@ -28,6 +28,29 @@ export interface WeeklyOrdersData {
   name: string;
   value: number;
 }
+
+// ==========================================
+// 1. NOUVELLES INTERFACES POUR LA LIVRAISON
+// ==========================================
+
+export interface DeliveryFeeBreakdown {
+  label: string;                  // ex: "Gratuit", "500 FCFA"
+  feeAmount: number | null;       // null si "Autres"
+  orderCount: number;
+  revenueGenerated: string;       // ex: "150 000 XOF"
+  deliveryFeesCollected: number;
+  percentage: number;
+}
+
+export interface DeliveryStatsData {
+  totalDeliveryFees: number;
+  totalDeliveryRevenue: number;
+  breakdown: DeliveryFeeBreakdown[];
+}
+
+// ==========================================
+// 2. MISE À JOUR DE LA RÉPONSE API
+// ==========================================
 
 export interface ApiDashboardResponse {
   stats: {
@@ -96,6 +119,8 @@ export interface ApiDashboardResponse {
       percentage: number;
     }>;
   };
+  // ✅ AJOUT ICI : Les stats de livraison
+  deliveryStats: DeliveryStatsData;
 }
 
 // Interface pour les paramètres de requête
@@ -104,7 +129,7 @@ export interface DashboardStatsParams {
   startDate?: string;
   endDate?: string;
   period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
-  dateRange?: string; // ✅ Ajouter le paramètre dateRange
+  dateRange?: string;
 }
 
 export interface BestSalesItem {
