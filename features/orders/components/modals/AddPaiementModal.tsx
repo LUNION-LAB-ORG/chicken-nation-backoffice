@@ -52,7 +52,7 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#F17922] to-orange-600 px-6 py-5">
+        <div className="bg-linear-to-r from-[#F17922] to-orange-600 px-6 py-5">
           <h2 className="text-2xl font-bold text-white">
             Ajouter des paiements
           </h2>
@@ -152,7 +152,7 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
             onClick={() =>
               setPaiements([
                 ...paiements,
-                { mode: PaiementMode.CASH, source: "", amount: 0 },
+                { mode: PaiementMode.CASH, source: "", amount: order.amount - totalAmount },
               ])
             }
             disabled={isPending || totalAmount >= order.amount}
@@ -176,7 +176,7 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
 
           {paiements.length > 0 && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="flex items-center justify-between bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl p-4">
+              <div className="flex items-center justify-between bg-linear-to-r from-orange-50 to-orange-100 rounded-xl p-4">
                 <span className="text-gray-700 font-semibold">Total saisi</span>
                 <div className="text-right">
                   <span className="block text-2xl font-bold text-orange-600">
@@ -205,7 +205,7 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
             disabled={
               paiements.length === 0 || isPending || totalAmount > order.amount
             }
-            className="flex-1 py-3 bg-gradient-to-r from-[#F17922] to-orange-600 text-white font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-orange-500/30 flex items-center justify-center"
+            className="flex-1 py-3 bg-linear-to-r from-[#F17922] to-orange-600 text-white font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-orange-500/30 flex items-center justify-center"
           >
             {isPending ? (
               <>

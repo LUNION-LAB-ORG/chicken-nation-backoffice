@@ -19,8 +19,8 @@ export interface OrderTableItem {
  * Statuts possibles d'une commande dans l'interface utilisateur
  */
 export type OrderTableStatus =
+  "EN ATTENTE" |
   "NOUVELLE" |
-  "EN COURS" |
   "EN PRÉPARATION" |
   "PRÊT" |
   "COLLECTÉE" |

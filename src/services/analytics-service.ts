@@ -56,7 +56,7 @@ const fetchAnalyticsData = async <T>(
 };
 
 export const getAllAppClick = (query: IAppClickSearchParams) =>
-	fetchAnalyticsData<IPaginatedResponse<IAppClick>>('/app-mobile', query);
+	fetchAnalyticsData<IPaginatedResponse<IAppClick>>('/deeplink', query);
 
 export const getAppClickStats = () =>
-	fetchAnalyticsData<IStatsResponse>('/app-mobile/stats');
+	fetchAnalyticsData<IStatsResponse>('/deeplink/stats');
