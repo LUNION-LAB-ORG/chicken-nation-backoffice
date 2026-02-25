@@ -26,7 +26,8 @@ export function OrderFilters() {
 
   const filtragesStatus = [
     { id: "", label: "Tous les statuts", icon: "📋" },
-    { id: OrderStatus.PENDING, label: "Nouvelles", icon: "🔔" },
+    { id: OrderStatus.PENDING, label: "En attente", icon: "⏳" },
+    { id: OrderStatus.ACCEPTED, label: "Nouvelles", icon: "🔔" },
     { id: OrderStatus.IN_PROGRESS, label: "En préparation", icon: "👨‍🍳" },
     { id: OrderStatus.READY, label: "Prêtes", icon: "✅" },
     { id: OrderStatus.PICKED_UP, label: "En Livraison", icon: "🚗" },
@@ -342,10 +343,10 @@ export function OrderFilters() {
                   ? dateRangeToLocalString(
                       typeof filters.startDate === "string"
                         ? new Date(filters.startDate)
-                        : filters.startDate,
+                        : filters.startDate as Date,
                       typeof filters.endDate === "string"
                         ? new Date(filters.endDate)
-                        : filters.endDate
+                        : filters.endDate as Date
                     )
                   : "Période"}
               </span>

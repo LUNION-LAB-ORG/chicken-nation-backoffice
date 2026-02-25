@@ -1,9 +1,10 @@
 import { EntityStatus, SortOrder } from "../../../types";
 import { Comment } from "../../comments/types/comment.types";
-import { Customer, LoyaltyPoint } from "../../customer/types/customer.types";
+import { Customer } from "../../customer/types/customer.types";
 import { Dish } from "../../menus/types/dish.types";
 import { Supplement } from "../../menus/types/supplement.types";
 import { TicketThread } from "../../messages/types/messages.types";
+import { LoyaltyPoint } from "../../points_fedelite/types/loyalty.types";
 import { Promotion, PromotionUsage } from "../../promotion/types/promotion.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Paiement } from "./paiement.types";

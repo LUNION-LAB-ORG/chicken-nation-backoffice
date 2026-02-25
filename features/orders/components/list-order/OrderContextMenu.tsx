@@ -29,7 +29,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   const isAccepted = order.status !== "NOUVELLE";
 
   const handleAccept = () => {
-    handleOrderUpdateStatus(order.id, OrderStatus.ACCEPTED);
+    handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS);
     onClose();
   };
 

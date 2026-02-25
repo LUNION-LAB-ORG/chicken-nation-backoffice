@@ -1,3 +1,5 @@
+
+
 class SoundManager {
     private audio: HTMLAudioElement | null = null;
     private intervalId: NodeJS.Timeout | null = null;

@@ -43,7 +43,7 @@ export const useOrderActions = () => {
       try {
         const order = await updateOrderStatus({ id: orderId, status });
 
-        if (status === OrderStatus.ACCEPTED) {
+        if (status === OrderStatus.IN_PROGRESS) {
           printOrder(order);
         }
         if (status === OrderStatus.CANCELLED) {

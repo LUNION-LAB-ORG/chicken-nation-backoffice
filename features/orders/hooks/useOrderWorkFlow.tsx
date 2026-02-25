@@ -27,6 +27,23 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
   } = useOrderActions();
 
   switch (order.status) {
+    case "EN ATTENTE":
+      return {
+        badgeText: "Commande en attente",
+        actions: [
+          {
+            label: isLoading ? "Chargement..." : "Rejeter",
+            onClick: () => handleToggleOrderModal(order, "to_cancel"),
+            variant: "danger",
+          },
+          {
+            label: isLoading ? "Chargement" : "Confirmer",
+            onClick: () =>
+              handleOrderUpdateStatus(order.id, OrderStatus.ACCEPTED),
+            variant: "primary",
+          },
+        ],
+      };
     case "NOUVELLE":
       return {
         badgeText: "Nouvelle commande",
@@ -39,7 +56,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           {
             label: isLoading ? "Chargement..." : "Accepter",
             onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.ACCEPTED),
+              handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS),
             variant: "primary",
           },
         ],
@@ -48,28 +65,6 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
       return {
         badgeText: "Commande annulée",
         actions: [],
-      };
-    case "EN COURS":
-      return {
-        badgeText: "Commande acceptée",
-        actions: [
-          {
-            label: isLoading ? "Chargement..." : "Refuser",
-            onClick: () => handleToggleOrderModal(order, "to_cancel"),
-            variant: "danger",
-          },
-          {
-            label: isLoading ? "Chargement..." : "Imprimer",
-            onClick: () => handlePrintOrder(order.id),
-            variant: "secondary",
-          },
-          {
-            label: isLoading ? "Chargement" : "Préparer",
-            onClick: () =>
-              handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS),
-            variant: "primary",
-          },
-        ],
       };
     case "EN PRÉPARATION":
       return {
@@ -134,12 +129,12 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
           ...(!order.paied
             ? [
-                {
-                  label: isLoading ? "Chargement..." : "Payer",
-                  onClick: () => handleToggleOrderModal(order, "add_paiement"),
-                  variant: "primary",
-                } as WorkflowAction,
-              ]
+              {
+                label: isLoading ? "Chargement..." : "Payer",
+                onClick: () => handleToggleOrderModal(order, "add_paiement"),
+                variant: "primary",
+              } as WorkflowAction,
+            ]
             : []),
         ],
       };
@@ -166,12 +161,12 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
           ...(!order.paied
             ? [
-                {
-                  label: isLoading ? "Chargement..." : "Payer",
-                  onClick: () => handleToggleOrderModal(order, "add_paiement"),
-                  variant: "primary",
-                } as WorkflowAction,
-              ]
+              {
+                label: isLoading ? "Chargement..." : "Payer",
+                onClick: () => handleToggleOrderModal(order, "add_paiement"),
+                variant: "primary",
+              } as WorkflowAction,
+            ]
             : []),
         ],
       };

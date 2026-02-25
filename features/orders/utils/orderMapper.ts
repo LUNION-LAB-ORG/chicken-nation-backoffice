@@ -8,8 +8,8 @@ import { Paiement } from "../types/paiement.types";
 // ========================================
 
 const STATUS_MAP: Record<OrderStatus, OrderTableStatus> = {
-  [OrderStatus.PENDING]: "NOUVELLE",
-  [OrderStatus.ACCEPTED]: "EN COURS",
+  [OrderStatus.PENDING]: "EN ATTENTE",
+  [OrderStatus.ACCEPTED]: "NOUVELLE",
   [OrderStatus.IN_PROGRESS]: "EN PRÉPARATION",
   [OrderStatus.READY]: "PRÊT",
   [OrderStatus.PICKED_UP]: "COLLECTÉE",
