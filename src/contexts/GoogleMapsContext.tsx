@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { LoadScript } from '@react-google-maps/api';
 
-const libraries: ("places")[] = ["places"];
+const libraries: ("places" | "visualization")[] = ["places", "visualization"];
 
 interface GoogleMapsContextType {
   isScriptLoaded: boolean;

@@ -47,6 +47,28 @@ const modulesMap: Record<string, any> = {
   inbox: dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
     loading: () => <LoadingSpinner />,
   }),
+
+  // ---- Statistiques détaillées ----
+  stats_products: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsProducts"),
+    { loading: () => <LoadingSpinner /> }
+  ),
+  stats_orders: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsOrders"),
+    { loading: () => <LoadingSpinner /> }
+  ),
+  stats_clients: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsClients"),
+    { loading: () => <LoadingSpinner /> }
+  ),
+  stats_delivery: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsDelivery"),
+    { loading: () => <LoadingSpinner /> }
+  ),
+  stats_marketing: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsMarketing"),
+    { loading: () => <LoadingSpinner /> }
+  ),
 };
 
 export default function DynamicModuleLoader() {

@@ -8,7 +8,10 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
   | 'restaurants' | 'personnel' | 'promos' | 'loyalty'
-  | 'inbox' | 'card_requests' | 'card_nation' | "reviews";
+  | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
+  // Statistiques détaillées
+  | 'stats_products' | 'stats_orders' | 'stats_clients'
+  | 'stats_delivery' | 'stats_marketing';
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
@@ -31,7 +34,7 @@ export interface DashboardState {
   selectedRestaurantId: string | null;
   selectedPeriod: PeriodFilter;
 
-  // Sections
+  // Sections existantes
   dashboard: SectionState;
   marketing: SectionState;
   inbox: SectionState;
@@ -46,6 +49,12 @@ export interface DashboardState {
   card_requests: SectionState;
   card_nation: SectionState;
   reviews: SectionState;
+  // Sections Statistiques détaillées
+  stats_products: SectionState;
+  stats_orders: SectionState;
+  stats_clients: SectionState;
+  stats_delivery: SectionState;
+  stats_marketing: SectionState;
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
@@ -70,9 +79,13 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
   modals: {}
 });
 
-const SECTION_KEYS: TabKey[] = ['dashboard', 'orders', 'menus', 'marketing', 'clients', 'inventory',
+const SECTION_KEYS: TabKey[] = [
+  'dashboard', 'orders', 'menus', 'marketing', 'clients', 'inventory',
   'restaurants', 'personnel', 'promos', 'loyalty', 'inbox',
-  'card_requests', 'card_nation', 'reviews'];
+  'card_requests', 'card_nation', 'reviews',
+  // Statistiques
+  'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing',
+];
 
 // --- STORE ---
 export const useDashboardStore = create<DashboardState>()(
@@ -97,6 +110,12 @@ export const useDashboardStore = create<DashboardState>()(
       card_requests: createInitialSectionState(),
       card_nation: createInitialSectionState(),
       reviews: createInitialSectionState(),
+      // Statistiques
+      stats_products: createInitialSectionState(),
+      stats_orders: createInitialSectionState(),
+      stats_clients: createInitialSectionState(),
+      stats_delivery: createInitialSectionState(),
+      stats_marketing: createInitialSectionState(),
 
       // Actions Globales
       setActiveTab: (tab) => set((state) => {

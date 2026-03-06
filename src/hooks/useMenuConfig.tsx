@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   BookOpen,
   Boxes,
   ClipboardList,
@@ -12,7 +13,9 @@ import {
   MessageSquare,
   Store,
   BadgePercent,
+  ShoppingCart,
   TicketPercent,
+  Truck,
   TrendingUp,
   UserCog,
   Users,
@@ -146,6 +149,44 @@ export const useGetMenuConfig = (): {
       label: "Marketing",
       icon: TrendingUp,
       canAccess: () => can(Modules.MARKETING, Action.READ),
+    },
+    {
+      id: "statistiques",
+      label: "Statistiques",
+      icon: BarChart3,
+      canAccess: () => can(Modules.DASHBOARD, Action.READ),
+      items: [
+        {
+          id: "statistiques-stats_products",
+          label: "Produits & Catégories",
+          icon: BookOpen,
+          canAccess: () => can(Modules.MENUS, Action.READ),
+        },
+        {
+          id: "statistiques-stats_orders",
+          label: "Commandes",
+          icon: ShoppingCart,
+          canAccess: () => can(Modules.COMMANDES, Action.READ),
+        },
+        {
+          id: "statistiques-stats_clients",
+          label: "Clients",
+          icon: Users,
+          canAccess: () => can(Modules.CLIENTS, Action.READ),
+        },
+        {
+          id: "statistiques-stats_delivery",
+          label: "Livraison",
+          icon: Truck,
+          canAccess: () => can(Modules.COMMANDES, Action.READ),
+        },
+        {
+          id: "statistiques-stats_marketing",
+          label: "Marketing & Promos",
+          icon: Megaphone,
+          canAccess: () => can(Modules.MARKETING, Action.READ),
+        },
+      ],
     },
   ];
 
