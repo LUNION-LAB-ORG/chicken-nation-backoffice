@@ -97,21 +97,14 @@ export default function StatsProducts() {
   const isLoading = topProducts.isLoading;
   const isError = topProducts.isError;
 
-  // ---- Donnees derivees : CA total, panier moyen ----
-  const totalRevenue =
-    topProducts.data?.items?.reduce((acc, i) => acc + i.revenue, 0) ?? 0;
-  const totalSold = topProducts.data?.totalSold ?? 0;
-  const avgPerDish = totalSold > 0 ? Math.round(totalRevenue / totalSold) : 0;
+  // ---- Donnees globales (salesTrend agrège TOUS les produits, pas juste le top 10) ----
+  const globalTotalSold = salesTrend.data?.totalQuantity ?? 0;
+  const globalTotalRevenue = salesTrend.data?.totalRevenue ?? 0;
+  const globalAvgPerDish =
+    globalTotalSold > 0 ? Math.round(globalTotalRevenue / globalTotalSold) : 0;
 
-  // ---- Trend du top product ----
-  const topItem = topProducts.data?.items?.[0];
-  const topTrend =
-    topItem?.evolution && topItem.evolution !== "0.0%"
-      ? formatTrend(
-          topItem.evolution.replace("%", "").replace("+", ""),
-          !topItem.evolution.startsWith("-")
-        )
-      : undefined;
+  // ---- Top 10 données pour le BarChart/table ----
+  const topTotalSold = topProducts.data?.totalSold ?? 0;
 
   // ---- PieChart catégories ----
   const categoryChartData = (topCategories.data?.items ?? []).map(
@@ -190,15 +183,14 @@ export default function StatsProducts() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Plats vendus"
-              value={formatNumber(totalSold)}
-              subtitle="sur la période"
-              trend={topTrend}
+              value={formatNumber(globalTotalSold)}
+              subtitle="tous produits confondus"
               color="orange"
             />
             <StatsCard
               title="CA Produits"
-              value={formatCurrencyXOF(totalRevenue)}
-              subtitle="chiffre d'affaires"
+              value={formatCurrencyXOF(globalTotalRevenue)}
+              subtitle="chiffre d'affaires global"
               color="green"
             />
             <StatsCard
@@ -211,8 +203,8 @@ export default function StatsProducts() {
             />
             <StatsCard
               title="Prix moyen / plat"
-              value={formatCurrencyXOF(avgPerDish)}
-              subtitle="revenu par unité"
+              value={formatCurrencyXOF(globalAvgPerDish)}
+              subtitle="revenu moyen par unité"
               color="purple"
             />
           </div>
@@ -362,7 +354,7 @@ export default function StatsProducts() {
           {topProductsBarData.length > 0 && (
             <StatsChartCard
               title="Top 10 Plats les plus vendus"
-              subtitle={`${formatNumber(totalSold)} plats vendus au total`}
+              subtitle={`${formatNumber(topTotalSold)} plats dans le top 10 · ${formatNumber(globalTotalSold)} au total`}
               icon={Trophy}
             >
               <div

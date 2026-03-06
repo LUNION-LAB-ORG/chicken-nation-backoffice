@@ -111,6 +111,22 @@ export const MULTI_SERIES_COLORS = [
   CHART_COLORS.success,
 ] as const;
 
+// === Palette de couleurs pour les restaurants (histogrammes empilés + cartes) ===
+export const RESTAURANT_COLORS = [
+  '#F17922', // Orange
+  '#3B82F6', // Blue
+  '#8B5CF6', // Purple
+  '#22C55E', // Green
+  '#EF4444', // Red
+  '#F59E0B', // Amber
+  '#EC4899', // Pink
+  '#06B6D4', // Cyan
+  '#14B8A6', // Teal
+  '#6366F1', // Indigo
+  '#84CC16', // Lime
+  '#D946EF', // Fuchsia
+] as const;
+
 // === Hauteurs par défaut des graphiques ===
 export const CHART_HEIGHTS = {
   small: 200,

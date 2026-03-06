@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   TrendingUp,
   Smartphone,
@@ -13,10 +13,9 @@ import {
   PieChart as PieChartIcon,
   Minimize2,
   Fullscreen,
+  Map as MapIcon,
 } from "lucide-react";
 import {
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -27,10 +26,9 @@ import {
   Cell,
   BarChart,
   Bar,
-  Legend,
   LabelList,
 } from "recharts";
-import { GoogleMap, HeatmapLayerF } from "@react-google-maps/api";
+import { GoogleMap, HeatmapLayerF, MarkerF, CircleF, InfoWindowF } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import {
   useOrdersOverviewQuery,
@@ -42,6 +40,9 @@ import {
   useOrdersByRestaurantAndSourceQuery,
   useOrdersDailyTrendQuery,
   useClientZonesQuery,
+  useDailyTrendByRestaurantQuery,
+  useRestaurantsLocationsQuery,
+  useInfluenceZonesQuery,
 } from "../../../../features/statistics/queries/statistics-orders.query";
 import {
   StatsFilters,
@@ -53,7 +54,6 @@ import {
   formatPercentage,
   formatDuration,
   formatTrend,
-  getPerformanceColor,
   truncateName,
 } from "../../../../features/statistics/utils/stats-formatters";
 import {
@@ -65,8 +65,7 @@ import {
   PUNCTUALITY_COLORS,
   AXIS_STYLE,
   GRID_STYLE,
-  AREA_GRADIENT_ID,
-  AREA_GRADIENT_CONFIG,
+  RESTAURANT_COLORS,
 } from "../../../../features/statistics/utils/chart-config";
 import StatsPeriodFilter from "./shared/StatsPeriodFilter";
 import StatsCard from "./shared/StatsCard";
@@ -75,8 +74,11 @@ import ChartTooltip, { PieChartTooltip } from "./shared/ChartTooltip";
 import StatsLoadingState from "./shared/StatsLoadingState";
 import StatsErrorState from "./shared/StatsErrorState";
 
+// === Types ===
 type GranularityType = "day" | "week" | "month";
+type MetricType = "count" | "revenue" | "avgBasket" | "onTimeRate";
 
+// === Constants ===
 const MAP_CONTAINER_STYLE = {
   width: "100%",
   height: "400px",
@@ -94,10 +96,39 @@ const MAP_OPTIONS: google.maps.MapOptions = {
   ],
 };
 
+const METRIC_CONFIG: Record<MetricType, { label: string; format: (v: number) => string; yAxisFormat?: (v: number) => string }> = {
+  count: {
+    label: "Total Commandes",
+    format: (v) => `${formatNumber(v)} cmd.`,
+    yAxisFormat: (v) => formatNumber(v),
+  },
+  revenue: {
+    label: "Chiffre d'affaires",
+    format: (v) => formatCurrencyXOF(v),
+    yAxisFormat: (v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`,
+  },
+  avgBasket: {
+    label: "Panier Moyen",
+    format: (v) => formatCurrencyXOF(v),
+    yAxisFormat: (v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`,
+  },
+  onTimeRate: {
+    label: "Taux Ponctualite",
+    format: (v) => `${v}%`,
+    yAxisFormat: (v) => `${v}%`,
+  },
+};
+
+// === Helper: Generate SVG marker icon ===
+function getRestaurantMarkerIcon(color: string, size = 32) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 // === Stacked bar legend custom ===
 function StackedBarLegend({ items }: { items: { label: string; color: string }[] }) {
   return (
-    <div className="flex items-center justify-center gap-5 mt-2">
+    <div className="flex items-center justify-center gap-4 mt-2 flex-wrap">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-1.5">
           <span
@@ -117,12 +148,18 @@ export default function StatsOrders() {
     restaurantId: undefined,
   });
   const [granularity, setGranularity] = useState<GranularityType>("day");
+  const [selectedMetric, setSelectedMetric] = useState<MetricType>("count");
+  const [fullScreen, setFullScreen] = useState(false);
+  const [fullScreenInfluence, setFullScreenInfluence] = useState(false);
+  const [selectedMapRestaurant, setSelectedMapRestaurant] = useState<string | null>(null);
+  const [selectedInfluenceRestaurant, setSelectedInfluenceRestaurant] = useState<string | null>(null);
+  const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);
 
   const queryParams = {
     ...filters,
     restaurantId: filters.restaurantId ?? undefined,
   };
-  const [fullScreen, setFullScreen] = useState(false);
+
   // ---- Queries ----
   const overview = useOrdersOverviewQuery(queryParams);
   const byChannel = useOrdersByChannelQuery(queryParams);
@@ -133,14 +170,17 @@ export default function StatsOrders() {
   const byRestaurantAndSource = useOrdersByRestaurantAndSourceQuery(queryParams);
   const dailyTrend = useOrdersDailyTrendQuery({ ...queryParams, granularity });
   const clientZones = useClientZonesQuery(queryParams);
+  const trendByRestaurant = useDailyTrendByRestaurantQuery({ ...queryParams, granularity });
+  const restaurantsLocations = useRestaurantsLocationsQuery();
+  const influenceZones = useInfluenceZonesQuery(queryParams);
 
   const isLoading = overview.isLoading;
   const isError = overview.isError;
 
-  // ---- Google Maps (chargé globalement via GoogleMapsProvider avec visualization) ----
+  // ---- Google Maps ----
   const { isScriptLoaded: mapsLoaded } = useGoogleMaps();
 
-  // ---- Données dérivées ----
+  // ---- Donnees derivees ----
 
   // Trend CA
   const evolution = overview.data?.evolution ?? "";
@@ -148,7 +188,7 @@ export default function StatsOrders() {
     ? formatTrend(evolution.replace("%", ""), !evolution.startsWith("-"))
     : undefined;
 
-  // Ponctualité livraison
+  // Ponctualite livraison
   const onTimeRate = lateOrders.data ? 100 - (lateOrders.data.lateRate ?? 0) : 0;
 
   // Canaux
@@ -161,7 +201,7 @@ export default function StatsOrders() {
       : 0;
   const callRate = totalChannelOrders > 0 ? 100 - appRate : 0;
 
-  // Données PieChart - Type de commande
+  // PieChart - Type de commande
   const typeChartData = (overview.data?.byType ?? []).map((t) => ({
     name: ORDER_TYPE_LABELS[t.type] ?? t.type,
     value: t.count,
@@ -169,7 +209,7 @@ export default function StatsOrders() {
     percentage: t.percentage,
   }));
 
-  // Données PieChart - Canal
+  // PieChart - Canal
   const channelChartData = [
     {
       name: CHANNEL_LABELS.app,
@@ -185,7 +225,7 @@ export default function StatsOrders() {
     },
   ];
 
-  // Données PieChart - Ponctualité livraison
+  // PieChart - Ponctualite
   const punctualityChartData = [
     {
       name: "A l'heure",
@@ -201,7 +241,7 @@ export default function StatsOrders() {
     },
   ];
 
-  // Données BarChart Empilé Horizontal - Par Restaurant et Source (App / Call Center)
+  // BarChart Source par restaurant
   const sourceRestaurantData = (byRestaurantAndSource.data?.items ?? [])
     .slice(0, 10)
     .map((r) => ({
@@ -212,7 +252,7 @@ export default function StatsOrders() {
       total: r.total,
     }));
 
-  // Données BarChart Empilé Horizontal - Par Restaurant et Type
+  // BarChart Type par restaurant
   const stackedRestaurantData = (byRestaurantAndType.data?.items ?? [])
     .slice(0, 10)
     .map((r) => ({
@@ -224,30 +264,104 @@ export default function StatsOrders() {
       total: r.total,
     }));
 
-  // Heat map data
+  // Restaurant color map
+  const restaurantColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const restaurants = trendByRestaurant.data?.restaurants ?? influenceZones.data?.restaurants ?? [];
+    restaurants.forEach((r, i) => {
+      map.set(r.id, RESTAURANT_COLORS[i % RESTAURANT_COLORS.length]);
+    });
+    return map;
+  }, [trendByRestaurant.data, influenceZones.data]);
+
+  // === STACKED BAR CHART DATA ===
+  const barChartRestaurants = trendByRestaurant.data?.restaurants ?? [];
+  const stackedBarData = useMemo(() => {
+    if (!trendByRestaurant.data) return [];
+    const { restaurants, data } = trendByRestaurant.data;
+
+    return data.map((point) => {
+      const entry: Record<string, string | number> = {
+        label: point.label,
+        date: point.date,
+      };
+
+      for (const restaurant of restaurants) {
+        const metrics = point.byRestaurant[restaurant.id];
+        entry[restaurant.name] = metrics ? metrics[selectedMetric] : 0;
+      }
+
+      return entry;
+    });
+  }, [trendByRestaurant.data, selectedMetric]);
+
+  // Heat map data (standard ou filtre par restaurant)
   const heatmapData = useMemo(() => {
-    if (!mapsLoaded || !clientZones.data?.points?.length) return [];
+    if (!mapsLoaded) return [];
+
+    if (selectedMapRestaurant && influenceZones.data?.points?.length) {
+      return influenceZones.data.points
+        .filter((p) => p.restaurantId === selectedMapRestaurant)
+        .map((p) => ({
+          location: new google.maps.LatLng(p.lat, p.lng),
+          weight: p.count,
+        }));
+    }
+
+    if (!clientZones.data?.points?.length) return [];
     return clientZones.data.points.map((p) => ({
       location: new google.maps.LatLng(p.lat, p.lng),
       weight: p.count,
     }));
-  }, [mapsLoaded, clientZones.data]);
+  }, [mapsLoaded, clientZones.data, influenceZones.data, selectedMapRestaurant]);
 
   const mapCenter = useMemo(() => {
     if (clientZones.data?.center) {
       return { lat: clientZones.data.center.lat, lng: clientZones.data.center.lng };
     }
-    return { lat: 6.3703, lng: 2.3912 }; // Cotonou par défaut
+    return { lat: 6.3703, lng: 2.3912 };
   }, [clientZones.data]);
 
-  // Formatters tooltip
-  const trendTooltipFormatter = useCallback(
-    (value: number, name: string) => {
-      if (name === "Commandes") return `${formatNumber(value)} cmd.`;
-      return formatCurrencyXOF(value);
+  // Influence map - points filtres
+  const influenceMapPoints = useMemo(() => {
+    if (!influenceZones.data?.points) return [];
+    if (selectedInfluenceRestaurant) {
+      return influenceZones.data.points.filter((p) => p.restaurantId === selectedInfluenceRestaurant);
+    }
+    return influenceZones.data.points;
+  }, [influenceZones.data, selectedInfluenceRestaurant]);
+
+  const influenceMapCenter = useMemo(() => {
+    if (influenceZones.data?.center) {
+      return { lat: influenceZones.data.center.lat, lng: influenceZones.data.center.lng };
+    }
+    return mapCenter;
+  }, [influenceZones.data, mapCenter]);
+
+  // Tooltip formatter pour le bar chart
+  const barTooltipFormatter = useCallback(
+    (value: number) => {
+      return METRIC_CONFIG[selectedMetric].format(value);
     },
-    []
+    [selectedMetric]
   );
+
+  // YAxis formatter
+  const yAxisFormatter = useCallback(
+    (value: number) => {
+      return METRIC_CONFIG[selectedMetric].yAxisFormat
+        ? METRIC_CONFIG[selectedMetric].yAxisFormat!(value)
+        : String(value);
+    },
+    [selectedMetric]
+  );
+
+  // Nom du restaurant selectionne sur la heat map
+  const selectedMapRestaurantName = useMemo(() => {
+    if (!selectedMapRestaurant) return null;
+    const found = restaurantsLocations.data?.restaurants?.find((r) => r.id === selectedMapRestaurant);
+    return found?.name ?? null;
+  }, [selectedMapRestaurant, restaurantsLocations.data]);
 
   return (
     <div className="space-y-6 p-6">
@@ -270,7 +384,7 @@ export default function StatsOrders() {
       {!isLoading && !isError && (
         <>
           {/* ========================================== */}
-          {/* SECTION 2 : KPI Cards                     */}
+          {/* SECTION 2 : KPI Cards (cliquables)        */}
           {/* ========================================== */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
@@ -279,31 +393,39 @@ export default function StatsOrders() {
               subtitle="sur la periode"
               trend={trendData}
               color="orange"
+              onClick={() => setSelectedMetric("count")}
+              active={selectedMetric === "count"}
             />
             <StatsCard
               title="Chiffre d'affaires"
               value={formatCurrencyXOF(overview.data?.totalRevenue ?? 0)}
               color="green"
+              onClick={() => setSelectedMetric("revenue")}
+              active={selectedMetric === "revenue"}
             />
             <StatsCard
               title="Panier Moyen"
               value={formatCurrencyXOF(overview.data?.averageBasket ?? 0)}
               color="blue"
+              onClick={() => setSelectedMetric("avgBasket")}
+              active={selectedMetric === "avgBasket"}
             />
             <StatsCard
               title="Taux ponctualite"
               value={`${onTimeRate.toFixed(1)}%`}
               subtitle="livraisons a l'heure"
               color={onTimeRate >= 70 ? "green" : onTimeRate >= 40 ? "orange" : "red"}
+              onClick={() => setSelectedMetric("onTimeRate")}
+              active={selectedMetric === "onTimeRate"}
             />
           </div>
 
           {/* ========================================== */}
-          {/* SECTION 3 : Tendance des Commandes - Area */}
+          {/* SECTION 3 : Histogramme empile par resto   */}
           {/* ========================================== */}
-          {dailyTrend.data && (
+          {trendByRestaurant.data && (
             <StatsChartCard
-              title="Tendance des Commandes"
+              title={`${METRIC_CONFIG[selectedMetric].label} par Restaurant`}
               icon={TrendingUp}
               rightContent={
                 <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
@@ -322,43 +444,66 @@ export default function StatsOrders() {
                 </div>
               }
             >
-              <div className="h-50">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={dailyTrend.data.data ?? []}
-                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id={AREA_GRADIENT_ID} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={AREA_GRADIENT_CONFIG.startColor} stopOpacity={AREA_GRADIENT_CONFIG.startOpacity} />
-                        <stop offset="95%" stopColor={AREA_GRADIENT_CONFIG.endColor} stopOpacity={AREA_GRADIENT_CONFIG.endOpacity} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid {...GRID_STYLE} vertical={false} />
-                    <XAxis dataKey="label" tick={AXIS_STYLE} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-                    <YAxis tick={AXIS_STYLE} tickLine={false} axisLine={false} width={40} allowDecimals={false} />
-                    <Tooltip content={<ChartTooltip valueFormatter={trendTooltipFormatter} />} />
-                    <Area
-                      type="monotone"
-                      dataKey="count"
-                      name="Commandes"
-                      stroke={CHART_COLORS.primary}
-                      strokeWidth={2.5}
-                      fill={`url(#${AREA_GRADIENT_ID})`}
-                      dot={false}
-                      activeDot={{ r: 5, fill: CHART_COLORS.primary, stroke: "#fff", strokeWidth: 2 }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center gap-6 mt-3 pt-3 border-t border-gray-100">
-                <div className="text-xs text-gray-500">
-                  Total : <span className="font-semibold text-gray-900">{formatNumber(dailyTrend.data.totalOrders)} cmd.</span>
+              {stackedBarData.length > 0 ? (
+                <>
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={stackedBarData}
+                        margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                      >
+                        <CartesianGrid {...GRID_STYLE} vertical={false} />
+                        <XAxis
+                          dataKey="label"
+                          tick={AXIS_STYLE}
+                          tickLine={false}
+                          axisLine={false}
+                          interval="preserveStartEnd"
+                        />
+                        <YAxis
+                          tick={AXIS_STYLE}
+                          tickLine={false}
+                          axisLine={false}
+                          width={60}
+                          allowDecimals={false}
+                          tickFormatter={yAxisFormatter}
+                        />
+                        <Tooltip
+                          content={
+                            <ChartTooltip
+                              valueFormatter={barTooltipFormatter}
+                            />
+                          }
+                        />
+                        {barChartRestaurants.map((restaurant, index) => {
+                          const color = RESTAURANT_COLORS[index % RESTAURANT_COLORS.length];
+                          const isLast = index === barChartRestaurants.length - 1;
+                          return (
+                            <Bar
+                              key={restaurant.id}
+                              dataKey={restaurant.name}
+                              stackId="restaurant"
+                              fill={color}
+                              radius={isLast ? [3, 3, 0, 0] : [0, 0, 0, 0]}
+                              barSize={stackedBarData.length > 15 ? 16 : stackedBarData.length > 7 ? 24 : 32}
+                            />
+                          );
+                        })}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <StackedBarLegend
+                    items={barChartRestaurants.map((r, i) => ({
+                      label: truncateName(r.name, 20),
+                      color: RESTAURANT_COLORS[i % RESTAURANT_COLORS.length],
+                    }))}
+                  />
+                </>
+              ) : (
+                <div className="h-80 flex items-center justify-center text-sm text-gray-400">
+                  Aucune donnee disponible
                 </div>
-                <div className="text-xs text-gray-500">
-                  CA : <span className="font-semibold text-gray-900">{formatCurrencyXOF(dailyTrend.data.totalRevenue)}</span>
-                </div>
-              </div>
+              )}
             </StatsChartCard>
           )}
 
@@ -460,7 +605,7 @@ export default function StatsOrders() {
           {/* SECTION 5 : Par Restaurant (2 charts)     */}
           {/* ========================================== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* 5A - Histogramme horizontal empilé par restaurant et source (App / Call Center) */}
+            {/* 5A - Par Restaurant et Source */}
             {byRestaurantAndSource.data && sourceRestaurantData.length > 0 && (
               <StatsChartCard
                 title="Restaurants par Source"
@@ -495,7 +640,7 @@ export default function StatsOrders() {
               </StatsChartCard>
             )}
 
-            {/* 5B - Histogramme horizontal empilé par restaurant et type */}
+            {/* 5B - Par Restaurant et Type */}
             {byRestaurantAndType.data && stackedRestaurantData.length > 0 && (
               <StatsChartCard
                 title="Restaurants par Type de Commande"
@@ -580,7 +725,7 @@ export default function StatsOrders() {
             {lateOrders.data && (
               <StatsChartCard
                 title="Ponctualite des Livraisons"
-                subtitle="Seuil : 40 min entre Pret et Reception (prêt -> réception)"
+                subtitle="Seuil : 40 min entre Pret et Reception (pret -> reception)"
                 icon={Target}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -597,7 +742,7 @@ export default function StatsOrders() {
                           {onTimeRate.toFixed(1)}%
                         </text>
                         <text x="50%" y="57%" textAnchor="middle" dominantBaseline="middle" className="fill-gray-400 text-[10px]">
-                          a l'heure
+                          a l&apos;heure
                         </text>
                       </PieChart>
                     </ResponsiveContainer>
@@ -606,7 +751,7 @@ export default function StatsOrders() {
                     <div className="flex items-center gap-2 bg-green-50 rounded-xl p-2.5">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: PUNCTUALITY_COLORS.onTime }}>OK</div>
                       <div>
-                        <div className="text-xs font-semibold text-gray-900">A l'heure</div>
+                        <div className="text-xs font-semibold text-gray-900">A l&apos;heure</div>
                         <div className="text-[11px] text-gray-500">{formatNumber(lateOrders.data.onTimeOrders)} ({onTimeRate.toFixed(1)}%)</div>
                       </div>
                     </div>
@@ -636,11 +781,10 @@ export default function StatsOrders() {
             {restoPunctuality.data && (
               <StatsChartCard
                 title="Ponctualite Restaurant"
-                subtitle="Temps de preparation (nouvelle commande -> prêt)"
+                subtitle="Temps de preparation (nouvelle commande -> pret)"
                 icon={ChefHat}
               >
                 <div className="space-y-3">
-                  {/* Resume global */}
                   <div className="grid grid-cols-3 gap-2">
                     <div className="bg-blue-50 rounded-xl p-3 text-center">
                       <div className="text-[10px] text-gray-400">Moyenne</div>
@@ -655,7 +799,6 @@ export default function StatsOrders() {
                       <div className="text-lg font-bold text-red-500">{restoPunctuality.data.maxPrepMinutes} min</div>
                     </div>
                   </div>
-                  {/* Par restaurant */}
                   <div className="space-y-1.5 max-h-50 overflow-y-auto">
                     {(restoPunctuality.data.byRestaurant ?? []).map((r) => {
                       const barWidth = restoPunctuality.data!.maxPrepMinutes > 0
@@ -689,19 +832,35 @@ export default function StatsOrders() {
           </div>
 
           {/* ========================================== */}
-          {/* SECTION 8 : Zones Clients (Heat Map)      */} {/* ========================================== */}
+          {/* SECTION 8 : Zones Clients (Heat Map)      */}
+          {/* avec marqueurs restaurants + filtre        */}
+          {/* ========================================== */}
           {clientZones.data && clientZones.data.points.length > 0 && (
             <StatsChartCard
               title="Zones Clients"
-              subtitle={`${formatNumber(clientZones.data.totalPoints)} zones identifiees sur ${formatNumber(clientZones.data.totalOrders)} commandes livrees`}
+              subtitle={
+                selectedMapRestaurantName
+                  ? `Filtre : ${selectedMapRestaurantName} — Cliquer ailleurs pour reinitialiser`
+                  : `${formatNumber(clientZones.data.totalPoints)} zones identifiees sur ${formatNumber(clientZones.data.totalOrders)} commandes livrees`
+              }
               icon={MapPin}
               rightContent={
-                <button
-                  onClick={() => setFullScreen(!fullScreen)}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-white shadow-sm text-[#F17922]"
-                >
-                  {fullScreen ? <Minimize2 className="w-4 h-4" /> : <Fullscreen className="w-4 h-4" />}
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectedMapRestaurant && (
+                    <button
+                      onClick={() => setSelectedMapRestaurant(null)}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-red-50 text-red-600 hover:bg-red-100"
+                    >
+                      Reinitialiser
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setFullScreen(!fullScreen)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-white shadow-sm text-[#F17922]"
+                  >
+                    {fullScreen ? <Minimize2 className="w-4 h-4" /> : <Fullscreen className="w-4 h-4" />}
+                  </button>
+                </div>
               }
             >
               {mapsLoaded ? (
@@ -727,14 +886,53 @@ export default function StatsOrders() {
                       }}
                     />
                   )}
+
+                  {/* Marqueurs restaurants */}
+                  {restaurantsLocations.data?.restaurants?.map((restaurant) => {
+                    const color = restaurantColorMap.get(restaurant.id) ?? CHART_COLORS.primary;
+                    const isSelected = selectedMapRestaurant === restaurant.id;
+                    return (
+                      <MarkerF
+                        key={restaurant.id}
+                        position={{ lat: restaurant.latitude, lng: restaurant.longitude }}
+                        icon={{
+                          url: getRestaurantMarkerIcon(isSelected ? '#000000' : color, isSelected ? 40 : 32),
+                          scaledSize: new google.maps.Size(isSelected ? 40 : 32, isSelected ? 40 : 32),
+                          anchor: new google.maps.Point(isSelected ? 20 : 16, isSelected ? 40 : 32),
+                        }}
+                        onClick={() => {
+                          setSelectedMapRestaurant(
+                            selectedMapRestaurant === restaurant.id ? null : restaurant.id
+                          );
+                        }}
+                        onMouseOver={() => setHoveredMarker(restaurant.id)}
+                        onMouseOut={() => setHoveredMarker(null)}
+                        zIndex={isSelected ? 100 : 10}
+                      >
+                        {hoveredMarker === restaurant.id && (
+                          <InfoWindowF
+                            position={{ lat: restaurant.latitude, lng: restaurant.longitude }}
+                            onCloseClick={() => setHoveredMarker(null)}
+                          >
+                            <div className="p-1">
+                              <p className="text-sm font-semibold text-gray-900">{restaurant.name}</p>
+                              {restaurant.address && (
+                                <p className="text-xs text-gray-500 mt-0.5">{restaurant.address}</p>
+                              )}
+                            </div>
+                          </InfoWindowF>
+                        )}
+                      </MarkerF>
+                    );
+                  })}
                 </GoogleMap>
               ) : (
                 <div className="h-50 bg-gray-100 rounded-xl flex items-center justify-center">
                   <div className="text-sm text-gray-400">Chargement de la carte...</div>
                 </div>
               )}
-              {/* Legende heat map */}
-              <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-100">
+              {/* Legende */}
+              <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-100 flex-wrap">
                 <div className="flex items-center gap-1.5">
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "rgba(255, 0, 0, 1)" }} />
                   <span className="text-xs text-gray-600">Forte concentration</span>
@@ -747,6 +945,129 @@ export default function StatsOrders() {
                   <span className="w-3 h-3 rounded-full" style={{ backgroundColor: "rgba(255, 255, 0, 0.6)" }} />
                   <span className="text-xs text-gray-600">Faible concentration</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="w-3 h-3 text-[#F17922]" />
+                  <span className="text-xs text-gray-600">Restaurants (clic pour filtrer)</span>
+                </div>
+              </div>
+            </StatsChartCard>
+          )}
+
+          {/* ========================================== */}
+          {/* SECTION 9 : Zones d'influence restaurants  */}
+          {/* ========================================== */}
+          {influenceZones.data && influenceZones.data.points.length > 0 && (
+            <StatsChartCard
+              title="Zones d'influence Restaurants"
+              subtitle="Repartition geographique des livraisons par restaurant"
+              icon={MapIcon}
+              rightContent={
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectedInfluenceRestaurant ?? ""}
+                    onChange={(e) => setSelectedInfluenceRestaurant(e.target.value || null)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
+                  >
+                    <option value="">Tous les restaurants</option>
+                    {(influenceZones.data?.restaurants ?? []).map((r) => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => setFullScreenInfluence(!fullScreenInfluence)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-white shadow-sm text-[#F17922]"
+                  >
+                    {fullScreenInfluence ? <Minimize2 className="w-4 h-4" /> : <Fullscreen className="w-4 h-4" />}
+                  </button>
+                </div>
+              }
+            >
+              {mapsLoaded ? (
+                <GoogleMap
+                  mapContainerStyle={{
+                    ...MAP_CONTAINER_STYLE,
+                    height: fullScreenInfluence ? `${window.innerHeight - 200}px` : '450px',
+                  }}
+                  center={influenceMapCenter}
+                  zoom={12}
+                  options={MAP_OPTIONS}
+                >
+                  {/* Points de livraison colores par restaurant */}
+                  {influenceMapPoints.map((point, index) => {
+                    const color = restaurantColorMap.get(point.restaurantId) ?? CHART_COLORS.textMuted;
+                    return (
+                      <CircleF
+                        key={`${point.lat}-${point.lng}-${point.restaurantId}-${index}`}
+                        center={{ lat: point.lat, lng: point.lng }}
+                        radius={Math.min(150 + point.count * 30, 500)}
+                        options={{
+                          fillColor: color,
+                          fillOpacity: 0.35,
+                          strokeColor: color,
+                          strokeOpacity: 0.8,
+                          strokeWeight: 1,
+                          clickable: false,
+                        }}
+                      />
+                    );
+                  })}
+
+                  {/* Marqueurs restaurants */}
+                  {restaurantsLocations.data?.restaurants?.map((restaurant) => {
+                    const color = restaurantColorMap.get(restaurant.id) ?? CHART_COLORS.primary;
+                    const isSelected = selectedInfluenceRestaurant === restaurant.id;
+                    return (
+                      <MarkerF
+                        key={`influence-${restaurant.id}`}
+                        position={{ lat: restaurant.latitude, lng: restaurant.longitude }}
+                        icon={{
+                          url: getRestaurantMarkerIcon(color, isSelected ? 40 : 34),
+                          scaledSize: new google.maps.Size(isSelected ? 40 : 34, isSelected ? 40 : 34),
+                          anchor: new google.maps.Point(isSelected ? 20 : 17, isSelected ? 40 : 34),
+                        }}
+                        onClick={() => {
+                          setSelectedInfluenceRestaurant(
+                            selectedInfluenceRestaurant === restaurant.id ? null : restaurant.id
+                          );
+                        }}
+                        zIndex={100}
+                      />
+                    );
+                  })}
+                </GoogleMap>
+              ) : (
+                <div className="h-50 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <div className="text-sm text-gray-400">Chargement de la carte...</div>
+                </div>
+              )}
+              {/* Legende restaurants */}
+              <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-100 flex-wrap">
+                {(influenceZones.data?.restaurants ?? []).map((r) => {
+                  const color = restaurantColorMap.get(r.id) ?? CHART_COLORS.textMuted;
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() =>
+                        setSelectedInfluenceRestaurant(
+                          selectedInfluenceRestaurant === r.id ? null : r.id
+                        )
+                      }
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${
+                        selectedInfluenceRestaurant === r.id
+                          ? "bg-gray-200 ring-1 ring-gray-400"
+                          : selectedInfluenceRestaurant
+                            ? "opacity-40 hover:opacity-70"
+                            : "hover:bg-gray-100"
+                      }`}
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full border border-white shadow-sm"
+                        style={{ backgroundColor: color }}
+                      />
+                      <span className="text-xs text-gray-700 font-medium">{truncateName(r.name, 18)}</span>
+                    </button>
+                  );
+                })}
               </div>
             </StatsChartCard>
           )}

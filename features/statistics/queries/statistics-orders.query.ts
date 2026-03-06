@@ -10,6 +10,9 @@ import {
   getOrdersByRestaurantAndSource,
   getOrdersDailyTrend,
   getClientZones,
+  getDailyTrendByRestaurant,
+  getRestaurantsLocations,
+  getInfluenceZones,
 } from '../apis/statistics-orders.api';
 import { OrdersStatsQueryParams } from '../types/orders-stats.types';
 
@@ -26,6 +29,9 @@ export const statsOrdersKeys = {
   byRestaurantAndSource: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'by-restaurant-and-source', params] as const,
   dailyTrend: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'daily-trend', params] as const,
   clientZones: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'client-zones', params] as const,
+  dailyTrendByRestaurant: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'daily-trend-by-restaurant', params] as const,
+  restaurantsLocations: () => ['stats', 'orders', 'restaurants-locations'] as const,
+  influenceZones: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'influence-zones', params] as const,
 };
 
 // ---- Hooks ----
@@ -127,6 +133,36 @@ export const useClientZonesQuery = (params: OrdersStatsQueryParams = {}, enabled
   useQuery({
     queryKey: statsOrdersKeys.clientZones(params),
     queryFn: () => getClientZones(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useDailyTrendByRestaurantQuery = (params: OrdersStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsOrdersKeys.dailyTrendByRestaurant(params),
+    queryFn: () => getDailyTrendByRestaurant(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useRestaurantsLocationsQuery = (enabled = true) =>
+  useQuery({
+    queryKey: statsOrdersKeys.restaurantsLocations(),
+    queryFn: () => getRestaurantsLocations(),
+    enabled,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useInfluenceZonesQuery = (params: OrdersStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsOrdersKeys.influenceZones(params),
+    queryFn: () => getInfluenceZones(params),
     enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

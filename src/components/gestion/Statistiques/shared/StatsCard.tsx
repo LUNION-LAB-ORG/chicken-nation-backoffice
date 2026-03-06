@@ -18,13 +18,18 @@ interface StatsCardProps {
   subtitle?: string;
   trend?: { label: string; color: string; arrow: string };
   color?: CardColor;
+  onClick?: () => void;
+  active?: boolean;
 }
 
-export default function StatsCard({ title, value, subtitle, trend, color = "orange" }: StatsCardProps) {
+export default function StatsCard({ title, value, subtitle, trend, color = "orange", onClick, active }: StatsCardProps) {
   const c = colorMap[color];
 
   return (
-    <div className={`${c.bg} ${c.border} border rounded-2xl p-4`}>
+    <div
+      className={`${c.bg} ${c.border} border rounded-2xl p-4 ${onClick ? "cursor-pointer transition-all hover:shadow-md" : ""} ${active ? "ring-2 ring-[#F17922] ring-offset-1 shadow-md" : ""}`}
+      onClick={onClick}
+    >
       <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
       <p className={`text-2xl font-bold ${c.text} mt-1`}>{value}</p>
       <div className="flex items-center justify-between mt-1">

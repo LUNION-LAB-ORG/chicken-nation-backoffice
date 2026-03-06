@@ -187,3 +187,57 @@ export interface OrdersDailyTrendResponse {
   totalOrders: number;
   totalRevenue: number;
 }
+
+// ----- Tendance par Restaurant (histogramme empilé) -----
+export interface RestaurantMetrics {
+  count: number;
+  revenue: number;
+  avgBasket: number;
+  onTimeRate: number;
+}
+
+export interface DailyTrendByRestaurantPoint {
+  date: string;
+  label: string;
+  byRestaurant: Record<string, RestaurantMetrics>;
+  total: RestaurantMetrics;
+}
+
+export interface RestaurantInfo {
+  id: string;
+  name: string;
+}
+
+export interface DailyTrendByRestaurantResponse {
+  restaurants: RestaurantInfo[];
+  data: DailyTrendByRestaurantPoint[];
+}
+
+// ----- Restaurants Locations -----
+export interface RestaurantLocationItem {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  image: string;
+  address: string;
+}
+
+export interface RestaurantsLocationsResponse {
+  restaurants: RestaurantLocationItem[];
+}
+
+// ----- Zones d'influence restaurants -----
+export interface InfluenceZonePoint {
+  lat: number;
+  lng: number;
+  restaurantId: string;
+  count: number;
+}
+
+export interface InfluenceZonesResponse {
+  restaurants: RestaurantInfo[];
+  points: InfluenceZonePoint[];
+  totalOrders: number;
+  center: { lat: number; lng: number };
+}

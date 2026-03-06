@@ -11,6 +11,9 @@ import {
   OrdersByRestaurantAndSourceResponse,
   OrdersDailyTrendResponse,
   ClientZonesResponse,
+  DailyTrendByRestaurantResponse,
+  RestaurantsLocationsResponse,
+  InfluenceZonesResponse,
 } from '../types/orders-stats.types';
 
 function buildQueryString(params: Record<string, string | number | undefined>): string {
@@ -122,4 +125,31 @@ export async function getOrdersDailyTrend(
 ): Promise<OrdersDailyTrendResponse> {
   const qs = buildQueryString(params as Record<string, string | number | undefined>);
   return api.get<OrdersDailyTrendResponse>(`/statistics/orders/daily-trend${qs}`);
+}
+
+/**
+ * Tendance par restaurant : histogramme empilé (count, revenue, avgBasket, onTimeRate).
+ */
+export async function getDailyTrendByRestaurant(
+  params: OrdersStatsQueryParams = {},
+): Promise<DailyTrendByRestaurantResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<DailyTrendByRestaurantResponse>(`/statistics/orders/daily-trend-by-restaurant${qs}`);
+}
+
+/**
+ * Positions des restaurants (lat/lng) pour les marqueurs carte.
+ */
+export async function getRestaurantsLocations(): Promise<RestaurantsLocationsResponse> {
+  return api.get<RestaurantsLocationsResponse>('/statistics/orders/restaurants-locations');
+}
+
+/**
+ * Zones d'influence : livraisons associées au restaurant (carte couleur).
+ */
+export async function getInfluenceZones(
+  params: OrdersStatsQueryParams = {},
+): Promise<InfluenceZonesResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<InfluenceZonesResponse>(`/statistics/orders/influence-zones${qs}`);
 }
