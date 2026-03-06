@@ -107,3 +107,41 @@ export interface TopProductByZoneItem {
 export interface ProductsByZoneResponse {
   items: TopProductByZoneItem[];
 }
+
+// ----- Tendance des ventes -----
+export interface SalesTrendDailyPoint {
+  date: string;
+  label: string;
+  totalQuantity: number;
+  totalRevenue: number;
+}
+
+export interface SalesTrendResponse {
+  dailyData: SalesTrendDailyPoint[];
+  totalQuantity: number;
+  totalRevenue: number;
+}
+
+// ----- Canal de vente -----
+export interface ChannelBreakdownResponse {
+  appSold: number;
+  appRevenue: number;
+  callCenterSold: number;
+  callCenterRevenue: number;
+  appPercentage: number;
+  callCenterPercentage: number;
+  totalSold: number;
+}
+
+// ----- Performance Promotions -----
+export interface PromotionPerformanceResponse {
+  promoDishCount: number;
+  promoTotalSold: number;
+  promoRevenue: number;
+  promoAvgBasket: number;
+  regularDishCount: number;
+  regularTotalSold: number;
+  regularRevenue: number;
+  regularAvgBasket: number;
+  promoRevenueShare: number;
+}

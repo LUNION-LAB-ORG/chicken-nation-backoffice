@@ -138,3 +138,49 @@ export interface ClientAnalyticsProfileResponse {
   loyaltyLevel: string;
   loyaltyPoints: number;
 }
+
+// ----- Répartition Fidélité -----
+export interface LoyaltyLevelItem {
+  level: string;
+  clientCount: number;
+  percentage: number;
+  averageRevenue: number;
+}
+
+export interface LoyaltyDistributionResponse {
+  items: LoyaltyLevelItem[];
+  totalClients: number;
+}
+
+// ----- Méthode de Paiement -----
+export interface PaymentMethodItem {
+  method: string;
+  clientCount: number;
+  orderCount: number;
+  percentage: number;
+  revenue: number;
+}
+
+export interface PaymentMethodDistributionResponse {
+  items: PaymentMethodItem[];
+  totalClients: number;
+}
+
+// ----- Concentration du CA (Pareto) -----
+export interface RevenueConcentrationResponse {
+  top10Percentage: number;
+  top20Percentage: number;
+  top50Percentage: number;
+  totalRevenue: number;
+  totalClients: number;
+}
+
+// ----- Panier Moyen Nouveaux vs Récurrents -----
+export interface BasketComparisonResponse {
+  newClientsBasket: number;
+  recurringClientsBasket: number;
+  newClientsRevenue: number;
+  recurringClientsRevenue: number;
+  newClientsOrders: number;
+  recurringClientsOrders: number;
+}

@@ -7,6 +7,9 @@ import {
   ProductComparisonResponse,
   ProductsByRestaurantResponse,
   ProductsByZoneResponse,
+  SalesTrendResponse,
+  ChannelBreakdownResponse,
+  PromotionPerformanceResponse,
 } from '../types/products-stats.types';
 
 function buildQueryString(params: Record<string, string | number | undefined>): string {
@@ -64,4 +67,34 @@ export async function getProductsByZone(
 ): Promise<ProductsByZoneResponse> {
   const qs = buildQueryString(params as Record<string, string | number | undefined>);
   return api.get<ProductsByZoneResponse>(`/statistics/products/by-zone${qs}`);
+}
+
+/**
+ * Tendance des ventes quotidiennes (quantité + CA).
+ */
+export async function getSalesTrend(
+  params: ProductsStatsQueryParams = {},
+): Promise<SalesTrendResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<SalesTrendResponse>(`/statistics/products/sales-trend${qs}`);
+}
+
+/**
+ * Répartition des ventes par canal (App vs Call Center).
+ */
+export async function getChannelBreakdown(
+  params: ProductsStatsQueryParams = {},
+): Promise<ChannelBreakdownResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<ChannelBreakdownResponse>(`/statistics/products/channel-breakdown${qs}`);
+}
+
+/**
+ * Performance des produits en promotion vs réguliers.
+ */
+export async function getPromotionPerformance(
+  params: ProductsStatsQueryParams = {},
+): Promise<PromotionPerformanceResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<PromotionPerformanceResponse>(`/statistics/products/promotion-performance${qs}`);
 }

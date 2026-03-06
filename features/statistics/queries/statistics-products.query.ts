@@ -5,6 +5,9 @@ import {
   getProductsComparison,
   getProductsByRestaurant,
   getProductsByZone,
+  getSalesTrend,
+  getChannelBreakdown,
+  getPromotionPerformance,
 } from '../apis/statistics-products.api';
 import {
   ProductsStatsQueryParams,
@@ -19,6 +22,9 @@ export const statsProductsKeys = {
   comparison: (params?: ProductsComparisonQueryParams) => ['stats', 'products', 'comparison', params] as const,
   byRestaurant: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'by-restaurant', params] as const,
   byZone: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'by-zone', params] as const,
+  salesTrend: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'sales-trend', params] as const,
+  channelBreakdown: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'channel-breakdown', params] as const,
+  promotionPerformance: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'promotion-performance', params] as const,
 };
 
 // ---- Hooks ----
@@ -73,6 +79,36 @@ export const useProductsByZoneQuery = (params: ProductsStatsQueryParams = {}, en
   useQuery({
     queryKey: statsProductsKeys.byZone(params),
     queryFn: () => getProductsByZone(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useSalesTrendQuery = (params: ProductsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsProductsKeys.salesTrend(params),
+    queryFn: () => getSalesTrend(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useChannelBreakdownQuery = (params: ProductsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsProductsKeys.channelBreakdown(params),
+    queryFn: () => getChannelBreakdown(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const usePromotionPerformanceQuery = (params: ProductsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsProductsKeys.promotionPerformance(params),
+    queryFn: () => getPromotionPerformance(params),
     enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

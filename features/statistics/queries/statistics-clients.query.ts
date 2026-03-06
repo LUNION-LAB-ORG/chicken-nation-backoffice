@@ -7,6 +7,10 @@ import {
   getInactiveClients,
   getClientsByZone,
   getClientAnalyticsProfile,
+  getLoyaltyDistribution,
+  getPaymentMethodDistribution,
+  getRevenueConcentration,
+  getBasketComparison,
 } from '../apis/statistics-clients.api';
 import {
   ClientsStatsQueryParams,
@@ -23,6 +27,10 @@ export const statsClientsKeys = {
   inactive: (params?: InactiveClientsQueryParams) => ['stats', 'clients', 'inactive', params] as const,
   byZone: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'by-zone', params] as const,
   profile: (clientId: string) => ['stats', 'clients', 'profile', clientId] as const,
+  loyaltyDistribution: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'loyalty-distribution', params] as const,
+  paymentMethods: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'payment-methods', params] as const,
+  revenueConcentration: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'revenue-concentration', params] as const,
+  basketComparison: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'basket-comparison', params] as const,
 };
 
 // ---- Hooks ----
@@ -92,6 +100,46 @@ export const useClientAnalyticsProfileQuery = (clientId: string, enabled = true)
     queryKey: statsClientsKeys.profile(clientId),
     queryFn: () => getClientAnalyticsProfile(clientId),
     enabled: !!clientId && enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useLoyaltyDistributionQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsClientsKeys.loyaltyDistribution(params),
+    queryFn: () => getLoyaltyDistribution(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const usePaymentMethodDistributionQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsClientsKeys.paymentMethods(params),
+    queryFn: () => getPaymentMethodDistribution(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useRevenueConcentrationQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsClientsKeys.revenueConcentration(params),
+    queryFn: () => getRevenueConcentration(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+
+export const useBasketComparisonQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsClientsKeys.basketComparison(params),
+    queryFn: () => getBasketComparison(params),
+    enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     retry: 2,

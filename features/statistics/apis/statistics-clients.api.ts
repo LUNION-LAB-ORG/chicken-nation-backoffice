@@ -9,6 +9,10 @@ import {
   InactiveClientsResponse,
   ClientsByZoneResponse,
   ClientAnalyticsProfileResponse,
+  LoyaltyDistributionResponse,
+  PaymentMethodDistributionResponse,
+  RevenueConcentrationResponse,
+  BasketComparisonResponse,
 } from '../types/clients-stats.types';
 
 function buildQueryString(params: Record<string, string | number | undefined>): string {
@@ -80,6 +84,46 @@ export async function getClientsByZone(
 ): Promise<ClientsByZoneResponse> {
   const qs = buildQueryString(params as Record<string, string | number | undefined>);
   return api.get<ClientsByZoneResponse>(`/statistics/clients/by-zone${qs}`);
+}
+
+/**
+ * Répartition par niveau de fidélité (STANDARD / PREMIUM / GOLD).
+ */
+export async function getLoyaltyDistribution(
+  params: ClientsStatsQueryParams = {},
+): Promise<LoyaltyDistributionResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<LoyaltyDistributionResponse>(`/statistics/clients/loyalty-distribution${qs}`);
+}
+
+/**
+ * Répartition par méthode de paiement.
+ */
+export async function getPaymentMethodDistribution(
+  params: ClientsStatsQueryParams = {},
+): Promise<PaymentMethodDistributionResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<PaymentMethodDistributionResponse>(`/statistics/clients/payment-methods${qs}`);
+}
+
+/**
+ * Concentration du CA (Pareto) : top 10/20/50%.
+ */
+export async function getRevenueConcentration(
+  params: ClientsStatsQueryParams = {},
+): Promise<RevenueConcentrationResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<RevenueConcentrationResponse>(`/statistics/clients/revenue-concentration${qs}`);
+}
+
+/**
+ * Panier moyen : nouveaux clients vs récurrents.
+ */
+export async function getBasketComparison(
+  params: ClientsStatsQueryParams = {},
+): Promise<BasketComparisonResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<BasketComparisonResponse>(`/statistics/clients/basket-comparison${qs}`);
 }
 
 /**
