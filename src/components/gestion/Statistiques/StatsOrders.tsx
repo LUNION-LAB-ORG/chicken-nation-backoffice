@@ -66,6 +66,7 @@ import {
   AXIS_STYLE,
   GRID_STYLE,
   RESTAURANT_COLORS,
+  TOOLTIP_CONTAINER_STYLE,
 } from "../../../../features/statistics/utils/chart-config";
 import StatsPeriodFilter from "./shared/StatsPeriodFilter";
 import StatsCard from "./shared/StatsCard";
@@ -120,7 +121,12 @@ const METRIC_CONFIG: Record<MetricType, { label: string; format: (v: number) => 
 };
 
 // === Helper: Generate SVG marker icon ===
-function getRestaurantMarkerIcon(color: string, size = 32) {
+function getRestaurantMarkerIcon(color: string, size = 32, selected = false) {
+  if (selected) {
+    // Selected : meme couleur, contour blanc epais + halo colore
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="-2 -2 28 28"><circle cx="12" cy="9" r="10" fill="none" stroke="${color}" stroke-width="2.5" opacity="0.35"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="${color}" stroke="white" stroke-width="2.5"/></svg>`;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
@@ -138,6 +144,48 @@ function StackedBarLegend({ items }: { items: { label: string; color: string }[]
           <span className="text-xs text-gray-600">{item.label}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// === Custom tooltip pour histogramme empile avec total ===
+function StackedBarTooltip({
+  active,
+  payload,
+  label,
+  metric,
+}: {
+  active?: boolean;
+  payload?: Array<{ name?: string; value?: number; color?: string }>;
+  label?: string;
+  metric: MetricType;
+}) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  const total = payload.reduce((sum, entry) => sum + (entry.value ?? 0), 0);
+  const formatter = METRIC_CONFIG[metric].format;
+
+  return (
+    <div style={TOOLTIP_CONTAINER_STYLE}>
+      {label && (
+        <p className="text-xs font-medium text-gray-900 mb-1.5">{label}</p>
+      )}
+      <div className="space-y-1">
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center gap-2 text-xs">
+            <span
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="text-gray-500 flex-1 truncate max-w-[140px]">{entry.name}</span>
+            <span className="font-semibold text-gray-900 whitespace-nowrap">{formatter(entry.value ?? 0)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 pt-1.5 border-t border-gray-200 flex items-center justify-between text-xs">
+        <span className="font-semibold text-gray-700">Total</span>
+        <span className="font-bold text-gray-900">{formatter(total)}</span>
+      </div>
     </div>
   );
 }
@@ -338,14 +386,6 @@ export default function StatsOrders() {
     return mapCenter;
   }, [influenceZones.data, mapCenter]);
 
-  // Tooltip formatter pour le bar chart
-  const barTooltipFormatter = useCallback(
-    (value: number) => {
-      return METRIC_CONFIG[selectedMetric].format(value);
-    },
-    [selectedMetric]
-  );
-
   // YAxis formatter
   const yAxisFormatter = useCallback(
     (value: number) => {
@@ -470,9 +510,7 @@ export default function StatsOrders() {
                         />
                         <Tooltip
                           content={
-                            <ChartTooltip
-                              valueFormatter={barTooltipFormatter}
-                            />
+                            <StackedBarTooltip metric={selectedMetric} />
                           }
                         />
                         {barChartRestaurants.map((restaurant, index) => {
@@ -891,15 +929,18 @@ export default function StatsOrders() {
                   {restaurantsLocations.data?.restaurants?.map((restaurant) => {
                     const color = restaurantColorMap.get(restaurant.id) ?? CHART_COLORS.primary;
                     const isSelected = selectedMapRestaurant === restaurant.id;
+                    // Quand non selectionne et qu'un filtre est actif, on rend le marqueur semi-transparent
+                    const isFiltered = selectedMapRestaurant !== null && !isSelected;
                     return (
                       <MarkerF
                         key={restaurant.id}
                         position={{ lat: restaurant.latitude, lng: restaurant.longitude }}
                         icon={{
-                          url: getRestaurantMarkerIcon(isSelected ? '#000000' : color, isSelected ? 40 : 32),
-                          scaledSize: new google.maps.Size(isSelected ? 40 : 32, isSelected ? 40 : 32),
-                          anchor: new google.maps.Point(isSelected ? 20 : 16, isSelected ? 40 : 32),
+                          url: getRestaurantMarkerIcon(color, isSelected ? 44 : 32, isSelected),
+                          scaledSize: new google.maps.Size(isSelected ? 44 : 32, isSelected ? 44 : 32),
+                          anchor: new google.maps.Point(isSelected ? 22 : 16, isSelected ? 44 : 32),
                         }}
+                        opacity={isFiltered ? 0.4 : 1}
                         onClick={() => {
                           setSelectedMapRestaurant(
                             selectedMapRestaurant === restaurant.id ? null : restaurant.id
