@@ -905,7 +905,7 @@ export default function StatsOrders() {
             >
               {mapsLoaded ? (
                 <GoogleMap
-                  mapContainerStyle={{ ...MAP_CONTAINER_STYLE, height: fullScreen ? `${window.innerHeight - 200}px` : '400px' }}
+                  mapContainerStyle={{ ...MAP_CONTAINER_STYLE, height: fullScreen ? `650px` : '400px' }}
                   center={mapCenter}
                   zoom={12}
                   options={MAP_OPTIONS}
@@ -1029,7 +1029,7 @@ export default function StatsOrders() {
                 <GoogleMap
                   mapContainerStyle={{
                     ...MAP_CONTAINER_STYLE,
-                    height: fullScreenInfluence ? `${window.innerHeight - 200}px` : '450px',
+                    height: fullScreenInfluence ? `650px` : '450px',
                   }}
                   center={influenceMapCenter}
                   zoom={12}
