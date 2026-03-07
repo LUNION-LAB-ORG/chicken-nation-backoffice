@@ -643,42 +643,8 @@ export default function StatsOrders() {
           {/* SECTION 5 : Par Restaurant (2 charts)     */}
           {/* ========================================== */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* 5A - Par Restaurant et Source */}
-            {byRestaurantAndSource.data && sourceRestaurantData.length > 0 && (
-              <StatsChartCard
-                title="Restaurants par Source"
-                subtitle={`Top ${sourceRestaurantData.length} restaurants (App vs Call Center)`}
-                icon={Smartphone}
-              >
-                <div className="h-87">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={sourceRestaurantData} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
-                      <CartesianGrid {...GRID_STYLE} horizontal={false} />
-                      <XAxis type="number" tick={AXIS_STYLE} tickLine={false} axisLine={false} allowDecimals={false} />
-                      <YAxis type="category" dataKey="name" tick={{ ...AXIS_STYLE, fontSize: 11 }} tickLine={false} axisLine={false} width={180} />
-                      <Tooltip
-                        content={
-                          <ChartTooltip
-                            payloadLabelKey="fullName"
-                            valueFormatter={(value) => `${formatNumber(value)} cmd.`}
-                          />
-                        }
-                      />
-                      <Bar dataKey="App" stackId="source" fill={CHART_COLORS.primary} radius={[0, 0, 0, 0]} barSize={20} />
-                      <Bar dataKey="Call Center" stackId="source" fill={CHART_COLORS.blue} radius={[0, 4, 4, 0]} barSize={20}>
-                        <LabelList dataKey="total" position="right" style={{ fontSize: 10, fill: CHART_COLORS.textSecondary, fontWeight: 600 }} />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-                <StackedBarLegend items={[
-                  { label: "App", color: CHART_COLORS.primary },
-                  { label: "Call Center", color: CHART_COLORS.blue },
-                ]} />
-              </StatsChartCard>
-            )}
 
-            {/* 5B - Par Restaurant et Type */}
+            {/* 5A - Par Restaurant et Type */}
             {byRestaurantAndType.data && stackedRestaurantData.length > 0 && (
               <StatsChartCard
                 title="Restaurants par Type de Commande"
@@ -714,6 +680,42 @@ export default function StatsOrders() {
                 ]} />
               </StatsChartCard>
             )}
+
+            {/* 5B - Par Restaurant et Source */}
+            {byRestaurantAndSource.data && sourceRestaurantData.length > 0 && (
+              <StatsChartCard
+                title="Restaurants par Source"
+                subtitle={`Top ${sourceRestaurantData.length} restaurants (App vs Call Center)`}
+                icon={Smartphone}
+              >
+                <div className="h-87">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={sourceRestaurantData} layout="vertical" margin={{ top: 5, right: 40, left: 10, bottom: 5 }}>
+                      <CartesianGrid {...GRID_STYLE} horizontal={false} />
+                      <XAxis type="number" tick={AXIS_STYLE} tickLine={false} axisLine={false} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ ...AXIS_STYLE, fontSize: 11 }} tickLine={false} axisLine={false} width={180} />
+                      <Tooltip
+                        content={
+                          <ChartTooltip
+                            payloadLabelKey="fullName"
+                            valueFormatter={(value) => `${formatNumber(value)} cmd.`}
+                          />
+                        }
+                      />
+                      <Bar dataKey="App" stackId="source" fill={CHART_COLORS.primary} radius={[0, 0, 0, 0]} barSize={20} />
+                      <Bar dataKey="Call Center" stackId="source" fill={CHART_COLORS.blue} radius={[0, 4, 4, 0]} barSize={20}>
+                        <LabelList dataKey="total" position="right" style={{ fontSize: 10, fill: CHART_COLORS.textSecondary, fontWeight: 600 }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <StackedBarLegend items={[
+                  { label: "App", color: CHART_COLORS.primary },
+                  { label: "Call Center", color: CHART_COLORS.blue },
+                ]} />
+              </StatsChartCard>
+            )}
+
           </div>
 
           {/* ========================================== */}
