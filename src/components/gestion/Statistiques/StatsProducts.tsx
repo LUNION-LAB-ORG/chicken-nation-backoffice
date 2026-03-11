@@ -25,6 +25,7 @@ import {
   BarChart,
   Bar,
   LabelList,
+  Legend,
 } from "recharts";
 import { useDashboardStore } from "@/store/dashboardStore";
 import {
@@ -50,6 +51,7 @@ import {
   CHART_COLORS,
   AXIS_STYLE,
   GRID_STYLE,
+  CHANNEL_COLORS,
 } from "../../../../features/statistics/utils/chart-config";
 import StatsPeriodFilter from "./shared/StatsPeriodFilter";
 import StatsCard from "./shared/StatsCard";
@@ -137,7 +139,7 @@ export default function StatsProducts() {
       ]
     : [];
 
-  // ---- BarChart top produits ----
+  // ---- BarChart top produits (empilé par source) ----
   const topProductsBarData = (topProducts.data?.items ?? [])
     .slice(0, 10)
     .map((item) => ({
@@ -146,6 +148,9 @@ export default function StatsProducts() {
       totalSold: item.totalSold,
       revenue: item.revenue,
       percentage: item.percentage,
+      app: item.sourceBreakdown?.app ?? item.totalSold,
+      callCenter: item.sourceBreakdown?.callCenter ?? 0,
+      hubrise: item.sourceBreakdown?.hubrise ?? 0,
     }));
 
   return (
@@ -359,14 +364,15 @@ export default function StatsProducts() {
             >
               <div
                 style={{
-                  height: Math.max(280, topProductsBarData.length * 38),
+                  height: Math.max(320, topProductsBarData.length * 42),
                 }}
               >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={topProductsBarData}
                     layout="vertical"
-                    margin={{ top: 5, right: 60, left: 10, bottom: 5 }}
+                    margin={{ top: 5, right: 70, left: 10, bottom: 20 }}
+                    stackOffset="none"
                   >
                     <CartesianGrid {...GRID_STYLE} horizontal={false} />
                     <XAxis
@@ -388,18 +394,41 @@ export default function StatsProducts() {
                       content={
                         <ChartTooltip
                           payloadLabelKey="fullName"
-                          valueFormatter={(v, name) => {
-                            if (name === "Vendus")
-                              return `${formatNumber(v)} plats`;
-                            return formatNumber(v);
-                          }}
+                          valueFormatter={(v, name) =>
+                            `${formatNumber(v)} plats`
+                          }
                         />
                       }
                     />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={24}
+                      iconType="circle"
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                    />
+                    {/* Barre empilée : App (orange) */}
                     <Bar
-                      dataKey="totalSold"
-                      name="Vendus"
-                      fill={CHART_COLORS.primary}
+                      dataKey="app"
+                      name="App"
+                      stackId="source"
+                      fill={CHANNEL_COLORS.app}
+                      barSize={24}
+                    />
+                    {/* Barre empilée : Call Center (bleu) */}
+                    <Bar
+                      dataKey="callCenter"
+                      name="Call Center"
+                      stackId="source"
+                      fill={CHANNEL_COLORS.callCenter}
+                      barSize={24}
+                    />
+                    {/* Barre empilée : HubRise (violet) — dernier = bord arrondi droit */}
+                    {/* <Bar
+                      dataKey="hubrise"
+                      name="HubRise"
+                      stackId="source"
+                      fill={CHART_COLORS.purple}
                       radius={[0, 6, 6, 0]}
                       barSize={24}
                     >
@@ -413,7 +442,7 @@ export default function StatsProducts() {
                         }}
                         formatter={(v: number) => `${v} plats`}
                       />
-                    </Bar>
+                    </Bar> */}
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -21,6 +21,13 @@ export interface ProductsComparisonQueryParams {
   limit?: number;
 }
 
+// ----- Répartition par source -----
+export interface SourceBreakdown {
+  app: number;
+  callCenter: number;
+  hubrise: number;
+}
+
 // ----- Top Produits -----
 export interface TopProductItem {
   id: string;
@@ -32,6 +39,7 @@ export interface TopProductItem {
   percentage: number;
   previousPeriodSold?: number;
   evolution?: string;
+  sourceBreakdown: SourceBreakdown;
 }
 
 export interface TopProductsResponse {

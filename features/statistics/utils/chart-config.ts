@@ -52,6 +52,7 @@ export const ORDER_TYPE_LABELS: Record<string, string> = {
 export const CHANNEL_COLORS = {
   app: CHART_COLORS.primary,
   callCenter: CHART_COLORS.blue,
+  hubrise: CHART_COLORS.purple,
 } as const;
 
 export const CHANNEL_LABELS: Record<string, string> = {
@@ -59,6 +60,8 @@ export const CHANNEL_LABELS: Record<string, string> = {
   App: 'App',
   callCenter: 'Call Center',
   'Call Center': 'Call Center',
+  hubrise: 'HubRise',
+  HubRise: 'HubRise',
 };
 
 // === Couleurs par statut de ponctualité ===

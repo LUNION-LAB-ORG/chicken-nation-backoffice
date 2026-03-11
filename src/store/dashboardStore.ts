@@ -11,7 +11,9 @@ export type TabKey =
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
-  | 'stats_delivery' | 'stats_marketing';
+  | 'stats_delivery' | 'stats_marketing'
+  // Intégrations
+  | 'hubrise';
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
@@ -55,6 +57,8 @@ export interface DashboardState {
   stats_clients: SectionState;
   stats_delivery: SectionState;
   stats_marketing: SectionState;
+  // Intégrations
+  hubrise: SectionState;
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
@@ -85,6 +89,8 @@ const SECTION_KEYS: TabKey[] = [
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing',
+  // Intégrations
+  'hubrise',
 ];
 
 // --- STORE ---
@@ -116,6 +122,8 @@ export const useDashboardStore = create<DashboardState>()(
       stats_clients: createInitialSectionState(),
       stats_delivery: createInitialSectionState(),
       stats_marketing: createInitialSectionState(),
+      // Intégrations
+      hubrise: createInitialSectionState(),
 
       // Actions Globales
       setActiveTab: (tab) => set((state) => {
