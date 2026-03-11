@@ -69,6 +69,11 @@ const modulesMap: Record<string, any> = {
     () => import("@/components/gestion/Statistiques/StatsMarketing"),
     { loading: () => <LoadingSpinner /> }
   ),
+
+  // ---- Intégrations ----
+  hubrise: dynamic(() => import("@/components/gestion/HubRise"), {
+    loading: () => <LoadingSpinner />,
+  }),
 };
 
 export default function DynamicModuleLoader() {

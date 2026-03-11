@@ -21,6 +21,7 @@ import {
   Users,
   Tag,
   BadgeDollarSign,
+  Link2,
 } from "lucide-react";
 
 import { useAuthStore } from "../../features/users/hook/authStore";
@@ -187,6 +188,12 @@ export const useGetMenuConfig = (): {
           canAccess: () => can(Modules.MARKETING, Action.READ),
         },
       ],
+    },
+    {
+      id: "hubrise",
+      label: "HubRise",
+      icon: Link2,
+      canAccess: () => can(Modules.RESTAURANTS, Action.READ),
     },
   ];
 
