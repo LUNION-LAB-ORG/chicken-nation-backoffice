@@ -232,3 +232,33 @@ export const exportReportOrdersToExcel = async (query: OrderQuery = {
         throw new Error(getHumanReadableError(error));
     }
 };
+
+export const exportRestaurantPdf = async (query: OrderQuery) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/export/restaurant-pdf', query);
+        const response = await fetch(url, { method: 'GET', headers });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Échec du téléchargement du rapport restaurant');
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+
+        // Extraire le nom de fichier depuis le header Content-Disposition si possible
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+        const filename = filenameMatch?.[1] || `rapport-restaurant-${new Date().getTime()}.pdf`;
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};

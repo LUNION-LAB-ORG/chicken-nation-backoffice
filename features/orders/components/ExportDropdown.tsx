@@ -3,13 +3,14 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { startOfMonth } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ChevronDown } from "lucide-react";
+import { FileText, ChevronDown, Store } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { dateRangeToLocalString } from "../../../utils/date/format-date";
 import { generateOrderReport } from "../lib/pdf/order-report-generator";
 import {
   exportReportOrdersToExcel,
+  exportRestaurantPdf,
   getAllOrders,
 } from "../services/order-service";
 import { OrderStatus, OrderType } from "../types/order.types";
@@ -139,6 +140,42 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     }
   };
 
+  const handleExportRestaurantPdf = async () => {
+    if (!selectedRestaurantId) {
+      toast.error("Veuillez sélectionner un restaurant pour générer ce rapport");
+      return;
+    }
+
+    const startDate = !filters?.startDate
+      ? startOfMonth(new Date())
+      : typeof filters?.startDate === "string"
+      ? new Date(filters?.startDate as string)
+      : (filters?.startDate as Date);
+
+    const endDate = !filters?.endDate
+      ? new Date()
+      : typeof filters?.endDate === "string"
+      ? new Date(filters?.endDate as string)
+      : (filters?.endDate as Date);
+
+    setIsExporting(true);
+    setIsOpen(false);
+
+    try {
+      await exportRestaurantPdf({
+        restaurantId: selectedRestaurantId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+      toast.success("Rapport restaurant PDF téléchargé avec succès");
+    } catch (error) {
+      console.error("Error exporting restaurant PDF:", error);
+      toast.error("Erreur lors de la génération du rapport restaurant");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
       <motion.button
@@ -195,13 +232,24 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
 
             <div className="border-t border-gray-100" />
 
-            {/* Bouton Export Excel - Tu peux ajouter ta logique */}
+            {/* Bouton Export Excel */}
             <button
               onClick={handleExportExcel}
               className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
             >
               <FileText size={18} className="text-green-600" />
               <span>Exporter en Excel</span>
+            </button>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Bouton Rapport Restaurant PDF */}
+            <button
+              onClick={handleExportRestaurantPdf}
+              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+            >
+              <Store size={18} className="text-orange-600" />
+              <span>Rapport Restaurant</span>
             </button>
           </motion.div>
         )}
