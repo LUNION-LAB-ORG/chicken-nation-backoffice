@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { OrderAlertsBar } from "./alerts/order-alerts-bar";
 import ExportDropdown from "./ExportDropdown";
 import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
+import { refreshOrders } from "../services/order-service";
+import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 function OrderHeader() {
   const {
@@ -16,6 +20,21 @@ function OrderHeader() {
   } = useDashboardStore();
 
   const { can } = useAuthStore();
+  const queryClient = useQueryClient();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refreshOrders();
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      toast.success("Commandes actualisées");
+    } catch {
+      toast.error("Erreur lors de l'actualisation");
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleSearch = (query: string) => {
     setFilter("orders", "search", query);
@@ -40,6 +59,17 @@ function OrderHeader() {
             realTimeSearch: true,
           }}
           actions={[
+            ...(can(Modules.COMMANDES, Action.READ)
+              ? [
+                  {
+                    label: isRefreshing ? "Actualisation..." : "Actualiser",
+                    onClick: handleRefresh,
+                    variant: "secondary" as const,
+                    className:
+                      "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
+                  },
+                ]
+              : []),
             ...(can(Modules.COMMANDES, Action.CREATE)
               ? [
                   {

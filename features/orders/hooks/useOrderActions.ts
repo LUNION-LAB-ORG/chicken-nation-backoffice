@@ -86,10 +86,30 @@ export const useOrderActions = () => {
       setSelectedItem("orders", order)
     }, [toggleModal, setSelectedItem])
 
+  // handle pour passer en mode édition de commande
+  const handleEditOrder = useCallback(
+    (order: OrderTable) => {
+      setSelectedItem("orders", order);
+      setSectionView("orders", "edit");
+    },
+    [setSelectedItem, setSectionView]
+  );
+
+  // handle pour ouvrir le modal de suppression
+  const handleDeleteOrder = useCallback(
+    (order: OrderTable) => {
+      setSelectedItem("orders", order);
+      toggleModal("orders", "to_delete");
+    },
+    [setSelectedItem, toggleModal]
+  );
+
   return {
     handleViewOrderDetails,
     handleOrderUpdateStatus,
     handlePrintOrder,
+    handleEditOrder,
+    handleDeleteOrder,
     isLoading: isUpdateStatusLoading || printingLoading,
     handleToggleOrderModal
   };

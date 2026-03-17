@@ -7,6 +7,7 @@ import Checkbox from "@/components/ui/Checkbox";
 import {
   OrderFormData,
   OrderItemFormData,
+  SupplementItem,
   SupplementOption,
 } from "../../types/order-form.types";
 import { Dish } from "../../../menus/types/dish.types";
@@ -14,8 +15,6 @@ import { useCategoryListQuery } from "../../../menus/queries/category/category-l
 import { useCategoryOneQuery } from "../../../menus/queries/category/category-one.query";
 import { Edit2, Trash } from "lucide-react";
 import { useDishListQuery } from "../../../menus/queries/dish-list.query";
-import { getParsedAddress } from "../../utils/getParsedAddress";
-import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
 import { OrderType } from "../../types/order.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
 
@@ -35,7 +34,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     useState<Dish | null>(null);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
   const [tempQuantity, setTempQuantity] = useState(1);
-  const [tempSupplements, setTempSupplements] = useState<string[]>([]);
+  const [tempSupplements, setTempSupplements] = useState<SupplementItem[]>([]);
   const [tempEpice, setTempEpice] = useState(false);
 
   // Récupérer tous les plats
@@ -60,7 +59,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
       newItems[editingItemIndex] = {
         dish_id: selectedDishForConfig.id,
         quantity: tempQuantity,
-        supplements_ids: tempSupplements,
+        supplements: tempSupplements.filter((s) => s.quantity > 0),
         epice: tempEpice,
       };
       onItemsChange(newItems);
@@ -72,7 +71,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         {
           dish_id: selectedDishForConfig.id,
           quantity: tempQuantity,
-          supplements_ids: tempSupplements,
+          supplements: tempSupplements.filter((s) => s.quantity > 0),
           epice: selectedDishForConfig.is_alway_epice ? true : tempEpice,
         },
       ]);
@@ -97,11 +96,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     setSelectedDishForConfig(dish);
     setEditingItemIndex(index);
     setTempQuantity(item.quantity);
-    setTempSupplements(item.supplements_ids);
+    setTempSupplements(item.supplements);
     setTempEpice(item.epice);
   };
 
   const getDishById = (dishId: string): Dish | undefined => {
+    if (!allDishes) return undefined;
     return allDishes.find((dish: Dish) => dish.id === dishId);
   };
 
@@ -145,14 +145,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         ? dish.promotion_price
         : dish.price;
 
-    const supplementsPrice = item.supplements_ids.reduce((sum, suppId) => {
+    const supplementsPrice = item.supplements.reduce((sum, supp) => {
       const supplement = dish.dish_supplements?.find(
-        (ds) => ds.supplement_id === suppId
+        (ds) => ds.supplement_id === supp.id
       )?.supplement;
-      return sum + (supplement?.price || 0);
+      return sum + (supplement?.price || 0) * supp.quantity;
     }, 0);
 
-    return (basePrice + supplementsPrice) * item.quantity;
+    return basePrice * item.quantity + supplementsPrice;
   };
 
   // Calculer le prix actuel en temps réel dans le modal
@@ -165,14 +165,40 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         ? selectedDishForConfig.promotion_price
         : selectedDishForConfig.price;
 
-    const supplementsPrice = tempSupplements.reduce((sum, suppId) => {
+    const supplementsPrice = tempSupplements.reduce((sum, supp) => {
       const supplement = selectedDishForConfig.dish_supplements?.find(
-        (ds) => ds.supplement_id === suppId
+        (ds) => ds.supplement_id === supp.id
       )?.supplement;
-      return sum + (supplement?.price || 0);
+      return sum + (supplement?.price || 0) * supp.quantity;
     }, 0);
 
-    return (basePrice + supplementsPrice) * tempQuantity;
+    return basePrice * tempQuantity + supplementsPrice;
+  };
+
+  // Helpers pour gérer la quantité des suppléments
+  const getSupplementQuantity = (suppId: string): number => {
+    const found = tempSupplements.find((s) => s.id === suppId);
+    return found ? found.quantity : 0;
+  };
+
+  const updateSupplementQuantity = (suppId: string, delta: number) => {
+    const existing = tempSupplements.find((s) => s.id === suppId);
+    if (existing) {
+      const newQty = existing.quantity + delta;
+      if (newQty <= 0) {
+        // Supprimer le supplément
+        setTempSupplements(tempSupplements.filter((s) => s.id !== suppId));
+      } else {
+        setTempSupplements(
+          tempSupplements.map((s) =>
+            s.id === suppId ? { ...s, quantity: newQty } : s
+          )
+        );
+      }
+    } else if (delta > 0) {
+      // Ajouter un nouveau supplément
+      setTempSupplements([...tempSupplements, { id: suppId, quantity: delta }]);
+    }
   };
 
   const totalCart = items.reduce(
@@ -186,17 +212,10 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     ACCESSORY: { label: "🍟 Suppléments", icon: "🍟" },
   };
 
-  // Récuparation des frais de livraison
-  const adresse = getParsedAddress(formData.address);
-  const { data: deliveryFee } = useDeliveryFeeQuery(
-    adresse
-      ? {
-          lat: adresse.latitude,
-          long: adresse.longitude,
-          restaurant_id: formData.restaurant_id || undefined,
-        }
-      : undefined
-  );
+  // Frais de livraison depuis le formData (auto-rempli par DeliveryInfoSection)
+  const isDelivery = formData.type === OrderType.DELIVERY;
+  const currentDeliveryFee = isDelivery ? (formData.delivery_fee || 0) : 0;
+  const grandTotal = totalCart + currentDeliveryFee;
 
   return (
     <div className="space-y-4">
@@ -434,7 +453,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 </div>
               </div>
 
-              {/* Suppléments groupés par catégorie */}
+              {/* Suppléments groupés par catégorie — avec sélecteur de quantité ± */}
               {(groupedSupplements.FOOD.length > 0 ||
                 groupedSupplements.DRINK.length > 0 ||
                 groupedSupplements.ACCESSORY.length > 0) && (
@@ -443,184 +462,75 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     Suppléments
                   </label>
 
-                  {/* Accompagnements */}
-                  {groupedSupplements.FOOD.length > 0 && (
-                    <div className="border-2 border-[#D9D9D9]/50 rounded-xl p-3">
-                      <h6 className="text-sm font-semibold text-[#595959] mb-2">
-                        {categoryLabels.FOOD.label}
-                      </h6>
-                      <div className="grid grid-cols-2 gap-2">
-                        {groupedSupplements.FOOD.map((supp) => (
-                          <motion.label
-                            key={supp.value}
-                            className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${
-                              tempSupplements.includes(supp.value)
-                                ? "border-[#F17922] bg-[#F17922]/10"
-                                : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={tempSupplements.includes(supp.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setTempSupplements([
-                                    ...tempSupplements,
-                                    supp.value,
-                                  ]);
-                                } else {
-                                  setTempSupplements(
-                                    tempSupplements.filter(
-                                      (id) => id !== supp.value
-                                    )
-                                  );
-                                }
-                              }}
-                              className="hidden"
-                            />
-                            {supp.image && (
-                              <Image
-                                src={supp.image}
-                                alt={supp.label}
-                                width={32}
-                                height={32}
-                                className="rounded object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-[#595959] truncate">
-                                {supp.label}
-                              </p>
-                              <p className="text-xs text-[#F17922] font-bold">
-                                +{supp.price} XOF
-                              </p>
-                            </div>
-                          </motion.label>
-                        ))}
+                  {(["FOOD", "DRINK", "ACCESSORY"] as const).map((cat) =>
+                    groupedSupplements[cat].length > 0 ? (
+                      <div key={cat} className="border-2 border-[#D9D9D9]/50 rounded-xl p-3">
+                        <h6 className="text-sm font-semibold text-[#595959] mb-2">
+                          {categoryLabels[cat].label}
+                        </h6>
+                        <div className="grid grid-cols-2 gap-2">
+                          {groupedSupplements[cat].map((supp) => {
+                            const qty = getSupplementQuantity(supp.value);
+                            return (
+                              <div
+                                key={supp.value}
+                                className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all ${
+                                  qty > 0
+                                    ? "border-[#F17922] bg-[#F17922]/10"
+                                    : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
+                                }`}
+                              >
+                                {supp.image && (
+                                  <Image
+                                    src={supp.image}
+                                    alt={supp.label}
+                                    width={32}
+                                    height={32}
+                                    className="rounded object-cover"
+                                  />
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-[#595959] truncate">
+                                    {supp.label}
+                                  </p>
+                                  <p className="text-xs text-[#F17922] font-bold">
+                                    {qty > 0
+                                      ? `+${supp.price * qty} XOF`
+                                      : `+${supp.price} XOF`}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => updateSupplementQuantity(supp.value, -1)}
+                                    className={`w-7 h-7 rounded-md font-semibold text-sm flex items-center justify-center ${
+                                      qty > 0
+                                        ? "bg-[#F17922] text-white"
+                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    }`}
+                                    whileTap={qty > 0 ? { scale: 0.9 } : undefined}
+                                    disabled={qty === 0}
+                                  >
+                                    −
+                                  </motion.button>
+                                  <span className="text-sm font-semibold text-[#595959] min-w-[20px] text-center">
+                                    {qty}
+                                  </span>
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => updateSupplementQuantity(supp.value, 1)}
+                                    className="w-7 h-7 bg-[#F17922] text-white rounded-md font-semibold text-sm flex items-center justify-center"
+                                    whileTap={{ scale: 0.9 }}
+                                  >
+                                    +
+                                  </motion.button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                  {/* Boissons */}
-                  {groupedSupplements.DRINK.length > 0 && (
-                    <div className="border-2 border-[#D9D9D9]/50 rounded-xl p-3">
-                      <h6 className="text-sm font-semibold text-[#595959] mb-2">
-                        {categoryLabels.DRINK.label}
-                      </h6>
-                      <div className="grid grid-cols-2 gap-2">
-                        {groupedSupplements.DRINK.map((supp) => (
-                          <motion.label
-                            key={supp.value}
-                            className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${
-                              tempSupplements.includes(supp.value)
-                                ? "border-[#F17922] bg-[#F17922]/10"
-                                : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={tempSupplements.includes(supp.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setTempSupplements([
-                                    ...tempSupplements,
-                                    supp.value,
-                                  ]);
-                                } else {
-                                  setTempSupplements(
-                                    tempSupplements.filter(
-                                      (id) => id !== supp.value
-                                    )
-                                  );
-                                }
-                              }}
-                              className="hidden"
-                            />
-                            {supp.image && (
-                              <Image
-                                src={supp.image}
-                                alt={supp.label}
-                                width={32}
-                                height={32}
-                                className="rounded object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-[#595959] truncate">
-                                {supp.label}
-                              </p>
-                              <p className="text-xs text-[#F17922] font-bold">
-                                +{supp.price} XOF
-                              </p>
-                            </div>
-                          </motion.label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Condiments */}
-                  {groupedSupplements.ACCESSORY.length > 0 && (
-                    <div className="border-2 border-[#D9D9D9]/50 rounded-xl p-3">
-                      <h6 className="text-sm font-semibold text-[#595959] mb-2">
-                        {categoryLabels.ACCESSORY.label}
-                      </h6>
-                      <div className="grid grid-cols-2 gap-2">
-                        {groupedSupplements.ACCESSORY.map((supp) => (
-                          <motion.label
-                            key={supp.value}
-                            className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer transition-all ${
-                              tempSupplements.includes(supp.value)
-                                ? "border-[#F17922] bg-[#F17922]/10"
-                                : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
-                            }`}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={tempSupplements.includes(supp.value)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setTempSupplements([
-                                    ...tempSupplements,
-                                    supp.value,
-                                  ]);
-                                } else {
-                                  setTempSupplements(
-                                    tempSupplements.filter(
-                                      (id) => id !== supp.value
-                                    )
-                                  );
-                                }
-                              }}
-                              className="hidden"
-                            />
-                            {supp.image && (
-                              <Image
-                                src={supp.image}
-                                alt={supp.label}
-                                width={32}
-                                height={32}
-                                className="rounded object-cover"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold text-[#595959] truncate">
-                                {supp.label}
-                              </p>
-                              <p className="text-xs text-[#F17922] font-bold">
-                                +{supp.price} XOF
-                              </p>
-                            </div>
-                          </motion.label>
-                        ))}
-                      </div>
-                    </div>
+                    ) : null
                   )}
                 </div>
               )}
@@ -683,12 +593,20 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
       {/* Panier */}
       {items.length > 0 && (
-        <div className="bg-white border-2 border-[#D9D9D9]/50 rounded-2xl p-4">
-          <h4 className="text-sm font-semibold text-[#595959] mb-3">
-            🛒 Panier ({items.length} article{items.length > 1 ? "s" : ""})
-          </h4>
+        <div className="bg-gradient-to-br from-white to-[#FFF8F3] border-2 border-[#F17922]/20 rounded-2xl overflow-hidden">
+          {/* Header du panier */}
+          <div className="bg-[#F17922] px-4 sm:px-6 py-3 flex items-center justify-between">
+            <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
+              <span>🛒</span>
+              Panier
+            </h4>
+            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
+              {items.length} article{items.length > 1 ? "s" : ""}
+            </span>
+          </div>
 
-          <div className="space-y-3">
+          {/* Liste des items */}
+          <div className="p-4 sm:p-6 space-y-3">
             {items.map((item, index) => {
               const dish = getDishById(item.dish_id);
               if (!dish) return null;
@@ -696,55 +614,62 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
               return (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex items-center gap-3 p-3 bg-[#F5F5F5] rounded-xl"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-[#D9D9D9]/30 shadow-sm hover:shadow-md transition-shadow"
                 >
                   {dish.image && (
                     <Image
                       src={formatImageUrl(dish.image)}
                       alt={dish.name}
-                      width={60}
-                      height={60}
-                      className="rounded-lg object-cover"
+                      width={72}
+                      height={72}
+                      className="rounded-xl object-cover w-16 h-16 sm:w-[72px] sm:h-[72px] flex-shrink-0"
                     />
                   )}
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-[#595959] text-sm truncate">
+                    <p className="font-bold text-[#595959] text-sm sm:text-base truncate">
                       {dish.name}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-600">
-                      <span>Qté: {item.quantity}</span>
-                      {item.epice && <span>🌶️</span>}
-                      {item.supplements_ids.length > 0 && (
-                        <span>+{item.supplements_ids.length} supp.</span>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                      <span className="inline-flex items-center bg-[#F5F5F5] text-[#595959] text-xs font-semibold px-2 py-0.5 rounded-md">
+                        x{item.quantity}
+                      </span>
+                      {item.epice && (
+                        <span className="inline-flex items-center bg-red-50 text-red-500 text-xs font-semibold px-2 py-0.5 rounded-md">
+                          🌶️ Épicé
+                        </span>
+                      )}
+                      {item.supplements.length > 0 && (
+                        <span className="inline-flex items-center bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-md">
+                          +{item.supplements.reduce((sum, s) => sum + s.quantity, 0)} supp.
+                        </span>
                       )}
                     </div>
-                    <p className="text-[#F17922] font-bold text-sm">
-                      {calculateItemTotal(item)} XOF
+                    <p className="text-[#F17922] font-bold text-sm sm:text-base mt-1">
+                      {calculateItemTotal(item).toLocaleString()} XOF
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col sm:flex-row items-center gap-1">
                     <motion.button
                       type="button"
                       onClick={() => editItem(index)}
-                      className="text-[#F17922] hover:text-[#F17922]/90 p-2"
-                      whileHover={{ scale: 1.1 }}
+                      className="text-[#F17922] hover:bg-[#F17922]/10 p-2 rounded-lg transition-colors"
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Edit2 size={20} />
+                      <Edit2 size={18} />
                     </motion.button>
                     <motion.button
                       type="button"
                       onClick={() => removeItem(index)}
-                      className="text-red-500 hover:text-red-700 p-2"
-                      whileHover={{ scale: 1.1 }}
+                      className="text-red-400 hover:bg-red-50 hover:text-red-600 p-2 rounded-lg transition-colors"
                       whileTap={{ scale: 0.9 }}
                     >
-                      <Trash size={20} />
+                      <Trash size={18} />
                     </motion.button>
                   </div>
                 </motion.div>
@@ -752,52 +677,62 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             })}
           </div>
 
-          <div className="mt-4 space-y-2 pt-4 border-t-2 border-[#D9D9D9]/50">
-            {formData.type == OrderType.DELIVERY && (
-              <>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-[#595959]">
-                    Sous-total
-                  </span>
-                  <span className="font-bold text-[#F17922]">
-                    {totalCart.toLocaleString()} XOF
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-[#595959]">
-                    Frais de livraison
-                  </span>
-                  <span className="font-bold text-[#F17922]">
-                    {formData?.delivery_fee
-                      ? formData?.delivery_fee?.toLocaleString()
-                      : (deliveryFee?.montant || 0).toLocaleString()}{" "}
-                    XOF
-                  </span>
-                </div>
-              </>
-            )}
+          {/* Résumé de prix */}
+          <div className="bg-white border-t-2 border-[#F17922]/10 px-4 sm:px-6 py-4 sm:py-6 space-y-3">
+            {/* Sous-total */}
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-[#595959]">
-                Total
+              <span className="text-sm sm:text-base text-[#71717A] font-medium">
+                Sous-total articles
               </span>
-              <span className="text-xl font-bold text-[#F17922]">
-                {(
-                  totalCart +
-                  (formData.type == OrderType.DELIVERY
-                    ? formData?.delivery_fee || deliveryFee?.montant || 0
-                    : 0)
-                ).toLocaleString()}{" "}
-                XOF
+              <span className="text-sm sm:text-base font-semibold text-[#595959]">
+                {totalCart.toLocaleString()} XOF
               </span>
+            </div>
+
+            {/* Frais de livraison */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm sm:text-base text-[#71717A] font-medium">
+                Frais de livraison
+              </span>
+              {isDelivery ? (
+                <span className="text-sm sm:text-base font-semibold text-[#595959]">
+                  {currentDeliveryFee > 0
+                    ? `${currentDeliveryFee.toLocaleString()} XOF`
+                    : "Non calculé"}
+                </span>
+              ) : (
+                <span className="text-sm sm:text-base font-semibold text-green-600">
+                  Non applicable
+                </span>
+              )}
+            </div>
+
+            {/* Séparateur */}
+            <div className="border-t-2 border-dashed border-[#D9D9D9]/50 my-2" />
+
+            {/* Total */}
+            <div className="flex justify-between items-center">
+              <span className="text-base sm:text-lg font-bold text-[#595959]">
+                Total à payer
+              </span>
+              <div className="text-right">
+                <span className="text-xl sm:text-2xl font-extrabold text-[#F17922]">
+                  {grandTotal.toLocaleString()}
+                </span>
+                <span className="text-sm sm:text-base font-bold text-[#F17922] ml-1">
+                  XOF
+                </span>
+              </div>
             </div>
           </div>
         </div>
       )}
 
       {items.length === 0 && (
-        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-[#D9D9D9]/50 rounded-2xl">
-          <p>🛒 Votre panier est vide</p>
-          <p className="text-sm mt-1">Sélectionnez des plats pour commencer</p>
+        <div className="text-center py-12 text-gray-400 border-2 border-dashed border-[#D9D9D9]/50 rounded-2xl bg-[#FAFAFA]">
+          <div className="text-4xl mb-3">🛒</div>
+          <p className="font-semibold text-[#595959]">Votre panier est vide</p>
+          <p className="text-sm mt-1 text-gray-400">Sélectionnez une catégorie puis ajoutez des plats</p>
         </div>
       )}
     </div>

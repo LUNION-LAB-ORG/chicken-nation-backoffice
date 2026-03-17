@@ -22,6 +22,7 @@ export enum Action {
   READ = 'read',
   CREATE = 'create',
   UPDATE = 'update',
+  UPDATE_FULL = 'update_full',
   DELETE = 'delete',
   IMPORT = 'import',
   REPORT = 'report',

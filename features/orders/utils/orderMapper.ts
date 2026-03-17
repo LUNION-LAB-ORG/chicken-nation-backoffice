@@ -144,8 +144,25 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
     const supplementNames = item.supplements?.map(s => s.name).join(", ") || "";
     const supplementsPrice = item.supplements?.reduce((sum, s) => sum + s.price, 0) || 0;
 
+    // Construire les données brutes des suppléments pour le mode édition
+    // On regroupe les suppléments identiques et on calcule leur quantité
+    const rawSupplements: { id: string; name: string; price: number; quantity: number }[] = [];
+    if (item.supplements) {
+      const suppMap = new Map<string, { id: string; name: string; price: number; quantity: number }>();
+      for (const s of item.supplements) {
+        const existing = suppMap.get(s.id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          suppMap.set(s.id, { id: s.id, name: s.name, price: s.price, quantity: 1 });
+        }
+      }
+      rawSupplements.push(...suppMap.values());
+    }
+
     return {
       id: item.id,
+      dishId: item.dish_id,
       name: item.dish?.name || "Article inconnu",
       quantity: item.quantity,
       price: item.amount,
@@ -153,6 +170,7 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
       epice: item.epice,
       supplements: supplementNames,
       supplementsPrice,
+      rawSupplements,
     };
   });
 };
@@ -196,6 +214,7 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
 
     // Livraison/Table
     address: extractAddress(order.address),
+    rawAddress: order.address,
     deliveryService: DELIVERY_SERVICE_MAP[order.delivery_service] || order.delivery_service,
     estimatedDeliveryTime: order.estimated_delivery_time,
     estimatedPreparationTime: order.estimated_preparation_time,
@@ -215,6 +234,9 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     paymentMethod: extractPaymentMethod(order.paiements),
     paymentSource: extractPaymentSource(order.paiements),
     paymentMode: extractPaymentMode(order.paiements),
+    // Commandes manuelles (auto=false) → toujours "Restaurant"
+    // Commandes OFFLINE → "Restaurant", ONLINE → "Appli"
+    paymentChannel: (!order.auto || order.payment_method === 'OFFLINE' || !order.payment_method) ? 'Restaurant' : 'Appli',
     paiements: order.paiements || [],
 
     // Bonus/Promo

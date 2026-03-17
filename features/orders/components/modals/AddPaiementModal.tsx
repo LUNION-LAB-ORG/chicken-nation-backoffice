@@ -96,9 +96,13 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
                     <div className="flex-1 space-y-4">
                       <CustomPaymentSelect
                         value={p.source}
-                        onChange={(newMode) => {
+                        onChange={(newSource) => {
                           const copy = [...paiements];
-                          copy[i].source = newMode;
+                          copy[i].source = newSource;
+                          copy[i].mode =
+                            paiementDataSelect.find(
+                              (opt) => opt.source === newSource
+                            )?.key ?? PaiementMode.CASH;
                           setPaiements(copy);
                         }}
                       />
@@ -115,9 +119,6 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
                           onChange={(e) => {
                             const copy = [...paiements];
                             copy[i].amount = Number(e.target.value);
-                            copy[i].mode = paiementDataSelect.find(
-                              (opt) => opt.source === copy[i].source
-                            )?.key;
                             setPaiements(copy);
                           }}
                         />

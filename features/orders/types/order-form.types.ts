@@ -1,10 +1,16 @@
 import { OrderType } from "./order.types";
 
+// ✅ SUPPLÉMENT AVEC QUANTITÉ (même format que le mobile V2)
+export interface SupplementItem {
+    id: string;
+    quantity: number;
+}
+
 // ✅ INTERFACES POUR LE FORMULAIRE DE COMMANDE
 export interface OrderItemFormData {
     dish_id: string;
     quantity: number;
-    supplements_ids: string[];
+    supplements: SupplementItem[];
     epice: boolean;
 }
 

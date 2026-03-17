@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { CheckCircle2, Edit2, Eye, Printer, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { useOrderActions } from "../../hooks/useOrderActions";
@@ -6,12 +6,25 @@ import { OrderStatus } from "../../types/order.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import { Action, Modules } from "../../../users/types/auth.type";
 import { HasPermission } from "../../../users/components/HasPermission";
+import { canEditOrder } from "../../utils/orderMapper";
 
 interface OrderContextMenuProps {
   order: OrderTable;
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Mapping inverse : statut UI → statut API
+const STATUS_REVERSE_MAP: Record<string, OrderStatus> = {
+  "EN ATTENTE": OrderStatus.PENDING,
+  "NOUVELLE": OrderStatus.ACCEPTED,
+  "EN PRÉPARATION": OrderStatus.IN_PROGRESS,
+  "PRÊT": OrderStatus.READY,
+  "COLLECTÉE": OrderStatus.PICKED_UP,
+  "LIVRÉE": OrderStatus.COLLECTED,
+  "ANNULÉE": OrderStatus.CANCELLED,
+  "TERMINÉE": OrderStatus.COMPLETED,
+};
 
 const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   order,
@@ -22,11 +35,15 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
     handleViewOrderDetails,
     handleOrderUpdateStatus,
     handlePrintOrder,
+    handleEditOrder,
+    handleDeleteOrder,
     isLoading,
     handleToggleOrderModal,
   } = useOrderActions();
 
   const isAccepted = order.status !== "NOUVELLE";
+  const apiStatus = STATUS_REVERSE_MAP[order.status];
+  const isEditable = apiStatus ? canEditOrder(apiStatus) : false;
 
   const handleAccept = () => {
     handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS);
@@ -78,12 +95,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                   className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
                   onClick={handleAccept}
                 >
-                  <Image
-                    src="/icons/check.png"
-                    alt="Accepter"
-                    width={20}
-                    height={20}
-                  />
+                  <CheckCircle2 size={16} />
                   <span>Accepter la commande</span>
                 </button>
               </HasPermission>
@@ -97,12 +109,13 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                   <span>Refuser</span>
                 </button>
               </HasPermission>
-              <HasPermission module={Modules.COMMANDES} action={Action.READ}>
+               <HasPermission module={Modules.COMMANDES} action={Action.READ}>
                 <button
                   type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
                   onClick={handleViewDetails}
                 >
+                  <Eye size={16} />
                   <span>Voir les détails</span>
                 </button>
               </HasPermission>
@@ -112,21 +125,54 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
               <button
                 type="button"
                 onClick={() => handlePrintOrder(order.id)}
-                className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
               >
+                <Printer size={16} />
                 <span>Imprimer</span>
               </button>
               <HasPermission module={Modules.COMMANDES} action={Action.READ}>
                 <button
                   type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold gap-2 text-[#888891] hover:bg-orange-50 cursor-pointer"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
                   onClick={handleViewDetails}
                 >
+                  <Eye size={16} />
                   <span>Voir les détails</span>
                 </button>
               </HasPermission>
             </>
           )}
+
+          {isEditable && (
+            <HasPermission module={Modules.COMMANDES} action={Action.UPDATE_FULL}>
+              <button
+                type="button"
+                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
+                onClick={() => {
+                  handleEditOrder(order);
+                  onClose();
+                }}
+              >
+                <Edit2 size={16} />
+                <span>Modifier</span>
+              </button>
+            </HasPermission>
+          )}
+
+          {/* Supprimer — ADMIN uniquement (via DELETE permission) */}
+          <HasPermission module={Modules.COMMANDES} action={Action.DELETE}>
+            <button
+              type="button"
+              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-red-50 cursor-pointer"
+              onClick={() => {
+                handleDeleteOrder(order);
+                onClose();
+              }}
+            >
+              <Trash2 size={16} />
+              <span>Supprimer</span>
+            </button>
+          </HasPermission>
         </div>
       </div>
     </>

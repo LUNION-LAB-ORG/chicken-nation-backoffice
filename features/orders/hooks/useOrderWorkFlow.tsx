@@ -151,8 +151,9 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
           {
             label: isLoading ? "Chargement..." : "Client a reçu",
-            onClick: () => {
+            onClick: async () => {
               if (order.paied) {
+                await handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED);
                 return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
               }
               return handleOrderUpdateStatus(order.id, OrderStatus.COLLECTED);
@@ -181,7 +182,7 @@ export const getWorkFlow = (order: OrderTable): WorkflowConfig => {
           },
           {
             label: isLoading ? "Chargement..." : "Terminer",
-            onClick: () => {
+            onClick: async () => {
               if (order.paied) {
                 return handleOrderUpdateStatus(order.id, OrderStatus.COMPLETED);
               }

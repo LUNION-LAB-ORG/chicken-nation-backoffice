@@ -3,12 +3,17 @@
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { motion } from "framer-motion";
 import { useOrderForm } from "../../hooks/useOrderForm";
+import { OrderTable } from "../../types/ordersTable.types";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
 
-const AddOrderForm = () => {
+interface AddOrderFormProps {
+  editOrder?: OrderTable;
+}
+
+const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const {
     formData,
     setFormData,
@@ -18,7 +23,7 @@ const AddOrderForm = () => {
     handleSubmit,
     handleCancel,
     handleCustomerChange,
-  } = useOrderForm();
+  } = useOrderForm(editOrder);
 
   return (
     <motion.form
@@ -31,7 +36,7 @@ const AddOrderForm = () => {
       {/* En-tête */}
       <div className="bg-white rounded-2xl p-6 border-2 border-[#D9D9D9]/50">
         <h2 className="text-2xl font-bold text-[#595959] mb-6">
-          Nouvelle Commande
+          {editOrder ? `Modifier la commande #${editOrder.reference}` : "Nouvelle Commande"}
         </h2>
 
         {/* Type de commande */}
@@ -78,6 +83,7 @@ const AddOrderForm = () => {
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
             onCustomerChange={handleCustomerChange}
+            isEditMode={!!editOrder}
           />
         </div>
 
@@ -117,7 +123,11 @@ const AddOrderForm = () => {
           whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
           disabled={isSubmitting || formData.items.length === 0}
         >
-          {isSubmitting ? "Enregistrement..." : "✓ Enregistrer la commande"}
+          {isSubmitting
+            ? "Enregistrement..."
+            : editOrder
+              ? "✓ Mettre à jour la commande"
+              : "✓ Enregistrer la commande"}
         </motion.button>
       </div>
     </motion.form>

@@ -9,6 +9,7 @@ import RestaurantTabs from "../../../../features/orders/components/filtrage/Rest
 import { OrdersTable } from "../../../../features/orders/components/list-order";
 import { AddPaiementModal } from "../../../../features/orders/components/modals/AddPaiementModal";
 import { CancelOrderModal } from "../../../../features/orders/components/modals/CancelOrderModal";
+import { DeleteOrderModal } from "../../../../features/orders/components/modals/DeleteOrderModal";
 import { useOrderListQuery } from "../../../../features/orders/queries/order-list.query";
 import {
   OrderStatus,
@@ -77,6 +78,13 @@ export default function Orders() {
 
       {view === "create" && <AddOrderForm />}
 
+      {view === "edit" && selectedItem && (
+        <AddOrderForm editOrder={selectedItem} />
+      )}
+
+      {modals?.to_delete && selectedItem && (
+        <DeleteOrderModal isOpen={true} order={selectedItem} />
+      )}
       {modals?.to_cancel && selectedItem && (
         <CancelOrderModal isOpen={true} order={selectedItem} />
       )}

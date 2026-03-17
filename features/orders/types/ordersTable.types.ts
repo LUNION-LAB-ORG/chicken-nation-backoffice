@@ -6,6 +6,7 @@ import { Paiement } from "./paiement.types";
  */
 export interface OrderTableItem {
   id: string;
+  dishId: string;
   name: string;
   quantity: number;
   price: number;
@@ -13,6 +14,8 @@ export interface OrderTableItem {
   epice: boolean;
   supplements: string;
   supplementsPrice: number;
+  /** Données brutes des suppléments (pour le mode édition) */
+  rawSupplements?: { id: string; name: string; price: number; quantity?: number }[];
 }
 
 /**
@@ -77,6 +80,8 @@ export interface OrderTable {
 
   // ========== LIVRAISON/TABLE ==========
   address: string;
+  /** Adresse brute JSON (pour le mode édition) */
+  rawAddress: string | null;
   deliveryService: string;
   estimatedDeliveryTime: string | null;
   estimatedPreparationTime: string | null;
@@ -96,6 +101,7 @@ export interface OrderTable {
   paymentMethod: string;
   paymentSource: string;
   paymentMode: string;
+  paymentChannel: 'Restaurant' | 'Appli';
   paiements: Paiement[];
 
   // ========== BONUS/PROMO ==========

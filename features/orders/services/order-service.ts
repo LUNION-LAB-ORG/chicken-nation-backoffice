@@ -188,6 +188,22 @@ export const getDeliveryFee = async (query?: { lat: number, long: number, restau
 };
 
 
+export async function refreshOrders(): Promise<void> {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/refresh');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 // --- Export et Statistiques ---
 
 export const exportReportOrdersToExcel = async (query: OrderQuery = {

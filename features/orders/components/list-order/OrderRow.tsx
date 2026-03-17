@@ -118,7 +118,16 @@ export function OrderRow({
               {order.auto ? "Auto" : "Manuel"}
             </span>
             <div className="flex justify-between items-center my-2">
-              <PaymentBadge status={order.paymentStatus} />
+              <div className="flex items-center gap-1.5">
+                <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                  order.paymentChannel === 'Appli'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-orange-100 text-orange-700'
+                }`}>
+                  {order.paymentChannel}
+                </span>
+                <PaymentBadge status={order.paymentStatus} />
+              </div>
             </div>
             <div className="flex justify-end mt-2">
               <div className="relative">
@@ -192,7 +201,16 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <PaymentBadge status={order.paymentStatus} />
+        <div className="flex items-center gap-1.5">
+          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+            order.paymentChannel === 'Appli'
+              ? 'bg-blue-100 text-blue-700'
+              : 'bg-orange-100 text-orange-700'
+          }`}>
+            {order.paymentChannel}
+          </span>
+          <PaymentBadge status={order.paymentStatus} />
+        </div>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span

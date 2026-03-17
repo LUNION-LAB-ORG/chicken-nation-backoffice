@@ -16,18 +16,24 @@ interface CustomerInfoSectionProps {
   formData: OrderFormData;
   onFormDataChange: (data: Partial<OrderFormData>) => void;
   onCustomerChange?: (customerId: string | null, needsSave: boolean) => void;
+  isEditMode?: boolean;
 }
 
 const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
   formData,
   onFormDataChange,
   onCustomerChange,
+  isEditMode = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
+  );
+  // En mode édition avec un customer_id existant, on considère le client comme connu
+  const [isKnownCustomer, setIsKnownCustomer] = useState(
+    isEditMode && !!formData.customer_id
   );
   const [needsSave, setNeedsSave] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -89,6 +95,13 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
 
  // Détecter si les données ont changé (nouveau client)
   useEffect(() => {
+    // En mode édition avec un client connu, ne pas déclencher needsSave
+    if (isKnownCustomer) {
+      setNeedsSave(false);
+      onCustomerChange?.(formData.customer_id || null, false);
+      return;
+    }
+
     if (selectedCustomer) {
       const currentFullname = [
         selectedCustomer.first_name,
@@ -108,6 +121,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
       if (hasChanged) {
         setNeedsSave(true);
         setSelectedCustomer(null);
+        setIsKnownCustomer(false);
         onCustomerChange?.(null, true);
       }
     } else if (formData.fullname || formData.phone || formData.email) {
@@ -208,12 +222,12 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
         <h3 className="text-lg font-semibold text-[#595959]">
           Informations client
         </h3>
-        {selectedCustomer && (
+        {(selectedCustomer || isKnownCustomer) && (
           <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">
             ✓ Client existant
           </span>
         )}
-        {needsSave && !selectedCustomer && (
+        {needsSave && !selectedCustomer && !isKnownCustomer && (
           <span className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-semibold">
             ⚠ Nouveau client
           </span>

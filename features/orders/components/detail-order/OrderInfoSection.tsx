@@ -74,6 +74,23 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
             {order.reference}
           </p>
         </div>
+        <div className="flex gap-32 items-center">
+          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            Canal de paiement
+          </p>
+          <div className="flex items-center">
+            <span
+              className={`text-xs font-semibold px-2 py-0.5 rounded ${
+                order.paymentChannel === "Appli"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-orange-100 text-orange-700"
+              }`}
+            >
+              {order.paymentChannel}
+            </span>
+          </div>
+        </div>
+
         {order.paymentMethod && (
           <div className="flex gap-32 items-center">
             <p className="lg:text-sm text-xs font-medium text-[#71717A]">
@@ -82,6 +99,44 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
             <div className="flex items-center">
               <p className="font-bold text-xs lg:text-sm text-[#71717A]">
                 {order.paymentMethod}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="flex gap-32 items-center">
+          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            Statut paiement
+          </p>
+          <div className="flex items-center gap-2">
+            <PaymentBadge
+              status={order.paymentStatus}
+              mode={order.paymentSource}
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-32 items-center">
+          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            Source
+          </p>
+          <span
+            className={`font-medium text-sm ${
+              !order.auto ? "bg-amber-100" : "bg-green-100"
+            } px-2 py-1 rounded-full`}
+          >
+            {order.auto ? "Auto" : "Manuel"}
+          </span>
+        </div>
+
+        {order.address && (
+          <div className="flex gap-32 items-center">
+            <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+              Adresse
+            </p>
+            <div className="flex items-center">
+              <p className="font-bold text-xs lg:text-sm text-[#71717A] max-w-[300px]">
+                {order.address}
               </p>
             </div>
           </div>
@@ -99,18 +154,6 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
             </div>
           </div>
         )}
-
-        <div className="flex gap-32 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
-            Statut paiement
-          </p>
-          <div className="flex items-center">
-            <PaymentBadge
-              status={order.paymentStatus}
-              mode={order.paymentSource}
-            />
-          </div>
-        </div>
       </div>
     </div>
   );

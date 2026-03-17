@@ -71,7 +71,7 @@ export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData
     items: formData.items.map(item => ({
       dish_id: item.dish_id,
       quantity: item.quantity,
-      supplements_ids: item.supplements_ids.length > 0 ? item.supplements_ids : undefined,
+      supplements: item.supplements.length > 0 ? item.supplements : undefined,
       epice: item.epice,
     })),
     customer_id: formData.customer_id || undefined,

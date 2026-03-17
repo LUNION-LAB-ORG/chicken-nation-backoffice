@@ -78,6 +78,7 @@ export interface Order {
     email: string | null;
     note: string | null;
     auto: boolean;
+    payment_method: 'ONLINE' | 'OFFLINE' | null;
     status: OrderStatus;
     restaurant_id: string;
     // Relations

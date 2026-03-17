@@ -5,4 +5,5 @@ export const orderEventsWebsocket = [
     "order:updated",
     "order:statusUpdated",
     "order:deleted",
+    "order:refresh"
 ]
