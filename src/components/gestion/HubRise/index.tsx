@@ -234,25 +234,27 @@ export default function HubRise() {
     <div className="flex flex-col h-full w-full p-4">
       {/* Résumé global + bouton actualiser */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
-          <Store className="w-5 h-5 text-[#F17922]" />
-          <div>
-            <p className="text-xs text-gray-500">Restaurants</p>
-            <p className="text-lg font-semibold text-gray-800">{restaurants.length}</p>
+        <div className="flex flex-wrap items-cente gap-3 mb-6">
+          <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
+            <Store className="w-5 h-5 text-[#F17922]" />
+            <div>
+              <p className="text-xs text-gray-500">Restaurants</p>
+              <p className="text-lg font-semibold text-gray-800">{restaurants.length}</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
-          <Link2 className="w-5 h-5 text-green-500" />
-          <div>
-            <p className="text-xs text-gray-500">Connectés</p>
-            <p className="text-lg font-semibold text-green-600">{connectedCount}</p>
+          <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
+            <Link2 className="w-5 h-5 text-green-500" />
+            <div>
+              <p className="text-xs text-gray-500">Connectés</p>
+              <p className="text-lg font-semibold text-green-600">{connectedCount}</p>
+            </div>
           </div>
-        </div>
-        <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
-          <Unlink className="w-5 h-5 text-gray-400" />
-          <div>
-            <p className="text-xs text-gray-500">Non connectés</p>
-            <p className="text-lg font-semibold text-gray-500">{restaurants.length - connectedCount}</p>
+          <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
+            <Unlink className="w-5 h-5 text-gray-400" />
+            <div>
+              <p className="text-xs text-gray-500">Non connectés</p>
+              <p className="text-lg font-semibold text-gray-500">{restaurants.length - connectedCount}</p>
+            </div>
           </div>
         </div>
 
@@ -342,11 +344,10 @@ function RestaurantCard({
         <div className="flex items-center gap-3">
           {/* Badge statut */}
           <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-              isConnected
+            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isConnected
                 ? "bg-green-50 text-green-700 border border-green-200"
                 : "bg-gray-50 text-gray-500 border border-gray-200"
-            }`}
+              }`}
           >
             {isConnected ? (
               <CheckCircle2 className="w-3.5 h-3.5" />
@@ -721,9 +722,8 @@ function MatchTable({ title, matches, type, isSelected, onToggle, isDish }: Matc
               return (
                 <tr
                   key={match.hubriseRef}
-                  className={`border-t border-gray-50 ${
-                    isLinked ? "bg-green-50/30" : hasMatch ? "hover:bg-orange-50/30" : "bg-gray-50/50 opacity-60"
-                  }`}
+                  className={`border-t border-gray-50 ${isLinked ? "bg-green-50/30" : hasMatch ? "hover:bg-orange-50/30" : "bg-gray-50/50 opacity-60"
+                    }`}
                 >
                   <td className="px-3 py-2">
                     {hasMatch && (
