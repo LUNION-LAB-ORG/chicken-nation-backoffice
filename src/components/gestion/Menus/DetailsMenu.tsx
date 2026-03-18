@@ -71,6 +71,11 @@ export default function DetailsMenu({
             <p className="text-sm font-medium text-gray-500">
               {menu.private ? "Privé" : "Public"}
             </p>
+            {menu.hubrise_sku && (
+              <p className="text-xs font-mono text-gray-400 mt-1">
+                SKU HubRise : {menu.hubrise_sku}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 w-full xs:w-auto justify-between xs:justify-end">
             <span className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold">

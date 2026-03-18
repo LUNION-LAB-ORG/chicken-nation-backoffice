@@ -33,13 +33,15 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
     image?: File;
     available: boolean;
     category: string;
+    hubrise_sku: string;
   }>({
-    name: '', 
+    name: '',
     price: 0,
     description: '',
     image: undefined,
-    available: true, 
+    available: true,
     category: '',
+    hubrise_sku: '',
   })
   
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -56,6 +58,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         image: undefined,
         available: dish.available,
         category: dish.category || 'FOOD',
+        hubrise_sku: (dish as unknown as { hubrise_sku?: string }).hubrise_sku || '',
       })
       
       if (dish.image) {
@@ -178,7 +181,10 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
       if (formData.image instanceof File) {
         fd.append('image', formData.image)
       }
-      
+
+      if (formData.hubrise_sku) {
+        fd.append('hubrise_sku', formData.hubrise_sku)
+      }
 
       // Envoyer la requête avec le client API
       const newSupplement = await api.post<Dish>('/supplements', fd)
@@ -255,6 +261,21 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
       </div>
 
  
+      {/* SKU HubRise */}
+      <div>
+        <label className="block text-sm text-[#595959] font-light mb-2">
+          SKU HubRise
+        </label>
+        <Input
+          name="hubrise_sku"
+          type="text"
+          value={formData.hubrise_sku}
+          onChange={handleChange}
+          placeholder="Ex: CHKN-001"
+          className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+        />
+      </div>
+
       <div className="mt-4">
        <div className='flex-1 flex items-center justify-between'>
         <span>Disponible</span>

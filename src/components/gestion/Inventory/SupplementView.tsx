@@ -8,9 +8,9 @@ import Toggle from "@/components/ui/Toggle";
 import SupplementActionsMenu from "./SupplementActionsMenu";
 import { createPortal } from "react-dom";
 import { Pagination } from "@/components/ui/pagination";
+import { formatImageUrl } from "@/utils/imageHelpers";
 
 type ProductCategory = "all" | "FOOD" | "DRINK" | "ACCESSORY";
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 // Type pour les produits dans la vue
 interface ProductViewItem {
@@ -260,10 +260,7 @@ export default function SupplementView({
                         <Image
                           src={
                             product.image
-                              ? product.image.startsWith("http") ||
-                                product.image.startsWith("/")
-                                ? product.image
-                                : `${API_URL}/${product.image}`
+                              ? formatImageUrl(product.image)
                               : "/images/plat.png"
                           }
                           alt={product.name || "Image du produit"}

@@ -26,13 +26,15 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
     image?: File;
     available: boolean;
     category: string;
+    hubrise_sku: string;
   }>({
-    name: '', 
+    name: '',
     price: 0,
     description: '',
     image: undefined,
-    available: true, 
+    available: true,
     category: '',
+    hubrise_sku: '',
   })
   
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -49,6 +51,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         image: undefined,
         available: product.available || false,
         category: product.category || 'DRINK',
+        hubrise_sku: (product as unknown as { hubrise_sku?: string }).hubrise_sku || '',
       })
       
       if (product.image) {
@@ -153,7 +156,11 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
       if (formData.image instanceof File) {
         fd.append('image', formData.image)
       }
-      
+
+      if (formData.hubrise_sku) {
+        fd.append('hubrise_sku', formData.hubrise_sku)
+      }
+
       const { api } = await import('@/services/api')
       const updatedSupplement = await api.patch<Dish>(
         `/supplements/${product.id}`,
@@ -260,6 +267,21 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
           className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.category ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px]`}
         />
         {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
+      </div>
+
+      {/* SKU HubRise */}
+      <div>
+        <label className="block text-sm text-[#595959] font-light mb-2">
+          SKU HubRise
+        </label>
+        <Input
+          name="hubrise_sku"
+          type="text"
+          value={formData.hubrise_sku}
+          onChange={handleChange}
+          placeholder="Ex: CHKN-001"
+          className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+        />
       </div>
 
       <div className="mt-4">
