@@ -1,5 +1,6 @@
 "use client";
 
+import { PaginationInfo } from "@/components/TableStates";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { CheckCircle2, Eye, XCircle } from "lucide-react";
@@ -15,11 +16,13 @@ import StatutCardRequestTab from "./StatutCardRequestTab";
 
 export function DemandeCarteList() {
   const {
-    card_requests: { filters, selectedItem, modals },
+    card_requests: { filters, selectedItem, modals, pagination },
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
-  const { data: requests } = useRequestListQuery({
+  const { data: requests, isLoading } = useRequestListQuery({
+    page: pagination.page,
+    limit: pagination.limit,
     status: filters?.status as CardRequestStatus,
     search: filters?.search as string,
   });
@@ -167,6 +170,15 @@ export function DemandeCarteList() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          <PaginationInfo
+            tabKey="card_requests"
+            label="demande"
+            totalItems={requests?.meta?.total}
+            totalPages={requests?.meta?.totalPages}
+            isLoading={isLoading}
+          />
         </div>
       </div>
 
