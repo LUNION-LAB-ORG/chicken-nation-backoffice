@@ -12,6 +12,7 @@ interface RawDishItem {
   price: number;
   available: boolean;
   image?: string;
+  hubrise_sku?: string | null;
 }
 
 interface UseDishesQueryParams {
@@ -87,7 +88,8 @@ export function useDishesQuery({
             image: item.image || '/images/plat.png',
             available: item.available,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            hubrise_sku: item.hubrise_sku ?? undefined,
           });
         });
       }
@@ -104,7 +106,8 @@ export function useDishesQuery({
             image: item.image || '/images/plat.png',
             available: item.available,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            hubrise_sku: item.hubrise_sku ?? undefined,
           });
         });
       }
@@ -121,7 +124,8 @@ export function useDishesQuery({
             image: item.image || '/images/plat.png',
             available: item.available,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
+            hubrise_sku: item.hubrise_sku ?? undefined,
           });
         });
       }

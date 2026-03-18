@@ -125,7 +125,8 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       dish_supplements: validatedApiMenu.dish_supplements || [],
       dish_restaurants: validatedApiMenu.dish_restaurants || [],
       is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false, // ✅ Nom corrigé sans "s"
-      private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false // ✅ Nom corrigé sans "s"
+      private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false, // ✅ Nom corrigé sans "s"
+      hubrise_sku: validatedApiMenu.hubrise_sku ?? undefined
     };
 
     // ✅ Validation finale avec le schéma MenuItem

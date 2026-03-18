@@ -115,8 +115,8 @@ export default function AddCategory({
       fd.append("name", formData.name);
       fd.append("description", formData.description);
       fd.append("private", String(formData.private));
-      if (formData.hubrise_sku) {
-        fd.append("hubrise_sku", formData.hubrise_sku);
+      if (formData.hubrise_sku.trim()) {
+        fd.append("hubrise_sku", formData.hubrise_sku.trim());
       }
 
       // Ajouter l'image si elle existe

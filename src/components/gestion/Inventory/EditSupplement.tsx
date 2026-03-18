@@ -157,8 +157,8 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         fd.append('image', formData.image)
       }
 
-      if (formData.hubrise_sku) {
-        fd.append('hubrise_sku', formData.hubrise_sku)
+      if (formData.hubrise_sku.trim()) {
+        fd.append('hubrise_sku', formData.hubrise_sku.trim())
       }
 
       const { api } = await import('@/services/api')

@@ -66,7 +66,8 @@ export const MenuItemSchema = z.object({
   dish_supplements: z.array(z.any()).optional(),
   dish_restaurants: z.array(z.any()).optional(),
   is_alway_epice: z.boolean().default(false), // ✅ Nom corrigé sans "s"
-  private: z.boolean().default(false) // ✅ Nom corrigé sans "s"
+  private: z.boolean().default(false), // ✅ Nom corrigé sans "s"
+  hubrise_sku: z.string().nullable().optional()
 });
 
 // Schémas pour les données API
@@ -92,7 +93,8 @@ export const ApiMenuDataSchema = z.object({
   // ✅ Champ pour les restaurants multiples
   selectedRestaurants: z.array(z.string()).optional(),
   is_alway_epice: z.boolean().optional(), // ✅ Nom corrigé sans "s"
-  private: z.boolean().optional() // ✅ Nom corrigé sans "s"
+  private: z.boolean().optional(), // ✅ Nom corrigé sans "s"
+  hubrise_sku: z.string().nullable().optional()
 });
 
 // Schéma pour la création de menu

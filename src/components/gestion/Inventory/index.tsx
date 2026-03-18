@@ -9,6 +9,7 @@ import {
 } from "@/services/categoryService";
 import { deleteSupplement } from "@/services/dishService";
 import { Dish } from "@/types/dish";
+import { useQueryClient } from "@tanstack/react-query";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -35,6 +36,7 @@ interface ProductViewProduct {
   stock: number;
   image: string;
   available: boolean;
+  hubrise_sku?: string;
 }
 
 export default function Inventory() {
@@ -60,6 +62,7 @@ export default function Inventory() {
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { can } = useAuthStore();
+  const queryClient = useQueryClient();
   // État pour la recherche
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -108,6 +111,7 @@ export default function Inventory() {
     stock: typeof dish.stock === "number" ? dish.stock : dish.available ? 1 : 0, // Garantir un number
     image: dish.image || "/images/default-menu.png",
     available: dish.available,
+    hubrise_sku: (dish as unknown as { hubrise_sku?: string }).hubrise_sku,
   }));
 
   const tabs: TabItem[] = [
@@ -139,9 +143,7 @@ export default function Inventory() {
     setIsLoading(true);
     try {
       await deleteCategoryApi(category.id);
-
-      // ✅ Les catégories se rafraîchissent automatiquement avec TanStack Query
-
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success("Catégorie supprimée avec succès");
     } catch (error) {
       console.error("Erreur lors de la suppression de la catégorie:", error);
@@ -165,7 +167,7 @@ export default function Inventory() {
 
   const handleSaveEditedCategory = async () => {
     try {
-      toast.success("Catégorie mise à jour avec succès");
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
     } catch (error) {
       console.error("Erreur lors du rafraîchissement des catégories:", error);
     } finally {
@@ -183,9 +185,10 @@ export default function Inventory() {
       available: product.available,
       image: product.image,
       category: product.category,
-      category_id: "", // Will be set properly in the edit component
-      created_at: "", // Will be set properly in the edit component
-      updated_at: "", // Will be set properly in the edit component
+      category_id: "",
+      created_at: "",
+      updated_at: "",
+      hubrise_sku: product.hubrise_sku,
     };
     setSelectedProduct(dishForEdit);
     setShowEditSupplementModal(true);
@@ -393,6 +396,7 @@ export default function Inventory() {
         <AddCategory
           onCancel={() => setShowAddCategoryModal(false)}
           onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['categories'] });
             setShowAddCategoryModal(false);
           }}
         />

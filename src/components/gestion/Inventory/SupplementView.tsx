@@ -383,10 +383,7 @@ export default function SupplementView({
                   <Image
                     src={
                       product.image
-                        ? product.image.startsWith("http") ||
-                          product.image.startsWith("/")
-                          ? product.image
-                          : `${API_URL}/${product.image}`
+                        ? formatImageUrl(product.image)
                         : "/images/plat.png"
                     }
                     alt={product.name || "Image du produit"}
