@@ -4,6 +4,7 @@ export interface Category {
   description?: string;
   promo?: string;
   image?: string;
+  hubrise_sku?: string;
 }
 
 export interface Supplement {
@@ -12,6 +13,7 @@ export interface Supplement {
   price: string;
   isAvailable: boolean;
   isSelected?: boolean;
+  hubrise_sku?: string;
 }
 
 export interface ProductSupplement {
@@ -220,6 +222,7 @@ export interface MenuItem {
   }>;
   is_alway_epice?: boolean; // ✅ Nom corrigé sans "s"
   private: boolean;
+  hubrise_sku?: string;
 }
 
 export interface Schedule {

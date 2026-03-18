@@ -43,6 +43,7 @@ interface MenuFormData {
   };
   is_alway_epice: boolean;
   private: boolean;
+  hubrise_sku: string;
 }
 
 interface AddMenuFormProps {
@@ -87,6 +88,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     },
     is_alway_epice: false, // ✅ Nom corrigé sans "s"
     private: false,
+    hubrise_sku: "",
   });
 
   // ✅ ÉTATS POUR LA CRÉATION
@@ -632,6 +634,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         dish_supplements: dishSupplements,
         is_alway_epice: formData.is_alway_epice,
         private: formData.private,
+        hubrise_sku: formData.hubrise_sku || undefined,
       };
 
       // ✅ Soumission sécurisée des données
@@ -930,6 +933,24 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                        1 Coleslaw,
                        1 crème à l'ail,
                        1 sauce cheddar"
+            />
+          </motion.div>
+
+          {/* SKU HubRise */}
+          <motion.div
+            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <input
+              type="text"
+              id="hubrise_sku"
+              value={formData.hubrise_sku}
+              onChange={(e) =>
+                setFormData({ ...formData, hubrise_sku: e.target.value })
+              }
+              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+              placeholder="SKU HubRise (ex: DISH-001)"
             />
           </motion.div>
         </div>

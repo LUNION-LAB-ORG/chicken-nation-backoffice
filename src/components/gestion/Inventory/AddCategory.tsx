@@ -27,6 +27,7 @@ export default function AddCategory({
     description: "",
     image: undefined as File | undefined,
     private: false,
+    hubrise_sku: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -53,6 +54,7 @@ export default function AddCategory({
         description: category.description || "",
         image: undefined,
         private: category.private,
+        hubrise_sku: category.hubrise_sku || "",
       });
 
       if (category.image) {
@@ -113,6 +115,9 @@ export default function AddCategory({
       fd.append("name", formData.name);
       fd.append("description", formData.description);
       fd.append("private", String(formData.private));
+      if (formData.hubrise_sku) {
+        fd.append("hubrise_sku", formData.hubrise_sku);
+      }
 
       // Ajouter l'image si elle existe
       if (formData.image) {
@@ -226,6 +231,20 @@ export default function AddCategory({
               className="w-full rounded-xl bg-white border border-[#D8D8D8] px-4 py-3 text-[13px] placeholder-gray-400 resize-none"
             />
           </div>
+          <div>
+            <label className="block text-[13px] text-gray-600 mb-1">
+              SKU HubRise
+            </label>
+            <Input
+              name="hubrise_sku"
+              value={formData.hubrise_sku}
+              onChange={handleChange}
+              placeholder="Ex: CAT-001"
+              disabled={isLoading}
+              className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+            />
+          </div>
+
           <div className="flex items-center gap-2">
             <Checkbox
               id="private"

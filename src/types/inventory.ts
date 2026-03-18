@@ -14,6 +14,7 @@ export interface Category {
   name: string;
   description?: string;
   productCount: number;
+  hubrise_sku?: string;
 }
 
 export type InventoryView = 'list' | 'create' | 'edit' | 'category';

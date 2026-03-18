@@ -473,6 +473,10 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       // ✅ Ajout du nouveau champ
       formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
       formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
+      const hubriseSkuUpdate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
+      if (hubriseSkuUpdate) {
+        formData.append('hubrise_sku', hubriseSkuUpdate);
+      }
 
       // Pour UPDATE: NE PAS envoyer restaurants et supplements ici
       // Ils sont gérés séparément par les services dédiés
@@ -521,6 +525,10 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       // ✅ Ajout du nouveau champ
       formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
       formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
+      const hubriseSkuCreate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
+      if (hubriseSkuCreate) {
+        formData.append('hubrise_sku', hubriseSkuCreate);
+      }
 
       // ✅ Ajout sécurisé des restaurants pour CREATE
       // Gérer les restaurants multiples depuis selectedRestaurants ou restaurantId unique

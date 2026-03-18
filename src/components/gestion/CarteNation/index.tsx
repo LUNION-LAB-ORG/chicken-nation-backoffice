@@ -38,6 +38,7 @@ export default function CarteNation() {
     error,
   } = useCardListQuery({
     page: pagination.page,
+    limit: pagination.limit,
     search: filters?.search as string,
     status: filters?.status as NationCardStatus,
     institution: filters?.institution as string,
@@ -72,9 +73,9 @@ export default function CarteNation() {
             isOpen={true}
             cardId={(selectedItem as NationCard).id}
             customerName={
-              (selectedItem as NationCard).customer?.first_name +
+              ((selectedItem as NationCard).customer?.first_name ?? "") +
               " " +
-              (selectedItem as NationCard).customer?.last_name
+              ((selectedItem as NationCard).customer?.last_name ?? "")
             }
             action={
               (modals?.activate
