@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Store,
   BadgePercent,
+  Settings,
   ShoppingCart,
   TicketPercent,
   Truck,
@@ -190,10 +191,10 @@ export const useGetMenuConfig = (): {
       ],
     },
     {
-      id: "hubrise",
-      label: "HubRise",
-      icon: Link2,
-      canAccess: () => can(Modules.RESTAURANTS, Action.READ),
+      id: "settings",
+      label: "Paramètres",
+      icon: Settings,
+      canAccess: () => can(Modules.SETTINGS, Action.READ),
     },
   ];
 

@@ -23,7 +23,6 @@ import {
   ExternalLink,
   Zap,
 } from "lucide-react";
-import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   getConnectUrl,
   getConnectionStatus,
@@ -219,7 +218,6 @@ export default function HubRise() {
   if (isLoading) {
     return (
       <div className="flex flex-col h-full w-full p-4">
-        <DashboardPageHeader mode="list" title="Intégration HubRise" />
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 text-[#F17922] animate-spin" />
@@ -234,21 +232,8 @@ export default function HubRise() {
 
   return (
     <div className="flex flex-col h-full w-full p-4">
-      <DashboardPageHeader
-        mode="list"
-        title="Intégration HubRise"
-        actions={[
-          {
-            label: "Actualiser tout",
-            onClick: fetchAll,
-            icon: RefreshCw,
-            variant: "secondary",
-          },
-        ]}
-      />
-
-      {/* Résumé global */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      {/* Résumé global + bouton actualiser */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="bg-white border border-gray-100 rounded-2xl px-5 py-3 shadow-sm flex items-center gap-3">
           <Store className="w-5 h-5 text-[#F17922]" />
           <div>
@@ -270,6 +255,14 @@ export default function HubRise() {
             <p className="text-lg font-semibold text-gray-500">{restaurants.length - connectedCount}</p>
           </div>
         </div>
+
+        <button
+          onClick={fetchAll}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer shadow-sm"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Actualiser tout
+        </button>
       </div>
 
       {/* Liste des restaurants */}

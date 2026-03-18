@@ -15,6 +15,7 @@ export enum Modules {
   MESSAGES = 'inbox',
   CARD_NATION = 'card_nation',
   COMMENTAIRES = 'reviews',
+  SETTINGS = 'settings',
   ALL = 'all',
 }
 

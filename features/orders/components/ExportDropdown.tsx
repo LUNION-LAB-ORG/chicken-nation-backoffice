@@ -3,7 +3,7 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { startOfMonth } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ChevronDown, Store } from "lucide-react";
+import { FileText, ChevronDown, Store, TrendingUp } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { dateRangeToLocalString } from "../../../utils/date/format-date";
@@ -11,6 +11,7 @@ import { generateOrderReport } from "../lib/pdf/order-report-generator";
 import {
   exportReportOrdersToExcel,
   exportRestaurantPdf,
+  exportMarketingReportPdf,
   getAllOrders,
 } from "../services/order-service";
 import { OrderStatus, OrderType } from "../types/order.types";
@@ -176,6 +177,44 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     }
   };
 
+  const handleExportMarketingPdf = async () => {
+    const startDate = !filters?.startDate
+      ? startOfMonth(new Date())
+      : typeof filters?.startDate === "string"
+      ? new Date(filters?.startDate as string)
+      : (filters?.startDate as Date);
+
+    const endDate = !filters?.endDate
+      ? new Date()
+      : typeof filters?.endDate === "string"
+      ? new Date(filters?.endDate as string)
+      : (filters?.endDate as Date);
+
+    setIsExporting(true);
+    setIsOpen(false);
+
+    try {
+      await exportMarketingReportPdf({
+        restaurantId: selectedRestaurantId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        type: filters?.type ? (filters?.type as OrderType) : undefined,
+        status: filters?.status ? (filters?.status as OrderStatus) : undefined,
+        auto: filters?.source
+          ? filters?.source === "auto"
+            ? true
+            : false
+          : undefined,
+      });
+      toast.success("Rapport marketing PDF téléchargé avec succès");
+    } catch (error) {
+      console.error("Error exporting marketing PDF:", error);
+      toast.error("Erreur lors de la génération du rapport marketing");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div ref={dropdownRef} className={`relative ${className}`}>
       <motion.button
@@ -250,6 +289,17 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             >
               <Store size={18} className="text-orange-600" />
               <span>Rapport Restaurant</span>
+            </button>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Bouton Rapport Marketing PDF */}
+            <button
+              onClick={handleExportMarketingPdf}
+              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+            >
+              <TrendingUp size={18} className="text-[#F17922]" />
+              <span>Rapport Marketing</span>
             </button>
           </motion.div>
         )}

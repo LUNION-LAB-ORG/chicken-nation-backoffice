@@ -13,7 +13,9 @@ export type TabKey =
   | 'stats_products' | 'stats_orders' | 'stats_clients'
   | 'stats_delivery' | 'stats_marketing'
   // Intégrations
-  | 'hubrise';
+  | 'hubrise'
+  // Paramètres
+  | 'settings';
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
