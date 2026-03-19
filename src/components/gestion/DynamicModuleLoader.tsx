@@ -70,6 +70,11 @@ const modulesMap: Record<string, any> = {
     { loading: () => <LoadingSpinner /> }
   ),
 
+  // ---- Notifications ----
+  notifications: dynamic(() => import("@/components/gestion/Notifications"), {
+    loading: () => <LoadingSpinner />,
+  }),
+
   // ---- Intégrations ----
   hubrise: dynamic(() => import("@/components/gestion/HubRise"), {
     loading: () => <LoadingSpinner />,

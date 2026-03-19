@@ -1,0 +1,132 @@
+"use client";
+
+import React, { useState } from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import MessageList from "./messages/MessageList";
+import CreateMessageModal from "./messages/CreateMessageModal";
+import TemplateList from "./templates/TemplateList";
+import CreateTemplateModal from "./templates/CreateTemplateModal";
+import EditTemplateModal from "./templates/EditTemplateModal";
+import SegmentList from "./segments/SegmentList";
+import type { OnesignalTemplate } from "@/types/onesignal";
+import { Bell, FileText, Users } from "lucide-react";
+
+type NotificationTab = "messages" | "templates" | "segments";
+
+const TABS: { id: NotificationTab; label: string; icon: React.ReactNode }[] = [
+  { id: "messages", label: "Messages", icon: <Bell size={16} /> },
+  { id: "templates", label: "Templates", icon: <FileText size={16} /> },
+  { id: "segments", label: "Segments", icon: <Users size={16} /> },
+];
+
+export default function Notifications() {
+  const [activeTab, setActiveTab] = useState<NotificationTab>("messages");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Modals
+  const [showCreateMessage, setShowCreateMessage] = useState(false);
+  const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [templateToEdit, setTemplateToEdit] = useState<OnesignalTemplate | null>(null);
+
+  const getActions = () => {
+    switch (activeTab) {
+      case "messages":
+        return [
+          {
+            label: "Envoyer une notification",
+            onClick: () => setShowCreateMessage(true),
+            variant: "primary" as const,
+          },
+        ];
+      case "templates":
+        return [
+          {
+            label: "Créer un template",
+            onClick: () => setShowCreateTemplate(true),
+            variant: "primary" as const,
+          },
+        ];
+      case "segments":
+        return [
+          {
+            label: "Ouvrir OneSignal",
+            onClick: () => window.open("https://dashboard.onesignal.com", "_blank"),
+            variant: "primary" as const,
+          },
+        ];
+    }
+  };
+
+  return (
+    <div className="flex-1 overflow-auto p-4">
+      <DashboardPageHeader
+        mode="list"
+        title="Notifications"
+        searchConfig={{
+          placeholder: "Rechercher...",
+          buttonText: "Chercher",
+          onSearch: setSearchQuery,
+          realTimeSearch: true,
+        }}
+        actions={getActions()}
+      />
+
+      {/* Tabs */}
+      <div className="bg-white rounded-[20px] p-4 mt-4 shadow-sm">
+        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-3">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id);
+                setSearchQuery("");
+              }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                activeTab === tab.id
+                  ? "bg-[#FFF3E8] text-[#F17922]"
+                  : "text-gray-500 hover:bg-gray-50"
+              }`}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        {activeTab === "messages" && <MessageList searchQuery={searchQuery} />}
+        {activeTab === "templates" && (
+          <TemplateList
+            searchQuery={searchQuery}
+            onEdit={(t) => setTemplateToEdit(t)}
+            onCreate={() => setShowCreateTemplate(true)}
+          />
+        )}
+        {activeTab === "segments" && (
+          <SegmentList
+            searchQuery={searchQuery}
+            onEdit={() => {}}
+            onCreate={() => {}}
+          />
+        )}
+      </div>
+
+      {/* Modals */}
+      <CreateMessageModal
+        isOpen={showCreateMessage}
+        onClose={() => setShowCreateMessage(false)}
+      />
+      <CreateTemplateModal
+        isOpen={showCreateTemplate}
+        onClose={() => setShowCreateTemplate(false)}
+      />
+      {templateToEdit && (
+        <EditTemplateModal
+          isOpen={!!templateToEdit}
+          onClose={() => setTemplateToEdit(null)}
+          template={templateToEdit}
+        />
+      )}
+    </div>
+  );
+}

@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  Bell,
   BookOpen,
   Boxes,
   ClipboardList,
@@ -151,6 +152,12 @@ export const useGetMenuConfig = (): {
       label: "Marketing",
       icon: TrendingUp,
       canAccess: () => can(Modules.MARKETING, Action.READ),
+    },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: Bell,
+      canAccess: () => can(Modules.SETTINGS, Action.READ),
     },
     {
       id: "statistiques",
