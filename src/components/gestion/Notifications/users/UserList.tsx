@@ -60,7 +60,7 @@ export default function UserList({ searchQuery }: Props) {
       {/* Stats bar */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-500">
-          <span className="font-semibold text-gray-700">{total}</span> utilisateur{total > 1 ? "s" : ""} OneSignal enregistr{total > 1 ? "es" : "e"}
+          <span className="font-semibold text-gray-700">{total}</span> utilisateur{total > 1 ? "s" : ""} OneSignal enregistré{total > 1 ? "s" : ""}
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export default function UserList({ searchQuery }: Props) {
             <Smartphone size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-500 text-sm">
-            {searchQuery ? "Aucun utilisateur trouv\u00e9" : "Aucun utilisateur OneSignal"}
+            {searchQuery ? "Aucun utilisateur trouvé" : "Aucun utilisateur OneSignal"}
           </p>
           <p className="text-gray-400 text-xs mt-1">
             Les utilisateurs apparaissent ici quand ils installent l&apos;app mobile
@@ -83,9 +83,9 @@ export default function UserList({ searchQuery }: Props) {
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-100">
                   <th className="pb-3 font-medium">Utilisateur</th>
-                  <th className="pb-3 font-medium">T\u00e9l\u00e9phone</th>
+                  <th className="pb-3 font-medium">Téléphone</th>
                   <th className="pb-3 font-medium">Ville</th>
-                  <th className="pb-3 font-medium">Fid\u00e9lit\u00e9</th>
+                  <th className="pb-3 font-medium">Fidélité</th>
                   <th className="pb-3 font-medium">Commandes</th>
                   <th className="pb-3 font-medium">Push</th>
                   <th className="pb-3 font-medium text-right">Actions</th>

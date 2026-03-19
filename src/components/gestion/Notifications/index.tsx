@@ -19,7 +19,7 @@ type NotificationTab = "messages" | "scheduled" | "templates" | "segments" | "us
 
 const TABS: { id: NotificationTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages", label: "Messages", icon: <Bell size={16} /> },
-  { id: "scheduled", label: "Planifi\u00e9es", icon: <CalendarClock size={16} /> },
+  { id: "scheduled", label: "Planifiées", icon: <CalendarClock size={16} /> },
   { id: "templates", label: "Templates", icon: <FileText size={16} /> },
   { id: "segments", label: "Segments", icon: <Users size={16} /> },
   { id: "users", label: "Utilisateurs", icon: <Smartphone size={16} /> },

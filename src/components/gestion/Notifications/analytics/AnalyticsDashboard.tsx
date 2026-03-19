@@ -131,9 +131,9 @@ export default function AnalyticsDashboard() {
     try {
       const result = await onesignalService.exportCsvPlayers();
       if (result?.csv_file_url) {
-        toast.success("Export CSV en cours de g\u00e9n\u00e9ration. Le lien sera disponible sous peu.");
+        toast.success("Export CSV en cours de génération. Le lien sera disponible sous peu.");
       } else {
-        toast.success("Export demand\u00e9 avec succ\u00e8s");
+        toast.success("Export demandé avec succès");
       }
     } catch (err) {
       toast.error("Erreur lors de l'export");
@@ -156,13 +156,13 @@ export default function AnalyticsDashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <KpiCard
           icon={<Send size={18} />}
-          label="Total envoy\u00e9s"
+          label="Total envoyés"
           value={kpis.totalSent.toLocaleString()}
           color="bg-blue-50 text-blue-600"
         />
         <KpiCard
           icon={<CheckCircle size={18} />}
-          label="D\u00e9livr\u00e9s"
+          label="Délivrés"
           value={kpis.totalDelivered.toLocaleString()}
           color="bg-green-50 text-green-600"
         />
@@ -174,7 +174,7 @@ export default function AnalyticsDashboard() {
         />
         <KpiCard
           icon={<AlertTriangle size={18} />}
-          label="\u00c9checs"
+          label="Échecs"
           value={kpis.totalFailed.toLocaleString()}
           color="bg-red-50 text-red-500"
         />
@@ -183,7 +183,7 @@ export default function AnalyticsDashboard() {
       {/* Summary bar */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-500">
-          Bas\u00e9 sur les <span className="font-semibold text-gray-700">{messages.length}</span> derniers messages
+          Basé sur les <span className="font-semibold text-gray-700">{messages.length}</span> derniers messages
           {totalMessages > 50 && (
             <span className="text-gray-400"> sur {totalMessages} au total</span>
           )}
@@ -232,14 +232,14 @@ export default function AnalyticsDashboard() {
                     fontSize: "12px",
                   }}
                 />
-                <Bar dataKey="sent" name="Envoy\u00e9s" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="clicked" name="Cliqu\u00e9s" fill={COLORS.success} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="failed" name="\u00c9checs" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="sent" name="Envoyés" fill={COLORS.primary} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="clicked" name="Cliqués" fill={COLORS.success} radius={[4, 4, 0, 0]} />
+                <Bar dataKey="failed" name="Échecs" fill={COLORS.danger} radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[260px] text-gray-400 text-xs">
-              Pas de donn\u00e9es disponibles
+              Pas de données disponibles
             </div>
           )}
         </div>
@@ -248,7 +248,7 @@ export default function AnalyticsDashboard() {
         <div className="border border-gray-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={16} className="text-gray-400" />
-            <h3 className="text-sm font-semibold text-gray-900">R\u00e9partition par canal</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Répartition par canal</h3>
           </div>
           {channelData.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -285,7 +285,7 @@ export default function AnalyticsDashboard() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-[260px] text-gray-400 text-xs">
-              Pas de donn\u00e9es disponibles
+              Pas de données disponibles
             </div>
           )}
         </div>
@@ -301,8 +301,8 @@ export default function AnalyticsDashboard() {
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
                 <th className="pb-2 font-medium">Message</th>
-                <th className="pb-2 font-medium text-right">Envoy\u00e9s</th>
-                <th className="pb-2 font-medium text-right">Cliqu\u00e9s</th>
+                <th className="pb-2 font-medium text-right">Envoyés</th>
+                <th className="pb-2 font-medium text-right">Cliqués</th>
                 <th className="pb-2 font-medium text-right">CTR</th>
                 <th className="pb-2 font-medium text-right">Date</th>
               </tr>

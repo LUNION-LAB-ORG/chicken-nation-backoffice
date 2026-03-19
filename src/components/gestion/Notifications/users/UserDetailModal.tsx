@@ -124,7 +124,7 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
   };
 
   const handleDeleteUser = () => {
-    if (!confirm(`Supprimer ${name} de OneSignal ? Cette action est irr\u00e9versible.`)) return;
+    if (!confirm(`Supprimer ${name} de OneSignal ? Cette action est irréversible.`)) return;
     deleteUser.mutate(user.id, { onSuccess: onClose });
   };
 
@@ -214,10 +214,10 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
             <div className="text-center py-12">
               <AlertTriangle size={24} className="text-amber-500 mx-auto mb-2" />
               <p className="text-sm text-gray-500">
-                Impossible de charger les d\u00e9tails OneSignal
+                Impossible de charger les détails OneSignal
               </p>
               <p className="text-xs text-gray-400 mt-1">
-                L&apos;utilisateur n&apos;est peut-\u00eatre pas encore enregistr\u00e9 sur OneSignal
+                L&apos;utilisateur n&apos;est peut-être pas encore enregistré sur OneSignal
               </p>
             </div>
           ) : (
@@ -269,7 +269,7 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
                           <button
                             onClick={() => handleToggleSubscription(sub)}
                             className="cursor-pointer"
-                            title={sub.enabled ? "D\u00e9sactiver" : "Activer"}
+                            title={sub.enabled ? "Désactiver" : "Activer"}
                           >
                             {sub.enabled ? (
                               <ToggleRight size={24} className="text-green-500" />
@@ -350,7 +350,7 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
                           <Plus size={12} className="text-gray-400" />
                           <input
                             type="text"
-                            placeholder="Cl\u00e9"
+                            placeholder="Clé"
                             value={newTagKey}
                             onChange={(e) => setNewTagKey(e.target.value)}
                             className="text-xs border border-gray-200 rounded px-2 py-1 w-[120px] focus:outline-none focus:border-[#F17922]"
