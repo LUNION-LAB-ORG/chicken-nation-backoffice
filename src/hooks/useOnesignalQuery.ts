@@ -16,6 +16,11 @@ import type {
   ScheduledNotificationListResponse,
   CreateScheduledNotificationPayload,
   UpdateScheduledNotificationPayload,
+  OnesignalUserListResponse,
+  OnesignalUserDetail,
+  UpdateUserPayload,
+  CreateAliasPayload,
+  UpdateSubscriptionPayload,
 } from "@/types/onesignal";
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
@@ -27,6 +32,8 @@ const keys = {
   template: (id: string) => ["onesignal", "templates", id] as const,
   segments: (q?: ViewSegmentsQuery) => ["onesignal", "segments", q] as const,
   scheduled: (page?: number) => ["onesignal", "scheduled", page] as const,
+  users: (q?: { page?: number; search?: string }) => ["onesignal", "users", q] as const,
+  user: (id: string) => ["onesignal", "users", "detail", id] as const,
 };
 
 // ── Messages ─────────────────────────────────────────────────────────────────
@@ -261,6 +268,148 @@ export function useDeleteScheduledMutation() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["onesignal", "scheduled"] });
       toast.success("Notification planifiée supprimée");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la suppression");
+    },
+  });
+}
+
+// ── Users ───────────────────────────────────────────────────────────────────
+
+export function useOnesignalUsersQuery(query: { page?: number; search?: string } = {}) {
+  return useQuery<OnesignalUserListResponse>({
+    queryKey: keys.users(query),
+    queryFn: () => onesignalService.listOnesignalUsers(query),
+    staleTime: 30_000,
+  });
+}
+
+export function useOnesignalUserDetailQuery(externalId: string) {
+  return useQuery<OnesignalUserDetail>({
+    queryKey: keys.user(externalId),
+    queryFn: () => onesignalService.viewUser(externalId),
+    enabled: !!externalId,
+    staleTime: 15_000,
+  });
+}
+
+export function useUpdateUserMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      externalId,
+      payload,
+    }: {
+      externalId: string;
+      payload: UpdateUserPayload;
+    }) => onesignalService.updateUser(externalId, payload),
+    onSuccess: (_, { externalId }) => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "users"] });
+      qc.invalidateQueries({ queryKey: keys.user(externalId) });
+      toast.success("Utilisateur mis à jour");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la mise à jour");
+    },
+  });
+}
+
+export function useDeleteUserMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (externalId: string) =>
+      onesignalService.deleteUser(externalId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "users"] });
+      toast.success("Utilisateur supprimé de OneSignal");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la suppression");
+    },
+  });
+}
+
+export function useCreateAliasMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      externalId,
+      payload,
+    }: {
+      externalId: string;
+      payload: CreateAliasPayload;
+    }) => onesignalService.createAlias(externalId, payload),
+    onSuccess: (_, { externalId }) => {
+      qc.invalidateQueries({ queryKey: keys.user(externalId) });
+      toast.success("Alias ajouté");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de l'ajout de l'alias");
+    },
+  });
+}
+
+export function useDeleteAliasMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      externalId,
+      label,
+    }: {
+      externalId: string;
+      label: string;
+    }) => onesignalService.deleteAlias(externalId, label),
+    onSuccess: (_, { externalId }) => {
+      qc.invalidateQueries({ queryKey: keys.user(externalId) });
+      toast.success("Alias supprimé");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la suppression de l'alias");
+    },
+  });
+}
+
+export function useUpdateSubscriptionMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      subscriptionId,
+      payload,
+      externalId,
+    }: {
+      subscriptionId: string;
+      payload: UpdateSubscriptionPayload;
+      externalId?: string;
+    }) => onesignalService.updateSubscription(subscriptionId, payload),
+    onSuccess: (_, { externalId }) => {
+      if (externalId) {
+        qc.invalidateQueries({ queryKey: keys.user(externalId) });
+      }
+      toast.success("Subscription mise à jour");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la mise à jour");
+    },
+  });
+}
+
+export function useDeleteSubscriptionMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      subscriptionId,
+      externalId,
+    }: {
+      subscriptionId: string;
+      externalId?: string;
+    }) => onesignalService.deleteSubscription(subscriptionId),
+    onSuccess: (_, { externalId }) => {
+      if (externalId) {
+        qc.invalidateQueries({ queryKey: keys.user(externalId) });
+      }
+      qc.invalidateQueries({ queryKey: ["onesignal", "users"] });
+      toast.success("Subscription supprimée");
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la suppression");

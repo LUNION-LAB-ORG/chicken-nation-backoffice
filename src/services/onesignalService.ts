@@ -15,6 +15,12 @@ import type {
   CreateScheduledNotificationPayload,
   UpdateScheduledNotificationPayload,
   ScheduledNotificationListResponse,
+  OnesignalUserListResponse,
+  OnesignalUserDetail,
+  UpdateUserPayload,
+  CreateAliasPayload,
+  UpdateSubscriptionPayload,
+  ViewOutcomesQuery,
 } from "@/types/onesignal";
 
 const BASE = "/onesignal";
@@ -155,6 +161,92 @@ export async function deleteScheduledNotification(
   id: string
 ): Promise<{ success: boolean }> {
   return api.delete<{ success: boolean }>(`${BASE}/scheduled/${id}`);
+}
+
+// ── Users ───────────────────────────────────────────────────────────────────
+
+export async function listOnesignalUsers(
+  query: { page?: number; limit?: number; search?: string } = {}
+): Promise<OnesignalUserListResponse> {
+  return api.get(`${BASE}/users${qs(query)}`);
+}
+
+export async function viewUser(
+  externalId: string
+): Promise<OnesignalUserDetail> {
+  return api.get<OnesignalUserDetail>(`${BASE}/users/${externalId}`);
+}
+
+export async function updateUser(
+  externalId: string,
+  payload: UpdateUserPayload
+): Promise<unknown> {
+  return api.patch(`${BASE}/users/${externalId}`, payload);
+}
+
+export async function deleteUser(
+  externalId: string
+): Promise<{ success: boolean }> {
+  return api.delete<{ success: boolean }>(`${BASE}/users/${externalId}`);
+}
+
+// ── Aliases ─────────────────────────────────────────────────────────────────
+
+export async function fetchAliases(
+  externalId: string
+): Promise<{ identity: Record<string, string> }> {
+  return api.get(`${BASE}/users/${externalId}/aliases`);
+}
+
+export async function createAlias(
+  externalId: string,
+  payload: CreateAliasPayload
+): Promise<unknown> {
+  return api.post(`${BASE}/users/${externalId}/aliases`, payload);
+}
+
+export async function deleteAlias(
+  externalId: string,
+  label: string
+): Promise<{ success: boolean }> {
+  return api.delete<{ success: boolean }>(
+    `${BASE}/users/${externalId}/aliases/${label}`
+  );
+}
+
+// ── Subscriptions ───────────────────────────────────────────────────────────
+
+export async function updateSubscription(
+  subscriptionId: string,
+  payload: UpdateSubscriptionPayload
+): Promise<unknown> {
+  return api.patch(`${BASE}/subscriptions/${subscriptionId}`, payload);
+}
+
+export async function deleteSubscription(
+  subscriptionId: string
+): Promise<{ success: boolean }> {
+  return api.delete<{ success: boolean }>(
+    `${BASE}/subscriptions/${subscriptionId}`
+  );
+}
+
+// ── Analytics ───────────────────────────────────────────────────────────────
+
+export async function viewOutcomes(
+  query: ViewOutcomesQuery = {}
+): Promise<{ outcomes: unknown[] }> {
+  return api.get(`${BASE}/analytics/outcomes${qs(query)}`);
+}
+
+export async function exportCsvPlayers(
+  extraFields?: string[],
+  segmentName?: string
+): Promise<{ csv_file_url: string }> {
+  return api.post(`${BASE}/analytics/export/players`, {
+    extra_fields: extraFields,
+    segment_name: segmentName,
+  });
 }
 
 // ── Tags Sync ───────────────────────────────────────────────────────────────

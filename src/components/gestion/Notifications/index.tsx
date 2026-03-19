@@ -10,16 +10,18 @@ import EditTemplateModal from "./templates/EditTemplateModal";
 import SegmentList from "./segments/SegmentList";
 import ScheduledList from "./scheduled/ScheduledList";
 import CreateScheduledModal from "./scheduled/CreateScheduledModal";
+import UserList from "./users/UserList";
 import type { OnesignalTemplate, ScheduledNotification } from "@/types/onesignal";
-import { Bell, FileText, Users, CalendarClock } from "lucide-react";
+import { Bell, FileText, Users, CalendarClock, Smartphone } from "lucide-react";
 
-type NotificationTab = "messages" | "scheduled" | "templates" | "segments";
+type NotificationTab = "messages" | "scheduled" | "templates" | "segments" | "users";
 
 const TABS: { id: NotificationTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages", label: "Messages", icon: <Bell size={16} /> },
-  { id: "scheduled", label: "Planifiées", icon: <CalendarClock size={16} /> },
+  { id: "scheduled", label: "Planifi\u00e9es", icon: <CalendarClock size={16} /> },
   { id: "templates", label: "Templates", icon: <FileText size={16} /> },
   { id: "segments", label: "Segments", icon: <Users size={16} /> },
+  { id: "users", label: "Utilisateurs", icon: <Smartphone size={16} /> },
 ];
 
 export default function Notifications() {
@@ -60,6 +62,14 @@ export default function Notifications() {
           },
         ];
       case "segments":
+        return [
+          {
+            label: "Ouvrir OneSignal",
+            onClick: () => window.open("https://dashboard.onesignal.com", "_blank"),
+            variant: "primary" as const,
+          },
+        ];
+      case "users":
         return [
           {
             label: "Ouvrir OneSignal",
@@ -129,6 +139,7 @@ export default function Notifications() {
             onCreate={() => {}}
           />
         )}
+        {activeTab === "users" && <UserList searchQuery={searchQuery} />}
       </div>
 
       {/* Modals */}

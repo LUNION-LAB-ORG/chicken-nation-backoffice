@@ -224,3 +224,81 @@ export interface ScheduledNotificationListResponse {
   page: number;
   limit: number;
 }
+
+// ── Users / Subscriptions ─────────────────────────────────────────────────
+
+export interface OnesignalUser {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  email: string | null;
+  loyalty_level: string | null;
+  city: string | null;
+  orders_count: number;
+  onesignal_id: string | null;
+  onesignal_subscription_id: string | null;
+  push_enabled: boolean;
+  promotions_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OnesignalUserListResponse {
+  items: OnesignalUser[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface OnesignalUserDetail {
+  properties: {
+    tags?: Record<string, string | number>;
+    language?: string;
+    timezone_id?: string;
+    country?: string;
+    first_active?: number;
+    last_active?: number;
+    ip?: string;
+    [key: string]: unknown;
+  };
+  identity: Record<string, string>;
+  subscriptions: OnesignalSubscription[];
+}
+
+export interface OnesignalSubscription {
+  id: string;
+  type: string;
+  token?: string;
+  enabled: boolean;
+  notification_types?: number;
+  sdk?: string;
+  device_model?: string;
+  device_os?: string;
+  app_version?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UpdateUserPayload {
+  tags?: Record<string, string | number | boolean>;
+  properties?: Record<string, unknown>;
+}
+
+export interface CreateAliasPayload {
+  identity: Record<string, string>;
+}
+
+export interface UpdateSubscriptionPayload {
+  enabled?: boolean;
+  token?: string;
+  notification_types?: number;
+}
+
+export interface ViewOutcomesQuery {
+  outcome_names?: string;
+  outcome_time_range?: string;
+  outcome_platforms?: string;
+  outcome_attribution?: string;
+}
