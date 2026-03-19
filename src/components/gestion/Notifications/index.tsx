@@ -8,13 +8,16 @@ import TemplateList from "./templates/TemplateList";
 import CreateTemplateModal from "./templates/CreateTemplateModal";
 import EditTemplateModal from "./templates/EditTemplateModal";
 import SegmentList from "./segments/SegmentList";
-import type { OnesignalTemplate } from "@/types/onesignal";
-import { Bell, FileText, Users } from "lucide-react";
+import ScheduledList from "./scheduled/ScheduledList";
+import CreateScheduledModal from "./scheduled/CreateScheduledModal";
+import type { OnesignalTemplate, ScheduledNotification } from "@/types/onesignal";
+import { Bell, FileText, Users, CalendarClock } from "lucide-react";
 
-type NotificationTab = "messages" | "templates" | "segments";
+type NotificationTab = "messages" | "scheduled" | "templates" | "segments";
 
 const TABS: { id: NotificationTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages", label: "Messages", icon: <Bell size={16} /> },
+  { id: "scheduled", label: "Planifiées", icon: <CalendarClock size={16} /> },
   { id: "templates", label: "Templates", icon: <FileText size={16} /> },
   { id: "segments", label: "Segments", icon: <Users size={16} /> },
 ];
@@ -26,7 +29,9 @@ export default function Notifications() {
   // Modals
   const [showCreateMessage, setShowCreateMessage] = useState(false);
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
+  const [showCreateScheduled, setShowCreateScheduled] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<OnesignalTemplate | null>(null);
+  const [scheduledToEdit, setScheduledToEdit] = useState<ScheduledNotification | null>(null);
 
   const getActions = () => {
     switch (activeTab) {
@@ -35,6 +40,14 @@ export default function Notifications() {
           {
             label: "Envoyer une notification",
             onClick: () => setShowCreateMessage(true),
+            variant: "primary" as const,
+          },
+        ];
+      case "scheduled":
+        return [
+          {
+            label: "Nouvelle planification",
+            onClick: () => setShowCreateScheduled(true),
             variant: "primary" as const,
           },
         ];
@@ -95,6 +108,13 @@ export default function Notifications() {
 
         {/* Content */}
         {activeTab === "messages" && <MessageList searchQuery={searchQuery} />}
+        {activeTab === "scheduled" && (
+          <ScheduledList
+            searchQuery={searchQuery}
+            onEdit={(item) => setScheduledToEdit(item)}
+            onCreate={() => setShowCreateScheduled(true)}
+          />
+        )}
         {activeTab === "templates" && (
           <TemplateList
             searchQuery={searchQuery}
@@ -115,6 +135,14 @@ export default function Notifications() {
       <CreateMessageModal
         isOpen={showCreateMessage}
         onClose={() => setShowCreateMessage(false)}
+      />
+      <CreateScheduledModal
+        isOpen={showCreateScheduled || !!scheduledToEdit}
+        onClose={() => {
+          setShowCreateScheduled(false);
+          setScheduledToEdit(null);
+        }}
+        editItem={scheduledToEdit}
       />
       <CreateTemplateModal
         isOpen={showCreateTemplate}

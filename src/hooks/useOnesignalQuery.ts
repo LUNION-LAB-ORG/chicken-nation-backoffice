@@ -13,6 +13,9 @@ import type {
   ViewMessagesQuery,
   ViewTemplatesQuery,
   ViewSegmentsQuery,
+  ScheduledNotificationListResponse,
+  CreateScheduledNotificationPayload,
+  UpdateScheduledNotificationPayload,
 } from "@/types/onesignal";
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
@@ -23,6 +26,7 @@ const keys = {
   templates: (q?: ViewTemplatesQuery) => ["onesignal", "templates", q] as const,
   template: (id: string) => ["onesignal", "templates", id] as const,
   segments: (q?: ViewSegmentsQuery) => ["onesignal", "segments", q] as const,
+  scheduled: (page?: number) => ["onesignal", "scheduled", page] as const,
 };
 
 // ── Messages ─────────────────────────────────────────────────────────────────
@@ -185,6 +189,81 @@ export function useDeleteSegmentMutation() {
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la suppression du segment");
+    },
+  });
+}
+
+// ── Scheduled Notifications ─────────────────────────────────────────────────
+
+export function useScheduledNotificationsQuery(page = 1) {
+  return useQuery<ScheduledNotificationListResponse>({
+    queryKey: keys.scheduled(page),
+    queryFn: () => onesignalService.listScheduledNotifications(page),
+    staleTime: 30_000,
+  });
+}
+
+export function useCreateScheduledMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateScheduledNotificationPayload) =>
+      onesignalService.createScheduledNotification(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "scheduled"] });
+      toast.success("Notification planifiée créée");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la création");
+    },
+  });
+}
+
+export function useUpdateScheduledMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: UpdateScheduledNotificationPayload;
+    }) => onesignalService.updateScheduledNotification(id, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "scheduled"] });
+      toast.success("Notification planifiée mise à jour");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la mise à jour");
+    },
+  });
+}
+
+export function useToggleScheduledMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      onesignalService.toggleScheduledNotification(id, active),
+    onSuccess: (_, { active }) => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "scheduled"] });
+      toast.success(active ? "Notification activée" : "Notification désactivée");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors du changement de statut");
+    },
+  });
+}
+
+export function useDeleteScheduledMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      onesignalService.deleteScheduledNotification(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["onesignal", "scheduled"] });
+      toast.success("Notification planifiée supprimée");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la suppression");
     },
   });
 }

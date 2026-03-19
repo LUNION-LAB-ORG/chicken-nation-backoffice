@@ -11,6 +11,10 @@ import type {
   CreateSegmentPayload,
   UpdateSegmentPayload,
   ViewSegmentsQuery,
+  ScheduledNotification,
+  CreateScheduledNotificationPayload,
+  UpdateScheduledNotificationPayload,
+  ScheduledNotificationListResponse,
 } from "@/types/onesignal";
 
 const BASE = "/onesignal";
@@ -108,6 +112,49 @@ export async function updateSegment(
 
 export async function deleteSegment(id: string): Promise<{ success: boolean }> {
   return api.delete<{ success: boolean }>(`${BASE}/segments/${id}`);
+}
+
+// ── Scheduled Notifications ─────────────────────────────────────────────────
+
+export async function createScheduledNotification(
+  payload: CreateScheduledNotificationPayload
+): Promise<ScheduledNotification> {
+  return api.post<ScheduledNotification>(`${BASE}/scheduled`, payload);
+}
+
+export async function listScheduledNotifications(
+  page = 1,
+  limit = 20
+): Promise<ScheduledNotificationListResponse> {
+  return api.get(`${BASE}/scheduled${qs({ page, limit })}`);
+}
+
+export async function getScheduledNotification(
+  id: string
+): Promise<ScheduledNotification> {
+  return api.get<ScheduledNotification>(`${BASE}/scheduled/${id}`);
+}
+
+export async function updateScheduledNotification(
+  id: string,
+  payload: UpdateScheduledNotificationPayload
+): Promise<ScheduledNotification> {
+  return api.patch<ScheduledNotification>(`${BASE}/scheduled/${id}`, payload);
+}
+
+export async function toggleScheduledNotification(
+  id: string,
+  active: boolean
+): Promise<ScheduledNotification> {
+  return api.patch<ScheduledNotification>(`${BASE}/scheduled/${id}/toggle`, {
+    active,
+  });
+}
+
+export async function deleteScheduledNotification(
+  id: string
+): Promise<{ success: boolean }> {
+  return api.delete<{ success: boolean }>(`${BASE}/scheduled/${id}`);
 }
 
 // ── Tags Sync ───────────────────────────────────────────────────────────────

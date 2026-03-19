@@ -174,3 +174,53 @@ export interface ViewSegmentsQuery {
   limit?: number;
   offset?: number;
 }
+
+// ── Scheduled Notifications ─────────────────────────────────────────────────
+
+export type ScheduleType = "once" | "daily" | "weekly" | "monthly" | "custom";
+
+export interface ScheduledNotification {
+  id: string;
+  name: string;
+  channel: string;
+  payload: Record<string, unknown>;
+  targeting: {
+    type: "segments" | "filters" | "aliases";
+    segments?: string[];
+    filters?: OnesignalFilter[];
+    aliases?: Record<string, string[]>;
+  };
+  schedule_type: ScheduleType;
+  cron_expression?: string | null;
+  scheduled_at?: string | null;
+  timezone: string;
+  active: boolean;
+  last_sent_at?: string | null;
+  next_run_at?: string | null;
+  send_count: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScheduledNotificationPayload {
+  name: string;
+  channel?: string;
+  payload: Record<string, unknown>;
+  targeting: Record<string, unknown>;
+  schedule_type: ScheduleType;
+  cron_expression?: string;
+  scheduled_at?: string;
+  timezone?: string;
+  active?: boolean;
+}
+
+export interface UpdateScheduledNotificationPayload
+  extends Partial<CreateScheduledNotificationPayload> {}
+
+export interface ScheduledNotificationListResponse {
+  items: ScheduledNotification[];
+  total: number;
+  page: number;
+  limit: number;
+}
