@@ -8,11 +8,12 @@ import TemplateList from "./templates/TemplateList";
 import CreateTemplateModal from "./templates/CreateTemplateModal";
 import EditTemplateModal from "./templates/EditTemplateModal";
 import SegmentList from "./segments/SegmentList";
+import CreateSegmentModal from "./segments/CreateSegmentModal";
 import ScheduledList from "./scheduled/ScheduledList";
 import CreateScheduledModal from "./scheduled/CreateScheduledModal";
 import UserList from "./users/UserList";
 import AnalyticsDashboard from "./analytics/AnalyticsDashboard";
-import type { OnesignalTemplate, ScheduledNotification } from "@/types/onesignal";
+import type { PushTemplate, ScheduledNotification } from "@/types/push-campaign";
 import { Bell, FileText, Users, CalendarClock, Smartphone, BarChart3 } from "lucide-react";
 
 type NotificationTab = "messages" | "scheduled" | "templates" | "segments" | "users" | "analytics";
@@ -34,7 +35,8 @@ export default function Notifications() {
   const [showCreateMessage, setShowCreateMessage] = useState(false);
   const [showCreateTemplate, setShowCreateTemplate] = useState(false);
   const [showCreateScheduled, setShowCreateScheduled] = useState(false);
-  const [templateToEdit, setTemplateToEdit] = useState<OnesignalTemplate | null>(null);
+  const [showCreateSegment, setShowCreateSegment] = useState(false);
+  const [templateToEdit, setTemplateToEdit] = useState<PushTemplate | null>(null);
   const [scheduledToEdit, setScheduledToEdit] = useState<ScheduledNotification | null>(null);
 
   const getActions = () => {
@@ -66,27 +68,13 @@ export default function Notifications() {
       case "segments":
         return [
           {
-            label: "Ouvrir OneSignal",
-            onClick: () => window.open("https://dashboard.onesignal.com", "_blank"),
+            label: "Créer un segment",
+            onClick: () => setShowCreateSegment(true),
             variant: "primary" as const,
           },
         ];
-      case "users":
-        return [
-          {
-            label: "Ouvrir OneSignal",
-            onClick: () => window.open("https://dashboard.onesignal.com", "_blank"),
-            variant: "primary" as const,
-          },
-        ];
-      case "analytics":
-        return [
-          {
-            label: "Ouvrir OneSignal",
-            onClick: () => window.open("https://dashboard.onesignal.com", "_blank"),
-            variant: "primary" as const,
-          },
-        ];
+      default:
+        return [];
     }
   };
 
@@ -145,8 +133,7 @@ export default function Notifications() {
         {activeTab === "segments" && (
           <SegmentList
             searchQuery={searchQuery}
-            onEdit={() => {}}
-            onCreate={() => {}}
+            onCreate={() => setShowCreateSegment(true)}
           />
         )}
         {activeTab === "users" && <UserList searchQuery={searchQuery} />}
@@ -169,6 +156,10 @@ export default function Notifications() {
       <CreateTemplateModal
         isOpen={showCreateTemplate}
         onClose={() => setShowCreateTemplate(false)}
+      />
+      <CreateSegmentModal
+        isOpen={showCreateSegment}
+        onClose={() => setShowCreateSegment(false)}
       />
       {templateToEdit && (
         <EditTemplateModal

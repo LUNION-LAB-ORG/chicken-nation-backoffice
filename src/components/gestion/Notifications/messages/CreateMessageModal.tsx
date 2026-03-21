@@ -2,172 +2,92 @@
 
 import React, { useState } from "react";
 import Modal from "@/components/ui/Modal";
-import { useCreateMessageMutation } from "@/hooks/useOnesignalQuery";
-import { useTemplatesQuery, useSegmentsQuery } from "@/hooks/useOnesignalQuery";
-import type { CreateMessagePayload, TargetChannel, OnesignalFilter } from "@/types/onesignal";
-import { Bell, Mail, MessageSquare, Loader2, Plus, Trash2, Info } from "lucide-react";
+import {
+  useCreateCampaignMutation,
+  useSegmentsQuery,
+  usePreviewSegmentMutation,
+} from "@/hooks/usePushCampaignQuery";
+import type { CreateCampaignPayload, PushSegment } from "@/types/push-campaign";
+import { Bell, Loader2, Users, Filter, Send } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type TargetType = "segments" | "filters" | "aliases";
-
-const CHANNELS: { id: TargetChannel; label: string; icon: React.ReactNode }[] = [
-  { id: "push", label: "Push", icon: <Bell size={18} /> },
-  { id: "email", label: "Email", icon: <Mail size={18} /> },
-  { id: "sms", label: "SMS", icon: <MessageSquare size={18} /> },
-];
-
-// Suggested tags matching Chicken Nation's data model
-const SUGGESTED_TAGS = [
-  { key: "orders", label: "Commandes", example: "> 5" },
-  { key: "total_spent", label: "Total dépensé", example: "> 50000" },
-  { key: "last_order_days", label: "Jours sans commande", example: "> 30" },
-  { key: "loyalty_level", label: "Niveau fidélité", example: "= GOLD" },
-  { key: "city", label: "Ville", example: "= Abidjan" },
-];
-
-const TAG_RELATIONS = [
-  { value: ">", label: "supérieur à (>)" },
-  { value: "<", label: "inférieur à (<)" },
-  { value: "=", label: "égal à (=)" },
-  { value: "!=", label: "différent de (!=)" },
-  { value: "exists", label: "existe" },
-  { value: "not_exists", label: "n'existe pas" },
-];
-
-interface FilterRow {
-  key: string;
-  relation: string;
-  value: string;
-  operator: "AND" | "OR";
-}
-
-function emptyFilterRow(): FilterRow {
-  return { key: "", relation: "=", value: "", operator: "AND" };
-}
-
-function toOnesignalFilters(rows: FilterRow[]): OnesignalFilter[] {
-  const result: OnesignalFilter[] = [];
-  rows.forEach((row, i) => {
-    if (i > 0) {
-      result.push({ field: row.operator === "OR" ? "OR" : "AND" } as unknown as OnesignalFilter);
-    }
-    const filter: OnesignalFilter = { field: "tag", key: row.key, relation: row.relation };
-    if (!["exists", "not_exists"].includes(row.relation)) {
-      filter.value = row.value;
-    }
-    result.push(filter);
-  });
-  return result;
-}
+type TargetMode = "all" | "segment" | "filters";
 
 export default function CreateMessageModal({ isOpen, onClose }: Props) {
-  const { mutate: createMessage, isPending } = useCreateMessageMutation();
-  const { data: templatesData } = useTemplatesQuery({ limit: 50 });
-  const { data: segmentsData } = useSegmentsQuery();
+  const { mutate: createCampaign, isPending } = useCreateCampaignMutation();
+  const { data: segments } = useSegmentsQuery();
+  const previewMutation = usePreviewSegmentMutation();
 
-  const templates = templatesData?.templates ?? [];
-  const segments = segmentsData?.segments ?? [];
-
-  const [channel, setChannel] = useState<TargetChannel>("push");
-  const [targetType, setTargetType] = useState<TargetType>("segments");
-  const [selectedSegments, setSelectedSegments] = useState<string[]>(["Subscribed Users"]);
-  const [externalIds, setExternalIds] = useState("");
-  const [filterRows, setFilterRows] = useState<FilterRow[]>([emptyFilterRow()]);
-  const [templateId, setTemplateId] = useState("");
-
-  // Push
+  const [name, setName] = useState("");
   const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [url, setUrl] = useState("");
-  const [bigPicture, setBigPicture] = useState("");
+  const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
-  // Email
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
+  // Targeting
+  const [targetMode, setTargetMode] = useState<TargetMode>("all");
+  const [selectedSegment, setSelectedSegment] = useState("");
 
-  // Scheduling
-  const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState("");
+  // Filters
+  const [filterField, setFilterField] = useState("orders");
+  const [filterOperator, setFilterOperator] = useState("gte");
+  const [filterValue, setFilterValue] = useState("");
 
   const resetForm = () => {
-    setChannel("push");
-    setTargetType("segments");
-    setSelectedSegments(["Subscribed Users"]);
-    setExternalIds("");
-    setFilterRows([emptyFilterRow()]);
-    setTemplateId("");
+    setName("");
     setTitle("");
-    setMessage("");
-    setUrl("");
-    setBigPicture("");
-    setEmailSubject("");
-    setEmailBody("");
-    setScheduleEnabled(false);
-    setScheduledDate("");
+    setBody("");
+    setImageUrl("");
+    setTargetMode("all");
+    setSelectedSegment("");
+    setFilterField("orders");
+    setFilterOperator("gte");
+    setFilterValue("");
   };
 
-  const updateFilterRow = (index: number, patch: Partial<FilterRow>) => {
-    setFilterRows((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, ...patch } : f))
-    );
+  const buildTargetConfig = (): { target_type: string; target_config: Record<string, any> } => {
+    if (targetMode === "all") {
+      return { target_type: "all", target_config: {} };
+    }
+    if (targetMode === "segment") {
+      return { target_type: "segment", target_config: { segment: selectedSegment } };
+    }
+    // filters
+    return {
+      target_type: "filters",
+      target_config: {
+        filters: [
+          { field: filterField, operator: filterOperator, value: filterValue },
+        ],
+      },
+    };
   };
 
-  const addFilterRow = () => {
-    setFilterRows((prev) => [...prev, emptyFilterRow()]);
-  };
-
-  const removeFilterRow = (index: number) => {
-    setFilterRows((prev) => prev.filter((_, i) => i !== index));
+  const handlePreview = () => {
+    const { target_type, target_config } = buildTargetConfig();
+    previewMutation.mutate({
+      target_type: target_type as any,
+      target_config,
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const { target_type, target_config } = buildTargetConfig();
 
-    const payload: CreateMessagePayload = {
-      target_channel: channel,
+    const payload: CreateCampaignPayload = {
+      name: name || title,
+      title,
+      body,
+      target_type: target_type as any,
+      target_config,
+      ...(imageUrl ? { image_url: imageUrl } : {}),
     };
 
-    // Content based on channel
-    if (channel === "push") {
-      if (templateId) {
-        payload.template_id = templateId;
-      } else {
-        payload.headings = { en: title, fr: title };
-        payload.contents = { en: message, fr: message };
-        if (url) payload.url = url;
-        if (bigPicture) payload.big_picture = bigPicture;
-      }
-    } else if (channel === "email") {
-      payload.email_subject = emailSubject;
-      payload.email_body = emailBody;
-    } else if (channel === "sms") {
-      payload.contents = { en: message, fr: message };
-    }
-
-    // Targeting
-    if (targetType === "segments") {
-      payload.included_segments = selectedSegments;
-    } else if (targetType === "filters") {
-      // Use tag filters — no segments needed
-      payload.filters = toOnesignalFilters(filterRows);
-    } else {
-      const ids = externalIds
-        .split(",")
-        .map((id) => id.trim())
-        .filter(Boolean);
-      payload.include_aliases = { external_id: ids };
-    }
-
-    // Scheduling
-    if (scheduleEnabled && scheduledDate) {
-      payload.send_after = new Date(scheduledDate).toISOString();
-    }
-
-    createMessage(payload, {
+    createCampaign(payload, {
       onSuccess: () => {
         resetForm();
         onClose();
@@ -175,171 +95,79 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
     });
   };
 
-  const toggleSegment = (name: string) => {
-    setSelectedSegments((prev) =>
-      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name]
-    );
-  };
+  const FILTER_FIELDS = [
+    { key: "orders", label: "Nombre de commandes" },
+    { key: "total_spent", label: "Total dépensé (FCFA)" },
+    { key: "loyalty_level", label: "Niveau fidélité" },
+    { key: "city", label: "Ville" },
+  ];
+
+  const OPERATORS = [
+    { key: "gte", label: "Supérieur ou égal à" },
+    { key: "lte", label: "Inférieur ou égal à" },
+    { key: "eq", label: "Égal à" },
+  ];
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Envoyer une notification"
-      size="large"
-    >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Channel selection */}
+    <Modal isOpen={isOpen} onClose={onClose} title="Envoyer une notification push">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Canal
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Nom de la campagne
           </label>
-          <div className="flex gap-3">
-            {CHANNELS.map((ch) => (
-              <button
-                key={ch.id}
-                type="button"
-                onClick={() => setChannel(ch.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-medium transition-all cursor-pointer ${
-                  channel === ch.id
-                    ? "border-[#F17922] bg-[#FFF3E8] text-[#F17922]"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                {ch.icon}
-                {ch.label}
-              </button>
-            ))}
-          </div>
+          <input
+            type="text"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="Ex: Promo weekend"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
         </div>
 
-        {/* Template select (push only) */}
-        {channel === "push" && templates.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Template (optionnel)
-            </label>
-            <select
-              value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            >
-              <option value="">Aucun — contenu personnalisé</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Title */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Titre de la notification
+          </label>
+          <input
+            type="text"
+            required
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="Titre affiché sur le téléphone"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
-        {/* Content — Push */}
-        {channel === "push" && !templateId && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Titre
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Titre de la notification"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Message
-              </label>
-              <textarea
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                placeholder="Corps du message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  URL (optionnel)
-                </label>
-                <input
-                  type="url"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="https://..."
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  Image (optionnel)
-                </label>
-                <input
-                  type="url"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  placeholder="https://...image.png"
-                  value={bigPicture}
-                  onChange={(e) => setBigPicture(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Body */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Message
+          </label>
+          <textarea
+            required
+            rows={3}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+            placeholder="Corps du message push"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+          />
+        </div>
 
-        {/* Content — Email */}
-        {channel === "email" && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Sujet
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                placeholder="Sujet de l'email"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Corps HTML
-              </label>
-              <textarea
-                required
-                rows={6}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none font-mono"
-                placeholder="<html>...</html>"
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Content — SMS */}
-        {channel === "sms" && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Message SMS
-            </label>
-            <textarea
-              required
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-              placeholder="Contenu du SMS"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </div>
-        )}
+        {/* Image URL */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Image URL (optionnel)
+          </label>
+          <input
+            type="url"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            placeholder="https://..."
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+          />
+        </div>
 
         {/* Targeting */}
         <div>
@@ -347,224 +175,96 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
             Ciblage
           </label>
           <div className="flex gap-2 mb-3">
-            <button
-              type="button"
-              onClick={() => setTargetType("segments")}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                targetType === "segments"
-                  ? "bg-[#FFF3E8] text-[#F17922] border border-[#F17922]"
-                  : "border border-gray-200 text-gray-600"
-              }`}
-            >
-              Par segment
-            </button>
-            <button
-              type="button"
-              onClick={() => setTargetType("filters")}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                targetType === "filters"
-                  ? "bg-[#FFF3E8] text-[#F17922] border border-[#F17922]"
-                  : "border border-gray-200 text-gray-600"
-              }`}
-            >
-              Par tags
-            </button>
-            <button
-              type="button"
-              onClick={() => setTargetType("aliases")}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                targetType === "aliases"
-                  ? "bg-[#FFF3E8] text-[#F17922] border border-[#F17922]"
-                  : "border border-gray-200 text-gray-600"
-              }`}
-            >
-              Par ID utilisateur
-            </button>
-          </div>
-
-          {/* Segment targeting */}
-          {targetType === "segments" && (
-            <div className="flex flex-wrap gap-2">
+            {[
+              { id: "all" as const, label: "Tous les abonnés", icon: <Users size={14} /> },
+              { id: "segment" as const, label: "Segment", icon: <Bell size={14} /> },
+              { id: "filters" as const, label: "Filtres", icon: <Filter size={14} /> },
+            ].map((opt) => (
               <button
+                key={opt.id}
                 type="button"
-                onClick={() => toggleSegment("Subscribed Users")}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                  selectedSegments.includes("Subscribed Users")
-                    ? "bg-[#F17922] text-white"
-                    : "bg-gray-100 text-gray-600"
+                onClick={() => setTargetMode(opt.id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                  targetMode === opt.id
+                    ? "border-[#F17922] bg-[#FFF3E8] text-[#F17922]"
+                    : "border-gray-200 text-gray-600 hover:border-gray-300"
                 }`}
               >
-                Tous les abonnés
+                {opt.icon}
+                {opt.label}
               </button>
-              {segments
-                .filter((s) => s.name !== "Subscribed Users")
-                .map((seg) => (
-                  <button
-                    key={seg.id}
-                    type="button"
-                    onClick={() => toggleSegment(seg.name)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                      selectedSegments.includes(seg.name)
-                        ? "bg-[#F17922] text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {seg.name}
-                  </button>
-                ))}
-            </div>
-          )}
-
-          {/* Tag filter targeting */}
-          {targetType === "filters" && (
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 bg-blue-50 rounded-xl p-3">
-                <Info size={16} className="text-blue-500 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-blue-700">
-                  Ciblez les utilisateurs par leurs tags (nombre de commandes, ville, fidélité, etc.).
-                  Les tags sont synchronisés automatiquement par le backend.
-                </p>
-              </div>
-
-              {filterRows.map((row, index) => {
-                const needsValue = !["exists", "not_exists"].includes(row.relation);
-                return (
-                  <div key={index}>
-                    {index > 0 && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <select
-                          value={row.operator}
-                          onChange={(e) =>
-                            updateFilterRow(index, { operator: e.target.value as "AND" | "OR" })
-                          }
-                          className="border border-gray-200 rounded-lg px-3 py-1 text-xs font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          <option value="AND">ET</option>
-                          <option value="OR">OU</option>
-                        </select>
-                        <div className="flex-1 h-px bg-gray-200" />
-                      </div>
-                    )}
-                    <div className="bg-gray-50 rounded-xl p-3 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Clé du tag"
-                          required
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 w-40"
-                          value={row.key}
-                          onChange={(e) => updateFilterRow(index, { key: e.target.value })}
-                        />
-                        <select
-                          value={row.relation}
-                          onChange={(e) => updateFilterRow(index, { relation: e.target.value })}
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                          {TAG_RELATIONS.map((r) => (
-                            <option key={r.value} value={r.value}>
-                              {r.label}
-                            </option>
-                          ))}
-                        </select>
-                        {needsValue && (
-                          <input
-                            type="text"
-                            placeholder="Valeur"
-                            required
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 flex-1"
-                            value={row.value}
-                            onChange={(e) => updateFilterRow(index, { value: e.target.value })}
-                          />
-                        )}
-                        {filterRows.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeFilterRow(index)}
-                            className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer flex-shrink-0"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Show tag suggestions when key is empty */}
-                      {!row.key && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {SUGGESTED_TAGS.map((tag) => (
-                            <button
-                              key={tag.key}
-                              type="button"
-                              onClick={() => updateFilterRow(index, { key: tag.key })}
-                              className="px-2 py-0.5 bg-white border border-gray-200 rounded-lg text-[11px] text-gray-500 hover:border-[#F17922] hover:text-[#F17922] cursor-pointer transition-all"
-                              title={`${tag.label} (ex: ${tag.example})`}
-                            >
-                              {tag.label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={addFilterRow}
-                className="flex items-center gap-1.5 text-sm text-[#F17922] font-medium hover:underline cursor-pointer"
-              >
-                <Plus size={16} />
-                Ajouter un filtre
-              </button>
-            </div>
-          )}
-
-          {/* External ID targeting */}
-          {targetType === "aliases" && (
-            <div>
-              <textarea
-                rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none font-mono"
-                placeholder="ID1, ID2, ID3 (séparés par des virgules)"
-                value={externalIds}
-                onChange={(e) => setExternalIds(e.target.value)}
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                Entrez les identifiants clients séparés par des virgules
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* Scheduling */}
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <label className="text-sm font-medium text-gray-700">
-              Planifier l&apos;envoi
-            </label>
-            <button
-              type="button"
-              onClick={() => setScheduleEnabled(!scheduleEnabled)}
-              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                scheduleEnabled ? "bg-[#F17922]" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                  scheduleEnabled ? "translate-x-4.5" : "translate-x-1"
-                }`}
-              />
-            </button>
+            ))}
           </div>
-          {scheduleEnabled && (
-            <input
-              type="datetime-local"
-              required={scheduleEnabled}
+
+          {/* Segment picker */}
+          {targetMode === "segment" && (
+            <select
+              value={selectedSegment}
+              onChange={(e) => setSelectedSegment(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              value={scheduledDate}
-              onChange={(e) => setScheduledDate(e.target.value)}
-            />
+            >
+              <option value="">Choisir un segment</option>
+              {(segments ?? []).map((seg) => (
+                <option key={seg.key} value={seg.key}>
+                  {seg.label} ({seg.count})
+                </option>
+              ))}
+            </select>
           )}
+
+          {/* Filters */}
+          {targetMode === "filters" && (
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  value={filterField}
+                  onChange={(e) => setFilterField(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  {FILTER_FIELDS.map((f) => (
+                    <option key={f.key} value={f.key}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterOperator}
+                  onChange={(e) => setFilterOperator(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  {OPERATORS.map((op) => (
+                    <option key={op.key} value={op.key}>
+                      {op.label}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="Valeur"
+                  value={filterValue}
+                  onChange={(e) => setFilterValue(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-2 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Preview count */}
+          <button
+            type="button"
+            onClick={handlePreview}
+            disabled={previewMutation.isPending}
+            className="mt-2 text-xs text-[#F17922] hover:underline cursor-pointer flex items-center gap-1"
+          >
+            {previewMutation.isPending ? (
+              <Loader2 size={12} className="animate-spin" />
+            ) : (
+              <Users size={12} />
+            )}
+            {previewMutation.data
+              ? `${previewMutation.data.count} destinataire${previewMutation.data.count > 1 ? "s" : ""}`
+              : "Calculer le nombre de destinataires"}
+          </button>
         </div>
 
         {/* Actions */}
@@ -581,8 +281,12 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
             disabled={isPending}
             className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
-            {isPending && <Loader2 size={16} className="animate-spin" />}
-            {scheduleEnabled ? "Planifier" : "Envoyer maintenant"}
+            {isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <Send size={16} />
+            )}
+            Envoyer
           </button>
         </div>
       </form>

@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { useUpdateTemplateMutation } from "@/hooks/useOnesignalQuery";
-import type { OnesignalTemplate, UpdateTemplatePayload } from "@/types/onesignal";
+import { useUpdateTemplateMutation } from "@/hooks/usePushCampaignQuery";
+import type { PushTemplate } from "@/types/push-campaign";
 import { Loader2 } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  template: OnesignalTemplate;
+  template: PushTemplate;
 }
 
 export default function EditTemplateModal({ isOpen, onClose, template }: Props) {
@@ -17,43 +17,29 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
 
   const [name, setName] = useState("");
   const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
-  const [pushUrl, setPushUrl] = useState("");
-  const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [smsMessage, setSmsMessage] = useState("");
-
-  const isEmail = template.isEmail;
-  const isSMS = template.isSMS;
+  const [body, setBody] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     setName(template.name || "");
-    setTitle(template.headings?.en || template.headings?.fr || "");
-    setMessage(template.contents?.en || template.contents?.fr || "");
-    setPushUrl(template.url || "");
-    setEmailSubject(template.email_subject || "");
-    setEmailBody(template.email_body || "");
-    setSmsMessage(template.contents?.en || template.contents?.fr || "");
+    setTitle(template.title || "");
+    setBody(template.body || "");
+    setImageUrl(template.image_url || "");
   }, [template]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const payload: UpdateTemplatePayload = { name };
-
-    if (isEmail) {
-      payload.email_subject = emailSubject;
-      payload.email_body = emailBody;
-    } else if (isSMS) {
-      payload.contents = { en: smsMessage, fr: smsMessage };
-    } else {
-      payload.headings = { en: title, fr: title };
-      payload.contents = { en: message, fr: message };
-      if (pushUrl) payload.url = pushUrl;
-    }
-
     updateTemplate(
-      { id: template.id, payload },
+      {
+        id: template.id,
+        payload: {
+          name,
+          title,
+          body,
+          ...(imageUrl ? { image_url: imageUrl } : {}),
+        },
+      },
       {
         onSuccess: () => onClose(),
       }
@@ -77,92 +63,43 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
           />
         </div>
 
-        {/* Push */}
-        {!isEmail && !isSMS && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Titre
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Message
-              </label>
-              <textarea
-                required
-                rows={3}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                URL (optionnel)
-              </label>
-              <input
-                type="url"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={pushUrl}
-                onChange={(e) => setPushUrl(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Titre
+          </label>
+          <input
+            type="text"
+            required
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
 
-        {/* Email */}
-        {isEmail && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Sujet
-              </label>
-              <input
-                type="text"
-                required
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={emailSubject}
-                onChange={(e) => setEmailSubject(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Corps HTML
-              </label>
-              <textarea
-                required
-                rows={6}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none font-mono"
-                value={emailBody}
-                onChange={(e) => setEmailBody(e.target.value)}
-              />
-            </div>
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Message
+          </label>
+          <textarea
+            required
+            rows={3}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+          />
+        </div>
 
-        {/* SMS */}
-        {isSMS && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Message
-            </label>
-            <textarea
-              required
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-              value={smsMessage}
-              onChange={(e) => setSmsMessage(e.target.value)}
-            />
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Image URL (optionnel)
+          </label>
+          <input
+            type="url"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+          />
+        </div>
 
         <div className="flex justify-end gap-3 pt-2">
           <button

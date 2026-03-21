@@ -1,316 +1,468 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
-import { useCreateSegmentMutation } from "@/hooks/useOnesignalQuery";
-import type { OnesignalFilter } from "@/types/onesignal";
-import { Loader2, Plus, Trash2, Info } from "lucide-react";
+import {
+  useCreateSegmentMutation,
+  useUpdateSegmentMutation,
+  usePreviewSegmentMutation,
+} from "@/hooks/usePushCampaignQuery";
+import type { PushSegment, SegmentFilters } from "@/types/push-campaign";
+import { Loader2, Users, Eye } from "lucide-react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  editSegment?: PushSegment | null;
 }
 
-// Filter types available in OneSignal
-const FILTER_TYPES = [
-  { value: "tag", label: "Tag utilisateur", description: "Filtrer par tag (commandes, fidélité, nom...)" },
-  { value: "last_session", label: "Dernière session", description: "Temps depuis la dernière session" },
-  { value: "first_session", label: "Première session", description: "Temps depuis la première session" },
-  { value: "session_count", label: "Nombre de sessions", description: "Nombre total de sessions" },
-  { value: "language", label: "Langue", description: "Langue de l'appareil" },
-  { value: "app_version", label: "Version de l'app", description: "Version installée" },
-  { value: "country", label: "Pays", description: "Pays de l'utilisateur" },
+const LOYALTY_LEVELS = [
+  { value: "", label: "Tous" },
+  { value: "STANDARD", label: "Standard" },
+  { value: "GOLD", label: "Gold" },
+  { value: "PREMIUM", label: "Premium" },
 ];
 
-// Relations available based on field type
-const TAG_RELATIONS = [
-  { value: ">", label: "supérieur à (>)" },
-  { value: "<", label: "inférieur à (<)" },
-  { value: "=", label: "égal à (=)" },
-  { value: "!=", label: "différent de (!=)" },
-  { value: "exists", label: "existe" },
-  { value: "not_exists", label: "n'existe pas" },
-];
+export default function CreateSegmentModal({
+  isOpen,
+  onClose,
+  editSegment,
+}: Props) {
+  const createMutation = useCreateSegmentMutation();
+  const updateMutation = useUpdateSegmentMutation();
+  const previewMutation = usePreviewSegmentMutation();
 
-const TIME_RELATIONS = [
-  { value: ">", label: "il y a plus de (heures)" },
-  { value: "<", label: "il y a moins de (heures)" },
-];
+  const isEdit = !!editSegment && !editSegment.is_system;
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
-const NUMERIC_RELATIONS = [
-  { value: ">", label: "supérieur à" },
-  { value: "<", label: "inférieur à" },
-  { value: "=", label: "égal à" },
-];
-
-const STRING_RELATIONS = [
-  { value: "=", label: "égal à" },
-  { value: "!=", label: "différent de" },
-];
-
-// Suggested tag keys based on Chicken Nation data
-const SUGGESTED_TAGS = [
-  { key: "orders", label: "Nombre de commandes", example: "> 5" },
-  { key: "total_spent", label: "Total dépensé (FCFA)", example: "> 10000" },
-  { key: "name", label: "Nom du client", example: "= Anderson" },
-  { key: "first_name", label: "Prénom", example: "= Andy" },
-  { key: "birthday", label: "Date de naissance", example: "= 03-15" },
-  { key: "city", label: "Ville", example: "= Cotonou" },
-  { key: "favorite_restaurant", label: "Restaurant favori", example: "= Akpakpa" },
-  { key: "last_order_days", label: "Jours depuis dernière commande", example: "> 30" },
-  { key: "loyalty_points", label: "Points de fidélité", example: "> 100" },
-  { key: "is_vip", label: "Client VIP", example: "= true" },
-];
-
-function getRelationsForField(field: string) {
-  if (field === "tag") return TAG_RELATIONS;
-  if (field === "last_session" || field === "first_session") return TIME_RELATIONS;
-  if (field === "session_count") return NUMERIC_RELATIONS;
-  return STRING_RELATIONS;
-}
-
-interface FilterRow {
-  field: string;
-  key: string;
-  relation: string;
-  value: string;
-  operator: "AND" | "OR";
-}
-
-function emptyFilter(): FilterRow {
-  return { field: "tag", key: "", relation: "=", value: "", operator: "AND" };
-}
-
-function toOnesignalFilters(rows: FilterRow[]): OnesignalFilter[] {
-  const result: OnesignalFilter[] = [];
-  rows.forEach((row, i) => {
-    // Add operator between filters (not before the first one)
-    if (i > 0) {
-      result.push({ field: row.operator === "OR" ? "OR" : "AND" } as unknown as OnesignalFilter);
-    }
-
-    const filter: OnesignalFilter = { field: row.field, relation: row.relation };
-    if (row.field === "tag") {
-      filter.key = row.key;
-    }
-    if (!["exists", "not_exists"].includes(row.relation)) {
-      filter.value = row.value;
-    }
-    result.push(filter);
-  });
-  return result;
-}
-
-export default function CreateSegmentModal({ isOpen, onClose }: Props) {
-  const { mutate: createSegment, isPending } = useCreateSegmentMutation();
+  // Form state
   const [name, setName] = useState("");
-  const [filters, setFilters] = useState<FilterRow[]>([emptyFilter()]);
-  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const [description, setDescription] = useState("");
+  const [nameContains, setNameContains] = useState("");
+  const [phoneContains, setPhoneContains] = useState("");
+  const [emailContains, setEmailContains] = useState("");
+  const [minOrders, setMinOrders] = useState("");
+  const [maxOrders, setMaxOrders] = useState("");
+  const [minSpent, setMinSpent] = useState("");
+  const [maxSpent, setMaxSpent] = useState("");
+  const [loyaltyLevel, setLoyaltyLevel] = useState("");
+  const [city, setCity] = useState("");
+  const [minPoints, setMinPoints] = useState("");
+  const [maxPoints, setMaxPoints] = useState("");
+  const [lastOrderDays, setLastOrderDays] = useState("");
+  const [noOrderDays, setNoOrderDays] = useState("");
 
-  const updateFilter = (index: number, patch: Partial<FilterRow>) => {
-    setFilters((prev) =>
-      prev.map((f, i) => (i === index ? { ...f, ...patch } : f))
-    );
+  useEffect(() => {
+    if (editSegment && !editSegment.is_system) {
+      setName(editSegment.label);
+      setDescription(editSegment.description ?? "");
+
+      const seg = editSegment as any;
+      const filters: SegmentFilters = seg.filters ?? {};
+      setNameContains(filters.name_contains ?? "");
+      setPhoneContains(filters.phone_contains ?? "");
+      setEmailContains(filters.email_contains ?? "");
+      setMinOrders(filters.min_orders?.toString() ?? "");
+      setMaxOrders(filters.max_orders?.toString() ?? "");
+      setMinSpent(filters.min_spent?.toString() ?? "");
+      setMaxSpent(filters.max_spent?.toString() ?? "");
+      setLoyaltyLevel(filters.loyalty_level ?? "");
+      setCity(filters.city ?? "");
+      setMinPoints(filters.min_points?.toString() ?? "");
+      setMaxPoints(filters.max_points?.toString() ?? "");
+      setLastOrderDays(filters.last_order_days?.toString() ?? "");
+      setNoOrderDays(filters.no_order_days?.toString() ?? "");
+    } else {
+      resetForm();
+    }
+  }, [editSegment, isOpen]);
+
+  const resetForm = () => {
+    setName("");
+    setDescription("");
+    setNameContains("");
+    setPhoneContains("");
+    setEmailContains("");
+    setMinOrders("");
+    setMaxOrders("");
+    setMinSpent("");
+    setMaxSpent("");
+    setLoyaltyLevel("");
+    setCity("");
+    setMinPoints("");
+    setMaxPoints("");
+    setLastOrderDays("");
+    setNoOrderDays("");
+    previewMutation.reset();
   };
 
-  const addFilter = () => {
-    setFilters((prev) => [...prev, emptyFilter()]);
+  const buildFilters = (): SegmentFilters => {
+    const filters: SegmentFilters = {};
+    if (nameContains) filters.name_contains = nameContains;
+    if (phoneContains) filters.phone_contains = phoneContains;
+    if (emailContains) filters.email_contains = emailContains;
+    if (minOrders) filters.min_orders = Number(minOrders);
+    if (maxOrders) filters.max_orders = Number(maxOrders);
+    if (minSpent) filters.min_spent = Number(minSpent);
+    if (maxSpent) filters.max_spent = Number(maxSpent);
+    if (loyaltyLevel) filters.loyalty_level = loyaltyLevel;
+    if (city) filters.city = city;
+    if (minPoints) filters.min_points = Number(minPoints);
+    if (maxPoints) filters.max_points = Number(maxPoints);
+    if (lastOrderDays) filters.last_order_days = Number(lastOrderDays);
+    if (noOrderDays) filters.no_order_days = Number(noOrderDays);
+    return filters;
   };
 
-  const removeFilter = (index: number) => {
-    setFilters((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const applyTagSuggestion = (index: number, tagKey: string) => {
-    updateFilter(index, { field: "tag", key: tagKey });
-    setShowTagSuggestions(false);
+  const handlePreview = () => {
+    const filters = buildFilters();
+    previewMutation.mutate({
+      target_type: "filters",
+      target_config: {
+        filters: Object.entries(filters).map(([field, value]) => ({
+          field,
+          operator: "=",
+          value,
+        })),
+      },
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const onesignalFilters = toOnesignalFilters(filters);
-    createSegment(
-      { name, filters: onesignalFilters },
-      {
+
+    const filters = buildFilters();
+    const payload = {
+      name,
+      description: description || undefined,
+      filters,
+    };
+
+    if (isEdit && editSegment?.id) {
+      updateMutation.mutate(
+        { id: editSegment.id, payload },
+        {
+          onSuccess: () => {
+            resetForm();
+            onClose();
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(payload, {
         onSuccess: () => {
-          setName("");
-          setFilters([emptyFilter()]);
+          resetForm();
           onClose();
         },
-      }
-    );
+      });
+    }
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Créer un segment" size="large">
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Nom du segment
-          </label>
-          <input
-            type="text"
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="Ex: Clients fidèles, Plus de 5 commandes..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
+  const hasAnyFilter =
+    nameContains ||
+    phoneContains ||
+    emailContains ||
+    minOrders ||
+    maxOrders ||
+    minSpent ||
+    maxSpent ||
+    loyaltyLevel ||
+    city ||
+    minPoints ||
+    maxPoints ||
+    lastOrderDays ||
+    noOrderDays;
 
-        {/* Info about tags */}
-        <div className="flex items-start gap-3 bg-blue-50 rounded-xl p-4">
-          <Info size={18} className="text-blue-500 mt-0.5 flex-shrink-0" />
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEdit ? "Modifier le segment" : "Nouveau segment"}
+      size="large"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6 max-h-[75vh] overflow-y-auto pr-1"
+      >
+        {/* Nom + description */}
+        <div className="space-y-4">
           <div>
-            <p className="text-sm text-blue-800 font-medium">
-              Segmentation par tags
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              Les tags sont automatiquement mis à jour par les tâches CRON du backend
-              (nombre de commandes, total dépensé, fidélité, etc.).
-              Sélectionnez &quot;Tag utilisateur&quot; pour créer des segments basés sur ces données.
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Nom du segment
+            </label>
+            <input
+              type="text"
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="Ex: VIP Abidjan"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Description (optionnel)
+            </label>
+            <input
+              type="text"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              placeholder="Ex: Clients Gold d'Abidjan avec 5+ commandes"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
 
+        {/* Filtres */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Filtres
+            Critères de ciblage
           </label>
-          <div className="space-y-3">
-            {filters.map((filter, index) => {
-              const relations = getRelationsForField(filter.field);
-              const needsValue = !["exists", "not_exists"].includes(filter.relation);
+          <p className="text-xs text-gray-400 mb-4">
+            Tous les critères sont combinés en AND (intersection). Laissez vide
+            pour ignorer un critère.
+          </p>
 
-              return (
-                <div key={index}>
-                  {index > 0 && (
-                    <div className="flex items-center gap-2 mb-2">
-                      <select
-                        value={filter.operator}
-                        onChange={(e) =>
-                          updateFilter(index, {
-                            operator: e.target.value as "AND" | "OR",
-                          })
-                        }
-                        className="border border-gray-200 rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        <option value="AND">ET</option>
-                        <option value="OR">OU</option>
-                      </select>
-                      <div className="flex-1 h-px bg-gray-200" />
-                    </div>
-                  )}
-                  <div className="bg-gray-50 rounded-xl p-3 space-y-3">
-                    <div className="flex items-center gap-3">
-                      {/* Field type */}
-                      <select
-                        value={filter.field}
-                        onChange={(e) => {
-                          const newField = e.target.value;
-                          const newRelations = getRelationsForField(newField);
-                          updateFilter(index, {
-                            field: newField,
-                            relation: newRelations[0].value,
-                            key: newField === "tag" ? filter.key : "",
-                          });
-                        }}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[160px]"
-                      >
-                        {FILTER_TYPES.map((f) => (
-                          <option key={f.value} value={f.value}>
-                            {f.label}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Tag key input */}
-                      {filter.field === "tag" && (
-                        <div className="relative">
-                          <input
-                            type="text"
-                            placeholder="Clé du tag"
-                            required
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 w-40"
-                            value={filter.key}
-                            onChange={(e) => updateFilter(index, { key: e.target.value })}
-                            onFocus={() => setShowTagSuggestions(true)}
-                          />
-                        </div>
-                      )}
-
-                      {/* Relation */}
-                      <select
-                        value={filter.relation}
-                        onChange={(e) =>
-                          updateFilter(index, { relation: e.target.value })
-                        }
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                      >
-                        {relations.map((r) => (
-                          <option key={r.value} value={r.value}>
-                            {r.label}
-                          </option>
-                        ))}
-                      </select>
-
-                      {/* Value */}
-                      {needsValue && (
-                        <input
-                          type="text"
-                          placeholder="Valeur"
-                          required
-                          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 flex-1"
-                          value={filter.value}
-                          onChange={(e) =>
-                            updateFilter(index, { value: e.target.value })
-                          }
-                        />
-                      )}
-
-                      {filters.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeFilter(index)}
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer flex-shrink-0"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Tag suggestions */}
-                    {filter.field === "tag" && showTagSuggestions && !filter.key && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {SUGGESTED_TAGS.map((tag) => (
-                          <button
-                            key={tag.key}
-                            type="button"
-                            onClick={() => applyTagSuggestion(index, tag.key)}
-                            className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs text-gray-600 hover:border-[#F17922] hover:text-[#F17922] cursor-pointer transition-all"
-                            title={`${tag.label} (ex: ${tag.example})`}
-                          >
-                            {tag.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Identité client */}
+            <div className="col-span-2 border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Client
+              </h4>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Nom / prénom contient
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: Koné"
+                    value={nameContains}
+                    onChange={(e) => setNameContains(e.target.value)}
+                  />
                 </div>
-              );
-            })}
-          </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Téléphone contient
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: +225"
+                    value={phoneContains}
+                    onChange={(e) => setPhoneContains(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Email contient
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: gmail.com"
+                    value={emailContains}
+                    onChange={(e) => setEmailContains(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
 
-          <button
-            type="button"
-            onClick={addFilter}
-            className="mt-3 flex items-center gap-1.5 text-sm text-[#F17922] font-medium hover:underline cursor-pointer"
-          >
-            <Plus size={16} />
-            Ajouter un filtre
-          </button>
+            {/* Commandes */}
+            <div className="col-span-2 border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Commandes
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Min commandes
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 5"
+                    value={minOrders}
+                    onChange={(e) => setMinOrders(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Max commandes
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 10"
+                    value={maxOrders}
+                    onChange={(e) => setMaxOrders(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Dépenses */}
+            <div className="col-span-2 border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Dépenses (FCFA)
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Min total dépensé
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 50000"
+                    value={minSpent}
+                    onChange={(e) => setMinSpent(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Max total dépensé
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 200000"
+                    value={maxSpent}
+                    onChange={(e) => setMaxSpent(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Fidélité + Points */}
+            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Fidélité
+              </h4>
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                value={loyaltyLevel}
+                onChange={(e) => setLoyaltyLevel(e.target.value)}
+              >
+                {LOYALTY_LEVELS.map((l) => (
+                  <option key={l.value} value={l.value}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Min points
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="0"
+                    value={minPoints}
+                    onChange={(e) => setMinPoints(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Max points
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="10000"
+                    value={maxPoints}
+                    onChange={(e) => setMaxPoints(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Ville */}
+            <div className="border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Ville
+              </h4>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="Ex: Abidjan"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+            </div>
+
+            {/* Activité */}
+            <div className="col-span-2 border border-gray-100 rounded-xl p-4 space-y-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Activité récente
+              </h4>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    A commandé dans les X derniers jours
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 7"
+                    value={lastOrderDays}
+                    onChange={(e) => setLastOrderDays(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Inactif depuis X jours
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    placeholder="Ex: 30"
+                    value={noOrderDays}
+                    onChange={(e) => setNoOrderDays(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
+        {/* Preview */}
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handlePreview}
+            disabled={!hasAnyFilter || previewMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50 transition-all"
+          >
+            {previewMutation.isPending ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Eye size={14} />
+            )}
+            Prévisualiser
+          </button>
+          {previewMutation.data && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#FFF3E8] rounded-xl">
+              <Users size={14} className="text-[#F17922]" />
+              <span className="text-sm font-semibold text-[#F17922]">
+                {previewMutation.data.count.toLocaleString("fr-FR")}{" "}
+                destinataires
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">
           <button
             type="button"
@@ -321,11 +473,11 @@ export default function CreateSegmentModal({ isOpen, onClose }: Props) {
           </button>
           <button
             type="submit"
-            disabled={isPending}
+            disabled={isPending || !name}
             className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
-            Créer
+            {isEdit ? "Enregistrer" : "Créer le segment"}
           </button>
         </div>
       </form>

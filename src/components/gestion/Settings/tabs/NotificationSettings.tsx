@@ -50,25 +50,11 @@ const AUTO_TAGS = [
     example: "Ex : total_spent > 50000 → clients à forte valeur",
   },
   {
-    key: "last_order_days",
-    label: "Jours depuis dernière commande",
-    description: "Récence d'achat — cibler les clients inactifs pour les réengager",
-    source: "commandes",
-    example: "Ex : last_order_days > 30 → campagne de réengagement",
-  },
-  {
     key: "loyalty_level",
     label: "Niveau de fidélité",
     description: "STANDARD, PREMIUM ou GOLD — offres personnalisées par tier",
     source: "fidélité",
     example: "Ex : loyalty_level = GOLD → offres VIP exclusives",
-  },
-  {
-    key: "city",
-    label: "Ville",
-    description: "Ville de livraison — promotions géo-ciblées",
-    source: "client",
-    example: "Ex : city = Abidjan → promo resto Abidjan",
   },
 ];
 

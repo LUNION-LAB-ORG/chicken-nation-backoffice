@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useState } from "react";
-import { useOnesignalUsersQuery } from "@/hooks/useOnesignalQuery";
-import type { OnesignalUser } from "@/types/onesignal";
+import { usePushUsersQuery } from "@/hooks/usePushCampaignQuery";
+import type { PushUser } from "@/types/push-campaign";
 import {
   Smartphone,
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Search,
   Crown,
-  ShoppingBag,
-  MapPin,
   Eye,
 } from "lucide-react";
 import UserDetailModal from "./UserDetailModal";
@@ -28,9 +25,9 @@ const LOYALTY_COLORS: Record<string, { bg: string; text: string }> = {
 
 export default function UserList({ searchQuery }: Props) {
   const [page, setPage] = useState(1);
-  const [selectedUser, setSelectedUser] = useState<OnesignalUser | null>(null);
+  const [selectedUser, setSelectedUser] = useState<PushUser | null>(null);
 
-  const { data, isLoading, error } = useOnesignalUsersQuery({
+  const { data, isLoading, error } = usePushUsersQuery({
     page,
     search: searchQuery || undefined,
   });
@@ -57,10 +54,9 @@ export default function UserList({ searchQuery }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Stats bar */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-gray-500">
-          <span className="font-semibold text-gray-700">{total}</span> utilisateur{total > 1 ? "s" : ""} OneSignal enregistré{total > 1 ? "s" : ""}
+          <span className="font-semibold text-gray-700">{total}</span> abonné{total > 1 ? "s" : ""} push
         </p>
       </div>
 
@@ -70,7 +66,7 @@ export default function UserList({ searchQuery }: Props) {
             <Smartphone size={28} className="text-gray-400" />
           </div>
           <p className="text-gray-500 text-sm">
-            {searchQuery ? "Aucun utilisateur trouvé" : "Aucun utilisateur OneSignal"}
+            {searchQuery ? "Aucun utilisateur trouvé" : "Aucun abonné push"}
           </p>
           <p className="text-gray-400 text-xs mt-1">
             Les utilisateurs apparaissent ici quand ils installent l&apos;app mobile
@@ -84,52 +80,35 @@ export default function UserList({ searchQuery }: Props) {
                 <tr className="text-left text-gray-500 border-b border-gray-100">
                   <th className="pb-3 font-medium">Utilisateur</th>
                   <th className="pb-3 font-medium">Téléphone</th>
-                  <th className="pb-3 font-medium">Ville</th>
                   <th className="pb-3 font-medium">Fidélité</th>
-                  <th className="pb-3 font-medium">Commandes</th>
                   <th className="pb-3 font-medium">Push</th>
                   <th className="pb-3 font-medium text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {users.map((user) => {
-                  const name = [user.first_name, user.last_name]
+                  const name = [user.customer.first_name, user.customer.last_name]
                     .filter(Boolean)
                     .join(" ") || "Sans nom";
-                  const loyalty = user.loyalty_level ?? "STANDARD";
+                  const loyalty = user.customer.loyalty_level ?? "STANDARD";
                   const colors = LOYALTY_COLORS[loyalty] ?? LOYALTY_COLORS.STANDARD;
 
                   return (
                     <tr
-                      key={user.id}
+                      key={user.customer_id}
                       className="hover:bg-gray-50/50 cursor-pointer"
                       onClick={() => setSelectedUser(user)}
                     >
                       <td className="py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 bg-[#FFF3E8] rounded-full flex items-center justify-center text-[#F17922] font-semibold text-xs">
-                            {(user.first_name?.[0] ?? "?").toUpperCase()}
+                            {(user.customer.first_name?.[0] ?? "?").toUpperCase()}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900 text-sm">{name}</p>
-                            {user.email && (
-                              <p className="text-xs text-gray-400">{user.email}</p>
-                            )}
-                          </div>
+                          <p className="font-medium text-gray-900 text-sm">{name}</p>
                         </div>
                       </td>
                       <td className="py-3 text-gray-600 text-xs">
-                        {user.phone ?? "\u2014"}
-                      </td>
-                      <td className="py-3">
-                        {user.city ? (
-                          <span className="flex items-center gap-1 text-xs text-gray-600">
-                            <MapPin size={12} className="text-gray-400" />
-                            {user.city}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">\u2014</span>
-                        )}
+                        {user.customer.phone}
                       </td>
                       <td className="py-3">
                         <span
@@ -140,15 +119,9 @@ export default function UserList({ searchQuery }: Props) {
                         </span>
                       </td>
                       <td className="py-3">
-                        <span className="flex items-center gap-1 text-xs text-gray-600">
-                          <ShoppingBag size={12} className="text-gray-400" />
-                          {user.orders_count}
-                        </span>
-                      </td>
-                      <td className="py-3">
                         <span
                           className={`inline-block w-2 h-2 rounded-full ${
-                            user.push_enabled ? "bg-green-500" : "bg-gray-300"
+                            user.push ? "bg-green-500" : "bg-gray-300"
                           }`}
                         />
                       </td>
@@ -172,7 +145,6 @@ export default function UserList({ searchQuery }: Props) {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-2">
               <p className="text-xs text-gray-400">
@@ -182,14 +154,14 @@ export default function UserList({ searchQuery }: Props) {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronLeft size={16} className="text-gray-500" />
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 cursor-pointer"
                 >
                   <ChevronRight size={16} className="text-gray-500" />
                 </button>
@@ -199,7 +171,6 @@ export default function UserList({ searchQuery }: Props) {
         </>
       )}
 
-      {/* Detail Modal */}
       {selectedUser && (
         <UserDetailModal
           isOpen={!!selectedUser}

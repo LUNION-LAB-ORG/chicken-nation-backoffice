@@ -2,11 +2,11 @@
 
 import React from "react";
 import {
-  useScheduledNotificationsQuery,
+  useScheduledQuery,
   useToggleScheduledMutation,
   useDeleteScheduledMutation,
-} from "@/hooks/useOnesignalQuery";
-import type { ScheduledNotification } from "@/types/onesignal";
+} from "@/hooks/usePushCampaignQuery";
+import type { ScheduledNotification } from "@/types/push-campaign";
 import {
   Clock,
   Repeat,
@@ -14,8 +14,6 @@ import {
   Trash2,
   Loader2,
   Bell,
-  Mail,
-  MessageSquare,
   Pause,
   Play,
 } from "lucide-react";
@@ -34,12 +32,6 @@ const SCHEDULE_LABELS: Record<string, string> = {
   custom: "Personnalisé",
 };
 
-const CHANNEL_ICONS: Record<string, React.ReactNode> = {
-  push: <Bell size={14} />,
-  email: <Mail size={14} />,
-  sms: <MessageSquare size={14} />,
-};
-
 function formatDate(date: string | null | undefined) {
   if (!date) return "—";
   return new Intl.DateTimeFormat("fr-FR", {
@@ -48,28 +40,18 @@ function formatDate(date: string | null | undefined) {
   }).format(new Date(date));
 }
 
-function formatCron(notif: ScheduledNotification): string {
-  if (notif.schedule_type === "once") {
-    return formatDate(notif.scheduled_at);
-  }
-  if (notif.cron_expression) {
-    return notif.cron_expression;
-  }
-  return SCHEDULE_LABELS[notif.schedule_type] ?? notif.schedule_type;
-}
-
 export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) {
-  const { data, isLoading } = useScheduledNotificationsQuery();
+  const { data: items, isLoading } = useScheduledQuery();
   const toggleMutation = useToggleScheduledMutation();
   const deleteMutation = useDeleteScheduledMutation();
 
-  const items = data?.items ?? [];
+  const allItems = items ?? [];
 
   const filtered = searchQuery
-    ? items.filter((item) =>
+    ? allItems.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : items;
+    : allItems;
 
   if (isLoading) {
     return (
@@ -99,12 +81,9 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
   return (
     <div className="space-y-3">
       {filtered.map((item) => {
-        const payload = item.payload as Record<string, unknown>;
-        const headings = payload.headings as Record<string, string> | undefined;
-        const contents = payload.contents as Record<string, string> | undefined;
-        const title = headings?.fr ?? headings?.en ?? item.name;
-        const body =
-          contents?.fr ?? contents?.en ?? payload.email_subject ?? "";
+        const payload = item.payload;
+        const title = payload?.title ?? item.name;
+        const body = payload?.body ?? "";
 
         return (
           <div
@@ -117,11 +96,10 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
             }`}
           >
             <div className="flex items-start justify-between gap-4">
-              {/* Left: info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-gray-400">
-                    {CHANNEL_ICONS[item.channel] ?? <Bell size={14} />}
+                    <Bell size={14} />
                   </span>
                   <h3 className="font-semibold text-gray-900 text-sm truncate">
                     {title}
@@ -139,7 +117,7 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
 
                 {body && (
                   <p className="text-xs text-gray-500 truncate mb-2">
-                    {String(body)}
+                    {body}
                   </p>
                 )}
 
@@ -177,15 +155,11 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
                 </div>
               </div>
 
-              {/* Right: actions */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleMutation.mutate({
-                      id: item.id,
-                      active: !item.active,
-                    });
+                    toggleMutation.mutate(item.id);
                   }}
                   className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
                   title={item.active ? "Désactiver" : "Activer"}
@@ -195,11 +169,7 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (
-                      confirm(
-                        `Supprimer la notification planifiée "${item.name}" ?`
-                      )
-                    ) {
+                    if (confirm(`Supprimer "${item.name}" ?`)) {
                       deleteMutation.mutate(item.id);
                     }
                   }}

@@ -4,35 +4,21 @@ import React from "react";
 import {
   useTemplatesQuery,
   useDeleteTemplateMutation,
-} from "@/hooks/useOnesignalQuery";
-import type { OnesignalTemplate } from "@/types/onesignal";
-import {
-  FileText,
-  Edit2,
-  Trash2,
-  Loader2,
-  Bell,
-  Mail,
-  MessageSquare,
-} from "lucide-react";
+} from "@/hooks/usePushCampaignQuery";
+import type { PushTemplate } from "@/types/push-campaign";
+import { FileText, Edit2, Trash2, Loader2, Bell } from "lucide-react";
 
 interface Props {
   searchQuery: string;
-  onEdit: (template: OnesignalTemplate) => void;
+  onEdit: (template: PushTemplate) => void;
   onCreate: () => void;
 }
 
-function getChannelInfo(t: OnesignalTemplate) {
-  if (t.isEmail) return { icon: <Mail size={14} className="text-blue-500" />, label: "Email" };
-  if (t.isSMS) return { icon: <MessageSquare size={14} className="text-green-500" />, label: "SMS" };
-  return { icon: <Bell size={14} className="text-[#F17922]" />, label: "Push" };
-}
-
 export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
-  const { data, isLoading, error } = useTemplatesQuery({ limit: 50 });
+  const { data, isLoading, error } = useTemplatesQuery({});
   const { mutate: deleteTemplate, isPending: isDeleting } = useDeleteTemplateMutation();
 
-  const templates = data?.templates ?? [];
+  const templates = data?.items ?? [];
 
   const filtered = searchQuery
     ? templates.filter((t) =>
@@ -82,69 +68,63 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
         <thead>
           <tr className="text-left text-gray-500 border-b border-gray-100">
             <th className="pb-3 font-medium">Nom</th>
-            <th className="pb-3 font-medium">Canal</th>
+            <th className="pb-3 font-medium">Titre</th>
             <th className="pb-3 font-medium">Contenu</th>
             <th className="pb-3 font-medium">Date</th>
             <th className="pb-3 font-medium text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
-          {filtered.map((template) => {
-            const ch = getChannelInfo(template);
-            return (
-              <tr key={template.id} className="hover:bg-gray-50/50">
-                <td className="py-3">
-                  <span className="font-medium text-gray-900">
-                    {template.name}
-                  </span>
-                </td>
-                <td className="py-3">
-                  <span className="flex items-center gap-1.5">
-                    {ch.icon}
-                    <span className="text-xs text-gray-600">{ch.label}</span>
-                  </span>
-                </td>
-                <td className="py-3 max-w-[250px]">
-                  <p className="text-xs text-gray-500 truncate">
-                    {template.contents?.en ||
-                      template.contents?.fr ||
-                      template.email_subject ||
-                      "—"}
-                  </p>
-                </td>
-                <td className="py-3 text-xs text-gray-500">
-                  {template.created_at
-                    ? new Date(template.created_at).toLocaleDateString("fr-FR", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                      })
-                    : "—"}
-                </td>
-                <td className="py-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => onEdit(template)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#F17922] cursor-pointer"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm("Supprimer ce template ?")) {
-                          deleteTemplate(template.id);
-                        }
-                      }}
-                      disabled={isDeleting}
-                      className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+          {filtered.map((template) => (
+            <tr key={template.id} className="hover:bg-gray-50/50">
+              <td className="py-3">
+                <span className="font-medium text-gray-900">
+                  {template.name}
+                </span>
+              </td>
+              <td className="py-3">
+                <span className="flex items-center gap-1.5">
+                  <Bell size={14} className="text-[#F17922]" />
+                  <span className="text-xs text-gray-600">{template.title}</span>
+                </span>
+              </td>
+              <td className="py-3 max-w-[250px]">
+                <p className="text-xs text-gray-500 truncate">
+                  {template.body || "—"}
+                </p>
+              </td>
+              <td className="py-3 text-xs text-gray-500">
+                {template.created_at
+                  ? new Date(template.created_at).toLocaleDateString("fr-FR", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "—"}
+              </td>
+              <td className="py-3">
+                <div className="flex items-center justify-end gap-2">
+                  <button
+                    onClick={() => onEdit(template)}
+                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#F17922] cursor-pointer"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm("Supprimer ce template ?")) {
+                        deleteTemplate(template.id);
+                      }
+                    }}
+                    disabled={isDeleting}
+                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
