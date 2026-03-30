@@ -147,23 +147,14 @@ export const useMessagesSocket = ({
       setSocketConnected(false);
     });
 
-    // Événements de messages - Tous les formats possibles
-    socket.on('message:new', handleNewMessage);
-    socket.on('message:created', handleNewMessage);
-    socket.on('new_message', handleNewMessage);
+    // Événements de messages
     socket.on('new:message', handleNewMessage);
-    socket.on('message_created', handleNewMessage);
-    socket.on('message:updated', handleNewMessage);
-    socket.on('message_updated', handleNewMessage);
 
     // Événements de lecture
-    socket.on('message:read', handleMessagesRead);
     socket.on('messages:read', handleMessagesRead);
 
     // Événements de conversations
-    socket.on('conversation:updated', handleNewMessage);
-    socket.on('conversation:new', handleNewMessage);
-    socket.on('conversation_updated', handleNewMessage);
+    socket.on('new:conversation', handleNewMessage);
 
     return () => {
       console.log('🧹 [Socket] Nettoyage connexion');

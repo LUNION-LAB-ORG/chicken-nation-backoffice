@@ -47,6 +47,9 @@ const modulesMap: Record<string, any> = {
   inbox: dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
     loading: () => <LoadingSpinner />,
   }),
+  tickets: dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
+    loading: () => <LoadingSpinner />,
+  }),
 
   // ---- Statistiques détaillées ----
   stats_products: dynamic(

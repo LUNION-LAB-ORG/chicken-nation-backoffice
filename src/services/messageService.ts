@@ -72,7 +72,7 @@ export const sendMessage = async (conversationId: string, content: string, messa
 export const markMessagesAsRead = async (conversationId: string): Promise<void> => {
   try {
    
-    await apiRequest(`/conversations/${conversationId}/read`, 'POST')
+    await apiRequest(`/conversations/${conversationId}/messages/read`, 'POST')
     
   } catch (error) {
     console.warn(`⚠️ [markMessagesAsRead] Impossible de marquer les messages comme lus:`, error)

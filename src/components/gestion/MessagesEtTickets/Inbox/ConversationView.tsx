@@ -9,6 +9,7 @@ import MobileRightSidebar from './MobileRightSidebar';
 import EscalateTicketModal from './EscalateTicketModal';
 import { useMessagesQuery, useSendMessageMutation } from '@/hooks/useConversationsQuery';
 import { useMessagesSocket } from '@/hooks/useMessagesSocket';
+import { markMessagesAsRead } from '@/services/messageService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
@@ -38,55 +39,6 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   } = useMessagesQuery(conversationId);
 
   const sendMessageMutation = useSendMessageMutation();
-
-  // Fonctions utilitaires pour le localStorage
-  const getReadMessages = useCallback(() => {
-    if (typeof window === 'undefined') return new Set();
-    try {
-      const stored = localStorage.getItem('readMessages');
-      return new Set(stored ? JSON.parse(stored) : []);
-    } catch {
-      return new Set();
-    }
-  }, []);
-
-  const markMessageAsRead = useCallback((messageId: string) => {
-    if (typeof window === 'undefined') return;
-    try {
-      const readMessages = getReadMessages();
-      readMessages.add(messageId);
-      localStorage.setItem('readMessages', JSON.stringify([...readMessages]));
-      console.log('✅ [ConversationView] Message marqué comme lu dans localStorage:', messageId);
-    } catch (error) {
-      console.warn('⚠️ [ConversationView] Erreur localStorage:', error);
-    }
-  }, [getReadMessages]);
-
-  const markConversationAsRead = useCallback((convId: string, messages: Message[]) => {
-    if (typeof window === 'undefined') return;
-    try {
-      const readMessages = getReadMessages();
-      let hasNewReads = false;
-
-      messages.forEach(msg => {
-        if (!readMessages.has(msg.id)) {
-          readMessages.add(msg.id);
-          hasNewReads = true;
-        }
-      });
-
-      if (hasNewReads) {
-        localStorage.setItem('readMessages', JSON.stringify([...readMessages]));
-        console.log('✅ [ConversationView] Conversation marquée comme lue dans localStorage:', convId);
-
-        // Invalider les queries pour mettre à jour l'UI
-        queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        queryClient.invalidateQueries({ queryKey: ['messages', convId] });
-      }
-    } catch (error) {
-      console.warn('⚠️ [ConversationView] Erreur localStorage:', error);
-    }
-  }, [getReadMessages, queryClient]);
 
   // Flatten pages and sort chronologically (older -> newer)
   const conversationMessages = useMemo(() => {
@@ -155,12 +107,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     enabled: !!conversationId,
   });
 
-  // Marquer comme lu quand la conversation change - DÉSACTIVÉ temporairement pour éviter la boucle
-  // useEffect(() => {
-  //   if (conversationId) {
-  //     markAsReadMutation.mutate(conversationId);
-  //   }
-  // }, [conversationId]); // Suppression de markAsReadMutation des dépendances
+  // Marquer comme lu via l'API serveur quand la conversation change
+  useEffect(() => {
+    if (conversationId) {
+      markMessagesAsRead(conversationId).catch(() => {});
+    }
+  }, [conversationId]);
 
   // 📜 Scroll automatique vers le bas - avec gestion intelligente
   const scrollToBottom = (behavior: 'smooth' | 'instant' = 'smooth') => {
@@ -196,13 +148,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         scrollToBottom('instant');
         isInitialLoadRef.current = false;
       }
-
-      // Marquer les messages comme lus via localStorage
-      if (conversationId && conversationMessages.length > 0) {
-        markConversationAsRead(conversationId, conversationMessages);
-      }
     }
-  }, [conversationId, conversationMessages.length, markConversationAsRead]);
+  }, [conversationId, conversationMessages.length]);
 
   // Scroll quand de nouveaux messages arrivent (smooth)
   useEffect(() => {
@@ -216,29 +163,6 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     }
   }, [conversationMessages.length, isFetchingNextPage]); // On écoute le changement de longueur
 
-  // Marquer comme lu quand de nouveaux messages arrivent et qu'on est dans la conversation
-  useEffect(() => {
-    if (conversationId && conversationMessages.length > 0) {
-      // Vérifier s'il y a des messages non lus dans le localStorage
-      const readMessages = getReadMessages();
-      const unreadMessages = conversationMessages.filter(msg =>
-        !readMessages.has(msg.id) && msg.authorCustomer
-      );
-
-      if (unreadMessages.length > 0) {
-        // Délai pour s'assurer que l'utilisateur voit les messages
-        const timer = setTimeout(() => {
-          unreadMessages.forEach(msg => markMessageAsRead(msg.id));
-          // Invalider les queries pour mettre à jour l'UI
-          queryClient.invalidateQueries({ queryKey: ['conversations'] });
-        }, 1000); // 1 seconde de délai
-
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [conversationMessages, conversationId, getReadMessages, markMessageAsRead, queryClient]);
-
-  // Ce useEffect est supprimé car remplacé par le localStorage dans l'useEffect précédent
 
   if (!conversationId) {
     return (
