@@ -241,8 +241,6 @@ export const sendTicketMessage = async (ticketId: string, messageData: {
   authorId: string;
   meta?: string;
 }): Promise<TicketMessage> => {
-  console.log('🚀 [sendTicketMessage] Envoi du message:', { ticketId, messageData });
-
   try {
     const payload = {
       body: messageData.body,
@@ -253,11 +251,8 @@ export const sendTicketMessage = async (ticketId: string, messageData: {
       meta: messageData.meta || 'dashboard'
     };
 
-    console.log('📤 [sendTicketMessage] Payload:', payload);
+    const response = await apiRequest<TicketMessage>(`/tickets/${ticketId}/messages`, 'POST', payload);
 
-    const response = await apiRequest<TicketMessage>(`/${ticketId}/messages/messages`, 'POST', payload);
-
-    console.log('✅ [sendTicketMessage] Message envoyé:', response);
     return response;
   } catch (error) {
     console.error('❌ [sendTicketMessage] Erreur:', error);

@@ -1,45 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import TicketsSidebar from './TicketsSidebar';
 import TicketView from './TicketView';
 import TicketsRightbar from './TicketsRightbar';
 import NewTicketModal from './NewTicketModal';
 import NewCategoryModal from './NewCategoryModal';
-import { useTicketsSocket } from '@/hooks/useTicketsSocket';
-import { useAuthStore } from '../../../../../features/users/hook/authStore';
-import { useTicketStore } from '@/store/ticketStore';
+import { useTicketSocketSync } from '../../../../../features/messagerie';
 
 function TicketsModule() {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
-  const { user } = useAuthStore();
-  const { addTicket, updateTicketInStore } = useTicketStore();
 
-  // ✅ Intégration WebSocket pour les tickets
-  const { socketConnected } = useTicketsSocket({
-    userId: user?.id,
-    enabled: true,
-    playSound: true,
-    onNewTicket: (data) => {
-      console.log('🎫 Nouveau ticket reçu:', data);
-      if (data.ticket) {
-        addTicket(data.ticket);
-      }
-    },
-    onTicketUpdate: (data) => {
-      console.log('🔄 Ticket mis à jour:', data);
-      if (data.ticket) {
-        updateTicketInStore(data.ticket);
-      }
-    },
-  });
-
-  // ✅ Charger les données initiales
-  useEffect(() => {
-    // Les données seront chargées par les composants enfants via les hooks React Query
-  }, []);
+  // WebSocket pour les mises à jour en temps réel
+  useTicketSocketSync({ enabled: true, playSound: true });
 
   return (
     <>

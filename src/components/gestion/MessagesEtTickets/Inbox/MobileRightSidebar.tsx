@@ -5,24 +5,6 @@ import Image from 'next/image';
 import { X, Mail, Phone } from 'lucide-react';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
-// Types pour les participants
-interface Participant {
-  id: string;
-  name: string;
-  role: string;
-  avatar: string;
-}
-
-// Données mockées pour les participants
-const mockParticipants: Participant[] = [
-  {
-    id: '1',
-    name: 'Jean Martin',
-    role: 'Caisse',
-    avatar: '/icons/imageprofile.png'
-  }
-];
-
 interface ConversationParticipant {
   id: string;
   fullName: string;
@@ -158,23 +140,7 @@ function MobileRightSidebar({
                   </div>
                 ))
               ) : (
-                mockParticipants.map((participant) => (
-                  <div key={participant.id} className="flex items-center space-x-3">
-                    <div className="w-8 h-8 rounded-full">
-                      <Image
-                        src={participant.avatar}
-                        alt={participant.name}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    </div>
-                    <div>
-                      <p className="text-base font-medium text-gray-900">{participant.name}</p>
-                      <p className="text-sm text-gray-500">{participant.role}</p>
-                    </div>
-                  </div>
-                ))
+                <p className="text-sm text-gray-400">Aucun participant</p>
               )}
             </div>
           </div>

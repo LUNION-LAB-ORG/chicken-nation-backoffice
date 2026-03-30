@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Calendar, Clock, Loader2 } from 'lucide-react';
-import { useTicketQuery } from '@/hooks/useTicketsQuery';
+import { useTicketDetailQuery } from '../../../../../features/messagerie';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
@@ -14,7 +14,7 @@ interface TicketsRightbarProps {
 
 function TicketsRightbar({ ticketId }: TicketsRightbarProps) {
   // Récupération des données du ticket via l'API
-  const { data: ticket, isLoading, error } = useTicketQuery(ticketId);
+  const { data: ticket, isLoading, error } = useTicketDetailQuery(ticketId);
 
   // Fonction pour formater les dates
   const formatDate = (dateString: string) => {

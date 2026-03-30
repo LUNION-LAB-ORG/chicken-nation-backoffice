@@ -4,10 +4,9 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { Search, MessageCircle, Plus, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import { useTicketsQuery } from '@/hooks/useTicketsQuery';
+import { useTicketListQuery } from '../../../../../features/messagerie';
 import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
-import { Ticket, TicketStatus, TicketPriority } from '@/types/tickets';
-import { TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/types/tickets';
+import { Ticket, TicketStatus, TicketPriority, TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/types/tickets';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
@@ -39,7 +38,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   };
 
   // Récupérer les tickets avec les filtres
-  const { data: ticketsData, isLoading: ticketsLoading, error: ticketsError } = useTicketsQuery(filters);
+  const { data: ticketsData, isLoading: ticketsLoading, error: ticketsError } = useTicketListQuery(filters);
 
   // Récupérer les catégories pour les afficher
   const { data: categoriesData } = useTicketCategoriesQuery({ status: 'ACTIVE' });
@@ -128,8 +127,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                 <span className="whitespace-nowrap">Créer une catégorie</span>
               </button>
             )}
-            {/* Bouton Nouveau - CACHÉ */}
-            {false && onNewTicket && (
+            {onNewTicket && (
               <button
                 onClick={onNewTicket}
                 className="flex items-center space-x-2 bg-[#F17922] text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"

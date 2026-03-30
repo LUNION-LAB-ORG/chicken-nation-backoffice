@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { createConversationWithDto, CreateConversationDto } from '@/services/messageService';
+import { conversationAPI, useInvalidateConversationQuery } from '../../../../../features/messagerie';
+import type { ICreerConversationDTO } from '../../../../../features/messagerie';
 import ConversationsList from './ConversationsList';
 import NewConversationModal from './NewConversationModal';
 
@@ -14,34 +14,27 @@ interface InboxSidebarProps {
 function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSidebarProps) {
   const [isNewConversationModalOpen, setIsNewConversationModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
+  const invalidateConversations = useInvalidateConversationQuery();
 
   const handleCreateConversation = async (conversationData: { type: string; clientId?: string; restaurantId?: string; subject: string; initialMessage?: string; participantId?: string | null }) => {
-
     try {
-      const dto: CreateConversationDto = {
+      const dto: ICreerConversationDTO = {
         seed_message: conversationData.initialMessage || conversationData.subject || 'Nouvelle conversation',
-        subject: conversationData.subject
+        subject: conversationData.subject,
+      };
+
+      if (conversationData.participantId) dto.receiver_user_id = conversationData.participantId;
+      if (conversationData.clientId) dto.customer_to_contact_id = conversationData.clientId;
+      if (conversationData.restaurantId) dto.restaurant_id = conversationData.restaurantId;
+
+      const created = await conversationAPI.creer(dto);
+      invalidateConversations();
+
+      if (created?.id) {
+        onSelectConversation(created.id);
       }
-
-      if (conversationData.participantId) {
-        dto.receiver_user_id = conversationData.participantId
-      }
-
-      if (conversationData.clientId) {
-        dto.customer_to_contact_id = conversationData.clientId
-      }
-
-      if (conversationData.restaurantId) {
-        dto.restaurant_id = conversationData.restaurantId
-      }
-
-      const created = await createConversationWithDto(dto)
-
-      // Invalidate conversations and open the new conversation in the inbox
-      queryClient.invalidateQueries({ queryKey: ['conversations'] })
     } catch (error) {
-      console.error('Erreur création conversation:', error)
+      console.error('Erreur création conversation:', error);
     } finally {
       setIsNewConversationModalOpen(false);
     }

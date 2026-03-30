@@ -8,10 +8,7 @@ import { SOCKET_URL } from '@/config';
 interface SocketTicketData {
   ticketId?: string;
   ticket?: Ticket;
-  userId?: string;
-  authorUser?: { id: string };
-  status?: string;
-  assignedToId?: string;
+  message?: unknown;
   [key: string]: unknown;
 }
 
@@ -43,128 +40,58 @@ export const useTicketsSocket = ({
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Fonction pour rafraîchir les tickets
   const refetchTickets = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ['tickets'],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ['tickets-infinite'],
-    });
+    queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
   }, [queryClient]);
 
-  // Fonction pour rafraîchir les statistiques
   const refetchTicketStats = useCallback(() => {
-    queryClient.invalidateQueries({
-      queryKey: ['ticket-stats'],
-    });
+    queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
   }, [queryClient]);
 
-  // Gestionnaire pour les nouveaux tickets
   const handleNewTicket = useCallback((data: SocketTicketData) => {
-
-    // Jouer le son si activé
     if (playSound && audioRef.current) {
       audioRef.current.currentTime = 0;
-      audioRef.current.play().catch((error) => {
-        console.warn('Impossible de jouer le son:', error);
-      });
+      audioRef.current.play().catch(() => {});
     }
 
-    // Callback personnalisé
-    if (onNewTicket) {
-      try {
-        onNewTicket(data);
-      } catch (err) {
-        console.warn('Erreur onNewTicket callback', err);
-      }
-    }
+    onNewTicket?.(data);
 
-    // Invalider les queries
-    queryClient.invalidateQueries({
-      queryKey: ['tickets'],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ['tickets-infinite'],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ['ticket-stats'],
-    });
+    queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
+    queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
   }, [queryClient, onNewTicket, playSound]);
 
-  // Gestionnaire pour les mises à jour de tickets
   const handleTicketUpdate = useCallback((data: SocketTicketData) => {
+    onTicketUpdate?.(data);
 
-    // Callback personnalisé
-    if (onTicketUpdate) {
-      try {
-        onTicketUpdate(data);
-      } catch (err) {
-        console.warn('Erreur onTicketUpdate callback', err);
-      }
+    if (data.ticketId || (data as any)?.id) {
+      queryClient.invalidateQueries({ queryKey: ['ticket', data.ticketId || (data as any)?.id] });
     }
 
-    // Invalider les queries spécifiques
-    if (data.ticketId) {
-      queryClient.invalidateQueries({
-        queryKey: ['ticket', data.ticketId],
-      });
-    }
-
-    queryClient.invalidateQueries({
-      queryKey: ['tickets'],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ['tickets-infinite'],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ['ticket-stats'],
-    });
+    queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
+    queryClient.invalidateQueries({ queryKey: ['ticket-stats'] });
   }, [queryClient, onTicketUpdate]);
 
-  // Gestionnaire pour les changements de statut
-  const handleTicketStatusChange = useCallback((data: SocketTicketData) => {
-
-    // Invalider les queries
-    if (data.ticketId) {
-      queryClient.invalidateQueries({
-        queryKey: ['ticket', data.ticketId],
-      });
+  const handleNewTicketMessage = useCallback((data: SocketTicketData) => {
+    if (playSound && audioRef.current) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play().catch(() => {});
     }
 
-    queryClient.invalidateQueries({
-      queryKey: ['tickets'],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ['ticket-stats'],
-    });
-  }, [queryClient]);
-
-  // Gestionnaire pour les assignations
-  const handleTicketAssignment = useCallback((data: SocketTicketData) => {
-
-    // Invalider les queries
+    // Invalidate the specific ticket to refresh its messages
     if (data.ticketId) {
-      queryClient.invalidateQueries({
-        queryKey: ['ticket', data.ticketId],
-      });
+      queryClient.invalidateQueries({ queryKey: ['ticket', data.ticketId] });
     }
 
-    queryClient.invalidateQueries({
-      queryKey: ['tickets'],
-    });
-  }, [queryClient]);
+    queryClient.invalidateQueries({ queryKey: ['tickets'] });
+    queryClient.invalidateQueries({ queryKey: ['tickets-infinite'] });
+  }, [queryClient, playSound]);
 
   useEffect(() => {
     if (!enabled) return;
 
-
-    // Initialiser l'audio si nécessaire
     if (playSound && !audioRef.current && typeof window !== 'undefined') {
       audioRef.current = new Audio('/musics/ticket-notification.mp3');
       audioRef.current.volume = 0.5;
@@ -179,42 +106,22 @@ export const useTicketsSocket = ({
     const socket = io(SOCKET_URL, { query });
     socketRef.current = socket;
 
-    // Événements de connexion
-    socket.on('connect', () => {
-      setSocketConnected(true);
-    });
+    socket.on('connect', () => setSocketConnected(true));
+    socket.on('disconnect', () => setSocketConnected(false));
 
-    socket.on('disconnect', () => {
-      setSocketConnected(false);
-    });
-
-    // Événements de tickets - Tous les formats possibles
-    socket.on('ticket:new', handleNewTicket);
-    socket.on('ticket:created', handleNewTicket);
-    socket.on('new_ticket', handleNewTicket);
+    // Match backend events exactly (support-websocket.service.ts)
     socket.on('new:ticket', handleNewTicket);
-    socket.on('ticket_created', handleNewTicket);
-
-    // Événements de mise à jour
-    socket.on('ticket:updated', handleTicketUpdate);
-    socket.on('ticket:update', handleTicketUpdate);
-    socket.on('ticket_updated', handleTicketUpdate);
     socket.on('update:ticket', handleTicketUpdate);
-
-    // Événements de changement de statut
-    socket.on('ticket:status', handleTicketStatusChange);
-    socket.on('ticket:status_changed', handleTicketStatusChange);
-    socket.on('ticket_status_changed', handleTicketStatusChange);
-
-    // Événements d'assignation
-    socket.on('ticket:assigned', handleTicketAssignment);
-    socket.on('ticket:assignment', handleTicketAssignment);
-    socket.on('ticket_assigned', handleTicketAssignment);
-
-    // Événements génériques
-    socket.on('ticket:event', (data) => {
-      handleTicketUpdate(data);
+    socket.on('new:ticket_message', handleNewTicketMessage);
+    socket.on('read:ticket_messages', (data: { ticketId: string }) => {
+      if (data.ticketId) {
+        queryClient.invalidateQueries({ queryKey: ['ticket', data.ticketId] });
+      }
     });
+
+    // Also listen for assigned/created events targeted at specific users
+    socket.on('assigned:ticket', handleTicketUpdate);
+    socket.on('created:ticket', handleNewTicket);
 
     return () => {
       socket.offAny();
@@ -227,8 +134,8 @@ export const useTicketsSocket = ({
     userId,
     handleNewTicket,
     handleTicketUpdate,
-    handleTicketStatusChange,
-    handleTicketAssignment,
+    handleNewTicketMessage,
+    queryClient,
     playSound
   ]);
 

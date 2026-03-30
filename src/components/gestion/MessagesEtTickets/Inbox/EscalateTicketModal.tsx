@@ -3,6 +3,10 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
+import { useEscaladerConversationMutation } from '../../../../../features/messagerie';
+import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
+import type { TicketPriorite } from '../../../../../features/messagerie';
+import toast from 'react-hot-toast';
 
 interface EscalateTicketModalProps {
   isOpen: boolean;
@@ -11,54 +15,65 @@ interface EscalateTicketModalProps {
   clientName?: string;
 }
 
-function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
+const PRIORITY_MAP: Record<string, TicketPriorite> = {
+  'LOW': 'LOW',
+  'MEDIUM': 'MEDIUM',
+  'HIGH': 'HIGH',
+};
+
+function EscalateTicketModal({ isOpen, onClose, conversationId, clientName }: EscalateTicketModalProps) {
   const [ticketSubject, setTicketSubject] = useState('');
-  const [priority, setPriority] = useState('Moyen');
-  const [category, setCategory] = useState('');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [priority, setPriority] = useState<string>('MEDIUM');
+  const [categoryId, setCategoryId] = useState('');
 
-  // Données mockées pour les options
-  const priorities = ['Faible', 'Moyen', 'Élevé', 'Urgent'];
-  const categories = [
-    'Qualité produit',
-    'Livraison', 
-    'Service client',
-    'Facturation', 
-    'Autre'
-  ];
-  const employees = [
-    'Ahmed Hassan', 
-    'Jean Martin'
+  const escalateMutation = useEscaladerConversationMutation();
+  const { data: categoriesData } = useTicketCategoriesQuery({}, isOpen);
+
+  const categories = categoriesData?.data || [];
+
+  const priorityOptions = [
+    { value: 'LOW', label: 'Faible' },
+    { value: 'MEDIUM', label: 'Moyen' },
+    { value: 'HIGH', label: 'Élevé' },
   ];
 
-  // Préparer les options pour les dropdowns
-  const priorityOptions = priorities.map(p => ({ value: p, label: p }));
-  const categoryOptions = categories.map(cat => ({ value: cat, label: cat }));
-  const employeeOptions = employees.map(emp => ({ value: emp, label: emp }));
+  const categoryOptions = categories.map((cat: any) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
 
-  const handleCreateTicket = () => {
+  const handleCreateTicket = async () => {
     if (!ticketSubject.trim()) {
-   
+      toast.error('Le sujet du ticket est requis');
       return;
     }
 
- 
+    try {
+      await escalateMutation.mutateAsync({
+        conversationId,
+        title: ticketSubject.trim(),
+        priority: PRIORITY_MAP[priority] || 'MEDIUM',
+        category: categoryId || undefined,
+      } as any);
 
-    // Fermer le modal et réinitialiser
-    onClose();
+      toast.success('Conversation escaladée en ticket');
+      onClose();
+      resetForm();
+    } catch (error) {
+      console.error('Erreur lors de l\'escalation:', error);
+      toast.error('Impossible d\'escalader la conversation');
+    }
+  };
+
+  const resetForm = () => {
     setTicketSubject('');
-    setPriority('Moyen');
-    setCategory('');
-    setAssignedTo('');
+    setPriority('MEDIUM');
+    setCategoryId('');
   };
 
   const handleCancel = () => {
     onClose();
-    // Réinitialiser les champs
-    setTicketSubject('');
-    setPriority('Moyen');
-    setCategory('');
-    setAssignedTo('');
+    resetForm();
   };
 
   if (!isOpen) {
@@ -70,7 +85,7 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
       <div className="bg-white rounded-2xl md:w-[700px] lg:w-[750px] xl:w-[800px] w-[90%] max-w-[800px] mx-4 max-h-[96vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-4 ">
-          <h2 className="md:text-xl text-3xl font-semibold text-[#F17922]">
+          <h2 className="md:text-xl text-lg font-semibold text-[#F17922]">
             Escalader en ticket
           </h2>
           <button
@@ -85,7 +100,7 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
         {/* Content */}
         <div className="md:p-6 p-4 pt-2">
           <p className="text-gray-600 md:text-sm text-xs mb-6">
-            Créer un ticket pour cette conversation permettra un suivi plus structuré.
+            Créer un ticket pour cette conversation{clientName ? ` avec ${clientName}` : ''} permettra un suivi plus structuré.
           </p>
 
           {/* Sujet du ticket */}
@@ -115,31 +130,21 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
           </div>
 
           {/* Catégorie */}
-          <div className="mb-6">
-            <CustomDropdown
-              label="Catégorie"
-              options={categoryOptions}
-              value={category}
-              onChange={setCategory}
-              placeholder="Sélectionner une catégorie"
-              className="w-full"
-            />
-          </div>
-
-          {/* Assigner à */}
-          <div className="mb-20">
-            <CustomDropdown
-              label="Assigner à"
-              options={employeeOptions}
-              value={assignedTo}
-              onChange={setAssignedTo}
-              placeholder="Sélectionner un employé"
-              className="w-full"
-            />
-          </div>
+          {categoryOptions.length > 0 && (
+            <div className="mb-6">
+              <CustomDropdown
+                label="Catégorie"
+                options={categoryOptions}
+                value={categoryId}
+                onChange={setCategoryId}
+                placeholder="Sélectionner une catégorie"
+                className="w-full"
+              />
+            </div>
+          )}
 
           {/* Actions */}
-          <div className="flex justify-end space-x-3  ">
+          <div className="flex justify-end space-x-3 mt-8">
             <button
               onClick={handleCancel}
               className="md:px-6 md:py-3 px-4 py-2 cursor-pointer border border-gray-300 text-gray-700 rounded-xl md:text-sm text-xs font-medium hover:bg-gray-50 transition-colors"
@@ -148,10 +153,10 @@ function EscalateTicketModal({ isOpen, onClose  }: EscalateTicketModalProps) {
             </button>
             <button
               onClick={handleCreateTicket}
-              disabled={!ticketSubject.trim()}
+              disabled={!ticketSubject.trim() || escalateMutation.isPending}
               className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-[#F17922] text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Créer le ticket
+              {escalateMutation.isPending ? 'Création...' : 'Créer le ticket'}
             </button>
           </div>
         </div>

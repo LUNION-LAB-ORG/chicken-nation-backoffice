@@ -7,13 +7,16 @@ import { MessageCircle, Eye, EyeOff, Send, ArrowLeft, AlertTriangle } from 'luci
 import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
 import EscalateTicketModal from './EscalateTicketModal';
-import { useMessagesQuery, useSendMessageMutation } from '@/hooks/useConversationsQuery';
-import { useMessagesSocket } from '@/hooks/useMessagesSocket';
-import { markMessagesAsRead } from '@/services/messageService';
+import {
+  useMessageListQuery,
+  useEnvoyerMessageMutation,
+  useMarquerLuMutation,
+  useMessagerieSocketSync,
+} from '../../../../../features/messagerie';
+import type { IMessage } from '../../../../../features/messagerie';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
-import type { MessagesResponse, Message } from '@/types/messaging';
 
 interface ConversationViewProps {
   conversationId: string | null;
@@ -32,18 +35,18 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const {
     data: messagesPagesData,
     isLoading: isLoadingMessages,
-    refetch: refetchMessagesQuery,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useMessagesQuery(conversationId);
+  } = useMessageListQuery(conversationId);
 
-  const sendMessageMutation = useSendMessageMutation();
+  const sendMessageMutation = useEnvoyerMessageMutation();
+  const marquerLuMutation = useMarquerLuMutation();
 
   // Flatten pages and sort chronologically (older -> newer)
   const conversationMessages = useMemo(() => {
-    const pages = (messagesPagesData?.pages || []) as MessagesResponse[];
-    const all = pages.flatMap((p) => p.data || []) as Message[];
+    const pages = (messagesPagesData?.pages || []) as any[];
+    const all = pages.flatMap((p) => p.data || []) as IMessage[];
     return all.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   }, [messagesPagesData]);
 
@@ -102,15 +105,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   }, [currentConversation]);
 
   // 🔌 Hook WebSocket pour les mises à jour en temps réel
-  const { socketConnected, refetchMessages } = useMessagesSocket({
-    conversationId,
-    enabled: !!conversationId,
-  });
+  useMessagerieSocketSync({ conversationId, enabled: !!conversationId });
 
   // Marquer comme lu via l'API serveur quand la conversation change
   useEffect(() => {
     if (conversationId) {
-      markMessagesAsRead(conversationId).catch(() => {});
+      marquerLuMutation.mutate(conversationId);
     }
   }, [conversationId]);
 
@@ -181,8 +181,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
       try {
         await sendMessageMutation.mutateAsync({
           conversationId,
-          content: message.trim(),
-          messageType: 'TEXT'
+          body: message.trim(),
         });
         setMessage('');
       } catch (error) {
@@ -299,9 +298,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           {/* Actions */}
           <div className="flex items-center space-x-2">
 
-            {/* Bouton d'escalation en ticket - Temporairement désactivé */}
-            {/* 
-            <button 
+            <button
               onClick={() => setIsEscalateModalOpen(true)}
               className="bg-[#F17922] text-white md:px-6 md:py-4 px-3 py-2 rounded-2xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
             >
@@ -309,7 +306,6 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               <span className="md:inline hidden lg:inline">Escalader en ticket</span>
               <span className="md:hidden">Escalader</span>
             </button>
-            */}
           </div>
         </div>
 
@@ -347,7 +343,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                         <Image
                           src={
                             msg.authorCustomer?.image ? formatImageUrl(msg.authorCustomer.image) :
-                              currentConversation?.client?.image ? formatImageUrl(currentConversation.client.image) :
+                              currentConversation?.customer?.image ? formatImageUrl(currentConversation.customer.image) :
                                 "/icons/imageprofile.png"
                           }
                           alt={msg.authorCustomer?.name || msg.authorCustomer?.first_name || 'Client'}
@@ -361,7 +357,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                           <span className="md:text-sm text-xs font-medium text-gray-900">
                             {msg.authorCustomer?.name ||
                               `${msg.authorCustomer?.first_name || ''} ${msg.authorCustomer?.last_name || ''}`.trim() ||
-                              currentConversation?.client?.fullname || 'Client'}
+                              currentConversation?.customer ? `${currentConversation.customer.first_name || ''} ${currentConversation.customer.last_name || ''}`.trim() : 'Client'}
                           </span>
                           <span className="md:text-sm text-xs text-gray-400">
                             {formatMessageTime(msg.createdAt)}

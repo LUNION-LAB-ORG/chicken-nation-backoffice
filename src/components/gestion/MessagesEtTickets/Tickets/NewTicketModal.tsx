@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import { useQuery } from '@tanstack/react-query';
-import { useCreateTicketMutation } from '@/hooks/useTicketsQuery';
+import { useCreerTicketMutation } from '../../../../../features/messagerie';
 import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
 import { useCustomersQuery } from '@/hooks/useCustomersQuery';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
@@ -47,7 +47,7 @@ function NewTicketModal({
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const createTicketMutation = useCreateTicketMutation();
+  const createTicketMutation = useCreerTicketMutation();
 
   // Réinitialiser le formulaire quand le modal s'ouvre
   useEffect(() => {

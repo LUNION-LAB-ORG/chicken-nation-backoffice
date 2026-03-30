@@ -4,7 +4,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import { useTicketQuery, useSendTicketMessageMutation, useAssignTicketToCurrentUserMutation, useUpdateTicketStatusMutation, useUpdateTicketPriorityMutation } from '@/hooks/useTicketsQuery';
+import {
+  useTicketDetailQuery,
+  useEnvoyerMessageTicketMutation,
+  useAssignerTicketMutation,
+  useModifierStatutTicketMutation,
+  useModifierPrioriteTicketMutation,
+} from '../../../../../features/messagerie';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
@@ -28,16 +34,16 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   const [selectedAssignee, setSelectedAssignee] = useState('');
 
   // Récupération des données du ticket via l'API
-  const { data: ticket, isLoading: ticketLoading, error: ticketError } = useTicketQuery(ticketId);
+  const { data: ticket, isLoading: ticketLoading, error: ticketError } = useTicketDetailQuery(ticketId);
 
   // Récupération de l'utilisateur connecté
   const { user } = useAuthStore();
 
   // Mutations pour les messages et l'assignation
-  const sendMessageMutation = useSendTicketMessageMutation();
-  const assignTicketMutation = useAssignTicketToCurrentUserMutation();
-  const updateStatusMutation = useUpdateTicketStatusMutation();
-  const updatePriorityMutation = useUpdateTicketPriorityMutation();
+  const sendMessageMutation = useEnvoyerMessageTicketMutation();
+  const assignTicketMutation = useAssignerTicketMutation();
+  const updateStatusMutation = useModifierStatutTicketMutation();
+  const updatePriorityMutation = useModifierPrioriteTicketMutation();
 
   // Trier les messages par ordre chronologique (anciens vers nouveaux)
   const sortedMessages = useMemo(() => {
@@ -96,61 +102,31 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
 
   // Fonction pour envoyer un message
   const handleSendMessage = async () => {
-    console.log('🚀 [handleSendMessage] Fonction appelée');
-    console.log('📝 Message:', message);
-    console.log('👤 User:', user);
-    console.log('🎫 TicketId:', ticketId);
-
-    if (!message.trim()) {
-      console.log('❌ Message vide');
-      return;
-    }
-
-    if (!user?.id || user.id.trim() === '') {
-      console.log('❌ Utilisateur non connecté ou ID vide:', { user, userId: user?.id });
-      return;
-    }
+    if (!message.trim() || !user?.id || !ticketId) return;
 
     try {
-      // Essayer d'assigner le ticket si nécessaire (mais continuer même si ça échoue)
+      // Auto-assigner le ticket si nécessaire
       if (!ticket?.assignee || ticket.assignee.id !== user.id) {
- 
         try {
-        
-          if (!user.id) {
-            console.error('❌ user.id est undefined ou vide:', user.id);
-            throw new Error('ID utilisateur manquant');
-          }
-          
           await assignTicketMutation.mutateAsync({ ticketId, assigneeId: user.id });
-          console.log('✅ Ticket assigné avec succès');
-        } catch (assignError) { 
-          console.warn('  - Status:', assignError?.status);
+        } catch {
+          // Continue même si l'assignation échoue
         }
-      } else {
-        console.log('✅ Ticket déjà assigné à l\'utilisateur actuel, pas besoin d\'assignation');
       }
 
-     
-      // Envoyer le message
-      const messagePayload = {
+      await sendMessageMutation.mutateAsync({
         ticketId,
-        messageData: {
+        data: {
           body: message,
           internal: messageType === 'internal',
           authorId: user.id,
-          meta: 'dashboard'
-        }
-      };
-     
+          meta: 'dashboard',
+        },
+      });
 
-      await sendMessageMutation.mutateAsync(messagePayload);
-      console.log('✅ Message envoyé avec succès');
-
-      // Réinitialiser le champ de message
       setMessage('');
     } catch (error) {
-      console.error('❌ Erreur lors de l\'envoi du message:', error);
+      console.error('Erreur lors de l\'envoi du message:', error);
     }
   };
 
@@ -463,31 +439,29 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
 
       {/* Zone de saisie */}
       <div className="md:px-6 md:py-4 px-4 py-3 bg-white border-t border-slate-300">
-        {/* Boutons Public/Interne - CACHÉS */}
-        {false && (
-          <div className="flex md:mb-4 mb-3">
-            <button
-              onClick={() => setMessageType('public')}
-              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
-                ? 'bg-[#F17922] text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              <Eye className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-              Public
-            </button>
-            <button
-              onClick={() => setMessageType('internal')}
-              className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
-                ? 'bg-[#F17922] text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              <EyeOff className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-              Interne
-            </button>
-          </div>
-        )}
+        {/* Boutons Public/Interne */}
+        <div className="flex md:mb-4 mb-3">
+          <button
+            onClick={() => setMessageType('public')}
+            className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 cursor-pointer ${messageType === 'public'
+              ? 'bg-[#F17922] text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+          >
+            <Eye className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
+            Public
+          </button>
+          <button
+            onClick={() => setMessageType('internal')}
+            className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium cursor-pointer ${messageType === 'internal'
+              ? 'bg-[#F17922] text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+          >
+            <EyeOff className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
+            Interne
+          </button>
+        </div>
 
         {/* Champ de saisie */}
         <div className="flex items-start md:space-x-3 space-x-2">

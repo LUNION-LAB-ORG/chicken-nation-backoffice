@@ -3,12 +3,11 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Search, Plus, Users } from 'lucide-react';
-import { useConversationsQuery } from '@/hooks/useConversationsQuery';
-import { useConversationsSocket } from '@/hooks/useConversationsSocket';
+import { useConversationListQuery, useMessagerieSocketSync } from '../../../../../features/messagerie';
+import type { IConversation } from '../../../../../features/messagerie';
 import { formatImageUrl } from '@/utils/imageHelpers';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Conversation } from '@/types/messaging';
 
 interface ConversationsListProps {
   selectedConversation: string | null;
@@ -24,10 +23,10 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   const {
     data: conversationsData,
     isLoading
-  } = useConversationsQuery();
+  } = useConversationListQuery();
 
   // 🔌 WebSocket pour les mises à jour temps réel
-  useConversationsSocket();
+  useMessagerieSocketSync();
 
   // Récupérer les conversations depuis React Query
   const conversations = conversationsData?.data || [];
@@ -56,7 +55,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   };
 
   // Fonction pour obtenir le dernier message d'une conversation
-  const getLastMessage = (conversation: Conversation) => {
+  const getLastMessage = (conversation: IConversation) => {
     if (!conversation.messages || conversation.messages.length === 0) {
       return { text: 'Aucun message', timestamp: conversation.createdAt };
     }
@@ -74,7 +73,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   };
 
   // Fonction pour obtenir le nom d'affichage d'une conversation
-  const getConversationDisplayName = (conversation: Conversation) => {
+  const getConversationDisplayName = (conversation: IConversation) => {
     if (!conversation.customer) {
       // Conversation interne - afficher les noms des participants
       const participantNames = conversation.users.map(user => user.fullName).join(', ');
@@ -88,7 +87,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   };
 
   // Fonction pour obtenir les infos secondaires d'une conversation
-  const getConversationSecondaryInfo = (conversation: Conversation) => {
+  const getConversationSecondaryInfo = (conversation: IConversation) => {
     if (!conversation.customer) {
       // Conversation interne - afficher les rôles
       const roles = conversation.users.map(user => user.role).join(', ');
