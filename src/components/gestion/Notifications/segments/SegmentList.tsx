@@ -125,53 +125,37 @@ export default function SegmentList({ searchQuery, onCreate }: Props) {
         </div>
       )}
 
-      {/* System segments */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <Lock size={14} className="text-gray-400" />
-          <h3 className="text-sm font-semibold text-gray-900">
-            Segments système
-          </h3>
-          <span className="text-xs text-gray-400">
-            (calculés automatiquement)
-          </span>
+      {/* System segments — compact chips */}
+      {filteredSystem.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Lock size={14} className="text-gray-400" />
+            <h3 className="text-sm font-semibold text-gray-900">
+              Segments système
+            </h3>
+            <span className="text-xs text-gray-400">
+              (calculés automatiquement)
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {filteredSystem.map((segment) => (
+              <div
+                key={segment.key}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-100 rounded-xl"
+                title={segment.description}
+              >
+                <Users size={14} className="text-gray-400 flex-shrink-0" />
+                <span className="text-sm font-medium text-gray-700">
+                  {segment.label}
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-200 text-gray-600">
+                  {segment.count.toLocaleString("fr-FR")}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-gray-500 border-b border-gray-100">
-                <th className="pb-3 font-medium">Segment</th>
-                <th className="pb-3 font-medium">Description</th>
-                <th className="pb-3 font-medium text-right">Abonnés</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filteredSystem.map((segment) => (
-                <tr key={segment.key} className="hover:bg-gray-50/50">
-                  <td className="py-3.5">
-                    <div className="flex items-center gap-2">
-                      <Users size={16} className="text-gray-400" />
-                      <span className="font-medium text-gray-900">
-                        {segment.label}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3.5">
-                    <span className="text-xs text-gray-500">
-                      {segment.description}
-                    </span>
-                  </td>
-                  <td className="py-3.5 text-right">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                      {segment.count.toLocaleString("fr-FR")}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
 
       {/* Edit modal */}
       <CreateSegmentModal

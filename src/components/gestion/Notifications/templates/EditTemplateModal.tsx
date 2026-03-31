@@ -5,6 +5,7 @@ import Modal from "@/components/ui/Modal";
 import { useUpdateTemplateMutation } from "@/hooks/usePushCampaignQuery";
 import type { PushTemplate } from "@/types/push-campaign";
 import { Loader2 } from "lucide-react";
+import VariablePicker from "../VariablePicker";
 
 interface Props {
   isOpen: boolean;
@@ -64,9 +65,10 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Titre
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">Titre</label>
+            <VariablePicker onInsert={(v) => setTitle((prev) => prev + v)} />
+          </div>
           <input
             type="text"
             required
@@ -77,9 +79,10 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Message
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">Message</label>
+            <VariablePicker onInsert={(v) => setBody((prev) => prev + v)} />
+          </div>
           <textarea
             required
             rows={3}

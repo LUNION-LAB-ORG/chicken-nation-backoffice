@@ -77,6 +77,12 @@ export async function previewSegment(
   return api.post<{ count: number }>(`${BASE}/segments/preview`, payload);
 }
 
+export async function previewCustomFilters(
+  filters: Record<string, unknown>
+): Promise<{ count: number }> {
+  return api.post<{ count: number }>(`${BASE}/segments/preview-filters`, { filters });
+}
+
 // ── Custom Segments ─────────────────────────────────────────────────────────
 
 export async function createCustomSegment(
@@ -145,6 +151,12 @@ export async function createScheduled(
   return api.post<ScheduledNotification>(`${BASE}/scheduled`, payload);
 }
 
+export async function createScheduledMulti(
+  payload: CreateScheduledPayload & { schedule_dates: string[] }
+): Promise<{ count: number; items: ScheduledNotification[] }> {
+  return api.post(`${BASE}/scheduled/multi`, payload);
+}
+
 export async function listScheduled(): Promise<ScheduledNotification[]> {
   return api.get<ScheduledNotification[]>(`${BASE}/scheduled`);
 }
@@ -176,6 +188,15 @@ export async function toggleScheduled(
 ): Promise<ScheduledNotification> {
   return api.patch<ScheduledNotification>(
     `${BASE}/scheduled/${id}/toggle`,
+    {}
+  );
+}
+
+export async function migrateScheduled(
+  id: string
+): Promise<ScheduledNotification> {
+  return api.patch<ScheduledNotification>(
+    `${BASE}/scheduled/${id}/migrate`,
     {}
   );
 }

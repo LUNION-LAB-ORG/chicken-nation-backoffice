@@ -115,6 +115,13 @@ export function usePreviewSegmentMutation() {
   });
 }
 
+export function usePreviewCustomFiltersMutation() {
+  return useMutation({
+    mutationFn: (filters: Record<string, unknown>) =>
+      pushService.previewCustomFilters(filters),
+  });
+}
+
 // ── Custom Segments ─────────────────────────────────────────────────────────
 
 export function useCustomSegmentsQuery() {
@@ -264,6 +271,21 @@ export function useCreateScheduledMutation() {
   });
 }
 
+export function useCreateScheduledMultiMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: CreateScheduledPayload & { schedule_dates: string[] }) =>
+      pushService.createScheduledMulti(payload),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["push", "scheduled"] });
+      toast.success(`${data.count} notification(s) planifiée(s) créée(s)`);
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la création");
+    },
+  });
+}
+
 export function useUpdateScheduledMutation() {
   const qc = useQueryClient();
   return useMutation({
@@ -303,6 +325,20 @@ export function useDeleteScheduledMutation() {
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la suppression");
+    },
+  });
+}
+
+export function useMigrateScheduledMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => pushService.migrateScheduled(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["push", "scheduled"] });
+      toast.success("Migration vers Expo Push effectuée");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "Erreur lors de la migration");
     },
   });
 }

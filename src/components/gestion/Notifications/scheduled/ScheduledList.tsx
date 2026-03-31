@@ -5,6 +5,7 @@ import {
   useScheduledQuery,
   useToggleScheduledMutation,
   useDeleteScheduledMutation,
+  useMigrateScheduledMutation,
 } from "@/hooks/usePushCampaignQuery";
 import type { ScheduledNotification } from "@/types/push-campaign";
 import {
@@ -16,6 +17,7 @@ import {
   Bell,
   Pause,
   Play,
+  ArrowRightLeft,
 } from "lucide-react";
 
 interface Props {
@@ -32,6 +34,13 @@ const SCHEDULE_LABELS: Record<string, string> = {
   custom: "Personnalisé",
 };
 
+const CHANNEL_LABELS: Record<string, { label: string; color: string }> = {
+  expo_push: { label: "Expo Push", color: "bg-blue-100 text-blue-700" },
+  push: { label: "OneSignal", color: "bg-purple-100 text-purple-700" },
+  email: { label: "Email", color: "bg-amber-100 text-amber-700" },
+  sms: { label: "SMS", color: "bg-teal-100 text-teal-700" },
+};
+
 function formatDate(date: string | null | undefined) {
   if (!date) return "—";
   return new Intl.DateTimeFormat("fr-FR", {
@@ -44,6 +53,7 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
   const { data: items, isLoading } = useScheduledQuery();
   const toggleMutation = useToggleScheduledMutation();
   const deleteMutation = useDeleteScheduledMutation();
+  const migrateMutation = useMigrateScheduledMutation();
 
   const allItems = items ?? [];
 
@@ -78,12 +88,26 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
     );
   }
 
+  const handleMigrate = (e: React.MouseEvent, item: ScheduledNotification) => {
+    e.stopPropagation();
+    if (
+      confirm(
+        `Migrer "${item.name}" vers Expo Push ?\nLes prochains envois utiliseront Expo Push au lieu de OneSignal.`
+      )
+    ) {
+      migrateMutation.mutate(item.id);
+    }
+  };
+
   return (
     <div className="space-y-3">
       {filtered.map((item) => {
         const payload = item.payload;
         const title = payload?.title ?? item.name;
         const body = payload?.body ?? "";
+        const channelInfo =
+          CHANNEL_LABELS[item.channel] ?? { label: item.channel, color: "bg-gray-100 text-gray-600" };
+        const isOneSignal = item.channel !== "expo_push";
 
         return (
           <div
@@ -112,6 +136,11 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
                     }`}
                   >
                     {item.active ? "Actif" : "Inactif"}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${channelInfo.color}`}
+                  >
+                    {channelInfo.label}
                   </span>
                 </div>
 
@@ -156,6 +185,16 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
+                {isOneSignal && (
+                  <button
+                    onClick={(e) => handleMigrate(e, item)}
+                    disabled={migrateMutation.isPending}
+                    className="p-2 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 cursor-pointer"
+                    title="Migrer vers Expo Push"
+                  >
+                    <ArrowRightLeft size={16} />
+                  </button>
+                )}
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

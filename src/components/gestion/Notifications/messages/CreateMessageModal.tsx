@@ -9,6 +9,7 @@ import {
 } from "@/hooks/usePushCampaignQuery";
 import type { CreateCampaignPayload, PushSegment } from "@/types/push-campaign";
 import { Bell, Loader2, Users, Filter, Send } from "lucide-react";
+import VariablePicker from "../VariablePicker";
 
 interface Props {
   isOpen: boolean;
@@ -127,14 +128,17 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
 
         {/* Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Titre de la notification
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">
+              Titre de la notification
+            </label>
+            <VariablePicker onInsert={(v) => setTitle((prev) => prev + v)} />
+          </div>
           <input
             type="text"
             required
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="Titre affiché sur le téléphone"
+            placeholder="Ex: Bonjour {{first_name}} !"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -142,14 +146,17 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
 
         {/* Body */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Message
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">
+              Message
+            </label>
+            <VariablePicker onInsert={(v) => setBody((prev) => prev + v)} />
+          </div>
           <textarea
             required
             rows={3}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-            placeholder="Corps du message push"
+            placeholder="Ex: {{first_name}}, profitez de -20% aujourd'hui !"
             value={body}
             onChange={(e) => setBody(e.target.value)}
           />

@@ -4,14 +4,16 @@ import React, { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import {
   useCreateScheduledMutation,
+  useCreateScheduledMultiMutation,
   useUpdateScheduledMutation,
   useSegmentsQuery,
 } from "@/hooks/usePushCampaignQuery";
 import type {
-  ScheduleType,
   ScheduledNotification,
   CreateScheduledPayload,
 } from "@/types/push-campaign";
+
+type ScheduleTypeExtended = "once" | "daily" | "weekly" | "monthly" | "custom" | "multi_dates";
 import {
   Loader2,
   Clock,
@@ -19,7 +21,9 @@ import {
   CalendarClock,
   CalendarDays,
   Calendar,
+  CalendarPlus,
 } from "lucide-react";
+import VariablePicker from "../VariablePicker";
 
 interface Props {
   isOpen: boolean;
@@ -28,7 +32,7 @@ interface Props {
 }
 
 const SCHEDULE_TYPES: {
-  id: ScheduleType;
+  id: ScheduleTypeExtended;
   label: string;
   icon: React.ReactNode;
   description: string;
@@ -38,6 +42,12 @@ const SCHEDULE_TYPES: {
     label: "Une fois",
     icon: <Clock size={16} />,
     description: "Envoi unique à une date/heure précise",
+  },
+  {
+    id: "multi_dates",
+    label: "Multi-dates",
+    icon: <CalendarPlus size={16} />,
+    description: "Plusieurs dates/heures spécifiques",
   },
   {
     id: "daily",
@@ -59,7 +69,7 @@ const SCHEDULE_TYPES: {
   },
   {
     id: "custom",
-    label: "Personnalisé",
+    label: "CRON",
     icon: <CalendarClock size={16} />,
     description: "Expression CRON personnalisée",
   },
@@ -112,11 +122,12 @@ export default function CreateScheduledModal({
   editItem,
 }: Props) {
   const createMutation = useCreateScheduledMutation();
+  const createMultiMutation = useCreateScheduledMultiMutation();
   const updateMutation = useUpdateScheduledMutation();
   const { data: segments } = useSegmentsQuery();
 
   const isEdit = !!editItem;
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isPending = createMutation.isPending || updateMutation.isPending || createMultiMutation.isPending;
 
   // ── Form state ──
   const [name, setName] = useState("");
@@ -129,13 +140,15 @@ export default function CreateScheduledModal({
   const [selectedSegment, setSelectedSegment] = useState("");
 
   // Schedule
-  const [scheduleType, setScheduleType] = useState<ScheduleType>("weekly");
+  const [scheduleType, setScheduleType] = useState<ScheduleTypeExtended>("weekly");
   const [scheduledDate, setScheduledDate] = useState("");
   const [hour, setHour] = useState("9");
   const [minute, setMinute] = useState("0");
   const [selectedDays, setSelectedDays] = useState<number[]>([1]);
   const [monthDay, setMonthDay] = useState("1");
   const [customCron, setCustomCron] = useState("");
+  const [multiDates, setMultiDates] = useState<string[]>([]);
+  const [newMultiDate, setNewMultiDate] = useState("");
 
   // ── Populate form from editItem ──
   useEffect(() => {
@@ -192,6 +205,8 @@ export default function CreateScheduledModal({
     setSelectedDays([1]);
     setMonthDay("1");
     setCustomCron("");
+    setMultiDates([]);
+    setNewMultiDate("");
   };
 
   const toggleDay = (day: number) => {
@@ -200,22 +215,58 @@ export default function CreateScheduledModal({
     );
   };
 
+  const addMultiDate = () => {
+    if (newMultiDate && !multiDates.includes(newMultiDate)) {
+      setMultiDates((prev) => [...prev, newMultiDate].sort());
+      setNewMultiDate("");
+    }
+  };
+
+  const removeMultiDate = (dateToRemove: string) => {
+    setMultiDates((prev) => prev.filter((d) => d !== dateToRemove));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const targetConfig: Record<string, unknown> =
+      targetType === "segment" && selectedSegment
+        ? { segment: selectedSegment }
+        : {};
+
+    // Multi-dates: create N scheduled notifications
+    if (scheduleType === "multi_dates") {
+      if (multiDates.length === 0) return;
+
+      const basePayload: CreateScheduledPayload & { schedule_dates: string[] } = {
+        name: name || title || "Notification planifiée",
+        title,
+        body: message,
+        ...(imageUrl ? { image_url: imageUrl } : {}),
+        target_type: targetType,
+        target_config: targetConfig,
+        schedule_type: "once",
+        timezone: "Africa/Abidjan",
+        schedule_dates: multiDates.map((d) => new Date(d).toISOString()),
+      };
+
+      createMultiMutation.mutate(basePayload, {
+        onSuccess: () => {
+          resetForm();
+          onClose();
+        },
+      });
+      return;
+    }
+
     const cronExpression = buildCron(
-      scheduleType,
+      scheduleType as any,
       hour,
       minute,
       selectedDays,
       monthDay,
       customCron
     );
-
-    const targetConfig: Record<string, unknown> =
-      targetType === "segment" && selectedSegment
-        ? { segment: selectedSegment }
-        : {};
 
     const body: CreateScheduledPayload = {
       name: name || title || "Notification planifiée",
@@ -224,7 +275,7 @@ export default function CreateScheduledModal({
       ...(imageUrl ? { image_url: imageUrl } : {}),
       target_type: targetType,
       target_config: targetConfig,
-      schedule_type: scheduleType,
+      schedule_type: scheduleType === "multi_dates" ? "once" : scheduleType,
       ...(cronExpression ? { cron_expression: cronExpression } : {}),
       ...(scheduleType === "once" && scheduledDate
         ? { scheduled_at: new Date(scheduledDate).toISOString() }
@@ -282,27 +333,29 @@ export default function CreateScheduledModal({
         {/* Content — Push only */}
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Titre
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-700">Titre</label>
+              <VariablePicker onInsert={(v) => setTitle((prev) => prev + v)} />
+            </div>
             <input
               type="text"
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="Titre de la notification"
+              placeholder="Ex: Bonjour {{first_name}} !"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Message
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-medium text-gray-700">Message</label>
+              <VariablePicker onInsert={(v) => setMessage((prev) => prev + v)} />
+            </div>
             <textarea
               required
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-              placeholder="Corps du message"
+              placeholder="Ex: {{first_name}}, ne ratez pas nos offres !"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
             />
@@ -380,7 +433,7 @@ export default function CreateScheduledModal({
             Planification
           </label>
 
-          <div className="grid grid-cols-5 gap-2 mb-4">
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-4">
             {SCHEDULE_TYPES.map((st) => (
               <button
                 key={st.id}
@@ -411,6 +464,58 @@ export default function CreateScheduledModal({
                 value={scheduledDate}
                 onChange={(e) => setScheduledDate(e.target.value)}
               />
+            </div>
+          )}
+
+          {/* Multi-dates picker */}
+          {scheduleType === "multi_dates" && (
+            <div className="space-y-3">
+              <label className="block text-xs text-gray-500">
+                Ajoutez les dates et heures d&apos;envoi
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="datetime-local"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  value={newMultiDate}
+                  onChange={(e) => setNewMultiDate(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={addMultiDate}
+                  disabled={!newMultiDate}
+                  className="px-4 py-2.5 bg-[#F17922] text-white rounded-lg text-sm font-medium hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
+                >
+                  Ajouter
+                </button>
+              </div>
+              {multiDates.length > 0 && (
+                <div className="space-y-1.5">
+                  {multiDates.map((d) => (
+                    <div
+                      key={d}
+                      className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2"
+                    >
+                      <span className="text-sm text-gray-700">
+                        {new Intl.DateTimeFormat("fr-FR", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        }).format(new Date(d))}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeMultiDate(d)}
+                        className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
+                      >
+                        Supprimer
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-400">
+                    {multiDates.length} date{multiDates.length > 1 ? "s" : ""} programmée{multiDates.length > 1 ? "s" : ""}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -547,7 +652,7 @@ export default function CreateScheduledModal({
           )}
 
           {/* CRON Preview */}
-          {scheduleType !== "once" && (
+          {scheduleType !== "once" && scheduleType !== "multi_dates" && (
             <div className="mt-3 bg-[#FFF3E8] rounded-xl px-3 py-2 text-xs text-[#F17922] flex items-center gap-2">
               <Repeat size={14} />
               CRON :{" "}

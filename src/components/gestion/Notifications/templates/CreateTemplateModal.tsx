@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import { useCreateTemplateMutation } from "@/hooks/usePushCampaignQuery";
 import { Loader2 } from "lucide-react";
+import VariablePicker from "../VariablePicker";
 
 interface Props {
   isOpen: boolean;
@@ -63,28 +64,30 @@ export default function CreateTemplateModal({ isOpen, onClose }: Props) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Titre
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">Titre</label>
+            <VariablePicker onInsert={(v) => setTitle((prev) => prev + v)} />
+          </div>
           <input
             type="text"
             required
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-            placeholder="Titre de la notification"
+            placeholder="Ex: Bonjour {{first_name}} !"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Message
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-sm font-medium text-gray-700">Message</label>
+            <VariablePicker onInsert={(v) => setBody((prev) => prev + v)} />
+          </div>
           <textarea
             required
             rows={3}
             className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
-            placeholder="Corps du message"
+            placeholder="Ex: {{first_name}}, profitez de nos offres !"
             value={body}
             onChange={(e) => setBody(e.target.value)}
           />

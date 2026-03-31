@@ -5,7 +5,7 @@ import Modal from "@/components/ui/Modal";
 import {
   useCreateSegmentMutation,
   useUpdateSegmentMutation,
-  usePreviewSegmentMutation,
+  usePreviewCustomFiltersMutation,
 } from "@/hooks/usePushCampaignQuery";
 import type { PushSegment, SegmentFilters } from "@/types/push-campaign";
 import { Loader2, Users, Eye } from "lucide-react";
@@ -30,7 +30,7 @@ export default function CreateSegmentModal({
 }: Props) {
   const createMutation = useCreateSegmentMutation();
   const updateMutation = useUpdateSegmentMutation();
-  const previewMutation = usePreviewSegmentMutation();
+  const previewMutation = usePreviewCustomFiltersMutation();
 
   const isEdit = !!editSegment && !editSegment.is_system;
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -116,16 +116,7 @@ export default function CreateSegmentModal({
 
   const handlePreview = () => {
     const filters = buildFilters();
-    previewMutation.mutate({
-      target_type: "filters",
-      target_config: {
-        filters: Object.entries(filters).map(([field, value]) => ({
-          field,
-          operator: "=",
-          value,
-        })),
-      },
-    });
+    previewMutation.mutate(filters);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
