@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
@@ -10,8 +10,10 @@ import {
   useAssignerTicketMutation,
   useModifierStatutTicketMutation,
   useModifierPrioriteTicketMutation,
-  useMarquerLuTicketMutation,
 } from '../../../../../features/messagerie';
+import { ticketAPI } from '../../../../../features/messagerie/apis/ticket.api';
+import { ticketKeyQuery, ticketStatsKeyQuery } from '../../../../../features/messagerie/queries/index.query';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
@@ -44,14 +46,20 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   const assignTicketMutation = useAssignerTicketMutation();
   const updateStatusMutation = useModifierStatutTicketMutation();
   const updatePriorityMutation = useModifierPrioriteTicketMutation();
-  const marquerLuMutation = useMarquerLuTicketMutation();
+  const queryClient = useQueryClient();
+  const markedReadRef = useRef<string | null>(null);
 
   // Marquer les messages comme lus quand on ouvre le ticket
   useEffect(() => {
-    if (ticketId) {
-      marquerLuMutation.mutate(ticketId);
+    if (ticketId && ticketId !== markedReadRef.current) {
+      markedReadRef.current = ticketId;
+      ticketAPI.marquerLu(ticketId).then(() => {
+        queryClient.invalidateQueries({ queryKey: ticketKeyQuery('list') });
+        queryClient.invalidateQueries({ queryKey: ticketKeyQuery('detail', ticketId) });
+        queryClient.invalidateQueries({ queryKey: ticketStatsKeyQuery() });
+      }).catch(() => {});
     }
-  }, [ticketId]);
+  }, [ticketId, queryClient]);
 
   // Trier les messages par ordre chronologique (anciens vers nouveaux)
   const sortedMessages = useMemo(() => {
