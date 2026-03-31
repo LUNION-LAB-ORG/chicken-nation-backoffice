@@ -12,7 +12,7 @@ export const useUnreadCounts = (): UnreadCounts => {
   const { data: ticketStats } = useTicketStatsQuery();
 
   const conversations = msgStats?.unread_conversations ?? 0;
-  const tickets = ticketStats?.open ?? 0;
+  const tickets = ticketStats?.unreadTickets ?? 0;
   const total = conversations + tickets;
 
   return { conversations, tickets, total };

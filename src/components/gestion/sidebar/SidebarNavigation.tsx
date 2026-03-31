@@ -49,7 +49,7 @@ export default function SidebarNavigation({
             <div key={item.id}>
               <button
                 onClick={(e) => toggleSection(item.id, e)}
-                className={`w-full flex justify-between items-center gap-2 px-4 py-[10px] rounded-[14px]
+                className={`relative w-full flex justify-between items-center gap-2 px-4 py-[10px] rounded-[14px]
                   ${
                     isParentActive
                       ? "bg-linear-to-r from-[#F17922] to-[#FA6345]"
@@ -57,11 +57,18 @@ export default function SidebarNavigation({
                   }`}
               >
                 <div className="flex items-center gap-2">
-                  <Icon
-                    className={`h-5 w-5 ${
-                      isParentActive ? "text-white" : "text-gray-500"
-                    }`}
-                  />
+                  <div className="relative">
+                    <Icon
+                      className={`h-5 w-5 ${
+                        isParentActive ? "text-white" : "text-gray-500"
+                      }`}
+                    />
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold bg-red-500 text-white leading-none">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
+                  </div>
                   <span
                     className={`text-sm ${
                       isParentActive ? "text-white" : "text-gray-600"
@@ -69,13 +76,6 @@ export default function SidebarNavigation({
                   >
                     {item.label}
                   </span>
-                  {item.badge !== undefined && item.badge > 0 && (
-                    <span className={`ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold ${
-                      isParentActive ? "bg-white text-[#F17922]" : "bg-red-500 text-white"
-                    }`}>
-                      {item.badge > 99 ? "99+" : item.badge}
-                    </span>
-                  )}
                 </div>
 
                 {expandedSections[item.id] ? (
@@ -106,11 +106,16 @@ export default function SidebarNavigation({
                       className={`ml-[10%] w-[90%] flex items-center gap-2 px-4 py-[10px] rounded-[14px]
                         ${isActive ? "bg-orange-50" : "hover:bg-gray-50"}`}
                     >
-                      <SubIcon
-                        className={`h-4 w-4 ${
-                          isActive ? "text-[#F17922]" : "text-gray-500"
-                        }`}
-                      />
+                      <div className="relative">
+                        <SubIcon
+                          className={`h-4 w-4 ${
+                            isActive ? "text-[#F17922]" : "text-gray-500"
+                          }`}
+                        />
+                        {sub.badge !== undefined && sub.badge > 0 && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500" />
+                        )}
+                      </div>
                       <span
                         className={`text-sm ${
                           isActive ? "text-[#F17922]" : "text-gray-600"
@@ -119,7 +124,7 @@ export default function SidebarNavigation({
                         {sub.label}
                       </span>
                       {sub.badge !== undefined && sub.badge > 0 && (
-                        <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-white">
+                        <span className="ml-auto text-[10px] font-semibold text-red-500">
                           {sub.badge > 99 ? "99+" : sub.badge}
                         </span>
                       )}

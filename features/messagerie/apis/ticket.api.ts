@@ -69,6 +69,9 @@ export const ticketAPI = {
       meta: data.meta || 'dashboard',
     }),
 
+  marquerLu: (ticketId: string): Promise<void> =>
+    apiRequest(`${BASE}/${ticketId}/messages/read`, 'POST'),
+
   obtenirStats: async (): Promise<ITicketStats> => {
     try {
       return await apiRequest<ITicketStats>(`${BASE}/stats`, 'GET');
@@ -76,6 +79,7 @@ export const ticketAPI = {
       return {
         total: 0, open: 0, inProgress: 0, resolved: 0, closed: 0,
         high: 0, medium: 0, low: 0, averageResponseTime: 0, averageResolutionTime: 0,
+        unreadTickets: 0,
       };
     }
   },

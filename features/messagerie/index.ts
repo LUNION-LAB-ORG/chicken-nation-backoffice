@@ -26,6 +26,7 @@ export { useTicketListQuery, useTicketListInfiniteQuery, useTicketStatsQuery } f
 export { useTicketDetailQuery } from './queries/ticket-detail.query';
 
 // === Ticket Mutations ===
+export { useMarquerLuTicketMutation } from './queries/ticket-marquer-lu.mutation';
 export { useCreerTicketMutation, useEscaladerConversationMutation } from './queries/ticket-creer.mutation';
 export {
   useModifierTicketMutation,

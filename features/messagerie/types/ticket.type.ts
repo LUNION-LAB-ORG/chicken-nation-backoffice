@@ -83,6 +83,7 @@ export interface ITicketStats {
   averageResponseTime: number;
   averageResolutionTime: number;
   satisfactionScore?: number;
+  unreadTickets?: number;
 }
 
 export interface ICreerTicketDTO {

@@ -10,6 +10,7 @@ import {
   useAssignerTicketMutation,
   useModifierStatutTicketMutation,
   useModifierPrioriteTicketMutation,
+  useMarquerLuTicketMutation,
 } from '../../../../../features/messagerie';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
@@ -43,6 +44,14 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   const assignTicketMutation = useAssignerTicketMutation();
   const updateStatusMutation = useModifierStatutTicketMutation();
   const updatePriorityMutation = useModifierPrioriteTicketMutation();
+  const marquerLuMutation = useMarquerLuTicketMutation();
+
+  // Marquer les messages comme lus quand on ouvre le ticket
+  useEffect(() => {
+    if (ticketId) {
+      marquerLuMutation.mutate(ticketId);
+    }
+  }, [ticketId]);
 
   // Trier les messages par ordre chronologique (anciens vers nouveaux)
   const sortedMessages = useMemo(() => {
