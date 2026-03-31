@@ -30,6 +30,7 @@ import {
 
 import { useAuthStore } from "../../features/users/hook/authStore";
 import { Modules, Action } from "../../features/users/types/auth.type";
+import { useUnreadCounts } from "../../features/messagerie/hooks/useUnreadCounts";
 
 export type CanAccessFn = () => boolean;
 
@@ -38,6 +39,7 @@ export interface NavigationItem {
   label: string;
   icon: LucideIcon;
   canAccess?: CanAccessFn;
+  badge?: number;
   items?: NavigationItem[];
 }
 
@@ -45,6 +47,7 @@ export const useGetMenuConfig = (): {
   navigationItems: NavigationItem[];
 } => {
   const can = useAuthStore((state) => state.can);
+  const unread = useUnreadCounts();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -96,18 +99,21 @@ export const useGetMenuConfig = (): {
       label: "Messages et tickets",
       icon: MessageSquare,
       canAccess: () => can(Modules.MESSAGES, Action.READ),
+      badge: unread.total > 0 ? unread.total : undefined,
       items: [
         {
           id: "messages_tickets-inbox",
           label: "Inbox",
           icon: MessageCircleMore,
           canAccess: () => can(Modules.MESSAGES, Action.READ),
+          badge: unread.conversations > 0 ? unread.conversations : undefined,
         },
         {
           id: "messages_tickets-tickets",
           label: "Tickets",
           icon: TicketCheck,
           canAccess: () => can(Modules.MESSAGES, Action.READ),
+          badge: unread.tickets > 0 ? unread.tickets : undefined,
         },
       ],
     },

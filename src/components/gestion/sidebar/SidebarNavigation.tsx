@@ -69,6 +69,13 @@ export default function SidebarNavigation({
                   >
                     {item.label}
                   </span>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className={`ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold ${
+                      isParentActive ? "bg-white text-[#F17922]" : "bg-red-500 text-white"
+                    }`}>
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  )}
                 </div>
 
                 {expandedSections[item.id] ? (
@@ -111,6 +118,11 @@ export default function SidebarNavigation({
                       >
                         {sub.label}
                       </span>
+                      {sub.badge !== undefined && sub.badge > 0 && (
+                        <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-white">
+                          {sub.badge > 99 ? "99+" : sub.badge}
+                        </span>
+                      )}
                     </button>
                   );
                 })}

@@ -68,6 +68,7 @@ export interface ITicket {
   category?: ITicketCategorie | null;
   createdAt: string;
   updatedAt: string;
+  unreadCount?: number;
 }
 
 export interface ITicketStats {
