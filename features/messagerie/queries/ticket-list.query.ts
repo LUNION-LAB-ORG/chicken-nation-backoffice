@@ -8,8 +8,8 @@ export const useTicketListQuery = (filtres: IFiltresTicket = {}, enabled = true)
     queryKey: ticketKeyQuery('list', filtres),
     queryFn: () => ticketAPI.obtenirTous(filtres),
     enabled,
-    staleTime: 5 * 1000,
-    refetchInterval: 10 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
   });
 };
 
@@ -23,8 +23,8 @@ export const useTicketListInfiniteQuery = (filtres: IFiltresTicket = {}, enabled
       return lastPage.meta.page < lastPage.meta.totalPages ? lastPage.meta.page + 1 : undefined;
     },
     enabled,
-    staleTime: 5 * 1000,
-    refetchInterval: 10 * 1000,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
   });
 };
 

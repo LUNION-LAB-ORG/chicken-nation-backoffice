@@ -12,6 +12,7 @@ import {
   Megaphone,
   MessageCircleMore,
   MessageSquare,
+  Star,
   Store,
   BadgePercent,
   Settings,
@@ -75,6 +76,12 @@ export const useGetMenuConfig = (): {
           label: "Clients",
           icon: Users,
           canAccess: () => can(Modules.CLIENTS, Action.READ),
+        },
+        {
+          id: "customers-reviews",
+          label: "Notes et avis",
+          icon: Star,
+          canAccess: () => can(Modules.COMMENTAIRES, Action.READ),
         },
         {
           id: "customers-card_nation",

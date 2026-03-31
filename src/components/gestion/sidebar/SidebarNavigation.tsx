@@ -40,9 +40,10 @@ export default function SidebarNavigation({
 
         // ---------- PARENT WITH CHILDREN ----------
         if (hasItems) {
-          const isParentActive = item.items!.some((sub) =>
-            sub.id.includes(activeTab)
-          );
+          const isParentActive = item.items!.some((sub) => {
+            const subKey = sub.id.includes('-') ? sub.id.split('-').slice(1).join('-') : sub.id;
+            return subKey === activeTab;
+          });
 
           return (
             <div key={item.id}>
@@ -88,7 +89,8 @@ export default function SidebarNavigation({
               {expandedSections[item.id] &&
                 item.items!.map((sub) => {
                   const SubIcon = sub.icon;
-                  const isActive = sub.id.includes(activeTab);
+                  const subKey = sub.id.includes('-') ? sub.id.split('-').slice(1).join('-') : sub.id;
+                  const isActive = subKey === activeTab;
 
                   return (
                     <button

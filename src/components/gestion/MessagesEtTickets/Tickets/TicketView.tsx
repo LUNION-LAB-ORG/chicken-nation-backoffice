@@ -31,7 +31,6 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   // États pour les dropdowns
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedPriority, setSelectedPriority] = useState('');
-  const [selectedAssignee, setSelectedAssignee] = useState('');
 
   // Récupération des données du ticket via l'API
   const { data: ticket, isLoading: ticketLoading, error: ticketError } = useTicketDetailQuery(ticketId);
@@ -58,7 +57,6 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     if (ticket) {
       setSelectedStatus(ticket.status);
       setSelectedPriority(ticket.priority);
-      setSelectedAssignee(ticket.assignee?.id || '');
     }
   }, [ticket]);
 
@@ -67,15 +65,13 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     if (!ticket || !ticketId) return;
     
     try {
-      console.log('🔄 Changement de statut:', { ticketId, newStatus });
       setSelectedStatus(newStatus);
-      await updateStatusMutation.mutateAsync({ 
-        id: ticketId, 
+      await updateStatusMutation.mutateAsync({
+        id: ticketId,
         status: newStatus as 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED'
       });
-      console.log('✅ Statut mis à jour avec succès');
     } catch (error) {
-      console.error('❌ Erreur lors du changement de statut:', error);
+      console.error('Erreur lors du changement de statut:', error);
       // Restaurer l'ancien statut en cas d'erreur
       setSelectedStatus(ticket.status);
     }
@@ -86,15 +82,13 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     if (!ticket || !ticketId) return;
     
     try {
-      console.log('🔄 Changement de priorité:', { ticketId, newPriority });
       setSelectedPriority(newPriority);
-      await updatePriorityMutation.mutateAsync({ 
-        id: ticketId, 
+      await updatePriorityMutation.mutateAsync({
+        id: ticketId,
         priority: newPriority as 'HIGH' | 'MEDIUM' | 'LOW'
       });
-      console.log('✅ Priorité mise à jour avec succès');
     } catch (error) {
-      console.error('❌ Erreur lors du changement de priorité:', error);
+      console.error('Erreur lors du changement de priorité:', error);
       // Restaurer l'ancienne priorité en cas d'erreur
       setSelectedPriority(ticket.priority);
     }
@@ -152,12 +146,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     { value: 'LOW', label: 'Faible' }
   ];
 
-  const assigneeOptions = [
-    { value: 'Marie Dubois', label: 'Marie Dubois' },
-    { value: 'Ahmed', label: 'Ahmed' },
-    { value: 'Sophie Martin', label: 'Sophie Martin' },
-    { value: 'Lucas Bernard', label: 'Lucas Bernard' }
-  ];
+  // Assignation automatique lors de l'envoi de message (pas de dropdown pour l'instant)
 
   if (!ticketId) {
     return (
@@ -276,16 +265,13 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             />
           </div>
 
-          {/* Assigné à - CACHÉ */}
-          {false && (
+          {/* Assigné à */}
+          {ticket.assignee && (
             <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-3">
               <span className="text-xs sm:text-sm md:text-base text-gray-800 font-normal whitespace-nowrap">Assigné:</span>
-              <CustomDropdown
-                options={assigneeOptions}
-                value={selectedAssignee}
-                onChange={setSelectedAssignee}
-                className="min-w-[70px] sm:min-w-[130px] md:min-w-[150px] text-xs sm:text-sm md:text-base"
-              />
+              <span className="text-xs sm:text-sm md:text-base text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">
+                {ticket.assignee.fullname || ticket.assignee.email || 'Agent'}
+              </span>
             </div>
           )}
         </div>
@@ -293,61 +279,6 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
 
       {/* Messages Area */}
       <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
-        {/* Boutons Public/Interne - CACHÉS */}
-        {false && (
-          <div className="m-4">
-            <div className="bg-slate-100 p-2 rounded-2xl">
-              {/* Version mobile - compacte */}
-              <div className="flex sm:hidden gap-2">
-                <button
-                  onClick={() => setMessageType('public')}
-                  className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'public'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600'
-                    }`}
-                >
-                  <Eye className="w-3 h-3 mr-1" />
-                  Public
-                </button>
-                <button
-                  onClick={() => setMessageType('internal')}
-                  className={`flex-1 flex items-center justify-center px-3 py-2 text-xs font-medium rounded-xl transition-colors ${messageType === 'internal'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600'
-                    }`}
-                >
-                  <EyeOff className="w-3 h-3 mr-1" />
-                  Interne
-                </button>
-              </div>
-
-              {/* Version tablette/desktop - normale */}
-              <div className="hidden sm:flex flex-col sm:flex-row gap-2">
-                <button
-                  onClick={() => setMessageType('public')}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'public'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600'
-                    }`}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Public (client voit)
-                </button>
-                <button
-                  onClick={() => setMessageType('internal')}
-                  className={`flex-1 flex items-center justify-center px-4 py-3 text-sm font-medium rounded-2xl transition-colors ${messageType === 'internal'
-                    ? 'bg-white text-gray-700 shadow-sm'
-                    : 'text-gray-600'
-                    }`}
-                >
-                  <EyeOff className="w-4 h-4 mr-2" />
-                  Interne (client ne voit pas)
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto md:px-6 md:py-4 px-4 py-3">
           <div className="md:space-y-6 space-y-4">

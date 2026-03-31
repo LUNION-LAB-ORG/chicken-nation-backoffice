@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { NotificationAPI } from '../../../src/services/notificationService';
 import { SOCKET_URL } from '../../../src/config';
 import { ticketKeyQuery, ticketStatsKeyQuery } from '../queries/index.query';
+import { useAuthStore } from '../../users/hook/authStore';
 
 interface UseTicketSocketSyncProps {
   enabled?: boolean;
@@ -19,6 +20,7 @@ export const useTicketSocketSync = ({
   playSound = false,
 }: UseTicketSocketSyncProps = {}) => {
   const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -31,7 +33,7 @@ export const useTicketSocketSync = ({
     if (!enabled) return;
 
     if (playSound && !audioRef.current && typeof window !== 'undefined') {
-      audioRef.current = new Audio('/musics/ticket-notification.mp3');
+      audioRef.current = new Audio('/musics/notification-sound.mp3');
       audioRef.current.volume = 0.5;
     }
 
@@ -63,7 +65,8 @@ export const useTicketSocketSync = ({
     });
 
     socket.on('new:ticket_message', (data: any) => {
-      if (playSound && audioRef.current) {
+      const authorId = data?.authorUser?.id || data?.message?.authorUser?.id;
+      if (playSound && audioRef.current && authorId !== currentUserId) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(() => {});
       }
@@ -95,7 +98,7 @@ export const useTicketSocketSync = ({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [enabled, queryClient, invalidateTickets, onNewTicket, onTicketUpdate, playSound]);
+  }, [enabled, currentUserId, queryClient, invalidateTickets, onNewTicket, onTicketUpdate, playSound]);
 
   return { socket: socketRef.current };
 };

@@ -3,13 +3,14 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { startOfMonth } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ChevronDown, Store, TrendingUp } from "lucide-react";
+import { FileText, ChevronDown, Store, TrendingUp, Truck } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { dateRangeToLocalString } from "../../../utils/date/format-date";
 import { generateOrderReport } from "../lib/pdf/order-report-generator";
 import {
   exportReportOrdersToExcel,
+  exportDeliveryPivotExcel,
   exportRestaurantPdf,
   exportMarketingReportPdf,
   getAllOrders,
@@ -136,6 +137,44 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     } catch (error) {
       console.error("Error exporting Excel:", error);
       toast.error("Erreur lors de l'exportation Excel");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportDeliveryPivot = async () => {
+    const startDate = !filters?.startDate
+      ? startOfMonth(new Date())
+      : typeof filters?.startDate === "string"
+      ? new Date(filters?.startDate as string)
+      : (filters?.startDate as Date);
+
+    const endDate = !filters?.endDate
+      ? new Date()
+      : typeof filters?.endDate === "string"
+      ? new Date(filters?.endDate as string)
+      : (filters?.endDate as Date);
+
+    setIsExporting(true);
+    setIsOpen(false);
+
+    try {
+      await exportDeliveryPivotExcel({
+        restaurantId: selectedRestaurantId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        type: filters?.type ? (filters?.type as OrderType) : undefined,
+        status: filters?.status ? (filters?.status as OrderStatus) : undefined,
+        auto: filters?.source
+          ? filters?.source === "auto"
+            ? true
+            : false
+          : undefined,
+      });
+      toast.success("Rapport livraisons par restaurant exporté avec succès");
+    } catch (error) {
+      console.error("Error exporting delivery pivot:", error);
+      toast.error("Erreur lors de l'exportation du rapport livraisons");
     } finally {
       setIsExporting(false);
     }
@@ -278,6 +317,17 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             >
               <FileText size={18} className="text-green-600" />
               <span>Exporter en Excel</span>
+            </button>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Bouton Livraisons par restaurant Excel */}
+            <button
+              onClick={handleExportDeliveryPivot}
+              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+            >
+              <Truck size={18} className="text-blue-600" />
+              <span>Livraisons / Restaurant</span>
             </button>
 
             <div className="border-t border-gray-100" />

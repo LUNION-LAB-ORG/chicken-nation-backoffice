@@ -11,6 +11,7 @@ import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { getRestaurantUsers } from '@/services/restaurantService';
 import { CreateTicketRequest, TicketPriority } from '@/types/tickets';
 import { TICKET_PRIORITY_LABELS, TICKET_CATEGORY_LABELS } from '@/types/tickets';
+import toast from 'react-hot-toast';
 
 interface NewTicketModalProps {
   isOpen: boolean;
@@ -90,17 +91,17 @@ function NewTicketModal({
 
   const handleSubmit = async () => {
     if (!title.trim()) {
-      alert('Le titre est obligatoire');
+      toast.error('Le titre est obligatoire');
       return;
     }
 
     if (!selectedClientId) {
-      alert('Veuillez sélectionner un client');
+      toast.error('Veuillez sélectionner un client');
       return;
     }
 
     if (!category) {
-      alert('Veuillez sélectionner une catégorie');
+      toast.error('Veuillez sélectionner une catégorie');
       return;
     }
 
@@ -108,23 +109,19 @@ function NewTicketModal({
       title: title.trim(),
       description: description.trim() || undefined,
       priority,
-      category: category as any, // Sera mappé selon vos types
+      category: category as any,
       clientId: selectedClientId,
       assignedToId: assignedToId || undefined,
       conversationId: conversationId || undefined,
     };
 
-    console.log('🎯 [NewTicketModal] Données du ticket à créer:', ticketData);
-    console.log('🎯 [NewTicketModal] Catégorie sélectionnée:', category);
-    console.log('🎯 [NewTicketModal] Client sélectionné:', selectedClientId);
-
     try {
       await createTicketMutation.mutateAsync(ticketData);
+      toast.success('Ticket créé avec succès');
       onClose();
-      // Optionnel : afficher une notification de succès
     } catch (error) {
       console.error('Erreur lors de la création du ticket:', error);
-      // Optionnel : afficher une notification d'erreur
+      toast.error('Erreur lors de la création du ticket');
     }
   };
 

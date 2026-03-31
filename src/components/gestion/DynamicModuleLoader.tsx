@@ -22,6 +22,9 @@ const modulesMap: Record<string, any> = {
   clients: dynamic(() => import("@/components/gestion/Clients"), {
     loading: () => <LoadingSpinner />,
   }),
+  reviews: dynamic(() => import("@/components/gestion/Clients/Reviews"), {
+    loading: () => <LoadingSpinner />,
+  }),
   card_nation: dynamic(() => import("@/components/gestion/CarteNation"), {
     loading: () => <LoadingSpinner />,
   }),
@@ -94,9 +97,7 @@ export default function DynamicModuleLoader() {
 
   const Component =
     modulesMap[
-      activeTab === "reviews"
-        ? "clients"
-        : activeTab === "card_requests"
+      activeTab === "card_requests"
         ? "card_nation"
         : activeTab
     ] ?? modulesMap["dashboard"];

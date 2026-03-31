@@ -61,9 +61,7 @@ export default function Sidebar() {
             isClient={isClient}
             navigationItems={navigationItems}
             activeTab={
-              activeTab === "reviews"
-                ? "clients"
-                : activeTab === "card_requests"
+              activeTab === "card_requests"
                 ? "card_nation"
                 : activeTab
             }

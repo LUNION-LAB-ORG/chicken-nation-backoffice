@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useCreateTicketCategoryMutation } from '@/hooks/useTicketCategoriesQuery';
+import toast from 'react-hot-toast';
 
 interface NewCategoryModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      alert('Le nom de la catégorie est obligatoire');
+      toast.error('Le nom de la catégorie est obligatoire');
       return;
     }
 
@@ -34,32 +35,24 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
       description: description.trim() || undefined,
     };
 
-    console.log('🎯 [NewCategoryModal] Tentative de création de catégorie:', categoryData);
-
     try {
-      const result = await createCategoryMutation.mutateAsync(categoryData);
-      console.log('✅ [NewCategoryModal] Catégorie créée avec succès:', result);
+      await createCategoryMutation.mutateAsync(categoryData);
+      toast.success('Catégorie créée avec succès');
       onClose();
-      alert('Catégorie créée avec succès !');
     } catch (error) {
-      console.error('❌ [NewCategoryModal] Erreur lors de la création de la catégorie:', error);
-      
-      // Gestion spécifique des erreurs
-      let errorMessage = 'Erreur inconnue';
-      
+      console.error('Erreur lors de la création de la catégorie:', error);
+
+      let errorMessage = 'Erreur lors de la création';
+
       if (error instanceof Error) {
         if (error.message.includes('409') || error.message.includes('Conflict')) {
-          errorMessage = `La catégorie "${name}" existe déjà. Choisissez un autre nom.`;
-        } else if (error.message.includes('401')) {
-          errorMessage = 'Vous n\'êtes pas autorisé à créer des catégories.';
-        } else if (error.message.includes('403')) {
-          errorMessage = 'Accès refusé. Vérifiez vos permissions.';
-        } else {
-          errorMessage = error.message;
+          errorMessage = `La catégorie "${name}" existe déjà`;
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+          errorMessage = 'Vous n\'êtes pas autorisé à créer des catégories';
         }
       }
-      
-      alert(`Erreur: ${errorMessage}`);
+
+      toast.error(errorMessage);
     }
   };
 

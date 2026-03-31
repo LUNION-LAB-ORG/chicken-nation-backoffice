@@ -73,13 +73,12 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
 
   const loadClients = useCallback(async () => {
+    if (!user?.restaurant_id) {
+      setClients([]);
+      return;
+    }
     setIsLoadingClients(true);
     try {
-      // Utiliser le nouvel endpoint qui filtre déjà par restaurant
-      if (!user?.restaurant_id) {
-        throw new Error('Aucun restaurant associé à votre compte');
-      }
-
       const clientsData = await getRestaurantCustomers(user.restaurant_id, {
         status: 'ACTIVE',
         search: clientSearchTerm.trim() || undefined
@@ -183,13 +182,13 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       newErrors.subject = 'Le sujet est obligatoire';
     }
 
-    if (conversationType === 'Avec client' && !selectedClientId) {
-      newErrors.client = 'Veuillez sélectionner un client';
-    }
-
-    // Validation du restaurant - utiliser l'ID du restaurant de l'utilisateur connecté
-    if (!user?.restaurant_id) {
-      newErrors.restaurant = 'Aucun restaurant associé à votre compte';
+    if (conversationType === 'Avec client') {
+      if (!selectedClientId) {
+        newErrors.client = 'Veuillez sélectionner un client';
+      }
+      if (!user?.restaurant_id) {
+        newErrors.restaurant = 'Aucun restaurant associé à votre compte';
+      }
     }
 
     if (conversationType === 'Interne' && selectedParticipantIds.length === 0) {

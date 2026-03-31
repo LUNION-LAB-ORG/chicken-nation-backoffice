@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import { NotificationAPI } from '../../../src/services/notificationService';
 import { SOCKET_URL } from '../../../src/config';
 import { conversationKeyQuery, messageKeyQuery, statsMessagesKeyQuery } from '../queries/index.query';
+import { useAuthStore } from '../../users/hook/authStore';
 
 interface UseMessagerieSocketSyncProps {
   conversationId?: string | null;
@@ -15,6 +16,7 @@ export const useMessagerieSocketSync = ({
   enabled = true,
 }: UseMessagerieSocketSyncProps = {}) => {
   const queryClient = useQueryClient();
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -36,19 +38,32 @@ export const useMessagerieSocketSync = ({
       audioRef.current.volume = 0.5;
     }
 
+    const token = NotificationAPI.getToken();
+    if (!token) {
+      console.warn('[Socket] Pas de token d\'authentification, socket non connecté');
+      return;
+    }
+
     const socket = io(SOCKET_URL, {
-      query: {
-        token: NotificationAPI.getToken() || '',
-        type: 'user',
-      },
+      query: { token, type: 'user' },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
     });
     socketRef.current = socket;
 
+    socket.on('connect_error', (err) => {
+      console.warn('[Socket] Erreur de connexion:', err.message);
+    });
+
     // Backend events: new:message, messages:read, new:conversation
     socket.on('new:message', (message: any) => {
-      if (audioRef.current) {
+      // Ne jouer le son que pour les messages reçus (pas ceux envoyés par soi-même)
+      const authorId = message?.authorUser?.id;
+      const isOwnMessage = currentUserId && authorId === currentUserId;
+      if (audioRef.current && !isOwnMessage) {
         audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+        audioRef.current.play().catch((e) => console.warn('[Audio] Play failed:', e.message));
       }
 
       const msgConvId = message?.conversation?.id || message?.conversationId;
@@ -76,7 +91,7 @@ export const useMessagerieSocketSync = ({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [enabled, queryClient, invalidateConversations, invalidateMessages]);
+  }, [enabled, currentUserId, queryClient, invalidateConversations, invalidateMessages]);
 
   return { socket: socketRef.current };
 };

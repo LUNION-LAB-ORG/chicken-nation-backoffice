@@ -6,8 +6,6 @@ import { TabKey, useDashboardStore, ViewType } from "@/store/dashboardStore";
 
 export default function ClientHeader() {
   const {
-    activeTab,
-    reviews: { view: viewReviews, filters: filtersReviews },
     clients: { view, filters },
     setActiveTab,
     setFilter,
@@ -25,44 +23,6 @@ export default function ClientHeader() {
     setSectionView(newTab, newView);
   };
 
-  if (activeTab == "reviews") {
-    if (viewReviews === "list") {
-      return (
-        <DashboardPageHeader
-          mode="list"
-          title={"Commentaires"}
-          searchConfig={{
-            placeholder: "Rechercher un commentaire",
-            buttonText: "Chercher",
-            value: filtersReviews?.search as string,
-            onSearch: (search) => handleSearch("reviews", search),
-            realTimeSearch: true,
-          }}
-          actions={[
-            {
-              label: "Clients",
-              onClick: () => handleViewChange("clients", "list"),
-            },
-          ]}
-        />
-      );
-    }
-    return (
-      <DashboardPageHeader
-        mode={viewReviews}
-        onBack={() => handleViewChange("reviews", "list")}
-        title={
-          view === "create"
-            ? "Ajouter un commentaire"
-            : view === "edit"
-            ? "Modifier le commentaire"
-            : "Détails du commentaire"
-        }
-        gradient={true}
-      />
-    );
-  }
-
   if (view === "list") {
     return (
       <DashboardPageHeader
@@ -75,12 +35,6 @@ export default function ClientHeader() {
           onSearch: (search) => handleSearch("clients", search),
           realTimeSearch: true,
         }}
-        actions={[
-          {
-            label: "Notes & avis",
-            onClick: () => handleViewChange("reviews", "list"),
-          },
-        ]}
       />
     );
   }

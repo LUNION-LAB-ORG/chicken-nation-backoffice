@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { MessageCircle, Eye, EyeOff, Send, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, AlertTriangle } from 'lucide-react';
 import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
 import EscalateTicketModal from './EscalateTicketModal';
@@ -25,7 +25,6 @@ interface ConversationViewProps {
 
 function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState<'public' | 'internal'>('public');
   const [isMobileRightbarOpen, setIsMobileRightbarOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -56,14 +55,14 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   // Récupérer la conversation actuelle depuis la liste des conversations
   const currentConversation = useMemo(() => {
     if (!conversationId) return null;
-    
-    // Récupérer la conversation depuis le cache React Query
-    const conversationsData = queryClient.getQueryData(['conversations']) as any;
+
+    // Récupérer la conversation depuis le cache React Query (clé = ['conversation', 'list'])
+    const conversationsData = queryClient.getQueryData(['conversation', 'list']) as any;
     const conversations = conversationsData?.data || [];
     const conversation = conversations.find((c: any) => c.id === conversationId);
-    
+
     return conversation || null;
-  }, [conversationId, queryClient]);
+  }, [conversationId, queryClient, conversationMessages]);
 
   // Fonction utilitaire pour obtenir les informations d'affichage de la conversation
   const getConversationInfo = useMemo(() => {
@@ -178,14 +177,13 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
   const handleSendMessage = async () => {
     if (message.trim() && conversationId && !sendMessageMutation.isPending) {
+      const body = message.trim();
+      setMessage(''); // Vider immédiatement (optimiste)
       try {
-        await sendMessageMutation.mutateAsync({
-          conversationId,
-          body: message.trim(),
-        });
-        setMessage('');
+        await sendMessageMutation.mutateAsync({ conversationId, body });
       } catch (error) {
         console.error('Erreur lors de l\'envoi du message:', error);
+        setMessage(body); // Restaurer en cas d'erreur
       }
     }
   };
@@ -318,13 +316,6 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             </div>
           )}
 
-          {/* Messages sans erreur - React Query gère les erreurs automatiquement */}
-          {!isLoadingMessages && conversationMessages.length === 0 && (
-            <div className="flex justify-center items-center h-32">
-              <p className="text-gray-500">Aucun message dans cette conversation</p>
-            </div>
-          )}
-
           {/* Messages */}
           <div className="md:space-y-6 space-y-4">
             {conversationMessages.length === 0 && !isLoadingMessages ? (
@@ -406,39 +397,15 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
         {/* Zone de saisie */}
         <div className="md:px-6 md:py-4 px-4 py-3 bg-white border-t border-slate-300">
-          {/* Boutons Public/Interne */}
-          <div className="flex md:mb-4 mb-3">
-            <button
-              onClick={() => setMessageType('public')}
-              className={`flex items-center md:px-4 md:py-2 px-3 cursor-pointer py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 ${messageType === 'public'
-                ? 'bg-[#F17922] text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              <Eye className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-              Public
-            </button>
-            <button
-              onClick={() => setMessageType('internal')}
-              className={`flex items-center md:px-4 md:py-2 cursor-pointer px-3 py-2 rounded-full md:text-sm text-xs font-medium ${messageType === 'internal'
-                ? 'bg-[#F17922] text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-            >
-              <EyeOff className="md:w-4 md:h-4 w-3 h-3 md:mr-2 mr-1" />
-              Interne
-            </button>
-          </div>
-
           {/* Champ de saisie */}
           <div className="flex items-start md:space-x-3 space-x-2">
             <div className="flex-1">
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder={messageType === 'public' ? "Écrire un message public..." : "Écrire un message interne..."}
-                className="w-full md:px-4 md:py-3 text-slate-700  px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent md:text-sm text-xs bg-gray-50"
+                onKeyDown={handleKeyPress}
+                placeholder="Écrire un message..."
+                className="w-full md:px-4 md:py-3 text-slate-700 px-3 py-2 border border-gray-200 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent md:text-sm text-xs bg-gray-50"
                 rows={3}
                 disabled={sendMessageMutation.isPending}
               />
