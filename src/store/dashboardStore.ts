@@ -7,7 +7,7 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 // --- TYPES ---
 export type TabKey =
   'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
-  | 'restaurants' | 'personnel' | 'promos' | 'loyalty'
+  | 'restaurants' | 'personnel' | 'promos' | 'loyalty' | 'voucher'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
@@ -50,6 +50,7 @@ export interface DashboardState {
   personnel: SectionState;
   promos: SectionState;
   loyalty: SectionState;
+  voucher: SectionState;
   card_requests: SectionState;
   card_nation: SectionState;
   reviews: SectionState;
@@ -87,7 +88,7 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 
 const SECTION_KEYS: TabKey[] = [
   'dashboard', 'orders', 'menus', 'marketing', 'clients', 'inventory',
-  'restaurants', 'personnel', 'promos', 'loyalty', 'inbox',
+  'restaurants', 'personnel', 'promos', 'loyalty', 'voucher', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing',
@@ -115,6 +116,7 @@ export const useDashboardStore = create<DashboardState>()(
       personnel: createInitialSectionState(),
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
+      voucher: createInitialSectionState(),
       card_requests: createInitialSectionState(),
       card_nation: createInitialSectionState(),
       reviews: createInitialSectionState(),

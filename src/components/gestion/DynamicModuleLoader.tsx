@@ -43,7 +43,13 @@ const modulesMap: Record<string, any> = {
   loyalty: dynamic(() => import("@/components/gestion/PointFedelisation"), {
     loading: () => <LoadingSpinner />,
   }),
+  voucher: dynamic(() => import("@/components/gestion/BonDeReduction"), {
+    loading: () => <LoadingSpinner />,
+  }),
   marketing: dynamic(() => import("@/components/gestion/Marketing"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  promo_code: dynamic(() => import("@/components/gestion/CodesPromo"), {
     loading: () => <LoadingSpinner />,
   }),
 
