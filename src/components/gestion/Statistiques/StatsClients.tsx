@@ -102,7 +102,7 @@ const ACQUISITION_COLORS = {
 } as const;
 
 export default function StatsClients() {
-  const { selectedRestaurantId } = useDashboardStore();
+  const { selectedRestaurantId, setActiveTab } = useDashboardStore();
   const [filters, setFilters] = useState<StatsFilters>({
     ...DEFAULT_STATS_FILTERS,
     restaurantId: selectedRestaurantId ?? undefined,
@@ -1281,6 +1281,11 @@ export default function StatsClients() {
                     label: "Total cmd.",
                     align: "right" as const,
                   },
+                  {
+                    key: "action",
+                    label: "",
+                    align: "right" as const,
+                  },
                 ]}
                 rows={(inactive.data?.items ?? []).slice(0, 8).map((c) => ({
                   name: (
@@ -1311,6 +1316,17 @@ export default function StatsClients() {
                     <span className="text-gray-600">
                       {formatNumber(c.totalOrders)}
                     </span>
+                  ),
+                  action: (
+                    <button
+                      onClick={() => {
+                        setActiveTab("stats_retention_callbacks" as any);
+                      }}
+                      className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-[#F17922] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors whitespace-nowrap"
+                    >
+                      <Phone className="w-2.5 h-2.5" />
+                      Rappeler
+                    </button>
                   ),
                 }))}
                 emptyMessage="Aucun client inactif sur cette période"

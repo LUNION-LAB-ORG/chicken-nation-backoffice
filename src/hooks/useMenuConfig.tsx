@@ -26,6 +26,7 @@ import {
   Tag,
   BadgeDollarSign,
   Link2,
+  Phone,
 } from "lucide-react";
 
 import { useAuthStore } from "../../features/users/hook/authStore";
@@ -201,6 +202,12 @@ export const useGetMenuConfig = (): {
           id: "statistiques-stats_clients",
           label: "Clients",
           icon: Users,
+          canAccess: () => can(Modules.CLIENTS, Action.READ),
+        },
+        {
+          id: "statistiques-stats_retention_callbacks",
+          label: "Rétention clients",
+          icon: Phone,
           canAccess: () => can(Modules.CLIENTS, Action.READ),
         },
         {

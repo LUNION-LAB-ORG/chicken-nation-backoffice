@@ -11,7 +11,7 @@ export type TabKey =
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
-  | 'stats_delivery' | 'stats_marketing'
+  | 'stats_delivery' | 'stats_marketing' | 'stats_retention_callbacks'
   // Intégrations
   | 'hubrise'
   // Paramètres

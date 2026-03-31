@@ -81,6 +81,10 @@ const modulesMap: Record<string, any> = {
     () => import("@/components/gestion/Statistiques/StatsMarketing"),
     { loading: () => <LoadingSpinner /> }
   ),
+  stats_retention_callbacks: dynamic(
+    () => import("@/components/gestion/Statistiques/StatsRetentionCallbacks"),
+    { loading: () => <LoadingSpinner /> }
+  ),
 
   // ---- Notifications ----
   notifications: dynamic(() => import("@/components/gestion/Notifications"), {
