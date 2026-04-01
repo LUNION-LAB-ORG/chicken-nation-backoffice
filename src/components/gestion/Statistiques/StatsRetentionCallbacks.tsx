@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   Phone,
@@ -23,6 +24,7 @@ import {
   ChevronRight,
   Filter,
   UserX,
+  X,
 } from "lucide-react";
 import {
   AreaChart,
@@ -62,11 +64,14 @@ import {
   useRetentionAgentPerformanceQuery,
   useRetentionFunnelQuery,
   useRetentionTrendQuery,
+  useCalledCustomersQuery,
 } from "../../../../features/retention_callback/queries/retention-callback-stats.query";
+import type { RetentionStatsDateFilter } from "../../../../features/retention_callback/apis/retention-callback-stats.api";
 import { useRetentionReasonsQuery } from "../../../../features/retention_callback/queries/retention-callback-reasons.query";
 import {
   useCreateRetentionCallbackMutation,
   useUpdateRetentionCallbackMutation,
+  useDeleteRetentionCallbackMutation,
   useCreateReasonMutation,
   useUpdateReasonMutation,
   useDeleteReasonMutation,
@@ -127,6 +132,37 @@ const PIE_COLORS = [
   CHART_COLORS.warning,
   CHART_COLORS.secondary,
 ];
+
+// === Date Range Filter ===
+function DateRangeFilter({ value, onChange }: { value: RetentionStatsDateFilter; onChange: (v: RetentionStatsDateFilter) => void }) {
+  return (
+    <div className="flex items-center gap-2 flex-wrap">
+      <span className="text-xs font-medium text-gray-500">Periode :</span>
+      <input
+        type="date"
+        value={value.dateFrom || ""}
+        onChange={(e) => onChange({ ...value, dateFrom: e.target.value || undefined })}
+        className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-[#F17922]"
+      />
+      <span className="text-xs text-gray-400">a</span>
+      <input
+        type="date"
+        value={value.dateTo || ""}
+        onChange={(e) => onChange({ ...value, dateTo: e.target.value || undefined })}
+        className="text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-[#F17922]"
+      />
+      {(value.dateFrom || value.dateTo) && (
+        <button
+          onClick={() => onChange({})}
+          className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+          title="Reinitialiser"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 // ============================================================
 // MAIN COMPONENT
@@ -197,20 +233,33 @@ export default function StatsRetentionCallbacks({ initialCustomerId }: Props) {
 // TAB 1: CLIENTS INACTIFS (primary)
 // ============================================================
 
+type CallFilter = "all" | "not_called" | "called";
+
 function InactiveClientsTab({ initialCustomerId }: { initialCustomerId?: string }) {
   const [inactiveDays, setInactiveDays] = useState(30);
   const [search, setSearch] = useState("");
+  const [callFilter, setCallFilter] = useState<CallFilter>("not_called");
   const [actionModal, setActionModal] = useState<{ client: InactiveClientItem; status: string } | null>(null);
   const [formReasonId, setFormReasonId] = useState("");
   const [formNotes, setFormNotes] = useState("");
   const [formNextCallbackAt, setFormNextCallbackAt] = useState("");
 
   const { data: inactiveData, isLoading } = useInactiveClientsQuery({ inactiveDays, limit: 200 });
+  const { data: calledData } = useCalledCustomersQuery();
   const { data: reasons } = useRetentionReasonsQuery();
   const createMutation = useCreateRetentionCallbackMutation();
 
+  const calledIds = useMemo(() => new Set(calledData?.calledCustomerIds || []), [calledData]);
+
   const clients = useMemo(() => {
-    const items = inactiveData?.items || [];
+    let items = inactiveData?.items || [];
+    // Filter by call status
+    if (callFilter === "not_called") {
+      items = items.filter((c) => !calledIds.has(c.id));
+    } else if (callFilter === "called") {
+      items = items.filter((c) => calledIds.has(c.id));
+    }
+    // Filter by search
     if (!search.trim()) return items;
     const q = search.toLowerCase();
     return items.filter(
@@ -219,7 +268,7 @@ function InactiveClientsTab({ initialCustomerId }: { initialCustomerId?: string 
         c.phone?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q)
     );
-  }, [inactiveData, search]);
+  }, [inactiveData, search, callFilter, calledIds]);
 
   const handleAction = (client: InactiveClientItem, status: string) => {
     if (status === "NO_ANSWER") {
@@ -279,9 +328,28 @@ function InactiveClientsTab({ initialCustomerId }: { initialCustomerId?: string 
               <option value={90}>90 jours</option>
             </select>
           </div>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+            {([
+              { key: "all" as CallFilter, label: "Tous" },
+              { key: "not_called" as CallFilter, label: "Non appeles" },
+              { key: "called" as CallFilter, label: "Deja appeles" },
+            ]).map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => setCallFilter(opt.key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  callFilter === opt.key
+                    ? "bg-white text-[#F17922] shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="text-sm text-gray-500">
-          <span className="font-semibold text-gray-900">{inactiveData?.totalCount || 0}</span> clients inactifs
+          <span className="font-semibold text-gray-900">{clients.length}</span> / {inactiveData?.totalCount || 0} clients
         </div>
       </div>
 
@@ -321,7 +389,16 @@ function InactiveClientsTab({ initialCustomerId }: { initialCustomerId?: string 
                       </div>
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-gray-600">{client.phone || "\u2014"}</td>
+                  <td className="py-3 px-3 text-gray-600">
+                    <div className="flex items-center gap-1.5">
+                      {client.phone || "\u2014"}
+                      {calledIds.has(client.id) && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-600">
+                          Deja appele
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="py-3 px-3 text-gray-500">
                     {client.lastOrderDate
                       ? new Date(client.lastOrderDate).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric" })
@@ -454,11 +531,12 @@ function InactiveClientsTab({ initialCustomerId }: { initialCustomerId?: string 
 // ============================================================
 
 function DashboardTab() {
-  const { data: overview, isLoading: loadingOverview } = useRetentionOverviewQuery();
-  const { data: byReason } = useRetentionByReasonQuery();
-  const { data: agentPerf } = useRetentionAgentPerformanceQuery();
-  const { data: funnel } = useRetentionFunnelQuery();
-  const { data: trend } = useRetentionTrendQuery();
+  const [dateFilter, setDateFilter] = useState<RetentionStatsDateFilter>({});
+  const { data: overview, isLoading: loadingOverview } = useRetentionOverviewQuery(dateFilter);
+  const { data: byReason } = useRetentionByReasonQuery(dateFilter);
+  const { data: agentPerf } = useRetentionAgentPerformanceQuery(dateFilter);
+  const { data: funnel } = useRetentionFunnelQuery(dateFilter);
+  const { data: trend } = useRetentionTrendQuery(30, dateFilter);
 
   if (loadingOverview) return <div className="p-4"><StatsLoadingState /></div>;
 
@@ -481,6 +559,9 @@ function DashboardTab() {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Date filter */}
+      <DateRangeFilter value={dateFilter} onChange={setDateFilter} />
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <StatsCard title="Total appels" value={kpis.total} color="blue" />
@@ -618,10 +699,19 @@ function DashboardTab() {
 // ============================================================
 
 function HistoriqueTab() {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === "ADMIN" || user?.role === "SUPER_ADMIN";
   const [filters, setFilters] = useState<IRetentionCallbackFilters>({ page: 1, limit: 20 });
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: listData, isLoading } = useRetentionCallbackListQuery(filters);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const { data: listData, isLoading } = useRetentionCallbackListQuery({
+    ...filters,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
   const updateMutation = useUpdateRetentionCallbackMutation();
+  const deleteMutation = useDeleteRetentionCallbackMutation();
 
   const handleSearch = () => {
     setFilters({ ...filters, search: searchQuery, page: 1 });
@@ -633,8 +723,8 @@ function HistoriqueTab() {
   return (
     <div className="p-4 space-y-4">
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 flex-1">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-1 flex-wrap">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -662,6 +752,28 @@ function HistoriqueTab() {
               <option key={key} value={key}>{cfg.label}</option>
             ))}
           </select>
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setFilters({ ...filters, page: 1 }); }}
+            className="text-sm border border-gray-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-[#F17922]"
+          />
+          <span className="text-xs text-gray-400">a</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setFilters({ ...filters, page: 1 }); }}
+            className="text-sm border border-gray-200 rounded-lg px-2.5 py-2 outline-none focus:ring-1 focus:ring-[#F17922]"
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(""); setDateTo(""); setFilters({ ...filters, page: 1 }); }}
+              className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+              title="Reinitialiser les dates"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -713,6 +825,15 @@ function HistoriqueTab() {
                         <XCircle className="w-3.5 h-3.5" />
                       </button>
                     </>
+                  )}
+                  {isAdmin && (
+                    <button
+                      onClick={() => { if (confirm("Supprimer cet appel ?")) deleteMutation.mutate(cb.id); }}
+                      className="p-1 rounded hover:bg-red-50 text-red-400 hover:text-red-600"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
               ),

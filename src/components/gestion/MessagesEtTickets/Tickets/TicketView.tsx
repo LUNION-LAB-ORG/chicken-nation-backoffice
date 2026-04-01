@@ -54,10 +54,14 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     if (ticketId && ticketId !== markedReadRef.current) {
       markedReadRef.current = ticketId;
       ticketAPI.marquerLu(ticketId).then(() => {
+        // Force immediate refetch (not just invalidation) so the badge updates instantly
+        queryClient.refetchQueries({ queryKey: ticketStatsKeyQuery() });
         queryClient.invalidateQueries({ queryKey: ticketKeyQuery('list') });
         queryClient.invalidateQueries({ queryKey: ticketKeyQuery('detail', ticketId) });
-        queryClient.invalidateQueries({ queryKey: ticketStatsKeyQuery() });
-      }).catch(() => {});
+      }).catch(() => {
+        // Reset ref so it retries on next render
+        markedReadRef.current = null;
+      });
     }
   }, [ticketId, queryClient]);
 
