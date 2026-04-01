@@ -10,7 +10,7 @@ import {
 } from "../services/voucher.service";
 import { CreateVoucherDto, UpdateVoucherDto } from "../types/voucher.types";
 
-// Créer un bon de réduction
+// Créer un bon
 export const useCreateVoucherMutation = () => {
     const invalidate = useInvalidateVoucherQuery();
 
@@ -18,13 +18,13 @@ export const useCreateVoucherMutation = () => {
         mutationFn: (data: CreateVoucherDto) => createVoucher(data),
         onSuccess: () => {
             invalidate("list");
-            toast.success("Bon de réduction créé avec succès");
+            toast.success("Bon créé avec succès");
         },
         onError: (e: Error) => toast.error(e.message),
     });
 };
 
-// Mettre à jour un bon de réduction
+// Mettre à jour un bon
 export const useUpdateVoucherMutation = () => {
     const invalidate = useInvalidateVoucherQuery();
 
@@ -34,13 +34,13 @@ export const useUpdateVoucherMutation = () => {
         onSuccess: (_, variables) => {
             invalidate("list");
             invalidate("detail", variables.code);
-            toast.success("Bon de réduction mis à jour avec succès");
+            toast.success("Bon mis à jour avec succès");
         },
         onError: (e: Error) => toast.error(e.message),
     });
 };
 
-// Annuler un bon de réduction
+// Annuler un bon
 export const useCancelVoucherMutation = () => {
     const invalidate = useInvalidateVoucherQuery();
 
@@ -49,13 +49,13 @@ export const useCancelVoucherMutation = () => {
         onSuccess: (_, code) => {
             invalidate("list");
             invalidate("detail", code);
-            toast.success("Bon de réduction annulé avec succès");
+            toast.success("Bon annulé avec succès");
         },
         onError: (e: Error) => toast.error(e.message),
     });
 };
 
-// Supprimer un bon de réduction (soft delete)
+// Supprimer un bon (soft delete)
 export const useDeleteVoucherMutation = () => {
     const invalidate = useInvalidateVoucherQuery();
 
@@ -63,13 +63,13 @@ export const useDeleteVoucherMutation = () => {
         mutationFn: (code: string) => removeVoucher(code),
         onSuccess: () => {
             invalidate("list");
-            toast.success("Bon de réduction supprimé avec succès");
+            toast.success("Bon supprimé avec succès");
         },
         onError: (e: Error) => toast.error(e.message),
     });
 };
 
-// Restaurer un bon de réduction
+// Restaurer un bon
 export const useRestoreVoucherMutation = () => {
     const invalidate = useInvalidateVoucherQuery();
 
@@ -78,7 +78,7 @@ export const useRestoreVoucherMutation = () => {
         onSuccess: (_, code) => {
             invalidate("list");
             invalidate("detail", code);
-            toast.success("Bon de réduction restauré avec succès");
+            toast.success("Bon restauré avec succès");
         },
         onError: (e: Error) => toast.error(e.message),
     });

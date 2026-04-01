@@ -156,7 +156,7 @@ export const useGetMenuConfig = (): {
         },
         {
           id: "fidelisation-voucher",
-          label: "Bons de réduction",
+          label: "Bons",
           icon: TicketPercent,
           canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },

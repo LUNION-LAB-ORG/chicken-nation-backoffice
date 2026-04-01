@@ -190,7 +190,7 @@ const CreateVoucherModal = ({ onClose }: { onClose: () => void }) => {
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-lg mx-4 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-gray-900">Nouveau bon de réduction</h2>
+          <h2 className="text-lg font-bold text-gray-900">Nouveau bon</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer">
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -365,7 +365,7 @@ const VoucherTable = ({
     return (
       <div className="flex flex-col items-center justify-center h-64 text-gray-400">
         <Ticket className="w-12 h-12 mb-3" />
-        <p className="text-sm">Aucun bon de réduction trouvé</p>
+        <p className="text-sm">Aucun bon trouvé</p>
       </div>
     );
   }
@@ -479,7 +479,7 @@ const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void 
   if (!voucher) {
     return (
       <div className="text-center text-gray-400 py-16">
-        <p>Bon de réduction introuvable</p>
+        <p>Bon introuvable</p>
         <button onClick={onBack} className="mt-4 text-[#F17922] text-sm font-medium cursor-pointer">
           Retour à la liste
         </button>
@@ -680,7 +680,7 @@ export default function BonDeReduction() {
           <DashboardPageHeader
             mode="view"
             onBack={handleBackToList}
-            title="Détail du bon de réduction"
+            title="Détail du bon"
             gradient={true}
           />
         </div>
@@ -695,7 +695,7 @@ export default function BonDeReduction() {
       <div className="-mt-10">
         <DashboardPageHeader
           mode="list"
-          title="Bons de réduction"
+          title="Bons"
           searchConfig={{
             placeholder: "Rechercher par code ou client...",
             buttonText: "Chercher",
