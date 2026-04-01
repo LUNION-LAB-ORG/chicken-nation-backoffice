@@ -93,6 +93,12 @@ export const useGetMenuConfig = (): {
           icon: CreditCard,
           canAccess: () => can(Modules.CARD_NATION, Action.READ),
         },
+        {
+          id: "customers-stats_retention_callbacks",
+          label: "Rétention clients",
+          icon: Phone,
+          canAccess: () => can(Modules.CLIENTS, Action.READ),
+        },
       ],
     },
     {
@@ -202,12 +208,6 @@ export const useGetMenuConfig = (): {
           id: "statistiques-stats_clients",
           label: "Clients",
           icon: Users,
-          canAccess: () => can(Modules.CLIENTS, Action.READ),
-        },
-        {
-          id: "statistiques-stats_retention_callbacks",
-          label: "Rétention clients",
-          icon: Phone,
           canAccess: () => can(Modules.CLIENTS, Action.READ),
         },
         {
