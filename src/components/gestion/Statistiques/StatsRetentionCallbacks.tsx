@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   Phone,
   PhoneCall,
@@ -152,19 +153,14 @@ export default function StatsRetentionCallbacks({ initialCustomerId }: Props) {
     <div className="flex-1 overflow-auto p-4 space-y-6">
       {/* Header */}
       <div className="-mt-10">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">
-              Retention Clients
-            </h1>
-            <p className="text-sm text-gray-500">
-              Suivi des appels de reconquete des anciens clients
-            </p>
-          </div>
-        </div>
+        <DashboardPageHeader
+          mode="list"
+          title="Retention Clients"
+          subtitle="Suivi des appels de reconquete des anciens clients"
+        />
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 -mt-2">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (

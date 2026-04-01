@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { Ticket, Tag, MapPin, MessageSquare, Download } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 import {
@@ -68,16 +69,14 @@ export default function StatsMarketing() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* En-tête */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Marketing &amp; Promotions</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            ROI promotions, zones street marketing, export campagnes
-          </p>
-        </div>
-        <StatsPeriodFilter filters={filters} onChange={setFilters} />
+    <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="-mt-10">
+        <DashboardPageHeader
+          mode="list"
+          title="Marketing & Promotions"
+          subtitle="ROI promotions, zones street marketing, export campagnes"
+          actions={[{ label: "", onClick: () => {}, customComponent: <StatsPeriodFilter filters={filters} onChange={setFilters} /> }]}
+        />
       </div>
 
       {isLoading && <StatsLoadingState />}

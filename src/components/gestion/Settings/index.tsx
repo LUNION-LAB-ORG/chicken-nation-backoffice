@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import SettingsTabs from "./SettingsTabs";
 import GeneralSettings from "./tabs/GeneralSettings";
 import EmailSettings from "./tabs/EmailSettings";
@@ -28,25 +29,28 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Paramètres</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Configurez les paramètres de l&apos;application — accessible uniquement aux administrateurs
-        </p>
+    <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="-mt-10">
+        <DashboardPageHeader
+          mode="list"
+          title="Paramètres"
+          subtitle="Configurez les paramètres de l'application"
+        />
       </div>
 
-      <SettingsTabs tabs={TABS} selected={activeTab} onSelect={setActiveTab} />
+      <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden p-4">
+        <SettingsTabs tabs={TABS} selected={activeTab} onSelect={setActiveTab} />
 
-      {activeTab === "general" && <GeneralSettings />}
-      {activeTab === "email" && <EmailSettings />}
-      {activeTab === "orders" && <OrderSettings />}
-      {activeTab === "mobile" && <MobileAppSettings />}
-      {activeTab === "sms" && <TwilioSettings />}
-      {activeTab === "payment" && <PaymentSettings />}
-      {activeTab === "marketing_report" && <MarketingReportSettings />}
-      {activeTab === "notifications" && <NotificationSettings />}
-      {activeTab === "hubrise" && <HubRiseSettings />}
+        {activeTab === "general" && <GeneralSettings />}
+        {activeTab === "email" && <EmailSettings />}
+        {activeTab === "orders" && <OrderSettings />}
+        {activeTab === "mobile" && <MobileAppSettings />}
+        {activeTab === "sms" && <TwilioSettings />}
+        {activeTab === "payment" && <PaymentSettings />}
+        {activeTab === "marketing_report" && <MarketingReportSettings />}
+        {activeTab === "notifications" && <NotificationSettings />}
+        {activeTab === "hubrise" && <HubRiseSettings />}
+      </div>
     </div>
   );
 };

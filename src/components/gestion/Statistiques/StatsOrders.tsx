@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   TrendingUp,
   Smartphone,
@@ -404,18 +405,14 @@ export default function StatsOrders() {
   }, [selectedMapRestaurant, restaurantsLocations.data]);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* ========================================== */}
-      {/* SECTION 1 : En-tete + Filtres             */}
-      {/* ========================================== */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Statistiques Commandes</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Volume, CA, canaux et performance de traitement
-          </p>
-        </div>
-        <StatsPeriodFilter filters={filters} onChange={setFilters} />
+    <div className="flex-1 overflow-auto p-4 space-y-6">
+      <div className="-mt-10">
+        <DashboardPageHeader
+          mode="list"
+          title="Statistiques Commandes"
+          subtitle="Volume, CA, canaux et performance de traitement"
+          actions={[{ label: "", onClick: () => {}, customComponent: <StatsPeriodFilter filters={filters} onChange={setFilters} /> }]}
+        />
       </div>
 
       {isLoading && <StatsLoadingState />}

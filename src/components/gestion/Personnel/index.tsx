@@ -306,12 +306,14 @@ export default function Personnel() {
   }
 
   return (
-    <div className="flex flex-col h-full w-full p-4">
-      <PersonnelHeader
+    <div className="flex-1 overflow-auto p-4">
+      <div className="-mt-10">
+        <PersonnelHeader
         onAddPersonnel={hasAccess ? () => setOpenAdd(true) : undefined}
-        onSearch={handleSearch}
-        isReadOnly={isReadOnly}
-      />
+          onSearch={handleSearch}
+          isReadOnly={isReadOnly}
+        />
+      </div>
       <div className="flex-1 overflow-y-auto ">
         <div className="bg-white border border-[#E4E4E7] rounded-xl p-2  ">
           <PersonnelTabs
