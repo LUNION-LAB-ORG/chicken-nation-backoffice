@@ -66,14 +66,6 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
           </p>
         </div>
 
-        <div className="flex gap-41 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
-            Référence
-          </p>
-          <p className="font-bold text-xs lg:text-sm text-[#71717A]">
-            {order.reference}
-          </p>
-        </div>
         <div className="flex gap-32 items-center">
           <p className="lg:text-sm text-xs font-medium text-[#71717A]">
             Canal de paiement
@@ -128,19 +120,6 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
             {order.auto ? "Auto" : "Manuel"}
           </span>
         </div>
-
-        {order.address && (
-          <div className="flex gap-32 items-center">
-            <p className="lg:text-sm text-xs font-medium text-[#71717A]">
-              Adresse
-            </p>
-            <div className="flex items-center">
-              <p className="font-bold text-xs lg:text-sm text-[#71717A] max-w-[300px]">
-                {order.address}
-              </p>
-            </div>
-          </div>
-        )}
 
         {order.note && (
           <div className="flex gap-32 items-center">

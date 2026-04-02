@@ -81,17 +81,20 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                     </div>
                     {item.supplements && (
                       <div className="flex justify-between items-center">
-                        <div>
+                        <div className="flex items-center gap-1">
                           <span className="text-xs font-semibold text-gray-500">
-                            Suppléments :
+                            Suppléments
                           </span>
-                          <span className="text-xs text-gray-500">
+                          {item.rawSupplements && item.rawSupplements.length > 0 && (
+                            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#F17922]/10 text-[#F17922] text-[10px] font-bold">
+                              {item.rawSupplements.reduce((sum, s) => sum + (s.quantity || 1), 0)}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400 ml-0.5">
                             {item.supplements}
                           </span>
                         </div>
-                        <p
-                          className={`ml-8 shrink-0 text-sm font-medium text-[#71717A]`}
-                        >
+                        <p className="ml-8 shrink-0 text-sm font-medium text-[#71717A]">
                           {`${item.supplementsPrice.toLocaleString()} F`}
                         </p>
                       </div>

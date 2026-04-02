@@ -141,8 +141,23 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
   if (!orderItems?.length) return [];
 
   return orderItems.map((item) => {
-    const supplementNames = item.supplements?.map(s => s.name).join(", ") || "";
-    const supplementsPrice = item.supplements?.reduce((sum, s) => sum + s.price, 0) || 0;
+    // Regrouper les suppléments par id pour obtenir la quantité de chaque
+    const suppGrouped = new Map<string, { name: string; price: number; quantity: number }>();
+    if (item.supplements) {
+      for (const s of item.supplements) {
+        const existing = suppGrouped.get(s.id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          suppGrouped.set(s.id, { name: s.name, price: s.price, quantity: 1 });
+        }
+      }
+    }
+    const supplementNames = [...suppGrouped.values()]
+      .map(s => s.quantity > 1 ? `${s.name} x${s.quantity}` : s.name)
+      .join(", ");
+    const supplementsPrice = [...suppGrouped.values()]
+      .reduce((sum, s) => sum + (s.price * s.quantity), 0);
 
     // Construire les données brutes des suppléments pour le mode édition
     // On regroupe les suppléments identiques et on calcule leur quantité
@@ -243,6 +258,7 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     points: order.points,
     codePromo: order.code_promo,
     promotionId: order.promotion_id,
+    promotionTitle: order.promotion?.title || null,
     zoneId: order.zone_id,
 
     // Notes

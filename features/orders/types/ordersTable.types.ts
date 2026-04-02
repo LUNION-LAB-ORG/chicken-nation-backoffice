@@ -108,6 +108,7 @@ export interface OrderTable {
   points: number;
   codePromo: string | null;
   promotionId: string | null;
+  promotionTitle: string | null;
   zoneId: string | null;
 
   // ========== NOTES ==========
