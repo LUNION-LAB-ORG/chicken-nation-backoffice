@@ -9,6 +9,7 @@ import {
 import { PaginatedResponse } from "../../../../types";
 import { TableHeader } from "./TableHeader";
 import { ClientRow } from "./ClientRow";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 export interface ClientsTableProps {
   clientResponse?: PaginatedResponse<Customer>;
@@ -21,6 +22,8 @@ export function ClientsTable({
   isLoading,
   error,
 }: ClientsTableProps) {
+  const { setSectionView, setSelectedItem } = useDashboardStore();
+
   // Conversion: Extraire les données
   const clients = useMemo(() => {
     return clientResponse?.data && clientResponse?.data.length > 0
@@ -37,6 +40,11 @@ export function ClientsTable({
   } = useClientsSelection({
     clients,
   });
+
+  const handleOpenClientDetail = (clientId: string) => {
+    setSelectedItem("clients", clientId);
+    setSectionView("clients", "view");
+  };
 
   // Afficher un indicateur de chargement
   if (isLoading && clients.length === 0) {
@@ -62,6 +70,7 @@ export function ClientsTable({
               isSelected={selectedClients.includes(client.id)}
               onSelect={handleSelectClient}
               isMobile={true}
+              onDoubleClick={() => handleOpenClientDetail(client.id)}
             />
           ))}
         </div>
@@ -81,6 +90,7 @@ export function ClientsTable({
                     client={client}
                     isSelected={selectedClients.includes(client.id)}
                     onSelect={handleSelectClient}
+                    onDoubleClick={() => handleOpenClientDetail(client.id)}
                   />
                 ))}
               </tbody>

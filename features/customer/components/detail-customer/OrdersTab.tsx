@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
 import PaymentBadge from "../../../orders/components/PaymentBadge";
+import OrderDetailModal from "../../../orders/components/detail-order/OrderDetailModal";
+import { OrderTable } from "../../../orders/types/ordersTable.types";
 
 interface OrdersTabProps {
   customerData: CustomerMapperData;
 }
 
 export function OrdersTab({ customerData }: OrdersTabProps) {
+  const [selectedOrder, setSelectedOrder] = useState<OrderTable | null>(null);
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -40,7 +45,8 @@ export function OrdersTab({ customerData }: OrdersTabProps) {
             {customerData.recentOrders.map((order) => (
               <tr
                 key={order.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => setSelectedOrder(order)}
               >
                 <td className="py-4 px-4">
                   <div className="font-medium text-sm text-gray-900">
@@ -69,6 +75,14 @@ export function OrdersTab({ customerData }: OrdersTabProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </div>
   );
 }

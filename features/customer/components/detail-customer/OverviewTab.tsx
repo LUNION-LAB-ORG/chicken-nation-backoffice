@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Award,
   Heart,
@@ -9,12 +10,16 @@ import {
 import Image from "next/image";
 import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
+import OrderDetailModal from "../../../orders/components/detail-order/OrderDetailModal";
+import { OrderTable } from "../../../orders/types/ordersTable.types";
 
 interface OverviewTabProps {
   customerData: CustomerMapperData;
 }
 
 export function OverviewTab({ customerData }: OverviewTabProps) {
+  const [selectedOrder, setSelectedOrder] = useState<OrderTable | null>(null);
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Recent Orders */}
@@ -27,7 +32,8 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
           {customerData.recentOrders.slice(0, 5).map((order) => (
             <div
               key={order.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              onClick={() => setSelectedOrder(order)}
             >
               <div className="flex-1">
                 <div className="font-medium text-sm text-gray-900">
@@ -167,6 +173,14 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
           ))}
         </div>
       </div>
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+        />
+      )}
     </div>
   );
 }
