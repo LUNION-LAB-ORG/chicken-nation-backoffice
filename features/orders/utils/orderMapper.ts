@@ -142,14 +142,17 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
 
   return orderItems.map((item) => {
     // Regrouper les suppléments par id pour obtenir la quantité de chaque
+    // Note : les commandes call center ont déjà un champ quantity dans chaque supplément,
+    // les commandes app répètent le supplément N fois (quantity absent ou = 1)
     const suppGrouped = new Map<string, { name: string; price: number; quantity: number }>();
     if (item.supplements) {
       for (const s of item.supplements) {
+        const qty = (s as { quantity?: number }).quantity || 1;
         const existing = suppGrouped.get(s.id);
         if (existing) {
-          existing.quantity += 1;
+          existing.quantity += qty;
         } else {
-          suppGrouped.set(s.id, { name: s.name, price: s.price, quantity: 1 });
+          suppGrouped.set(s.id, { name: s.name, price: s.price, quantity: qty });
         }
       }
     }
@@ -165,11 +168,12 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
     if (item.supplements) {
       const suppMap = new Map<string, { id: string; name: string; price: number; quantity: number }>();
       for (const s of item.supplements) {
+        const qty = (s as { quantity?: number }).quantity || 1;
         const existing = suppMap.get(s.id);
         if (existing) {
-          existing.quantity += 1;
+          existing.quantity += qty;
         } else {
-          suppMap.set(s.id, { id: s.id, name: s.name, price: s.price, quantity: 1 });
+          suppMap.set(s.id, { id: s.id, name: s.name, price: s.price, quantity: qty });
         }
       }
       rawSupplements.push(...suppMap.values());
