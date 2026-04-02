@@ -18,7 +18,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
   // Fetch customer order count
   const { data: customerOrdersData } = useQuery({
     queryKey: ["orders", "customer-count", order.customerId],
-    queryFn: () => getAllOrders({ customerId: order.customerId, limit: 1, page: 1, startDate: "2020-01-01", endDate: new Date().toISOString() }),
+    queryFn: () => getAllOrders({ customerId: order.customerId, limit: 1, page: 1, startDate: "01/01/2020", endDate: "31/12/2099" }),
     enabled: !!order.customerId,
   });
 
@@ -94,7 +94,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
 
   const { data, isLoading } = useQuery({
     queryKey: ["orders", "customer-list", customerId, page],
-    queryFn: () => getAllOrders({ customerId, limit: 10, page, sortBy: "created_at", sortOrder: "desc", startDate: "2020-01-01", endDate: new Date().toISOString() }),
+    queryFn: () => getAllOrders({ customerId, limit: 10, page, sortBy: "created_at", sortOrder: "desc", startDate: "01/01/2020", endDate: "31/12/2099" }),
     enabled: !!customerId,
   });
 
