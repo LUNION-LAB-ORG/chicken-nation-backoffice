@@ -49,6 +49,9 @@ const modulesMap: Record<string, any> = {
   marketing: dynamic(() => import("@/components/gestion/Marketing"), {
     loading: () => <LoadingSpinner />,
   }),
+  news: dynamic(() => import("@/components/gestion/Nouveautes"), {
+    loading: () => <LoadingSpinner />,
+  }),
   promo_code: dynamic(() => import("@/components/gestion/CodesPromo"), {
     loading: () => <LoadingSpinner />,
   }),

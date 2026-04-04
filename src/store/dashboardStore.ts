@@ -6,7 +6,7 @@ import { OrderTable } from '../../features/orders/types/ordersTable.types';
 
 // --- TYPES ---
 export type TabKey =
-  'dashboard' | 'orders' | 'menus' | 'marketing' | 'clients' | 'inventory'
+  'dashboard' | 'orders' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
   | 'restaurants' | 'personnel' | 'promos' | 'loyalty' | 'voucher'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
@@ -41,6 +41,7 @@ export interface DashboardState {
   // Sections existantes
   dashboard: SectionState;
   marketing: SectionState;
+  news: SectionState;
   inbox: SectionState;
   orders: SectionState<OrderTable>;
   menus: SectionState<MenuItem>;
@@ -88,7 +89,7 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 });
 
 const SECTION_KEYS: TabKey[] = [
-  'dashboard', 'orders', 'menus', 'marketing', 'clients', 'inventory',
+  'dashboard', 'orders', 'menus', 'marketing', 'news', 'clients', 'inventory',
   'restaurants', 'personnel', 'promos', 'loyalty', 'voucher', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
@@ -108,6 +109,7 @@ export const useDashboardStore = create<DashboardState>()(
 
       dashboard: createInitialSectionState(),
       marketing: createInitialSectionState(),
+      news: createInitialSectionState(),
       inbox: createInitialSectionState(),
       orders: createInitialSectionState<OrderTable>(),
       menus: createInitialSectionState<MenuItem>(),

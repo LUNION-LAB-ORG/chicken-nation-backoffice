@@ -12,8 +12,8 @@ function MarketingModule() {
       <div className="-mt-10">
         <DashboardPageHeader
           mode="list"
-          title="Marketing"
-          subtitle="Statistiques des clics et performances"
+          title="Clics & Deeplinks"
+          subtitle="Suivi des clics de téléchargement de l'application"
         />
       </div>
 
