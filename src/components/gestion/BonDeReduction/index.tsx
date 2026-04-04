@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useDashboardStore } from "@/store/dashboardStore";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useVoucherListQuery, useVoucherDetailQuery, useVoucherRedemptionsQuery } from "../../../../features/voucher/queries/voucher.queries";
 import { useCreateVoucherMutation, useCancelVoucherMutation, useDeleteVoucherMutation, useRestoreVoucherMutation } from "../../../../features/voucher/queries/voucher.mutations";
 import { useCustomerListQuery } from "../../../../features/customer/queries/customer-list.query";
-import { Voucher, VoucherStatus } from "../../../../features/voucher/types/voucher.types";
+import { Voucher, VoucherStatus, Redemption } from "../../../../features/voucher/types/voucher.types";
+import { useOrderDetailQuery } from "../../../../features/orders/queries/order-detail.query";
+import { mapApiOrderToUiOrder } from "../../../../features/orders/utils/orderMapper";
+import OrderDetailModal from "../../../../features/orders/components/detail-order/OrderDetailModal";
 import {
   Ticket,
   Plus,
@@ -23,6 +27,7 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 
 // --- Helpers ---
@@ -289,24 +294,38 @@ const VoucherActions = ({ voucher, onView }: { voucher: Voucher; onView: () => v
   const cancelMutation = useCancelVoucherMutation();
   const deleteMutation = useDeleteVoucherMutation();
   const restoreMutation = useRestoreVoucherMutation();
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  React.useEffect(() => {
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (
+        !(e.target as Element).closest(".voucher-context-menu") &&
+        !(e.target as Element).closest(".voucher-menu-button")
+      ) {
+        setOpen(false);
+      }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+    if (open) {
+      document.addEventListener("mousedown", handler);
+      return () => document.removeEventListener("mousedown", handler);
+    }
+  }, [open]);
 
-  return (
-    <div ref={ref} className="relative">
-      <button onClick={() => setOpen(!open)} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer">
-        <MoreHorizontal className="w-4 h-4 text-gray-500" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-8 z-50 bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[160px]">
+  const renderMenu = () => {
+    if (!open || !buttonRef.current) return null;
+    const rect = buttonRef.current.getBoundingClientRect();
+    return createPortal(
+      <div
+        className="voucher-context-menu"
+        style={{
+          position: "absolute",
+          top: `${rect.bottom + window.scrollY}px`,
+          left: `${rect.right - 160 + window.scrollX}px`,
+          zIndex: 9999,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-white border border-gray-200 rounded-xl shadow-lg py-1 min-w-[160px]">
           <button
             onClick={() => { onView(); setOpen(false); }}
             className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
@@ -337,7 +356,21 @@ const VoucherActions = ({ voucher, onView }: { voucher: Voucher; onView: () => v
             </button>
           )}
         </div>
-      )}
+      </div>,
+      document.body
+    );
+  };
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={() => setOpen(!open)}
+        className="voucher-menu-button p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"
+      >
+        <MoreHorizontal className="w-4 h-4 text-gray-500" />
+      </button>
+      {renderMenu()}
     </div>
   );
 };
@@ -460,6 +493,51 @@ const Pagination = ({
 };
 
 // --- Detail View ---
+
+const RedemptionOrderCell = ({ redemption }: { redemption: Redemption }) => {
+  const orderId = redemption.order?.id ?? redemption.orderId;
+  const orderRef = redemption.order?.orderNumber;
+  const [showModal, setShowModal] = useState(false);
+
+  if (!orderId) return <span className="text-gray-400">—</span>;
+
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-[#d96a1c] hover:underline cursor-pointer"
+      >
+        #{orderRef ?? "Commande"}
+        <ExternalLink className="w-3.5 h-3.5" />
+      </button>
+      {showModal && (
+        <RedemptionOrderModal orderId={orderId} onClose={() => setShowModal(false)} />
+      )}
+    </>
+  );
+};
+
+const RedemptionOrderModal = ({ orderId, onClose }: { orderId: string; onClose: () => void }) => {
+  const { data: orderDetail, isLoading } = useOrderDetailQuery(orderId);
+  const mappedOrder = orderDetail ? mapApiOrderToUiOrder(orderDetail) : null;
+
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="bg-white rounded-2xl p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!mappedOrder) {
+    onClose();
+    return null;
+  }
+
+  return <OrderDetailModal order={mappedOrder} onClose={onClose} />;
+};
 
 const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void }) => {
   const { data: voucher, isLoading } = useVoucherDetailQuery(code);
@@ -601,11 +679,11 @@ const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void 
               </thead>
               <tbody>
                 {redemptions.map((r) => (
-                  <tr key={r.id} className="border-b border-gray-50">
+                  <tr key={r.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
                     <td className="px-4 py-3 text-sm text-gray-600">{formatDateTime(r.createdAt)}</td>
                     <td className="px-4 py-3 text-sm text-right font-medium text-gray-900">{formatFCFA(r.amount)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {r.order?.orderNumber ?? r.orderId ?? "—"}
+                    <td className="px-4 py-3">
+                      <RedemptionOrderCell redemption={r} />
                     </td>
                   </tr>
                 ))}
@@ -715,7 +793,7 @@ export default function BonDeReduction() {
 
       <StatsHeader vouchers={vouchersData?.data} />
 
-      <div className="overflow-hidden min-h-[600px]">
+      <div className="min-h-[600px]">
         <VoucherFilterBar />
         <VoucherTable
           vouchers={vouchersData?.data ?? []}

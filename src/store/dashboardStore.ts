@@ -60,6 +60,7 @@ export interface DashboardState {
   stats_clients: SectionState;
   stats_delivery: SectionState;
   stats_marketing: SectionState;
+  stats_retention_callbacks: SectionState;
   // Intégrations
   hubrise: SectionState;
 
@@ -91,7 +92,7 @@ const SECTION_KEYS: TabKey[] = [
   'restaurants', 'personnel', 'promos', 'loyalty', 'voucher', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
-  'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing',
+  'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing', 'stats_retention_callbacks',
   // Intégrations
   'hubrise',
 ];
@@ -126,6 +127,7 @@ export const useDashboardStore = create<DashboardState>()(
       stats_clients: createInitialSectionState(),
       stats_delivery: createInitialSectionState(),
       stats_marketing: createInitialSectionState(),
+      stats_retention_callbacks: createInitialSectionState(),
       // Intégrations
       hubrise: createInitialSectionState(),
 
