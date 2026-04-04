@@ -209,12 +209,13 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
               {imageUrl && (
                 <div>
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Image</p>
-                  <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2.5">
-                    <ImageIcon size={14} />
-                    <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="hover:underline truncate">
-                      {imageUrl}
-                    </a>
-                  </div>
+                  <a href={imageUrl} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={imageUrl}
+                      alt="Image de la notification"
+                      className="rounded-xl max-h-48 object-cover border border-gray-100"
+                    />
+                  </a>
                 </div>
               )}
             </div>
