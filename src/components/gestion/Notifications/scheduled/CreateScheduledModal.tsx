@@ -156,9 +156,18 @@ export default function CreateScheduledModal({
       setName(editItem.name);
       setScheduleType(editItem.schedule_type);
 
-      setTitle(editItem.payload?.title ?? "");
-      setMessage(editItem.payload?.body ?? "");
-      setImageUrl(editItem.payload?.image_url ?? "");
+      // Support both Expo Push format (title/body) and OneSignal format (headings/contents)
+      const p = editItem.payload as Record<string, any> | null;
+      const extractedTitle = p?.title
+        ?? (p?.headings?.fr || p?.headings?.en)
+        ?? "";
+      const extractedBody = p?.body
+        ?? (p?.contents?.fr || p?.contents?.en)
+        ?? "";
+      const extractedImage = p?.image_url ?? p?.big_picture ?? p?.ios_attachments?.id ?? "";
+      setTitle(extractedTitle);
+      setMessage(extractedBody);
+      setImageUrl(extractedImage);
 
       setTargetType(editItem.targeting?.type === "segment" ? "segment" : "all");
       setSelectedSegment(

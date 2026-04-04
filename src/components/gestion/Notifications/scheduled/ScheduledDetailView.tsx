@@ -67,8 +67,11 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
 
   const payload = item.payload;
   const targeting = item.targeting;
-  const title = payload?.title || item.name;
-  const body = payload?.body || "";
+  // Support both Expo Push format (title/body) and OneSignal format (headings/contents)
+  const p = payload as Record<string, any> | null;
+  const title = p?.title || p?.headings?.fr || p?.headings?.en || item.name;
+  const body = p?.body || p?.contents?.fr || p?.contents?.en || "";
+  const imageUrl = p?.image_url || p?.big_picture || p?.ios_attachments?.id || "";
   const channelInfo = CHANNEL_LABELS[item.channel] ?? { label: item.channel, color: "bg-gray-100 text-gray-600" };
   const isOneSignal = item.channel !== "expo_push";
 
@@ -205,13 +208,13 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
                   {body || <span className="text-gray-400 italic">Aucun message défini</span>}
                 </p>
               </div>
-              {payload?.image_url && (
+              {imageUrl && (
                 <div>
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1.5">Image</p>
                   <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2.5">
                     <ImageIcon size={14} />
-                    <a href={payload.image_url} target="_blank" rel="noopener noreferrer" className="hover:underline truncate">
-                      {payload.image_url}
+                    <a href={imageUrl} target="_blank" rel="noopener noreferrer" className="hover:underline truncate">
+                      {imageUrl}
                     </a>
                   </div>
                 </div>

@@ -102,9 +102,9 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
   return (
     <div className="space-y-3">
       {filtered.map((item) => {
-        const payload = item.payload;
-        const title = payload?.title ?? item.name;
-        const body = payload?.body ?? "";
+        const payload = item.payload as Record<string, any> | null;
+        const title = payload?.title || payload?.headings?.fr || payload?.headings?.en || item.name;
+        const body = payload?.body || payload?.contents?.fr || payload?.contents?.en || "";
         const channelInfo =
           CHANNEL_LABELS[item.channel] ?? { label: item.channel, color: "bg-gray-100 text-gray-600" };
         const isOneSignal = item.channel !== "expo_push";
