@@ -21,6 +21,7 @@ import {
   TicketCheck,
   TicketPercent,
   Truck,
+  TrendingUp,
   UserCog,
   Users,
   Tag,
@@ -172,14 +173,22 @@ export const useGetMenuConfig = (): {
           icon: BadgePercent,
           canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },
+      ],
+    },
+    {
+      id: "marketing_group",
+      label: "Marketing",
+      icon: TrendingUp,
+      canAccess: () => can(Modules.MARKETING, Action.READ),
+      items: [
         {
-          id: "fidelisation-news",
+          id: "marketing_group-news",
           label: "Nouveautés",
           icon: Newspaper,
           canAccess: () => can(Modules.MARKETING, Action.READ),
         },
         {
-          id: "fidelisation-marketing",
+          id: "marketing_group-marketing",
           label: "Clics & Deeplinks",
           icon: Link2,
           canAccess: () => can(Modules.MARKETING, Action.READ),
