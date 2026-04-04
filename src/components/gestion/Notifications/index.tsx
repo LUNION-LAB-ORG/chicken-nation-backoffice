@@ -10,6 +10,7 @@ import EditTemplateModal from "./templates/EditTemplateModal";
 import SegmentList from "./segments/SegmentList";
 import CreateSegmentModal from "./segments/CreateSegmentModal";
 import ScheduledList from "./scheduled/ScheduledList";
+import ScheduledDetailView from "./scheduled/ScheduledDetailView";
 import CreateScheduledModal from "./scheduled/CreateScheduledModal";
 import UserList from "./users/UserList";
 import AnalyticsDashboard from "./analytics/AnalyticsDashboard";
@@ -38,6 +39,7 @@ export default function Notifications() {
   const [showCreateSegment, setShowCreateSegment] = useState(false);
   const [templateToEdit, setTemplateToEdit] = useState<PushTemplate | null>(null);
   const [scheduledToEdit, setScheduledToEdit] = useState<ScheduledNotification | null>(null);
+  const [scheduledToView, setScheduledToView] = useState<ScheduledNotification | null>(null);
 
   const getActions = () => {
     switch (activeTab) {
@@ -117,11 +119,22 @@ export default function Notifications() {
         {/* Content */}
         {activeTab === "messages" && <MessageList searchQuery={searchQuery} />}
         {activeTab === "scheduled" && (
-          <ScheduledList
-            searchQuery={searchQuery}
-            onEdit={(item) => setScheduledToEdit(item)}
-            onCreate={() => setShowCreateScheduled(true)}
-          />
+          scheduledToView ? (
+            <ScheduledDetailView
+              item={scheduledToView}
+              onBack={() => setScheduledToView(null)}
+              onEdit={(item) => {
+                setScheduledToView(null);
+                setScheduledToEdit(item);
+              }}
+            />
+          ) : (
+            <ScheduledList
+              searchQuery={searchQuery}
+              onEdit={(item) => setScheduledToView(item)}
+              onCreate={() => setShowCreateScheduled(true)}
+            />
+          )
         )}
         {activeTab === "templates" && (
           <TemplateList

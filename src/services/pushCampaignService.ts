@@ -19,6 +19,7 @@ import type {
   PushUser,
   PushUserDetail,
   PushCampaignStats,
+  PushCampaignChartData,
 } from "@/types/push-campaign";
 
 const BASE = "/push-campaigns";
@@ -63,6 +64,10 @@ export async function cancelCampaign(
 
 export async function getCampaignStats(): Promise<PushCampaignStats> {
   return api.get<PushCampaignStats>(`${BASE}/stats`);
+}
+
+export async function getCampaignChartData(days = 30): Promise<PushCampaignChartData> {
+  return api.get<PushCampaignChartData>(`${BASE}/stats/chart?days=${days}`);
 }
 
 // ── Segments ─────────────────────────────────────────────────────────────────

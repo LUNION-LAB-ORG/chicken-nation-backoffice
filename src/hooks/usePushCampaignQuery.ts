@@ -21,6 +21,7 @@ import type {
   PushUser,
   PushUserDetail,
   PushCampaignStats,
+  PushCampaignChartData,
 } from "@/types/push-campaign";
 
 // ── Keys ─────────────────────────────────────────────────────────────────────
@@ -29,6 +30,7 @@ const keys = {
   campaigns: (q?: CampaignQuery) => ["push", "campaigns", q] as const,
   campaign: (id: string) => ["push", "campaigns", id] as const,
   stats: () => ["push", "stats"] as const,
+  statsChart: (days: number) => ["push", "stats", "chart", days] as const,
   segments: () => ["push", "segments"] as const,
   customSegments: () => ["push", "segments", "custom"] as const,
   customSegment: (id: string) => ["push", "segments", "custom", id] as const,
@@ -94,6 +96,14 @@ export function useCampaignStatsQuery() {
   return useQuery<PushCampaignStats>({
     queryKey: keys.stats(),
     queryFn: () => pushService.getCampaignStats(),
+    staleTime: 60_000,
+  });
+}
+
+export function useCampaignChartQuery(days = 30) {
+  return useQuery<PushCampaignChartData>({
+    queryKey: keys.statsChart(days),
+    queryFn: () => pushService.getCampaignChartData(days),
     staleTime: 60_000,
   });
 }

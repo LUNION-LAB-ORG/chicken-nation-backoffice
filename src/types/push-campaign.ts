@@ -236,3 +236,16 @@ export interface PushCampaignStats {
     "id" | "name" | "status" | "total_targeted" | "total_sent" | "total_failed" | "sent_at" | "created_at"
   >[];
 }
+
+export interface DailyChartEntry {
+  date: string;
+  sent: number;
+  failed: number;
+  targeted: number;
+  campaigns: number;
+}
+
+export interface PushCampaignChartData {
+  daily: DailyChartEntry[];
+  statusDistribution: { status: string; count: number }[];
+}
