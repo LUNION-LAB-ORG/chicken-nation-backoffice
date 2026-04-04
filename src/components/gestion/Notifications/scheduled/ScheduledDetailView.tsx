@@ -67,11 +67,9 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
 
   const payload = item.payload;
   const targeting = item.targeting;
-  // Support both Expo Push format (title/body) and OneSignal format (headings/contents)
-  const p = payload as Record<string, any> | null;
-  const title = p?.title || p?.headings?.fr || p?.headings?.en || item.name;
-  const body = p?.body || p?.contents?.fr || p?.contents?.en || "";
-  const imageUrl = p?.image_url || p?.big_picture || p?.ios_attachments?.id || "";
+  const title = payload?.title || item.name;
+  const body = payload?.body || "";
+  const imageUrl = payload?.image_url || "";
   const channelInfo = CHANNEL_LABELS[item.channel] ?? { label: item.channel, color: "bg-gray-100 text-gray-600" };
   const isOneSignal = item.channel !== "expo_push";
 
