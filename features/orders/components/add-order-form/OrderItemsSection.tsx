@@ -108,13 +108,15 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   const getSupplementsOptions = (dish: Dish): SupplementOption[] => {
     if (!dish.dish_supplements) return [];
 
-    return dish.dish_supplements.map((ds) => ({
-      value: ds.supplement_id,
-      label: ds.supplement?.name || "",
-      price: ds.supplement?.price || 0,
-      image: formatImageUrl(ds?.supplement?.image),
-      type: ds.supplement?.category || "ACCESSORY",
-    }));
+    return dish.dish_supplements
+      .filter((ds) => ds.supplement?.available !== false)
+      .map((ds) => ({
+        value: ds.supplement_id,
+        label: ds.supplement?.name || "",
+        price: ds.supplement?.price || 0,
+        image: formatImageUrl(ds?.supplement?.image),
+        type: ds.supplement?.category || "ACCESSORY",
+      }));
   };
 
   // Grouper les suppléments par catégorie
