@@ -54,8 +54,21 @@ export interface NotificationSetting {
   order: boolean;
   promotions: boolean;
   system: boolean;
+  active?: boolean;
+  expo_push_token?: string | null;
   customer?: Customer;
 }
+
+export const CUSTOMER_SEGMENTS = [
+  'all',
+  'app_users',
+  'no_app',
+  'has_ordered',
+  'never_ordered',
+  'incomplete_profile',
+] as const;
+
+export type CustomerSegment = (typeof CUSTOMER_SEGMENTS)[number];
 
 export interface CustomerQuery {
   page?: number;
@@ -63,4 +76,5 @@ export interface CustomerQuery {
   status?: EntityStatus;
   search?: string;
   restaurantId?: string;
+  segment?: CustomerSegment;
 }

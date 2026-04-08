@@ -79,6 +79,24 @@ export const getCustomerById = async (id: string) => {
 };
 
 
+export const deleteCustomer = async (id: string) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/admin/${id}`);
+
+        const response = await fetch(url, {
+            method: 'DELETE',
+            headers
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Customer;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 export const addCustomer = async (formData: CustomerAddForm) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/');
