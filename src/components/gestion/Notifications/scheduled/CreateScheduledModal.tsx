@@ -22,6 +22,7 @@ import {
   CalendarDays,
   Calendar,
   CalendarPlus,
+  MousePointerClick,
 } from "lucide-react";
 import VariablePicker from "../VariablePicker";
 
@@ -135,6 +136,10 @@ export default function CreateScheduledModal({
   const [message, setMessage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  // Action au clic
+  const [clickAction, setClickAction] = useState<string>("none");
+  const [clickValue, setClickValue] = useState("");
+
   // Targeting
   const [targetType, setTargetType] = useState<"all" | "segment">("all");
   const [selectedSegment, setSelectedSegment] = useState("");
@@ -159,6 +164,31 @@ export default function CreateScheduledModal({
       setTitle(editItem.payload?.title ?? "");
       setMessage(editItem.payload?.body ?? "");
       setImageUrl(editItem.payload?.image_url ?? "");
+
+      // Restore click action from data
+      const data = editItem.payload?.data;
+      if (data?.menu_id) {
+        setClickAction("menu");
+        setClickValue(data.menu_id as string);
+      } else if (data?.order_id) {
+        setClickAction("order");
+        setClickValue(data.order_id as string);
+      } else if (data?.url) {
+        setClickAction("url");
+        setClickValue(data.url as string);
+      } else if (data?.type === "PROMOTION" || data?.type === "promo") {
+        setClickAction("promotions");
+        setClickValue("");
+      } else if (data?.type === "VOUCHER" || data?.type === "voucher") {
+        setClickAction("vouchers");
+        setClickValue("");
+      } else if (data?.type === "LOYALTY" || data?.type === "loyalty") {
+        setClickAction("loyalty");
+        setClickValue("");
+      } else {
+        setClickAction("none");
+        setClickValue("");
+      }
 
       setTargetType(editItem.targeting?.type === "segment" ? "segment" : "all");
       setSelectedSegment(
@@ -191,11 +221,32 @@ export default function CreateScheduledModal({
     }
   }, [editItem, isOpen]);
 
+  const buildClickData = (): Record<string, unknown> | undefined => {
+    switch (clickAction) {
+      case "menu":
+        return clickValue ? { menu_id: clickValue } : undefined;
+      case "order":
+        return clickValue ? { order_id: clickValue } : undefined;
+      case "url":
+        return clickValue ? { url: clickValue } : undefined;
+      case "promotions":
+        return { type: "PROMOTION" };
+      case "vouchers":
+        return { type: "VOUCHER" };
+      case "loyalty":
+        return { type: "LOYALTY" };
+      default:
+        return undefined;
+    }
+  };
+
   const resetForm = () => {
     setName("");
     setTitle("");
     setMessage("");
     setImageUrl("");
+    setClickAction("none");
+    setClickValue("");
     setTargetType("all");
     setSelectedSegment("");
     setScheduleType("weekly");
@@ -234,6 +285,8 @@ export default function CreateScheduledModal({
         ? { segment: selectedSegment }
         : {};
 
+    const clickData = buildClickData();
+
     // Multi-dates: create N scheduled notifications
     if (scheduleType === "multi_dates") {
       if (multiDates.length === 0) return;
@@ -243,6 +296,7 @@ export default function CreateScheduledModal({
         title,
         body: message,
         ...(imageUrl ? { image_url: imageUrl } : {}),
+        ...(clickData ? { data: clickData } : {}),
         target_type: targetType,
         target_config: targetConfig,
         schedule_type: "once",
@@ -273,6 +327,7 @@ export default function CreateScheduledModal({
       title,
       body: message,
       ...(imageUrl ? { image_url: imageUrl } : {}),
+      ...(clickData ? { data: clickData } : {}),
       target_type: targetType,
       target_config: targetConfig,
       schedule_type: scheduleType === "multi_dates" ? "once" : scheduleType,
@@ -372,6 +427,76 @@ export default function CreateScheduledModal({
               onChange={(e) => setImageUrl(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* ── Action au clic ── */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <MousePointerClick size={16} className="text-gray-500" />
+            <label className="text-sm font-medium text-gray-700">
+              Action au clic (optionnel)
+            </label>
+          </div>
+          <p className="text-xs text-gray-400 mb-3">
+            Que se passe-t-il quand le client clique sur la notification ?
+          </p>
+
+          <div className="flex flex-wrap gap-2 mb-3">
+            {[
+              { id: "none", label: "Accueil" },
+              { id: "menu", label: "Fiche produit" },
+              { id: "promotions", label: "Promotions" },
+              { id: "vouchers", label: "Bons de réduction" },
+              { id: "loyalty", label: "Fidélité / Profil" },
+              { id: "url", label: "Lien externe" },
+            ].map((action) => (
+              <button
+                key={action.id}
+                type="button"
+                onClick={() => {
+                  setClickAction(action.id);
+                  setClickValue("");
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                  clickAction === action.id
+                    ? "bg-[#F17922] text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {action.label}
+              </button>
+            ))}
+          </div>
+
+          {clickAction === "menu" && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                ID du produit (menu)
+              </label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                placeholder="Ex: clxxxxxxxxxxxxxxxxxx"
+                value={clickValue}
+                onChange={(e) => setClickValue(e.target.value)}
+              />
+            </div>
+          )}
+
+          {clickAction === "url" && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                URL à ouvrir
+              </label>
+              <input
+                type="url"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                placeholder="https://chicken-nation.com/..."
+                value={clickValue}
+                onChange={(e) => setClickValue(e.target.value)}
+              />
+            </div>
+          )}
         </div>
 
         {/* ── Targeting ── */}
