@@ -170,6 +170,9 @@ export default function CreateScheduledModal({
       if (data?.menu_id) {
         setClickAction("menu");
         setClickValue(data.menu_id as string);
+      } else if (data?.category_id) {
+        setClickAction("category");
+        setClickValue(data.category_id as string);
       } else if (data?.order_id) {
         setClickAction("order");
         setClickValue(data.order_id as string);
@@ -225,6 +228,8 @@ export default function CreateScheduledModal({
     switch (clickAction) {
       case "menu":
         return clickValue ? { menu_id: clickValue } : undefined;
+      case "category":
+        return clickValue ? { category_id: clickValue } : undefined;
       case "order":
         return clickValue ? { order_id: clickValue } : undefined;
       case "url":
@@ -445,6 +450,7 @@ export default function CreateScheduledModal({
             {[
               { id: "none", label: "Accueil" },
               { id: "menu", label: "Fiche produit" },
+              { id: "category", label: "Catégorie" },
               { id: "promotions", label: "Promotions" },
               { id: "vouchers", label: "Bons de réduction" },
               { id: "loyalty", label: "Fidélité / Profil" },
@@ -472,6 +478,21 @@ export default function CreateScheduledModal({
             <div>
               <label className="block text-xs text-gray-500 mb-1">
                 ID du produit (menu)
+              </label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                placeholder="Ex: clxxxxxxxxxxxxxxxxxx"
+                value={clickValue}
+                onChange={(e) => setClickValue(e.target.value)}
+              />
+            </div>
+          )}
+
+          {clickAction === "category" && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                ID de la catégorie
               </label>
               <input
                 type="text"
