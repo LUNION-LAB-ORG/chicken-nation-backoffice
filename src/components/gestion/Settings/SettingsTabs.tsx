@@ -11,7 +11,7 @@ interface SettingsTabsProps {
 const SettingsTabs: React.FC<SettingsTabsProps> = ({ tabs, selected, onSelect }) => {
   return (
     <div
-      className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-6 w-fit
+      className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-6 max-w-full
       overflow-x-auto scrollbar-thin scrollbar-thumb-[#E4E4E7]
       scrollbar-track-transparent"
       style={{ minHeight: 40 }}

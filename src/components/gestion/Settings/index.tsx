@@ -36,7 +36,7 @@ const Settings: React.FC = () => {
         />
       </div>
 
-      <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden p-4">
+      <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden p-4 min-w-0">
         <SettingsTabs tabs={TABS} selected={activeTab} onSelect={setActiveTab} />
 
         {activeTab === "general" && <GeneralSettings />}

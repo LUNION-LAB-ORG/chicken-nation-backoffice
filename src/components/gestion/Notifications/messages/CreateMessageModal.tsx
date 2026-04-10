@@ -10,6 +10,8 @@ import {
 import type { CreateCampaignPayload, PushSegment } from "@/types/push-campaign";
 import { Bell, Loader2, Users, Filter, Send } from "lucide-react";
 import VariablePicker from "../VariablePicker";
+import ClickActionPicker, { buildClickData } from "../ClickActionPicker";
+import type { ClickActionData } from "../ClickActionPicker";
 
 interface Props {
   isOpen: boolean;
@@ -28,6 +30,10 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
   const [body, setBody] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  // Action au clic
+  const [clickAction, setClickAction] = useState("none");
+  const [clickValue, setClickValue] = useState("");
+
   // Targeting
   const [targetMode, setTargetMode] = useState<TargetMode>("all");
   const [selectedSegment, setSelectedSegment] = useState("");
@@ -42,6 +48,8 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
     setTitle("");
     setBody("");
     setImageUrl("");
+    setClickAction("none");
+    setClickValue("");
     setTargetMode("all");
     setSelectedSegment("");
     setFilterField("orders");
@@ -79,6 +87,8 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
     e.preventDefault();
     const { target_type, target_config } = buildTargetConfig();
 
+    const clickData = buildClickData(clickAction, clickValue);
+
     const payload: CreateCampaignPayload = {
       name: name || title,
       title,
@@ -86,6 +96,7 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
       target_type: target_type as any,
       target_config,
       ...(imageUrl ? { image_url: imageUrl } : {}),
+      ...(clickData ? { data: clickData } : {}),
     };
 
     createCampaign(payload, {
@@ -175,6 +186,16 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
             onChange={(e) => setImageUrl(e.target.value)}
           />
         </div>
+
+        {/* Action au clic */}
+        <ClickActionPicker
+          action={clickAction}
+          value={clickValue}
+          onChange={({ action, value }: ClickActionData) => {
+            setClickAction(action);
+            setClickValue(value);
+          }}
+        />
 
         {/* Targeting */}
         <div>
