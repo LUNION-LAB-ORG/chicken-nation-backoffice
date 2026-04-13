@@ -29,6 +29,11 @@ export interface ClientsOverviewResponse {
   averageOrderFrequency: number; // Commandes/mois
   appClients: number;
   callCenterClients: number;
+  totalAllCustomers: number;
+  noAppClients: number;
+  hasOrderedClients: number;
+  neverOrderedClients: number;
+  incompleteProfileClients: number;
 }
 
 // ----- Acquisition (tendance journalière) -----
