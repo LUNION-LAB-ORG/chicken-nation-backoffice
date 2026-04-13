@@ -378,7 +378,7 @@ export default function StatsClients() {
             const pct = (v: number) => total > 0 ? Math.round((v / total) * 100) : 0;
             const segments = [
               { label: "Tous", value: total, pct: 100, color: "bg-gray-100 text-gray-700", icon: Users },
-              { label: "Utilisateurs app", value: overview.data.appClients, pct: pct(overview.data.appClients), color: "bg-orange-50 text-[#F17922]", icon: Smartphone },
+              { label: "Utilisateurs app", value: total - overview.data.noAppClients, pct: pct(total - overview.data.noAppClients), color: "bg-orange-50 text-[#F17922]", icon: Smartphone },
               { label: "Sans app", value: overview.data.noAppClients, pct: pct(overview.data.noAppClients), color: "bg-blue-50 text-blue-700", icon: PhoneOff },
               { label: "Ont commandé", value: overview.data.hasOrderedClients, pct: pct(overview.data.hasOrderedClients), color: "bg-green-50 text-green-700", icon: UserCheck },
               { label: "Jamais commandé", value: overview.data.neverOrderedClients, pct: pct(overview.data.neverOrderedClients), color: "bg-red-50 text-red-600", icon: UserX },
