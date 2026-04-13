@@ -11,7 +11,12 @@ import {
   Store,
   ChefHat,
   PieChart as PieChartIcon,
+  Fullscreen,
+  Minimize2,
+  Map as MapIcon,
 } from "lucide-react";
+import { GoogleMap, CircleF, MarkerF } from "@react-google-maps/api";
+import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import {
   XAxis,
   YAxis,
@@ -35,6 +40,8 @@ import {
   useOrdersByRestaurantAndSourceQuery,
   useOrdersDailyTrendQuery,
   useDailyTrendByRestaurantQuery,
+  useInfluenceZonesQuery,
+  useRestaurantsLocationsQuery,
 } from "../../../../features/statistics/queries/statistics-orders.query";
 import {
   StatsFilters,
@@ -154,6 +161,27 @@ function StackedBarTooltip({
   );
 }
 
+// === Map Constants ===
+const MAP_CONTAINER_STYLE = { width: "100%", borderRadius: "12px" };
+const MAP_OPTIONS = {
+  disableDefaultUI: true,
+  zoomControl: true,
+  styles: [
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", stylers: [{ visibility: "off" }] },
+  ],
+};
+
+function getRestaurantMarkerIcon(color: string, size = 32, selected = false): string {
+  const s = size;
+  const r = s / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}">
+    <circle cx="${r}" cy="${r}" r="${r - 2}" fill="${color}" stroke="white" stroke-width="2"/>
+    ${selected ? `<circle cx="${r}" cy="${r}" r="${r - 6}" fill="white" fill-opacity="0.4"/>` : ""}
+  </svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 export default function StatsOrders() {
   const [filters, setFilters] = useState<StatsFilters>({
     ...DEFAULT_STATS_FILTERS,
@@ -161,6 +189,8 @@ export default function StatsOrders() {
   });
   const [granularity, setGranularity] = useState<GranularityType>("day");
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("count");
+  const [fullScreenInfluence, setFullScreenInfluence] = useState(false);
+  const [selectedInfluenceRestaurant, setSelectedInfluenceRestaurant] = useState<string | null>(null);
   const queryParams = {
     ...filters,
     restaurantId: filters.restaurantId ?? undefined,
@@ -176,6 +206,35 @@ export default function StatsOrders() {
   const byRestaurantAndSource = useOrdersByRestaurantAndSourceQuery(queryParams);
   const dailyTrend = useOrdersDailyTrendQuery({ ...queryParams, granularity });
   const trendByRestaurant = useDailyTrendByRestaurantQuery({ ...queryParams, granularity });
+  const influenceZones = useInfluenceZonesQuery(queryParams);
+  const restaurantsLocations = useRestaurantsLocationsQuery();
+
+  // ---- Google Maps ----
+  const { isScriptLoaded: mapsLoaded } = useGoogleMaps();
+
+  const restaurantColorMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const restaurants = influenceZones.data?.restaurants ?? [];
+    restaurants.forEach((r, i) => {
+      map.set(r.id, RESTAURANT_COLORS[i % RESTAURANT_COLORS.length]);
+    });
+    return map;
+  }, [influenceZones.data]);
+
+  const influenceMapPoints = useMemo(() => {
+    if (!influenceZones.data?.points) return [];
+    if (selectedInfluenceRestaurant) {
+      return influenceZones.data.points.filter((p) => p.restaurantId === selectedInfluenceRestaurant);
+    }
+    return influenceZones.data.points;
+  }, [influenceZones.data, selectedInfluenceRestaurant]);
+
+  const influenceMapCenter = useMemo(() => {
+    if (influenceZones.data?.center) {
+      return { lat: influenceZones.data.center.lat, lng: influenceZones.data.center.lng };
+    }
+    return { lat: 6.3703, lng: 2.3912 };
+  }, [influenceZones.data]);
 
   const isLoading = overview.isLoading;
   const isError = overview.isError;
@@ -758,6 +817,123 @@ export default function StatsOrders() {
               </StatsChartCard>
             )}
           </div>
+
+          {/* ========================================== */}
+          {/* SECTION : Zones d'influence restaurants    */}
+          {/* ========================================== */}
+          {influenceZones.data && influenceZones.data.points.length > 0 && (
+            <div className={fullScreenInfluence ? "fixed inset-0 z-50 bg-white p-6 overflow-auto" : ""}>
+              <StatsChartCard
+                title="Zones d'influence Restaurants"
+                subtitle="Répartition géographique des livraisons par restaurant"
+                icon={MapIcon}
+                rightContent={
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={selectedInfluenceRestaurant ?? ""}
+                      onChange={(e) => setSelectedInfluenceRestaurant(e.target.value || null)}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg bg-white border border-gray-200 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
+                    >
+                      <option value="">Tous les restaurants</option>
+                      {(influenceZones.data?.restaurants ?? []).map((r) => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => setFullScreenInfluence(!fullScreenInfluence)}
+                      className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all bg-white shadow-sm text-[#F17922]"
+                    >
+                      {fullScreenInfluence ? <Minimize2 className="w-4 h-4" /> : <Fullscreen className="w-4 h-4" />}
+                    </button>
+                  </div>
+                }
+              >
+                {mapsLoaded ? (
+                  <GoogleMap
+                    mapContainerStyle={{
+                      ...MAP_CONTAINER_STYLE,
+                      height: fullScreenInfluence ? 'calc(100vh - 200px)' : '450px',
+                    }}
+                    center={influenceMapCenter}
+                    zoom={12}
+                    options={MAP_OPTIONS}
+                  >
+                    {influenceMapPoints.map((point, index) => {
+                      const color = restaurantColorMap.get(point.restaurantId) ?? CHART_COLORS.textMuted;
+                      return (
+                        <CircleF
+                          key={`${point.lat}-${point.lng}-${point.restaurantId}-${index}`}
+                          center={{ lat: point.lat, lng: point.lng }}
+                          radius={Math.min(150 + point.count * 30, 500)}
+                          options={{
+                            fillColor: color,
+                            fillOpacity: 0.35,
+                            strokeColor: color,
+                            strokeOpacity: 0.8,
+                            strokeWeight: 1,
+                            clickable: false,
+                          }}
+                        />
+                      );
+                    })}
+                    {restaurantsLocations.data?.restaurants?.map((restaurant) => {
+                      const color = restaurantColorMap.get(restaurant.id) ?? CHART_COLORS.primary;
+                      const isSelected = selectedInfluenceRestaurant === restaurant.id;
+                      return (
+                        <MarkerF
+                          key={`influence-${restaurant.id}`}
+                          position={{ lat: restaurant.latitude, lng: restaurant.longitude }}
+                          icon={{
+                            url: getRestaurantMarkerIcon(color, isSelected ? 40 : 34),
+                            scaledSize: new google.maps.Size(isSelected ? 40 : 34, isSelected ? 40 : 34),
+                            anchor: new google.maps.Point(isSelected ? 20 : 17, isSelected ? 40 : 34),
+                          }}
+                          onClick={() => {
+                            setSelectedInfluenceRestaurant(
+                              selectedInfluenceRestaurant === restaurant.id ? null : restaurant.id
+                            );
+                          }}
+                          zIndex={100}
+                        />
+                      );
+                    })}
+                  </GoogleMap>
+                ) : (
+                  <div className="h-50 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <div className="text-sm text-gray-400">Chargement de la carte...</div>
+                  </div>
+                )}
+                <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-100 flex-wrap">
+                  {(influenceZones.data?.restaurants ?? []).map((r) => {
+                    const color = restaurantColorMap.get(r.id) ?? CHART_COLORS.textMuted;
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() =>
+                          setSelectedInfluenceRestaurant(
+                            selectedInfluenceRestaurant === r.id ? null : r.id
+                          )
+                        }
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all ${
+                          selectedInfluenceRestaurant === r.id
+                            ? "bg-gray-200 ring-1 ring-gray-400"
+                            : selectedInfluenceRestaurant
+                              ? "opacity-40 hover:opacity-70"
+                              : "hover:bg-gray-100"
+                        }`}
+                      >
+                        <span
+                          className="w-3 h-3 rounded-full border border-white shadow-sm"
+                          style={{ backgroundColor: color }}
+                        />
+                        <span className="text-xs text-gray-700 font-medium">{truncateName(r.name, 18)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </StatsChartCard>
+            </div>
+          )}
         </>
       )}
     </div>

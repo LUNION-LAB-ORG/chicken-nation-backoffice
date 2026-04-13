@@ -3,7 +3,7 @@
  * Utilisés dans les composants de filtre (DateRangePicker, PeriodSelector, RestaurantSelector).
  */
 
-export type StatsPeriod = 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+export type StatsPeriod = 'today' | 'yesterday' | 'week' | 'month' | 'lastMonth' | 'year';
 
 export interface StatsFilters {
   restaurantId?: string;
@@ -20,9 +20,10 @@ export interface PeriodOption {
 
 export const PERIOD_OPTIONS: PeriodOption[] = [
   { value: 'today', label: "Aujourd'hui", shortLabel: 'Auj.' },
+  { value: 'yesterday', label: 'Hier', shortLabel: 'Hier' },
   { value: 'week', label: 'Cette semaine', shortLabel: 'Sem.' },
   { value: 'month', label: 'Ce mois', shortLabel: 'Mois' },
-  // { value: 'lastMonth', label: 'Mois dernier', shortLabel: 'M-1' },
+  { value: 'lastMonth', label: 'Mois dernier', shortLabel: 'M-1' },
   { value: 'year', label: 'Cette année', shortLabel: 'Année' },
 ];
 
@@ -37,7 +38,7 @@ export function filtersToQueryParams(filters: StatsFilters): Record<string, stri
   if (filters.restaurantId) params.restaurantId = filters.restaurantId;
 
   if (filters.period) {
-    params.period = filters.period === 'lastMonth' ? 'last_month' : filters.period;
+    params.period = filters.period === 'lastMonth' ? 'last_month' : filters.period as string;
   } else {
     if (filters.startDate) params.startDate = filters.startDate;
     if (filters.endDate) params.endDate = filters.endDate;
