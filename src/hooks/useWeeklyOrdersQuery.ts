@@ -4,7 +4,7 @@ import { getWeeklyOrdersData } from '../../features/statistics/services/statisti
 interface UseWeeklyOrdersQueryProps {
   restaurantId?: string;
   dateRange?: string;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
   enabled?: boolean;
 }
 

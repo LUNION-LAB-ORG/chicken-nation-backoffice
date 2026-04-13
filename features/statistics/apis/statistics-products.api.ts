@@ -12,11 +12,14 @@ import {
   PromotionPerformanceResponse,
 } from '../types/products-stats.types';
 
+const PERIOD_MAP: Record<string, string> = { lastMonth: 'last_month', lastWeek: 'last_week' };
+
 function buildQueryString(params: Record<string, string | number | undefined>): string {
   const qs = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') {
-      qs.append(key, String(value));
+      const v = key === 'period' ? (PERIOD_MAP[String(value)] ?? String(value)) : String(value);
+      qs.append(key, v);
     }
   }
   const str = qs.toString();

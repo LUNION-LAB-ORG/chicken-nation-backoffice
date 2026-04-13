@@ -130,7 +130,7 @@ export function transformApiDataToDashboardStats(apiData: ApiDashboardResponse):
 }
 
 // Calculer les statistiques globales
-export async function getDashboardStats(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<DashboardStats> {
+export async function getDashboardStats(restaurantId?: string, period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<DashboardStats> {
   try {
     const apiData = await getApiDashboardStats({
       restaurantId,
@@ -144,7 +144,7 @@ export async function getDashboardStats(restaurantId?: string, period: 'today' |
 }
 
 // Récupérer les données de revenus pour les graphiques
-export async function getRevenueData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<RevenueData[]> {
+export async function getRevenueData(restaurantId?: string, period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<RevenueData[]> {
   try {
     const apiData = await getApiDashboardStats({
       restaurantId,
@@ -204,7 +204,7 @@ export async function getWeeklyOrdersData(restaurantId?: string, dateRange?: str
 }
 
 // Récupérer les données des meilleures ventes
-export async function getBestSalesData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<BestSalesItem[]> {
+export async function getBestSalesData(restaurantId?: string, period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year' = 'month'): Promise<BestSalesItem[]> {
   try {
     const apiData = await getApiDashboardStats({
       restaurantId,
@@ -229,7 +229,7 @@ export async function getBestSalesData(restaurantId?: string, period: 'today' | 
 }
 
 // Récupérer les données des ventes journalières
-export async function getDailySalesData(restaurantId?: string, period: 'today' | 'week' | 'month' | 'lastMonth' | 'year' = 'today'): Promise<DailySalesData[]> {
+export async function getDailySalesData(restaurantId?: string, period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year' = 'today'): Promise<DailySalesData[]> {
   try {
     const apiData = await getApiDashboardStats({
       restaurantId,
@@ -255,6 +255,6 @@ function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('fr-FR').format(amount);
 }
 
-function convertPeriodToApiParams(period: 'today' | 'week' | 'month' | 'lastMonth' | 'year') {
+function convertPeriodToApiParams(period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year') {
   return getPeriodDateRange(period);
 }

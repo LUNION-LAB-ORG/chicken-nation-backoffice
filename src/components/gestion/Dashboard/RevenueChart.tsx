@@ -34,7 +34,7 @@ interface RevenueChartProps {
     value: number;
   }>;
   restaurantId?: string;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 }
 
 const RevenueChart: React.FC<RevenueChartProps> = ({ restaurantId, period = 'month' }) => {

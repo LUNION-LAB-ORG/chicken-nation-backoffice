@@ -33,7 +33,7 @@ interface WeeklyOrdersChartProps {
     name: string
     value: number
   }>;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 }
 
 const WeeklyOrdersChart: React.FC<WeeklyOrdersChartProps> = ({ restaurantId, data, period = 'week' }) => {

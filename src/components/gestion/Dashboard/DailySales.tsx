@@ -11,7 +11,7 @@ interface DailySalesProps {
   title?: string;
   subtitle?: string;
   restaurantId?: string;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 }
 
 const DailySales: React.FC<DailySalesProps> = ({

@@ -20,7 +20,7 @@ interface BestSalesChartProps {
   title: string;
   items?: MenuItem[];
   restaurantId?: string;
-  period?: "today" | "week" | "month" | "lastMonth" | "year";
+  period?: "today" | "yesterday" | "week" | "lastWeek" | "month" | "lastMonth" | "year";
 }
 
 interface CircularProgressProps {

@@ -4,7 +4,7 @@ import { getApiDashboardStats } from '../../features/statistics/services/statist
 interface UseRevenueDataQueryProps {
   restaurantId?: string;
   enabled?: boolean;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 }
 
 export interface RevenueDataResponse {

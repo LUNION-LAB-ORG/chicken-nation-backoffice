@@ -7,7 +7,7 @@ export interface OrdersStatsQueryParams {
   restaurantId?: string;
   startDate?: string;
   endDate?: string;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
   type?: 'DELIVERY' | 'PICKUP' | 'TABLE';
   status?: string;
   channel?: 'app' | 'call';

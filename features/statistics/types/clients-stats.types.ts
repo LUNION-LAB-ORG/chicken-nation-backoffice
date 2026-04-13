@@ -6,7 +6,7 @@ export interface ClientsStatsQueryParams {
   restaurantId?: string;
   startDate?: string;
   endDate?: string;
-  period?: 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+  period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
   limit?: number;
 }
 

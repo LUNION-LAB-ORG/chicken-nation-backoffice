@@ -3,7 +3,7 @@
  * Utilisés dans les composants de filtre (DateRangePicker, PeriodSelector, RestaurantSelector).
  */
 
-export type StatsPeriod = 'today' | 'yesterday' | 'week' | 'month' | 'lastMonth' | 'year';
+export type StatsPeriod = 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 
 export interface StatsFilters {
   restaurantId?: string;
@@ -22,10 +22,19 @@ export const PERIOD_OPTIONS: PeriodOption[] = [
   { value: 'today', label: "Aujourd'hui", shortLabel: 'Auj.' },
   { value: 'yesterday', label: 'Hier', shortLabel: 'Hier' },
   { value: 'week', label: 'Cette semaine', shortLabel: 'Sem.' },
+  { value: 'lastWeek', label: 'Semaine dernière', shortLabel: 'S-1' },
   { value: 'month', label: 'Ce mois', shortLabel: 'Mois' },
   { value: 'lastMonth', label: 'Mois dernier', shortLabel: 'M-1' },
   { value: 'year', label: 'Cette année', shortLabel: 'Année' },
 ];
+
+/**
+ * Map camelCase frontend → snake_case backend pour les périodes.
+ */
+const PERIOD_TO_API: Record<string, string> = {
+  lastWeek: 'last_week',
+  lastMonth: 'last_month',
+};
 
 /**
  * Convertir les filtres UI en paramètres de requête API.
@@ -38,7 +47,7 @@ export function filtersToQueryParams(filters: StatsFilters): Record<string, stri
   if (filters.restaurantId) params.restaurantId = filters.restaurantId;
 
   if (filters.period) {
-    params.period = filters.period === 'lastMonth' ? 'last_month' : filters.period as string;
+    params.period = PERIOD_TO_API[filters.period] ?? filters.period;
   } else {
     if (filters.startDate) params.startDate = filters.startDate;
     if (filters.endDate) params.endDate = filters.endDate;

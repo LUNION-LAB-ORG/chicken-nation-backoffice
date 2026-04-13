@@ -19,7 +19,7 @@ export type TabKey =
 
 export type ViewType = 'list' | 'create' | 'edit' | 'view';
 
-export type PeriodFilter = 'today' | 'week' | 'month' | 'lastMonth' | 'year';
+export type PeriodFilter = 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 
 interface SectionState<T = unknown> {
   view: ViewType;

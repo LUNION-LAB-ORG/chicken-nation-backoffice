@@ -59,9 +59,34 @@ export function getCurrentMonthDateRange(): { startDate: string; endDate: string
  * @param period - La période souhaitée
  * @returns {Object} Objet contenant les paramètres pour l'API
  */
-export function getPeriodDateRange(period: 'today' | 'week' | 'month' | 'lastMonth' | 'year') {
+export function getLastWeekDateRange(): { startDate: string; endDate: string } {
   const now = new Date();
-  
+  const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // Lundi = 1
+
+  // Lundi de la semaine dernière
+  const startOfLastWeek = new Date(now);
+  startOfLastWeek.setDate(now.getDate() - dayOfWeek - 6);
+
+  // Dimanche de la semaine dernière
+  const endOfLastWeek = new Date(startOfLastWeek);
+  endOfLastWeek.setDate(startOfLastWeek.getDate() + 6);
+
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  return {
+    startDate: formatDate(startOfLastWeek),
+    endDate: formatDate(endOfLastWeek)
+  };
+}
+
+export function getPeriodDateRange(period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year') {
+  const now = new Date();
+
   switch (period) {
     case 'today': {
       const today = now.toISOString().split('T')[0];
@@ -71,45 +96,64 @@ export function getPeriodDateRange(period: 'today' | 'week' | 'month' | 'lastMon
         endDate: today
       };
     }
-    
+
+    case 'yesterday': {
+      const yesterday = new Date(now);
+      yesterday.setDate(now.getDate() - 1);
+      const yStr = yesterday.toISOString().split('T')[0];
+      return {
+        period: 'yesterday' as const,
+        startDate: yStr,
+        endDate: yStr
+      };
+    }
+
     case 'week': {
       const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay());
+      const day = now.getDay() === 0 ? 7 : now.getDay();
+      startOfWeek.setDate(now.getDate() - day + 1); // Lundi
       const endOfWeek = new Date(startOfWeek);
       endOfWeek.setDate(startOfWeek.getDate() + 6);
-      
+
       return {
         period: 'week' as const,
         startDate: startOfWeek.toISOString().split('T')[0],
         endDate: endOfWeek.toISOString().split('T')[0]
       };
     }
-    
+
+    case 'lastWeek': {
+      return {
+        period: 'last_week' as const,
+        ...getLastWeekDateRange()
+      };
+    }
+
     case 'month': {
       return {
         period: 'month' as const,
         ...getCurrentMonthDateRange()
       };
     }
-    
+
     case 'lastMonth': {
       return {
-        period: undefined, // Ne pas envoyer de période, utiliser seulement les dates
+        period: 'last_month' as const,
         ...getLastMonthDateRange()
       };
     }
-    
+
     case 'year': {
       const startOfYear = new Date(now.getFullYear(), 0, 1);
       const endOfYear = new Date(now.getFullYear(), 11, 31);
-      
+
       return {
         period: 'year' as const,
         startDate: startOfYear.toISOString().split('T')[0],
         endDate: endOfYear.toISOString().split('T')[0]
       };
     }
-    
+
     default:
       return { period };
   }
@@ -134,12 +178,16 @@ export function formatDateFrench(date: Date | string): string {
  * @param period - La période
  * @returns {string} Texte descriptif de la période
  */
-export function formatPeriodText(period: 'today' | 'week' | 'month' | 'lastMonth' | 'year'): string {
+export function formatPeriodText(period: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year'): string {
   switch (period) {
     case 'today':
       return "Aujourd'hui";
+    case 'yesterday':
+      return 'Hier';
     case 'week':
       return 'Cette semaine';
+    case 'lastWeek':
+      return 'Semaine dernière';
     case 'month':
       return 'Ce mois';
     case 'lastMonth':
