@@ -19,6 +19,15 @@ const modulesMap: Record<string, any> = {
   orders: dynamic(() => import("@/components/gestion/Orders"), {
     loading: () => <LoadingSpinner />,
   }),
+  operations: dynamic(() => import("@/components/gestion/Operations"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  historique: dynamic(() => import("@/components/gestion/Orders"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  courses: dynamic(() => import("@/components/gestion/Courses"), {
+    loading: () => <LoadingSpinner />,
+  }),
   clients: dynamic(() => import("@/components/gestion/Clients"), {
     loading: () => <LoadingSpinner />,
   }),
@@ -35,6 +44,9 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
   personnel: dynamic(() => import("@/components/gestion/Personnel"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  livreurs: dynamic(() => import("@/components/gestion/Livreurs"), {
     loading: () => <LoadingSpinner />,
   }),
   promos: dynamic(() => import("@/components/gestion/Promos"), {

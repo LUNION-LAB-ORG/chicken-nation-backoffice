@@ -3,11 +3,13 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
 import { MenuItem } from '@/types';
 import { OrderTable } from '../../features/orders/types/ordersTable.types';
+import { Livreur } from '../../features/livreurs/types/livreur.types';
+import { Course } from '../../features/courses/types/course.types';
 
 // --- TYPES ---
 export type TabKey =
-  'dashboard' | 'orders' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
-  | 'restaurants' | 'personnel' | 'promos' | 'loyalty' | 'voucher'
+  'dashboard' | 'orders' | 'operations' | 'historique' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
+  | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
@@ -44,11 +46,15 @@ export interface DashboardState {
   news: SectionState;
   inbox: SectionState;
   orders: SectionState<OrderTable>;
+  operations: SectionState<OrderTable>;
+  historique: SectionState<OrderTable>;
+  courses: SectionState<Course>;
   menus: SectionState<MenuItem>;
   clients: SectionState<string>;
   inventory: SectionState;
   restaurants: SectionState;
   personnel: SectionState;
+  livreurs: SectionState<Livreur>;
   promos: SectionState;
   loyalty: SectionState;
   voucher: SectionState;
@@ -89,8 +95,8 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 });
 
 const SECTION_KEYS: TabKey[] = [
-  'dashboard', 'orders', 'menus', 'marketing', 'news', 'clients', 'inventory',
-  'restaurants', 'personnel', 'promos', 'loyalty', 'voucher', 'inbox',
+  'dashboard', 'orders', 'operations', 'historique', 'courses', 'menus', 'marketing', 'news', 'clients', 'inventory',
+  'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'voucher', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing', 'stats_retention_callbacks',
@@ -112,11 +118,15 @@ export const useDashboardStore = create<DashboardState>()(
       news: createInitialSectionState(),
       inbox: createInitialSectionState(),
       orders: createInitialSectionState<OrderTable>(),
+      operations: createInitialSectionState<OrderTable>(),
+      historique: createInitialSectionState<OrderTable>(),
+      courses: createInitialSectionState<Course>(),
       menus: createInitialSectionState<MenuItem>(),
       clients: createInitialSectionState(),
       inventory: createInitialSectionState(),
       restaurants: createInitialSectionState(),
       personnel: createInitialSectionState(),
+      livreurs: createInitialSectionState<Livreur>(),
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
       voucher: createInitialSectionState(),

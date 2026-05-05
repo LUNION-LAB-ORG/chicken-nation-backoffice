@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { addPaiement } from "../services/paiement-service";
 import { OrderTable } from "../types/ordersTable.types";
@@ -7,7 +7,8 @@ import { preparePaiementData, validatePaiementForm } from "../utils/paiementForm
 import { useInvalidateOrderQuery } from "./index.query";
 
 export const usePaiementAddMutation = () => {
-	const invalidateOrderQuery = useInvalidateOrderQuery()
+	const invalidateOrderQuery = useInvalidateOrderQuery();
+	const queryClient = useQueryClient();
 
 	return useMutation({
 		mutationFn: async (data: {
@@ -28,7 +29,16 @@ export const usePaiementAddMutation = () => {
 			}
 		},
 		onSuccess: async () => {
-			await invalidateOrderQuery();
+			// FIX TEMPS RÉEL OPS : un paiement change le statut de l'Order côté
+			// backend (paied=true → potentiellement COMPLETED), ce qui doit
+			// retirer la card de la liste « Opérations actives ». Sans cette
+			// invalidation, le drawer se met à jour mais la card reste affichée
+			// avec son ancien statut « Livrée ».
+			await Promise.all([
+				invalidateOrderQuery(),
+				queryClient.invalidateQueries({ queryKey: ["operations"] }),
+				queryClient.invalidateQueries({ queryKey: ["courses"] }),
+			]);
 			toast.success("Paiement ajouté avec succès");
 		},
 		onError: async (e) => {

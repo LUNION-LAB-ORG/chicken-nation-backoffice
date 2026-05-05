@@ -34,6 +34,7 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 const DELIVERY_SERVICE_MAP: Record<string, string> = {
   TURBO: "Livraison Turbo",
   FREE: "Livraison Standard",
+  CHICKEN_NATION: "Chicken Nation",
 };
 
 const DEFAULT_IMAGE = "/images/food2.png";

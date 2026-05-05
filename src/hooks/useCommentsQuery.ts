@@ -3,8 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { CommentService, CommentFilters, Comment } from '@/services/commentService';
 
 interface UseCommentsQueryParams {
-  rating?: string; 
+  rating?: string;
   restaurantId?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 interface UseCommentsQueryReturn {
@@ -23,7 +25,9 @@ interface UseCommentsQueryReturn {
 
 export function useCommentsQuery({
   rating,
-  restaurantId
+  restaurantId,
+  dateFrom,
+  dateTo
 }: UseCommentsQueryParams): UseCommentsQueryReturn {
   const [currentPage, setCurrentPageState] = useState(1);
   const queryClient = useQueryClient();
@@ -35,27 +39,37 @@ export function useCommentsQuery({
       limit: 10
     };
 
- 
+
     if (restaurantId) {
       filters.restaurantId = restaurantId;
     }
 
- 
+
     if (rating && rating !== '') {
       const ratingValue = parseInt(rating);
       filters.min_rating = ratingValue;
       filters.max_rating = ratingValue;
     }
 
-    return filters;
-  }, [currentPage, restaurantId, rating]);
+    if (dateFrom) {
+      filters.date_from = dateFrom;
+    }
 
-  
+    if (dateTo) {
+      filters.date_to = dateTo;
+    }
+
+    return filters;
+  }, [currentPage, restaurantId, rating, dateFrom, dateTo]);
+
+
   const queryKey = [
     'comments',
     currentPage,
     restaurantId || 'all',
-    rating
+    rating,
+    dateFrom || 'no-from',
+    dateTo || 'no-to'
   ].filter(Boolean);
 
   // ✅ Query TanStack avec pagination côté serveur
@@ -103,7 +117,7 @@ export function useCommentsQuery({
     if (currentPage !== 1) {
       setCurrentPageState(1);
     }
-  }, [restaurantId, rating, currentPage]);
+  }, [restaurantId, rating, dateFrom, dateTo, currentPage]);
 
   // ✅ Invalider le cache pour forcer un refresh
   const forceRefetch = useCallback(() => {

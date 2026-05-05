@@ -107,7 +107,7 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
                 isActive: false,
             },
             {
-                title: "Récupérée",
+                title: "Collectée",
                 icon: ICONS[2].default,
                 isActive: false,
             },
@@ -150,7 +150,7 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
     // ========== STEP 3 : RÉCUPÉRÉE ==========
     const isPickedUp = !!order.pickedUpAt;
     steps.push({
-        title: "Récupérée",
+        title: "Collectée",
         date: order.pickedUpAt
             ? formatStepDate(order.pickedUpAt, order.createdAt)
             : undefined,

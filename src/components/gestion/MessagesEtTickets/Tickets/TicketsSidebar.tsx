@@ -2,11 +2,19 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Search, MessageCircle, Plus, Loader2 } from 'lucide-react';
+import { Search, MessageCircle, Plus, Loader2, Bike, User as UserIcon } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import { useTicketListQuery } from '../../../../../features/messagerie';
 import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
-import { Ticket, TicketStatus, TicketPriority, TICKET_STATUS_LABELS, TICKET_PRIORITY_LABELS } from '@/types/tickets';
+import {
+  Ticket,
+  TicketStatus,
+  TicketPriority,
+  TICKET_STATUS_LABELS,
+  TICKET_PRIORITY_LABELS,
+  type TicketSource,
+  getTicketSource,
+} from '@/types/tickets';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
@@ -23,6 +31,8 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   const [selectedStatus, setSelectedStatus] = useState('Tous les statuts');
   const [selectedPriority, setSelectedPriority] = useState('Toutes priorités');
   const [searchQuery, setSearchQuery] = useState('');
+  // P-chat livreur : tabs filtre origine du ticket
+  const [sourceFilter, setSourceFilter] = useState<TicketSource | 'ALL'>('ALL');
 
   // Fonction pour mapper les valeurs de filtre aux valeurs API
   const mapFilterValue = (filterType: 'status' | 'priority', value: string) => {
@@ -43,8 +53,19 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   // Récupérer les catégories pour les afficher
   const { data: categoriesData } = useTicketCategoriesQuery({ status: 'ACTIVE' });
 
-  const tickets = ticketsData?.data || [];
+  const allTickets = ticketsData?.data || [];
+  // Filtrage côté client par origine (pas encore exposé via filtre backend)
+  const tickets = sourceFilter === 'ALL'
+    ? allTickets
+    : allTickets.filter((t) => getTicketSource(t as Ticket) === sourceFilter);
   const categories = categoriesData?.data || [];
+
+  // Compteurs pour les tabs source
+  const counts = {
+    ALL: allTickets.length,
+    CUSTOMER: allTickets.filter((t) => getTicketSource(t as Ticket) === 'CUSTOMER').length,
+    DELIVERER: allTickets.filter((t) => getTicketSource(t as Ticket) === 'DELIVERER').length,
+  };
 
   // Options pour les dropdowns
   const statusOptions = [
@@ -174,6 +195,36 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
             />
           </div>
         </div>
+
+        {/* P-chat livreur : tabs filtre par origine du ticket */}
+        <div className="flex items-center gap-1 mt-3 bg-gray-100 rounded-lg p-1">
+          {([
+            { key: 'ALL', label: 'Tous', icon: null },
+            { key: 'CUSTOMER', label: 'Clients', icon: UserIcon },
+            { key: 'DELIVERER', label: 'Livreurs', icon: Bike },
+          ] as const).map((tab) => {
+            const isActive = sourceFilter === tab.key;
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setSourceFilter(tab.key)}
+                className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                  isActive
+                    ? 'bg-white text-[#F17922] shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {tab.label}
+                <span className={`text-[10px] ${isActive ? 'text-[#F17922]/70' : 'text-gray-400'}`}>
+                  ({counts[tab.key]})
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tickets List */}
@@ -217,36 +268,69 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                   </div>
                 </div>
 
-                {/* Client et Agent */}
-                <div className="flex items-center space-x-3 mb-3">
-                  {/* Avatar client */}
-                  <div className="md:w-12 md:h-12 w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                    {ticket.customer?.image && ticket.customer.image.trim() !== '' ? (
-                      <Image
-                        src={formatImageUrl(ticket.customer.image)}
-                        alt={ticket.customer?.name || 'Client'}
-                        width={40}
-                        height={40}
-                        className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-gray-600 font-medium text-sm">
-                        {ticket.customer?.first_name?.[0] || ticket.customer?.name?.[0] || 'C'}
-                      </span>
-                    )}
-                  </div>
+                {/* Demandeur (client OU livreur) et Agent */}
+                {(() => {
+                  const ticketSource = getTicketSource(ticket as Ticket);
+                  const isDeliverer = ticketSource === 'DELIVERER';
+                  const requester = isDeliverer ? ticket.deliverer : ticket.customer;
+                  return (
+                    <div className="flex items-center space-x-3 mb-3">
+                      {/* Avatar demandeur avec badge type (livreur = orange, client = bleu) */}
+                      <div className="relative">
+                        <div className={`md:w-12 md:h-12 w-10 h-10 rounded-full flex items-center justify-center ${
+                          isDeliverer ? 'bg-orange-100' : 'bg-gray-200'
+                        }`}>
+                          {requester?.image && requester.image.trim() !== '' ? (
+                            <Image
+                              src={formatImageUrl(requester.image)}
+                              alt={requester?.name || (isDeliverer ? 'Livreur' : 'Client')}
+                              width={40}
+                              height={40}
+                              className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className={`font-medium text-sm ${isDeliverer ? 'text-orange-700' : 'text-gray-600'}`}>
+                              {requester?.first_name?.[0] || requester?.name?.[0] || (isDeliverer ? 'L' : 'C')}
+                            </span>
+                          )}
+                        </div>
+                        {/* Badge type en bas-droite de l'avatar */}
+                        <div
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white ${
+                            isDeliverer ? 'bg-orange-500' : 'bg-blue-500'
+                          }`}
+                          title={isDeliverer ? 'Ticket livreur' : 'Ticket client'}
+                        >
+                          {isDeliverer ? (
+                            <Bike className="w-2 h-2 text-white" />
+                          ) : (
+                            <UserIcon className="w-2 h-2 text-white" />
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Noms - Agent • Client */}
-                  <div className="flex items-center space-x-1 text-gray-600">
-                    <span className="md:text-sm text-xs font-medium">
-                      {ticket.assignee?.name || 'Non assigné'}
-                    </span>
-                    <span className="text-gray-400">•</span>
-                    <span className="md:text-sm text-xs">
-                      {ticket.customer ? ticket.customer.name : 'Client inconnu'}
-                    </span>
-                  </div>
-                </div>
+                      {/* Noms - Agent • Demandeur + label type */}
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <div className="flex items-center space-x-1 text-gray-600">
+                          <span className="md:text-sm text-xs font-medium">
+                            {ticket.assignee?.name || 'Non assigné'}
+                          </span>
+                          <span className="text-gray-400">•</span>
+                          <span className="md:text-sm text-xs truncate">
+                            {requester ? requester.name : (isDeliverer ? 'Livreur inconnu' : 'Client inconnu')}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] uppercase font-bold tracking-wider ${
+                            isDeliverer ? 'text-orange-600' : 'text-blue-600'
+                          }`}
+                        >
+                          {isDeliverer ? 'Ticket livreur' : 'Ticket client'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Catégorie et référence conversation */}
                 <div className="flex items-center justify-between">

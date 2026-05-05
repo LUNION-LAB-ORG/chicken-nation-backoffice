@@ -178,7 +178,7 @@ export default function DetailsMenu({
               )}
             </div>
 
-            {/* Bouton Supprimer */}
+            {/* Bouton Désactiver (soft-delete : entity_status = DELETED) */}
             <HasPermission module={Modules.MENUS} action={Action.DELETE}>
               <div className="flex justify-end">
                 <button
@@ -186,7 +186,7 @@ export default function DetailsMenu({
                   onClick={onDelete}
                   className="w-full sm:w-[180px] lg:w-[200px] py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
                 >
-                  Supprimer
+                  Désactiver
                 </button>
               </div>
             </HasPermission>

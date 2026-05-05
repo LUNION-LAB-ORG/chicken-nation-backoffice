@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import { OrderFormData } from "../../types/order-form.types";
-import { OrderType } from "../../types/order.types";
+import { DeliveryService, OrderType } from "../../types/order.types";
 import {
   getCurrentDate,
   getCurrentTime,
@@ -84,6 +84,44 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           onChange={handleAddressChange}
           placeholder="Rechercher votre adresse de livraison"
         />
+      )}
+
+      {/* Service de livraison — Override admin du choix auto */}
+      {isDelivery && (
+        <motion.div
+          className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl"
+          whileHover={{ scale: 1.01 }}
+        >
+          <label className="text-xs font-semibold text-[#595959] mb-2 block">
+            Service de livraison
+          </label>
+          <div className="flex gap-2">
+            {(
+              [
+                { value: undefined, label: "Auto (selon zone)", desc: "Le backend choisit" },
+                { value: DeliveryService.CHICKEN_NATION, label: "Chicken Nation", desc: "Livreur interne" },
+                { value: DeliveryService.TURBO, label: "Turbo Delivery", desc: "Sous-traitant" },
+              ] as const
+            ).map((opt) => {
+              const selected = formData.delivery_service === opt.value;
+              return (
+                <button
+                  key={opt.label}
+                  type="button"
+                  onClick={() => onFormDataChange({ delivery_service: opt.value })}
+                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border-2 transition ${
+                    selected
+                      ? "border-[#F17922] bg-orange-50 text-[#F17922]"
+                      : "border-transparent bg-gray-50 text-[#595959] hover:bg-gray-100"
+                  }`}
+                >
+                  <div>{opt.label}</div>
+                  <div className="text-[10px] font-normal opacity-70 mt-0.5">{opt.desc}</div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
       )}
 
       <div className="grid grid-cols-2 gap-4">

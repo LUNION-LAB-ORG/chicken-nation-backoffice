@@ -32,15 +32,19 @@ export interface Ticket {
   code: string; // Code du ticket (ex: "LIV-00001")
   status: TicketStatus;
   priority: TicketPriority;
-  
+
   // Relations avec objets complets
-  customer: TicketCustomer;
+  // Mutuellement exclusifs côté API : un ticket vient soit d'un client, soit d'un livreur.
+  customer: TicketCustomer | null;
+  /** P-chat livreur : demandeur livreur d'un ticket support. */
+  deliverer?: TicketDeliverer | null;
   assignee?: TicketAssignee | null;
   participants: any[]; // À définir si nécessaire
   messages: TicketMessage[];
-  order?: TicketOrder;
+  order?: TicketOrder | null;
   category: TicketCategoryObject;
-  
+  unreadCount?: number;
+
   // Métadonnées
   createdAt: string;
   updatedAt?: string;
@@ -54,6 +58,19 @@ export interface TicketCustomer {
   last_name: string;
   email?: string | null;
   image?: string;
+}
+
+/**
+ * P-chat livreur : demandeur livreur d'un ticket support.
+ * Mutuellement exclusif avec `customer` côté API.
+ */
+export interface TicketDeliverer {
+  id: string;
+  name: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  image?: string | null;
 }
 
 // Interface pour les agents assignés
@@ -71,11 +88,27 @@ export interface TicketMessage {
   ticketId: string;
   authorUserId?: string | null;
   authorCustomerId?: string | null;
+  /** P-chat livreur : auteur livreur. Exclusif avec authorUser/authorCustomer. */
+  authorDelivererId?: string | null;
   body: string;
   meta: string;
   createdAt: string;
   isRead: boolean;
   internal: boolean;
+  // Données enrichies de l'auteur si fournies par l'API
+  authorUser?: TicketAssignee | null;
+  authorCustomer?: TicketCustomer | null;
+  authorDeliverer?: TicketDeliverer | null;
+}
+
+/** Type d'origine d'un ticket — utilisé pour les filtres tabs côté UI. */
+export type TicketSource = 'CUSTOMER' | 'DELIVERER';
+
+/** Helper pour identifier l'origine d'un ticket à partir des données API. */
+export function getTicketSource(ticket: Pick<Ticket, 'customer' | 'deliverer'>): TicketSource | null {
+  if (ticket.deliverer) return 'DELIVERER';
+  if (ticket.customer) return 'CUSTOMER';
+  return null;
 }
 
 // Interface pour les commandes liées

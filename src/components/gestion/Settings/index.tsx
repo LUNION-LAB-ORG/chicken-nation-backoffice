@@ -6,6 +6,7 @@ import SettingsTabs from "./SettingsTabs";
 import GeneralSettings from "./tabs/GeneralSettings";
 import EmailSettings from "./tabs/EmailSettings";
 import OrderSettings from "./tabs/OrderSettings";
+import DeliverySettings from "./tabs/DeliverySettings";
 import MobileAppSettings from "./tabs/MobileAppSettings";
 import PaymentSettings from "./tabs/PaymentSettings";
 import MarketingReportSettings from "./tabs/MarketingReportSettings";
@@ -16,6 +17,7 @@ const TABS = [
   { key: "general", label: "Général" },
   { key: "email", label: "Email" },
   { key: "orders", label: "Commandes" },
+  { key: "delivery", label: "Livraison" },
   { key: "mobile", label: "App Mobile" },
   { key: "payment", label: "Paiements" },
   { key: "marketing_report", label: "Rapport Marketing" },
@@ -42,6 +44,7 @@ const Settings: React.FC = () => {
         {activeTab === "general" && <GeneralSettings />}
         {activeTab === "email" && <EmailSettings />}
         {activeTab === "orders" && <OrderSettings />}
+        {activeTab === "delivery" && <DeliverySettings />}
         {activeTab === "mobile" && <MobileAppSettings />}
         {activeTab === "payment" && <PaymentSettings />}
         {activeTab === "marketing_report" && <MarketingReportSettings />}

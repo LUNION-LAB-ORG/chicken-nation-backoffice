@@ -21,8 +21,9 @@ export enum OrderStatus {
     COMPLETED = 'COMPLETED'
 }
 export enum DeliveryService {
-    TURBO = 'TURBO',
-    FREE = 'FREE'
+    TURBO = 'TURBO',                    // Sous-traité à Turbo Delivery
+    FREE = 'FREE',                      // Legacy — livraison gratuite (compat historique)
+    CHICKEN_NATION = 'CHICKEN_NATION',  // Livreur interne Chicken Nation (module course)
 }
 
 export enum TypeTable {
@@ -35,6 +36,16 @@ export enum OrderType {
     DELIVERY = "DELIVERY",
     PICKUP = "PICKUP",
     TABLE = "TABLE",
+}
+
+/**
+ * Mode de paiement d'une Order — miroir Prisma.
+ *  - OFFLINE : paiement en espèce au restaurant ou au livreur
+ *  - ONLINE  : paiement dématérialisé (KKiaPay, Mobile Money, CB)
+ */
+export enum PaymentMethod {
+    OFFLINE = 'OFFLINE',
+    ONLINE = 'ONLINE',
 }
 
 // Structure pour le champ 'address' de Order (basé sur le commentaire)

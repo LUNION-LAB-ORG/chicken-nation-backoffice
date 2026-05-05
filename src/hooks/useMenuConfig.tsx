@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Activity,
+  Archive,
   BarChart3,
   Bell,
   BookOpen,
@@ -69,6 +71,27 @@ export const useGetMenuConfig = (): {
       label: "Commandes",
       icon: ClipboardList,
       canAccess: () => can(Modules.COMMANDES, Action.READ),
+      items: [
+        {
+          id: "orders-operations",
+          label: "Opérations",
+          icon: Activity,
+          canAccess: () => can(Modules.COMMANDES, Action.READ),
+        },
+        {
+          id: "orders-historique",
+          label: "Historique",
+          icon: Archive,
+          canAccess: () => can(Modules.COMMANDES, Action.READ),
+        },
+      ],
+    },
+    {
+      id: "courses",
+      label: "Courses",
+      icon: Truck,
+      // Même permission que Livreurs : seul l'admin gère les courses
+      canAccess: () => can(Modules.LIVREURS, Action.READ),
     },
     {
       id: "customers",
@@ -142,6 +165,12 @@ export const useGetMenuConfig = (): {
       label: "Personnel",
       icon: UserCog,
       canAccess: () => can(Modules.PERSONNELS, Action.READ),
+    },
+    {
+      id: "livreurs",
+      label: "Livreurs",
+      icon: Truck,
+      canAccess: () => can(Modules.LIVREURS, Action.READ),
     },
     {
       id: "fidelisation",

@@ -72,6 +72,8 @@ export interface CommentFilters {
   min_rating?: number;
   max_rating?: number;
   restaurantId?: string;
+  date_from?: string;
+  date_to?: string;
 }
 
 // ✅ Interface pour la réponse réelle de l'API
@@ -148,6 +150,14 @@ export class CommentService {
 
       if (filters.restaurantId) {
         queryParams.append('restaurantId', filters.restaurantId);
+      }
+
+      if (filters.date_from) {
+        queryParams.append('date_from', filters.date_from);
+      }
+
+      if (filters.date_to) {
+        queryParams.append('date_to', filters.date_to);
       }
 
       const url = `${baseUrl}/api/v1/comments?${queryParams.toString()}`;

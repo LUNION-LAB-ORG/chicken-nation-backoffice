@@ -602,17 +602,17 @@ const Menus = () => {
 
       // ✅ Demander confirmation avec nom sécurisé
       const confirmed = window.confirm(
-        `Êtes-vous sûr de vouloir supprimer le menu "${sanitizedName}" ? Cette action est irréversible.`
+        `Êtes-vous sûr de vouloir désactiver le menu "${sanitizedName}" ? Il ne sera plus visible dans l'application mais restera archivé.`
       );
 
       if (!confirmed) return;
 
       setMenuState({ ...menuState, saving: true });
 
-      // ✅ Appeler l'API pour supprimer le menu (déjà sécurisée)
+      // ✅ Soft-delete : entity_status passe à DELETED côté backend
       await deleteMenu(menu.id);
 
-      toast.success("Menu supprimé avec succès !");
+      toast.success("Menu désactivé avec succès !");
 
       // Recharger les données API
       refetch();
@@ -625,8 +625,8 @@ const Menus = () => {
         saving: false,
       });
     } catch (error) {
-      console.error("Erreur lors de la suppression du menu:", error);
-      toast.error("Erreur lors de la suppression du menu");
+      console.error("Erreur lors de la désactivation du menu:", error);
+      toast.error("Erreur lors de la désactivation du menu");
       setMenuState({ ...menuState, saving: false });
     }
   };

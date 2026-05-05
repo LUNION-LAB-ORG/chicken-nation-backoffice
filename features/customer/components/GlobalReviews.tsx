@@ -137,7 +137,9 @@ export function GlobalReviews() {
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState({
     rating: '',
-    restaurantId: '' // ✅ Permettre la sélection manuelle du restaurant
+    restaurantId: '', // ✅ Permettre la sélection manuelle du restaurant
+    dateFrom: '',
+    dateTo: ''
   });
 
   // ✅ État pour la liste des restaurants
@@ -193,7 +195,9 @@ export function GlobalReviews() {
     setCurrentPage
   } = useCommentsQuery({
     rating: filters.rating,
-    restaurantId: filters.restaurantId || undefined
+    restaurantId: filters.restaurantId || undefined,
+    dateFrom: filters.dateFrom || undefined,
+    dateTo: filters.dateTo || undefined
   });
 
   // ✅ Plus besoin de filtrage côté client - TanStack Query gère tout côté serveur
@@ -318,9 +322,9 @@ export function GlobalReviews() {
             {/* ✅ Interface de filtres (sélection restaurant visible seulement pour ADMIN/MARKETING) */}
       {showFilters && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <div className={`grid grid-cols-1 ${canSelectRestaurant ? 'md:grid-cols-2' : 'md:grid-cols-1'} gap-4`}>
+          <div className={`grid grid-cols-1 ${canSelectRestaurant ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
             {/* Filtre par note */}
-            <div className='w-1/2'>
+            <div>
               <CustomDropdown
                 options={ratingOptions}
                 value={filters.rating}
@@ -331,7 +335,41 @@ export function GlobalReviews() {
                 label="Note"
                 placeholder="Toutes les notes"
               />
-            </div >
+            </div>
+
+            {/* Filtre date début */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date début
+              </label>
+              <input
+                type="date"
+                value={filters.dateFrom}
+                max={filters.dateTo || undefined}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, dateFrom: e.target.value }));
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] transition-all duration-200 text-gray-900"
+              />
+            </div>
+
+            {/* Filtre date fin */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date fin
+              </label>
+              <input
+                type="date"
+                value={filters.dateTo}
+                min={filters.dateFrom || undefined}
+                onChange={(e) => {
+                  setFilters(prev => ({ ...prev, dateTo: e.target.value }));
+                  setCurrentPage(1);
+                }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] transition-all duration-200 text-gray-900"
+              />
+            </div>
 
             {/* Filtre par restaurant - SEULEMENT pour ADMIN et MARKETING */}
             {canSelectRestaurant && (
@@ -367,13 +405,15 @@ export function GlobalReviews() {
             <button
               type="button"
               onClick={() => {
-                setFilters({ 
-                  rating: '', 
-                  restaurantId: isRestaurantManager && user?.restaurant_id 
-                    ? user.restaurant_id 
-                    : canSelectRestaurant 
-                    ? '' 
-                    : filters.restaurantId
+                setFilters({
+                  rating: '',
+                  restaurantId: isRestaurantManager && user?.restaurant_id
+                    ? user.restaurant_id
+                    : canSelectRestaurant
+                    ? ''
+                    : filters.restaurantId,
+                  dateFrom: '',
+                  dateTo: ''
                 });
                 setCurrentPage(1);
               }}
@@ -429,11 +469,18 @@ export function GlobalReviews() {
                 {/* ✅ Contenu du commentaire */}
                 <div className="flex-1 min-w-0">
                   {/* Nom et étoiles */}
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-gray-900 truncate">
-                      {comment.customer?.first_name} {comment.customer?.last_name}
-                    </h4>
-                    <div className="flex items-center ml-2">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">
+                        {comment.customer?.first_name} {comment.customer?.last_name}
+                      </h4>
+                      {comment.customer?.phone && (
+                        <p className="text-xs text-gray-500 truncate">
+                          {comment.customer.phone}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center ml-2 shrink-0">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}

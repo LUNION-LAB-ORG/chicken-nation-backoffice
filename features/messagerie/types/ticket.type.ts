@@ -20,6 +20,19 @@ export interface ITicketClient {
   image?: string | null;
 }
 
+/**
+ * Demandeur livreur d'un ticket (P-chat livreur ↔ support).
+ * Mutuellement exclusif avec `customer` côté API.
+ */
+export interface ITicketLivreur {
+  id: string;
+  name: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+  image?: string | null;
+}
+
 export interface ITicketAssigne {
   id: string;
   name?: string;
@@ -45,6 +58,8 @@ export interface ITicketMessage {
   ticketId: string;
   authorUserId?: string | null;
   authorCustomerId?: string | null;
+  /** P-chat livreur : auteur livreur. Exclusif avec authorUser/authorCustomer. */
+  authorDelivererId?: string | null;
   body: string;
   meta?: any;
   isRead: boolean;
@@ -52,6 +67,8 @@ export interface ITicketMessage {
   createdAt: string;
   authorUser?: ITicketAssigne | null;
   authorCustomer?: ITicketClient | null;
+  /** Données enrichies du livreur auteur. */
+  authorDeliverer?: ITicketLivreur | null;
 }
 
 export interface ITicket {
@@ -61,6 +78,8 @@ export interface ITicket {
   status: TicketStatut;
   priority: TicketPriorite;
   customer?: ITicketClient | null;
+  /** P-chat livreur : demandeur livreur. Exclusif avec customer. */
+  deliverer?: ITicketLivreur | null;
   assignee?: ITicketAssigne | null;
   participants?: { userId: string }[];
   messages: ITicketMessage[];
@@ -69,6 +88,19 @@ export interface ITicket {
   createdAt: string;
   updatedAt: string;
   unreadCount?: number;
+}
+
+/**
+ * Type d'origine d'un ticket — utilisé pour filtrer la liste backoffice
+ * (tabs "Tous · Clients · Livreurs").
+ */
+export type TicketSource = 'CUSTOMER' | 'DELIVERER';
+
+/** Helper pour identifier l'origine d'un ticket. */
+export function getTicketSource(ticket: ITicket): TicketSource | null {
+  if (ticket.deliverer) return 'DELIVERER';
+  if (ticket.customer) return 'CUSTOMER';
+  return null;
 }
 
 export interface ITicketStats {

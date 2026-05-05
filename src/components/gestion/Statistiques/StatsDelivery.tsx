@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useMemo, useState } from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   Timer,
   Coins,
   MapPin,
+  Route,
   Truck,
   Target,
   Zap,
@@ -34,7 +35,14 @@ import {
 import {
   StatsFilters,
   DEFAULT_STATS_FILTERS,
+  StatsPeriod,
 } from "../../../../features/statistics/filters/statistics.filters";
+// ── Stats courses (anciennement en bas de la page Courses, fusionnées ici
+// pour respecter la continuité statistique livraison → courses).
+import { CoursesDailyBarChart } from "../../../../features/courses/components/stats/CoursesDailyBarChart";
+import { CoursesKpiRow } from "../../../../features/courses/components/stats/CoursesKpiRow";
+import { CoursesStatusPieChart } from "../../../../features/courses/components/stats/CoursesStatusPieChart";
+import { useCourseStatsQuery } from "../../../../features/courses/queries/course-stats.query";
 import {
   formatCurrencyXOF,
   formatNumber,
@@ -62,6 +70,68 @@ const DELIVERY_COLORS = {
   free: "#F17922",
 } as const;
 
+/**
+ * Convertit `StatsPeriod` (UI) en plage `{startDate, endDate}` au format
+ * YYYY-MM-DD. Utilisé pour brancher la query courses (qui ne connaît pas
+ * `period` côté backend, juste les dates) sur le filtre commun StatsDelivery.
+ *
+ * Cohérent avec `PERIOD_OPTIONS` exposé par `statistics.filters.ts` —
+ * si tu ajoutes une période là-bas, ajoute le case ici.
+ */
+function resolvePeriodToDates(period: StatsPeriod): {
+  startDate: string;
+  endDate: string;
+} {
+  const now = new Date();
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const startOfDay = (d: Date) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const addDays = (d: Date, n: number) => {
+    const x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  };
+  const startOfWeek = (d: Date) => {
+    const x = startOfDay(d);
+    const day = x.getDay() || 7; // Lundi = 1
+    x.setDate(x.getDate() - day + 1);
+    return x;
+  };
+  const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const startOfYear = (d: Date) => new Date(d.getFullYear(), 0, 1);
+
+  switch (period) {
+    case "today": {
+      const s = startOfDay(now);
+      return { startDate: fmt(s), endDate: fmt(now) };
+    }
+    case "yesterday": {
+      const y = addDays(startOfDay(now), -1);
+      return { startDate: fmt(y), endDate: fmt(addDays(y, 1)) };
+    }
+    case "week":
+      return { startDate: fmt(startOfWeek(now)), endDate: fmt(now) };
+    case "lastWeek": {
+      const thisWeek = startOfWeek(now);
+      const lastWeek = addDays(thisWeek, -7);
+      return { startDate: fmt(lastWeek), endDate: fmt(thisWeek) };
+    }
+    case "month":
+      return { startDate: fmt(startOfMonth(now)), endDate: fmt(now) };
+    case "lastMonth": {
+      const thisMonth = startOfMonth(now);
+      const lastMonth = new Date(thisMonth);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      return { startDate: fmt(lastMonth), endDate: fmt(thisMonth) };
+    }
+    case "year":
+      return { startDate: fmt(startOfYear(now)), endDate: fmt(now) };
+  }
+}
+
 export default function StatsDelivery() {
   const { selectedRestaurantId } = useDashboardStore();
   const [filters, setFilters] = useState<StatsFilters>({
@@ -79,6 +149,21 @@ export default function StatsDelivery() {
   const feesBreakdown = useDeliveryFeesBreakdownQuery(queryParams);
   const byZone = useDeliveryByZoneQuery({ ...queryParams, limit: 10 });
   const performance = useDeliveryPerformanceQuery(queryParams);
+
+  // Stats courses (route + dispatch livreur) — fusionnées ici depuis l'ancienne
+  // section bas-de-page de /gestion/courses pour respecter la continuité
+  // statistique livraison → courses. Mêmes filtres restaurant + période.
+  const coursesStatsParams = useMemo(() => {
+    const range = filters.period
+      ? resolvePeriodToDates(filters.period)
+      : { startDate: filters.startDate, endDate: filters.endDate };
+    return {
+      restaurant_id: queryParams.restaurantId,
+      startDate: range.startDate,
+      endDate: range.endDate,
+    };
+  }, [filters.period, filters.startDate, filters.endDate, queryParams.restaurantId]);
+  const coursesStats = useCourseStatsQuery(coursesStatsParams);
 
   const isLoading = overview.isLoading || performance.isLoading;
   const isError = overview.isError && performance.isError;
@@ -187,6 +272,36 @@ export default function StatsDelivery() {
               color="purple"
             />
           </div>
+
+          {/* ========================================== */}
+          {/* SECTION 2bis : Stats COURSES (dispatch + tournée)
+              Fusionnée depuis l'ancienne section bas-de-page de /gestion/courses
+              pour la continuité statistique livraison → courses. */}
+          {/* ========================================== */}
+          <StatsChartCard
+            title="Activité des courses (tournées livreurs)"
+            subtitle="Volume, taux de succès, revenu encaissé sur la même période"
+            icon={Route}
+          >
+            <div className="space-y-4">
+              <CoursesKpiRow
+                stats={coursesStats.data}
+                isLoading={coursesStats.isLoading}
+              />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <div className="lg:col-span-2">
+                  <CoursesDailyBarChart
+                    data={coursesStats.data?.dailyBreakdown ?? []}
+                    isLoading={coursesStats.isLoading}
+                  />
+                </div>
+                <CoursesStatusPieChart
+                  distribution={coursesStats.data?.distribution ?? []}
+                  isLoading={coursesStats.isLoading}
+                />
+              </div>
+            </div>
+          </StatsChartCard>
 
           {/* ========================================== */}
           {/* SECTION 3 : Service + Ponctualite (2 col) */}

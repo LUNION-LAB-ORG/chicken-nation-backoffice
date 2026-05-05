@@ -1,4 +1,4 @@
-import { OrderType } from "./order.types";
+import { DeliveryService, OrderType } from "./order.types";
 
 // ✅ SUPPLÉMENT AVEC QUANTITÉ (même format que le mobile V2)
 export interface SupplementItem {
@@ -29,6 +29,8 @@ export interface OrderFormData {
     auto: boolean;
     user_id: string;
     delivery_fee?: number;
+    /** Override admin : force FREE (Chicken Nation) ou TURBO (sous-traitant). Si absent, auto-détection backend. */
+    delivery_service?: DeliveryService;
 }
 
 // ✅ TYPES POUR LES OPTIONS

@@ -79,5 +79,6 @@ export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData
     auto: formData.auto,
     user_id: formData.user_id,
     delivery_fee: formData.delivery_fee,
+    delivery_service: formData.delivery_service,
   };
 };
