@@ -1,0 +1,34 @@
+# Generic docker-compose for Chicken Nation Backoffice
+#
+# Usage: créer un .env à côté de ce fichier avec :
+#   NEXT_PUBLIC_API_URL=https://api.chicken-nation.com
+#   NEXT_PUBLIC_API_PREFIX=/api/v1
+#   NEXT_PUBLIC_CLOUDFRONT_URL=https://dvsxt5681pvqm.cloudfront.net
+#   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...
+#   NEXT_PUBLIC_ONESIGNAL_APP_ID=...
+#   HOST_BIND=127.0.0.1   (ou 0.0.0.0 si exposition directe — déconseillé)
+#   HOST_PORT=3000
+#
+# Puis : docker compose up -d --build
+#
+# Note : les variables NEXT_PUBLIC_* sont passées comme build args (inlined dans le bundle).
+# Pour changer une URL, il faut REBUILD l'image (pas juste restart).
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_API_PREFIX: ${NEXT_PUBLIC_API_PREFIX:-/api/v1}
+        NEXT_PUBLIC_CLOUDFRONT_URL: ${NEXT_PUBLIC_CLOUDFRONT_URL}
+        NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+        NEXT_PUBLIC_ONESIGNAL_APP_ID: ${NEXT_PUBLIC_ONESIGNAL_APP_ID}
+    image: chicken-nation-backoffice:latest
+    container_name: chicken-nation-backoffice
+    ports:
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT:-3000}:3000"
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
