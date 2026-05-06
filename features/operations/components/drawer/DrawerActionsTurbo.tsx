@@ -5,6 +5,7 @@ import { Info } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
+import { DrawerCancelAction } from "./DrawerCancelAction";
 
 interface Props {
   order: Order;
@@ -49,6 +50,7 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
           Commande terminée — aucune action disponible.
         </p>
       )}
+      <DrawerCancelAction order={order} />
     </div>
   );
 };

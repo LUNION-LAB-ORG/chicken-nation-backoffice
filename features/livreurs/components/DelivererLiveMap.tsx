@@ -81,6 +81,49 @@ function getInitials(first?: string | null, last?: string | null): string {
   return (f + l).toUpperCase() || "?";
 }
 
+// ─── Avatar livreur ───────────────────────────────────────────────────────────
+
+function DelivererAvatar({
+  image,
+  initials,
+  color,
+  size = 36,
+  ring = false,
+}: {
+  image?: string | null;
+  initials: string;
+  color: string;
+  size?: number;
+  ring?: boolean;
+}) {
+  const [imgError, setImgError] = React.useState(false);
+  const dim = `${size}px`;
+  const ringClass = ring ? "ring-2 ring-white" : "";
+
+  if (image && !imgError) {
+    return (
+      <img
+        src={image}
+        alt={initials}
+        width={size}
+        height={size}
+        className={`rounded-full object-cover flex-shrink-0 ${ringClass}`}
+        style={{ width: dim, height: dim }}
+        onError={() => setImgError(true)}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={`rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ${ringClass}`}
+      style={{ width: dim, height: dim, backgroundColor: color }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 // ─── Icônes de markers ───────────────────────────────────────────────────────
 
 function buildMarkerIcon(
@@ -268,13 +311,14 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
                       : "opacity-50 cursor-default"
                   }`}
                 >
-                  {/* Avatar initiales */}
-                  <div
-                    className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ring-2 ring-white"
-                    style={{ backgroundColor: meta.color }}
-                  >
-                    {initials}
-                  </div>
+                  {/* Avatar : photo si dispo, sinon initiales */}
+                  <DelivererAvatar
+                    image={l.image}
+                    initials={initials}
+                    color={meta.color}
+                    size={36}
+                    ring
+                  />
 
                   {/* Infos */}
                   <div className="flex-1 min-w-0">
@@ -366,13 +410,13 @@ function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
   return (
     <div className="p-1 min-w-[260px]">
       <div className="flex items-start gap-2.5 mb-2">
-        {/* Avatar */}
-        <div
-          className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
-          style={{ backgroundColor: meta.color }}
-        >
-          {initials}
-        </div>
+        {/* Avatar : photo si dispo, sinon initiales */}
+        <DelivererAvatar
+          image={livreur.image}
+          initials={initials}
+          color={meta.color}
+          size={36}
+        />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-gray-900">{fullName}</p>
           {livreur.restaurant && (
