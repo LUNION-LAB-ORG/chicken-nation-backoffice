@@ -1,100 +1,79 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, MapPin, X, Navigation } from "lucide-react";
+
+import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
+import { apiRequest } from "@/services/api";
 import { OrderAddress } from "../../types/order.types";
+
+interface BackendReverseGeocode {
+  formattedAddress: string;
+  components: Array<{ long_name: string; short_name: string; types: string[] }>;
+}
 
 interface AddressSearchInputProps {
   value: OrderAddress | null;
   onChange: (address: OrderAddress | null) => void;
   placeholder?: string;
 }
-const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
+/**
+ * Champ de recherche d'adresse (Places Autocomplete + Geocoding inverse).
+ *
+ * Utilise `useGoogleMaps()` pour attendre que le script Google Maps soit
+ * chargé par `GoogleMapsContext` — plus de double injection `<script>`.
+ *
+ * La clé API (`NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`) reste dans `GoogleMapsContext`
+ * et est restreinte au domaine backoffice dans Google Cloud Console.
+ */
 const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
   value,
   onChange,
   placeholder = "Rechercher une adresse",
 }) => {
+  const { isScriptLoaded } = useGoogleMaps();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [predictions, setPredictions] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoaded, setGoogleLoaded] = useState(false);
 
-  const autocompleteService = useRef<any>(null);
-  const placesService = useRef<any>(null);
-  const mapRef = useRef<any>(null);
+  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
+  const placesService = useRef<google.maps.places.PlacesService | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
 
-  // Charger Google Maps API
+  // Initialiser les services dès que le script est prêt
   useEffect(() => {
-    if (window.google || !apiKey) {
-      if (window.google) {
-        initializeServices();
-        setGoogleLoaded(true);
-      }
-      return;
-    }
+    if (!isScriptLoaded || typeof window.google === "undefined") return;
 
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      initializeServices();
-      setGoogleLoaded(true);
-    };
-
-    script.onerror = () => {
-      console.error("Erreur lors du chargement de Google Maps");
-    };
-
-    document.head.appendChild(script);
-
-    return () => {
-      const existingScript = document.querySelector(
-        `script[src*="maps.googleapis.com"]`
-      );
-      if (existingScript) {
-        document.head.removeChild(existingScript);
-      }
-    };
-  }, [apiKey]);
-
-  // Initialiser les services Google
-  const initializeServices = () => {
-    if (!window.google) return;
-
-    // Créer un élément de carte invisible pour PlacesService
+    // Carte invisible nécessaire pour PlacesService
     if (!mapRef.current) {
       const mapDiv = document.createElement("div");
       mapDiv.style.display = "none";
       document.body.appendChild(mapDiv);
-
-      const map = new window.google.maps.Map(mapDiv, {
+      mapRef.current = new window.google.maps.Map(mapDiv, {
         center: { lat: 5.3599517, lng: -4.0082563 },
         zoom: 14,
       });
-
-      mapRef.current = map;
     }
 
-    autocompleteService.current =
-      new window.google.maps.places.AutocompleteService();
-    placesService.current = new window.google.maps.places.PlacesService(
-      mapRef.current
-    );
-  };
+    autocompleteService.current = new window.google.maps.places.AutocompleteService();
+    placesService.current = new window.google.maps.places.PlacesService(mapRef.current);
+    // Nouveau session token — groupera les appels Autocomplete + Details
+    sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+  }, [isScriptLoaded]);
 
-  // Afficher l'adresse sélectionnée
+  // Sync valeur entrante
   useEffect(() => {
-    if (value) {
-      setSearchQuery(value.title || value.address);
-    }
+    if (value) setSearchQuery(value.title || value.address);
   }, [value]);
 
-  // Recherche avec autocomplétion
-  const handleSearch = (query: string) => {
+  // ── Autocomplétion ──────────────────────────────────────────────────────
+
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     setShowDropdown(true);
 
@@ -105,155 +84,140 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
 
     setIsLoading(true);
 
-    const request = {
-      input: query,
-      location: new window.google.maps.LatLng(5.3599517, -4.0082563), // Abidjan
-      radius: 50000,
-      componentRestrictions: { country: "ci" }, // Limiter à la Côte d'Ivoire
-    };
-
     autocompleteService.current.getPlacePredictions(
-      request,
-      (results: any, status: any) => {
+      {
+        input: query,
+        location: new window.google.maps.LatLng(5.3599517, -4.0082563),
+        radius: 50000,
+        componentRestrictions: { country: "ci" },
+        sessionToken: sessionTokenRef.current ?? undefined,
+      },
+      (results, status) => {
         setIsLoading(false);
-
-        if (
-          status === window.google.maps.places.PlacesServiceStatus.OK &&
-          results
-        ) {
-          setPredictions(results);
-        } else {
-          setPredictions([]);
-        }
-      }
+        setPredictions(
+          status === window.google.maps.places.PlacesServiceStatus.OK && results
+            ? results
+            : [],
+        );
+      },
     );
-  };
+  }, []);
 
-  // Sélectionner une adresse
-  const selectPlace = (placeId: string) => {
+  // ── Sélection d'un lieu ─────────────────────────────────────────────────
+
+  const selectPlace = useCallback((placeId: string) => {
     if (!placesService.current) return;
 
-    const request = {
-      placeId: placeId,
-      fields: [
-        "name",
-        "formatted_address",
-        "address_components",
-        "geometry",
-        "place_id",
-      ],
-    };
+    placesService.current.getDetails(
+      {
+        placeId,
+        fields: ["name", "formatted_address", "address_components", "geometry", "place_id"],
+        // Même session token → toute la session facturée comme 1 seul appel Details
+        sessionToken: sessionTokenRef.current ?? undefined,
+      },
+      (place, status) => {
+        if (status !== window.google.maps.places.PlacesServiceStatus.OK || !place) return;
 
-    placesService.current.getDetails(request, (place: any, status: any) => {
-      if (
-        status === window.google.maps.places.PlacesServiceStatus.OK &&
-        place
-      ) {
-        // Extraire les informations
-        const addressComponents = place.address_components || [];
+        const components = place.address_components ?? [];
         let street = "";
         let city = "";
 
-        addressComponents.forEach((component: any) => {
-          if (component.types.includes("route")) {
-            street = component.long_name;
-          }
-          if (
-            component.types.includes("locality") ||
-            component.types.includes("administrative_area_level_1")
-          ) {
-            city = component.long_name;
+        components.forEach((c) => {
+          if (c.types.includes("route")) street = c.long_name;
+          if (c.types.includes("locality") || c.types.includes("administrative_area_level_1")) {
+            city = c.long_name;
           }
         });
 
-        const addressData: OrderAddress = {
-          title: place.name,
-          address: place.formatted_address,
+        onChange({
+          title: place.name ?? "",
+          address: place.formatted_address ?? "",
           street: street || "",
           city: city || "Abidjan",
-          longitude: place.geometry.location.lng(),
-          latitude: place.geometry.location.lat(),
+          longitude: place.geometry!.location!.lng(),
+          latitude: place.geometry!.location!.lat(),
           note: "",
-        };
+        });
 
-        onChange(addressData);
-        setSearchQuery(place.name);
+        setSearchQuery(place.name ?? "");
         setShowDropdown(false);
         setPredictions([]);
-      }
-    });
-  };
 
-  // Obtenir la position actuelle
-  const getCurrentLocation = () => {
+        // Réinitialiser le session token pour la prochaine session de recherche
+        sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+      },
+    );
+  }, [onChange]);
+
+  // ── Géolocalisation ─────────────────────────────────────────────────────
+
+  const getCurrentLocation = useCallback(() => {
     if (!navigator.geolocation) {
       alert("La géolocalisation n'est pas supportée par votre navigateur");
       return;
     }
-
     setIsLoading(true);
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
 
-        // Geocoding inversé
-        const geocoder = new window.google.maps.Geocoder();
-        const latlng = { lat, lng };
+        try {
+          // Géocodage inverse via backend proxy (cache 24h, clé côté serveur)
+          const data = await apiRequest<BackendReverseGeocode>(
+            `/maps/geocode/reverse?lat=${lat}&lng=${lng}`,
+          );
 
-        geocoder.geocode({ location: latlng }, (results: any, status: any) => {
+          const street = data.components.find((c) => c.types.includes("route"))?.long_name ?? "";
+          const city =
+            data.components.find(
+              (c) => c.types.includes("locality") || c.types.includes("administrative_area_level_1"),
+            )?.long_name ?? "Abidjan";
+
+          onChange({
+            title: "Ma position actuelle",
+            address: data.formattedAddress,
+            street,
+            city,
+            longitude: lng,
+            latitude: lat,
+            note: "",
+          });
+          setSearchQuery("Ma position actuelle");
+        } catch {
+          // Fallback sans adresse
+          onChange({
+            title: "Ma position actuelle",
+            address: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+            street: "",
+            city: "Abidjan",
+            longitude: lng,
+            latitude: lat,
+            note: "",
+          });
+          setSearchQuery("Ma position actuelle");
+        } finally {
           setIsLoading(false);
-
-          if (status === "OK" && results[0]) {
-            const place = results[0];
-            const addressComponents = place.address_components || [];
-            let street = "";
-            let city = "";
-
-            addressComponents.forEach((component: any) => {
-              if (component.types.includes("route")) {
-                street = component.long_name;
-              }
-              if (
-                component.types.includes("locality") ||
-                component.types.includes("administrative_area_level_1")
-              ) {
-                city = component.long_name;
-              }
-            });
-
-            const addressData: OrderAddress = {
-              title: "Ma position actuelle",
-              address: place.formatted_address,
-              street: street || "",
-              city: city || "Abidjan",
-              longitude: lng,
-              latitude: lat,
-              note: "",
-            };
-
-            onChange(addressData);
-            setSearchQuery("Ma position actuelle");
-          }
-        });
+        }
       },
-      (error) => {
+      () => {
         setIsLoading(false);
         alert("Impossible d'obtenir votre position");
-      }
+      },
     );
-  };
+  }, [onChange]);
 
-  // Effacer la recherche
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchQuery("");
     setPredictions([]);
     onChange(null);
     setShowDropdown(false);
-  };
+  }, [onChange]);
 
-  if (!googleLoaded) {
+  // ── Rendu ────────────────────────────────────────────────────────────────
+
+  if (!isScriptLoaded) {
     return (
       <motion.div
         className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl"
@@ -288,7 +252,8 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             onFocus={() => setShowDropdown(true)}
-            className="flex-1 py-1 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+            className="flex-1 py-1 text-[13px] focus:outline-none text-[#595959] font-semibold"
             placeholder={placeholder}
           />
 
@@ -317,7 +282,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
         </div>
       </motion.div>
 
-      {/* Dropdown des résultats */}
+      {/* Dropdown suggestions */}
       <AnimatePresence>
         {showDropdown && predictions.length > 0 && (
           <motion.div
@@ -330,7 +295,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
               <button
                 type="button"
                 key={prediction.place_id}
-                onClick={() => selectPlace(prediction.place_id)}
+                onMouseDown={() => selectPlace(prediction.place_id)}
                 className="w-full px-4 py-3 flex items-start hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
               >
                 <MapPin className="w-5 h-5 text-[#F17922] mr-3 mt-0.5 flex-shrink-0" />
@@ -338,9 +303,11 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
                   <div className="font-semibold text-[#595959] text-sm truncate">
                     {prediction.structured_formatting.main_text}
                   </div>
-                  <div className="text-xs text-gray-500 truncate mt-0.5">
-                    {prediction.structured_formatting.secondary_text}
-                  </div>
+                  {prediction.structured_formatting.secondary_text && (
+                    <div className="text-xs text-gray-500 truncate mt-0.5">
+                      {prediction.structured_formatting.secondary_text}
+                    </div>
+                  )}
                 </div>
               </button>
             ))}
@@ -348,7 +315,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Informations de l'adresse sélectionnée */}
+      {/* Adresse sélectionnée */}
       {value && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}

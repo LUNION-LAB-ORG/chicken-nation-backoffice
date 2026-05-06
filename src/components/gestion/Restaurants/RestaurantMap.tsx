@@ -1,8 +1,9 @@
 "use client";
 
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
-import { Autocomplete, GoogleMap, Marker } from "@react-google-maps/api";
-import { Search } from "lucide-react";
+import { apiRequest } from "@/services/api";
+import { GoogleMap, Marker } from "@react-google-maps/api";
+import { Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface RestaurantMapProps {
@@ -19,10 +20,41 @@ const containerStyle = {
   borderRadius: "12px",
 };
 
-const defaultCenter = {
-  lat: 5.359952, // Abidjan coordinates
-  lng: -4.008256,
-};
+const defaultCenter = { lat: 5.359952, lng: -4.008256 };
+
+// ─── Types backend proxy ──────────────────────────────────────────────────────
+
+interface BackendAutocomplete {
+  placeId: string;
+  description: string;
+  mainText: string;
+  secondaryText: string;
+}
+
+interface BackendReverseGeocode {
+  formattedAddress: string;
+  components: Array<{ long_name: string; short_name: string; types: string[] }>;
+}
+
+interface BackendPlaceDetails {
+  placeId: string;
+  formattedAddress: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  addressComponents: Array<{ long_name: string; short_name: string; types: string[] }>;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function newSessionToken(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
+// ─── Composant ────────────────────────────────────────────────────────────────
 
 export default function RestaurantMap({
   initialLat,
@@ -32,120 +64,157 @@ export default function RestaurantMap({
   isViewOnly = false,
 }: RestaurantMapProps) {
   const { isScriptLoaded, map, setMap } = useGoogleMaps();
-  const [marker, setMarker] = useState<google.maps.LatLng | null>(null);
-  const [searchBox, setSearchBox] =
-    useState<google.maps.places.Autocomplete | null>(null);
+
+  const [markerPos, setMarkerPos] = useState<google.maps.LatLng | null>(null);
   const [address, setAddress] = useState<string>("");
-  const searchInputRef = useRef<HTMLInputElement>(null);
   const [isMapReady, setIsMapReady] = useState(false);
 
-  // Initialize map with initial coordinates if provided
+  // Recherche
+  const [searchQuery, setSearchQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<BackendAutocomplete[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const sessionTokenRef = useRef<string>(newSessionToken());
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // ── Init coordonnées initiales ──────────────────────────────────────────
+
   useEffect(() => {
-    if (isScriptLoaded && initialLat && initialLng && isMapReady) {
-      const position = { lat: initialLat, lng: initialLng };
-      const newMarker = new google.maps.LatLng(position.lat, position.lng);
-      setMarker(newMarker);
+    if (!isScriptLoaded || !isMapReady || !initialLat || !initialLng) return;
 
-      // Center map on marker
-      if (map) {
-        map.panTo(newMarker);
-        map.setZoom(15);
-      }
+    const pos = new google.maps.LatLng(initialLat, initialLng);
+    setMarkerPos(pos);
+    map?.panTo(pos);
+    map?.setZoom(15);
 
-      // Reverse geocode to get address
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ location: position }, (results, status) => {
-        if (status === "OK" && results?.[0]) {
-          setAddress(results[0].formatted_address);
-          if (!isViewOnly) {
-            onLocationChange(
-              position.lat,
-              position.lng,
-              results[0].formatted_address
-            );
-          }
-        }
+    // Géocodage inverse via backend (cache 24h)
+    apiRequest<BackendReverseGeocode>(
+      `/maps/geocode/reverse?lat=${initialLat}&lng=${initialLng}`,
+    )
+      .then((data) => {
+        setAddress(data.formattedAddress);
+        if (!isViewOnly) onLocationChange(initialLat, initialLng, data.formattedAddress);
+      })
+      .catch(() => {
+        // Fallback silencieux — on ne bloque pas le rendu
       });
-    }
-  }, [
-    initialLat,
-    initialLng,
-    isScriptLoaded,
-    isMapReady,
-    map,
-    isViewOnly,
-    onLocationChange,
-  ]);
+  }, [initialLat, initialLng, isScriptLoaded, isMapReady, map, isViewOnly, onLocationChange]);
 
-  const handleMapLoad = useCallback(
-    (map: google.maps.Map) => {
-      setMap(map);
-      setIsMapReady(true);
-    },
-    [setMap]
-  );
+  // ── Drag du marker ──────────────────────────────────────────────────────
 
-  const onMarkerLoad = useCallback(
-    (marker: google.maps.Marker) => {
-      if (!isViewOnly) {
-        marker.addListener("dragend", () => {
-          const position = marker.getPosition();
-          if (position) {
-            const lat = position.lat();
-            const lng = position.lng();
+  const handleMarkerDragEnd = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (isViewOnly || !e.latLng) return;
+      const lat = e.latLng.lat();
+      const lng = e.latLng.lng();
 
-            // Reverse geocode to get address
-            const geocoder = new google.maps.Geocoder();
-            geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-              if (status === "OK" && results?.[0]) {
-                setAddress(results[0].formatted_address);
-                onLocationChange(lat, lng, results[0].formatted_address);
-              }
-            });
-          }
+      // Géocodage inverse via backend
+      apiRequest<BackendReverseGeocode>(
+        `/maps/geocode/reverse?lat=${lat}&lng=${lng}`,
+      )
+        .then((data) => {
+          setAddress(data.formattedAddress);
+          onLocationChange(lat, lng, data.formattedAddress);
+        })
+        .catch(() => {
+          onLocationChange(lat, lng, "");
         });
+    },
+    [isViewOnly, onLocationChange],
+  );
+
+  // ── Recherche autocomplete ──────────────────────────────────────────────
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setShowDropdown(true);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (value.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const qs = new URLSearchParams({
+          input: value,
+          components: "country:ci",
+          language: "fr",
+          sessionToken: sessionTokenRef.current,
+        }).toString();
+        const results = await apiRequest<BackendAutocomplete[]>(
+          `/maps/places/autocomplete?${qs}`,
+        );
+        setSuggestions(results);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setIsSearching(false);
       }
-    },
-    [onLocationChange, isViewOnly]
-  );
+    }, 300);
+  }, []);
 
-  const onSearchBoxLoad = useCallback(
-    (autocomplete: google.maps.places.Autocomplete) => {
-      setSearchBox(autocomplete);
-    },
-    []
-  );
+  // ── Sélection d'un lieu ─────────────────────────────────────────────────
 
-  const onPlaceChanged = useCallback(() => {
-    if (searchBox) {
-      const place = searchBox.getPlace();
-      if (place.geometry?.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
+  const handleSelectPlace = useCallback(
+    async (item: BackendAutocomplete) => {
+      setSearchQuery(item.description);
+      setSuggestions([]);
+      setShowDropdown(false);
+      setIsSearching(true);
 
-        // Update marker position
-        const newPosition = new google.maps.LatLng(lat, lng);
-        setMarker(newPosition);
+      try {
+        const qs = new URLSearchParams({
+          sessionToken: sessionTokenRef.current,
+        }).toString();
+        const details = await apiRequest<BackendPlaceDetails>(
+          `/maps/places/details/${item.placeId}?${qs}`,
+        );
 
-        // Update map center
-        map?.panTo(newPosition);
+        const pos = new google.maps.LatLng(details.latitude, details.longitude);
+        setMarkerPos(pos);
+        map?.panTo(pos);
         map?.setZoom(15);
 
-        // Update address and notify parent
-        const formattedAddress = place.formatted_address || "";
-        setAddress(formattedAddress);
+        setAddress(details.formattedAddress);
         if (!isViewOnly) {
-          onLocationChange(lat, lng, formattedAddress);
+          onLocationChange(details.latitude, details.longitude, details.formattedAddress);
         }
+      } catch {
+        // Échec silencieux
+      } finally {
+        setIsSearching(false);
+        // Nouveau session token pour la prochaine recherche
+        sessionTokenRef.current = newSessionToken();
       }
-    }
-  }, [searchBox, map, onLocationChange, isViewOnly]);
+    },
+    [map, isViewOnly, onLocationChange],
+  );
+
+  const clearSearch = useCallback(() => {
+    setSearchQuery("");
+    setSuggestions([]);
+    setShowDropdown(false);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+  }, []);
+
+  const handleMapLoad = useCallback(
+    (m: google.maps.Map) => {
+      setMap(m);
+      setIsMapReady(true);
+    },
+    [setMap],
+  );
+
+  // ── Rendu ────────────────────────────────────────────────────────────────
 
   if (!isScriptLoaded) {
     return (
-      <div
-        className={`${className} bg-gray-100 rounded-xl flex items-center justify-center`}
-      >
+      <div className={`${className} bg-gray-100 rounded-xl flex items-center justify-center`}>
         <p className="text-gray-500">Chargement de la carte...</p>
       </div>
     );
@@ -154,48 +223,79 @@ export default function RestaurantMap({
   return (
     <div className={`relative ${className}`}>
       <div className="relative">
+        {/* Barre de recherche custom (proxy backend) */}
         {!isViewOnly && (
           <div className="absolute top-4 left-4 z-10 w-[calc(100%-2rem)]">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Autocomplete
-                onLoad={onSearchBoxLoad}
-                onPlaceChanged={onPlaceChanged}
-              >
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Rechercher une adresse..."
-                  className="w-full pl-10 h-[42px] rounded-xl bg-white border dark:text-gray-700 border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400 shadow-md"
-                />
-              </Autocomplete>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
+                onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+                placeholder="Rechercher une adresse..."
+                className="w-full pl-10 pr-8 h-[42px] rounded-xl bg-white border dark:text-gray-700 border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+              />
+              {isSearching && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#F17922] border-t-transparent rounded-full animate-spin" />
+              )}
+              {!isSearching && searchQuery && (
+                <button
+                  type="button"
+                  onMouseDown={clearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-3.5 h-3.5 text-gray-400" />
+                </button>
+              )}
             </div>
+
+            {/* Dropdown suggestions */}
+            {showDropdown && suggestions.length > 0 && (
+              <div className="absolute z-20 w-full mt-1 bg-white rounded-xl shadow-2xl border border-gray-100 max-h-52 overflow-y-auto">
+                {suggestions.map((item) => (
+                  <button
+                    type="button"
+                    key={item.placeId}
+                    onMouseDown={() => handleSelectPlace(item)}
+                    className="w-full px-4 py-2.5 flex flex-col items-start hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
+                  >
+                    <span className="font-semibold text-[#595959] text-[13px] truncate w-full">
+                      {item.mainText}
+                    </span>
+                    {item.secondaryText && (
+                      <span className="text-xs text-gray-500 truncate w-full mt-0.5">
+                        {item.secondaryText}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
+        {/* Carte Google Maps — rendu visuel, ne peut pas être proxifié */}
         <GoogleMap
           mapContainerStyle={containerStyle}
-          center={marker || defaultCenter}
-          zoom={marker ? 15 : 12}
+          center={markerPos ?? defaultCenter}
+          zoom={markerPos ? 15 : 12}
           onLoad={handleMapLoad}
           options={{
             styles: [
-              {
-                featureType: "poi",
-                elementType: "labels",
-                stylers: [{ visibility: "off" }],
-              },
+              { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
             ],
             mapTypeControl: false,
             streetViewControl: false,
             fullscreenControl: false,
           }}
         >
-          {marker && (
+          {markerPos && (
             <Marker
-              position={marker}
+              position={markerPos}
               draggable={!isViewOnly}
-              onLoad={onMarkerLoad}
+              onDragEnd={handleMarkerDragEnd}
               animation={google.maps.Animation.DROP}
             />
           )}
