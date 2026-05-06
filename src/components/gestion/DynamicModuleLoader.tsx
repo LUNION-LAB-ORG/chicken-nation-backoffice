@@ -51,6 +51,9 @@ const modulesMap: Record<string, any> = {
   livreurs: dynamic(() => import("@/components/gestion/Livreurs"), {
     loading: () => <LoadingSpinner />,
   }),
+  planning_livreurs: dynamic(() => import("@/components/gestion/PlanningLivreurs"), {
+    loading: () => <LoadingSpinner />,
+  }),
   promos: dynamic(() => import("@/components/gestion/Promos"), {
     loading: () => <LoadingSpinner />,
   }),

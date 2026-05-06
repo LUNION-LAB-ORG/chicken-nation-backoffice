@@ -16,6 +16,8 @@ export type TabKey =
   | 'stats_delivery' | 'stats_marketing' | 'stats_retention_callbacks'
   // Intégrations
   | 'hubrise'
+  // Planning livreurs (sous-page dédiée)
+  | 'planning_livreurs'
   // Paramètres
   | 'settings';
 
@@ -69,6 +71,8 @@ export interface DashboardState {
   stats_retention_callbacks: SectionState;
   // Intégrations
   hubrise: SectionState;
+  // Planning livreurs
+  planning_livreurs: SectionState;
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
@@ -101,6 +105,8 @@ const SECTION_KEYS: TabKey[] = [
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing', 'stats_retention_callbacks',
   // Intégrations
   'hubrise',
+  // Planning livreurs
+  'planning_livreurs',
 ];
 
 // --- STORE ---
@@ -140,6 +146,8 @@ export const useDashboardStore = create<DashboardState>()(
       stats_retention_callbacks: createInitialSectionState(),
       // Intégrations
       hubrise: createInitialSectionState(),
+      // Planning livreurs
+      planning_livreurs: createInitialSectionState(),
 
       // Actions Globales
       setActiveTab: (tab) => set((state) => {

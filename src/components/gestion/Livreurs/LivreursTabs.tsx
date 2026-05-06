@@ -1,19 +1,18 @@
 "use client";
 
 import React from "react";
-import { Calendar, Map } from "lucide-react";
+import { Map } from "lucide-react";
 
 import type { DelivererStatus } from "../../../../features/livreurs/types/livreur.types";
 
-// "CARTE_LIVE" et "PLANNING" sont des tabs virtuelles (pas un statut DB)
-//   - "CARTE_LIVE" affiche la carte live des livreurs
-//   - "PLANNING" affiche les plans de créneaux (P7)
-export type LivreursTab = "TOUS" | DelivererStatus | "CARTE_LIVE" | "PLANNING";
+// "CARTE_LIVE" est une tab virtuelle (pas un statut DB) — affiche la carte live.
+// "PLANNING" est désormais une sous-page dédiée dans la sidebar.
+export type LivreursTab = "TOUS" | DelivererStatus | "CARTE_LIVE";
 
 interface ITabConfig {
   key: LivreursTab;
   label: string;
-  /** Icône optionnelle pour les tabs virtuelles (Carte live, Planning). */
+  /** Icône optionnelle pour les tabs virtuelles (Carte live). */
   Icon?: React.FC<{ className?: string }>;
 }
 
@@ -24,7 +23,6 @@ export const LIVREURS_TABS: ITabConfig[] = [
   { key: "SUSPENDED", label: "Suspendus" },
   { key: "REJECTED", label: "Refusés" },
   { key: "CARTE_LIVE", label: "Carte live", Icon: Map },
-  { key: "PLANNING", label: "Planning", Icon: Calendar },
 ];
 
 interface LivreursTabsProps {

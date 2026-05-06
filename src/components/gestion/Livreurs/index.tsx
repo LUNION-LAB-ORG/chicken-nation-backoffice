@@ -14,7 +14,6 @@ import type {
   Livreur,
   LivreursQueryFilters,
 } from "../../../../features/livreurs/types/livreur.types";
-import { SchedulePlanningView } from "../../../../features/schedule/components/SchedulePlanningView";
 
 /**
  * Module Livreurs (admin backoffice).
@@ -37,9 +36,9 @@ export default function Livreurs() {
   const [tab, setTab] = useState<LivreursTab>("TOUS");
   const [search, setSearch] = useState("");
 
-  // Les tabs virtuelles "CARTE_LIVE" / "PLANNING" ne sont pas des filtres de statut.
+  // La tab virtuelle "CARTE_LIVE" n'est pas un filtre de statut.
   const statusFilter: LivreursQueryFilters["status"] | undefined =
-    tab === "TOUS" || tab === "CARTE_LIVE" || tab === "PLANNING" ? undefined : tab;
+    tab === "TOUS" || tab === "CARTE_LIVE" ? undefined : tab;
 
   const filters: LivreursQueryFilters = useMemo(
     () => ({
@@ -50,10 +49,10 @@ export default function Livreurs() {
     [statusFilter, search],
   );
 
-  // Pas besoin de fetcher la liste sur les tabs virtuelles
+  // Pas besoin de fetcher la liste sur la tab virtuelle carte
   const { data, isLoading } = useLivreursList(
     filters,
-    view === "list" && tab !== "CARTE_LIVE" && tab !== "PLANNING",
+    view === "list" && tab !== "CARTE_LIVE",
   );
   const livreurs = data?.items ?? [];
 
@@ -96,8 +95,6 @@ export default function Livreurs() {
           <LivreursTabs selected={tab} onSelect={setTab} counts={counts} />
           {tab === "CARTE_LIVE" ? (
             <DelivererLiveMap />
-          ) : tab === "PLANNING" ? (
-            <SchedulePlanningView />
           ) : (
             <LivreursList
               livreurs={livreurs}

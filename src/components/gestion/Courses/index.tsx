@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+import { Map, ChevronDown, ChevronUp } from 'lucide-react';
 import { useDashboardStore } from '@/store/dashboardStore';
 
+import { DelivererLiveMap } from '../../../../features/livreurs/components/DelivererLiveMap';
 import { CoursesHeader } from '../../../../features/courses/components/CoursesHeader';
 import { CourseDetails } from '../../../../features/courses/components/detail-course';
 import { CoursesFilters } from '../../../../features/courses/components/filtrage/CoursesFilters';
@@ -29,6 +32,7 @@ import type { CourseStatut } from '../../../../features/courses/types/course.typ
  */
 export default function Courses() {
   useCoursesSocketSync();
+  const [showMap, setShowMap] = useState(false);
 
   const {
     courses: { view, selectedItem, filters, pagination, modals },
@@ -53,6 +57,23 @@ export default function Courses() {
 
       {view === 'list' && (
         <>
+          {/* Carte live livreurs — toggle */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowMap((v) => !v)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#F17922] hover:text-[#d4621a] transition-colors mb-3"
+            >
+              <Map className="w-4 h-4" />
+              Carte live des livreurs
+              {showMap ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+            {showMap && (
+              <div className="mb-4">
+                <DelivererLiveMap restaurantId={restaurantFilter} />
+              </div>
+            )}
+          </div>
           <CoursesFilters />
           <CoursesTable
             courses={listQuery.data}

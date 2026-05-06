@@ -5,6 +5,7 @@ import {
   Bell,
   BookOpen,
   Boxes,
+  Calendar,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -155,6 +156,20 @@ export const useGetMenuConfig = (): {
       label: "Livreurs",
       icon: Truck,
       canAccess: () => can(Modules.LIVREURS, Action.READ),
+      items: [
+        {
+          id: "livreurs-livreurs",
+          label: "Liste des livreurs",
+          icon: Truck,
+          canAccess: () => can(Modules.LIVREURS, Action.READ),
+        },
+        {
+          id: "livreurs-planning_livreurs",
+          label: "Planning",
+          icon: Calendar,
+          canAccess: () => can(Modules.LIVREURS, Action.READ),
+        },
+      ],
     },
     {
       id: "fidelisation",
