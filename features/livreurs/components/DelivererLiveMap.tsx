@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { GoogleMap, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import {
   AlertOctagon,
@@ -27,24 +27,11 @@ import type {
 
 const ABIDJAN_CENTER = { lat: 5.348, lng: -4.027 };
 
-/**
- * Garde stricte sur `location` retourné par le backend.
- *
- * Le champ Prisma `last_location` est typé `JsonValue` côté serveur — donc
- * en pratique la forme reçue peut être :
- *  - `{ lat: number, lng: number }` (format attendu)
- *  - `{ latitude, longitude }` (vieux livreurs en base)
- *  - `{ lat: "5.36", lng: "-4.0" }` (string si bug de remontée GPS)
- *  - `null` (livreur jamais géolocalisé)
- *  - `{}` (entrée corrompue)
- *
- * On ne fait confiance qu'à la forme `{ lat: finite, lng: finite }`.
- * Tout le reste → null → marker masqué (au lieu de crash Google Maps).
- */
+// ─── Garde safeLocation ──────────────────────────────────────────────────────
+
 function safeLocation(loc: unknown): { lat: number; lng: number } | null {
   if (!loc || typeof loc !== "object") return null;
   const obj = loc as Record<string, unknown>;
-  // Accepte les deux conventions : {lat, lng} (mobile) ou {latitude, longitude} (legacy)
   const rawLat = obj.lat ?? obj.latitude;
   const rawLng = obj.lng ?? obj.longitude;
   const lat = typeof rawLat === "string" ? Number(rawLat) : rawLat;
@@ -56,136 +43,304 @@ function safeLocation(loc: unknown): { lat: number; lng: number } | null {
   return { lat, lng };
 }
 
+// ─── Metadata disponibilité ──────────────────────────────────────────────────
+
 interface IAvailabilityMeta {
   label: string;
   color: string;
   bgColor: string;
+  textColor: string;
   Icon: React.ComponentType<{ className?: string }>;
 }
 
 const AVAILABILITY_META: Record<IDelivererAvailability, IAvailabilityMeta> = {
-  available: { label: "Disponible", color: "#17C964", bgColor: "#DCFCE7", Icon: Zap },
-  in_course: { label: "En course", color: "#007AFF", bgColor: "#DBEAFE", Icon: Truck },
-  paused: { label: "En pause", color: "#F5A524", bgColor: "#FEF3C7", Icon: Pause },
-  auto_paused: { label: "Auto-pause", color: "#EF4444", bgColor: "#FEE2E2", Icon: AlertOctagon },
-  offline: { label: "Hors-ligne", color: "#9CA3AF", bgColor: "#F3F4F6", Icon: Power },
+  available:   { label: "Disponible",  color: "#17C964", bgColor: "#DCFCE7", textColor: "#166534", Icon: Zap },
+  in_course:   { label: "En course",   color: "#007AFF", bgColor: "#DBEAFE", textColor: "#1e40af", Icon: Truck },
+  paused:      { label: "En pause",    color: "#F5A524", bgColor: "#FEF3C7", textColor: "#92400E", Icon: Pause },
+  auto_paused: { label: "Auto-pause",  color: "#EF4444", bgColor: "#FEE2E2", textColor: "#991B1B", Icon: AlertOctagon },
+  offline:     { label: "Hors-ligne",  color: "#9CA3AF", bgColor: "#F3F4F6", textColor: "#4B5563", Icon: Power },
 };
+
+const ASIDE_FILTERS: { key: IDelivererAvailability | "all"; label: string }[] = [
+  { key: "all",         label: "Tous" },
+  { key: "available",  label: "Disponible" },
+  { key: "in_course",  label: "En course" },
+  { key: "paused",     label: "En pause" },
+  { key: "offline",    label: "Hors-ligne" },
+];
 
 const VEHICULE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
-  MOTO: Bike,
-  VELO: Bike,
-  VOITURE: Car,
+  MOTO: Bike, VELO: Bike, VOITURE: Car,
 };
 
-/**
- * Dashboard carte live des livreurs (P6c).
- *
- * - Markers colorés selon `availability` (vert/bleu/ambre/rouge/gris)
- * - Clic sur marker → InfoWindow avec détails (vitesse, cap, course active)
- * - Refetch auto toutes les 15 s via query (cf. `useDelivererLiveLocationsQuery`)
- * - Fit bounds auto quand les positions changent
- */
+// ─── Initiales ───────────────────────────────────────────────────────────────
+
+function getInitials(first?: string | null, last?: string | null): string {
+  const f = (first ?? "").trim()[0] ?? "";
+  const l = (last  ?? "").trim()[0] ?? "";
+  return (f + l).toUpperCase() || "?";
+}
+
+// ─── Icônes de markers ───────────────────────────────────────────────────────
+
+function buildMarkerIcon(
+  availability: IDelivererAvailability,
+  initials: string,
+  selected: boolean,
+): google.maps.Icon {
+  const meta = AVAILABILITY_META[availability];
+  const size = selected ? 48 : 36;
+  const r    = selected ? 20 : 14;
+  const cx   = size / 2;
+
+  const svg = selected
+    ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${meta.color}" stroke="white" stroke-width="3.5"/>
+        <text x="${cx}" y="${cx + 5}" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="13" font-weight="bold">${initials}</text>
+       </svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${meta.color}" stroke="white" stroke-width="2.5"/>
+        <circle cx="${cx}" cy="${cx}" r="4" fill="white"/>
+       </svg>`;
+
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+    scaledSize: new google.maps.Size(size, size),
+    anchor: new google.maps.Point(cx, cx),
+  };
+}
+
+// ─── Composant principal ─────────────────────────────────────────────────────
+
 export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
-  // ⚠ Le context expose `isScriptLoaded` (pas `isLoaded`) — ne pas confondre
-  // avec la prop `isLoaded` du hook `useJsApiLoader` de @react-google-maps/api.
   const { isScriptLoaded } = useGoogleMaps();
-  // Toggle "Voir aussi les livreurs hors-ligne" — utile pour debug : si le
-  // backend filtre `location_fresh` à 5 min et qu'aucun livreur n'a une app
-  // active, la carte reste vide. Activer ce toggle force l'inclusion des
-  // livreurs avec dernier GPS plus ancien.
-  const [includeOffline, setIncludeOffline] = useState(false);
+  const [includeOffline, setIncludeOffline]   = useState(false);
+  const [asideFilter, setAsideFilter]         = useState<IDelivererAvailability | "all">("all");
+  const [selectedId, setSelectedId]           = useState<string | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+
   const { data: livreurs, isLoading, isError } = useDelivererLiveLocationsQuery({
     restaurantId,
     includeOffline,
   });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Normalise les livreurs : `safeLocation()` filtre les coords malformées
-  // pour éviter `InvalidValueError` au render. Si la coord est invalide,
-  // on garde le livreur mais avec `location: null` (il ne sera pas affiché).
-  const normalizedLivreurs = useMemo(() => {
-    return (livreurs ?? []).map((l) => ({
-      ...l,
-      location: safeLocation(l.location),
-    }));
-  }, [livreurs]);
+  const normalized = useMemo(() => (livreurs ?? []).map((l) => ({
+    ...l,
+    location: safeLocation(l.location),
+  })), [livreurs]);
 
-  const visibleLivreurs = useMemo(
-    () => normalizedLivreurs.filter((l) => l.location !== null),
-    [normalizedLivreurs],
-  );
+  const visible = useMemo(() => normalized.filter((l) => l.location !== null), [normalized]);
 
   const center = useMemo(() => {
-    if (visibleLivreurs.length === 0) return ABIDJAN_CENTER;
-    // Barycentre simple sur les livreurs avec coord valide
-    const sum = visibleLivreurs.reduce(
-      (acc, l) => ({
-        lat: acc.lat + l.location!.lat,
-        lng: acc.lng + l.location!.lng,
-      }),
-      { lat: 0, lng: 0 },
-    );
-    return {
-      lat: sum.lat / visibleLivreurs.length,
-      lng: sum.lng / visibleLivreurs.length,
-    };
-  }, [visibleLivreurs]);
+    if (visible.length === 0) return ABIDJAN_CENTER;
+    const sum = visible.reduce((a, l) => ({ lat: a.lat + l.location!.lat, lng: a.lng + l.location!.lng }), { lat: 0, lng: 0 });
+    return { lat: sum.lat / visible.length, lng: sum.lng / visible.length };
+  }, [visible]);
 
-  const selected = normalizedLivreurs.find((l) => l.id === selectedId) ?? null;
+  const asideList = useMemo(() =>
+    normalized.filter((l) => asideFilter === "all" || l.availability === asideFilter),
+    [normalized, asideFilter],
+  );
+
+  const selected = normalized.find((l) => l.id === selectedId) ?? null;
+
+  const onMapLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
+
+  const handleSelectDeliverer = (l: IDelivererLive) => {
+    setSelectedId(l.id);
+    if (l.location) {
+      mapRef.current?.panTo(l.location);
+      mapRef.current?.setZoom(16);
+    }
+  };
+
+  const hiddenInvalid = normalized.length - visible.length;
 
   if (!isScriptLoaded) {
     return (
-      <div className="flex items-center justify-center h-[500px] bg-gray-100 rounded-2xl">
+      <div className="flex items-center justify-center h-[600px] bg-gray-100 rounded-2xl">
         <p className="text-sm text-gray-500">Chargement de la carte…</p>
       </div>
     );
   }
-
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-[500px] bg-red-50 rounded-2xl">
+      <div className="flex items-center justify-center h-[600px] bg-red-50 rounded-2xl">
         <p className="text-sm text-red-600">Impossible de charger les positions.</p>
       </div>
     );
   }
 
-  // Compteur diagnostic : combien de livreurs remontés mais avec coord invalide
-  // ou null. Affiché dans le header si > 0 pour aider l'ops à comprendre
-  // pourquoi tel livreur n'apparaît pas.
-  const hiddenInvalid = normalizedLivreurs.length - visibleLivreurs.length;
-
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-      <LiveMapHeader
-        count={visibleLivreurs.length}
-        isLoading={isLoading}
-        livreurs={normalizedLivreurs}
-        hiddenInvalid={hiddenInvalid}
-        includeOffline={includeOffline}
-        onToggleIncludeOffline={() => setIncludeOffline((v) => !v)}
-      />
-      <div className="relative">
+    <div className="flex h-[640px] bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+
+      {/* ── Aside gauche ─────────────────────────────────────────────────── */}
+      <aside className="w-72 flex-shrink-0 border-r border-gray-100 flex flex-col bg-gray-50/60">
+
+        {/* Header aside */}
+        <div className="px-4 py-3 border-b border-gray-100 bg-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-gray-900">Livreurs live</h3>
+              <p className="text-[11px] text-gray-400 mt-0.5">
+                {isLoading ? "Chargement…" : `${visible.length} géolocalisé${visible.length > 1 ? "s" : ""}`}
+                {hiddenInvalid > 0 && (
+                  <span className="text-amber-500"> · {hiddenInvalid} masqué{hiddenInvalid > 1 ? "s" : ""}</span>
+                )}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIncludeOffline((v) => !v)}
+              title={includeOffline ? "Exclure les hors-ligne" : "Inclure les hors-ligne"}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                includeOffline ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              <EyeOff className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Compteurs par statut */}
+          <div className="flex gap-1.5 flex-wrap mt-2">
+            {Object.entries(AVAILABILITY_META).map(([key, meta]) => {
+              const c = normalized.filter((l) => l.availability === key).length;
+              if (c === 0) return null;
+              return (
+                <span
+                  key={key}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                  style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                >
+                  <meta.Icon className="w-2.5 h-2.5" />{c}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Filtres disponibilité */}
+        <div className="px-3 py-2 border-b border-gray-100 bg-white flex gap-1 flex-wrap">
+          {ASIDE_FILTERS.map((f) => {
+            const isActive = asideFilter === f.key;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setAsideFilter(f.key)}
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                  isActive
+                    ? "bg-[#F17922] text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Liste livreurs */}
+        <div className="flex-1 overflow-y-auto py-1">
+          {asideList.length === 0 ? (
+            <p className="text-center text-xs text-gray-400 mt-8">Aucun livreur</p>
+          ) : (
+            asideList.map((l) => {
+              const meta     = AVAILABILITY_META[l.availability];
+              const initials = getInitials(l.first_name, l.last_name);
+              const fullName = [l.first_name, l.last_name].filter(Boolean).join(" ") || "Livreur";
+              const isActive = selectedId === l.id;
+              const hasLoc   = l.location !== null;
+
+              return (
+                <button
+                  key={l.id}
+                  type="button"
+                  onClick={() => hasLoc && handleSelectDeliverer(l)}
+                  disabled={!hasLoc}
+                  className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0 ${
+                    isActive
+                      ? "bg-orange-50"
+                      : hasLoc
+                      ? "hover:bg-gray-100 cursor-pointer"
+                      : "opacity-50 cursor-default"
+                  }`}
+                >
+                  {/* Avatar initiales */}
+                  <div
+                    className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white ring-2 ring-white"
+                    style={{ backgroundColor: meta.color }}
+                  >
+                    {initials}
+                  </div>
+
+                  {/* Infos */}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[12px] font-semibold truncate ${isActive ? "text-[#F17922]" : "text-gray-900"}`}>
+                      {fullName}
+                    </p>
+                    {l.restaurant && (
+                      <p className="text-[10px] text-gray-400 truncate flex items-center gap-0.5 mt-0.5">
+                        <MapPin className="w-2.5 h-2.5 shrink-0" />
+                        {l.restaurant.name}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Badge statut */}
+                  <span
+                    className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                  >
+                    {meta.label}
+                  </span>
+                </button>
+              );
+            })
+          )}
+        </div>
+      </aside>
+
+      {/* ── Carte ────────────────────────────────────────────────────────── */}
+      <div className="flex-1 relative">
+        {/* Légende en surimpression */}
+        <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 px-3 py-1.5 flex gap-2 flex-wrap text-[11px]">
+          {Object.entries(AVAILABILITY_META).map(([key, meta]) => (
+            <span key={key} className="inline-flex items-center gap-1 font-semibold"
+              style={{ color: meta.color }}>
+              <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: meta.color }} />
+              {meta.label}
+            </span>
+          ))}
+          <span className="text-gray-400">· refresh 15 s</span>
+        </div>
+
         <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "600px" }}
+          mapContainerStyle={{ width: "100%", height: "100%" }}
           center={center}
           zoom={13}
+          onLoad={onMapLoad}
           options={{
             disableDefaultUI: false,
             zoomControl: true,
             streetViewControl: false,
             mapTypeControl: false,
             fullscreenControl: true,
+            styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
           }}
         >
-          {visibleLivreurs.map((l) => (
+          {visible.map((l) => (
             <MarkerF
               key={l.id}
               position={l.location!}
-              onClick={() => setSelectedId(l.id)}
-              icon={buildMarkerIcon(l.availability)}
+              onClick={() => handleSelectDeliverer(l)}
+              icon={buildMarkerIcon(l.availability, getInitials(l.first_name, l.last_name), selectedId === l.id)}
+              zIndex={selectedId === l.id ? 10 : 1}
             />
           ))}
-          {selected && selected.location && (
+          {selected?.location && selectedId && (
             <InfoWindowF
               position={selected.location}
               onCloseClick={() => setSelectedId(null)}
@@ -199,97 +354,26 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   );
 }
 
-// ─── Header de la carte ─────────────────────────────────────────
-
-function LiveMapHeader({
-  count,
-  isLoading,
-  livreurs,
-  hiddenInvalid,
-  includeOffline,
-  onToggleIncludeOffline,
-}: {
-  count: number;
-  isLoading: boolean;
-  livreurs: IDelivererLive[];
-  hiddenInvalid: number;
-  includeOffline: boolean;
-  onToggleIncludeOffline: () => void;
-}) {
-  const statsByAvailability: Partial<Record<IDelivererAvailability, number>> = {};
-  for (const l of livreurs) {
-    statsByAvailability[l.availability] = (statsByAvailability[l.availability] ?? 0) + 1;
-  }
-  return (
-    <div className="px-5 py-3 border-b border-gray-100">
-      <div className="flex items-center justify-between mb-2">
-        <div>
-          <h3 className="text-lg font-bold text-gray-900">Carte live des livreurs</h3>
-          <p className="text-xs text-gray-500">
-            {isLoading && !livreurs.length ? "Chargement…" : `${count} livreur(s) géolocalisé(s)`}
-            {hiddenInvalid > 0 && (
-              <>
-                {" · "}
-                <span className="text-amber-600">
-                  {hiddenInvalid} masqué{hiddenInvalid > 1 ? "s" : ""} (coords invalides)
-                </span>
-              </>
-            )}
-            {" · "}
-            <span className="text-gray-400">refresh auto toutes les 15 s</span>
-          </p>
-        </div>
-        {/* Toggle "Inclure hors-ligne" — utile pour débugger une carte vide :
-            si le backend filtre `location_fresh` à 5 min et qu'aucun livreur
-            n'a une app active, ce toggle force l'inclusion. */}
-        <button
-          type="button"
-          onClick={onToggleIncludeOffline}
-          className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${
-            includeOffline
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          <EyeOff className="w-3 h-3" />
-          {includeOffline ? "Inclut hors-ligne" : "Inclure hors-ligne"}
-        </button>
-      </div>
-      <div className="flex gap-2 flex-wrap">
-        {Object.entries(AVAILABILITY_META).map(([key, meta]) => {
-          const count = statsByAvailability[key as IDelivererAvailability] ?? 0;
-          if (count === 0) return null;
-          return (
-            <span
-              key={key}
-              className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full"
-              style={{ backgroundColor: meta.bgColor, color: meta.color }}
-            >
-              <meta.Icon className="w-3 h-3" />
-              {meta.label} · {count}
-            </span>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ─── InfoWindow détaillée ────────────────────────────────────────
+// ─── InfoWindow détaillée ─────────────────────────────────────────────────────
 
 function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
-  const meta = AVAILABILITY_META[livreur.availability];
+  const meta      = AVAILABILITY_META[livreur.availability];
   const VehicleIcon = livreur.type_vehicule ? VEHICULE_ICON[livreur.type_vehicule] : null;
-  const fullName = [livreur.first_name, livreur.last_name].filter(Boolean).join(" ") || "Livreur";
-
-  // Fetch on-demand du scoring détaillé quand l'InfoWindow s'ouvre
-  // — 1 query DB supplémentaire par clic, raisonnable car 1 seul livreur sélectionné à la fois.
+  const fullName  = [livreur.first_name, livreur.last_name].filter(Boolean).join(" ") || "Livreur";
+  const initials  = getInitials(livreur.first_name, livreur.last_name);
   const { data: scoring } = useDelivererScoringInfoQuery(livreur.id);
 
   return (
     <div className="p-1 min-w-[260px]">
-      <div className="flex items-start justify-between mb-2">
-        <div>
+      <div className="flex items-start gap-2.5 mb-2">
+        {/* Avatar */}
+        <div
+          className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
+          style={{ backgroundColor: meta.color }}
+        >
+          {initials}
+        </div>
+        <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-gray-900">{fullName}</p>
           {livreur.restaurant && (
             <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
@@ -301,8 +385,7 @@ function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
           className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
           style={{ backgroundColor: meta.bgColor, color: meta.color }}
         >
-          <meta.Icon className="w-2.5 h-2.5" />
-          {meta.label}
+          <meta.Icon className="w-2.5 h-2.5" />{meta.label}
         </span>
       </div>
 
@@ -310,117 +393,54 @@ function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
         {VehicleIcon && livreur.type_vehicule && (
           <div className="flex items-center justify-between">
             <dt className="text-gray-500">Véhicule</dt>
-            <dd className="text-gray-800 font-semibold flex items-center gap-1">
-              <VehicleIcon className="w-3 h-3" /> {livreur.type_vehicule}
+            <dd className="font-semibold text-gray-800 flex items-center gap-1">
+              <VehicleIcon className="w-3 h-3" />{livreur.type_vehicule}
             </dd>
           </div>
         )}
         {livreur.speed_kmh !== null && (
           <div className="flex items-center justify-between">
             <dt className="text-gray-500">Vitesse</dt>
-            <dd className="text-gray-800 font-semibold">{Math.round(livreur.speed_kmh)} km/h</dd>
+            <dd className="font-semibold text-gray-800">{Math.round(livreur.speed_kmh)} km/h</dd>
           </div>
         )}
         {livreur.queue_rank !== null && (
           <div className="flex items-center justify-between">
             <dt className="text-gray-500">Rang FIFO</dt>
-            <dd className="text-gray-800 font-semibold">#{livreur.queue_rank}</dd>
+            <dd className="font-semibold text-gray-800">#{livreur.queue_rank}</dd>
           </div>
         )}
         {scoring?.ranking?.position && (
           <div className="flex items-center justify-between">
-            <dt className="text-gray-500 flex items-center gap-1">
-              <Award className="w-3 h-3" />
-              Rang scoring
-            </dt>
-            <dd className="text-gray-800 font-semibold">
-              #{scoring.ranking.position}/{scoring.ranking.totalCandidates}
-            </dd>
+            <dt className="text-gray-500 flex items-center gap-1"><Award className="w-3 h-3" />Rang scoring</dt>
+            <dd className="font-semibold text-gray-800">#{scoring.ranking.position}/{scoring.ranking.totalCandidates}</dd>
           </div>
         )}
         {scoring?.scoring && (
           <div className="flex items-center justify-between">
-            <dt className="text-gray-500">Score composite</dt>
-            <dd className="text-gray-800 font-semibold font-mono">
-              {scoring.scoring.currentScore.toFixed(3)}
-            </dd>
+            <dt className="text-gray-500">Score</dt>
+            <dd className="font-semibold font-mono text-gray-800">{scoring.scoring.currentScore.toFixed(3)}</dd>
           </div>
         )}
         {scoring && scoring.refusals.countInWindow > 0 && (
           <div className="flex items-center justify-between">
-            <dt className="text-gray-500 flex items-center gap-1">
-              <TrendingDown className="w-3 h-3" />
-              Refus récents
-            </dt>
-            <dd className="text-orange-600 font-semibold">
-              {scoring.refusals.countInWindow}/{scoring.refusals.threshold}
-            </dd>
+            <dt className="text-gray-500 flex items-center gap-1"><TrendingDown className="w-3 h-3" />Refus</dt>
+            <dd className="text-orange-600 font-semibold">{scoring.refusals.countInWindow}/{scoring.refusals.threshold}</dd>
           </div>
         )}
         {livreur.active_course && (
           <div className="flex items-center justify-between">
-            <dt className="text-gray-500">Course</dt>
-            <dd className="text-gray-800 font-semibold">
-              #{livreur.active_course.reference} · {livreur.active_course.deliveries.length} liv.
-            </dd>
-          </div>
-        )}
-        {livreur.auto_pause_until && (
-          <div className="flex items-center justify-between text-red-600">
-            <dt>Pause auto jusqu&apos;à</dt>
-            <dd className="font-semibold">
-              {new Date(livreur.auto_pause_until).toLocaleTimeString("fr-FR", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </dd>
+            <dt className="text-gray-500">Course active</dt>
+            <dd className="font-semibold text-gray-800">#{livreur.active_course.reference}</dd>
           </div>
         )}
         {livreur.location_at && (
           <div className="flex items-center justify-between text-gray-400">
             <dt>Dernier GPS</dt>
-            <dd>
-              {new Date(livreur.location_at).toLocaleTimeString("fr-FR", {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })}
-            </dd>
+            <dd>{new Date(livreur.location_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</dd>
           </div>
         )}
       </dl>
-
-      {scoring && scoring.reasons.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">
-            Contexte
-          </p>
-          <ul className="space-y-0.5">
-            {scoring.reasons.slice(0, 2).map((r) => (
-              <li key={r} className="text-[10px] text-gray-600">
-                • {r}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </div>
   );
-}
-
-// ─── Icône SVG des markers ────────────────────────────────────────
-
-function buildMarkerIcon(availability: IDelivererAvailability): google.maps.Icon {
-  const meta = AVAILABILITY_META[availability];
-  // SVG inline pour un marker coloré avec contour blanc + pulse visuel simple
-  const svg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36">
-  <circle cx="18" cy="18" r="14" fill="${meta.color}" stroke="white" stroke-width="3"/>
-  <circle cx="18" cy="18" r="5" fill="white"/>
-</svg>`;
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    scaledSize: new google.maps.Size(36, 36),
-    anchor: new google.maps.Point(18, 18),
-  };
 }
