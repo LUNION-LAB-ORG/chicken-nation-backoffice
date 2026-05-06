@@ -12,6 +12,8 @@ interface OrderContextMenuProps {
   order: OrderTable;
   isOpen: boolean;
   onClose: () => void;
+  /** Si fourni, "Voir les détails" ouvre le drawer au lieu de l'ancienne vue détail */
+  onViewDetails?: (order: OrderTable) => void;
 }
 
 // Mapping inverse : statut UI → statut API
@@ -30,6 +32,7 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   order,
   isOpen,
   onClose,
+  onViewDetails,
 }) => {
   const {
     handleViewOrderDetails,
@@ -56,7 +59,11 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   };
 
   const handleViewDetails = () => {
-    handleViewOrderDetails(order);
+    if (onViewDetails) {
+      onViewDetails(order);
+    } else {
+      handleViewOrderDetails(order);
+    }
     if (!isLoading) {
       onClose();
     }

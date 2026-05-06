@@ -16,13 +16,15 @@ const modulesMap: Record<string, any> = {
   menus: dynamic(() => import("@/components/gestion/Menus"), {
     loading: () => <LoadingSpinner />,
   }),
-  orders: dynamic(() => import("@/components/gestion/Orders"), {
-    loading: () => <LoadingSpinner />,
-  }),
   operations: dynamic(() => import("@/components/gestion/Operations"), {
     loading: () => <LoadingSpinner />,
   }),
-  historique: dynamic(() => import("@/components/gestion/Orders"), {
+  // Alias rétro-compat : les anciens activeTab "orders" et "historique" persistés
+  // en localStorage redirigent vers la page unifiée.
+  orders: dynamic(() => import("@/components/gestion/Operations"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  historique: dynamic(() => import("@/components/gestion/Operations"), {
     loading: () => <LoadingSpinner />,
   }),
   courses: dynamic(() => import("@/components/gestion/Courses"), {

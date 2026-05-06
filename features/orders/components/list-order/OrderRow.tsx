@@ -16,7 +16,9 @@ interface OrderRowProps {
   isSelected: boolean;
   onSelect?: (orderId: string, checked: boolean) => void;
   isMobile?: boolean;
-  showRestaurantColumn?: boolean; // ✅ Contrôler l'affichage de la colonne Restaurant
+  showRestaurantColumn?: boolean;
+  onRowClick?: (order: OrderTable) => void;    // clic sur la ligne → drawer
+  onViewDetails?: (order: OrderTable) => void; // "Voir les détails" du menu contextuel → drawer
 }
 export function OrderRow({
   order,
@@ -24,6 +26,8 @@ export function OrderRow({
   onSelect,
   isMobile = false,
   showRestaurantColumn = true,
+  onRowClick,
+  onViewDetails,
 }: OrderRowProps) {
   const { handleViewOrderDetails } = useOrderActions();
 
@@ -60,6 +64,7 @@ export function OrderRow({
           order={order}
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
+          onViewDetails={onViewDetails}
         />
       </div>,
       portalContainer,
@@ -69,8 +74,9 @@ export function OrderRow({
   if (isMobile) {
     return (
       <div
-        className="bg-white rounded-xl shadow-sm p-4 mb-3 border border-gray-100"
-        onDoubleClick={() => handleViewOrderDetails(order)}
+        className="bg-white rounded-xl shadow-sm p-4 mb-3 border border-gray-100 cursor-pointer"
+        onClick={() => onRowClick ? onRowClick(order) : undefined}
+        onDoubleClick={() => !onRowClick && handleViewOrderDetails(order)}
       >
         <div className="flex items-start gap-3">
           {onSelect && (
@@ -152,8 +158,9 @@ export function OrderRow({
 
   return (
     <tr
-      className="hover:bg-[#FDEDD3]"
-      onDoubleClick={() => handleViewOrderDetails(order)}
+      className="hover:bg-[#FDEDD3] cursor-pointer"
+      onClick={() => onRowClick ? onRowClick(order) : undefined}
+      onDoubleClick={() => !onRowClick && handleViewOrderDetails(order)}
     >
       {onSelect && (
         <td className="w-8 whitespace-nowrap py-3 px-3 sm:px-4">

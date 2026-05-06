@@ -8,7 +8,7 @@ import { Course } from '../../features/courses/types/course.types';
 
 // --- TYPES ---
 export type TabKey =
-  'dashboard' | 'orders' | 'operations' | 'historique' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
+  'dashboard' | 'orders' | 'operations' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
   | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
@@ -47,7 +47,6 @@ export interface DashboardState {
   inbox: SectionState;
   orders: SectionState<OrderTable>;
   operations: SectionState<OrderTable>;
-  historique: SectionState<OrderTable>;
   courses: SectionState<Course>;
   menus: SectionState<MenuItem>;
   clients: SectionState<string>;
@@ -95,7 +94,7 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 });
 
 const SECTION_KEYS: TabKey[] = [
-  'dashboard', 'orders', 'operations', 'historique', 'courses', 'menus', 'marketing', 'news', 'clients', 'inventory',
+  'dashboard', 'orders', 'operations', 'courses', 'menus', 'marketing', 'news', 'clients', 'inventory',
   'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'voucher', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
@@ -119,7 +118,6 @@ export const useDashboardStore = create<DashboardState>()(
       inbox: createInitialSectionState(),
       orders: createInitialSectionState<OrderTable>(),
       operations: createInitialSectionState<OrderTable>(),
-      historique: createInitialSectionState<OrderTable>(),
       courses: createInitialSectionState<Course>(),
       menus: createInitialSectionState<MenuItem>(),
       clients: createInitialSectionState(),

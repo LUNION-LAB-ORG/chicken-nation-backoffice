@@ -12,6 +12,7 @@ import { mapApiOrdersToUiOrders } from "../../utils/orderMapper";
 
 import { PaginatedResponse } from "../../../../types";
 import { User } from "../../../users/types/user.types";
+import { OrderTable } from "../../types/ordersTable.types";
 import { OrderRow } from "./OrderRow";
 import { TableHeader } from "./TableHeader";
 
@@ -20,12 +21,16 @@ export interface OrdersTableProps {
   orders?: PaginatedResponse<IOrder>;
   isLoading: boolean;
   error: Error;
+  onRowClick?: (order: OrderTable) => void;    // clic ligne → drawer
+  onViewDetails?: (order: OrderTable) => void; // "Voir les détails" menu contextuel → drawer
 }
 export function OrdersTable({
   currentUser = null,
   orders,
   isLoading,
   error,
+  onRowClick,
+  onViewDetails,
 }: OrdersTableProps) {
   // Conversion: Mapper les données API vers UI
   const ordersToDisplay = useMemo(() => {
@@ -62,6 +67,8 @@ export function OrdersTable({
                 isSelected={selectedOrders.includes(order.id)}
                 onSelect={handleSelectOrder}
                 isMobile={true}
+                onRowClick={onRowClick}
+                onViewDetails={onViewDetails}
               />
             ))}
           </div>
@@ -81,6 +88,8 @@ export function OrdersTable({
                       isSelected={selectedOrders.includes(order.id)}
                       onSelect={handleSelectOrder}
                       showRestaurantColumn={!currentUser?.restaurant_id}
+                      onRowClick={onRowClick}
+                      onViewDetails={onViewDetails}
                     />
                   ))}
                 </tbody>

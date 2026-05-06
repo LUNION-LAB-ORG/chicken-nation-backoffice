@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Activity,
-  Archive,
   BarChart3,
   Bell,
   BookOpen,
@@ -67,24 +65,10 @@ export const useGetMenuConfig = (): {
       canAccess: () => can(Modules.MENUS, Action.READ),
     },
     {
-      id: "orders",
+      id: "operations",
       label: "Commandes",
       icon: ClipboardList,
       canAccess: () => can(Modules.COMMANDES, Action.READ),
-      items: [
-        {
-          id: "orders-operations",
-          label: "Opérations",
-          icon: Activity,
-          canAccess: () => can(Modules.COMMANDES, Action.READ),
-        },
-        {
-          id: "orders-historique",
-          label: "Historique",
-          icon: Archive,
-          canAccess: () => can(Modules.COMMANDES, Action.READ),
-        },
-      ],
     },
     {
       id: "courses",
