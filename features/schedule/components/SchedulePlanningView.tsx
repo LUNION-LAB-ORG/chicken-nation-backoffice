@@ -11,6 +11,7 @@ import {
   Plus,
   Send,
   Store,
+  Trash2,
   Users,
 } from "lucide-react";
 
@@ -239,32 +240,64 @@ const PlanCard: React.FC<{
 
       <div className="mt-2 flex flex-wrap gap-1.5">
         {plan.status === "DRAFT" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              sendMut.mutate(plan.id);
-            }}
-            disabled={sendMut.isPending}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded-lg disabled:opacity-60"
-          >
-            <Send className="w-3 h-3" />
-            Envoyer
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                sendMut.mutate(plan.id);
+              }}
+              disabled={sendMut.isPending}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-100 hover:bg-blue-200 px-2 py-1 rounded-lg disabled:opacity-60"
+            >
+              <Send className="w-3 h-3" />
+              Envoyer
+            </button>
+            {/* Annuler un brouillon vide — libère les dates pour une re-génération */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm("Annuler ce plan brouillon ? Cette action est irréversible."))
+                  archiveMut.mutate(plan.id);
+              }}
+              disabled={archiveMut.isPending}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-100 hover:bg-red-200 px-2 py-1 rounded-lg disabled:opacity-60"
+            >
+              <Trash2 className="w-3 h-3" />
+              Annuler
+            </button>
+          </>
         )}
         {plan.status === "SENT" && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              confirmMut.mutate(plan.id);
-            }}
-            disabled={confirmMut.isPending}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-1 rounded-lg disabled:opacity-60"
-          >
-            <CheckCircle2 className="w-3 h-3" />
-            Confirmer
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                confirmMut.mutate(plan.id);
+              }}
+              disabled={confirmMut.isPending}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 px-2 py-1 rounded-lg disabled:opacity-60"
+            >
+              <CheckCircle2 className="w-3 h-3" />
+              Confirmer
+            </button>
+            {/* Annuler un plan envoyé — retire les créneaux en attente */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm("Annuler ce plan envoyé ? Les livreurs ne pourront plus le confirmer."))
+                  archiveMut.mutate(plan.id);
+              }}
+              disabled={archiveMut.isPending}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 px-2 py-1 rounded-lg disabled:opacity-60"
+            >
+              <Trash2 className="w-3 h-3" />
+              Annuler
+            </button>
+          </>
         )}
         {plan.status === "CONFIRMED" && (
           <button
