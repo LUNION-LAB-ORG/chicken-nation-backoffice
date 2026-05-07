@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 
 import {
   assignRestaurantToLivreur,
+  forceActivateLivreur,
   getAllLivreurs,
   getLivreurById,
   reactivateLivreur,
@@ -104,6 +105,18 @@ export const useReactivateLivreur = () => {
     onSuccess: (_data, id) => {
       invalidate(id);
       toast.success('Livreur réactivé');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+export const useForceActivateLivreur = () => {
+  const invalidate = useInvalidateLivreurs();
+  return useMutation({
+    mutationFn: (id: string) => forceActivateLivreur(id),
+    onSuccess: (_data, id) => {
+      invalidate(id);
+      toast.success('Livreur activé (sans documents)');
     },
     onError: (e: Error) => toast.error(e.message),
   });

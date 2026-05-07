@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoogleMap, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import {
   AlertOctagon,
@@ -20,6 +20,7 @@ import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 
 import { useDelivererLiveLocationsQuery } from "../queries/deliverer-live.query";
 import { useDelivererScoringInfoQuery } from "../queries/deliverer-scoring.query";
+import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
 import type {
   IDelivererAvailability,
   IDelivererLive,
@@ -162,8 +163,22 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   const [selectedId, setSelectedId]           = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  // Le filtre restaurant local (interne à la carte) prend le dessus sur le prop parent.
+  const [localRestaurantId, setLocalRestaurantId] = useState<string>(restaurantId ?? "");
+
+  // Synchroniser le state local si le prop change (navigation depuis le parent)
+  useEffect(() => {
+    setLocalRestaurantId(restaurantId ?? "");
+  }, [restaurantId]);
+
+  const { data: restaurantData } = useRestaurantListQuery({ limit: 100 });
+  const restaurants = restaurantData?.items ?? [];
+
+  // Utilise le filtre local s'il est défini, sinon le prop parent
+  const effectiveRestaurantId = localRestaurantId || restaurantId || undefined;
+
   const { data: livreurs, isLoading, isError } = useDelivererLiveLocationsQuery({
-    restaurantId,
+    restaurantId: effectiveRestaurantId,
     includeOffline,
   });
 
@@ -262,6 +277,20 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
               );
             })}
           </div>
+        </div>
+
+        {/* Sélecteur restaurant interne */}
+        <div className="px-3 py-2 border-b border-gray-100 bg-white">
+          <select
+            value={localRestaurantId}
+            onChange={(e) => setLocalRestaurantId(e.target.value)}
+            className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-700 focus:outline-none"
+          >
+            <option value="">Tous les restaurants</option>
+            {restaurants.map((r) => (
+              <option key={r.id} value={r.id}>{r.name}</option>
+            ))}
+          </select>
         </div>
 
         {/* Filtres disponibilité */}

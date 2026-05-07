@@ -57,6 +57,9 @@ export const suspendLivreur = (id: string, payload: SuspendLivreurPayload) =>
 export const reactivateLivreur = (id: string) =>
   safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/reactivate`, {}, true));
 
+export const forceActivateLivreur = (id: string) =>
+  safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/force-activate`, {}, true));
+
 // ============================================================
 // AFFECTATION & SUPPRESSION
 // ============================================================

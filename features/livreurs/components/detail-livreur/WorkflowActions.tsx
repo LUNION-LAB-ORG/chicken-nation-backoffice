@@ -1,10 +1,11 @@
 "use client";
 
 import React from "react";
-import { Ban, Check, RefreshCw, Store, Trash2, XCircle } from "lucide-react";
+import { Ban, Check, RefreshCw, ShieldAlert, Store, Trash2, XCircle } from "lucide-react";
 
 import {
   useDeleteLivreur,
+  useForceActivateLivreur,
   useReactivateLivreur,
   useValidateLivreur,
 } from "../../hook/use-livreurs";
@@ -26,6 +27,7 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
   onAssignRestaurant,
 }) => {
   const { mutate: validate, isPending: isValidating } = useValidateLivreur();
+  const { mutate: forceActivate, isPending: isForcing } = useForceActivateLivreur();
   const { mutate: reactivate, isPending: isReactivating } = useReactivateLivreur();
   const { mutate: deleteLivreur, isPending: isDeleting } = useDeleteLivreur();
 
@@ -33,6 +35,8 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
   const isActive = livreur.status === "ACTIVE";
   const isSuspended = livreur.status === "SUSPENDED";
   const canValidate = isPending && !!livreur.piece_identite && !!livreur.permis_conduire;
+  // Forcer l'activation : uniquement si au moins un document manque
+  const canForceActivate = isPending && (!livreur.piece_identite || !livreur.permis_conduire);
 
   const handleDelete = () => {
     if (!confirm(`Supprimer définitivement ce compte livreur ?`)) return;
@@ -54,6 +58,27 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
           >
             <Check className="w-4 h-4" />
             {isValidating ? "Validation…" : "Valider le livreur"}
+          </button>
+        )}
+
+        {canForceActivate && (
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                confirm(
+                  "⚠️ Activer sans documents ?\n\nLe livreur sera marqué ACTIF même si ses pièces justificatives sont manquantes. Utilise cette option uniquement si tu as vérifié son identité par un autre moyen."
+                )
+              ) {
+                forceActivate(livreur.id);
+              }
+            }}
+            disabled={isForcing}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-amber-700 bg-amber-100 border border-amber-300 rounded-lg hover:bg-amber-200 disabled:opacity-50"
+            title="Activer sans vérification des documents (admin override)"
+          >
+            <ShieldAlert className="w-4 h-4" />
+            {isForcing ? "Activation…" : "Forcer l'activation"}
           </button>
         )}
 
