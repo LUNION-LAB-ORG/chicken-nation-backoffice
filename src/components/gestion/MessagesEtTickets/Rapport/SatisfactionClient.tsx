@@ -2,68 +2,26 @@
 
 import Image from 'next/image';
 import React from 'react';
+import { useTicketStatsQuery } from '@/hooks/useTicketsQuery';
 
-// Types pour les données mockées
-interface SatisfactionData {
-  id: string;
+interface SatisfactionRowProps {
   label: string;
   value: string;
-  type: 'rating' | 'percentage';
-  badgeColor: string;
-  badgeTextColor: string;
+  color?: string;
 }
 
-// Données mockées
-const mockSatisfaction: SatisfactionData[] = [
-  {
-    id: '1',
-    label: 'Note moyenne',
-    value: '4.2/5',
-    type: 'rating',
-    badgeColor: '',
-    badgeTextColor: 'text-[#F17922]'
-  },
-  {
-    id: '2',
-    label: 'Très satisfait',
-    value: '72%',
-    type: 'percentage',
-    badgeColor: 'bg-green-500',
-    badgeTextColor: 'text-white'
-  },
-  {
-    id: '3',
-    label: 'Amélioration requise',
-    value: '12%',
-    type: 'percentage',
-    badgeColor: 'bg-red-500',
-    badgeTextColor: 'text-white'
-  }
-];
-
-// Composant pour un item de satisfaction
-interface SatisfactionItemProps {
-  item: SatisfactionData;
-}
-
-function SatisfactionItem({ item }: SatisfactionItemProps) {
+function SatisfactionRow({ label, value, color }: SatisfactionRowProps) {
   return (
     <div className="py-1 px-2 md:px-4">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="md:text-sm lg:text-sm text-xs text-gray-600 font-medium">
-            {item.label}
-          </p>
-        </div>
+        <p className="md:text-sm lg:text-sm text-xs text-gray-600 font-medium">{label}</p>
         <div className="ml-4">
-          {item.badgeColor ? (
-            <span className={`inline-flex items-center px-2 md:px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium ${item.badgeColor} ${item.badgeTextColor}`}>
-              {item.value}
+          {color ? (
+            <span className={`inline-flex items-center px-2 md:px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-gray-200 text-slate-600`}>
+              {value}
             </span>
           ) : (
-            <span className={`md:text-sm lg:text-sm text-xs font-medium ${item.badgeTextColor}`}>
-              {item.value}
-            </span>
+            <span className="md:text-sm lg:text-sm text-xs font-medium text-[#F17922]">{value}</span>
           )}
         </div>
       </div>
@@ -72,29 +30,32 @@ function SatisfactionItem({ item }: SatisfactionItemProps) {
 }
 
 function SatisfactionClient() {
+  const { data, isLoading } = useTicketStatsQuery();
+
+  const score = isLoading
+    ? '…'
+    : data?.satisfactionScore != null
+      ? `${data.satisfactionScore.toFixed(1)}/10`
+      : '--';
+
   return (
-    <div className="bg-white rounded-2xl  border-0 overflow-hidden h-full flex flex-col">
-      {/* Header */}
+    <div className="bg-white rounded-2xl border-0 overflow-hidden h-full flex flex-col">
       <div className="p-3 md:p-6">
         <div className="flex items-center justify-start">
-          <div className='flex items-center gap-2'>
-           <Image src='/icons/rapport/satisfaction.png' width={24} height={24} alt="statisfaction" className='mt-1' />
-          <h3 className="lg:text-2xl md:text-base text-md font-semibold text-gray-900"> 
-            Satisfaction client
-          </h3>
+          <div className="flex items-center gap-2">
+            <Image src="/icons/rapport/satisfaction.png" width={24} height={24} alt="satisfaction" className="mt-1" />
+            <h3 className="lg:text-2xl md:text-base text-md font-semibold text-gray-900">
+              Satisfaction client
+            </h3>
           </div>
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-6 flex-1 overflow-y-auto">
         <div className="space-y-0">
-          {mockSatisfaction.map((item) => (
-            <SatisfactionItem 
-              key={item.id} 
-              item={item} 
-            />
-          ))}
+          <SatisfactionRow label="Note moyenne" value={score} />
+          <SatisfactionRow label="Très satisfait" value="--" color="gray" />
+          <SatisfactionRow label="Amélioration requise" value="--" color="gray" />
         </div>
       </div>
     </div>

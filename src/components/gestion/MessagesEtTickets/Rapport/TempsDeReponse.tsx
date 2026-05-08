@@ -2,60 +2,35 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useTicketStatsQuery } from '@/hooks/useTicketsQuery';
 
-// Types pour les données mockées
-interface TempsReponseData {
-  id: string;
+function formatMinutes(minutes: number): string {
+  if (!minutes || minutes === 0) return '--';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}min`;
+}
+
+interface ReponseRowProps {
   label: string;
   value: string;
-  type: 'time' | 'count';
-  badgeColor: string;
-  badgeTextColor: string;
+  badge?: boolean;
 }
 
-// Données mockées
-const mockTempsReponse: TempsReponseData[] = [
-  {
-    id: '1',
-    label: 'Temps moyen',
-    value: '2h 15min',
-    type: 'time',
-    badgeColor: '',
-    badgeTextColor: 'text-[#F17922]'
-  },
-  {
-    id: '2',
-    label: 'En retard',
-    value: '3 tickets',
-    type: 'count',
-    badgeColor: 'bg-red-500',
-    badgeTextColor: 'text-white'
-  }
-];
-
-// Composant pour un item de temps de réponse
-interface TempsReponseItemProps {
-  item: TempsReponseData;
-}
-
-function TempsReponseItem({ item }: TempsReponseItemProps) {
+function ReponseRow({ label, value, badge }: ReponseRowProps) {
   return (
     <div className="py-1 px-2 md:px-4">
       <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <p className="md:text-sm lg:text-sm text-xs text-gray-600 font-medium">
-            {item.label}
-          </p>
-        </div>
+        <p className="md:text-sm lg:text-sm text-xs text-gray-600 font-medium">{label}</p>
         <div className="ml-4">
-          {item.badgeColor ? (
-            <span className={`inline-flex items-center px-2 md:px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium ${item.badgeColor} ${item.badgeTextColor}`}>
-              {item.value}
+          {badge ? (
+            <span className="inline-flex items-center px-2 md:px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-gray-200 text-slate-600">
+              {value}
             </span>
           ) : (
-            <span className={`md:text-sm lg:text-sm text-xs font-medium ${item.badgeTextColor}`}>
-              {item.value}
-            </span>
+            <span className="md:text-sm lg:text-sm text-xs font-medium text-[#F17922]">{value}</span>
           )}
         </div>
       </div>
@@ -64,9 +39,12 @@ function TempsReponseItem({ item }: TempsReponseItemProps) {
 }
 
 function TempsDeReponse() {
+  const { data, isLoading } = useTicketStatsQuery();
+
+  const avgResolution = isLoading ? '…' : formatMinutes(data?.averageResolutionTime ?? 0);
+
   return (
-    <div className="bg-white rounded-2xl  border-0 overflow-hidden h-full flex flex-col">
-      {/* Header */}
+    <div className="bg-white rounded-2xl border-0 overflow-hidden h-full flex flex-col">
       <div className="p-3 md:p-6">
         <div className="flex items-center justify-between">
           <h3 className="lg:text-2xl md:text-base text-md font-semibold text-gray-900 flex items-center">
@@ -82,15 +60,10 @@ function TempsDeReponse() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="p-6 flex-1 overflow-y-auto">
         <div className="space-y-0">
-          {mockTempsReponse.map((item) => (
-            <TempsReponseItem 
-              key={item.id} 
-              item={item} 
-            />
-          ))}
+          <ReponseRow label="Temps de résolution moyen" value={avgResolution} />
+          <ReponseRow label="En retard" value="--" badge />
         </div>
       </div>
     </div>

@@ -49,10 +49,16 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ restaurantId, period = 'mon
   });
 
 
-  // Données mockées pour correspondre à l'image
-  const timeLabels = ['08.00', '09.00', '10.00', '11.00', '12.00', '13.00', '14.00', '15.00', '16.00', '17.00'];
-  const revenueValues = [0, 0, 0, 0, 0, 0, 27, 27, 26, 20];
-  
+  // Données réelles : hourlyValues de l'API (tableau { hour, value }[]).
+  // Si l'API ne retourne pas encore de données horaires, on affiche un graphe vide.
+  const hourlyValues = revenueData?.hourlyValues ?? [];
+  const timeLabels = hourlyValues.length > 0
+    ? hourlyValues.map((d) => d.hour)
+    : ['--'];
+  const revenueValues = hourlyValues.length > 0
+    ? hourlyValues.map((d) => d.value)
+    : [0];
+
   const chartData = {
     labels: timeLabels,
     datasets: [
@@ -60,27 +66,18 @@ const RevenueChart: React.FC<RevenueChartProps> = ({ restaurantId, period = 'mon
         fill: true,
         label: 'Revenu',
         data: revenueValues,
-        borderColor: 'transparent', 
+        borderColor: 'transparent',
         backgroundColor: (context: { chart: { ctx: CanvasRenderingContext2D } }) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-          gradient.addColorStop(0, '#FA6345'); // Orange foncé en haut
-          gradient.addColorStop(0.5, '#ff6200'); // Orange clair au milieu
-          gradient.addColorStop(0.57, 'rgba(253, 233, 218, 0)'); // Transparent en bas
+          gradient.addColorStop(0, '#FA6345');
+          gradient.addColorStop(0.5, '#ff6200');
+          gradient.addColorStop(0.57, 'rgba(253, 233, 218, 0)');
           return gradient;
         },
         tension: 0.4,
         pointRadius: 0,
       },
-     
-      {
-        data: [null, null, null, null, null, 25, null, null, null, null],
-        borderColor: 'transparent',
-        backgroundColor: 'transparent',
-        pointRadius: 0,
-        tension: 0,
-        fill: false,
-      }
     ],
   };
 

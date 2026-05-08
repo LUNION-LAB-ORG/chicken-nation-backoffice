@@ -250,13 +250,6 @@ export default function RestaurantDetail({
         return true;
       });
 
-      if (
-        filteredMenus.length === 0 &&
-        process.env.NODE_ENV === "development"
-      ) {
-        filteredMenus = allMenus as unknown as typeof restaurantMenus;
-      }
-
       setRestaurantMenus(filteredMenus);
 
       if (filteredMenus.length > 0) {

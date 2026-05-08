@@ -14,6 +14,8 @@ export interface RevenueDataResponse {
     comparedTo: string;
     isPositive: boolean;
   };
+  /** Données horaires pour le graphe. Absent si l'API ne retourne pas encore ce champ. */
+  hourlyValues?: Array<{ hour: string; value: number }>;
 }
 
 export const useRevenueDataQuery = ({ 
@@ -35,10 +37,12 @@ export const useRevenueDataQuery = ({
       if (apiData.revenue?.dailyData) {
         return {
           total: apiData.revenue.dailyData.total,
-          trend: apiData.revenue.dailyData.trend
+          trend: apiData.revenue.dailyData.trend,
+          // Données horaires pour le graphe (optionnel côté API)
+          hourlyValues: apiData.revenue.dailyData.hourlyValues,
         } as RevenueDataResponse;
       }
-      
+
       // Fallback si pas de données
       return {
         total: "0 XOF",
@@ -46,7 +50,8 @@ export const useRevenueDataQuery = ({
           percentage: "0%",
           comparedTo: "hier",
           isPositive: true
-        }
+        },
+        hourlyValues: undefined,
       } as RevenueDataResponse;
     },
     enabled,
