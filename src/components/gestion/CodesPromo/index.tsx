@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -31,7 +31,12 @@ import type {
   PromoCodeQuery,
   CreatePromoCodeDto,
   DiscountType,
+  TargetType,
 } from "../../../../features/promo_code/types/promo-code.types";
+import ProductTargetSelector from "@/components/gestion/Promos/ProductTargetSelector";
+import { getAllMenus } from "@/services/menuService";
+import { getAllCategories, type Category } from "@/services/categoryService";
+import type { MenuItem } from "@/types";
 
 // --- Helpers ---
 
@@ -132,6 +137,20 @@ function DeleteConfirmModal({
 
 // --- Create/Edit Modal ---
 
+type ProductTarget = "all" | "specific" | "categories";
+
+const targetTypeToProductTarget = (t: TargetType): ProductTarget => {
+  if (t === "SPECIFIC_PRODUCTS") return "specific";
+  if (t === "CATEGORIES") return "categories";
+  return "all";
+};
+
+const productTargetToTargetType = (t: ProductTarget): TargetType => {
+  if (t === "specific") return "SPECIFIC_PRODUCTS";
+  if (t === "categories") return "CATEGORIES";
+  return "ALL_PRODUCTS";
+};
+
 interface PromoCodeFormData {
   code: string;
   description: string;
@@ -145,6 +164,9 @@ interface PromoCodeFormData {
   expiration_date: string;
   is_active: boolean;
   restaurant_ids: string[];
+  product_target: ProductTarget;
+  selected_dish_ids: string[];
+  selected_category_ids: string[];
 }
 
 const defaultFormData: PromoCodeFormData = {
@@ -160,6 +182,9 @@ const defaultFormData: PromoCodeFormData = {
   expiration_date: "",
   is_active: true,
   restaurant_ids: [],
+  product_target: "all",
+  selected_dish_ids: [],
+  selected_category_ids: [],
 };
 
 function PromoCodeFormModal({
@@ -188,10 +213,88 @@ function PromoCodeFormModal({
         expiration_date: new Date(promo.expiration_date).toISOString().slice(0, 16),
         is_active: promo.is_active,
         restaurant_ids: promo.restaurant_ids,
+        product_target: targetTypeToProductTarget(promo.target_type ?? "ALL_PRODUCTS"),
+        selected_dish_ids: (promo.promo_code_targeted_dishes ?? []).map((t) => t.dish_id),
+        selected_category_ids: (promo.promo_code_targeted_categories ?? []).map(
+          (t) => t.category_id,
+        ),
       };
     }
     return { ...defaultFormData };
   });
+
+  // Chargement menus + catégories (mêmes services que CreatePromo dans Promos)
+  const [menus, setMenus] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingMenus, setLoadingMenus] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadData = async () => {
+      try {
+        setLoadingMenus(true);
+        setLoadingCategories(true);
+        const [menuData, categoryData] = await Promise.all([
+          getAllMenus({ page: 1, limit: 100 }),
+          getAllCategories(),
+        ]);
+        if (cancelled) return;
+        setMenus(menuData.filter((m) => m.isAvailable) as unknown as MenuItem[]);
+        setCategories(categoryData);
+      } catch (error) {
+        if (cancelled) return;
+        console.error("Erreur lors du chargement des plats/catégories:", error);
+        setMenus([]);
+        setCategories([]);
+      } finally {
+        if (cancelled) return;
+        setLoadingMenus(false);
+        setLoadingCategories(false);
+      }
+    };
+    loadData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Helpers ProductTargetSelector
+  const handleMenuToggle = (menuId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      selected_dish_ids: prev.selected_dish_ids.includes(menuId)
+        ? prev.selected_dish_ids.filter((id) => id !== menuId)
+        : [...prev.selected_dish_ids, menuId],
+    }));
+  };
+
+  const handleCategoryToggle = (categoryId: string) => {
+    setForm((prev) => ({
+      ...prev,
+      selected_category_ids: prev.selected_category_ids.includes(categoryId)
+        ? prev.selected_category_ids.filter((id) => id !== categoryId)
+        : [...prev.selected_category_ids, categoryId],
+    }));
+  };
+
+  const handleSelectAllMenus = () => {
+    setForm((prev) => ({
+      ...prev,
+      selected_dish_ids:
+        prev.selected_dish_ids.length === menus.length ? [] : menus.map((m) => m.id),
+    }));
+  };
+
+  const handleSelectAllCategories = () => {
+    setForm((prev) => ({
+      ...prev,
+      selected_category_ids:
+        prev.selected_category_ids.length === categories.length
+          ? []
+          : categories.map((c) => c.id),
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,6 +320,18 @@ function PromoCodeFormModal({
       return;
     }
 
+    // Validation du ciblage
+    if (form.product_target === "specific" && form.selected_dish_ids.length === 0) {
+      toast.error("Sélectionnez au moins un plat pour le ciblage spécifique");
+      return;
+    }
+    if (form.product_target === "categories" && form.selected_category_ids.length === 0) {
+      toast.error("Sélectionnez au moins une catégorie pour le ciblage par catégorie");
+      return;
+    }
+
+    const targetType = productTargetToTargetType(form.product_target);
+
     const dto: CreatePromoCodeDto = {
       code: form.code.toUpperCase().trim(),
       description: form.description || undefined,
@@ -230,6 +345,13 @@ function PromoCodeFormModal({
       expiration_date: new Date(form.expiration_date).toISOString(),
       is_active: form.is_active,
       restaurant_ids: form.restaurant_ids.length > 0 ? form.restaurant_ids : undefined,
+      target_type: targetType,
+      // En édition / création, on envoie toujours les listes pour que le backend
+      // synchronise correctement les liaisons (replace pattern).
+      targeted_dish_ids:
+        targetType === "SPECIFIC_PRODUCTS" ? form.selected_dish_ids : [],
+      targeted_category_ids:
+        targetType === "CATEGORIES" ? form.selected_category_ids : [],
     };
 
     onSubmit(dto);
@@ -400,6 +522,27 @@ function PromoCodeFormModal({
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
               />
             </div>
+          </div>
+
+          {/* Product targeting (parité avec module Promotion) */}
+          <div className="pt-2 border-t border-gray-100">
+            <ProductTargetSelector
+              activeProductTarget={form.product_target}
+              onProductTargetChange={(target) =>
+                setForm((prev) => ({ ...prev, product_target: target }))
+              }
+              menus={menus}
+              categories={categories}
+              loadingMenus={loadingMenus}
+              loadingCategories={loadingCategories}
+              selectedMenus={form.selected_dish_ids}
+              selectedCategories={form.selected_category_ids}
+              onMenuToggle={handleMenuToggle}
+              onCategoryToggle={handleCategoryToggle}
+              onSelectAllMenus={handleSelectAllMenus}
+              onSelectAllCategories={handleSelectAllCategories}
+              getSelectedItemsDisplay={() => null}
+            />
           </div>
 
           {/* Active toggle */}
@@ -678,6 +821,16 @@ export default function CodesPromo() {
                           <Copy size={14} className="text-gray-400" />
                         </button>
                       </div>
+                      {/* Badge ciblage produits */}
+                      {promo.target_type && promo.target_type !== "ALL_PRODUCTS" && (
+                        <div className="mt-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-medium text-orange-700 bg-orange-50 border border-orange-100 px-1.5 py-0.5 rounded">
+                            {promo.target_type === "SPECIFIC_PRODUCTS"
+                              ? `${promo.promo_code_targeted_dishes?.length ?? 0} plat${(promo.promo_code_targeted_dishes?.length ?? 0) > 1 ? "s" : ""}`
+                              : `${promo.promo_code_targeted_categories?.length ?? 0} catégorie${(promo.promo_code_targeted_categories?.length ?? 0) > 1 ? "s" : ""}`}
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Description */}

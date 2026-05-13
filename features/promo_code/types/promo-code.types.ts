@@ -1,9 +1,35 @@
 export type DiscountType = 'PERCENTAGE' | 'FIXED_AMOUNT' | 'BUY_X_GET_Y';
 
+export type TargetType = 'ALL_PRODUCTS' | 'SPECIFIC_PRODUCTS' | 'CATEGORIES';
+
 export interface PromoCodeCreator {
   id: string;
   email: string;
   fullname: string;
+}
+
+export interface PromoCodeTargetedDish {
+  id: string;
+  promo_code_id: string;
+  dish_id: string;
+  dish?: {
+    id: string;
+    name: string;
+    image: string | null;
+    price: number;
+    category_id: string;
+  };
+}
+
+export interface PromoCodeTargetedCategory {
+  id: string;
+  promo_code_id: string;
+  category_id: string;
+  category?: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
 }
 
 export interface PromoCodeUsageCustomer {
@@ -45,12 +71,15 @@ export interface PromoCode {
   expiration_date: string;
   is_active: boolean;
   restaurant_ids: string[];
+  target_type: TargetType;
   created_by: string | null;
   creator: PromoCodeCreator | null;
   created_at: string;
   updated_at: string;
   entity_status: string;
   usages?: PromoCodeUsage[];
+  promo_code_targeted_dishes?: PromoCodeTargetedDish[];
+  promo_code_targeted_categories?: PromoCodeTargetedCategory[];
   _count?: {
     usages: number;
   };
@@ -81,6 +110,9 @@ export interface CreatePromoCodeDto {
   expiration_date: string;
   is_active?: boolean;
   restaurant_ids?: string[];
+  target_type?: TargetType;
+  targeted_dish_ids?: string[];
+  targeted_category_ids?: string[];
 }
 
 export interface UpdatePromoCodeDto extends Partial<CreatePromoCodeDto> {}
