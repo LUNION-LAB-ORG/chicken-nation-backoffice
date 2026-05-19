@@ -6,9 +6,10 @@ import { fr } from "date-fns/locale";
 import { X } from "lucide-react";
 
 import { useOrderDetailQuery } from "../../orders/queries/order-detail.query";
-import { DeliveryService, PaymentMethod, type Order } from "../../orders/types/order.types";
+import { DeliveryService, OrderType, PaymentMethod, type Order } from "../../orders/types/order.types";
 import { TYPE_LABEL } from "../utils/status-colors";
 import { DrawerActionsChickenNation } from "./drawer/DrawerActionsChickenNation";
+import { DrawerActionsClient } from "./drawer/DrawerActionsClient";
 import { DrawerActionsTurbo } from "./drawer/DrawerActionsTurbo";
 import { DrawerDetailsTab } from "./drawer/DrawerDetailsTab";
 import { DrawerHistoriqueTab } from "./drawer/DrawerHistoriqueTab";
@@ -105,9 +106,15 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
               {tab === "payment" && showPayment && <DrawerPaymentTab order={live} />}
             </div>
 
-            {/* Actions sticky footer */}
+            {/* Actions sticky footer
+                Routage par type de commande :
+                 - PICKUP / TABLE → DrawerActionsClient (séquence sans PICKED_UP)
+                 - DELIVERY via CHICKEN_NATION → DrawerActionsChickenNation (module course interne)
+                 - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel) */}
             <footer className="px-4 py-3 border-t border-gray-100 bg-gray-50/80">
-              {live.delivery_service === DeliveryService.CHICKEN_NATION ? (
+              {live.type !== OrderType.DELIVERY ? (
+                <DrawerActionsClient order={live} />
+              ) : live.delivery_service === DeliveryService.CHICKEN_NATION ? (
                 <DrawerActionsChickenNation order={live} />
               ) : (
                 <DrawerActionsTurbo order={live} />

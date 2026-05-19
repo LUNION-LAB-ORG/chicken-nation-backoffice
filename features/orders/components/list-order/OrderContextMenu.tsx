@@ -16,14 +16,15 @@ interface OrderContextMenuProps {
   onViewDetails?: (order: OrderTable) => void;
 }
 
-// Mapping inverse : statut UI → statut API
+// Mapping inverse conservé pour compat (cas où on aurait un label sans rawStatus).
+// Préférer `order.rawStatus` directement quand dispo.
 const STATUS_REVERSE_MAP: Record<string, OrderStatus> = {
   "EN ATTENTE": OrderStatus.PENDING,
   "NOUVELLE": OrderStatus.ACCEPTED,
   "EN PRÉPARATION": OrderStatus.IN_PROGRESS,
   "PRÊT": OrderStatus.READY,
-  "COLLECTÉE": OrderStatus.PICKED_UP,
-  "LIVRÉE": OrderStatus.COLLECTED,
+  "EN LIVRAISON": OrderStatus.PICKED_UP,
+  "RÉCUPÉRÉE": OrderStatus.COLLECTED,
   "ANNULÉE": OrderStatus.CANCELLED,
   "TERMINÉE": OrderStatus.COMPLETED,
 };

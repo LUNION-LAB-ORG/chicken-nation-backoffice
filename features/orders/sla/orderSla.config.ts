@@ -19,17 +19,10 @@ export type SlaRule = {
 
 export const ORDER_SLA: Partial<Record<OrderTableStatus, SlaRule>> = {
   "NOUVELLE": {
-    next: "EN COURS",
+    next: "EN PRÉPARATION",
     delayMinutes: 10,
     reason: "En attente de prise en charge par le restaurant",
     lateReason: "Le restaurant n'a pas pris en charge la commande à temps",
-  },
-
-  "EN COURS": {
-    next: "EN PRÉPARATION",
-    delayMinutes: 15,
-    reason: "Commande en cours de validation par le restaurant",
-    lateReason: "La validation de la commande a pris trop de temps",
   },
 
   "EN PRÉPARATION": {
@@ -41,25 +34,26 @@ export const ORDER_SLA: Partial<Record<OrderTableStatus, SlaRule>> = {
   },
 
   "PRÊT": {
-    next: "COLLECTÉE",
+    // À livrer  → étape suivante = EN LIVRAISON (livreur a pris)
+    // À récupérer/À table → étape suivante = RÉCUPÉRÉE (client a récupéré)
+    next: "EN LIVRAISON",
     delayMinutes: (order) =>
       order.orderType === "À livrer" ? 15 : 60,
     reason: "Commande prête, en attente de livraison ou de retrait",
     lateReason: "La commande est prête mais n'a pas été récupérée à temps",
   },
 
-  "COLLECTÉE": {
-    next: "LIVRÉE",
+  "EN LIVRAISON": {
+    next: "RÉCUPÉRÉE",
     delayMinutes: 45,
     reason: "Commande en cours de livraison",
     lateReason: "La livraison de la commande prend trop de temps",
   },
 
-  "LIVRÉE": {
+  "RÉCUPÉRÉE": {
     next: "TERMINÉE",
     delayMinutes: 60,
-    reason: "Commande collectée, en attente de clôture",
-    lateReason: "La commande collectée n'a pas été clôturée à temps",
+    reason: "Commande récupérée par le client, en attente de clôture (paiement)",
+    lateReason: "La commande récupérée n'a pas été clôturée à temps",
   },
 };
-

@@ -283,7 +283,7 @@ function Mini({
 }
 
 function statusToTone(status: string): string {
-  if (status === "LIVRÉE" || status === "TERMINÉE") {
+  if (status === "RÉCUPÉRÉE" || status === "TERMINÉE") {
     return "bg-green-50 text-green-700 border-green-200";
   }
   if (status === "ANNULÉE") {

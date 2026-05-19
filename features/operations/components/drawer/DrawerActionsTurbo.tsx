@@ -12,21 +12,44 @@ interface Props {
 }
 
 /**
- * Workflow manuel legacy pour les commandes gérées par Turbo Delivery.
- * Pas d'intégration applicative Turbo → la caissière doit faire toutes les transitions à la main.
+ * Workflow manuel legacy pour les commandes DELIVERY gérées par Turbo Delivery.
+ *
+ * À n'utiliser que pour `order.type === DELIVERY` — pour PICKUP/TABLE, utiliser
+ * `DrawerActionsClient` (séquence sans PICKED_UP, le client récupère lui-même).
+ *
+ * Auto-complete : si la commande est déjà payée au moment où on la marque
+ * collectée, on saute directement à COMPLETED.
  */
 export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
 
+  const isPickedUpAndPaid =
+    order.status === OrderStatus.PICKED_UP && order.paied;
+  const isCollectedAndPaid =
+    order.status === OrderStatus.COLLECTED && order.paied;
+
   const transitions: { from: OrderStatus; to: OrderStatus; label: string; tone: string }[] = [
     { from: OrderStatus.ACCEPTED, to: OrderStatus.IN_PROGRESS, label: "Commencer la préparation", tone: "bg-[#F17922]" },
     { from: OrderStatus.IN_PROGRESS, to: OrderStatus.READY, label: "Marquer comme prête", tone: "bg-green-600" },
-    { from: OrderStatus.READY, to: OrderStatus.PICKED_UP, label: "Commande récupérée par Turbo", tone: "bg-indigo-600" },
-    { from: OrderStatus.PICKED_UP, to: OrderStatus.COLLECTED, label: "Livrée au client", tone: "bg-emerald-600" },
-    { from: OrderStatus.COLLECTED, to: OrderStatus.COMPLETED, label: "Terminer la commande", tone: "bg-gray-700" },
+    { from: OrderStatus.READY, to: OrderStatus.PICKED_UP, label: "Livreur a récupéré", tone: "bg-indigo-600" },
+    {
+      from: OrderStatus.PICKED_UP,
+      to: isPickedUpAndPaid ? OrderStatus.COMPLETED : OrderStatus.COLLECTED,
+      label: isPickedUpAndPaid ? "Livrée au client + terminer" : "Livrée au client",
+      tone: "bg-emerald-600",
+    },
+    {
+      from: OrderStatus.COLLECTED,
+      to: OrderStatus.COMPLETED,
+      label: isCollectedAndPaid ? "Terminer la commande" : "Terminer (payer d'abord)",
+      tone: "bg-gray-700",
+    },
   ];
 
   const next = transitions.find((t) => t.from === order.status);
+  const disableNext =
+    isLoading ||
+    (order.status === OrderStatus.COLLECTED && !order.paied);
 
   return (
     <div className="space-y-3">
@@ -40,8 +63,13 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
       {next ? (
         <button
           onClick={() => handleOrderUpdateStatus(order.id, next.to)}
-          disabled={isLoading}
+          disabled={disableNext}
           className={`w-full py-3 text-white font-semibold rounded-lg disabled:bg-gray-300 ${next.tone}`}
+          title={
+            order.status === OrderStatus.COLLECTED && !order.paied
+              ? "Enregistrez d'abord le paiement via l'onglet Paiement"
+              : undefined
+          }
         >
           {isLoading ? "…" : next.label}
         </button>

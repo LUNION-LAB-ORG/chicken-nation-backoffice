@@ -29,8 +29,8 @@ export function getStatusBadgeClasses(status: OrderStatus): string {
     case OrderStatus.IN_PROGRESS: // EN PRÉPARATION → ambre
       return "bg-amber-50 text-[#F5A524] border-[#F5A524]/30";
     case OrderStatus.READY: // PRÊT → vert
-    case OrderStatus.PICKED_UP: // COLLECTÉE → vert
-    case OrderStatus.COLLECTED: // LIVRÉE → vert
+    case OrderStatus.PICKED_UP: // EN LIVRAISON → vert
+    case OrderStatus.COLLECTED: // RÉCUPÉRÉE → vert
     case OrderStatus.COMPLETED: // TERMINÉE → vert
       return "bg-green-50 text-[#17C964] border-[#17C964]/30";
     case OrderStatus.CANCELLED: // ANNULÉE → noir/gris

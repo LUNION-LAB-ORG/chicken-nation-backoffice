@@ -1,4 +1,4 @@
-import { TypeTable } from "./order.types";
+import { OrderStatus, TypeTable } from "./order.types";
 import { Paiement } from "./paiement.types";
 
 /**
@@ -19,15 +19,20 @@ export interface OrderTableItem {
 }
 
 /**
- * Statuts possibles d'une commande dans l'interface utilisateur
+ * Statuts possibles d'une commande dans l'interface utilisateur.
+ *
+ * Convention (alignée sur l'enum Prisma OrderStatus) :
+ *  - "EN LIVRAISON" = PICKED_UP (livreur a pris la commande, DELIVERY uniquement)
+ *  - "RÉCUPÉRÉE"    = COLLECTED (client a reçu / a récupéré la commande, tous types)
+ *  - "TERMINÉE"     = COMPLETED (commande payée + récupérée, terminée)
  */
 export type OrderTableStatus =
   "EN ATTENTE" |
   "NOUVELLE" |
   "EN PRÉPARATION" |
   "PRÊT" |
-  "COLLECTÉE" |
-  "LIVRÉE" |
+  "EN LIVRAISON" |
+  "RÉCUPÉRÉE" |
   "ANNULÉE" |
   "TERMINÉE"
 
@@ -69,6 +74,12 @@ export interface OrderTable {
 
   // ========== STATUT ==========
   status: OrderTableStatus;
+  /**
+   * Status brut côté backend (enum Prisma).
+   * Source de vérité pour le workflow — préférer `rawStatus` à `status` dans
+   * tout switch métier ; `status` est juste le libellé d'affichage.
+   */
+  rawStatus: OrderStatus;
   orderType: OrderTableType;
 
   // ========== MONTANTS ==========

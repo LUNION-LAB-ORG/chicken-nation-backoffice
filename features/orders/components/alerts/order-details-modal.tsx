@@ -74,11 +74,11 @@ export function OrderDetailsModal({
   /**
    * Détermine qui est responsable du retard
    * - Restaurant : NOUVELLE → PRÊT
-   * - Livraison : PRÊT → LIVRÉE
+   * - Livraison  : PRÊT → EN LIVRAISON (livreur a pris, en route vers le client)
    */
   const getResponsibility = (order: OrderTable) => {
     const restaurantSteps = ["NOUVELLE", "EN COURS", "EN PRÉPARATION"];
-    const deliverySteps = ["PRÊT", "COLLECTÉE"];
+    const deliverySteps = ["PRÊT", "EN LIVRAISON"];
 
     if (restaurantSteps.includes(order.status)) {
       return {

@@ -102,17 +102,17 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
                 isActive: true,
             },
             {
-                title: "Prêt",
+                title: "Prête",
                 icon: ICONS[1].default,
                 isActive: false,
             },
             {
-                title: "Collectée",
+                title: "En livraison",
                 icon: ICONS[2].default,
                 isActive: false,
             },
             {
-                title: "Livrée",
+                title: "Récupérée",
                 icon: ICONS[2].default,
                 isActive: false,
             },
@@ -132,10 +132,10 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
             : undefined,
     });
 
-    // ========== STEP 2 : PRÊT ==========
+    // ========== STEP 2 : PRÊTE ==========
     const isReady = !!order.readyAt;
     steps.push({
-        title: "Prêt",
+        title: "Prête",
         date: order.readyAt
             ? formatStepDate(order.readyAt, order.createdAt)
             : undefined,
@@ -147,10 +147,10 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
                 : undefined,
     });
 
-    // ========== STEP 3 : RÉCUPÉRÉE ==========
+    // ========== STEP 3 : EN LIVRAISON (= PICKED_UP, livreur a pris) ==========
     const isPickedUp = !!order.pickedUpAt;
     steps.push({
-        title: "Collectée",
+        title: "En livraison",
         date: order.pickedUpAt
             ? formatStepDate(order.pickedUpAt, order.createdAt)
             : undefined,
@@ -162,15 +162,15 @@ const buildSteps = (order: OrderTable): ProgressStep[] => {
                 : undefined,
     });
 
-    // ========== STEP 4 : LIVRÉE ==========
-    const isDelivered = !!order.collectedAt;
+    // ========== STEP 4 : RÉCUPÉRÉE (= COLLECTED, client a reçu) ==========
+    const isCollected = !!order.collectedAt;
     steps.push({
-        title: "Livrée",
+        title: "Récupérée",
         date: order.collectedAt
             ? formatStepDate(order.collectedAt, order.createdAt)
             : undefined,
-        icon: isDelivered ? ICONS[2].active : ICONS[2].default,
-        isActive: isDelivered,
+        icon: isCollected ? ICONS[2].active : ICONS[2].default,
+        isActive: isCollected,
     });
 
     return steps;

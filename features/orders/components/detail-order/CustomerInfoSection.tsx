@@ -154,7 +154,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
                             </span>
                           )}
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                            o.status === "LIVRÉE" || o.status === "TERMINÉE" ? "bg-green-100 text-green-700" :
+                            o.status === "RÉCUPÉRÉE" || o.status === "TERMINÉE" ? "bg-green-100 text-green-700" :
                             o.status === "ANNULÉE" ? "bg-red-100 text-red-600" :
                             "bg-yellow-100 text-yellow-700"
                           }`}>

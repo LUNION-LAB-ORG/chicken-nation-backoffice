@@ -7,13 +7,17 @@ import { Paiement } from "../types/paiement.types";
 // CONSTANTES DE MAPPING
 // ========================================
 
+// Mapping enum Prisma → libellé d'affichage.
+// PICKED_UP = livreur a pris (DELIVERY uniquement). COLLECTED = client a
+// récupéré / reçu (tous types). Préférer `OrderTable.rawStatus` pour toute
+// logique métier ; ces labels servent uniquement à l'affichage.
 const STATUS_MAP: Record<OrderStatus, OrderTableStatus> = {
   [OrderStatus.PENDING]: "EN ATTENTE",
   [OrderStatus.ACCEPTED]: "NOUVELLE",
   [OrderStatus.IN_PROGRESS]: "EN PRÉPARATION",
   [OrderStatus.READY]: "PRÊT",
-  [OrderStatus.PICKED_UP]: "COLLECTÉE",
-  [OrderStatus.COLLECTED]: "LIVRÉE",
+  [OrderStatus.PICKED_UP]: "EN LIVRAISON",
+  [OrderStatus.COLLECTED]: "RÉCUPÉRÉE",
   [OrderStatus.CANCELLED]: "ANNULÉE",
   [OrderStatus.COMPLETED]: "TERMINÉE",
 };
@@ -223,6 +227,7 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
 
     // Statut
     status: STATUS_MAP[order.status],
+    rawStatus: order.status,
     orderType: TYPE_MAP[order.type],
 
     // Montants
