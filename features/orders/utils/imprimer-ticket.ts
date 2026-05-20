@@ -227,18 +227,19 @@ const LABEL_PAYMENT_METHOD: Record<string, string> = {
 };
 
 /**
- * Date au format "LUNDI 11 MAI 2026 - 14:32:08" (en majuscules).
+ * Date au format "LUNDI 11 05 2026 - 14:32:08".
+ * Jour de semaine en lettres majuscules, mois en chiffres sur 2 digits.
  * Aligne sur la version ESC/POS (ticket.ts).
  */
 function formatDateLongueMaj(d: Date): string {
   const jour = d.toLocaleDateString("fr-FR", { weekday: "long" }).toUpperCase();
   const dayNum = d.getDate();
-  const mois = d.toLocaleDateString("fr-FR", { month: "long" }).toUpperCase();
+  const moisNum = String(d.getMonth() + 1).padStart(2, "0");
   const annee = d.getFullYear();
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   const ss = String(d.getSeconds()).padStart(2, "0");
-  return `${jour} ${dayNum} ${mois} ${annee} - ${hh}:${mm}:${ss}`;
+  return `${jour} ${dayNum} ${moisNum} ${annee} - ${hh}:${mm}:${ss}`;
 }
 
 function construireHtml(

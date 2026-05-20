@@ -102,24 +102,26 @@ function getClientPhone(order: Order): string {
 }
 
 /**
- * Formate une date au format "LUNDI 11 MAI 2026 - 14:32:08" (en majuscules).
+ * Formate une date au format "LUNDI 11 05 2026 - 14:32:08".
  *
- * Utilise Intl pour le nom du jour et du mois en francais, puis met tout en
- * majuscules pour le rendu ticket de caisse.
+ * Convention ticket :
+ *  - jour de semaine en lettres majuscules (LUNDI / MARDI / ...)
+ *  - jour du mois en chiffres (sans padding 0)
+ *  - mois en chiffres sur 2 digits (05 = mai)
+ *  - annee 4 chiffres
+ *  - heure HH:MM:SS
  */
 function formatDateLongueMaj(d: Date): string {
   const jour = d
     .toLocaleDateString("fr-FR", { weekday: "long" })
     .toUpperCase();
   const dayNum = d.getDate();
-  const mois = d
-    .toLocaleDateString("fr-FR", { month: "long" })
-    .toUpperCase();
+  const moisNum = String(d.getMonth() + 1).padStart(2, "0");
   const annee = d.getFullYear();
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   const ss = String(d.getSeconds()).padStart(2, "0");
-  return `${jour} ${dayNum} ${mois} ${annee} - ${hh}:${mm}:${ss}`;
+  return `${jour} ${dayNum} ${moisNum} ${annee} - ${hh}:${mm}:${ss}`;
 }
 
 /**
