@@ -1,9 +1,11 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useCallback, useState } from "react";
+import { toast } from "react-hot-toast";
 import { useOrderUpdateStatusMutation } from "../queries/order-update-status.mutation";
 import { Order, OrderStatus } from "../types/order.types";
 import { OrderTable } from "../types/ordersTable.types";
 import { getOrderById } from "../services/order-service";
+import { imprimerTicket } from "../utils/imprimer-ticket";
 
 export const useOrderActions = () => {
   const { setSelectedItem, setSectionView, toggleModal } = useDashboardStore();
@@ -15,16 +17,47 @@ export const useOrderActions = () => {
     isPending: isUpdateStatusLoading,
   } = useOrderUpdateStatusMutation();
 
-  // fonction pour imprimer la commande
-  const printOrder = useCallback((order: Order) => {
-    if (
-      typeof window !== "undefined" &&
-      window.flutter_inappwebview?.callHandler
-    ) {
-      console.log("Printing order:", order);
-      window.flutter_inappwebview.callHandler("printDocument", order);
-    } else {
-      console.warn("Printing non disponible");
+  /**
+   * Imprime un ticket de commande.
+   *
+   * Cascade automatique : WebUSB (imprimante thermique appairée) →
+   * WebBluetooth → Flutter inAppWebView (TPE) → popup HTML.
+   *
+   * L'existant Flutter est CONSERVÉ : si le BO tourne dans l'app native CN,
+   * le handler `printDocument` reste fonctionnel (priorité 3 dans la cascade,
+   * derrière USB/BT mais devant le fallback HTML).
+   */
+  const printOrder = useCallback(async (order: Order) => {
+    try {
+      const result = await imprimerTicket(
+        order,
+        {
+          nom: order.restaurant?.name ?? "Chicken Nation",
+          adresse: order.restaurant?.address ?? undefined,
+          telephone:
+            (order.restaurant as { phone?: string })?.phone ?? undefined,
+          devise: "F CFA",
+        },
+        {},
+      );
+
+      if (result.mode === "ERREUR") {
+        toast.error(result.message ?? "Impossible d'imprimer le ticket");
+        return;
+      }
+
+      // Toast contextuel seulement si fallback (sinon silencieux pour USB/BT)
+      if (result.fallback && result.mode === "HTML") {
+        toast(
+          `Imprimante non détectée — ticket ouvert dans le navigateur${result.message ? ` (${result.message})` : ""}`,
+          { icon: "🖨️" },
+        );
+      } else if (result.mode === "HTML") {
+        toast("Ticket ouvert dans le navigateur", { icon: "🖨️" });
+      }
+    } catch (err) {
+      console.error("[printOrder] Erreur inattendue:", err);
+      toast.error("Erreur lors de l'impression");
     }
   }, []);
 
@@ -68,7 +101,7 @@ export const useOrderActions = () => {
           throw new Error("Commande introuvable");
         }
 
-        printOrder(order);
+        await printOrder(order);
         return true;
       } catch (error) {
         console.error("Erreur impression commande :", error);

@@ -12,6 +12,7 @@ import PaymentSettings from "./tabs/PaymentSettings";
 import MarketingReportSettings from "./tabs/MarketingReportSettings";
 import NotificationSettings from "./tabs/NotificationSettings";
 import HubRiseSettings from "./tabs/HubRiseSettings";
+import PrinterSettings from "./tabs/PrinterSettings";
 
 const TABS = [
   { key: "general", label: "Général" },
@@ -23,6 +24,7 @@ const TABS = [
   { key: "marketing_report", label: "Rapport Marketing" },
   { key: "notifications", label: "Notifications" },
   { key: "hubrise", label: "HubRise" },
+  { key: "printer", label: "Imprimante" },
 ];
 
 const Settings: React.FC = () => {
@@ -50,6 +52,7 @@ const Settings: React.FC = () => {
         {activeTab === "marketing_report" && <MarketingReportSettings />}
         {activeTab === "notifications" && <NotificationSettings />}
         {activeTab === "hubrise" && <HubRiseSettings />}
+        {activeTab === "printer" && <PrinterSettings />}
       </div>
     </div>
   );

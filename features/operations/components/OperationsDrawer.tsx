@@ -7,6 +7,8 @@ import { X } from "lucide-react";
 
 import { useOrderDetailQuery } from "../../orders/queries/order-detail.query";
 import { DeliveryService, OrderType, PaymentMethod, type Order } from "../../orders/types/order.types";
+import { useOrderActions } from "../../orders/hooks/useOrderActions";
+import { Printer } from "lucide-react";
 import { TYPE_LABEL } from "../utils/status-colors";
 import { DrawerActionsChickenNation } from "./drawer/DrawerActionsChickenNation";
 import { DrawerActionsClient } from "./drawer/DrawerActionsClient";
@@ -37,6 +39,7 @@ interface Props {
 export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }) => {
   const isOpen = order !== null;
   const [tab, setTab] = useState<DrawerTabKey>(initialTab ?? "details");
+  const { handlePrintOrder, isLoading } = useOrderActions();
 
   // Live : on récupère la version fraîche de la commande (invalidée par socket).
   // Fallback sur la prop tant que le fetch n'a pas encore résolu.
@@ -87,12 +90,23 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
                     {TYPE_LABEL[live.type] ?? ""}
                   </p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="p-2 hover:bg-gray-100 rounded-lg shrink-0 transition"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => handlePrintOrder(live.id)}
+                    disabled={isLoading}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#F17922] bg-orange-50 hover:bg-orange-100 disabled:opacity-50 rounded-lg transition"
+                    title="Imprimer le ticket"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span className="hidden sm:inline">Imprimer</span>
+                  </button>
+                  <button
+                    onClick={onClose}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition"
+                  >
+                    <X className="w-5 h-5 text-gray-500" />
+                  </button>
+                </div>
               </div>
             </header>
 

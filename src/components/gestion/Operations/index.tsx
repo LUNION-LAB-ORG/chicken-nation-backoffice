@@ -277,6 +277,12 @@ export default function Operations() {
       {/* ── Onglet : En cours ────────────────────────────────────────────────── */}
       {activeTab === "temps_reel" && (
         <div className="p-4 space-y-4">
+          {/* Filtre restaurant — mêmes privilèges de visibilité que la tab Commandes :
+              visible uniquement pour les utilisateurs BACKOFFICE (admin / marketing).
+              Pour un manager restaurant, le composant ne se rend pas et le filtre
+              reste pilote par le backend via le JWT. */}
+          <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
+
           {/* Code retrait livreur */}
           <div className="max-w-md">
             <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading} />
