@@ -23,6 +23,8 @@ export interface InfosBoutique {
   adresse?: string;
   /** Telephone du restaurant. */
   telephone?: string;
+  /** Email du restaurant. */
+  email?: string;
   /** Devise par defaut : "F CFA". */
   devise?: string;
 }
@@ -50,8 +52,8 @@ const LABELS_MODE_PAIEMENT: Record<PaiementMode | string, string> = {
 };
 
 const LABELS_PAYMENT_METHOD: Record<PaymentMethod, string> = {
-  ONLINE: "En ligne",
-  OFFLINE: "Sur place",
+  ONLINE: "Application",
+  OFFLINE: "Restaurant",
 };
 
 /** Largeur en colonnes du ticket 80mm en font A (12x24 pixels). */
@@ -84,13 +86,40 @@ function getSupplements(item: OrderItem): Supplement[] {
   return [];
 }
 
-function getClientLabel(order: Order): string | null {
-  const name = order.customer
-    ? [order.customer.first_name, order.customer.last_name].filter(Boolean).join(" ").trim()
-    : order.fullname?.trim() ?? "";
-  const phone = order.customer?.phone ?? order.phone ?? "";
-  if (!name && !phone) return null;
-  return name && phone ? `${name} · ${phone}` : name || phone;
+function getClientName(order: Order): string {
+  if (order.customer) {
+    const full = [order.customer.first_name, order.customer.last_name]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (full) return full;
+  }
+  return order.fullname?.trim() ?? "";
+}
+
+function getClientPhone(order: Order): string {
+  return order.customer?.phone ?? order.phone ?? "";
+}
+
+/**
+ * Formate une date au format "LUNDI 11 MAI 2026 - 14:32:08" (en majuscules).
+ *
+ * Utilise Intl pour le nom du jour et du mois en francais, puis met tout en
+ * majuscules pour le rendu ticket de caisse.
+ */
+function formatDateLongueMaj(d: Date): string {
+  const jour = d
+    .toLocaleDateString("fr-FR", { weekday: "long" })
+    .toUpperCase();
+  const dayNum = d.getDate();
+  const mois = d
+    .toLocaleDateString("fr-FR", { month: "long" })
+    .toUpperCase();
+  const annee = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${jour} ${dayNum} ${mois} ${annee} - ${hh}:${mm}:${ss}`;
 }
 
 /**
@@ -132,6 +161,7 @@ export function genererTicketEscPos(
 
   if (boutique.adresse) b.ligne(trim(boutique.adresse, COLS));
   if (boutique.telephone) b.ligne(`Tel : ${trim(boutique.telephone, COLS - 6)}`);
+  if (boutique.email) b.ligne(`Email : ${trim(boutique.email, COLS - 8)}`);
   b.ligne(`${dateStr}  ${heureStr}`);
 
   if (contexte.duplicata) {
@@ -162,10 +192,14 @@ export function genererTicketEscPos(
 
   b.ligne(sep);
 
-  // Bloc client
-  const clientLabel = getClientLabel(order);
-  if (clientLabel) {
-    b.ligne(`Client : ${trim(clientLabel, COLS - 9)}`);
+  // Bloc client (nom et telephone sur des lignes separees pour lisibilite)
+  const clientNom = getClientName(order);
+  const clientTel = getClientPhone(order);
+  if (clientNom) {
+    b.ligne(`Client : ${trim(clientNom, COLS - 9)}`);
+  }
+  if (clientTel) {
+    b.ligne(`Tel    : ${trim(clientTel, COLS - 9)}`);
   }
   if (order.type === "DELIVERY" && order.address) {
     // L'adresse est parfois un JSON serialise — afficher tel quel si plain, sinon parser.
@@ -195,7 +229,7 @@ export function genererTicketEscPos(
   if (order.note) {
     b.ligne(`Note : ${trim(order.note, COLS - 7)}`);
   }
-  if (clientLabel || order.note || (order.type === "DELIVERY" && order.address)) {
+  if (clientNom || clientTel || order.note || (order.type === "DELIVERY" && order.address)) {
     b.ligne(sep);
   }
 
@@ -293,6 +327,13 @@ export function genererTicketEscPos(
     }
     if (ligne.length > 0) b.ligne(ligne);
   }
+
+  // Date longue d'impression : "LUNDI 11 MAI 2026 - 14:32:08"
+  // Place sous le message de remerciement / footer custom, en bas de ticket.
+  b.saut(1).ligne(formatDateLongueMaj(new Date()));
+
+  // Signature appli en gras
+  b.saut(1).gras(true).ligne("CHICKEN NATION APPLI").gras(false);
 
   b.saut(3).couper();
 

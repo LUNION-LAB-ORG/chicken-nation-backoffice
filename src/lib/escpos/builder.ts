@@ -12,6 +12,7 @@ import { encoderCP858 } from "./cp858";
 /** Octets de controle ESC/POS. */
 export const ESC = 0x1b;
 export const GS = 0x1d;
+export const FS = 0x1c;
 export const LF = 0x0a;
 
 export class ConstructeurEscPos {
@@ -21,11 +22,21 @@ export class ConstructeurEscPos {
   init(): this { this.buf.push(ESC, 0x40); return this; }
 
   /**
-   * ESC t n : selectionne la table de codes.
-   * n=19 = CP858 sur Epson TM. Sur certaines clones n=13 (cp437) mieux mais
-   * 19 est compatible Epson natif + clones recents.
+   * Selectionne la table de codes CP858 + desactive le mode kanji.
+   *
+   * Sequence :
+   *  1. FS . (0x1C 0x2E) : Cancel Kanji character mode. CRITIQUE pour les
+   *     imprimantes Xprinter / GooJPRT / clones chinois qui demarrent par
+   *     defaut en mode 2-bytes (GBK/Big5) : sans cela, un byte 0x82 ('é'
+   *     en CP858) est interprete comme premier byte d'un caractere CJK,
+   *     produisant des glyphes asiatiques aleatoires.
+   *  2. ESC t 19 : selectionne CP858 (Latin1 multilingue + €).
    */
-  codePageCp858(): this { this.buf.push(ESC, 0x74, 19); return this; }
+  codePageCp858(): this {
+    this.buf.push(FS, 0x2e);          // FS . — Cancel Kanji mode (Xprinter fix)
+    this.buf.push(ESC, 0x74, 19);     // ESC t 19 — CP858
+    return this;
+  }
 
   /** ESC a n : alignement (0=gauche, 1=centre, 2=droite). */
   aligner(mode: "gauche" | "centre" | "droite"): this {

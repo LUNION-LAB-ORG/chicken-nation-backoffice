@@ -221,6 +221,25 @@ const LABEL_MODE_PAIEMENT: Record<string, string> = {
   CARD: "Carte",
   CASH: "Espèces",
 };
+const LABEL_PAYMENT_METHOD: Record<string, string> = {
+  ONLINE: "Application",
+  OFFLINE: "Restaurant",
+};
+
+/**
+ * Date au format "LUNDI 11 MAI 2026 - 14:32:08" (en majuscules).
+ * Aligne sur la version ESC/POS (ticket.ts).
+ */
+function formatDateLongueMaj(d: Date): string {
+  const jour = d.toLocaleDateString("fr-FR", { weekday: "long" }).toUpperCase();
+  const dayNum = d.getDate();
+  const mois = d.toLocaleDateString("fr-FR", { month: "long" }).toUpperCase();
+  const annee = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${jour} ${dayNum} ${mois} ${annee} - ${hh}:${mm}:${ss}`;
+}
 
 function construireHtml(
   order: Order,
@@ -332,6 +351,7 @@ function construireHtml(
   <div class="center gros">${echapperHtml((restaurantNom).toUpperCase())}</div>
   ${boutique.adresse ? `<div class="center">${echapperHtml(boutique.adresse)}</div>` : ""}
   ${boutique.telephone ? `<div class="center">Tel : ${echapperHtml(boutique.telephone)}</div>` : ""}
+  ${boutique.email ? `<div class="center">Email : ${echapperHtml(boutique.email)}</div>` : ""}
   <div class="center">${dateStr} ${heureStr}</div>
   ${contexte.duplicata ? `<div class="center" style="font-weight:bold">*** DUPLICATA ***</div>` : ""}
   <div class="sep"></div>
@@ -343,7 +363,8 @@ function construireHtml(
   ${contexte.caissier ? `<div class="lf"><span>Caissier :</span><span>${echapperHtml(contexte.caissier)}</span></div>` : ""}
   <div class="sep"></div>
 
-  ${clientName || clientPhone ? `<div><strong>Client :</strong> ${echapperHtml(clientName)}${clientPhone ? ` · ${echapperHtml(clientPhone)}` : ""}</div>` : ""}
+  ${clientName ? `<div><strong>Client :</strong> ${echapperHtml(clientName)}</div>` : ""}
+  ${clientPhone ? `<div><strong>Tel&nbsp;&nbsp;&nbsp;&nbsp;:</strong> ${echapperHtml(clientPhone)}</div>` : ""}
   ${order.type === "DELIVERY" && adresse ? `<div><strong>Adresse :</strong> ${echapperHtml(adresse)}</div>` : ""}
   ${order.note ? `<div><strong>Note :</strong> ${echapperHtml(order.note)}</div>` : ""}
   ${clientName || clientPhone || (order.type === "DELIVERY" && adresse) || order.note ? `<div class="sep"></div>` : ""}
@@ -360,12 +381,20 @@ function construireHtml(
   <div class="lf total-final"><span>TOTAL</span><span>${formatMontant(order.amount)} ${devise}</span></div>
   <div class="double-sep"></div>
 
-  ${paiementsHtml ? `<div><strong>Paiement :</strong></div>${paiementsHtml}` : ""}
+  ${
+    paiementsHtml
+      ? `<div><strong>Paiement :</strong></div>${paiementsHtml}`
+      : order.payment_method
+      ? `<div class="lf"><span><strong>Paiement :</strong></span><span>${LABEL_PAYMENT_METHOD[order.payment_method] ?? order.payment_method}</span></div>`
+      : ""
+  }
   ${!order.paied ? `<div class="nopay center">&gt;&gt;&gt; NON PAYÉ &lt;&lt;&lt;</div>` : ""}
 
   <div class="footer">
     ${order.paied ? "Merci de votre commande !" : "À RÉGLER"}
     ${footerCustom ? `<div style="margin-top:8px">${echapperHtml(footerCustom)}</div>` : ""}
+    <div style="margin-top:10px;font-size:11px;color:#222">${formatDateLongueMaj(new Date())}</div>
+    <div style="margin-top:6px;font-weight:bold">CHICKEN NATION APPLI</div>
   </div>
 </body>
 </html>`;

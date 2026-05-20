@@ -34,8 +34,8 @@ export const useOrderActions = () => {
         {
           nom: order.restaurant?.name ?? "Chicken Nation",
           adresse: order.restaurant?.address ?? undefined,
-          telephone:
-            (order.restaurant as { phone?: string })?.phone ?? undefined,
+          telephone: order.restaurant?.phone ?? undefined,
+          email: order.restaurant?.email ?? undefined,
           devise: "F CFA",
         },
         {},
