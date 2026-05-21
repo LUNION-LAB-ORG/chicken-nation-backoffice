@@ -357,17 +357,18 @@ const WindowsHelpPanel: React.FC = () => {
         <div className="px-5 py-4 space-y-4 bg-white text-sm text-gray-700">
           <div className="space-y-2">
             <p className="font-medium text-gray-900">
-              Pourquoi mon imprimante POS-90 (ou autre) n&apos;apparaît pas dans
-              le picker USB ci-dessus&nbsp;?
+              Pourquoi mon imprimante thermique n&apos;apparaît pas dans le
+              picker USB ci-dessus&nbsp;?
             </p>
             <p className="text-xs leading-relaxed">
               Sur Windows, dès qu&apos;un driver est installé pour
-              l&apos;imprimante (cas de POS-90 et de toutes les imprimantes
-              reconnues par Windows), l&apos;OS la <strong>réserve</strong>{" "}
+              l&apos;imprimante (cas de toutes les imprimantes reconnues par
+              Windows — quel que soit leur modèle&nbsp;: POS-90, Epson TM,
+              Star TSP, Xprinter, etc.), l&apos;OS la <strong>réserve</strong>{" "}
               pour lui-même : WebUSB ne peut alors plus y accéder, c&apos;est
               une restriction de sécurité Windows. Sur macOS / Linux,
               cette restriction n&apos;existe pas — c&apos;est pour ça que
-              l&apos;USB direct fonctionne sur iMac mais pas sur le poste
+              l&apos;USB direct fonctionne sur Mac mais pas sur le poste
               Windows.
             </p>
           </div>
@@ -393,7 +394,10 @@ const WindowsHelpPanel: React.FC = () => {
               <li>
                 Dans <strong>Paramètres Windows → Imprimantes et scanners</strong>{" "}
                 : décocher <em>« Laisser Windows gérer mon imprimante par défaut »</em>,
-                puis <strong>définir POS-90 comme imprimante par défaut</strong>.
+                puis <strong>définir votre imprimante thermique comme
+                imprimante par défaut</strong> (ex. POS-90, Epson TM-T20,
+                Xprinter, etc. — le nom exact figure dans la liste des
+                imprimantes Windows).
               </li>
               <li>
                 Faire un clic droit sur le bureau → <strong>Nouveau → Raccourci</strong>.
@@ -422,7 +426,8 @@ const WindowsHelpPanel: React.FC = () => {
               <li>
                 Lancer le BO via ce raccourci : Chrome démarre sans le dialog
                 d&apos;impression. Cliquer sur <strong>Imprimer</strong> dans
-                une commande → le ticket part directement sur POS-90.
+                une commande → le ticket part directement sur l&apos;imprimante
+                par défaut du poste.
               </li>
             </ol>
             <p className="text-[11px] italic text-gray-500 mt-2">
