@@ -6,6 +6,10 @@ import {
   AlertCircle,
   Bluetooth,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Info,
   Plug,
   Printer,
   RefreshCw,
@@ -293,6 +297,163 @@ const PrinterSettings: React.FC = () => {
               busy={enCoursBT}
             />
           )}
+        </div>
+      )}
+
+      {/* ─── Panneau d'aide spécifique Windows ─────────────────────────── */}
+      <WindowsHelpPanel />
+    </div>
+  );
+};
+
+// ─── Panneau d'aide Windows : --kiosk-printing ─────────────────────────
+
+const KIOSK_COMMAND =
+  '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --kiosk-printing https://admin-private.chicken-nation.com/gestion';
+
+const WindowsHelpPanel: React.FC = () => {
+  const [open, setOpen] = useState(false);
+
+  function detectWindows(): boolean {
+    if (typeof navigator === "undefined") return false;
+    // Chrome 90+ : navigator.userAgentData.platform
+    const uaData = (navigator as Navigator & {
+      userAgentData?: { platform?: string };
+    }).userAgentData;
+    if (uaData?.platform) return /windows/i.test(uaData.platform);
+    return /windows/i.test(navigator.userAgent);
+  }
+
+  const isWindows = detectWindows();
+
+  const handleCopyCommand = async () => {
+    try {
+      await navigator.clipboard.writeText(KIOSK_COMMAND);
+      toast.success("Commande copiée — collez-la dans la cible du raccourci");
+    } catch {
+      toast.error("Impossible de copier — sélectionnez la commande manuellement");
+    }
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 px-5 py-3 bg-blue-50 hover:bg-blue-100 transition-colors"
+      >
+        <Info className="w-5 h-5 text-blue-600 shrink-0" />
+        <span className="flex-1 text-left text-sm font-medium text-blue-900">
+          Configuration Windows {isWindows ? "(détecté)" : ""} — impression silencieuse sans dialog
+        </span>
+        {open ? (
+          <ChevronDown className="w-4 h-4 text-blue-600" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-blue-600" />
+        )}
+      </button>
+
+      {open && (
+        <div className="px-5 py-4 space-y-4 bg-white text-sm text-gray-700">
+          <div className="space-y-2">
+            <p className="font-medium text-gray-900">
+              Pourquoi mon imprimante POS-90 (ou autre) n&apos;apparaît pas dans
+              le picker USB ci-dessus&nbsp;?
+            </p>
+            <p className="text-xs leading-relaxed">
+              Sur Windows, dès qu&apos;un driver est installé pour
+              l&apos;imprimante (cas de POS-90 et de toutes les imprimantes
+              reconnues par Windows), l&apos;OS la <strong>réserve</strong>{" "}
+              pour lui-même : WebUSB ne peut alors plus y accéder, c&apos;est
+              une restriction de sécurité Windows. Sur macOS / Linux,
+              cette restriction n&apos;existe pas — c&apos;est pour ça que
+              l&apos;USB direct fonctionne sur iMac mais pas sur le poste
+              Windows.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <p className="font-medium text-gray-900">
+              Solution recommandée — Chrome en mode kiosk-printing
+            </p>
+            <p className="text-xs leading-relaxed">
+              Chrome dispose d&apos;un flag <code className="px-1 py-0.5 bg-gray-100 rounded font-mono text-[11px]">--kiosk-printing</code>{" "}
+              qui supprime la fenêtre de dialogue d&apos;impression : quand on
+              clique « Imprimer », le ticket part directement sur
+              l&apos;imprimante par défaut Windows, sans clic supplémentaire
+              (comportement identique à WebUSB direct).
+            </p>
+          </div>
+
+          <div className="space-y-3 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p className="font-semibold text-gray-900 text-xs">
+              Procédure (à faire une fois par poste)
+            </p>
+            <ol className="list-decimal list-inside space-y-2 text-xs leading-relaxed">
+              <li>
+                Dans <strong>Paramètres Windows → Imprimantes et scanners</strong>{" "}
+                : décocher <em>« Laisser Windows gérer mon imprimante par défaut »</em>,
+                puis <strong>définir POS-90 comme imprimante par défaut</strong>.
+              </li>
+              <li>
+                Faire un clic droit sur le bureau → <strong>Nouveau → Raccourci</strong>.
+              </li>
+              <li>
+                Coller la commande ci-dessous comme <strong>emplacement de l&apos;élément</strong> :
+                <div className="mt-2 flex items-stretch gap-2">
+                  <code className="flex-1 px-3 py-2 bg-white border border-gray-300 rounded text-[11px] font-mono text-gray-800 break-all">
+                    {KIOSK_COMMAND}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={handleCopyCommand}
+                    className="px-3 py-2 bg-[#F17922] text-white rounded text-xs font-medium hover:bg-[#d96810] flex items-center gap-1 shrink-0"
+                    title="Copier la commande"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    Copier
+                  </button>
+                </div>
+              </li>
+              <li>
+                Nommer le raccourci <strong>« Chicken Nation »</strong> et le
+                placer sur le bureau ou la barre des tâches.
+              </li>
+              <li>
+                Lancer le BO via ce raccourci : Chrome démarre sans le dialog
+                d&apos;impression. Cliquer sur <strong>Imprimer</strong> dans
+                une commande → le ticket part directement sur POS-90.
+              </li>
+            </ol>
+            <p className="text-[11px] italic text-gray-500 mt-2">
+              Note : si Chrome n&apos;est pas dans{" "}
+              <code className="font-mono text-[10px]">C:\Program Files\Google\Chrome\Application\</code>,
+              adapter le chemin (parfois{" "}
+              <code className="font-mono text-[10px]">C:\Program Files (x86)\...</code>{" "}
+              sur les Windows 32 bits, ou{" "}
+              <code className="font-mono text-[10px]">%LOCALAPPDATA%\Google\Chrome\Application\</code>{" "}
+              pour une install utilisateur).
+            </p>
+          </div>
+
+          <div className="text-xs leading-relaxed bg-amber-50 border border-amber-100 rounded-lg p-3">
+            <p className="font-medium text-amber-900">Alternative non recommandée</p>
+            <p className="mt-1">
+              Il est techniquement possible de libérer l&apos;imprimante pour
+              WebUSB avec l&apos;outil{" "}
+              <a
+                href="https://zadig.akeo.ie/"
+                target="_blank"
+                rel="noreferrer"
+                className="text-amber-900 underline"
+              >
+                Zadig
+              </a>{" "}
+              (remplacement du driver par WinUSB) — mais l&apos;imprimante
+              devient alors inutilisable pour Word, PDF et toute autre
+              application Windows. À éviter sauf besoin spécifique.
+            </p>
+          </div>
         </div>
       )}
     </div>
