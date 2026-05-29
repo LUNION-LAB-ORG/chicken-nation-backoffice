@@ -101,6 +101,25 @@ export interface CalculatePointsResponse {
     amount: number;
 }
 
+/** Statistiques globales de fidélité (en-tête du tableau de bord). */
+export interface LoyaltyStats {
+    /** Total des points jamais distribués (cumul lifetime). */
+    points_distributed: number;
+    points_distributed_xof: number;
+    /** Points encore en circulation (engagement à honorer). */
+    points_available: number;
+    points_available_xof: number;
+    /** Points effectivement utilisés sur des commandes. */
+    points_redeemed: number;
+    points_redeemed_xof: number;
+    /** Clients atteignant le seuil minimum (peuvent utiliser leurs points). */
+    eligible_customers: number;
+    /** Clients ayant au moins 1 point en circulation. */
+    customers_with_points: number;
+    minimum_redemption_points: number;
+    point_value_in_xof: number;
+}
+
 export interface LoyaltyConfigFormData {
   points_per_xof: string;
   points_expiration_days: string;

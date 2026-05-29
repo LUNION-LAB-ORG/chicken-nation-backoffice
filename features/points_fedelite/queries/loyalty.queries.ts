@@ -7,10 +7,27 @@ import {
     getCustomerLoyaltyInfo,
     getAvailablePointsBreakdown,
     getAllLoyaltyPoints,
+    getLoyaltyStats,
     calculatePointsForOrder,
     calculateAmountForPoints,
 } from "../services/loyalty.service";
 import { LoyaltyPointQuery } from "../types/loyalty.types";
+
+// Statistiques globales (en-tête KPI)
+export const useLoyaltyStatsQuery = () => {
+    const result = useQuery({
+        queryKey: loyaltyKeyQuery("stats"),
+        queryFn: getLoyaltyStats,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+    });
+    React.useEffect(() => {
+        if (result.isError) {
+            toast.error(result.error instanceof Error ? result.error.message : "Erreur de chargement");
+        }
+    }, [result.isError, result.error]);
+    return result;
+};
 
 // Configuration
 export const useConfigQuery = () => {

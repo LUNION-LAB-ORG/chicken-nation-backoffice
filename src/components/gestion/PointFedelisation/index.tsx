@@ -2,6 +2,7 @@
 
 import { useDashboardStore } from "@/store/dashboardStore";
 import LoyaltyFilterTab from "../../../../features/points_fedelite/components/LoyaltyFilterTab";
+import { LoyaltyKpiRow } from "../../../../features/points_fedelite/components/LoyaltyKpiRow";
 import PointFideliteHeader from "../../../../features/points_fedelite/components/PointFideliteHeader";
 import { LoyaltyPointsList } from "../../../../features/points_fedelite/components/liste-loyalty-points";
 import { useLoyaltyPointsListQuery } from "../../../../features/points_fedelite/queries/loyalty.queries";
@@ -33,6 +34,10 @@ export default function PointFedelisation() {
       {/* Clients */}
       {activeTab == "loyalty" && view === "list" && (
         <div className="overflow-hidden min-h-[600px]">
+          {/* En-tête KPI : points distribués, en circulation, utilisés, clients éligibles */}
+          <div className="mb-6">
+            <LoyaltyKpiRow />
+          </div>
           <LoyaltyFilterTab />
           <LoyaltyPointsList
             points={points}

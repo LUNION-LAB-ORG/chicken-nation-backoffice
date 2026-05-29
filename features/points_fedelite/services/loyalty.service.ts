@@ -10,6 +10,7 @@ import {
     LoyaltyConfigFormData,
     LoyaltyPoint,
     LoyaltyPointQuery,
+    LoyaltyStats,
     RedeemPointsDto,
 } from '../types/loyalty.types';
 
@@ -148,6 +149,19 @@ export const expirePoints = async () => {
         const response = await fetch(url, { method: 'POST', headers });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
+// --- Statistiques globales ---
+
+export const getLoyaltyStats = async () => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/points/stats');
+        const response = await fetch(url, { method: 'GET', headers });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json() as LoyaltyStats;
     } catch (error) {
         throw new Error(getHumanReadableError(error));
     }
