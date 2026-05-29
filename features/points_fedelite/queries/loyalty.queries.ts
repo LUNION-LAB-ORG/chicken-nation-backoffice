@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import React from "react";
 import { toast } from "react-hot-toast";
 import { loyaltyKeyQuery } from "./index.query";
@@ -61,7 +61,7 @@ export const useAvailablePointsBreakdownQuery = (customerId: string) => {
 export const loyaltyPointsListQueryOption = (query?: LoyaltyPointQuery) => ({
     queryKey: loyaltyKeyQuery("points-list", query),
     queryFn: () => getAllLoyaltyPoints(query),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     staleTime: 5 * 60 * 1000,
 });
 
