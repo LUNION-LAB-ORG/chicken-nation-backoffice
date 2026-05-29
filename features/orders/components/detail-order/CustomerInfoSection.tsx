@@ -1,12 +1,42 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { formatAddress } from "../../utils/orderUtils";
 import { OrderTable } from "../../types/ordersTable.types";
 import { useQuery } from "@tanstack/react-query";
 import { getAllOrders } from "../../services/order-service";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
-import { ShoppingBag, ChevronDown, ChevronUp, X } from "lucide-react";
+import { ShoppingBag, ChevronDown, ChevronUp, X, MapPin } from "lucide-react";
+import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import SafeImage from "@/components/ui/SafeImage";
 import { format } from "date-fns";
+import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
+import { clientHouseMarkerIcon } from "../../../maps/components/marker-icons";
+
+/**
+ * Extrait les coordonnées GPS de l'adresse brute (JSON) de la commande.
+ * Le backend stocke `Order.address` en JSON `{ ..., latitude, longitude }`.
+ * Garde stricte (nombres finis + bornes Google Maps) → safe à passer à la carte
+ * sans risquer un `InvalidValueError`. `null` → pas de carte (ex. à table).
+ */
+function parseClientCoords(rawAddress: string | null): { lat: number; lng: number } | null {
+  if (!rawAddress) return null;
+  let obj: unknown;
+  try {
+    obj = JSON.parse(rawAddress);
+  } catch {
+    return null;
+  }
+  if (!obj || typeof obj !== "object") return null;
+  const o = obj as Record<string, unknown>;
+  const rawLat = o.latitude ?? o.lat;
+  const rawLng = o.longitude ?? o.lng;
+  const lat = typeof rawLat === "string" ? Number(rawLat) : rawLat;
+  const lng = typeof rawLng === "string" ? Number(rawLng) : rawLng;
+  if (typeof lat !== "number" || !Number.isFinite(lat)) return null;
+  if (typeof lng !== "number" || !Number.isFinite(lng)) return null;
+  if (lat < -90 || lat > 90) return null;
+  if (lng < -180 || lng > 180) return null;
+  return { lat, lng };
+}
 
 interface CustomerInfoSectionProps {
   order: OrderTable;
@@ -14,6 +44,37 @@ interface CustomerInfoSectionProps {
 
 const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
   const [showOrdersModal, setShowOrdersModal] = useState(false);
+
+  // ── Carte client dépliable ─────────────────────────────────────────────
+  const { isScriptLoaded } = useGoogleMaps();
+  const [mapOpen, setMapOpen] = useState(false);
+  // Montée paresseuse : on ne crée la GoogleMap qu'au premier dépliage (et on
+  // la garde ensuite montée pour que replier/déplier reste fluide).
+  const [mapMounted, setMapMounted] = useState(false);
+  const clientMapRef = useRef<google.maps.Map | null>(null);
+
+  const clientCoords = useMemo(() => parseClientCoords(order.rawAddress), [order.rawAddress]);
+  const houseIcon = useMemo(
+    () => (isScriptLoaded ? clientHouseMarkerIcon() : undefined),
+    [isScriptLoaded],
+  );
+
+  const toggleMap = () => {
+    setMapOpen((open) => {
+      if (!open) setMapMounted(true);
+      return !open;
+    });
+  };
+
+  // Après le dépliage, on recadre une fois la transition finie — évite les
+  // tuiles grises si la carte s'est montée pendant que le conteneur grandissait.
+  useEffect(() => {
+    if (!mapOpen || !clientCoords) return;
+    const id = window.setTimeout(() => {
+      clientMapRef.current?.setCenter(clientCoords);
+    }, 320);
+    return () => window.clearTimeout(id);
+  }, [mapOpen, clientCoords]);
 
   // Fetch customer order count
   const { data: customerOrdersData } = useQuery({
@@ -32,6 +93,68 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
         <p className="text-sm text-[#71717A]">Client</p>
         <p className="text-sm text-[#71717A] font-bold">{order.clientName}</p>
       </div>
+
+      {/* Carte client — dropdown qui déplie/replie la localisation de livraison,
+          au-dessus de l'adresse. N'apparaît que si la commande a des coords. */}
+      {clientCoords && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={toggleMap}
+            aria-expanded={mapOpen}
+            className="w-full flex items-center justify-between py-1.5 cursor-pointer group"
+          >
+            <span className="flex items-center gap-1.5 text-sm text-[#71717A]">
+              <MapPin className="w-4 h-4 text-[#F17922]" />
+              Localisation
+            </span>
+            <span className="flex items-center gap-1 text-xs font-semibold text-[#F17922] group-hover:text-[#D96A1D] transition-colors">
+              {mapOpen ? "Masquer la carte" : "Voir sur la carte"}
+              {mapOpen ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </span>
+          </button>
+
+          {/* Pli/dépli fluide via grid-template-rows (0fr ↔ 1fr). */}
+          <div
+            className={`grid transition-[grid-template-rows] duration-300 ease-out ${
+              mapOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="pt-2">
+                {isScriptLoaded && mapMounted ? (
+                  <GoogleMap
+                    mapContainerStyle={{ width: "100%", height: "200px", borderRadius: "14px" }}
+                    center={clientCoords}
+                    zoom={16}
+                    onLoad={(map) => {
+                      clientMapRef.current = map;
+                    }}
+                    onUnmount={() => {
+                      clientMapRef.current = null;
+                    }}
+                    options={{
+                      disableDefaultUI: true,
+                      zoomControl: true,
+                      clickableIcons: false,
+                      gestureHandling: "cooperative",
+                      styles: [{ featureType: "poi", stylers: [{ visibility: "off" }] }],
+                    }}
+                  >
+                    <MarkerF position={clientCoords} icon={houseIcon} />
+                  </GoogleMap>
+                ) : (
+                  <div className="h-[200px] bg-gray-50 rounded-[14px] animate-pulse" />
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-row justify-between items-start mb-4">
         <p className="text-sm text-[#71717A]">Adresse</p>

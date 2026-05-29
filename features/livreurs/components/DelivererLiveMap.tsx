@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { GoogleMap, MarkerF, InfoWindowF } from "@react-google-maps/api";
+import { GoogleMap, InfoWindowF } from "@react-google-maps/api";
 import {
   AlertOctagon,
   Award,
@@ -21,6 +21,8 @@ import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import { useDelivererLiveLocationsQuery } from "../queries/deliverer-live.query";
 import { useDelivererScoringInfoQuery } from "../queries/deliverer-scoring.query";
 import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
+import { AnimatedDelivererMarker } from "../../maps/components/AnimatedDelivererMarker";
+import { useDelivererLiveSync } from "../../maps/hooks/use-deliverer-live-socket";
 import type {
   IDelivererAvailability,
   IDelivererLive,
@@ -158,6 +160,13 @@ function buildMarkerIcon(
 
 export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   const { isScriptLoaded } = useGoogleMaps();
+
+  // Branche le temps réel : à chaque ping `deliverer:location:live`, la position
+  // du livreur concerné est patchée EN PLACE dans le cache `live-locations` →
+  // les markers glissent au lieu de sauter toutes les 15 s. Le polling REST
+  // reste actif, mais en simple réconciliation (nouveaux livreurs / dispo).
+  useDelivererLiveSync();
+
   const [includeOffline, setIncludeOffline]   = useState(false);
   const [asideFilter, setAsideFilter]         = useState<IDelivererAvailability | "all">("all");
   const [selectedId, setSelectedId]           = useState<string | null>(null);
@@ -189,11 +198,22 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
 
   const visible = useMemo(() => normalized.filter((l) => l.location !== null), [normalized]);
 
-  const center = useMemo(() => {
-    if (visible.length === 0) return ABIDJAN_CENTER;
-    const sum = visible.reduce((a, l) => ({ lat: a.lat + l.location!.lat, lng: a.lng + l.location!.lng }), { lat: 0, lng: 0 });
-    return { lat: sum.lat / visible.length, lng: sum.lng / visible.length };
-  }, [visible]);
+  // Centre INITIAL figé : on cadre sur le barycentre de la flotte au premier
+  // chargement, puis on n'y touche plus. Sans ça, comme les positions bougent
+  // désormais à chaque ping socket, un `center` recalculé recentrerait la carte
+  // en continu et combattrait le pan de l'utilisateur (et le glissement).
+  const initialCenterRef = useRef<{ lat: number; lng: number } | null>(null);
+  if (initialCenterRef.current === null && visible.length > 0) {
+    const sum = visible.reduce(
+      (a, l) => ({ lat: a.lat + l.location!.lat, lng: a.lng + l.location!.lng }),
+      { lat: 0, lng: 0 },
+    );
+    initialCenterRef.current = {
+      lat: sum.lat / visible.length,
+      lng: sum.lng / visible.length,
+    };
+  }
+  const center = initialCenterRef.current ?? ABIDJAN_CENTER;
 
   const asideList = useMemo(() =>
     normalized.filter((l) => asideFilter === "all" || l.availability === asideFilter),
@@ -387,7 +407,7 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
               {meta.label}
             </span>
           ))}
-          <span className="text-gray-400">· refresh 15 s</span>
+          <span className="text-gray-400">· temps réel</span>
         </div>
 
         <GoogleMap
@@ -405,11 +425,12 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
           }}
         >
           {visible.map((l) => (
-            <MarkerF
+            <AnimatedDelivererMarker
               key={l.id}
               position={l.location!}
               onClick={() => handleSelectDeliverer(l)}
               icon={buildMarkerIcon(l.availability, getInitials(l.first_name, l.last_name), selectedId === l.id)}
+              durationMs={5000}
               zIndex={selectedId === l.id ? 10 : 1}
             />
           ))}
