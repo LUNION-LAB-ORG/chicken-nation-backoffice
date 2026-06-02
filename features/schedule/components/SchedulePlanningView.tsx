@@ -27,6 +27,7 @@ import type { ISchedulePlan, SchedulePlanStatus } from "../types/schedule.types"
 
 import RestaurantTabsControlled from "./RestaurantTabsControlled";
 
+import { EditDatesModal } from "./EditDatesModal";
 import { GeneratePlanModal } from "./GeneratePlanModal";
 import { SchedulePlanDetail } from "./SchedulePlanDetail";
 
@@ -57,6 +58,7 @@ export function SchedulePlanningView({ restaurantId: defaultRestaurantId }: { re
   const [statusFilter, setStatusFilter] = useState<SchedulePlanStatus | "ALL">("ALL");
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
+  const [editPlan, setEditPlan] = useState<ISchedulePlan | null>(null);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>(defaultRestaurantId ?? "");
 
   const { data: restaurantsResponse } = useRestaurantListQuery();
@@ -131,6 +133,7 @@ export function SchedulePlanningView({ restaurantId: defaultRestaurantId }: { re
                 plan={p}
                 selected={selectedPlanId === p.id}
                 onSelect={() => setSelectedPlanId(p.id)}
+                onEdit={() => setEditPlan(p)}
               />
             ))}
           </ul>
@@ -157,6 +160,16 @@ export function SchedulePlanningView({ restaurantId: defaultRestaurantId }: { re
         onGenerated={(planId) => {
           setSelectedPlanId(planId);
           setShowGenerateModal(false);
+        }}
+      />
+
+      <EditDatesModal
+        isOpen={!!editPlan}
+        plan={editPlan}
+        onClose={() => setEditPlan(null)}
+        onRegenerated={(planId) => {
+          setSelectedPlanId(planId);
+          setEditPlan(null);
         }}
       />
       </div>
@@ -203,7 +216,8 @@ const PlanCard: React.FC<{
   plan: ISchedulePlan;
   selected: boolean;
   onSelect: () => void;
-}> = ({ plan, selected, onSelect }) => {
+  onEdit: () => void;
+}> = ({ plan, selected, onSelect, onEdit }) => {
   const sendMut = useSendPlanMutation();
   const confirmMut = useConfirmPlanMutation();
   const archiveMut = useArchivePlanMutation();
@@ -243,6 +257,19 @@ const PlanCard: React.FC<{
       )}
 
       <div className="mt-2 flex flex-wrap gap-1.5">
+        {(plan.status === "DRAFT" || plan.status === "SENT") && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#92400E] bg-amber-100 hover:bg-amber-200 px-2 py-1 rounded-lg"
+          >
+            <Calendar className="w-3 h-3" />
+            Dates
+          </button>
+        )}
         {plan.status === "DRAFT" && (
           <>
             <button

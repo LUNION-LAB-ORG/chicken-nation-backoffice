@@ -57,5 +57,26 @@ export const archiveSchedulePlan = (planId: string) =>
 export const deleteSchedulePlan = (planId: string) =>
   safeCall(() => api.delete<{ id: string; deleted: boolean }>(`${ENDPOINT}/plans/${planId}`, true));
 
+export const setDelivererDay = (
+  planId: string,
+  delivererId: string,
+  payload: { date: string; mode: "REST" | "WORK" },
+) =>
+  safeCall(() =>
+    api.patch<ISchedulePlan>(
+      `${ENDPOINT}/plans/${planId}/deliverers/${delivererId}/day`,
+      payload,
+      true,
+    ),
+  );
+
+export const regenerateSchedulePlan = (
+  planId: string,
+  payload: { periodStart: string; periodEnd?: string },
+) =>
+  safeCall(() =>
+    api.post<ISchedulePlan>(`${ENDPOINT}/plans/${planId}/regenerate`, payload, true),
+  );
+
 export const getSchedulePlanStats = (planId: string) =>
   safeCall(() => api.get<ISchedulePlanStats>(`${ENDPOINT}/plans/${planId}/stats`, true));

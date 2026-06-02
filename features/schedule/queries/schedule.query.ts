@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 
 import {
   archiveSchedulePlan,
@@ -8,7 +9,9 @@ import {
   getSchedulePlanDetail,
   getSchedulePlanStats,
   listSchedulePlans,
+  regenerateSchedulePlan,
   sendSchedulePlan,
+  setDelivererDay,
 } from "../services/schedule.service";
 import type {
   IGeneratePlanPayload,
@@ -93,5 +96,37 @@ export const useDeletePlanMutation = () => {
   return useMutation({
     mutationFn: (planId: string) => deleteSchedulePlan(planId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY, "plans"] }),
+  });
+};
+
+export const useSetDelivererDayMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: {
+      planId: string;
+      delivererId: string;
+      date: string;
+      mode: "REST" | "WORK";
+    }) => setDelivererDay(vars.planId, vars.delivererId, { date: vars.date, mode: vars.mode }),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [...KEY, "plan", vars.planId] });
+      qc.invalidateQueries({ queryKey: [...KEY, "plans"] });
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Modification impossible"),
+  });
+};
+
+export const useRegeneratePlanMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { planId: string; periodStart: string; periodEnd?: string }) =>
+      regenerateSchedulePlan(vars.planId, {
+        periodStart: vars.periodStart,
+        periodEnd: vars.periodEnd,
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY, "plans"] }),
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Réédition impossible"),
   });
 };

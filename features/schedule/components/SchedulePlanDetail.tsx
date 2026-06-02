@@ -8,6 +8,7 @@ import { CheckCircle2, Loader2, Sun, XCircle, Moon, AlertCircle } from "lucide-r
 import {
   useSchedulePlanDetailQuery,
   useSchedulePlanStatsQuery,
+  useSetDelivererDayMutation,
 } from "../queries/schedule.query";
 import type {
   IShift,
@@ -36,6 +37,7 @@ interface Props {
 export function SchedulePlanDetail({ planId }: Props) {
   const { data: plan, isLoading } = useSchedulePlanDetailQuery(planId);
   const { data: stats } = useSchedulePlanStatsQuery(planId);
+  const dayMut = useSetDelivererDayMutation();
 
   // Index : pour chaque (delivererId, dateKey, shiftType), retrouver l'assignment
   const matrix = useMemo(() => {
@@ -82,6 +84,7 @@ export function SchedulePlanDetail({ planId }: Props) {
     );
   }
 
+  const isDraft = plan.status === "DRAFT";
   const periodLabel = `${format(parseISO(plan.period_start), "dd MMM", { locale: fr })} → ${format(parseISO(plan.period_end), "dd MMM yyyy", { locale: fr })}`;
 
   return (
@@ -100,6 +103,12 @@ export function SchedulePlanDetail({ planId }: Props) {
           </div>
         )}
       </div>
+
+      {isDraft && (
+        <div className="px-5 py-2 bg-orange-50 border-b border-orange-100 text-[11px] text-[#92400E]">
+          Brouillon — clique une cellule pour basculer <b>repos ↔ travail</b> (repos interdit ven/sam/dim).
+        </div>
+      )}
 
       {/* Matrice */}
       <div className="overflow-x-auto">
@@ -125,8 +134,28 @@ export function SchedulePlanDetail({ planId }: Props) {
                 {matrix.days.map((day) => {
                   const morning = matrix.cellMap.get(`${d.id}|${day}|MORNING`);
                   const evening = matrix.cellMap.get(`${d.id}|${day}|EVENING`);
+                  const hasWork = !!morning || !!evening;
                   return (
-                    <td key={day} className="p-1 text-center align-top">
+                    <td
+                      key={day}
+                      onClick={
+                        isDraft && !dayMut.isPending
+                          ? () =>
+                              dayMut.mutate({
+                                planId,
+                                delivererId: d.id,
+                                date: day,
+                                mode: hasWork ? "REST" : "WORK",
+                              })
+                          : undefined
+                      }
+                      title={
+                        isDraft ? (hasWork ? "Mettre en repos" : "Faire travailler") : undefined
+                      }
+                      className={`p-1 text-center align-top ${
+                        isDraft ? "cursor-pointer hover:bg-orange-50" : ""
+                      }`}
+                    >
                       <div className="flex flex-col items-center gap-0.5">
                         {morning && <ShiftBadge assignment={morning} type="MORNING" />}
                         {evening && <ShiftBadge assignment={evening} type="EVENING" />}
