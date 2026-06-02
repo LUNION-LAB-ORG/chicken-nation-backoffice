@@ -75,7 +75,7 @@ export default function Livreurs() {
 
   // Restaurants pour le sélecteur
   const { data: restaurantData } = useRestaurantListQuery({ limit: 100 });
-  const restaurants = restaurantData?.items ?? [];
+  const restaurants = restaurantData?.data ?? [];
 
   const counts = useMemo(() => {
     const c: Partial<Record<LivreursTab, number>> = { TOUS: data?.total };
@@ -141,7 +141,6 @@ export default function Livreurs() {
               livreurs={livreurs}
               isLoading={isLoading}
               onView={openDetail}
-              onMenu={openDetail}
               liveMap={liveMap}
             />
           )}

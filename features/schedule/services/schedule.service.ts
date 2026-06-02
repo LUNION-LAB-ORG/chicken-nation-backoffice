@@ -54,5 +54,8 @@ export const confirmSchedulePlan = (planId: string) =>
 export const archiveSchedulePlan = (planId: string) =>
   safeCall(() => api.patch<ISchedulePlan>(`${ENDPOINT}/plans/${planId}/archive`, {}, true));
 
+export const deleteSchedulePlan = (planId: string) =>
+  safeCall(() => api.delete<{ id: string; deleted: boolean }>(`${ENDPOINT}/plans/${planId}`, true));
+
 export const getSchedulePlanStats = (planId: string) =>
   safeCall(() => api.get<ISchedulePlanStats>(`${ENDPOINT}/plans/${planId}/stats`, true));

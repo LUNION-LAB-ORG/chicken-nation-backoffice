@@ -36,8 +36,13 @@ export interface Livreur {
   // Statut métier
   status: DelivererStatus;
   is_operational: boolean;
+  /** Motif du dernier refus (status REJECTED). */
+  rejection_reason?: string | null;
   restaurant_id?: string | null;
   restaurant?: RestaurantLight | null;
+  /** Lieu d'habitation choisi par le livreur (sert au tri des restaurants par proximité). */
+  home_location?: { lat: number; lng: number } | null;
+  home_address?: string | null;
 
   // Sessions / dates
   last_login_at?: string | null;

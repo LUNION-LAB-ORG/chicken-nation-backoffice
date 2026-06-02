@@ -9,8 +9,8 @@ import {
   CheckCircle2,
   Loader2,
   Plus,
+  RefreshCw,
   Send,
-  Store,
   Trash2,
   Users,
 } from "lucide-react";
@@ -19,10 +19,13 @@ import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-lis
 import {
   useArchivePlanMutation,
   useConfirmPlanMutation,
+  useDeletePlanMutation,
   useSchedulePlansQuery,
   useSendPlanMutation,
 } from "../queries/schedule.query";
 import type { ISchedulePlan, SchedulePlanStatus } from "../types/schedule.types";
+
+import RestaurantTabsControlled from "./RestaurantTabsControlled";
 
 import { GeneratePlanModal } from "./GeneratePlanModal";
 import { SchedulePlanDetail } from "./SchedulePlanDetail";
@@ -56,7 +59,7 @@ export function SchedulePlanningView({ restaurantId: defaultRestaurantId }: { re
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>(defaultRestaurantId ?? "");
 
-  const { data: restaurantsResponse, isLoading: isLoadingRestaurants } = useRestaurantListQuery();
+  const { data: restaurantsResponse } = useRestaurantListQuery();
   const restaurants = restaurantsResponse?.data ?? [];
 
   // Auto-sélectionne le 1er restaurant à l'arrivée si rien n'est sélectionné
@@ -66,36 +69,36 @@ export function SchedulePlanningView({ restaurantId: defaultRestaurantId }: { re
     }
   }, [selectedRestaurantId, restaurants]);
 
-  const { data: plans, isLoading } = useSchedulePlansQuery({
+  const { data: plans, isLoading, isFetching, refetch } = useSchedulePlansQuery({
     restaurantId: selectedRestaurantId || undefined,
     status: statusFilter === "ALL" ? undefined : statusFilter,
   });
 
   return (
     <div className="space-y-4">
-      {/* Header : selector restaurant */}
+      {/* Header : tabs restaurants + actualiser */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
-        <label className="block text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-          <Store className="w-3.5 h-3.5 text-[#F17922]" />
-          Restaurant
-        </label>
-        <select
-          value={selectedRestaurantId}
-          onChange={(e) => {
-            setSelectedRestaurantId(e.target.value);
-            setSelectedPlanId(null); // reset selection au changement de resto
-          }}
-          disabled={isLoadingRestaurants}
-          className="w-full md:w-1/2 px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
-        >
-          {isLoadingRestaurants && <option>Chargement…</option>}
-          {!isLoadingRestaurants && restaurants.length === 0 && (
-            <option>Aucun restaurant disponible</option>
-          )}
-          {restaurants.map((r) => (
-            <option key={r.id} value={r.id}>{r.name}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <RestaurantTabsControlled
+              value={selectedRestaurantId}
+              onChange={(id) => {
+                setSelectedRestaurantId(id);
+                setSelectedPlanId(null); // reset selection au changement de resto
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="inline-flex items-center gap-1.5 flex-shrink-0 text-xs font-semibold text-[#71717A] bg-[#f4f4f5] hover:bg-gray-200 px-3 py-2 rounded-lg disabled:opacity-60"
+            title="Actualiser les plans"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin" : ""}`} />
+            Actualiser
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -204,6 +207,7 @@ const PlanCard: React.FC<{
   const sendMut = useSendPlanMutation();
   const confirmMut = useConfirmPlanMutation();
   const archiveMut = useArchivePlanMutation();
+  const deleteMut = useDeletePlanMutation();
 
   const meta = STATUS_META[plan.status];
   const start = format(new Date(plan.period_start), "dd MMM", { locale: fr });
@@ -253,19 +257,19 @@ const PlanCard: React.FC<{
               <Send className="w-3 h-3" />
               Envoyer
             </button>
-            {/* Annuler un brouillon vide — libère les dates pour une re-génération */}
+            {/* Supprimer le brouillon — libère les dates pour une re-génération */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm("Annuler ce plan brouillon ? Cette action est irréversible."))
-                  archiveMut.mutate(plan.id);
+                if (confirm("Supprimer définitivement ce brouillon ? Vous pourrez en régénérer un."))
+                  deleteMut.mutate(plan.id);
               }}
-              disabled={archiveMut.isPending}
+              disabled={deleteMut.isPending}
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-100 hover:bg-red-200 px-2 py-1 rounded-lg disabled:opacity-60"
             >
               <Trash2 className="w-3 h-3" />
-              Annuler
+              Supprimer
             </button>
           </>
         )}
@@ -283,19 +287,19 @@ const PlanCard: React.FC<{
               <CheckCircle2 className="w-3 h-3" />
               Confirmer
             </button>
-            {/* Annuler un plan envoyé — retire les créneaux en attente */}
+            {/* Supprimer un plan envoyé — les livreurs ne le verront plus */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                if (confirm("Annuler ce plan envoyé ? Les livreurs ne pourront plus le confirmer."))
-                  archiveMut.mutate(plan.id);
+                if (confirm("Supprimer définitivement ce plan envoyé ? Les livreurs ne le verront plus."))
+                  deleteMut.mutate(plan.id);
               }}
-              disabled={archiveMut.isPending}
+              disabled={deleteMut.isPending}
               className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-700 bg-orange-100 hover:bg-orange-200 px-2 py-1 rounded-lg disabled:opacity-60"
             >
               <Trash2 className="w-3 h-3" />
-              Annuler
+              Supprimer
             </button>
           </>
         )}

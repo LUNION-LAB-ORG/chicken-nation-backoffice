@@ -6,6 +6,7 @@ import { useDashboardStore } from "@/store/dashboardStore";
 
 import AffectationSection from "./AffectationSection";
 import ContactSection from "./ContactSection";
+import ProximiteSection from "./ProximiteSection";
 import DocumentsSection from "./DocumentsSection";
 import ProfilSection from "./ProfilSection";
 import ScoringQueueSection from "./ScoringQueueSection";
@@ -61,6 +62,7 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
               livreur={livreur}
               onAssignRestaurant={() => setAssignOpen(true)}
             />
+            <ProximiteSection livreur={livreur} />
             <ScoringQueueSection livreurId={livreur.id} />
             <WorkflowActions
               livreur={livreur}

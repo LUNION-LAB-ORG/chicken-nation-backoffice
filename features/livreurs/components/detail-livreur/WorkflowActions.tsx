@@ -32,9 +32,13 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
   const { mutate: deleteLivreur, isPending: isDeleting } = useDeleteLivreur();
 
   const isPending = livreur.status === "PENDING_VALIDATION";
+  const isRejected = livreur.status === "REJECTED";
   const isActive = livreur.status === "ACTIVE";
   const isSuspended = livreur.status === "SUSPENDED";
-  const canValidate = isPending && !!livreur.piece_identite && !!livreur.permis_conduire;
+  // Accepter : possible depuis PENDING **ou REJECTED** (accepter après refus) — le
+  // backend autorise désormais REJECTED→ACTIVE via PATCH :id/validate.
+  const canValidate =
+    (isPending || isRejected) && !!livreur.piece_identite && !!livreur.permis_conduire;
   // Forcer l'activation : uniquement si au moins un document manque
   const canForceActivate = isPending && (!livreur.piece_identite || !livreur.permis_conduire);
 
@@ -48,7 +52,13 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
       <p className="text-[18px] font-medium text-[#F17922] mb-3">Actions</p>
 
       <div className="flex flex-col gap-2">
-        {isPending && (
+        {isRejected && livreur.rejection_reason && (
+          <p className="text-xs text-[#EF4444] bg-[#EF4444]/5 border border-[#EF4444]/20 rounded-lg px-3 py-2">
+            Refusé — motif : {livreur.rejection_reason}
+          </p>
+        )}
+
+        {(isPending || isRejected) && (
           <button
             type="button"
             onClick={() => validate(livreur.id)}
@@ -57,7 +67,11 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
             title={!canValidate ? "Documents obligatoires manquants" : undefined}
           >
             <Check className="w-4 h-4" />
-            {isValidating ? "Validation…" : "Valider le livreur"}
+            {isValidating
+              ? "Validation…"
+              : isRejected
+                ? "Accepter le livreur"
+                : "Valider le livreur"}
           </button>
         )}
 

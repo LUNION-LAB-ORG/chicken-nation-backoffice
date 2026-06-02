@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   archiveSchedulePlan,
   confirmSchedulePlan,
+  deleteSchedulePlan,
   generateSchedulePlan,
   getSchedulePlanDetail,
   getSchedulePlanStats,
@@ -83,6 +84,14 @@ export const useArchivePlanMutation = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (planId: string) => archiveSchedulePlan(planId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY, "plans"] }),
+  });
+};
+
+export const useDeletePlanMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (planId: string) => deleteSchedulePlan(planId),
     onSuccess: () => qc.invalidateQueries({ queryKey: [...KEY, "plans"] }),
   });
 };

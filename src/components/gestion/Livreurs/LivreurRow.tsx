@@ -1,9 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 
+import LivreurContextMenu from "./LivreurContextMenu";
 import StatutBadge from "./StatutBadge";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import type { Livreur } from "../../../../features/livreurs/types/livreur.types";
@@ -13,7 +15,6 @@ interface LivreurRowProps {
   livreur: Livreur;
   live?: IDelivererLive;
   onView: () => void;
-  onMenu: () => void;
 }
 
 const vehiculeLabel: Record<string, string> = {
@@ -46,7 +47,39 @@ function formatGpsAge(locationAt: string): string {
   return `Il y a ${diffH}h`;
 }
 
-const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, onMenu }) => {
+const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    setPortalContainer(document.body);
+  }, []);
+
+  const renderMenu = () => {
+    if (!menuOpen || !portalContainer || !buttonRef.current) return null;
+    const rect = buttonRef.current.getBoundingClientRect();
+    return createPortal(
+      <div
+        style={{
+          position: "absolute",
+          top: `${rect.bottom + window.scrollY}px`,
+          left: `${rect.right - 224 + window.scrollX}px`, // 224px = largeur du menu (w-56)
+          zIndex: 9999,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <LivreurContextMenu
+          livreur={livreur}
+          isOpen={menuOpen}
+          onClose={() => setMenuOpen(false)}
+          onViewDetails={onView}
+        />
+      </div>,
+      portalContainer,
+    );
+  };
+
   const avatarUrl = livreur.image ? formatImageUrl(livreur.image) : null;
   const nomComplet =
     `${livreur.first_name ?? ""} ${livreur.last_name ?? ""}`.trim() || "—";
@@ -163,16 +196,18 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, onMenu }
       {/* 8. Actions */}
       <td className="py-3 px-4 text-right">
         <button
+          ref={buttonRef}
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onMenu();
+            setMenuOpen((o) => !o);
           }}
-          className="p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
+          className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
           aria-label="Actions"
         >
           <MoreHorizontal className="w-4 h-4" />
         </button>
+        {renderMenu()}
       </td>
     </tr>
   );

@@ -11,7 +11,6 @@ interface LivreursListProps {
   livreurs: Livreur[];
   isLoading: boolean;
   onView: (livreur: Livreur) => void;
-  onMenu: (livreur: Livreur) => void;
   liveMap?: Map<string, IDelivererLive>;
 }
 
@@ -73,7 +72,6 @@ const LivreursList: React.FC<LivreursListProps> = ({
   livreurs,
   isLoading,
   onView,
-  onMenu,
   liveMap,
 }) => {
   return (
@@ -119,7 +117,6 @@ const LivreursList: React.FC<LivreursListProps> = ({
                   livreur={livreur}
                   live={liveMap?.get(livreur.id)}
                   onView={() => onView(livreur)}
-                  onMenu={() => onMenu(livreur)}
                 />
               ))
             )}
