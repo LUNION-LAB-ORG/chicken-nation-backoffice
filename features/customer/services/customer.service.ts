@@ -97,6 +97,33 @@ export const deleteCustomer = async (id: string) => {
     }
 };
 
+export interface CustomerUpdatePayload {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+}
+
+// Modification des infos d'un client par un agent backoffice (admin)
+export const updateCustomer = async (id: string, payload: CustomerUpdatePayload) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/admin/${id}`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Customer;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
 export const addCustomer = async (formData: CustomerAddForm) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/');
