@@ -19,6 +19,17 @@ interface Props {
 const ORANGE = "#F17922";
 
 /**
+ * Normalise un numéro ivoirien : accepte +225 / 00225 / 10 chiffres.
+ * Renvoie les 10 chiffres locaux, ou null si invalide.
+ */
+function normalizeCiPhone(input: string): string | null {
+  let d = input.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("225") && d.length === 13) d = d.slice(3);
+  return d.length === 10 ? d : null;
+}
+
+/**
  * Capture d'un client Glovo/Yango (cf. cahier §4.3) — utilisable depuis la page
  * Commandes. 4 champs obligatoires. Store pré-rempli pour un agent store ;
  * sélectionnable pour l'admin central. Affiche un écran de confirmation après création.
@@ -64,18 +75,19 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
     }
   }, [isOpen, isStore, userRestaurantId]);
 
-  const cleanedPhone = phone.replace(/\D/g, "");
+  const normalizedPhone = normalizeCiPhone(phone);
+  const phoneValid = normalizedPhone !== null;
 
-  // Détection de doublon (debounce) dès que le téléphone atteint 10 chiffres
+  // Détection de doublon (debounce) dès que le numéro est valide
   useEffect(() => {
-    if (cleanedPhone.length !== 10) {
+    if (!normalizedPhone) {
       setDup(null);
       return;
     }
     let active = true;
     const t = setTimeout(async () => {
       try {
-        const res = await checkProspectPhone(cleanedPhone);
+        const res = await checkProspectPhone(normalizedPhone);
         if (active) {
           setDup(
             res.exists && res.prospect
@@ -91,7 +103,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
       active = false;
       clearTimeout(t);
     };
-  }, [cleanedPhone]);
+  }, [normalizedPhone]);
 
   if (!isOpen) return null;
 
@@ -103,18 +115,18 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
     !!platform &&
     !!name.trim() &&
     !!orderNumber.trim() &&
-    cleanedPhone.length === 10 &&
+    phoneValid &&
     (isStore || !!restaurantId);
 
   const handleSubmit = async () => {
     setError(null);
-    if (!canSubmit || !platform) return;
+    if (!canSubmit || !platform || !normalizedPhone) return;
     try {
       await mutation.mutateAsync({
         platform,
         name: name.trim(),
         order_number: orderNumber.trim(),
-        phone: cleanedPhone,
+        phone: normalizedPhone,
         ...(isStore ? {} : { restaurant_id: restaurantId }),
       });
       setCreated(true);
@@ -264,7 +276,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
               />
               <p className="text-[11px] text-gray-500 mt-1">
-                Numéro ivoirien à 10 chiffres.
+                Numéro ivoirien à 10 chiffres (avec ou sans +225).
               </p>
               {dup && (
                 <div className="mt-2 flex gap-2 items-center bg-amber-50 text-amber-800 rounded-lg px-3 py-2 text-xs">
