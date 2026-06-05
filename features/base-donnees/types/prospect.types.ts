@@ -96,7 +96,14 @@ export interface ProspectMessage {
   kind: ProspectMessageKind;
   rank: number;
   body: string;
+  sms_sent: boolean;
   created_at: string;
+}
+
+export interface ResendCouponResult {
+  smsSent: boolean;
+  message: string;
+  code: string;
 }
 
 export interface ProspectCouponLite {

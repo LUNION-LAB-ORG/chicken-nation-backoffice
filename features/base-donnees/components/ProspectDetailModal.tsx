@@ -6,6 +6,7 @@ import { Loader2, Phone, Ticket, X } from "lucide-react";
 import { useProspectDetailQuery } from "../queries/prospect-detail.query";
 import {
   useMarkCallMutation,
+  useResendCouponMutation,
   useSendCouponMutation,
 } from "../queries/prospect-actions.mutation";
 import { CallResult } from "../types/prospect.types";
@@ -44,6 +45,7 @@ export function ProspectDetailModal({
   const { data: p, isLoading } = useProspectDetailQuery(id);
   const markCall = useMarkCallMutation();
   const sendCoupon = useSendCouponMutation();
+  const resend = useResendCouponMutation();
 
   if (!id) return null;
 
@@ -176,6 +178,15 @@ export function ProspectDetailModal({
                           {fmt(m.created_at)}
                         </span>
                       </div>
+                      <span
+                        className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold mb-1 ${
+                          m.sms_sent
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {m.sms_sent ? "SMS délivré" : "SMS non délivré"}
+                      </span>
                       <p className="text-gray-600 leading-relaxed">{m.body}</p>
                     </li>
                   ))}
@@ -189,9 +200,19 @@ export function ProspectDetailModal({
                 {p.status === "COUPON_ENVOYE" ||
                 p.status === "INSCRIT" ||
                 p.status === "CONVERTI" ? (
-                  <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
-                    <Ticket className="w-4 h-4" /> Coupon déjà envoyé
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => resend.mutate(p.id)}
+                    disabled={resend.isPending}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                  >
+                    {resend.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Ticket className="w-4 h-4" />
+                    )}
+                    Renvoyer le SMS du coupon
+                  </button>
                 ) : p.status === "JOINT" ? (
                   <button
                     type="button"

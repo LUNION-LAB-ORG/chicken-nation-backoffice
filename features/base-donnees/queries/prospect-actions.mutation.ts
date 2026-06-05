@@ -3,6 +3,7 @@ import { toast } from "react-hot-toast";
 
 import {
   markProspectCall,
+  resendProspectCoupon,
   sendProspectCoupon,
 } from "../services/prospect.service";
 import { CallResult } from "../types/prospect.types";
@@ -31,6 +32,25 @@ export const useSendCouponMutation = () => {
       } else {
         toast(
           `Coupon ${res.coupon.code} généré — SMS non envoyé, communiquez le code au client`,
+          { icon: "⚠️", duration: 6000 },
+        );
+      }
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+export const useResendCouponMutation = () => {
+  const invalidate = useInvalidateProspectQuery();
+  return useMutation({
+    mutationFn: (id: string) => resendProspectCoupon(id),
+    onSuccess: async (res) => {
+      await invalidate();
+      if (res.smsSent) {
+        toast.success(`SMS du coupon ${res.code} renvoyé`);
+      } else {
+        toast(
+          `SMS non envoyé (code ${res.code}) — vérifiez le numéro / Twilio`,
           { icon: "⚠️", duration: 6000 },
         );
       }
