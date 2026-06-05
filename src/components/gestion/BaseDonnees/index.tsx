@@ -1,16 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import {
-  BarChart3,
-  Database,
-  Phone,
-  Ticket,
-  TrendingUp,
-  Users,
-  UserPlus,
-} from "lucide-react";
+import { BarChart3, Database, Ticket, TrendingUp, Users, UserPlus } from "lucide-react";
 
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { ProspectsList } from "../../../../features/base-donnees/components/ProspectsList";
 import { CallCenterView } from "../../../../features/base-donnees/components/CallCenterView";
 import { DashboardView } from "../../../../features/base-donnees/components/DashboardView";
@@ -46,68 +39,64 @@ const EXPORT_BY_TAB: Partial<Record<AdminTab, "contacts" | "coupons" | "sales">>
  */
 export default function BaseDonnees() {
   const user = useAuthStore((s) => s.user);
+  const can = useAuthStore((s) => s.can);
   const isCallCenter = String(user?.role) === "CALL_CENTER";
 
   const [tab, setTab] = useState<AdminTab>("dashboard");
   const [captureOpen, setCaptureOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  return (
-    <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-orange-50 grid place-items-center text-[#F17922]">
-            {isCallCenter ? (
-              <Phone className="w-6 h-6" />
-            ) : (
-              <Database className="w-6 h-6" />
-            )}
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">
-              {isCallCenter ? "Vérification — Call Center" : "Base de Données"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              {isCallCenter
-                ? "File d'appels J+1 · conversion en client direct"
-                : "Captation & conversion des clients Glovo / Yango"}
-            </p>
-          </div>
-        </div>
+  const exportType = !isCallCenter ? EXPORT_BY_TAB[tab] : undefined;
 
-        <div className="flex items-center gap-2">
-          {!isCallCenter && EXPORT_BY_TAB[tab] && (
-            <HasPermission module={Modules.BASE_DONNEES} action={Action.EXPORT}>
-              <ExportButton type={EXPORT_BY_TAB[tab]!} />
-            </HasPermission>
-          )}
-          <HasPermission module={Modules.BASE_DONNEES} action={Action.CREATE}>
-            <button
-              type="button"
-              onClick={() => setCaptureOpen(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:opacity-90"
-            >
-              <UserPlus className="w-4 h-4" />
-              Capturer un client
-            </button>
-          </HasPermission>
-        </div>
-      </div>
+  return (
+    <div className="flex-1 px-4 pt-4 pb-10">
+      <DashboardPageHeader
+        mode="list"
+        title={isCallCenter ? "Vérification — Call Center" : "Base de Données"}
+        subtitle={
+          isCallCenter
+            ? "File d'appels J+1 · conversion en client direct"
+            : "Captation & conversion des clients Glovo / Yango"
+        }
+        actions={[
+          ...(exportType && can(Modules.BASE_DONNEES, Action.EXPORT)
+            ? [
+                {
+                  label: "Exporter",
+                  onClick: () => {},
+                  customComponent: <ExportButton type={exportType} />,
+                },
+              ]
+            : []),
+          ...(can(Modules.BASE_DONNEES, Action.CREATE)
+            ? [
+                {
+                  label: "Capturer un client",
+                  onClick: () => setCaptureOpen(true),
+                  variant: "primary" as const,
+                  icon: UserPlus,
+                },
+              ]
+            : []),
+        ]}
+      />
 
       {isCallCenter ? (
-        <CallCenterView />
+        <div className="mt-4">
+          <CallCenterView />
+        </div>
       ) : (
         <HasPermission
           module={Modules.BASE_DONNEES}
           action={Action.READ}
           fallback={
-            <div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6">
+            <div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">
               Vous n&apos;avez pas accès à ce module.
             </div>
           }
         >
           {/* Onglets admin */}
-          <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit mb-5">
+          <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit my-4">
             {ADMIN_TABS.map((t) => {
               const active = tab === t.key;
               return (
