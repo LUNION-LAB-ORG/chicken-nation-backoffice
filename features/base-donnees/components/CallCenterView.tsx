@@ -3,6 +3,8 @@
 import React from "react";
 import { CheckCircle2, Loader2, Ticket } from "lucide-react";
 
+import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+
 import { useCallQueueQuery } from "../queries/prospect-call-queue.query";
 import {
   useMarkCallMutation,
@@ -128,19 +130,12 @@ export function CallCenterView() {
   const queue = data?.queue ?? [];
   const ind = data?.indicators;
 
-  const Indicator = ({ label, value }: { label: string; value: number }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <div className="text-xs font-semibold text-gray-500">{label}</div>
-      <div className="text-2xl font-bold text-gray-900 mt-1">{value}</div>
-    </div>
-  );
-
   return (
     <div>
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <Indicator label="À appeler (file J+1)" value={ind?.toCall ?? 0} />
-        <Indicator label="Joints aujourd'hui" value={ind?.joinedToday ?? 0} />
-        <Indicator label="Coupons envoyés" value={ind?.couponsToday ?? 0} />
+        <StatsCard title="À appeler (file J+1)" value={ind?.toCall ?? 0} color="blue" />
+        <StatsCard title="Joints aujourd'hui" value={ind?.joinedToday ?? 0} color="purple" />
+        <StatsCard title="Coupons envoyés" value={ind?.couponsToday ?? 0} color="orange" />
       </div>
 
       {isLoading ? (

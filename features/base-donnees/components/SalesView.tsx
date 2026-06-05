@@ -3,6 +3,8 @@
 import React from "react";
 import { Inbox, Loader2 } from "lucide-react";
 
+import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+
 import { useProspectSalesQuery } from "../queries/prospect-analytics.query";
 import { PLATFORM_META } from "../utils/prospect-ui";
 
@@ -22,19 +24,12 @@ export function SalesView() {
   const rows = data?.data ?? [];
   const totals = data?.totals;
 
-  const Counter = ({ label, value }: { label: string; value: string | number }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <div className="text-xs font-semibold text-gray-500">{label}</div>
-      <div className="text-2xl font-bold text-gray-900 mt-1">{value}</div>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Counter label="Ventes générées" value={totals?.count ?? 0} />
-        <Counter label="CA total" value={`${f(totals?.ca ?? 0)} F`} />
-        <Counter label="Panier moyen" value={`${f(totals?.average ?? 0)} F`} />
+        <StatsCard title="Ventes générées" value={totals?.count ?? 0} color="green" />
+        <StatsCard title="CA total" value={`${f(totals?.ca ?? 0)} F`} color="orange" />
+        <StatsCard title="Panier moyen" value={`${f(totals?.average ?? 0)} F`} color="blue" />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">

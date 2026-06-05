@@ -3,6 +3,8 @@
 import React from "react";
 import { Inbox, Loader2 } from "lucide-react";
 
+import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+
 import { useProspectCouponsQuery } from "../queries/prospect-analytics.query";
 import { CouponState } from "../types/prospect.types";
 import { PLATFORM_META } from "../utils/prospect-ui";
@@ -27,19 +29,12 @@ export function CouponsView() {
   const used = rows.filter((r) => r.state === "USED").length;
   const usageRate = rows.length ? Math.round((used / rows.length) * 100) : 0;
 
-  const Counter = ({ label, value }: { label: string; value: string | number }) => (
-    <div className="bg-white border border-gray-200 rounded-xl p-4">
-      <div className="text-xs font-semibold text-gray-500">{label}</div>
-      <div className="text-2xl font-bold text-gray-900 mt-1">{value}</div>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <Counter label="Coupons émis" value={rows.length} />
-        <Counter label="Utilisés" value={used} />
-        <Counter label="Taux d'utilisation" value={`${usageRate}%`} />
+        <StatsCard title="Coupons émis" value={rows.length} color="orange" />
+        <StatsCard title="Utilisés" value={used} color="green" />
+        <StatsCard title="Taux d'utilisation" value={`${usageRate}%`} color="blue" />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
