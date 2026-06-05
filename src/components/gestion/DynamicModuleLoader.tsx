@@ -116,8 +116,8 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
-  // ---- Base de Données (Glovo/Yango) ----
-  base_donnees: dynamic(() => import("@/components/gestion/BaseDonnees"), {
+  // ---- Acquisition Glovo/Yango (module Base de Données) ----
+  acquisition: dynamic(() => import("@/components/gestion/BaseDonnees"), {
     loading: () => <LoadingSpinner />,
   }),
 
