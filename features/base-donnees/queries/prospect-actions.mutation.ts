@@ -26,7 +26,14 @@ export const useSendCouponMutation = () => {
     mutationFn: (id: string) => sendProspectCoupon(id),
     onSuccess: async (res) => {
       await invalidate();
-      toast.success(`Coupon ${res.coupon.code} envoyé`);
+      if (res.smsSent) {
+        toast.success(`Coupon ${res.coupon.code} envoyé par SMS`);
+      } else {
+        toast(
+          `Coupon ${res.coupon.code} généré — SMS non envoyé, communiquez le code au client`,
+          { icon: "⚠️", duration: 6000 },
+        );
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   });

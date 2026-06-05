@@ -132,6 +132,7 @@ export interface SendCouponResult {
   prospect: Prospect;
   coupon: { code: string; expiration_date: string };
   message: string;
+  smsSent: boolean;
 }
 
 // ============================================================
