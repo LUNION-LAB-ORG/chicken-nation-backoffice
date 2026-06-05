@@ -54,7 +54,11 @@ function formatDate(iso: string) {
   }
 }
 
-export function ProspectsList() {
+export function ProspectsList({
+  onRowClick,
+}: {
+  onRowClick?: (id: string) => void;
+} = {}) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<ProspectPlatform | "">("");
   const [status, setStatus] = useState<ProspectStatus | "">("");
@@ -169,7 +173,8 @@ export function ProspectsList() {
                 {rows.map((p) => (
                   <tr
                     key={p.id}
-                    className="border-t border-gray-100 hover:bg-gray-50"
+                    onClick={() => onRowClick?.(p.id)}
+                    className={`border-t border-gray-100 hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""}`}
                   >
                     <td className="px-4 py-3 text-gray-500 tabular-nums whitespace-nowrap">
                       {formatDate(p.created_at)}

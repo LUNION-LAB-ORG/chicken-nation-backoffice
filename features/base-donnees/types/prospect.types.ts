@@ -70,3 +70,66 @@ export interface CheckPhoneResult {
     created_at: string;
   } | null;
 }
+
+// ============================================================
+// PHASE 2 — Call Center
+// ============================================================
+
+export type CallResult = "JOINT" | "NON_JOIGNABLE" | "REFUS";
+
+export type ProspectMessageKind =
+  | "DECOUVERTE"
+  | "RELANCE_1"
+  | "RELANCE_2_FIDELITE";
+
+export interface ProspectCall {
+  id: string;
+  result: CallResult;
+  rank: number;
+  note?: string | null;
+  created_at: string;
+  agent?: { id: string; fullname: string } | null;
+}
+
+export interface ProspectMessage {
+  id: string;
+  kind: ProspectMessageKind;
+  rank: number;
+  body: string;
+  created_at: string;
+}
+
+export interface ProspectCouponLite {
+  id: string;
+  code: string;
+  expiration_date: string;
+  is_active?: boolean;
+  usage_count?: number;
+}
+
+export interface ProspectDetail extends Prospect {
+  customer?: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string;
+  } | null;
+  promo_code?: ProspectCouponLite | null;
+  calls: ProspectCall[];
+  messages: ProspectMessage[];
+}
+
+export interface CallQueueItem extends Prospect {
+  _count?: { calls: number; messages: number };
+}
+
+export interface CallQueueResponse {
+  queue: CallQueueItem[];
+  indicators: { toCall: number; joinedToday: number; couponsToday: number };
+}
+
+export interface SendCouponResult {
+  prospect: Prospect;
+  coupon: { code: string; expiration_date: string };
+  message: string;
+}

@@ -2,10 +2,14 @@ import { getHumanReadableError } from "@/utils/errorMessages";
 import { getAuthToken } from "@/utils/authUtils";
 import { PaginatedResponse } from "../../../types";
 import {
+  CallQueueResponse,
+  CallResult,
   CheckPhoneResult,
   CreateProspectPayload,
   Prospect,
+  ProspectDetail,
   ProspectQuery,
+  SendCouponResult,
 } from "../types/prospect.types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
@@ -87,5 +91,74 @@ export const checkProspectPhone = async (phone: string) => {
     return (await response.json()) as CheckPhoneResult;
   } catch (error) {
     throw new Error(getHumanReadableError(error));
+  }
+};
+
+// ============================================================
+// PHASE 2 — Call Center
+// ============================================================
+
+export const getProspectDetail = async (id: string) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as ProspectDetail;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+export const getCallQueue = async (restaurantId?: string) => {
+  try {
+    const { url, headers } = await prepareRequest(
+      BASE_URL,
+      "/call-queue",
+      restaurantId ? { restaurantId } : undefined,
+    );
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as CallQueueResponse;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+export const markProspectCall = async (
+  id: string,
+  payload: { result: CallResult; note?: string },
+) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/call`);
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as Prospect;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+export const sendProspectCoupon = async (id: string) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/coupon`);
+    const response = await fetch(url, { method: "POST", headers, body: "{}" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as SendCouponResult;
+  } catch (error) {
+    throw new Error((error as Error).message);
   }
 };
