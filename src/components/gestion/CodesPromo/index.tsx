@@ -34,6 +34,7 @@ import type {
   TargetType,
 } from "../../../../features/promo_code/types/promo-code.types";
 import ProductTargetSelector from "@/components/gestion/Promos/ProductTargetSelector";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { getAllMenus } from "@/services/menuService";
 import { getAllCategories, type Category } from "@/services/categoryService";
 import type { MenuItem } from "@/types";
@@ -667,52 +668,45 @@ export default function CodesPromo() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Codes promo</h1>
-          <p className="text-sm text-gray-500 mt-1">Gérez vos codes promotionnels</p>
+    <div className="flex-1 px-4 pt-4 pb-10 space-y-5">
+      {/* Header (aligné sur la page Commandes) */}
+      <DashboardPageHeader
+        mode="list"
+        title="Codes promo"
+        subtitle="Gérez vos codes promotionnels"
+        searchConfig={{
+          placeholder: "Rechercher un code...",
+          value: searchInput,
+          realTimeSearch: true,
+          onSearch: (v: string) => {
+            setSearchInput(v);
+            setQuery((prev) => ({ ...prev, page: 1 }));
+          },
+        }}
+        actions={[
+          {
+            label: "Nouveau code",
+            onClick: () => setShowCreateModal(true),
+            variant: "primary" as const,
+            icon: Plus,
+          },
+        ]}
+      />
+
+      {/* Stats rapides */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <span>{stats?.activeCount ?? 0} actifs</span>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Stats */}
-          <div className="hidden sm:flex items-center gap-4 mr-2">
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span>{stats?.activeCount ?? 0} actifs</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-sm text-gray-600">
-              <Tag size={14} />
-              <span>{stats?.totalUsage ?? 0} utilisations</span>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#F17922] text-white rounded-lg hover:bg-[#d96810] transition-colors text-sm font-medium shadow-sm"
-          >
-            <Plus size={18} />
-            Nouveau code
-          </button>
+        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+          <Tag size={14} />
+          <span>{stats?.totalUsage ?? 0} utilisations</span>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="relative flex-1 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Rechercher un code..."
-            value={searchInput}
-            onChange={(e) => {
-              setSearchInput(e.target.value);
-              setQuery((prev) => ({ ...prev, page: 1 }));
-            }}
-            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent"
-          />
-        </div>
-
         {/* Active filter */}
         <div className="flex bg-gray-100 rounded-lg p-0.5">
           {(["all", "active", "inactive"] as const).map((val) => (
