@@ -3,7 +3,7 @@
 import React from "react";
 import { CheckCircle2, Loader2, Ticket } from "lucide-react";
 
-import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
 
 import { useCallQueueQuery } from "../queries/prospect-call-queue.query";
 import {
@@ -133,9 +133,9 @@ export function CallCenterView() {
   return (
     <div>
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <StatsCard title="À appeler (file J+1)" value={ind?.toCall ?? 0} color="blue" />
-        <StatsCard title="Joints aujourd'hui" value={ind?.joinedToday ?? 0} color="purple" />
-        <StatsCard title="Coupons envoyés" value={ind?.couponsToday ?? 0} color="orange" />
+        <GenericStatCard badgeText="À appeler (file J+1)" badgeColor="#4285F4" value={ind?.toCall ?? 0} />
+        <GenericStatCard badgeText="Joints aujourd'hui" badgeColor="#7C3AED" value={ind?.joinedToday ?? 0} />
+        <GenericStatCard badgeText="Coupons envoyés" badgeColor="#F17922" value={ind?.couponsToday ?? 0} />
       </div>
 
       {isLoading ? (

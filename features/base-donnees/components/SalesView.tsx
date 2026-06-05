@@ -3,7 +3,7 @@
 import React from "react";
 import { Inbox, Loader2 } from "lucide-react";
 
-import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
 
 import { useProspectSalesQuery } from "../queries/prospect-analytics.query";
 import { PLATFORM_META } from "../utils/prospect-ui";
@@ -27,9 +27,9 @@ export function SalesView() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <StatsCard title="Ventes générées" value={totals?.count ?? 0} color="green" />
-        <StatsCard title="CA total" value={`${f(totals?.ca ?? 0)} F`} color="orange" />
-        <StatsCard title="Panier moyen" value={`${f(totals?.average ?? 0)} F`} color="blue" />
+        <GenericStatCard badgeText="Ventes générées" badgeColor="#16A34A" value={totals?.count ?? 0} />
+        <GenericStatCard badgeText="CA total" badgeColor="#F17922" value={f(totals?.ca ?? 0)} unit="FCFA" />
+        <GenericStatCard badgeText="Panier moyen" badgeColor="#4285F4" value={f(totals?.average ?? 0)} unit="FCFA" />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">

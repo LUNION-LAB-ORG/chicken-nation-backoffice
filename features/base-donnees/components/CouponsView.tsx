@@ -3,7 +3,7 @@
 import React from "react";
 import { Inbox, Loader2 } from "lucide-react";
 
-import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
+import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
 
 import { useProspectCouponsQuery } from "../queries/prospect-analytics.query";
 import { CouponState } from "../types/prospect.types";
@@ -32,9 +32,9 @@ export function CouponsView() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <StatsCard title="Coupons émis" value={rows.length} color="orange" />
-        <StatsCard title="Utilisés" value={used} color="green" />
-        <StatsCard title="Taux d'utilisation" value={`${usageRate}%`} color="blue" />
+        <GenericStatCard badgeText="Coupons émis" badgeColor="#F17922" value={rows.length} />
+        <GenericStatCard badgeText="Utilisés" badgeColor="#16A34A" value={used} />
+        <GenericStatCard badgeText="Taux d'utilisation" badgeColor="#4285F4" value={usageRate} unit="%" />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">

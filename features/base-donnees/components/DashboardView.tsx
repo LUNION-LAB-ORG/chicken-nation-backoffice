@@ -1,12 +1,9 @@
 "use client";
 
 import React from "react";
-import { Store, TrendingUp } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
-import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartCard";
-import StatsTable from "@/components/gestion/Statistiques/shared/StatsTable";
-import StatsLoadingState from "@/components/gestion/Statistiques/shared/StatsLoadingState";
+import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
 
 import { useProspectStatsQuery } from "../queries/prospect-analytics.query";
 
@@ -16,7 +13,11 @@ export function DashboardView() {
   const { data: s, isLoading } = useProspectStatsQuery();
 
   if (isLoading || !s) {
-    return <StatsLoadingState />;
+    return (
+      <div className="flex items-center justify-center h-56">
+        <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
+      </div>
+    );
   }
 
   const funnel: { label: string; value: number }[] = [
@@ -27,66 +28,46 @@ export function DashboardView() {
     { label: "Convertis (vente)", value: s.funnel.convertis },
   ];
   const max = Math.max(1, s.funnel.saisis);
+  const storeMax = Math.max(1, ...s.by_store.map((x) => x.total));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* KPIs — répartition plateformes */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <StatsCard
-          title="Total coordonnées"
+      <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+        <GenericStatCard
+          badgeText="Total coordonnées"
+          badgeColor="#F17922"
           value={f(s.total)}
-          subtitle="Glovo + Yango"
-          color="orange"
         />
-        <StatsCard
-          title="Contacts Glovo"
+        <GenericStatCard
+          badgeText="Contacts Glovo"
+          badgeColor="#4285F4"
           value={f(s.platform.glovo)}
-          subtitle={s.total ? `${Math.round((s.platform.glovo / s.total) * 100)}%` : ""}
-          color="blue"
+          unit={s.total ? `(${Math.round((s.platform.glovo / s.total) * 100)}%)` : ""}
         />
-        <StatsCard
-          title="Contacts Yango"
+        <GenericStatCard
+          badgeText="Contacts Yango"
+          badgeColor="#EA4335"
           value={f(s.platform.yango)}
-          subtitle={s.total ? `${Math.round((s.platform.yango / s.total) * 100)}%` : ""}
-          color="red"
+          unit={s.total ? `(${Math.round((s.platform.yango / s.total) * 100)}%)` : ""}
         />
       </div>
 
       {/* KPIs — qualification & performance */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatsCard
-          title="Vérifiés"
-          value={f(s.funnel.verifies)}
-          subtitle="appelés & joints"
-          color="purple"
-        />
-        <StatsCard
-          title="Inscrits"
-          value={f(s.funnel.inscrits)}
-          subtitle="comptes créés"
-          color="green"
-        />
-        <StatsCard
-          title="Taux de conversion"
-          value={`${s.conversion_rate}%`}
-          subtitle="convertis ÷ total"
-          color="orange"
-        />
-        <StatsCard
-          title="Ventes générées"
-          value={f(s.sales.count)}
-          subtitle={`${f(s.sales.ca)} FCFA`}
-          color="green"
-        />
+      <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-6">
+        <GenericStatCard badgeText="Vérifiés" badgeColor="#7C3AED" value={f(s.funnel.verifies)} />
+        <GenericStatCard badgeText="Inscrits" badgeColor="#16A34A" value={f(s.funnel.inscrits)} />
+        <GenericStatCard badgeText="Taux de conversion" badgeColor="#F17922" value={s.conversion_rate} unit="%" />
+        <GenericStatCard badgeText="CA généré" badgeColor="#16A34A" value={f(s.sales.ca)} unit="FCFA" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 grid-cols-1 gap-6">
         {/* Entonnoir */}
-        <StatsChartCard
-          title="Entonnoir de conversion"
-          subtitle="Du contact capté à la première vente directe"
-          icon={TrendingUp}
-        >
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-900">Entonnoir de conversion</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Du contact capté à la première vente directe
+          </p>
           <div className="space-y-2.5">
             {funnel.map((d) => (
               <div key={d.label} className="flex items-center gap-3">
@@ -105,35 +86,41 @@ export function DashboardView() {
               </div>
             ))}
           </div>
-        </StatsChartCard>
+        </div>
 
         {/* Performance par store */}
-        <StatsChartCard
-          title="Performance par store"
-          subtitle="Contacts captés / convertis"
-          icon={Store}
-          rightContent={
-            <span className="text-xs text-gray-500">
-              Coupons : {s.coupons.sent} émis · {s.coupons.used} utilisés
-            </span>
-          }
-        >
-          <StatsTable
-            columns={[
-              { key: "store", label: "Store" },
-              { key: "total", label: "Captés", align: "right" },
-              { key: "converted", label: "Convertis", align: "right" },
-            ]}
-            rows={s.by_store.map((st) => ({
-              store: st.name,
-              total: f(st.total),
-              converted: (
-                <span className="text-green-600 font-medium">{st.converted}</span>
-              ),
-            }))}
-            emptyMessage="Aucune donnée par store"
-          />
-        </StatsChartCard>
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+          <h3 className="text-sm font-semibold text-gray-900">Performance par store</h3>
+          <p className="text-xs text-gray-500 mb-4">
+            Contacts captés (convertis) · Coupons : {s.coupons.sent} émis ·{" "}
+            {s.coupons.used} utilisés
+          </p>
+          {s.by_store.length === 0 ? (
+            <p className="text-sm text-gray-400">Aucune donnée par store.</p>
+          ) : (
+            <div className="space-y-3">
+              {s.by_store.map((st) => (
+                <div key={st.restaurant_id}>
+                  <div className="flex justify-between text-sm font-semibold mb-1">
+                    <span>{st.name}</span>
+                    <span>
+                      {st.total}{" "}
+                      <span className="text-green-600 text-xs font-medium">
+                        · {st.converted} conv.
+                      </span>
+                    </span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#F17922] rounded-full"
+                      style={{ width: `${(st.total / storeMax) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
