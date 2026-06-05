@@ -8,6 +8,7 @@ import {
   Calendar,
   ClipboardList,
   CreditCard,
+  Database,
   LayoutDashboard,
   LucideIcon,
   Megaphone,
@@ -109,6 +110,12 @@ export const useGetMenuConfig = (): {
           canAccess: () => can(Modules.CLIENTS, Action.READ),
         },
       ],
+    },
+    {
+      id: "base_donnees",
+      label: "Base de Données",
+      icon: Database,
+      canAccess: () => can(Modules.BASE_DONNEES, Action.READ),
     },
     {
       id: "messages_tickets",

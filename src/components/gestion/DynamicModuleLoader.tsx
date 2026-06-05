@@ -116,6 +116,11 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
+  // ---- Base de Données (Glovo/Yango) ----
+  base_donnees: dynamic(() => import("@/components/gestion/BaseDonnees"), {
+    loading: () => <LoadingSpinner />,
+  }),
+
   // ---- Paramètres ----
   settings: dynamic(() => import("@/components/gestion/Settings"), {
     loading: () => <LoadingSpinner />,

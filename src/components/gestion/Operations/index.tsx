@@ -37,6 +37,7 @@ import { refreshOrders } from "../../../../features/orders/services/order-servic
 import { OrderStatus, OrderType as OT } from "../../../../features/orders/types/order.types";
 import { OrderTable } from "../../../../features/orders/types/ordersTable.types";
 import { UserType } from "../../../../features/users/types/user.types";
+import { CaptureContactModal } from "../../../../features/base-donnees/components/CaptureContactModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -74,6 +75,7 @@ export default function Operations() {
 
   // ── Header partagé ───────────────────────────────────────────────────────────
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [captureOpen, setCaptureOpen] = useState(false);
 
   // Le header passe en mode "retour" uniquement quand on crée/édite une commande
   const isEditing =
@@ -206,6 +208,17 @@ export default function Operations() {
               realTimeSearch: true,
             }}
             actions={[
+              ...(can(Modules.BASE_DONNEES, Action.CREATE)
+                ? [
+                    {
+                      label: "Capturer un client Glovo/Yango",
+                      onClick: () => setCaptureOpen(true),
+                      variant: "secondary" as const,
+                      className:
+                        "bg-[#F17922] border border-[#F17922] text-white hover:opacity-90",
+                    },
+                  ]
+                : []),
               ...(can(Modules.COMMANDES, Action.READ)
                 ? [
                     {
@@ -371,6 +384,12 @@ export default function Operations() {
         order={drawerOrder}
         initialTab={initialDrawerTab}
         onClose={handleCloseDrawer}
+      />
+
+      {/* Capture d'un client Glovo/Yango (module Base de Données) */}
+      <CaptureContactModal
+        isOpen={captureOpen}
+        onClose={() => setCaptureOpen(false)}
       />
     </div>
   );

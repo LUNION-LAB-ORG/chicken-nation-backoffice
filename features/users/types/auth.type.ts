@@ -17,6 +17,7 @@ export enum Modules {
   CARD_NATION = 'card_nation',
   COMMENTAIRES = 'reviews',
   SETTINGS = 'settings',
+  BASE_DONNEES = 'base_donnees',
   ALL = 'all',
 }
 

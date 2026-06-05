@@ -18,6 +18,8 @@ export type TabKey =
   | 'hubrise'
   // Planning livreurs (sous-page dédiée)
   | 'planning_livreurs'
+  // Base de Données (prospects Glovo/Yango)
+  | 'base_donnees'
   // Paramètres
   | 'settings';
 
@@ -73,6 +75,8 @@ export interface DashboardState {
   hubrise: SectionState;
   // Planning livreurs
   planning_livreurs: SectionState;
+  // Base de Données
+  base_donnees: SectionState;
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
@@ -107,6 +111,8 @@ const SECTION_KEYS: TabKey[] = [
   'hubrise',
   // Planning livreurs
   'planning_livreurs',
+  // Base de Données
+  'base_donnees',
 ];
 
 // --- STORE ---
@@ -148,6 +154,8 @@ export const useDashboardStore = create<DashboardState>()(
       hubrise: createInitialSectionState(),
       // Planning livreurs
       planning_livreurs: createInitialSectionState(),
+      // Base de Données
+      base_donnees: createInitialSectionState(),
 
       // Actions Globales
       setActiveTab: (tab) => set((state) => {
