@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { BarChart3, Database, Ticket, TrendingUp, Users, UserPlus } from "lucide-react";
+import { BarChart3, Database, Phone, Ticket, TrendingUp, Users, UserPlus } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { ProspectsList } from "../../../../features/base-donnees/components/ProspectsList";
@@ -16,11 +16,12 @@ import { HasPermission } from "../../../../features/users/components/HasPermissi
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 
-type AdminTab = "dashboard" | "liste" | "coupons" | "ventes";
+type AdminTab = "dashboard" | "liste" | "verification" | "coupons" | "ventes";
 
 const ADMIN_TABS: { key: AdminTab; label: string; Icon: typeof Database }[] = [
   { key: "dashboard", label: "Tableau de bord", Icon: BarChart3 },
   { key: "liste", label: "Contacts", Icon: Users },
+  { key: "verification", label: "Vérification", Icon: Phone },
   { key: "coupons", label: "Coupons", Icon: Ticket },
   { key: "ventes", label: "Ventes", Icon: TrendingUp },
 ];
@@ -119,6 +120,7 @@ export default function BaseDonnees() {
 
           {tab === "dashboard" && <DashboardView />}
           {tab === "liste" && <ProspectsList onRowClick={setDetailId} />}
+          {tab === "verification" && <CallCenterView />}
           {tab === "coupons" && <CouponsView />}
           {tab === "ventes" && <SalesView />}
         </HasPermission>
