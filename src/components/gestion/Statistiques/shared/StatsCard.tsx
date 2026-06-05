@@ -2,14 +2,16 @@
 
 import React from "react";
 
+import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
+
 type CardColor = "orange" | "green" | "blue" | "purple" | "red";
 
-const colorMap: Record<CardColor, { bg: string; text: string; border: string }> = {
-  orange: { bg: "bg-orange-50", text: "text-[#F17922]", border: "border-orange-100" },
-  green:  { bg: "bg-green-50",  text: "text-green-700",  border: "border-green-100" },
-  blue:   { bg: "bg-blue-50",   text: "text-blue-700",   border: "border-blue-100" },
-  purple: { bg: "bg-purple-50", text: "text-purple-700", border: "border-purple-100" },
-  red:    { bg: "bg-red-50",    text: "text-red-600",    border: "border-red-100" },
+const COLOR_HEX: Record<CardColor, string> = {
+  orange: "#F17922",
+  green: "#16A34A",
+  blue: "#4285F4",
+  purple: "#7C3AED",
+  red: "#EA4335",
 };
 
 interface StatsCardProps {
@@ -22,24 +24,35 @@ interface StatsCardProps {
   active?: boolean;
 }
 
-export default function StatsCard({ title, value, subtitle, trend, color = "orange", onClick, active }: StatsCardProps) {
-  const c = colorMap[color];
+/**
+ * `StatsCard` est désormais un **adaptateur** au-dessus de `GenericStatCard`
+ * (le composant KPI du tableau de bord principal), pour une carte de stats
+ * unique dans toute l'application.
+ *
+ * Mapping : title → badge, subtitle (+ tendance) → sous-titre, color → couleur
+ * du badge, active → surbrillance (ring), onClick → clic.
+ */
+export default function StatsCard({
+  title,
+  value,
+  subtitle,
+  trend,
+  color = "orange",
+  onClick,
+  active,
+}: StatsCardProps) {
+  const sub = [subtitle, trend ? `${trend.arrow} ${trend.label}` : null]
+    .filter(Boolean)
+    .join("  ");
 
   return (
-    <div
-      className={`${c.bg} ${c.border} border rounded-2xl p-4 ${onClick ? "cursor-pointer transition-all hover:shadow-md" : ""} ${active ? "ring-2 ring-[#F17922] ring-offset-1 shadow-md" : ""}`}
+    <GenericStatCard
+      badgeText={title}
+      badgeColor={COLOR_HEX[color]}
+      value={value}
+      title={sub || undefined}
       onClick={onClick}
-    >
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
-      <p className={`text-2xl font-bold ${c.text} mt-1`}>{value}</p>
-      <div className="flex items-center justify-between mt-1">
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
-        {trend && (
-          <span className="text-xs font-medium" style={{ color: trend.color }}>
-            {trend.arrow} {trend.label}
-          </span>
-        )}
-      </div>
-    </div>
+      className={active ? "ring-2 ring-[#F17922] ring-offset-1" : ""}
+    />
   );
 }
