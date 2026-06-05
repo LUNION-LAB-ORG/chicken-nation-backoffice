@@ -4,8 +4,14 @@ import React from "react";
 import { Loader2, Phone, Ticket, X } from "lucide-react";
 
 import { useProspectDetailQuery } from "../queries/prospect-detail.query";
+import {
+  useMarkCallMutation,
+  useSendCouponMutation,
+} from "../queries/prospect-actions.mutation";
 import { CallResult } from "../types/prospect.types";
 import { PLATFORM_META, STATUS_META } from "../utils/prospect-ui";
+import { HasPermission } from "../../users/components/HasPermission";
+import { Action, Modules } from "../../users/types/auth.type";
 
 const CALL_RESULT_LABEL: Record<CallResult, string> = {
   JOINT: "Joint",
@@ -36,6 +42,8 @@ export function ProspectDetailModal({
   onClose: () => void;
 }) {
   const { data: p, isLoading } = useProspectDetailQuery(id);
+  const markCall = useMarkCallMutation();
+  const sendCoupon = useSendCouponMutation();
 
   if (!id) return null;
 
@@ -174,6 +182,55 @@ export function ProspectDetailModal({
                 </ul>
               )}
             </div>
+
+            {/* Actions call center (admin / call center) */}
+            <HasPermission module={Modules.BASE_DONNEES} action={Action.UPDATE}>
+              <div className="mt-5 pt-4 border-t border-gray-100">
+                {p.status === "COUPON_ENVOYE" ||
+                p.status === "INSCRIT" ||
+                p.status === "CONVERTI" ? (
+                  <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                    <Ticket className="w-4 h-4" /> Coupon déjà envoyé
+                  </div>
+                ) : p.status === "JOINT" ? (
+                  <button
+                    type="button"
+                    onClick={() => sendCoupon.mutate(p.id)}
+                    disabled={sendCoupon.isPending}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-[#3a2700] disabled:opacity-60"
+                    style={{ backgroundColor: "#F5A623" }}
+                  >
+                    {sendCoupon.isPending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Ticket className="w-4 h-4" />
+                    )}
+                    Envoyer le coupon
+                  </button>
+                ) : (
+                  <>
+                    <div className="text-xs font-semibold text-gray-500 mb-1.5">
+                      Marquer l&apos;appel
+                    </div>
+                    <div className="flex gap-2">
+                      {(["JOINT", "NON_JOIGNABLE", "REFUS"] as CallResult[]).map(
+                        (r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            disabled={markCall.isPending}
+                            onClick={() => markCall.mutate({ id: p.id, result: r })}
+                            className="flex-1 border border-gray-200 rounded-lg py-2 text-xs font-semibold bg-white hover:border-current disabled:opacity-50"
+                          >
+                            {CALL_RESULT_LABEL[r]}
+                          </button>
+                        ),
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            </HasPermission>
           </div>
         )}
       </div>
