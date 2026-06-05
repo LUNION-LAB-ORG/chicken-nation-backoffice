@@ -185,7 +185,7 @@ export function ProspectDetailModal({
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {m.sms_sent ? "SMS délivré" : "SMS non délivré"}
+                        {m.sms_sent ? "SMS envoyé (Twilio)" : "SMS non envoyé"}
                       </span>
                       <p className="text-gray-600 leading-relaxed">{m.body}</p>
                     </li>
