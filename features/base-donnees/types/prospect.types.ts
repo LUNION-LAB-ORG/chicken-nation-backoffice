@@ -133,3 +133,58 @@ export interface SendCouponResult {
   coupon: { code: string; expiration_date: string };
   message: string;
 }
+
+// ============================================================
+// PHASE 3 — Analytics
+// ============================================================
+
+export interface ProspectStoreStat {
+  restaurant_id: string;
+  name: string;
+  total: number;
+  converted: number;
+}
+
+export interface ProspectStats {
+  total: number;
+  funnel: {
+    saisis: number;
+    verifies: number;
+    coupon_envoye: number;
+    inscrits: number;
+    convertis: number;
+  };
+  platform: { glovo: number; yango: number };
+  conversion_rate: number;
+  coupons: { sent: number; used: number; usage_rate: number };
+  sales: { count: number; ca: number; average: number };
+  by_store: ProspectStoreStat[];
+}
+
+export type CouponState = "ACTIVE" | "USED" | "EXPIRED";
+
+export interface CouponRow {
+  id: string;
+  code: string;
+  name: string;
+  platform: ProspectPlatform;
+  restaurant?: ProspectRestaurantLite | null;
+  sent_at: string | null;
+  expiration_date: string | null;
+  state: CouponState;
+}
+
+export interface SaleRow {
+  id: string;
+  name: string;
+  platform: ProspectPlatform;
+  restaurant?: ProspectRestaurantLite | null;
+  coupon: string | null;
+  amount: number;
+  date: string | null;
+}
+
+export interface SalesResponse {
+  data: SaleRow[];
+  totals: { count: number; ca: number; average: number };
+}

@@ -5,10 +5,13 @@ import {
   CallQueueResponse,
   CallResult,
   CheckPhoneResult,
+  CouponRow,
   CreateProspectPayload,
   Prospect,
   ProspectDetail,
   ProspectQuery,
+  ProspectStats,
+  SalesResponse,
   SendCouponResult,
 } from "../types/prospect.types";
 
@@ -160,5 +163,54 @@ export const sendProspectCoupon = async (id: string) => {
     return (await response.json()) as SendCouponResult;
   } catch (error) {
     throw new Error((error as Error).message);
+  }
+};
+
+// ============================================================
+// PHASE 3 — Analytics
+// ============================================================
+
+export const getProspectStats = async (restaurantId?: string) => {
+  try {
+    const { url, headers } = await prepareRequest(
+      BASE_URL,
+      "/stats",
+      restaurantId ? { restaurantId } : undefined,
+    );
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return (await response.json()) as ProspectStats;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+export const getProspectCoupons = async (restaurantId?: string) => {
+  try {
+    const { url, headers } = await prepareRequest(
+      BASE_URL,
+      "/coupons",
+      restaurantId ? { restaurantId } : undefined,
+    );
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return (await response.json()) as CouponRow[];
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+export const getProspectSales = async (restaurantId?: string) => {
+  try {
+    const { url, headers } = await prepareRequest(
+      BASE_URL,
+      "/sales",
+      restaurantId ? { restaurantId } : undefined,
+    );
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return (await response.json()) as SalesResponse;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
   }
 };
