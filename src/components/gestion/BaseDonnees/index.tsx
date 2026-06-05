@@ -5,6 +5,7 @@ import {
   BarChart3,
   Database,
   Phone,
+  Settings,
   Ticket,
   TrendingUp,
   Users,
@@ -16,20 +17,30 @@ import { CallCenterView } from "../../../../features/base-donnees/components/Cal
 import { DashboardView } from "../../../../features/base-donnees/components/DashboardView";
 import { CouponsView } from "../../../../features/base-donnees/components/CouponsView";
 import { SalesView } from "../../../../features/base-donnees/components/SalesView";
+import { ParametresView } from "../../../../features/base-donnees/components/ParametresView";
+import { ExportButton } from "../../../../features/base-donnees/components/ExportButton";
 import { ProspectDetailModal } from "../../../../features/base-donnees/components/ProspectDetailModal";
 import { CaptureContactModal } from "../../../../features/base-donnees/components/CaptureContactModal";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 
-type AdminTab = "dashboard" | "liste" | "coupons" | "ventes";
+type AdminTab = "dashboard" | "liste" | "coupons" | "ventes" | "parametres";
 
 const ADMIN_TABS: { key: AdminTab; label: string; Icon: typeof Database }[] = [
   { key: "dashboard", label: "Tableau de bord", Icon: BarChart3 },
   { key: "liste", label: "Contacts", Icon: Users },
   { key: "coupons", label: "Coupons", Icon: Ticket },
   { key: "ventes", label: "Ventes", Icon: TrendingUp },
+  { key: "parametres", label: "Paramètres", Icon: Settings },
 ];
+
+const EXPORT_BY_TAB: Partial<Record<AdminTab, "contacts" | "coupons" | "sales">> =
+  {
+    liste: "contacts",
+    coupons: "coupons",
+    ventes: "sales",
+  };
 
 /**
  * Module « Base de Données » — captation & conversion des clients Glovo/Yango.
@@ -67,16 +78,23 @@ export default function BaseDonnees() {
           </div>
         </div>
 
-        <HasPermission module={Modules.BASE_DONNEES} action={Action.CREATE}>
-          <button
-            type="button"
-            onClick={() => setCaptureOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:opacity-90"
-          >
-            <UserPlus className="w-4 h-4" />
-            Capturer un client
-          </button>
-        </HasPermission>
+        <div className="flex items-center gap-2">
+          {!isCallCenter && EXPORT_BY_TAB[tab] && (
+            <HasPermission module={Modules.BASE_DONNEES} action={Action.EXPORT}>
+              <ExportButton type={EXPORT_BY_TAB[tab]!} />
+            </HasPermission>
+          )}
+          <HasPermission module={Modules.BASE_DONNEES} action={Action.CREATE}>
+            <button
+              type="button"
+              onClick={() => setCaptureOpen(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:opacity-90"
+            >
+              <UserPlus className="w-4 h-4" />
+              Capturer un client
+            </button>
+          </HasPermission>
+        </div>
       </div>
 
       {isCallCenter ? (
@@ -117,6 +135,7 @@ export default function BaseDonnees() {
           {tab === "liste" && <ProspectsList onRowClick={setDetailId} />}
           {tab === "coupons" && <CouponsView />}
           {tab === "ventes" && <SalesView />}
+          {tab === "parametres" && <ParametresView />}
         </HasPermission>
       )}
 

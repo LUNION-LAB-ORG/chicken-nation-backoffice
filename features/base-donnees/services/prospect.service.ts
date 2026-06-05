@@ -7,10 +7,11 @@ import {
   CheckPhoneResult,
   CouponRow,
   CreateProspectPayload,
+  ExportType,
   Prospect,
   ProspectDetail,
   ProspectQuery,
-  ProspectStats,
+  ProspectSettings,
   SalesResponse,
   SendCouponResult,
 } from "../types/prospect.types";
@@ -213,4 +214,57 @@ export const getProspectSales = async (restaurantId?: string) => {
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
+};
+
+// ============================================================
+// PHASE 4 — Réglages & exports
+// ============================================================
+
+export const getProspectSettings = async () => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, "/settings");
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return (await response.json()) as ProspectSettings;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+export const updateProspectSettings = async (
+  payload: Partial<ProspectSettings>,
+) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, "/settings");
+    const response = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as ProspectSettings;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+// Télécharge un CSV (contacts | coupons | sales)
+export const exportProspectsCsv = async (type: ExportType) => {
+  const { url, headers } = await prepareRequest(BASE_URL, "/export", { type });
+  const response = await fetch(url, { method: "GET", headers });
+  if (!response.ok) {
+    throw new Error(`Export impossible (HTTP ${response.status})`);
+  }
+  const blob = await response.blob();
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = `prospects-${type}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
 };

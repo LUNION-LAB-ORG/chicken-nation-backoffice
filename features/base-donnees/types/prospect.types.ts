@@ -188,3 +188,15 @@ export interface SalesResponse {
   data: SaleRow[];
   totals: { count: number; ca: number; average: number };
 }
+
+export interface ProspectSettings {
+  coupon_validity_days: number;
+  coupon_discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
+  coupon_discount_value: number;
+  app_link: string;
+  msg_decouverte: string;
+  msg_relance_1: string;
+  msg_relance_2: string;
+}
+
+export type ExportType = "contacts" | "coupons" | "sales";
