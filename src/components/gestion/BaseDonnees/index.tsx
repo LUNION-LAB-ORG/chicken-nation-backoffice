@@ -52,7 +52,7 @@ export default function BaseDonnees() {
     <div className="flex-1 px-4 pt-4 pb-10">
       <DashboardPageHeader
         mode="list"
-        title={isCallCenter ? "Vérification — Call Center" : "Base de Données"}
+        title={isCallCenter ? "Vérification — Call Center" : "Acquisition Glovo/Yango"}
         subtitle={
           isCallCenter
             ? "File d'appels J+1 · conversion en client direct"

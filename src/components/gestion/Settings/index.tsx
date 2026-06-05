@@ -22,8 +22,7 @@ const TABS = [
   { key: "delivery", label: "Livraison" },
   { key: "mobile", label: "App Mobile" },
   { key: "payment", label: "Paiements" },
-  { key: "marketing_report", label: "Rapport Marketing" },
-  { key: "base_donnees", label: "Base de Données" },
+  { key: "marketing_report", label: "Marketing" },
   { key: "notifications", label: "Notifications" },
   { key: "hubrise", label: "HubRise" },
   { key: "printer", label: "Imprimante" },
@@ -51,8 +50,12 @@ const Settings: React.FC = () => {
         {activeTab === "delivery" && <DeliverySettings />}
         {activeTab === "mobile" && <MobileAppSettings />}
         {activeTab === "payment" && <PaymentSettings />}
-        {activeTab === "marketing_report" && <MarketingReportSettings />}
-        {activeTab === "base_donnees" && <BaseDonneesSettings />}
+        {activeTab === "marketing_report" && (
+          <div className="space-y-6">
+            <MarketingReportSettings />
+            <BaseDonneesSettings />
+          </div>
+        )}
         {activeTab === "notifications" && <NotificationSettings />}
         {activeTab === "hubrise" && <HubRiseSettings />}
         {activeTab === "printer" && <PrinterSettings />}
