@@ -262,8 +262,9 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         onClick={() => !isExporting && setIsOpen(!isOpen)}
         disabled={isExporting}
         className={`
-          px-3 py-1 sm:py-1 cursor-pointer text-sm font-light rounded-xl
-          transition-all duration-200 flex items-center justify-center gap-2 min-w-[120px]
+          cursor-pointer text-sm font-light rounded-xl
+          transition-all duration-200 flex items-center justify-center gap-2
+          w-11 h-11 sm:w-auto sm:h-auto sm:px-3 sm:py-1 sm:min-w-[120px]
           ${
             isExporting
               ? "text-white bg-orange-400 cursor-wait"
@@ -274,15 +275,15 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         {isExporting ? (
           <>
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-            Export...
+            <span className="hidden sm:inline">Export...</span>
           </>
         ) : (
           <>
             <FileText size={16} />
-            {buttonText}
+            <span className="hidden sm:inline">{buttonText}</span>
             <ChevronDown
               size={16}
-              className={`transition-transform duration-200 ${
+              className={`hidden sm:block transition-transform duration-200 ${
                 isOpen ? "rotate-180" : ""
               }`}
             />

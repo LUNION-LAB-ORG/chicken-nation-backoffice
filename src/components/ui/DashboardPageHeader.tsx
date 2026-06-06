@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, MoreVertical, Search, LucideIcon } from "lucide-react";
+import { ChevronLeft, Search, LucideIcon } from "lucide-react";
 import React from "react";
 import { motion } from "framer-motion";
 import { ViewType } from "@/store/dashboardStore";
@@ -20,10 +20,8 @@ interface ActionButton {
   icon?: LucideIcon;
   className?: string;
   customComponent?: React.ReactNode;
-  /** Masquer cette action sur mobile (ex. déjà couverte par la barre d'onglets). */
+  /** Masquer cette action sur mobile (rare ; par défaut toutes sont affichées en icônes). */
   hideOnMobile?: boolean;
-  /** Reléguer cette action dans le menu « ⋯ » sur mobile (jamais l'action principale). */
-  mobileSecondary?: boolean;
 }
 
 interface DashboardPageHeaderProps {
@@ -56,7 +54,6 @@ const DashboardPageHeader = ({
   className = "",
 }: DashboardPageHeaderProps) => {
   const [searchValue, setSearchValue] = React.useState(searchConfig?.value);
-  const [actionsMenuOpen, setActionsMenuOpen] = React.useState(false);
 
   // Animations
   const containerVariants = {
@@ -150,14 +147,7 @@ const DashboardPageHeader = ({
   const renderActions = () => {
     if (actions.length === 0) return null;
 
-    // Sur mobile, on épure : actions masquées exclues, les « secondaires » reléguées
-    // dans le menu « ⋯ », et la première action restante mise en avant.
     const mobileActions = actions.filter((a) => !a.hideOnMobile);
-    const primaryPool = mobileActions.filter((a) => !a.mobileSecondary);
-    const secondaryPool = mobileActions.filter((a) => a.mobileSecondary);
-    const primary = primaryPool[0];
-    const rest = [...primaryPool.slice(1), ...secondaryPool];
-    const PrimaryIcon = primary?.icon;
 
     return (
       <>
@@ -166,76 +156,37 @@ const DashboardPageHeader = ({
           {actions.map(renderDesktopButton)}
         </div>
 
-        {/* Mobile (< sm) : action principale + menu déroulant « ⋯ » */}
+        {/* Mobile (< sm) : rangée d'icônes compactes (gain de place) */}
         {mobileActions.length > 0 && (
-          <div className="flex sm:hidden mt-3 w-full items-center gap-2">
-            {primary &&
-              (primary.customComponent ? (
-                <div className="flex-1 min-w-0">{primary.customComponent}</div>
-              ) : (
+          <div className="flex sm:hidden mt-3 w-full items-center justify-end gap-2">
+            {mobileActions.map((action, index) => {
+              if (action.customComponent) {
+                return (
+                  <div key={index} className="shrink-0">
+                    {action.customComponent}
+                  </div>
+                );
+              }
+              const Icon = action.icon;
+              return (
                 <button
+                  key={index}
                   type="button"
-                  onClick={primary.onClick}
-                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#F17922] active:bg-[#e06816]"
+                  onClick={action.onClick}
+                  aria-label={action.label}
+                  title={action.label}
+                  className="w-11 h-11 shrink-0 grid place-items-center rounded-xl border border-gray-200 bg-white text-gray-700 active:bg-gray-100 transition-colors"
                 >
-                  {PrimaryIcon && <PrimaryIcon size={18} className="shrink-0" />}
-                  <span className="truncate">{primary.label}</span>
+                  {Icon ? (
+                    <Icon size={20} />
+                  ) : (
+                    <span className="text-[11px] font-bold uppercase">
+                      {action.label.slice(0, 2)}
+                    </span>
+                  )}
                 </button>
-              ))}
-
-            {rest.length > 0 && (
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setActionsMenuOpen((o) => !o)}
-                  aria-label="Plus d'actions"
-                  className="p-2.5 rounded-xl border border-gray-200 text-gray-600 active:bg-gray-100"
-                >
-                  <MoreVertical size={20} />
-                </button>
-
-                {actionsMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={() => setActionsMenuOpen(false)}
-                    />
-                    <div className="absolute right-0 mt-2 w-60 max-w-[80vw] bg-white rounded-xl shadow-lg border border-gray-200 z-20 p-1.5">
-                      {rest.map((a, i) => {
-                        if (a.customComponent) {
-                          return (
-                            <div
-                              key={i}
-                              className="px-1 py-1"
-                              onClick={() => setActionsMenuOpen(false)}
-                            >
-                              {a.customComponent}
-                            </div>
-                          );
-                        }
-                        const Icon = a.icon;
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => {
-                              a.onClick();
-                              setActionsMenuOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-700 active:bg-orange-50"
-                          >
-                            {Icon && (
-                              <Icon size={18} className="text-gray-500 shrink-0" />
-                            )}
-                            <span className="truncate">{a.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+              );
+            })}
           </div>
         )}
       </>

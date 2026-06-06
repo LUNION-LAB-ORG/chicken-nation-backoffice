@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Activity, AlertCircle, Archive } from "lucide-react";
+import { Activity, AlertCircle, Archive, Plus, RotateCw, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -215,10 +215,9 @@ export default function Operations() {
                       label: "Capturer un client Glovo/Yango",
                       onClick: openCapture,
                       variant: "secondary" as const,
+                      icon: UserPlus,
                       className:
                         "bg-[#F17922] border border-[#F17922] text-white hover:opacity-90",
-                      // Fonction secondaire : reléguée dans le menu « ⋯ » sur mobile
-                      mobileSecondary: true,
                     },
                   ]
                 : []),
@@ -228,6 +227,7 @@ export default function Operations() {
                       label: isRefreshing ? "Actualisation..." : "Actualiser",
                       onClick: handleRefresh,
                       variant: "secondary" as const,
+                      icon: RotateCw,
                       className:
                         "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
                     },
@@ -242,6 +242,7 @@ export default function Operations() {
                         setSectionView("orders", "create");
                       },
                       variant: "secondary" as const,
+                      icon: Plus,
                       className:
                         "bg-white border border-[#F17922] text-[#F17922] hover:bg-white hover:opacity-80",
                     },
