@@ -113,7 +113,6 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
 
   const canSubmit =
     !!platform &&
-    !!name.trim() &&
     !!orderNumber.trim() &&
     phoneValid &&
     (isStore || !!restaurantId);
@@ -202,7 +201,8 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
             <div className="flex gap-2 items-start bg-orange-50 text-[#8a4a1c] rounded-xl px-4 py-3 text-sm mb-5">
               <AlertTriangle className="w-4 h-4 flex-none mt-0.5 text-[#F17922]" />
               <span>
-                Les <b>4 champs</b> sont obligatoires.
+                <b>Plateforme</b>, <b>n° commande</b> et <b>téléphone</b> sont
+                obligatoires. Le <b>nom</b> est optionnel (absent sur Yango).
               </span>
             </div>
 
@@ -239,12 +239,13 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
             {/* Nom */}
             <div className="mb-4">
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                2 · Nom / Prénom / Pseudo <span className="text-red-500">*</span>
+                2 · Nom / Prénom / Pseudo{" "}
+                <span className="text-gray-400 font-normal">(optionnel)</span>
               </label>
               <input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Nom utilisé pour la commande"
+                placeholder="Laisser vide si non fourni (Yango)"
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
               />
             </div>
