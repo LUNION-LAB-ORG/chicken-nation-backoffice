@@ -3,6 +3,7 @@
 import React from "react";
 import {
   BarChart3,
+  BookOpen,
   ClipboardList,
   Home,
   LayoutGrid,
@@ -59,7 +60,16 @@ export default function MobileBottomNav() {
       onClick: () => setActiveTab("operations" as TabKey),
     });
   }
-  if (can(Modules.COMMANDES, Action.READ)) {
+  if (can(Modules.MENUS, Action.READ)) {
+    items.push({
+      key: "menus",
+      label: "Menus",
+      Icon: BookOpen,
+      active: activeTab === "menus",
+      onClick: () => setActiveTab("menus" as TabKey),
+    });
+  }
+  if (can(Modules.DASHBOARD, Action.READ) && can(Modules.COMMANDES, Action.READ)) {
     items.push({
       key: "stats_orders",
       label: "Stats",

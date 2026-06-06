@@ -226,14 +226,6 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
         ) : (
           /* ---------- Formulaire ---------- */
           <div className="px-6 py-5">
-            <div className="flex gap-2 items-start bg-orange-50 text-[#8a4a1c] rounded-xl px-4 py-3 text-sm mb-5">
-              <AlertTriangle className="w-4 h-4 flex-none mt-0.5 text-[#F17922]" />
-              <span>
-                <b>Plateforme</b>, <b>n° commande</b> et <b>téléphone</b> sont
-                obligatoires. Le <b>nom</b> est optionnel (absent sur Yango).
-              </span>
-            </div>
-
             {/* Scan photo → préremplissage automatique */}
             <input
               ref={fileRef}
@@ -311,6 +303,8 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
               <input
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Ex. 101672547192"
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
               />
