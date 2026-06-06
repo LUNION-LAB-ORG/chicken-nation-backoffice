@@ -69,7 +69,7 @@ function KpiTile({
 }) {
   return (
     <div
-      className={`relative bg-gradient-to-br ${bgFrom} to-white border border-gray-100 rounded-2xl shadow-sm p-4 overflow-hidden`}
+      className={`relative bg-gradient-to-br ${bgFrom} to-white border border-gray-100 rounded-2xl shadow-sm p-5 sm:p-4 overflow-hidden`}
     >
       {urgent && (
         <span className="absolute top-2 right-2 flex h-2 w-2">
@@ -77,16 +77,18 @@ function KpiTile({
           <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
         </span>
       )}
-      <div className="flex items-center gap-3">
+      {/* Mobile : layout vertical (icône au-dessus, gros chiffre) facon widget natif.
+          Desktop (sm+) : layout horizontal compact d'origine. */}
+      <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+          className="w-11 h-11 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0"
           style={{ backgroundColor: `${color}20` }}
         >
           <Icon className="w-5 h-5" style={{ color }} />
         </div>
         <div>
-          <p className="text-xs text-gray-600 uppercase font-semibold tracking-wide">{label}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-0.5">{value}</p>
+          <p className="text-[11px] sm:text-xs text-gray-600 uppercase font-semibold tracking-wide">{label}</p>
+          <p className="text-3xl sm:text-2xl font-bold text-gray-900 mt-0.5 leading-none">{value}</p>
         </div>
       </div>
     </div>

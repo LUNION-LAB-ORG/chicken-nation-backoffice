@@ -258,27 +258,22 @@ export default function Operations() {
         )}
       </div>
 
-      {/* ── Sélecteur d'onglets (sous le header, masqué en create/edit) ──────── */}
+      {/* ── Sélecteur d'onglets — segmented control plein-largeur sur mobile ──── */}
       {!isEditing && (
         <div className="px-4 pt-3 pb-0">
-          <div
-            className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 w-fit"
-            style={{ minHeight: 40 }}
-          >
-            {TABS.map((tab, idx) => {
+          <div className="flex items-center bg-[#f4f4f5] rounded-[14px] p-1 gap-1 w-full sm:w-fit">
+            {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
-                  className={`transition-colors font-bold cursor-pointer text-[13px] px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap inline-flex items-center gap-1.5
-                    ${isActive ? "bg-[#F17922] text-white shadow-none" : "bg-transparent text-[#71717A] font-normal"}
-                    ${idx === 0 ? "" : "ml-1"}
+                  className={`flex-1 sm:flex-none transition-all font-bold cursor-pointer text-[13px] px-5 rounded-[11px] focus:outline-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[30px]
+                    ${isActive ? "bg-[#F17922] text-white shadow-sm" : "bg-transparent text-[#71717A] font-normal active:bg-black/5"}
                   `}
-                  style={{ height: 30 }}
                 >
-                  <tab.Icon className="w-3.5 h-3.5" />
+                  <tab.Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
                   {tab.label}
                 </button>
               );
