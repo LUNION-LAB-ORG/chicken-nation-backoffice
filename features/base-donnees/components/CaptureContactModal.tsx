@@ -18,6 +18,7 @@ import { useProspectAddMutation } from "../queries/prospect-add.mutation";
 import { checkProspectPhone, scanProspectOrder } from "../services/prospect.service";
 import { ProspectPlatform } from "../types/prospect.types";
 import { PLATFORM_META } from "../utils/prospect-ui";
+import BottomSheet from "@/components/ui/BottomSheet";
 
 interface Props {
   isOpen: boolean;
@@ -135,8 +136,6 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
     };
   }, [normalizedPhone]);
 
-  if (!isOpen) return null;
-
   const restaurantName = restaurants.find(
     (r) => r.id === (isStore ? userRestaurantId : restaurantId),
   )?.name;
@@ -170,8 +169,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-auto">
+    <BottomSheet isOpen={isOpen} onClose={handleClose} className="md:max-w-lg">
         {/* Header */}
         <div
           className="flex items-start gap-3 px-6 py-5 text-white rounded-t-2xl"
@@ -398,7 +396,6 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </BottomSheet>
   );
 }

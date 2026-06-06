@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, Search, LucideIcon } from "lucide-react";
+import { ChevronLeft, MoreVertical, Search, LucideIcon } from "lucide-react";
 import React from "react";
 import { motion } from "framer-motion";
 import { ViewType } from "@/store/dashboardStore";
@@ -20,6 +20,8 @@ interface ActionButton {
   icon?: LucideIcon;
   className?: string;
   customComponent?: React.ReactNode;
+  /** Masquer cette action sur mobile (ex. déjà couverte par la barre d'onglets). */
+  hideOnMobile?: boolean;
 }
 
 interface DashboardPageHeaderProps {
@@ -52,6 +54,7 @@ const DashboardPageHeader = ({
   className = "",
 }: DashboardPageHeaderProps) => {
   const [searchValue, setSearchValue] = React.useState(searchConfig?.value);
+  const [actionsMenuOpen, setActionsMenuOpen] = React.useState(false);
 
   // Animations
   const containerVariants = {
@@ -109,47 +112,128 @@ const DashboardPageHeader = ({
     );
   };
 
+  // Bouton « plein » desktop — comportement inchangé (≥ sm)
+  const renderDesktopButton = (action: ActionButton, index: number) => {
+    if (action.customComponent) {
+      return (
+        <div key={index} className={mode === "list" ? "w-full sm:w-auto" : ""}>
+          {action.customComponent}
+        </div>
+      );
+    }
+    const Icon = action.icon;
+    return (
+      <motion.button
+        key={index}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={action.onClick}
+        className={`
+          px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2
+          ${
+            action.className ||
+            (action.variant === "secondary"
+              ? "text-gray-700 bg-gray-100 hover:bg-gray-200"
+              : "text-white bg-[#F17922] hover:bg-[#e06816]")
+          }
+          ${mode === "list" ? "w-full sm:w-auto" : ""}
+        `}
+      >
+        {Icon && <Icon size={18} />}
+        {action.label}
+      </motion.button>
+    );
+  };
+
   const renderActions = () => {
     if (actions.length === 0) return null;
 
-    return (
-      <div className="flex mt-4 flex-col sm:flex-row gap-2 w-full sm:w-auto ">
-        {actions.map((action, index) => {
-          // Si customComponent est fourni, l'utiliser à la place du bouton par défaut
-          if (action.customComponent) {
-            return (
-              <div
-                key={index}
-                className={mode === "list" ? "w-full sm:w-auto" : ""}
-              >
-                {action.customComponent}
-              </div>
-            );
-          }
+    // Sur mobile, on épure : actions couvertes ailleurs masquées, le reste replié
+    const mobileActions = actions.filter((a) => !a.hideOnMobile);
+    const primary = mobileActions[0];
+    const rest = mobileActions.slice(1);
+    const PrimaryIcon = primary?.icon;
 
-          return (
-            <motion.button
-              key={index}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={action.onClick}
-              className={`
-                px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2
-                ${
-                  action.className ||
-                  (action.variant === "secondary"
-                    ? "text-gray-700 bg-gray-100 hover:bg-gray-200"
-                    : "text-white bg-[#F17922] hover:bg-[#e06816]")
-                }
-                ${mode === "list" ? "w-full sm:w-auto" : ""}
-              `}
-            >
-              {action.icon && <action.icon size={18} />}
-              {action.label}
-            </motion.button>
-          );
-        })}
-      </div>
+    return (
+      <>
+        {/* Desktop (≥ sm) : rangée complète, inchangée */}
+        <div className="hidden sm:flex mt-4 flex-row gap-2 w-auto">
+          {actions.map(renderDesktopButton)}
+        </div>
+
+        {/* Mobile (< sm) : action principale + menu déroulant « ⋯ » */}
+        {mobileActions.length > 0 && (
+          <div className="flex sm:hidden mt-3 w-full items-center gap-2">
+            {primary &&
+              (primary.customComponent ? (
+                <div className="flex-1 min-w-0">{primary.customComponent}</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={primary.onClick}
+                  className="flex-1 min-w-0 inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#F17922] active:bg-[#e06816]"
+                >
+                  {PrimaryIcon && <PrimaryIcon size={18} className="shrink-0" />}
+                  <span className="truncate">{primary.label}</span>
+                </button>
+              ))}
+
+            {rest.length > 0 && (
+              <div className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setActionsMenuOpen((o) => !o)}
+                  aria-label="Plus d'actions"
+                  className="p-2.5 rounded-xl border border-gray-200 text-gray-600 active:bg-gray-100"
+                >
+                  <MoreVertical size={20} />
+                </button>
+
+                {actionsMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setActionsMenuOpen(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-60 max-w-[80vw] bg-white rounded-xl shadow-lg border border-gray-200 z-20 p-1.5">
+                      {rest.map((a, i) => {
+                        if (a.customComponent) {
+                          return (
+                            <div
+                              key={i}
+                              className="px-1 py-1"
+                              onClick={() => setActionsMenuOpen(false)}
+                            >
+                              {a.customComponent}
+                            </div>
+                          );
+                        }
+                        const Icon = a.icon;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => {
+                              a.onClick();
+                              setActionsMenuOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-700 active:bg-orange-50"
+                          >
+                            {Icon && (
+                              <Icon size={18} className="text-gray-500 shrink-0" />
+                            )}
+                            <span className="truncate">{a.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </>
     );
   };
 

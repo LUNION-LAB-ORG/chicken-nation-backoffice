@@ -54,7 +54,7 @@ export default function UserMenu() {
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           className="flex items-center space-x-3 p-2 cursor-pointer rounded-lg hover:bg-gray-50 transition-colors"
         >
-          <span className="text-sm text-gray-700">{displayName}</span>
+          <span className="hidden sm:inline text-sm text-gray-700">{displayName}</span>
           <div className="w-8 h-8 bg-gray-200 rounded-full cursor-pointer overflow-hidden">
             <Image
               src={avatarUrl}

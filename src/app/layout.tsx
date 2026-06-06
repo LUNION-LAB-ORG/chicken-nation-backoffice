@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { urbanist, blocklynCondensed, blocklynGrunge } from "./fonts";
 import { Toaster } from "react-hot-toast";
@@ -11,11 +11,27 @@ import OneSignalProvider from "@/providers/OneSignalProvider";
 export const metadata: Metadata = {
   title: "Chicken Nation",
   description: "Champion dans poulet",
+  applicationName: "Chicken Nation",
   icons: {
     icon: "/icons/logo.png",
     shortcut: "/icons/logo.png",
     apple: "/icons/logo.png",
   },
+  // Permet l'ouverture en plein écran depuis l'écran d'accueil iOS (mode standalone)
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Chicken Nation",
+  },
+};
+
+// Next 15 : themeColor / viewportFit doivent être dans `viewport`, pas dans `metadata`
+export const viewport: Viewport = {
+  themeColor: "#F17922",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
