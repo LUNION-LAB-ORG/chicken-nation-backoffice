@@ -40,10 +40,11 @@ export default function MobileBottomNav() {
     activeTab === "orders" ||
     activeTab === "historique";
 
-  const items: NavItem[] = [];
+  // Destinations possibles, par ordre de priorité, filtrées par permission.
+  const destinations: NavItem[] = [];
 
   if (can(Modules.DASHBOARD, Action.READ)) {
-    items.push({
+    destinations.push({
       key: "dashboard",
       label: "Accueil",
       Icon: Home,
@@ -52,7 +53,7 @@ export default function MobileBottomNav() {
     });
   }
   if (can(Modules.COMMANDES, Action.READ)) {
-    items.push({
+    destinations.push({
       key: "operations",
       label: "Commandes",
       Icon: ClipboardList,
@@ -61,7 +62,7 @@ export default function MobileBottomNav() {
     });
   }
   if (can(Modules.MENUS, Action.READ)) {
-    items.push({
+    destinations.push({
       key: "menus",
       label: "Menus",
       Icon: BookOpen,
@@ -70,7 +71,7 @@ export default function MobileBottomNav() {
     });
   }
   if (can(Modules.DASHBOARD, Action.READ) && can(Modules.COMMANDES, Action.READ)) {
-    items.push({
+    destinations.push({
       key: "stats_orders",
       label: "Stats",
       Icon: BarChart3,
@@ -78,6 +79,9 @@ export default function MobileBottomNav() {
       onClick: () => setActiveTab("stats_orders" as TabKey),
     });
   }
+
+  // Au plus 4 entrées : 3 destinations prioritaires + « Plus » (le reste via le drawer).
+  const items: NavItem[] = destinations.slice(0, 3);
   items.push({
     key: "more",
     label: "Plus",
