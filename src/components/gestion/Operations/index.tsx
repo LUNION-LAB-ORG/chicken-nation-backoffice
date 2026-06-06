@@ -217,8 +217,8 @@ export default function Operations() {
                       variant: "secondary" as const,
                       className:
                         "bg-[#F17922] border border-[#F17922] text-white hover:opacity-90",
-                      // Sur mobile, déjà couvert par le bouton central de la barre d'onglets
-                      hideOnMobile: true,
+                      // Fonction secondaire : reléguée dans le menu « ⋯ » sur mobile
+                      mobileSecondary: true,
                     },
                   ]
                 : []),
@@ -324,7 +324,10 @@ export default function Operations() {
             />
           )}
 
-          <OperationsKpiBar buckets={buckets} inDeliveryCount={inDeliveryCount} />
+          {/* KPIs masqués sur mobile : les compteurs sont repris dans les onglets d'état */}
+          <div className="hidden md:block">
+            <OperationsKpiBar buckets={buckets} inDeliveryCount={inDeliveryCount} />
+          </div>
 
           {isLoading && !data ? (
             <div className="flex items-center justify-center h-64">

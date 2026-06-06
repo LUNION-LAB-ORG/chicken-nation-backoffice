@@ -22,6 +22,8 @@ interface ActionButton {
   customComponent?: React.ReactNode;
   /** Masquer cette action sur mobile (ex. déjà couverte par la barre d'onglets). */
   hideOnMobile?: boolean;
+  /** Reléguer cette action dans le menu « ⋯ » sur mobile (jamais l'action principale). */
+  mobileSecondary?: boolean;
 }
 
 interface DashboardPageHeaderProps {
@@ -148,10 +150,13 @@ const DashboardPageHeader = ({
   const renderActions = () => {
     if (actions.length === 0) return null;
 
-    // Sur mobile, on épure : actions couvertes ailleurs masquées, le reste replié
+    // Sur mobile, on épure : actions masquées exclues, les « secondaires » reléguées
+    // dans le menu « ⋯ », et la première action restante mise en avant.
     const mobileActions = actions.filter((a) => !a.hideOnMobile);
-    const primary = mobileActions[0];
-    const rest = mobileActions.slice(1);
+    const primaryPool = mobileActions.filter((a) => !a.mobileSecondary);
+    const secondaryPool = mobileActions.filter((a) => a.mobileSecondary);
+    const primary = primaryPool[0];
+    const rest = [...primaryPool.slice(1), ...secondaryPool];
     const PrimaryIcon = primary?.icon;
 
     return (
