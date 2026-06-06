@@ -14,6 +14,7 @@ import {
   ProspectSettings,
   ResendCouponResult,
   SalesResponse,
+  ScanResult,
   SendCouponResult,
 } from "../types/prospect.types";
 
@@ -264,6 +265,27 @@ export const updateProspectSettings = async (
   } catch (error) {
     throw new Error((error as Error).message);
   }
+};
+
+// Scan d'une capture de commande (OCR/IA) → champs préremplis
+export const scanProspectOrder = async (file: File) => {
+  const token = getAuthToken();
+  if (!token) {
+    throw new Error("Authentication required");
+  }
+  const form = new FormData();
+  form.append("image", file);
+  // Pas de Content-Type → le navigateur ajoute le boundary multipart automatiquement
+  const response = await fetch(`${BASE_URL}/scan`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: form,
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.message || `HTTP error! status: ${response.status}`);
+  }
+  return (await response.json()) as ScanResult;
 };
 
 // Télécharge un CSV (contacts | coupons | sales)

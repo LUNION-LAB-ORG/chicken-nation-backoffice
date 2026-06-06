@@ -197,6 +197,8 @@ export interface SalesResponse {
   totals: { count: number; ca: number; average: number };
 }
 
+export type ScanEngine = "TESSERACT" | "GEMINI" | "OPENAI" | "ANTHROPIC";
+
 export interface ProspectSettings {
   coupon_validity_days: number;
   coupon_discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
@@ -205,6 +207,17 @@ export interface ProspectSettings {
   msg_decouverte: string;
   msg_relance_1: string;
   msg_relance_2: string;
+  scan_engine: ScanEngine;
+  scan_api_key: string;
+  scan_model: string;
+}
+
+export interface ScanResult {
+  engine: string;
+  platform: ProspectPlatform | null;
+  name: string | null;
+  phone: string | null;
+  order_number: string | null;
 }
 
 export type ExportType = "contacts" | "coupons" | "sales";

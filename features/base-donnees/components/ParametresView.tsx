@@ -136,6 +136,73 @@ export function ParametresView() {
         </div>
       </div>
 
+      {/* Scan de commande (OCR / IA) */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <h3 className="font-bold text-gray-900 mb-1">Scan de commande (OCR / IA)</h3>
+        <p className="text-xs text-gray-500 mb-4">
+          Permet de préremplir la capture en photographiant l&apos;écran Glovo /
+          Yango. « OCR simple » fonctionne <b>sans clé</b> (précision limitée,
+          pour tester). Une <b>IA</b> donne de bien meilleurs résultats (clé
+          requise).
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className={labelCls}>Moteur</label>
+            <select
+              value={form.scan_engine}
+              onChange={(e) =>
+                upd({
+                  scan_engine: e.target
+                    .value as ProspectSettings["scan_engine"],
+                })
+              }
+              className={inputCls}
+            >
+              <option value="TESSERACT">OCR simple (gratuit, sans clé)</option>
+              <option value="GEMINI">Google Gemini (IA)</option>
+              <option value="OPENAI">OpenAI (IA)</option>
+              <option value="ANTHROPIC">Anthropic Claude (IA)</option>
+            </select>
+          </div>
+          <div>
+            <label className={labelCls}>
+              Clé API{" "}
+              {form.scan_engine === "TESSERACT" && (
+                <span className="text-gray-400 font-normal">(non requise)</span>
+              )}
+            </label>
+            <input
+              type="password"
+              value={form.scan_api_key}
+              onChange={(e) => upd({ scan_api_key: e.target.value })}
+              placeholder={
+                form.scan_engine === "TESSERACT" ? "—" : "Collez votre clé API"
+              }
+              disabled={form.scan_engine === "TESSERACT"}
+              className={inputCls}
+            />
+          </div>
+          <div>
+            <label className={labelCls}>Modèle (optionnel)</label>
+            <input
+              value={form.scan_model}
+              onChange={(e) => upd({ scan_model: e.target.value })}
+              placeholder={
+                form.scan_engine === "GEMINI"
+                  ? "gemini-1.5-flash"
+                  : form.scan_engine === "OPENAI"
+                    ? "gpt-4o-mini"
+                    : form.scan_engine === "ANTHROPIC"
+                      ? "claude-3-5-haiku-latest"
+                      : "—"
+              }
+              disabled={form.scan_engine === "TESSERACT"}
+              className={inputCls}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end">
         <button
           type="button"

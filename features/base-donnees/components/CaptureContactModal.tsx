@@ -1,13 +1,21 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Loader2, UserPlus, X } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  ScanLine,
+  UserPlus,
+  X,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
 
 import { useAuthStore } from "../../users/hook/authStore";
 import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
 
 import { useProspectAddMutation } from "../queries/prospect-add.mutation";
-import { checkProspectPhone } from "../services/prospect.service";
+import { checkProspectPhone, scanProspectOrder } from "../services/prospect.service";
 import { ProspectPlatform } from "../types/prospect.types";
 import { PLATFORM_META } from "../utils/prospect-ui";
 
@@ -53,8 +61,30 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
   const [dup, setDup] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const mutation = useProspectAddMutation();
+
+  const handleScanFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permet de re-scanner le même fichier
+    if (!file) return;
+    setScanning(true);
+    setError(null);
+    try {
+      const res = await scanProspectOrder(file);
+      if (res.platform) setPlatform(res.platform);
+      if (res.name) setName(res.name);
+      if (res.phone) setPhone(res.phone);
+      if (res.order_number) setOrderNumber(res.order_number);
+      toast.success("Champs préremplis — vérifiez avant d'enregistrer");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setScanning(false);
+    }
+  };
 
   const reset = () => {
     setPlatform(null);
@@ -205,6 +235,31 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                 obligatoires. Le <b>nom</b> est optionnel (absent sur Yango).
               </span>
             </div>
+
+            {/* Scan photo → préremplissage automatique */}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleScanFile}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={scanning}
+              className="w-full mb-5 inline-flex items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#F17922]/50 bg-orange-50 py-2.5 text-sm font-semibold text-[#F17922] hover:bg-orange-100 disabled:opacity-60"
+            >
+              {scanning ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ScanLine className="w-4 h-4" />
+              )}
+              {scanning
+                ? "Analyse de l'image…"
+                : "Scanner la commande (préremplir par photo)"}
+            </button>
 
             {/* Plateforme */}
             <label className="block text-xs font-semibold text-gray-700 mb-2">
