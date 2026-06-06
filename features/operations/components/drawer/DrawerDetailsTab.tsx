@@ -75,6 +75,7 @@ export function DrawerDetailsTab({ order }: Props) {
     <div className="p-5 md:p-6 space-y-5">
       <HeroBlock ui={ui} source={source} />
       <ClientBlock ui={ui} />
+      <NoteBlock ui={ui} />
       <ItemsBlock ui={ui} />
       <PriceBlock ui={ui} />
       <ProgressBlock ui={ui} />
@@ -240,6 +241,23 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
         </div>
       </div>
     </Card>
+  );
+}
+
+// ─── Note client ───────────────────────────────────────────────────────────
+
+function NoteBlock({ ui }: { ui: OrderTable }) {
+  if (!ui.note) return null;
+  return (
+    <div className="bg-amber-50 rounded-3xl border border-amber-200 shadow-sm p-5 md:p-6">
+      <div className="flex items-center gap-2.5 mb-3">
+        <span className="w-8 h-8 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+          <StickyNote className="w-4 h-4" />
+        </span>
+        <h3 className="text-[15px] font-bold text-amber-900">Note client</h3>
+      </div>
+      <p className="text-sm text-amber-900 whitespace-pre-wrap">{ui.note}</p>
+    </div>
   );
 }
 
@@ -489,17 +507,6 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
           value={ui.auto ? "Application" : "Manuel"}
         />
       </dl>
-      {ui.note && (
-        <div className="mt-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
-          <StickyNote className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[10px] font-bold uppercase text-amber-700 tracking-wider mb-1">
-              Note client
-            </p>
-            <p className="text-xs text-amber-900 whitespace-pre-wrap">{ui.note}</p>
-          </div>
-        </div>
-      )}
     </Card>
   );
 }

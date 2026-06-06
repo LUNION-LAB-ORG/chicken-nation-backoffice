@@ -12,6 +12,17 @@
   padding-right: env(safe-area-inset-right);
 }
 
+/* iOS : empêcher le zoom automatique au focus des champs.
+   Safari zoome dès qu'un champ a une police < 16px → on force 16px sur mobile.
+   `!important` car les classes Tailwind (text-sm…) priment sinon sur le sélecteur d'élément. */
+@media (max-width: 767.98px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 @layer base {
   :root {
     --font-urbanist: "Urbanist", system-ui, sans-serif;
