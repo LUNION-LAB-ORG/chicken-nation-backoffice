@@ -73,7 +73,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
         />
       )}
       <aside
-        className={`fixed top-0 right-0 h-full w-full max-w-[480px] lg:max-w-[720px] xl:max-w-[840px] bg-white shadow-2xl z-50 transform transition-transform duration-300 flex flex-col ${
+        className={`fixed top-0 right-0 h-[100dvh] w-full max-w-[480px] lg:max-w-[720px] xl:max-w-[840px] bg-white shadow-2xl z-50 transform transition-transform duration-300 flex flex-col ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -81,7 +81,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
           <>
             {/* Header sticky — pas de badge de service livraison ici
                 (l'info reste dans le tab Détails : hero chip + champ « Service livraison ») */}
-            <header className="px-4 pt-4 pb-3 border-b border-gray-100 bg-white">
+            <header className="px-4 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] border-b border-gray-100 bg-white">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-gray-900 truncate">{live.reference}</h3>
@@ -125,7 +125,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
                  - PICKUP / TABLE → DrawerActionsClient (séquence sans PICKED_UP)
                  - DELIVERY via CHICKEN_NATION → DrawerActionsChickenNation (module course interne)
                  - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel) */}
-            <footer className="px-4 py-3 border-t border-gray-100 bg-gray-50/80">
+            <footer className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50/80">
               {live.type !== OrderType.DELIVERY ? (
                 <DrawerActionsClient order={live} />
               ) : live.delivery_service === DeliveryService.CHICKEN_NATION ? (
