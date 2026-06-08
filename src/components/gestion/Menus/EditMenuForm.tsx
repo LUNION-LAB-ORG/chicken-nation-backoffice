@@ -1144,69 +1144,71 @@ const EditMenuForm = ({
             </div>
           </motion.div>
 
-          <div className="flex flex-row items-center justify-between w-full gap-3 ">
-            {/* Réduction */}
-            <motion.div
-              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-center">
-                <Checkbox
-                  id="reduction"
-                  checked={formData.reduction}
-                  onChange={(checked) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      reduction: checked,
-                      reducedPrice: checked ? prev.reducedPrice || "" : "",
-                    }));
-                  }}
-                />
-                <label
-                  htmlFor="reduction"
-                  className="ml-2 text-[13px] font-semibold text-gray-700"
+          {/* Réduction (pleine largeur de la colonne) */}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <div className="flex items-center">
+              <Checkbox
+                id="reduction"
+                checked={formData.reduction}
+                onChange={(checked) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    reduction: checked,
+                    reducedPrice: checked ? prev.reducedPrice || "" : "",
+                  }));
+                }}
+              />
+              <label
+                htmlFor="reduction"
+                className="ml-2 text-[13px] font-semibold text-gray-700"
+              >
+                Réduction
+              </label>
+            </div>
+            <AnimatePresence>
+              {formData.reduction && (
+                <motion.div
+                  className="relative"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  Réduction
-                </label>
-              </div>
-              <AnimatePresence>
-                {formData.reduction && (
-                  <motion.div
-                    className="relative"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <input
-                      type="number"
-                      value={formData.reducedPrice}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (
-                          value === "" ||
-                          (Number(value) >= 0 &&
-                            Number(value) < Number(formData.price))
-                        ) {
-                          setFormData((prev) => ({
-                            ...prev,
-                            reducedPrice: value,
-                          }));
-                        }
-                      }}
-                      className="w-full px-2 py-2 text-[13px] focus:outline-none text-[#595959] font-semibold focus:border-transparent"
-                      placeholder="0.00"
-                      min="0"
-                      max={formData.price}
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
-                      XOF
-                    </span>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
+                  <input
+                    type="number"
+                    value={formData.reducedPrice}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (
+                        value === "" ||
+                        (Number(value) >= 0 &&
+                          Number(value) < Number(formData.price))
+                      ) {
+                        setFormData((prev) => ({
+                          ...prev,
+                          reducedPrice: value,
+                        }));
+                      }
+                    }}
+                    className="w-full px-2 py-2 text-[13px] focus:outline-none text-[#595959] font-semibold focus:border-transparent"
+                    placeholder="0.00"
+                    min="0"
+                    max={formData.price}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
+                    XOF
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Niveau épicé + Disponible pour (2 colonnes côte à côte, taille similaire) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Niveau épicé (3 états) */}
             <motion.div
               className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
@@ -1255,9 +1257,6 @@ const EditMenuForm = ({
               <label className="block text-[13px] font-semibold text-gray-700">
                 Disponible pour
               </label>
-              <p className="text-[12px] text-gray-500">
-                Décochez les modes où ce plat n&apos;est pas disponible (tout décocher = tous).
-              </p>
               <div className="flex gap-2">
                 {(
                   [
@@ -1291,58 +1290,66 @@ const EditMenuForm = ({
                 })}
               </div>
             </motion.div>
+          </div>
 
-            {/* Créneau horaire de disponibilité */}
-            <motion.div
-              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <label className="block text-[13px] font-semibold text-gray-700">
-                Créneau de disponibilité
-              </label>
-              <p className="text-[12px] text-gray-500">
-                Laissez vide pour rendre le plat disponible toute la journée.
-              </p>
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  value={formData.available_from}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, available_from: e.target.value }))
-                  }
-                  className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
-                />
-                <span className="text-gray-400">→</span>
-                <input
-                  type="time"
-                  value={formData.available_until}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, available_until: e.target.value }))
-                  }
-                  className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
-                />
-              </div>
-            </motion.div>
-          </div>
-          <div className="flex items-center">
-            <Checkbox
-              id="private"
-              checked={formData.private}
-              onChange={(checked) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  private: checked,
-                }));
-              }}
-            />
-            <label
-              htmlFor="private"
-              className="ml-2 text-[13px] font-semibold text-gray-700"
-            >
-              Privé
+          {/* Créneau horaire de disponibilité (pleine largeur) */}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <label className="block text-[13px] font-semibold text-gray-700">
+              Créneau de disponibilité
             </label>
-          </div>
+            <p className="text-[12px] text-gray-500">
+              Laissez vide pour rendre le plat disponible toute la journée.
+            </p>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                value={formData.available_from}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, available_from: e.target.value }))
+                }
+                className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+              />
+              <span className="text-gray-400">→</span>
+              <input
+                type="time"
+                value={formData.available_until}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, available_until: e.target.value }))
+                }
+                className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+              />
+            </div>
+          </motion.div>
+
+          {/* Privé */}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <div className="flex items-center">
+              <Checkbox
+                id="private"
+                checked={formData.private}
+                onChange={(checked) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    private: checked,
+                  }));
+                }}
+              />
+              <label
+                htmlFor="private"
+                className="ml-2 text-[13px] font-semibold text-gray-700"
+              >
+                Privé
+              </label>
+            </div>
+          </motion.div>
           {/* Description */}
           <motion.div
             className=" w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"

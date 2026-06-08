@@ -1,18 +1,17 @@
 import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
 import { useState, useEffect } from "react";
-import { Trash2 } from "lucide-react";
 import { formatImageUrl } from "@/utils/imageHelpers";
-import { HasPermission } from "../../../features/users/components/HasPermission";
-import { Action, Modules } from "../../../features/users/types/auth.type";
 
 interface MenuItemProps {
   menu: MenuItemType;
   onView?: (menu: MenuItemType) => void;
+  // onDelete intentionnellement retiré de la card : la suppression (soft-delete) se fait
+  // depuis le détail du menu (DetailsMenu) pour éviter les suppressions accidentelles.
   onDelete?: (menu: MenuItemType) => void;
 }
 
-export default function MenuItem({ menu, onView, onDelete }: MenuItemProps) {
+export default function MenuItem({ menu, onView }: MenuItemProps) {
   const [imageSrc, setImageSrc] = useState<string>(formatImageUrl(menu.image));
 
   useEffect(() => {
@@ -32,22 +31,6 @@ export default function MenuItem({ menu, onView, onDelete }: MenuItemProps) {
           priority
           onError={() => setImageSrc("/images/placeholder-food.jpg")}
         />
-        {onDelete && (
-          <HasPermission module={Modules.MENUS} action={Action.DELETE}>
-            <button
-              type="button"
-              title="Supprimer le plat"
-              aria-label="Supprimer le plat"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete(menu);
-              }}
-              className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow grid place-items-center text-red-600 hover:bg-red-50 active:scale-95 transition"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          </HasPermission>
-        )}
       </div>
       <div>
         <h3
