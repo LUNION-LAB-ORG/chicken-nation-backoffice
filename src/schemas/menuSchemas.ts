@@ -65,7 +65,14 @@ export const MenuItemSchema = z.object({
   promotion_price: z.union([z.number(), z.string()]).optional(),
   dish_supplements: z.array(z.any()).optional(),
   dish_restaurants: z.array(z.any()).optional(),
+  // Modèle "tout par défaut − exclusions" : IDs explicitement retirés du plat.
+  excluded_supplement_ids: z.array(z.string()).optional(),
+  excluded_restaurant_ids: z.array(z.string()).optional(),
   is_alway_epice: z.boolean().default(false), // ✅ Nom corrigé sans "s"
+  // Épicé à 3 états (remplace progressivement is_alway_epice).
+  spice_level: z.enum(['ALWAYS', 'OPTIONAL', 'NEVER']).optional(),
+  // Modes de commande disponibles (vide/absent = tous).
+  available_order_types: z.array(z.enum(['DELIVERY', 'PICKUP', 'TABLE'])).optional(),
   private: z.boolean().default(false), // ✅ Nom corrigé sans "s"
   hubrise_sku: z.string().nullable().optional()
 });
@@ -90,9 +97,14 @@ export const ApiMenuDataSchema = z.object({
   is_promotion: z.boolean().optional(),
   dish_supplements: z.array(z.any()).optional(),
   dish_restaurants: z.array(z.any()).optional(),
+  // Exclusions renvoyées par l'API (effectif = tout − exclusions).
+  excluded_supplement_ids: z.array(z.string()).optional(),
+  excluded_restaurant_ids: z.array(z.string()).optional(),
   // ✅ Champ pour les restaurants multiples
   selectedRestaurants: z.array(z.string()).optional(),
   is_alway_epice: z.boolean().optional(), // ✅ Nom corrigé sans "s"
+  spice_level: z.enum(['ALWAYS', 'OPTIONAL', 'NEVER']).optional(),
+  available_order_types: z.array(z.enum(['DELIVERY', 'PICKUP', 'TABLE'])).optional(),
   private: z.boolean().optional(), // ✅ Nom corrigé sans "s"
   hubrise_sku: z.string().nullable().optional()
 });
@@ -111,7 +123,9 @@ export const CreateMenuSchema = MenuItemSchema.omit({
 
 // Schéma pour la mise à jour de menu
 export const UpdateMenuSchema = MenuItemSchema.partial().extend({
-  id: z.string().min(1, 'ID requis pour la mise à jour')
+  id: z.string().min(1, 'ID requis pour la mise à jour'),
+  // Restaurants exclus (sinon Zod le supprimerait : absent de MenuItemSchema).
+  selectedRestaurants: z.array(z.string()).optional()
 });
 
 // Types TypeScript dérivés des schémas

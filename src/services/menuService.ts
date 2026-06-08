@@ -124,7 +124,12 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       // ✅ Ajout des champs optionnels pour compatibilité API
       dish_supplements: validatedApiMenu.dish_supplements || [],
       dish_restaurants: validatedApiMenu.dish_restaurants || [],
+      // Exclusions du plat (pour préremplir les sélecteurs en édition).
+      excluded_supplement_ids: (validatedApiMenu as unknown as { excluded_supplement_ids?: string[] }).excluded_supplement_ids ?? [],
+      excluded_restaurant_ids: (validatedApiMenu as unknown as { excluded_restaurant_ids?: string[] }).excluded_restaurant_ids ?? [],
       is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false, // ✅ Nom corrigé sans "s"
+      spice_level: (validatedApiMenu as unknown as { spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER" }).spice_level ?? undefined,
+      available_order_types: (validatedApiMenu as unknown as { available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[] }).available_order_types ?? undefined,
       private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false, // ✅ Nom corrigé sans "s"
       hubrise_sku: validatedApiMenu.hubrise_sku ?? undefined
     };
@@ -474,13 +479,42 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       // ✅ Ajout du nouveau champ
       formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
       formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
+      const spiceLevelUpdate = (validatedMenu as unknown as { spice_level?: string }).spice_level;
+      if (spiceLevelUpdate) {
+        formData.append('spice_level', spiceLevelUpdate);
+      }
+      const orderTypesUpdate = (validatedMenu as unknown as { available_order_types?: string[] }).available_order_types;
+      if (Array.isArray(orderTypesUpdate)) {
+        orderTypesUpdate.forEach((t) => { if (t) formData.append('available_order_types', t); });
+      }
       const hubriseSkuUpdate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
       if (hubriseSkuUpdate) {
         formData.append('hubrise_sku', hubriseSkuUpdate);
       }
 
-      // Pour UPDATE: NE PAS envoyer restaurants et supplements ici
-      // Ils sont gérés séparément par les services dédiés
+      // ✅ Modèle "tout par défaut − exclusions" pour UPDATE.
+      // On remplace ENTIÈREMENT les exclusions du plat (manage_exclusions=true
+      // permet de TOUT vider si l'utilisateur n'exclut plus rien). Sources :
+      //  - selectedRestaurants = restaurants qui NE vendent PAS le plat
+      //  - dish_supplements    = suppléments RETIRÉS du plat
+      formData.append('manage_exclusions', 'true');
+      const cleanIdU = (id: string) => id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
+
+      const exclRestoUpdate = (validatedMenu as unknown as { selectedRestaurants?: string[] }).selectedRestaurants ?? [];
+      exclRestoUpdate.forEach((restaurantId) => {
+        if (restaurantId && typeof restaurantId === 'string') {
+          const c = cleanIdU(restaurantId);
+          if (c.length > 0) formData.append('excluded_restaurant_ids', c);
+        }
+      });
+
+      const exclSuppUpdate = (validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string }> }).dish_supplements ?? [];
+      exclSuppUpdate.forEach((s) => {
+        if (s && s.supplement_id && typeof s.supplement_id === 'string') {
+          const c = cleanIdU(s.supplement_id);
+          if (c.length > 0) formData.append('excluded_supplement_ids', c);
+        }
+      });
 
     } else {
       // ✅ POUR CREATE: Validation et sanitisation des champs
@@ -526,81 +560,41 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       // ✅ Ajout du nouveau champ
       formData.append('is_alway_epice', (validatedMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ? 'true' : 'false');
       formData.append('private', (validatedMenu as unknown as { private?: boolean }).private ? 'true' : 'false');
+      const spiceLevelCreate = (validatedMenu as unknown as { spice_level?: string }).spice_level;
+      if (spiceLevelCreate) {
+        formData.append('spice_level', spiceLevelCreate);
+      }
+      const orderTypesCreate = (validatedMenu as unknown as { available_order_types?: string[] }).available_order_types;
+      if (Array.isArray(orderTypesCreate)) {
+        orderTypesCreate.forEach((t) => { if (t) formData.append('available_order_types', t); });
+      }
       const hubriseSkuCreate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
       if (hubriseSkuCreate) {
         formData.append('hubrise_sku', hubriseSkuCreate);
       }
 
-      // ✅ Ajout sécurisé des restaurants pour CREATE
-      // Gérer les restaurants multiples depuis selectedRestaurants ou restaurantId unique
-      const restaurantIds: string[] = [];
+      // ✅ Modèle "tout par défaut − exclusions" pour CREATE.
+      // Les sélecteurs du formulaire désignent désormais ce qu'on RETIRE :
+      //  - selectedRestaurants = restaurants qui NE vendent PAS le plat
+      //  - dish_supplements    = suppléments RETIRÉS du plat
+      // (vide = le plat a tout par défaut)
+      const cleanId = (id: string) => id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
 
-      const menuWithRestaurants = validatedMenu as unknown as { selectedRestaurants?: string[] };
-      if (menuWithRestaurants.selectedRestaurants && Array.isArray(menuWithRestaurants.selectedRestaurants)) {
-        // Cas des restaurants multiples
-        menuWithRestaurants.selectedRestaurants.forEach((restaurantId: string) => {
-          if (restaurantId && typeof restaurantId === 'string') {
-            const sanitizedRestaurantId = restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-            if (sanitizedRestaurantId.length > 0) {
-              restaurantIds.push(sanitizedRestaurantId);
-            }
-          }
-        });
-      } else if (validatedMenu.restaurantId && validatedMenu.restaurantId.trim() !== '') {
-        // Cas d'un seul restaurant
-        const sanitizedRestaurantId = validatedMenu.restaurantId.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-        if (sanitizedRestaurantId.length > 0) {
-          restaurantIds.push(sanitizedRestaurantId);
+      const exclRestoSource = (validatedMenu as unknown as { selectedRestaurants?: string[] }).selectedRestaurants ?? [];
+      exclRestoSource.forEach((restaurantId) => {
+        if (restaurantId && typeof restaurantId === 'string') {
+          const c = cleanId(restaurantId);
+          if (c.length > 0) formData.append('excluded_restaurant_ids', c);
         }
-      }
-
-      // Ajouter tous les restaurants au FormData
-      restaurantIds.forEach(restaurantId => {
-        formData.append('restaurant_ids', restaurantId);
       });
 
-
-      // ✅ Ajout sécurisé des suppléments pour CREATE
-      const supplementsAdded: Array<{ id: string, quantity: number }> = [];
-      const menuWithSupplements = validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string; quantity?: number }> };
-      if (menuWithSupplements.dish_supplements && Array.isArray(menuWithSupplements.dish_supplements)) {
-        menuWithSupplements.dish_supplements.forEach((supplement) => {
-          if (supplement.supplement_id && typeof supplement.supplement_id === 'string') {
-            const sanitizedSupplementId = supplement.supplement_id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-            if (sanitizedSupplementId.length > 0) {
-              formData.append('supplement_ids', sanitizedSupplementId);
-
-              // ✅ Ajouter la quantité pour chaque supplément
-              const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
-                ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
-                : 1;
-              formData.append('supplement_quantities', quantity.toString());
-
-              supplementsAdded.push({ id: sanitizedSupplementId, quantity });
-            }
-          }
-        });
-      } else if (validatedMenu.supplements) {
-        (['ACCESSORY', 'FOOD', 'DRINK'] as const).forEach(type => {
-          const supplements = validatedMenu.supplements?.[type];
-          if (supplements && Array.isArray(supplements)) {
-            supplements.forEach(supplement => {
-              if (supplement.id && typeof supplement.id === 'string') {
-                const sanitizedSupplementId = supplement.id.trim().replace(/[^a-zA-Z0-9\-_]/g, '');
-                if (sanitizedSupplementId.length > 0) {
-                  formData.append('supplement_ids', sanitizedSupplementId);
-
-                  // ✅ Ajouter la quantité pour chaque supplément
-                  const quantity = supplement.quantity && typeof supplement.quantity === 'number' && supplement.quantity > 0
-                    ? Math.min(Math.max(1, Math.floor(supplement.quantity)), 10)
-                    : 1;
-                  formData.append('supplement_quantities', quantity.toString());
-                }
-              }
-            });
-          }
-        });
-      }
+      const exclSuppSource = (validatedMenu as unknown as { dish_supplements?: Array<{ supplement_id?: string }> }).dish_supplements ?? [];
+      exclSuppSource.forEach((s) => {
+        if (s && s.supplement_id && typeof s.supplement_id === 'string') {
+          const c = cleanId(s.supplement_id);
+          if (c.length > 0) formData.append('excluded_supplement_ids', c);
+        }
+      });
     }
 
     return formData;

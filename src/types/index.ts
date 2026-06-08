@@ -220,7 +220,14 @@ export interface MenuItem {
     };
     [key: string]: unknown;
   }>;
+  // Modèle "tout par défaut − exclusions" : IDs explicitement retirés du plat.
+  excluded_supplement_ids?: string[];
+  excluded_restaurant_ids?: string[];
   is_alway_epice?: boolean; // ✅ Nom corrigé sans "s"
+  // Épicé à 3 états (source de vérité ; is_alway_epice = (spice_level === 'ALWAYS')).
+  spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER";
+  // Modes de commande où le plat est disponible (vide/absent = tous).
+  available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
   private: boolean;
   hubrise_sku?: string;
 }

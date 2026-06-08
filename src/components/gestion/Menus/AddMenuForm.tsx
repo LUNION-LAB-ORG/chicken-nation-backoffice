@@ -42,6 +42,8 @@ interface MenuFormData {
     };
   };
   is_alway_epice: boolean;
+  spice_level: "ALWAYS" | "OPTIONAL" | "NEVER";
+  available_order_types: ("DELIVERY" | "PICKUP" | "TABLE")[];
   private: boolean;
   hubrise_sku: string;
 }
@@ -87,6 +89,8 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
       boissons: { category: "", quantity: 0 },
     },
     is_alway_epice: false, // ✅ Nom corrigé sans "s"
+    spice_level: "OPTIONAL",
+    available_order_types: ["DELIVERY", "PICKUP", "TABLE"],
     private: false,
     hubrise_sku: "",
   });
@@ -143,34 +147,12 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     }
   };
 
-  // ✅ INITIALISATION DES RESTAURANTS POUR LA CRÉATION
+  // ✅ INITIALISATION DES EXCLUSIONS RESTAURANTS POUR LA CRÉATION
+  // Modèle "tout par défaut − exclusions" : un nouveau plat est vendu dans TOUS
+  // les restaurants → on ne présélectionne AUCUNE exclusion (liste vide).
   const initializeSelectedRestaurants = useCallback(
-    (availableRestaurants: RestaurantOption[]) => {
-      try {
-        // ✅ Pour la création, sélectionner le premier restaurant par défaut
-        if (availableRestaurants.length > 0) {
-          const firstRestaurant = availableRestaurants[0];
-          if (
-            firstRestaurant.value &&
-            typeof firstRestaurant.value === "string"
-          ) {
-            const sanitizedId = sanitizeMenuInput(firstRestaurant.value);
-            if (sanitizedId.length > 0) {
-              setSelectedRestaurants([sanitizedId]);
-              return;
-            }
-          }
-        }
-
-        // ✅ Fallback si aucun restaurant disponible
-        setSelectedRestaurants([]);
-      } catch (error) {
-        console.error(
-          "Erreur lors de l'initialisation des restaurants:",
-          error
-        );
-        setSelectedRestaurants([]);
-      }
+    (_availableRestaurants: RestaurantOption[]) => {
+      setSelectedRestaurants([]);
     },
     []
   );
@@ -632,7 +614,9 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         is_promotion: formData.reduction === true,
         promotion_price: formData.reduction ? formData.reducedPrice : "0",
         dish_supplements: dishSupplements,
-        is_alway_epice: formData.is_alway_epice,
+        spice_level: formData.spice_level,
+        is_alway_epice: formData.spice_level === "ALWAYS",
+        available_order_types: formData.available_order_types,
         private: formData.private,
         hubrise_sku: formData.hubrise_sku || undefined,
       };
@@ -861,29 +845,88 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                 )}
               </AnimatePresence>
             </motion.div>
-            {/* Epicé */}
+            {/* Niveau épicé (3 états) */}
             <motion.div
               className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-center">
-                <Checkbox
-                  id="is_alway_epice"
-                  checked={formData.is_alway_epice}
-                  onChange={(checked) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      is_alway_epice: checked,
-                    }));
-                  }}
-                />
-                <label
-                  htmlFor="is_alway_epice"
-                  className="ml-2 text-[13px] font-semibold text-gray-700"
-                >
-                  Déjà épicé
-                </label>
+              <label className="block text-[13px] font-semibold text-gray-700">
+                Niveau épicé
+              </label>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["ALWAYS", "Toujours 🌶️"],
+                    ["OPTIONAL", "Au choix"],
+                    ["NEVER", "Jamais"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        spice_level: value,
+                        is_alway_epice: value === "ALWAYS",
+                      }))
+                    }
+                    className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
+                      formData.spice_level === value
+                        ? "bg-[#F17922] text-white border-[#F17922]"
+                        : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Modes de commande disponibles */}
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <label className="block text-[13px] font-semibold text-gray-700">
+                Disponible pour
+              </label>
+              <p className="text-[12px] text-gray-500">
+                Décochez les modes où ce plat n&apos;est pas disponible (tout décocher = tous).
+              </p>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["DELIVERY", "Livraison"],
+                    ["PICKUP", "À emporter"],
+                    ["TABLE", "Sur place"],
+                  ] as const
+                ).map(([value, label]) => {
+                  const active = formData.available_order_types.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          available_order_types: prev.available_order_types.includes(value)
+                            ? prev.available_order_types.filter((t) => t !== value)
+                            : [...prev.available_order_types, value],
+                        }))
+                      }
+                      className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
+                        active
+                          ? "bg-[#F17922] text-white border-[#F17922]"
+                          : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
@@ -992,21 +1035,31 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <h3 className="text-lg font-medium text-[#595959] mb-2">
-              Choisissez les restaurants
+            <h3 className="text-lg font-medium text-[#595959]">
+              Restaurants exclus
             </h3>
+            <p className="text-[13px] text-gray-500 mb-2">
+              Par défaut, ce plat est vendu dans <b>tous</b> les restaurants.
+              Sélectionnez uniquement ceux qui ne doivent <b>pas</b> le proposer.
+            </p>
             <SelectWithCheckboxes
               value={selectedRestaurants}
               onChange={setSelectedRestaurants}
               options={restaurants}
-              placeholder="Sélectionnez les restaurants"
+              placeholder="Restaurants à exclure (aucun = tous)"
               className=""
             />
           </motion.div>
 
           {/* Suppléments */}
           <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-4 space-y-4">
-            <h3 className="text-lg font-medium text-[#595959]">Produits</h3>
+            <h3 className="text-lg font-medium text-[#595959]">
+              Suppléments exclus
+            </h3>
+            <p className="text-[13px] text-gray-500">
+              Par défaut, ce plat propose <b>tous</b> les suppléments.
+              Sélectionnez uniquement ceux à <b>retirer</b>.
+            </p>
 
             {/* Ingrédients */}
             <motion.div
@@ -1020,7 +1073,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedIngredients}
                     onChange={handleIngredientChange}
                     options={isLoadingSupplements ? [] : ingredientOptions}
-                    placeholder="Sélectionnez des suppléments"
+                    placeholder="Ingrédients à exclure"
                   />
                 </div>
 
@@ -1042,7 +1095,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedAccompagnements}
                     onChange={handleAccompagnementChange}
                     options={isLoadingSupplements ? [] : accompagnementOptions}
-                    placeholder="Sélectionnez des sauces"
+                    placeholder="Accompagnements à exclure"
                   />
                 </div>
 
@@ -1064,7 +1117,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
                     value={selectedBoissons}
                     onChange={handleBoissonChange}
                     options={isLoadingSupplements ? [] : boissonOptions}
-                    placeholder="Sélectionnez des boissons"
+                    placeholder="Boissons à exclure"
                   />
                 </div>
 

@@ -42,6 +42,8 @@ interface MenuFormData {
     };
   };
   is_alway_epice: boolean; // ✅ Nom corrigé sans "s"
+  spice_level: "ALWAYS" | "OPTIONAL" | "NEVER";
+  available_order_types: ("DELIVERY" | "PICKUP" | "TABLE")[];
   private: boolean;
   hubrise_sku: string;
 }
@@ -92,6 +94,8 @@ const EditMenuForm = ({
       boissons: { category: "", quantity: 0 },
     },
     is_alway_epice: false, // ✅ Valeur par défaut
+    spice_level: "OPTIONAL",
+    available_order_types: ["DELIVERY", "PICKUP", "TABLE"],
     private: false,
   });
 
@@ -118,6 +122,18 @@ const EditMenuForm = ({
         is_alway_epice:
           (validatedData as unknown as { is_alway_epice?: boolean })
             .is_alway_epice ?? false,
+        spice_level:
+          (validatedData as unknown as {
+            spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER";
+          }).spice_level ??
+          ((validatedData as unknown as { is_alway_epice?: boolean })
+            .is_alway_epice
+            ? "ALWAYS"
+            : "OPTIONAL"),
+        available_order_types:
+          (validatedData as unknown as {
+            available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
+          }).available_order_types ?? ["DELIVERY", "PICKUP", "TABLE"],
         private:
           (validatedData as unknown as { private?: boolean }).private ?? false,
         hubrise_sku:
@@ -142,6 +158,18 @@ const EditMenuForm = ({
         is_alway_epice:
           (initialData as unknown as { is_alway_epice?: boolean })
             .is_alway_epice ?? false,
+        spice_level:
+          (initialData as unknown as {
+            spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER";
+          }).spice_level ??
+          ((initialData as unknown as { is_alway_epice?: boolean })
+            .is_alway_epice
+            ? "ALWAYS"
+            : "OPTIONAL"),
+        available_order_types:
+          (initialData as unknown as {
+            available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
+          }).available_order_types ?? ["DELIVERY", "PICKUP", "TABLE"],
         private:
           (initialData as unknown as { private?: boolean }).private ?? false,
         hubrise_sku: (initialData as unknown as { hubrise_sku?: string }).hubrise_sku ?? "",
@@ -207,73 +235,20 @@ const EditMenuForm = ({
     }
   };
 
-  // ✅ INITIALISATION DES RESTAURANTS POUR L'ÉDITION
+  // ✅ INITIALISATION DES RESTAURANTS EXCLUS POUR L'ÉDITION
+  // Modèle "tout par défaut − exclusions" : on présélectionne les restaurants
+  // EXCLUS (ceux qui NE vendent PAS le plat). Vide = vendu partout.
   const initializeSelectedRestaurants = useCallback(
-    (availableRestaurants: RestaurantOption[]) => {
+    (_availableRestaurants: RestaurantOption[]) => {
       try {
+        const excluded = Array.isArray(initialData.excluded_restaurant_ids)
+          ? initialData.excluded_restaurant_ids
+          : [];
+
         const selectedIds: string[] = [];
-
-        // ✅ Extraction des restaurants depuis les données existantes
-        if (
-          initialData.dish_restaurants &&
-          Array.isArray(initialData.dish_restaurants) &&
-          initialData.dish_restaurants.length > 0
-        ) {
-          for (const relation of initialData.dish_restaurants) {
-            try {
-              let restaurantId: string | null = null;
-
-              if (relation && typeof relation === "object") {
-                const relationObj = relation as Record<string, unknown>;
-                restaurantId =
-                  (typeof relationObj.restaurant_id === "string"
-                    ? relationObj.restaurant_id
-                    : null) ||
-                  (relationObj.restaurant &&
-                  typeof relationObj.restaurant === "object" &&
-                  typeof (relationObj.restaurant as Record<string, unknown>)
-                    .id === "string"
-                    ? ((relationObj.restaurant as Record<string, unknown>)
-                        .id as string)
-                    : null) ||
-                  (typeof relationObj.id === "string"
-                    ? relationObj.id
-                    : null) ||
-                  null;
-              } else if (typeof relation === "string") {
-                restaurantId = relation;
-              }
-
-              if (restaurantId && typeof restaurantId === "string") {
-                const sanitizedId = sanitizeMenuInput(restaurantId);
-                if (
-                  sanitizedId.length > 0 &&
-                  /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)
-                ) {
-                  selectedIds.push(sanitizedId);
-                }
-              }
-            } catch (relationError) {
-              console.warn("Relation restaurant ignorée:", relationError);
-            }
-          }
-        }
-        // ✅ Fallback vers restaurantId
-        else if (initialData.restaurantId) {
-          if (Array.isArray(initialData.restaurantId)) {
-            for (const id of initialData.restaurantId) {
-              if (typeof id === "string") {
-                const sanitizedId = sanitizeMenuInput(id);
-                if (
-                  sanitizedId.length > 0 &&
-                  /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)
-                ) {
-                  selectedIds.push(sanitizedId);
-                }
-              }
-            }
-          } else if (typeof initialData.restaurantId === "string") {
-            const sanitizedId = sanitizeMenuInput(initialData.restaurantId);
+        for (const rawId of excluded) {
+          if (typeof rawId === "string") {
+            const sanitizedId = sanitizeMenuInput(rawId);
             if (
               sanitizedId.length > 0 &&
               /^[a-zA-Z0-9\-_]+$/.test(sanitizedId)
@@ -283,24 +258,12 @@ const EditMenuForm = ({
           }
         }
 
-        // ✅ Fallback si aucun restaurant trouvé
-        if (selectedIds.length === 0 && availableRestaurants.length > 0) {
-          const firstRestaurant = availableRestaurants[0];
-          if (
-            firstRestaurant.value &&
-            typeof firstRestaurant.value === "string"
-          ) {
-            const sanitizedId = sanitizeMenuInput(firstRestaurant.value);
-            if (sanitizedId.length > 0) {
-              selectedIds.push(sanitizedId);
-            }
-          }
-        }
-
+        // PAS de fallback "premier restaurant" : en logique d'exclusion, cela
+        // exclurait involontairement un restaurant du plat.
         setSelectedRestaurants([...new Set(selectedIds)]);
       } catch (error) {
         console.error(
-          "Erreur lors de l'initialisation des restaurants:",
+          "Erreur lors de l'initialisation des exclusions restaurants:",
           error
         );
         setSelectedRestaurants([]);
@@ -651,21 +614,23 @@ const EditMenuForm = ({
           }
         }
 
-        // ✅ INITIALISATION IMMÉDIATE DES SUPPLÉMENTS EXISTANTS
-        const dishSupplements = initialData?.dish_supplements;
-        if (
-          dishSupplements &&
-          Array.isArray(dishSupplements) &&
-          dishSupplements.length > 0
-        ) {
+        // Modèle "tout par défaut − exclusions" : on présélectionne les
+        // suppléments EXCLUS du plat. On les mappe en {supplement_id} pour
+        // réutiliser le classement par catégorie / liste d'options.
+        const excludedSupplementIds = Array.isArray(
+          initialData?.excluded_supplement_ids
+        )
+          ? initialData.excluded_supplement_ids
+          : [];
+        if (excludedSupplementIds.length > 0) {
           initializeSupplementsWithOptions(
-            dishSupplements,
+            excludedSupplementIds.map((id) => ({ supplement_id: id })),
             newIngredientOptions,
             newAccompagnementOptions,
             newBoissonOptions
           );
         } else {
-          // ✅ Pas de suppléments existants
+          // ✅ Aucune exclusion : tous les suppléments sont proposés
           setSelectedIngredients([]);
           setIngredientQuantities({});
           setSelectedAccompagnements([]);
@@ -687,7 +652,7 @@ const EditMenuForm = ({
     };
 
     fetchSupplements();
-  }, [initialData?.dish_supplements, initializeSupplementsWithOptions]); // ✅ Dépendances nécessaires
+  }, [initialData?.excluded_supplement_ids, initializeSupplementsWithOptions]); // ✅ Dépendances nécessaires
 
   // ✅ Gestion des changements des ingrédients
   const handleIngredientChange = (selectedIds: string[]) => {
@@ -997,7 +962,9 @@ const EditMenuForm = ({
         is_promotion: formData.reduction === true,
         promotion_price: formData.reduction ? formData.reducedPrice : "0",
         dish_supplements: dishSupplements,
-        is_alway_epice: formData.is_alway_epice, // ✅ Nom corrigé sans "s"
+        spice_level: formData.spice_level,
+        is_alway_epice: formData.spice_level === "ALWAYS", // ✅ Nom corrigé sans "s"
+        available_order_types: formData.available_order_types,
         private: formData.private,
         hubrise_sku: formData.hubrise_sku || undefined,
       };
@@ -1226,29 +1193,88 @@ const EditMenuForm = ({
                 )}
               </AnimatePresence>
             </motion.div>
-            {/* Epice*/}
+            {/* Niveau épicé (3 états) */}
             <motion.div
               className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
-              <div className="flex items-center">
-                <Checkbox
-                  id="is_alway_epice"
-                  checked={formData.is_alway_epice}
-                  onChange={(checked) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      is_alway_epice: checked,
-                    }));
-                  }}
-                />
-                <label
-                  htmlFor="is_alway_epice"
-                  className="ml-2 text-[13px] font-semibold text-gray-700"
-                >
-                  Déjà épicé
-                </label>
+              <label className="block text-[13px] font-semibold text-gray-700">
+                Niveau épicé
+              </label>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["ALWAYS", "Toujours 🌶️"],
+                    ["OPTIONAL", "Au choix"],
+                    ["NEVER", "Jamais"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        spice_level: value,
+                        is_alway_epice: value === "ALWAYS",
+                      }))
+                    }
+                    className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
+                      formData.spice_level === value
+                        ? "bg-[#F17922] text-white border-[#F17922]"
+                        : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Modes de commande disponibles */}
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <label className="block text-[13px] font-semibold text-gray-700">
+                Disponible pour
+              </label>
+              <p className="text-[12px] text-gray-500">
+                Décochez les modes où ce plat n&apos;est pas disponible (tout décocher = tous).
+              </p>
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["DELIVERY", "Livraison"],
+                    ["PICKUP", "À emporter"],
+                    ["TABLE", "Sur place"],
+                  ] as const
+                ).map(([value, label]) => {
+                  const active = formData.available_order_types.includes(value);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          available_order_types: prev.available_order_types.includes(value)
+                            ? prev.available_order_types.filter((t) => t !== value)
+                            : [...prev.available_order_types, value],
+                        }))
+                      }
+                      className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
+                        active
+                          ? "bg-[#F17922] text-white border-[#F17922]"
+                          : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           </div>
@@ -1349,21 +1375,31 @@ const EditMenuForm = ({
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <h3 className="text-lg font-medium text-[#595959] mb-2">
-              Choisissez les restaurants
+            <h3 className="text-lg font-medium text-[#595959]">
+              Restaurants exclus
             </h3>
+            <p className="text-[13px] text-gray-500 mb-2">
+              Par défaut, ce plat est vendu dans <b>tous</b> les restaurants.
+              Sélectionnez uniquement ceux qui ne doivent <b>pas</b> le proposer.
+            </p>
             <SelectWithCheckboxes
               value={selectedRestaurants}
               onChange={setSelectedRestaurants}
               options={restaurants}
-              placeholder="Sélectionnez les restaurants"
+              placeholder="Restaurants à exclure (aucun = tous)"
               className=""
             />
           </motion.div>
 
           {/* Suppléments */}
           <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-4 space-y-4">
-            <h3 className="text-lg font-medium text-[#595959]">Produits</h3>
+            <h3 className="text-lg font-medium text-[#595959]">
+              Suppléments exclus
+            </h3>
+            <p className="text-[13px] text-gray-500">
+              Par défaut, ce plat propose <b>tous</b> les suppléments.
+              Sélectionnez uniquement ceux à <b>retirer</b>.
+            </p>
 
             {/* Ingrédients */}
             <motion.div
@@ -1377,7 +1413,7 @@ const EditMenuForm = ({
                     value={selectedIngredients}
                     onChange={handleIngredientChange}
                     options={isLoadingSupplements ? [] : ingredientOptions}
-                    placeholder="Sélectionnez des suppléments"
+                    placeholder="Ingrédients à exclure"
                   />
                 </div>
 
@@ -1399,7 +1435,7 @@ const EditMenuForm = ({
                     value={selectedAccompagnements}
                     onChange={handleAccompagnementChange}
                     options={isLoadingSupplements ? [] : accompagnementOptions}
-                    placeholder="Sélectionnez des sauces"
+                    placeholder="Accompagnements à exclure"
                   />
                 </div>
 
@@ -1421,7 +1457,7 @@ const EditMenuForm = ({
                     value={selectedBoissons}
                     onChange={handleBoissonChange}
                     options={isLoadingSupplements ? [] : boissonOptions}
-                    placeholder="Sélectionnez des boissons"
+                    placeholder="Boissons à exclure"
                   />
                 </div>
 

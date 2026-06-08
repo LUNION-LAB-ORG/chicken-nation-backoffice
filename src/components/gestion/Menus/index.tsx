@@ -19,16 +19,6 @@ import {
   formatMenuFromApi,
 } from "@/services/menuService";
 import { useMenusSearchQuery } from "@/hooks/useMenusSearchQuery";
-
-import {
-  addRestaurantToDish,
-  deleteDishRestaurantRelation,
-} from "@/services/dishRestaurantService";
-import {
-  addSupplementToDish,
-  updateSupplementQuantity,
-  removeSupplementFromDish,
-} from "@/services/dishSupplementService";
 import { toast } from "react-hot-toast";
 import {
   validateMenuItem,
@@ -433,143 +423,19 @@ const Menus = () => {
       const formData = menuToFormData(updatedMenu, true); // ✅ Indiquer qu'il s'agit d'un UPDATE
       await updateMenu(menuState.selectedMenu.id, formData);
 
-      // 2. Préparer les données pour la mise à jour des relations
+      // Le modèle "tout par défaut − exclusions" est géré ENTIÈREMENT par
+      // menuToFormData(UPDATE) : l'API remplace les exclusions du plat en une
+      // seule requête (manage_exclusions=true). Surtout PAS de diff manuel ici :
+      // les services dish-supplement / dish-restaurant gèrent désormais des
+      // EXCLUSIONS (et non plus des inclusions), donc rejouer un diff
+      // corromprait les données.
 
-      // Extraire les IDs et IDs de relation des restaurants actuels
-      const currentRestaurants = menuState.selectedMenu.dish_restaurants
-        ? menuState.selectedMenu.dish_restaurants.map((r) => ({
-            id: r.restaurant_id || (r.restaurant && r.restaurant.id) || "",
-            relationId: r.id,
-          }))
-        : [];
+      await queryClient.invalidateQueries({ queryKey: ["menus"] });
+      await queryClient.invalidateQueries({ queryKey: ["menus-search"] });
+      await queryClient.invalidateQueries({ queryKey: ["dish"] });
+      setMenuRefreshSignal((n) => n + 1);
 
-      // Extraire les IDs des nouveaux restaurants
-      const menuWithRestaurants = updatedMenu as MenuItem & {
-        selectedRestaurants?: string[];
-      };
-      const newRestaurantIds =
-        menuWithRestaurants.selectedRestaurants &&
-        Array.isArray(menuWithRestaurants.selectedRestaurants)
-          ? menuWithRestaurants.selectedRestaurants
-          : updatedMenu.restaurantId
-          ? Array.isArray(updatedMenu.restaurantId)
-            ? updatedMenu.restaurantId
-            : [updatedMenu.restaurantId]
-          : [];
-
-      // Extraire les suppléments actuels avec leurs quantités et IDs de relation
-      const currentSupplements = menuState.selectedMenu.dish_supplements
-        ? menuState.selectedMenu.dish_supplements.map((s) => ({
-            id: s.supplement_id || (s.supplement && s.supplement.id) || "",
-            quantity: s.quantity || 1,
-            relationId: s.id,
-          }))
-        : [];
-
-      // Extraire les nouveaux suppléments avec leurs quantités
-      const newSupplements: Array<{ id: string; quantity: number }> = [];
-
-      // Ajouter les ingrédients (ACCESSORY)
-      if (updatedMenu.supplements?.ACCESSORY) {
-        updatedMenu.supplements.ACCESSORY.forEach((supp) => {
-          newSupplements.push({
-            id: supp.id,
-            quantity: (supp as unknown as { quantity?: number }).quantity || 1,
-          });
-        });
-      }
-
-      // Ajouter les accompagnements (FOOD)
-      if (updatedMenu.supplements?.FOOD) {
-        updatedMenu.supplements.FOOD.forEach((supp) => {
-          newSupplements.push({
-            id: supp.id,
-            quantity: (supp as unknown as { quantity?: number }).quantity || 1,
-          });
-        });
-      }
-
-      // Ajouter les boissons (DRINK)
-      if (updatedMenu.supplements?.DRINK) {
-        updatedMenu.supplements.DRINK.forEach((supp) => {
-          newSupplements.push({
-            id: supp.id,
-            quantity: (supp as unknown as { quantity?: number }).quantity || 1,
-          });
-        });
-      }
-
-      const restaurantPromises = [];
-
-      // Ajouter les nouveaux restaurants
-      for (const newRestaurantId of newRestaurantIds) {
-        // Vérifier si ce restaurant existe déjà
-        const exists = currentRestaurants.some((r) => r.id === newRestaurantId);
-        if (!exists) {
-          restaurantPromises.push(
-            addRestaurantToDish(menuState.selectedMenu.id, newRestaurantId)
-          );
-        }
-      }
-
-      for (const currentResto of currentRestaurants) {
-        if (currentResto.id && currentResto.relationId) {
-          const stillExists = newRestaurantIds.includes(currentResto.id);
-          if (!stillExists) {
-            restaurantPromises.push(
-              deleteDishRestaurantRelation(currentResto.relationId)
-            );
-          }
-        }
-      }
-
-      const supplementPromises = [];
-
-      for (const newSupplement of newSupplements) {
-        const existingSupp = currentSupplements.find(
-          (s) => s.id === newSupplement.id
-        );
-        if (!existingSupp) {
-          supplementPromises.push(
-            addSupplementToDish(
-              menuState.selectedMenu.id,
-              newSupplement.id,
-              newSupplement.quantity
-            )
-          );
-        } else if (existingSupp.quantity !== newSupplement.quantity) {
-          // Mettre à jour la quantité si elle a changé
-          if (existingSupp.relationId) {
-            supplementPromises.push(
-              updateSupplementQuantity(
-                existingSupp.relationId,
-                newSupplement.quantity
-              )
-            );
-          } else {
-          }
-        }
-      }
-
-      for (const currentSupp of currentSupplements) {
-        if (currentSupp.id && currentSupp.relationId) {
-          const stillExists = newSupplements.some(
-            (s) => s.id === currentSupp.id
-          );
-          if (!stillExists) {
-            supplementPromises.push(
-              removeSupplementFromDish(currentSupp.relationId)
-            );
-          }
-        }
-      }
-
-      await Promise.all([
-        Promise.all(restaurantPromises),
-        Promise.all(supplementPromises),
-      ]);
-
-      toast.success("Menu mis à jour avec succès !");
+      toast.success("Plat mis à jour avec succès !");
       refetch(); // Recharger les données
       setMenuState({
         view: "list",

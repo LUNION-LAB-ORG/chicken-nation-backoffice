@@ -33,6 +33,8 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
     image?: File;
     available: boolean;
     category: string;
+    spice_level: string;
+    available_order_types: ("DELIVERY" | "PICKUP" | "TABLE")[];
     hubrise_sku: string;
   }>({
     name: '',
@@ -41,6 +43,8 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
     image: undefined,
     available: true,
     category: '',
+    spice_level: 'NEVER',
+    available_order_types: ["DELIVERY", "PICKUP", "TABLE"],
     hubrise_sku: '',
   })
   
@@ -58,6 +62,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         image: undefined,
         available: dish.available,
         category: dish.category || 'FOOD',
+        spice_level: (dish as unknown as { spice_level?: string }).spice_level || 'NEVER',
         hubrise_sku: (dish as unknown as { hubrise_sku?: string }).hubrise_sku || '',
       })
       
@@ -173,7 +178,8 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
       fd.append('price', formData.price.toString())
       fd.append('category', formData.category)
       fd.append('available', formData.available ? 'true' : 'false')
-      
+      fd.append('spice_level', formData.spice_level)
+
       if (formData.description) {
         fd.append('description', formData.description)
       }
@@ -260,7 +266,35 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
       </div>
 
- 
+      {/* Niveau épicé (3 états) */}
+      <div>
+        <label className="block text-sm text-[#595959] font-light mb-2">
+          Niveau épicé
+        </label>
+        <div className="flex gap-2">
+          {(
+            [
+              ["ALWAYS", "Toujours 🌶️"],
+              ["OPTIONAL", "Au choix"],
+              ["NEVER", "Jamais"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setFormData((prev) => ({ ...prev, spice_level: value }))}
+              className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border transition-colors ${
+                formData.spice_level === value
+                  ? "bg-[#F17922] text-white border-[#F17922]"
+                  : "bg-white text-gray-600 border-[#D8D8D8] hover:border-[#F17922]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* SKU HubRise */}
       <div>
         <label className="block text-sm text-[#595959] font-light mb-2">
