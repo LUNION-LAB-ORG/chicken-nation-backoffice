@@ -43,11 +43,26 @@ export default function BaseDonnees() {
   const can = useAuthStore((s) => s.can);
   const isCallCenter = String(user?.role) === "CALL_CENTER";
 
+  // Store-roles (manager / assistant-manager / caissière) : accès au seul onglet
+  // Contacts (lecture) + capture. Les rôles « gestion » (admin / marketing) ont
+  // tous les onglets — détecté via une permission que les store-roles n'ont pas.
+  const canManage =
+    can(Modules.BASE_DONNEES, Action.REPORT) ||
+    can(Modules.BASE_DONNEES, Action.UPDATE) ||
+    can(Modules.BASE_DONNEES, Action.EXPORT);
+
   const [tab, setTab] = useState<AdminTab>("dashboard");
   const [captureOpen, setCaptureOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
-  const exportType = !isCallCenter ? EXPORT_BY_TAB[tab] : undefined;
+  const visibleTabs = canManage
+    ? ADMIN_TABS
+    : ADMIN_TABS.filter((t) => t.key === "liste");
+  const activeTab = visibleTabs.some((t) => t.key === tab)
+    ? tab
+    : visibleTabs[0].key;
+
+  const exportType = !isCallCenter ? EXPORT_BY_TAB[activeTab] : undefined;
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10">
@@ -96,33 +111,44 @@ export default function BaseDonnees() {
             </div>
           }
         >
-          {/* Onglets admin */}
-          <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit my-4">
-            {ADMIN_TABS.map((t) => {
-              const active = tab === t.key;
-              return (
-                <button
-                  key={t.key}
-                  type="button"
-                  onClick={() => setTab(t.key)}
-                  className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors ${
-                    active
-                      ? "bg-[#F17922] text-white"
-                      : "text-[#71717A] hover:text-gray-700"
-                  }`}
-                >
-                  <t.Icon className="w-3.5 h-3.5" />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Onglets — scroll horizontal sur mobile ; masqués si un seul (store-roles) */}
+          {visibleTabs.length > 1 && (
+            <div className="my-4 w-full overflow-x-auto">
+              <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
+                {visibleTabs.map((t) => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setTab(t.key)}
+                      className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+                        active
+                          ? "bg-[#F17922] text-white"
+                          : "text-[#71717A] hover:text-gray-700"
+                      }`}
+                    >
+                      <t.Icon className="w-3.5 h-3.5" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-          {tab === "dashboard" && <DashboardView />}
-          {tab === "liste" && <ProspectsList onRowClick={setDetailId} />}
-          {tab === "verification" && <CallCenterView />}
-          {tab === "coupons" && <CouponsView />}
-          {tab === "ventes" && <SalesView />}
+          <div className={visibleTabs.length > 1 ? "" : "mt-4"}>
+            {activeTab === "dashboard" && <DashboardView />}
+            {activeTab === "liste" && (
+              <ProspectsList
+                onRowClick={canManage ? setDetailId : undefined}
+                showStoreFilter={canManage}
+              />
+            )}
+            {activeTab === "verification" && <CallCenterView />}
+            {activeTab === "coupons" && <CouponsView />}
+            {activeTab === "ventes" && <SalesView />}
+          </div>
         </HasPermission>
       )}
 

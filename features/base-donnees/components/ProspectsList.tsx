@@ -56,8 +56,11 @@ function formatDate(iso: string) {
 
 export function ProspectsList({
   onRowClick,
+  showStoreFilter = true,
 }: {
   onRowClick?: (id: string) => void;
+  /** Filtre « tous les stores » — masqué pour les store-roles (déjà scopés). */
+  showStoreFilter?: boolean;
 } = {}) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<ProspectPlatform | "">("");
@@ -77,7 +80,7 @@ export function ProspectsList({
     ...(search.trim() ? { search: search.trim() } : {}),
     ...(platform ? { platform } : {}),
     ...(status ? { status } : {}),
-    ...(restaurantId ? { restaurantId } : {}),
+    ...(showStoreFilter && restaurantId ? { restaurantId } : {}),
   };
   const { data, isLoading, isFetching } = useProspectListQuery(query);
 
@@ -86,10 +89,10 @@ export function ProspectsList({
 
   return (
     <div>
-      {/* Filtres */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-[220px] max-w-sm">
-          <Search className="w-4 h-4 text-gray-400" />
+      {/* Filtres — empilés sur mobile, en ligne sur desktop */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 mb-4">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 w-full sm:flex-1 sm:min-w-[220px] sm:max-w-sm">
+          <Search className="w-4 h-4 text-gray-400 shrink-0" />
           <input
             value={search}
             onChange={(e) => {
@@ -97,111 +100,150 @@ export function ProspectsList({
               setPage(1);
             }}
             placeholder="Rechercher nom, téléphone, n° commande…"
-            className="flex-1 text-sm outline-none bg-transparent"
+            className="flex-1 min-w-0 text-sm outline-none bg-transparent"
           />
         </div>
-        <select
-          value={restaurantId}
-          onChange={(e) => {
-            setRestaurantId(e.target.value);
-            setPage(1);
-          }}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-        >
-          <option value="">Tous les stores</option>
-          {restaurants.map((r) => (
-            <option key={r.id} value={r.id}>
-              {r.name}
-            </option>
-          ))}
-        </select>
-        <select
-          value={platform}
-          onChange={(e) => {
-            setPlatform(e.target.value as ProspectPlatform | "");
-            setPage(1);
-          }}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-        >
-          <option value="">Toutes plateformes</option>
-          <option value="GLOVO">Glovo</option>
-          <option value="YANGO">Yango</option>
-        </select>
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value as ProspectStatus | "");
-            setPage(1);
-          }}
-          className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-        >
-          <option value="">Tous statuts</option>
-          {PROSPECT_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {STATUS_META[s].label}
-            </option>
-          ))}
-        </select>
+        <div className="flex gap-2">
+          {showStoreFilter && (
+            <select
+              value={restaurantId}
+              onChange={(e) => {
+                setRestaurantId(e.target.value);
+                setPage(1);
+              }}
+              className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+            >
+              <option value="">Tous les stores</option>
+              {restaurants.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          )}
+          <select
+            value={platform}
+            onChange={(e) => {
+              setPlatform(e.target.value as ProspectPlatform | "");
+              setPage(1);
+            }}
+            className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+          >
+            <option value="">Toutes plateformes</option>
+            <option value="GLOVO">Glovo</option>
+            <option value="YANGO">Yango</option>
+          </select>
+          <select
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value as ProspectStatus | "");
+              setPage(1);
+            }}
+            className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+          >
+            <option value="">Tous statuts</option>
+            {PROSPECT_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_META[s].label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-56">
-            <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
+      {/* États vides / chargement */}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-56 bg-white border border-gray-200 rounded-xl">
+          <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-56 text-gray-400 bg-white border border-gray-200 rounded-xl">
+          <Inbox className="w-10 h-10 mb-2" />
+          <p className="text-sm">Aucun contact pour ces filtres.</p>
+        </div>
+      ) : (
+        <>
+          {/* Mobile : cartes tap-friendly */}
+          <div className="md:hidden space-y-2">
+            {rows.map((p) => (
+              <div
+                key={p.id}
+                onClick={() => onRowClick?.(p.id)}
+                className={`bg-white border border-gray-200 rounded-xl p-3 ${
+                  onRowClick ? "cursor-pointer active:bg-gray-50" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <PlatformChip platform={p.platform} />
+                  <StatusBadge status={p.status} />
+                </div>
+                <p className="mt-2 font-semibold text-gray-800">{p.name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-gray-600">
+                  <span className="tabular-nums">{p.phone}</span>
+                  <span className="text-gray-300">·</span>
+                  <span className="tabular-nums">N° {p.order_number}</span>
+                </div>
+                <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
+                  <span className="truncate">{p.restaurant?.name ?? "—"}</span>
+                  <span className="tabular-nums shrink-0">
+                    {formatDate(p.created_at)}
+                  </span>
+                </div>
+              </div>
+            ))}
           </div>
-        ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-56 text-gray-400">
-            <Inbox className="w-10 h-10 mb-2" />
-            <p className="text-sm">Aucun contact pour ces filtres.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
-                  <th className="text-left font-semibold px-4 py-3">Date</th>
-                  <th className="text-left font-semibold px-4 py-3">Plateforme</th>
-                  <th className="text-left font-semibold px-4 py-3">Nom / Pseudo</th>
-                  <th className="text-left font-semibold px-4 py-3">N° commande</th>
-                  <th className="text-left font-semibold px-4 py-3">Téléphone</th>
-                  <th className="text-left font-semibold px-4 py-3">Store</th>
-                  <th className="text-left font-semibold px-4 py-3">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((p) => (
-                  <tr
-                    key={p.id}
-                    onClick={() => onRowClick?.(p.id)}
-                    className={`border-t border-gray-100 hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""}`}
-                  >
-                    <td className="px-4 py-3 text-gray-500 tabular-nums whitespace-nowrap">
-                      {formatDate(p.created_at)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <PlatformChip platform={p.platform} />
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-gray-800">
-                      {p.name}
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 tabular-nums">
-                      {p.order_number}
-                    </td>
-                    <td className="px-4 py-3 tabular-nums">{p.phone}</td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {p.restaurant?.name ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={p.status} />
-                    </td>
+
+          {/* Desktop : tableau */}
+          <div className="hidden md:block bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
+                    <th className="text-left font-semibold px-4 py-3">Date</th>
+                    <th className="text-left font-semibold px-4 py-3">Plateforme</th>
+                    <th className="text-left font-semibold px-4 py-3">Nom / Pseudo</th>
+                    <th className="text-left font-semibold px-4 py-3">N° commande</th>
+                    <th className="text-left font-semibold px-4 py-3">Téléphone</th>
+                    <th className="text-left font-semibold px-4 py-3">Store</th>
+                    <th className="text-left font-semibold px-4 py-3">Statut</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((p) => (
+                    <tr
+                      key={p.id}
+                      onClick={() => onRowClick?.(p.id)}
+                      className={`border-t border-gray-100 hover:bg-gray-50 ${
+                        onRowClick ? "cursor-pointer" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3 text-gray-500 tabular-nums whitespace-nowrap">
+                        {formatDate(p.created_at)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PlatformChip platform={p.platform} />
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-gray-800">
+                        {p.name}
+                      </td>
+                      <td className="px-4 py-3 text-gray-500 tabular-nums">
+                        {p.order_number}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">{p.phone}</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {p.restaurant?.name ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <StatusBadge status={p.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Pagination */}
       {meta && meta.totalPages > 1 && (
