@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import MenuHeader from "./MenuHeader";
 import BestSellers from "./BestSellers";
@@ -53,6 +54,10 @@ const Menus = () => {
   // État pour la recherche côté serveur
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  // Rafraîchissement des listes après suppression d'un plat
+  const queryClient = useQueryClient();
+  const [menuRefreshSignal, setMenuRefreshSignal] = useState(0);
 
   // ✅ Hook pour la recherche côté serveur
   const {
@@ -602,7 +607,7 @@ const Menus = () => {
 
       // ✅ Demander confirmation avec nom sécurisé
       const confirmed = window.confirm(
-        `Êtes-vous sûr de vouloir désactiver le menu "${sanitizedName}" ? Il ne sera plus visible dans l'application mais restera archivé.`
+        `Supprimer le plat "${sanitizedName}" ? Il ne sera plus visible dans l'application (archivé côté serveur).`
       );
 
       if (!confirmed) return;
@@ -612,9 +617,14 @@ const Menus = () => {
       // ✅ Soft-delete : entity_status passe à DELETED côté backend
       await deleteMenu(menu.id);
 
-      toast.success("Menu désactivé avec succès !");
+      toast.success("Plat supprimé avec succès !");
 
-      // Recharger les données API
+      // Rafraîchir toutes les listes : BestSellers (['menus']), recherche
+      // (['menus-search']), feature (['dish']) + MenuCategories (state local via signal).
+      await queryClient.invalidateQueries({ queryKey: ["menus"] });
+      await queryClient.invalidateQueries({ queryKey: ["menus-search"] });
+      await queryClient.invalidateQueries({ queryKey: ["dish"] });
+      setMenuRefreshSignal((n) => n + 1);
       refetch();
 
       // Retourner à la liste
@@ -625,8 +635,8 @@ const Menus = () => {
         saving: false,
       });
     } catch (error) {
-      console.error("Erreur lors de la désactivation du menu:", error);
-      toast.error("Erreur lors de la désactivation du menu");
+      console.error("Erreur lors de la suppression du plat:", error);
+      toast.error("Erreur lors de la suppression du plat");
       setMenuState({ ...menuState, saving: false });
     }
   };
@@ -679,6 +689,7 @@ const Menus = () => {
                       key={menu.id}
                       menu={menu as unknown as MenuItem}
                       onView={() => handleViewMenu(menu as unknown as MenuItem)}
+                      onDelete={() => handleDeleteMenu(menu as unknown as MenuItem)}
                     />
                   ))}
                 </div>
@@ -691,12 +702,15 @@ const Menus = () => {
                 menus={[]}
                 onEditMenu={handleEditMenu}
                 onViewMenu={handleViewMenu}
+                onDeleteMenu={handleDeleteMenu}
               />
               <div className="border-t border-gray-100 mt-4"></div>
               <MenuCategories
                 categories={[]}
                 onEditMenu={handleEditMenu}
                 onViewMenu={handleViewMenu}
+                onDeleteMenu={handleDeleteMenu}
+                refreshSignal={menuRefreshSignal}
               />
             </>
           )}

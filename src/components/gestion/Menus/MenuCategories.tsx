@@ -13,9 +13,12 @@ interface MenuCategoriesProps {
   menuItems: MenuItemType[]
   onEditMenu: (menu: MenuItemType) => void
   onViewMenu?: (menu: MenuItemType) => void
+  onDeleteMenu?: (menu: MenuItemType) => void
+  /** Incrémenté après une suppression pour recharger les plats (state local). */
+  refreshSignal?: number
 }
 
-export default function MenuCategories({ categories: propCategories, onEditMenu, onViewMenu }: Omit<MenuCategoriesProps, 'menuItems'>) {
+export default function MenuCategories({ categories: propCategories, onEditMenu, onViewMenu, onDeleteMenu, refreshSignal }: Omit<MenuCategoriesProps, 'menuItems'>) {
   // États pour les catégories
   const [categories, setCategories] = useState<Category[]>(propCategories || [])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]) 
@@ -77,7 +80,7 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
     };
     
     fetchMenusByCategory();
-  }, [activeCategoryId]);
+  }, [activeCategoryId, refreshSignal]);
 
   // Charger tous les menus des catégories sélectionnées
   useEffect(() => {
@@ -109,7 +112,7 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
     };
     
     fetchMenusForSelectedCategories();
-  }, [selectedCategories, categories]);
+  }, [selectedCategories, categories, refreshSignal]);
 
   // Filtrer les plats si des catégories sont sélectionnées dans le filtre
   const filteredMenus = selectedCategories.length > 1
@@ -210,10 +213,11 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4 lg:gap-6">
             {paginatedMenus.map((menu) => (
-              <MenuItemCard 
-                key={menu.id} 
-                menu={menu} 
+              <MenuItemCard
+                key={menu.id}
+                menu={menu}
                 onView={onViewMenu}
+                onDelete={onDeleteMenu}
               />
             ))}
           </div>

@@ -11,9 +11,10 @@ interface BestSellersProps {
   menus: MenuItemType[]
   onEditMenu: (menu: MenuItemType) => void
   onViewMenu?: (menu: MenuItemType) => void
+  onDeleteMenu?: (menu: MenuItemType) => void
 }
 
-export default function BestSellers({ onEditMenu, onViewMenu }: BestSellersProps) {
+export default function BestSellers({ onEditMenu, onViewMenu, onDeleteMenu }: BestSellersProps) {
   // ✅ Utiliser TanStack Query pour les menus
   const {
     menus,
@@ -58,6 +59,7 @@ export default function BestSellers({ onEditMenu, onViewMenu }: BestSellersProps
                 key={menu.id}
                 menu={menu as unknown as MenuItemType}
                 onView={() => onViewMenu?.(menu as unknown as MenuItemType)}
+                onDelete={onDeleteMenu}
               />
             ))}
           </div>
