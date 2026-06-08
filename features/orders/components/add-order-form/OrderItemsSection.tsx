@@ -108,10 +108,13 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   const getSupplementsOptions = (dish: Dish): SupplementOption[] => {
     if (!dish.dish_supplements) return [];
 
+    // Depuis la bascule "inclusion → exclusion" côté backend, withEffective() renvoie
+    // `dish_supplements: [{ supplement }]` sans `supplement_id` au niveau de la ligne :
+    // l'id réel est désormais dans `ds.supplement.id`.
     return dish.dish_supplements
-      .filter((ds) => ds.supplement?.available !== false)
+      .filter((ds) => ds.supplement && ds.supplement.available !== false)
       .map((ds) => ({
-        value: ds.supplement_id,
+        value: ds.supplement!.id,
         label: ds.supplement?.name || "",
         price: ds.supplement?.price || 0,
         image: formatImageUrl(ds?.supplement?.image),
@@ -149,7 +152,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
     const supplementsPrice = item.supplements.reduce((sum, supp) => {
       const supplement = dish.dish_supplements?.find(
-        (ds) => ds.supplement_id === supp.id
+        (ds) => ds.supplement?.id === supp.id
       )?.supplement;
       return sum + (supplement?.price || 0) * supp.quantity;
     }, 0);
@@ -169,7 +172,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
     const supplementsPrice = tempSupplements.reduce((sum, supp) => {
       const supplement = selectedDishForConfig.dish_supplements?.find(
-        (ds) => ds.supplement_id === supp.id
+        (ds) => ds.supplement?.id === supp.id
       )?.supplement;
       return sum + (supplement?.price || 0) * supp.quantity;
     }, 0);
