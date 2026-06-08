@@ -130,6 +130,8 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       is_alway_epice: (validatedApiMenu as unknown as { is_alway_epice?: boolean }).is_alway_epice ?? false, // ✅ Nom corrigé sans "s"
       spice_level: (validatedApiMenu as unknown as { spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER" }).spice_level ?? undefined,
       available_order_types: (validatedApiMenu as unknown as { available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[] }).available_order_types ?? undefined,
+      available_from: (validatedApiMenu as unknown as { available_from?: string | null }).available_from ?? undefined,
+      available_until: (validatedApiMenu as unknown as { available_until?: string | null }).available_until ?? undefined,
       private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false, // ✅ Nom corrigé sans "s"
       hubrise_sku: validatedApiMenu.hubrise_sku ?? undefined
     };
@@ -487,6 +489,10 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       if (Array.isArray(orderTypesUpdate)) {
         orderTypesUpdate.forEach((t) => { if (t) formData.append('available_order_types', t); });
       }
+      const availFromUpdate = (validatedMenu as unknown as { available_from?: string | null }).available_from;
+      const availUntilUpdate = (validatedMenu as unknown as { available_until?: string | null }).available_until;
+      formData.append('available_from', availFromUpdate ?? '');
+      formData.append('available_until', availUntilUpdate ?? '');
       const hubriseSkuUpdate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
       if (hubriseSkuUpdate) {
         formData.append('hubrise_sku', hubriseSkuUpdate);
@@ -568,6 +574,10 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       if (Array.isArray(orderTypesCreate)) {
         orderTypesCreate.forEach((t) => { if (t) formData.append('available_order_types', t); });
       }
+      const availFromCreate = (validatedMenu as unknown as { available_from?: string | null }).available_from;
+      const availUntilCreate = (validatedMenu as unknown as { available_until?: string | null }).available_until;
+      formData.append('available_from', availFromCreate ?? '');
+      formData.append('available_until', availUntilCreate ?? '');
       const hubriseSkuCreate = (validatedMenu as unknown as { hubrise_sku?: string }).hubrise_sku;
       if (hubriseSkuCreate) {
         formData.append('hubrise_sku', hubriseSkuCreate);

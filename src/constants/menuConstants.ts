@@ -16,7 +16,5 @@ export const SUPPLEMENT_TYPE_LABELS = {
 // Endpoints API
 export const API_ENDPOINTS = {
   DISHES: '/api/v1/dishes',
-  DISH_RESTAURANTS: '/api/v1/dish-restaurants',
-  DISH_SUPPLEMENTS: '/api/v1/dish-supplements',
   MENU_CATEGORIES: '/api/v1/menu-categories'
 };

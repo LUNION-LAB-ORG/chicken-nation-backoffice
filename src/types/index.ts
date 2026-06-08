@@ -228,6 +228,9 @@ export interface MenuItem {
   spice_level?: "ALWAYS" | "OPTIONAL" | "NEVER";
   // Modes de commande où le plat est disponible (vide/absent = tous).
   available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
+  // Créneau horaire « HH:mm » (null/absent = toujours dispo).
+  available_from?: string | null;
+  available_until?: string | null;
   private: boolean;
   hubrise_sku?: string;
 }

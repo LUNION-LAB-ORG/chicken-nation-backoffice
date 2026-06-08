@@ -44,6 +44,8 @@ interface MenuFormData {
   is_alway_epice: boolean; // ✅ Nom corrigé sans "s"
   spice_level: "ALWAYS" | "OPTIONAL" | "NEVER";
   available_order_types: ("DELIVERY" | "PICKUP" | "TABLE")[];
+  available_from: string;
+  available_until: string;
   private: boolean;
   hubrise_sku: string;
 }
@@ -96,6 +98,8 @@ const EditMenuForm = ({
     is_alway_epice: false, // ✅ Valeur par défaut
     spice_level: "OPTIONAL",
     available_order_types: ["DELIVERY", "PICKUP", "TABLE"],
+    available_from: "",
+    available_until: "",
     private: false,
   });
 
@@ -134,6 +138,10 @@ const EditMenuForm = ({
           (validatedData as unknown as {
             available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
           }).available_order_types ?? ["DELIVERY", "PICKUP", "TABLE"],
+        available_from:
+          (validatedData as unknown as { available_from?: string | null }).available_from ?? "",
+        available_until:
+          (validatedData as unknown as { available_until?: string | null }).available_until ?? "",
         private:
           (validatedData as unknown as { private?: boolean }).private ?? false,
         hubrise_sku:
@@ -170,6 +178,10 @@ const EditMenuForm = ({
           (initialData as unknown as {
             available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[];
           }).available_order_types ?? ["DELIVERY", "PICKUP", "TABLE"],
+        available_from:
+          (initialData as unknown as { available_from?: string | null }).available_from ?? "",
+        available_until:
+          (initialData as unknown as { available_until?: string | null }).available_until ?? "",
         private:
           (initialData as unknown as { private?: boolean }).private ?? false,
         hubrise_sku: (initialData as unknown as { hubrise_sku?: string }).hubrise_sku ?? "",
@@ -965,6 +977,8 @@ const EditMenuForm = ({
         spice_level: formData.spice_level,
         is_alway_epice: formData.spice_level === "ALWAYS", // ✅ Nom corrigé sans "s"
         available_order_types: formData.available_order_types,
+        available_from: formData.available_from,
+        available_until: formData.available_until,
         private: formData.private,
         hubrise_sku: formData.hubrise_sku || undefined,
       };
@@ -1275,6 +1289,39 @@ const EditMenuForm = ({
                     </button>
                   );
                 })}
+              </div>
+            </motion.div>
+
+            {/* Créneau horaire de disponibilité */}
+            <motion.div
+              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <label className="block text-[13px] font-semibold text-gray-700">
+                Créneau de disponibilité
+              </label>
+              <p className="text-[12px] text-gray-500">
+                Laissez vide pour rendre le plat disponible toute la journée.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="time"
+                  value={formData.available_from}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, available_from: e.target.value }))
+                  }
+                  className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+                />
+                <span className="text-gray-400">→</span>
+                <input
+                  type="time"
+                  value={formData.available_until}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, available_until: e.target.value }))
+                  }
+                  className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+                />
               </div>
             </motion.div>
           </div>

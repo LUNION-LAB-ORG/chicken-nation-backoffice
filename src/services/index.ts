@@ -2,9 +2,7 @@
 // Exporter tous les services
 export * from './api';
 export * from './categoryService';
-export * from './dishRestaurantService';
 export * from './dishService';
-export * from './dishSupplementService';
 export * from './menuService';
 export * from './productService';
 export * from './restaurantService';

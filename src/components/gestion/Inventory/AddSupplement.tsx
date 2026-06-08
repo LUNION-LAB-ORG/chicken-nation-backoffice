@@ -63,6 +63,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
         available: dish.available,
         category: dish.category || 'FOOD',
         spice_level: (dish as unknown as { spice_level?: string }).spice_level || 'NEVER',
+        available_order_types: (dish as unknown as { available_order_types?: ("DELIVERY" | "PICKUP" | "TABLE")[] }).available_order_types || ["DELIVERY", "PICKUP", "TABLE"],
         hubrise_sku: (dish as unknown as { hubrise_sku?: string }).hubrise_sku || '',
       })
       
@@ -179,6 +180,7 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
       fd.append('category', formData.category)
       fd.append('available', formData.available ? 'true' : 'false')
       fd.append('spice_level', formData.spice_level)
+      formData.available_order_types.forEach((t) => fd.append('available_order_types', t))
 
       if (formData.description) {
         fd.append('description', formData.description)
@@ -292,6 +294,45 @@ export default function AddSupplement({ onCancel, onSuccess, dish }: AddProductP
               {label}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Modes de commande disponibles */}
+      <div>
+        <label className="block text-sm text-[#595959] font-light mb-2">
+          Disponible pour
+        </label>
+        <div className="flex gap-2">
+          {(
+            [
+              ["DELIVERY", "Livraison"],
+              ["PICKUP", "À emporter"],
+              ["TABLE", "Sur place"],
+            ] as const
+          ).map(([value, label]) => {
+            const active = formData.available_order_types.includes(value);
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    available_order_types: prev.available_order_types.includes(value)
+                      ? prev.available_order_types.filter((t) => t !== value)
+                      : [...prev.available_order_types, value],
+                  }))
+                }
+                className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border transition-colors ${
+                  active
+                    ? "bg-[#F17922] text-white border-[#F17922]"
+                    : "bg-white text-gray-600 border-[#D8D8D8] hover:border-[#F17922]"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -68,7 +68,7 @@ export default function RestaurantDetail({
       price: string;
       image?: string;
       restaurantId?: string;
-      dish_restaurants?: Array<{ restaurant_id: string }>;
+      dish_restaurants?: Array<{ restaurant_id?: string; restaurant?: { id: string } }>;
       supplements?: Record<
         string,
         { items?: Array<{ id: string; name: string; price?: string }> }
@@ -227,12 +227,14 @@ export default function RestaurantDetail({
           menu.restaurantId.includes(restaurantId)
       );
 
-      // Méthode 3: Vérifier si dish_restaurants existe et contient l'ID recherché
+      // Méthode 3: Vérifier si dish_restaurants existe et contient l'ID recherché.
+      // Le backend renvoie maintenant `dish_restaurants: [{ restaurant: { id, ... } }]`
+      // (effectif via withEffective), il n'y a plus de clé `restaurant_id` au niveau de la ligne.
       const menusByDishRestaurants = allMenus.filter(
         (menu) =>
           menu.dish_restaurants &&
           Array.isArray(menu.dish_restaurants) &&
-          menu.dish_restaurants.some((dr) => dr.restaurant_id === restaurantId)
+          menu.dish_restaurants.some((dr) => dr.restaurant?.id === restaurantId)
       );
 
       // Combiner tous les résultats et éliminer les doublons

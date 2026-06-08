@@ -73,6 +73,9 @@ export const MenuItemSchema = z.object({
   spice_level: z.enum(['ALWAYS', 'OPTIONAL', 'NEVER']).optional(),
   // Modes de commande disponibles (vide/absent = tous).
   available_order_types: z.array(z.enum(['DELIVERY', 'PICKUP', 'TABLE'])).optional(),
+  // Créneau horaire « HH:mm » (null/absent = toujours dispo).
+  available_from: z.string().nullable().optional(),
+  available_until: z.string().nullable().optional(),
   private: z.boolean().default(false), // ✅ Nom corrigé sans "s"
   hubrise_sku: z.string().nullable().optional()
 });
@@ -105,6 +108,8 @@ export const ApiMenuDataSchema = z.object({
   is_alway_epice: z.boolean().optional(), // ✅ Nom corrigé sans "s"
   spice_level: z.enum(['ALWAYS', 'OPTIONAL', 'NEVER']).optional(),
   available_order_types: z.array(z.enum(['DELIVERY', 'PICKUP', 'TABLE'])).optional(),
+  available_from: z.string().nullable().optional(),
+  available_until: z.string().nullable().optional(),
   private: z.boolean().optional(), // ✅ Nom corrigé sans "s"
   hubrise_sku: z.string().nullable().optional()
 });
