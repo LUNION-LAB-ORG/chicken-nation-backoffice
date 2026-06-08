@@ -131,7 +131,7 @@ export class CommentService {
       }
 
       // ✅ URL avec vraie pagination côté serveur
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://chicken.turbodeliveryapp.com';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api-private.chicken-nation.com';
 
       // Construire les paramètres de requête avec pagination
       const queryParams = new URLSearchParams();

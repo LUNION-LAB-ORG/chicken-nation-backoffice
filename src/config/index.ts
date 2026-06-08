@@ -12,5 +12,5 @@ export const API_TIMEOUT = 30000;
 
 // SOCKET URL
 export const SOCKET_URL =
-    (process.env.NEXT_PUBLIC_API_URL ?? "https://chicken.turbodeliveryapp.com") +
+    (process.env.NEXT_PUBLIC_API_URL ?? "https://api-private.chicken-nation.com") +
     "/app";

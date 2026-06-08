@@ -107,7 +107,7 @@ export const SecureApiConfig = {
     if (!url) {
       if (isDevelopment()) {
         console.warn('⚠️ API URL manquante - utilisation de l\'URL par défaut');
-        return 'https://chicken.turbodeliveryapp.com';
+        return 'https://api-private.chicken-nation.com';
       }
       throw new Error('NEXT_PUBLIC_API_URL manquante en production');
     }
@@ -121,7 +121,7 @@ export const SecureApiConfig = {
     if (!prefix) {
       if (isDevelopment()) {
         console.warn('⚠️ API PREFIX manquant - utilisation du préfixe par défaut');
-        return 'https://chicken.turbodeliveryapp.com/api/v1';
+        return 'https://api-private.chicken-nation.com/api/v1';
       }
       throw new Error('NEXT_PUBLIC_API_PREFIX manquant en production');
     }

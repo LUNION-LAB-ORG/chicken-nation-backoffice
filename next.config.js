@@ -32,6 +32,10 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "api-private.chicken-nation.com",
+      },
+      {
+        protocol: "https",
         hostname: "images.bfmtv.com",
       },
       {

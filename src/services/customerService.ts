@@ -1,6 +1,6 @@
 import { PaginatedResponse } from "../../types";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://chicken.turbodeliveryapp.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api-private.chicken-nation.com';
 const API_PREFIX = '/api/v1';
 const CUSTOMERS_ENDPOINT = '/customer';
 const REVIEWS_ENDPOINT = '/reviews';

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // ✅ SÉCURITÉ : Configuration stricte pour le proxy d'images
 const ALLOWED_DOMAINS = [
+  'api-private.chicken-nation.com',
   'chicken.turbodeliveryapp.com',
   'kfy9qwx5yd.ufs.sh'
 ];
