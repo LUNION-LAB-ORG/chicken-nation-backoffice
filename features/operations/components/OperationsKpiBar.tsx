@@ -4,6 +4,7 @@ import React from "react";
 import { AlertTriangle, ChefHat, PackageCheck, Truck } from "lucide-react";
 
 import type { IOperationsBuckets } from "../types/operations.types";
+import { isOrderLate } from "../utils/group-orders";
 
 interface Props {
   buckets: IOperationsBuckets;
@@ -13,9 +14,18 @@ interface Props {
 /**
  * Barre de 4 compteurs live pour la page Opérations.
  * Animée subtilement au changement (scale pulse via CSS).
+ *
+ * "Retards" agrège toutes les commandes en retard (READY > 30 min, COLLECTED
+ * non payée > seuil), peu importe leur onglet d'origine — c'est l'unique
+ * indicateur d'urgence depuis la fusion des 4 sections en 2 onglets.
  */
 export function OperationsKpiBar({ buckets, inDeliveryCount }: Props) {
   const pretesTotal = buckets.pretesGroupes.reduce((s, g) => s + g.orders.length, 0);
+  const pretesOrders = buckets.pretesGroupes.flatMap((g) => g.orders);
+  const lateCount =
+    buckets.aPreparer.filter(isOrderLate).length +
+    pretesOrders.filter(isOrderLate).length +
+    buckets.recuperees.filter(isOrderLate).length;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -34,12 +44,12 @@ export function OperationsKpiBar({ buckets, inDeliveryCount }: Props) {
         bgFrom="from-green-50"
       />
       <KpiTile
-        label="Problèmes"
-        value={buckets.problemes.length}
+        label="Retards"
+        value={lateCount}
         icon={AlertTriangle}
         color="#EF4444"
         bgFrom="from-red-50"
-        urgent={buckets.problemes.length > 0}
+        urgent={lateCount > 0}
       />
       <KpiTile
         label="En livraison"

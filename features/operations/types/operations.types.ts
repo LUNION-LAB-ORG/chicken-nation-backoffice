@@ -1,6 +1,9 @@
 import type { DeliveryService, Order, OrderStatus } from '../../orders/types/order.types';
 
-/** Sections visuelles de la page Opérations */
+/** Onglets visuels de la page Opérations (regroupement par présence physique). */
+export type OperationsTabKey = 'au_restaurant' | 'hors_restaurant';
+
+/** @deprecated — ancien découpage 4 sections, conservé pour compat éventuelle. */
 export type OperationsSectionKey = 'a_preparer' | 'pretes' | 'recuperees' | 'problemes';
 
 /** Order enrichie avec infos Course pour l'affichage */
@@ -25,13 +28,12 @@ export interface IOperationsBuckets {
   aPreparer: Order[];
   pretesGroupes: IOrderGroup[];
   /**
-   * PICKED_UP (tous types confondus) — commandes collectées mais non terminées.
-   * Pour DELIVERY : en route vers le client. Pour PICKUP : emportées. Pour TABLE : servies.
-   * Affichées dans une colonne dédiée « Collectées » ET comptées dans le KPI « En livraison »
-   * (filtré sur type=DELIVERY côté consommateur).
+   * Commandes qui ont quitté le restaurant :
+   *  - PICKED_UP (tous types : DELIVERY en route, PICKUP emportée, TABLE servie)
+   *  - COLLECTED non payée (livrée, livreur revient au resto avec l'argent)
+   * Alimente l'onglet "Hors restaurant" + le KPI "En livraison" (filtré sur DELIVERY).
    */
   recuperees: Order[];
-  problemes: Order[];
 }
 
 /** Seuil (min) au-delà duquel une Order READY est considérée "en retard" */
