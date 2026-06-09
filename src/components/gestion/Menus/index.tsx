@@ -26,6 +26,7 @@ import {
   ValidatedMenuItem,
 } from "@/schemas/menuSchemas";
 import MenuRightSide from "./MenuRightSide";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface MenuState {
   view: "list" | "create" | "edit" | "view";
@@ -48,6 +49,12 @@ const Menus = () => {
   // Rafraîchissement des listes après suppression d'un plat
   const queryClient = useQueryClient();
   const [menuRefreshSignal, setMenuRefreshSignal] = useState(0);
+
+  // Dialog de confirmation de suppression de plat. On garde le menu à supprimer
+  // dans un state pour que le dialog reste branché sur lui pendant l'animation
+  // de fermeture (sinon le titre flash en undefined au moment de la fermeture).
+  const [menuToDelete, setMenuToDelete] = useState<MenuItem | null>(null);
+  const [isDeletingMenu, setIsDeletingMenu] = useState(false);
 
   // ✅ Hook pour la recherche côté serveur
   const {
@@ -451,37 +458,30 @@ const Menus = () => {
   };
 
   // ✅ FONCTION DE SUPPRESSION SÉCURISÉE
-  const handleDeleteMenu = async (menu: MenuItem) => {
+  // Étape 1 : on valide l'entrée et on ouvre le ConfirmDialog (cf. JSX en bas).
+  // Étape 2 : la confirmation lance `performDeleteMenu` qui fait l'appel API.
+  const handleDeleteMenu = (menu: MenuItem) => {
+    if (
+      !menu.id ||
+      typeof menu.id !== "string" ||
+      menu.id.trim().length === 0
+    ) {
+      toast.error("ID de menu invalide");
+      return;
+    }
+    if (!menu.name || typeof menu.name !== "string") {
+      toast.error("Nom de menu invalide");
+      return;
+    }
+    setMenuToDelete(menu);
+  };
+
+  const performDeleteMenu = async () => {
+    if (!menuToDelete) return;
+    setIsDeletingMenu(true);
     try {
-      // ✅ Validation basique de l'ID et du nom
-      if (
-        !menu.id ||
-        typeof menu.id !== "string" ||
-        menu.id.trim().length === 0
-      ) {
-        toast.error("ID de menu invalide");
-        return;
-      }
-
-      if (!menu.name || typeof menu.name !== "string") {
-        toast.error("Nom de menu invalide");
-        return;
-      }
-
-      // ✅ Sanitisation du nom pour l'affichage
-      const sanitizedName = sanitizeMenuInput(menu.name);
-
-      // ✅ Demander confirmation avec nom sécurisé
-      const confirmed = window.confirm(
-        `Supprimer le plat "${sanitizedName}" ? Il ne sera plus visible dans l'application (archivé côté serveur).`
-      );
-
-      if (!confirmed) return;
-
-      setMenuState({ ...menuState, saving: true });
-
       // ✅ Soft-delete : entity_status passe à DELETED côté backend
-      await deleteMenu(menu.id);
+      await deleteMenu(menuToDelete.id);
 
       toast.success("Plat supprimé avec succès !");
 
@@ -500,10 +500,12 @@ const Menus = () => {
         loadingMenu: false,
         saving: false,
       });
+      setMenuToDelete(null);
     } catch (error) {
       console.error("Erreur lors de la suppression du plat:", error);
       toast.error("Erreur lors de la suppression du plat");
-      setMenuState({ ...menuState, saving: false });
+    } finally {
+      setIsDeletingMenu(false);
     }
   };
 
@@ -686,6 +688,29 @@ const Menus = () => {
           </div>
         </div>
       )}
+
+      {/* Confirmation de suppression (soft-delete archive le plat côté serveur). */}
+      <ConfirmDialog
+        isOpen={menuToDelete !== null}
+        onClose={() => {
+          if (!isDeletingMenu) setMenuToDelete(null);
+        }}
+        onConfirm={performDeleteMenu}
+        title="Supprimer ce plat ?"
+        description={
+          menuToDelete ? (
+            <>
+              Le plat <b>{sanitizeMenuInput(menuToDelete.name)}</b> ne sera plus
+              visible dans l&apos;application. L&apos;historique des commandes
+              liées reste intact (archivage côté serveur).
+            </>
+          ) : null
+        }
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        variant="danger"
+        isLoading={isDeletingMenu}
+      />
     </div>
   );
 };

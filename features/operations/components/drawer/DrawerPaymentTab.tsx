@@ -3,24 +3,30 @@
 import React, { useMemo, useState } from "react";
 import {
   Banknote,
+  Check,
   CheckCircle,
   Clock,
   CreditCard,
+  Pencil,
   Plus,
   Receipt,
   Smartphone,
   Trash2,
   Wallet,
+  X,
   XCircle,
 } from "lucide-react";
 
 import { CustomPaymentSelect } from "../../../orders/components/CustomPaymentSelect";
 import { paiementDataSelect } from "../../../orders/constantes/paiement-data-select";
 import { usePaiementAddMutation } from "../../../orders/queries/paiement-add.mutation";
+import { usePaiementRemoveMutation } from "../../../orders/queries/paiement-delete.mutation";
+import { usePaiementUpdateMutation } from "../../../orders/queries/paiement-update.mutation";
 import { type Order, PaymentMethod } from "../../../orders/types/order.types";
 import { PaiementMode, PaiementStatus, type Paiement } from "../../../orders/types/paiement.types";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import { useIsAdmin } from "../../../users/hook/useIsAdmin";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
   order: Order;
@@ -143,7 +149,7 @@ export function DrawerPaymentTab({ order }: Props) {
             </p>
           </div>
         </div>
-        <PaiementsHistory paiements={successPaiements} />
+        <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
       </div>
     );
   }
@@ -196,7 +202,7 @@ export function DrawerPaymentTab({ order }: Props) {
       )}
 
       {/* Historique des paiements — toujours affiché si présent */}
-      <PaiementsHistory paiements={successPaiements} />
+      <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
 
       {/* Si entièrement payée → message neutre pour les non-admin ; l'admin garde
           l'accès au formulaire pour saisir un paiement correctif/complémentaire. */}
@@ -325,7 +331,10 @@ export function DrawerPaymentTab({ order }: Props) {
 // HISTORIQUE DES PAIEMENTS
 // ============================================================
 
-const PaiementsHistory: React.FC<{ paiements: Paiement[] }> = ({ paiements }) => {
+const PaiementsHistory: React.FC<{ paiements: Paiement[]; canEdit: boolean }> = ({
+  paiements,
+  canEdit,
+}) => {
   if (paiements.length === 0) {
     return (
       <div className="bg-gray-50 border border-dashed border-gray-300 rounded-2xl p-4 text-center">
@@ -342,22 +351,68 @@ const PaiementsHistory: React.FC<{ paiements: Paiement[] }> = ({ paiements }) =>
           <Receipt className="w-3.5 h-3.5" />
           Historique ({paiements.length})
         </h4>
+        {canEdit && (
+          <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+            Mode admin
+          </span>
+        )}
       </div>
       <div className="space-y-2">
         {paiements.map((p) => (
-          <PaiementRow key={p.id} paiement={p} />
+          <PaiementRow key={p.id} paiement={p} canEdit={canEdit} />
         ))}
       </div>
     </div>
   );
 };
 
-const PaiementRow: React.FC<{ paiement: Paiement }> = ({ paiement }) => {
+const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean }> = ({
+  paiement,
+  canEdit,
+}) => {
   const modeMeta = MODE_META[paiement.mode] ?? MODE_META.CASH;
   const statusMeta = STATUS_META[paiement.status];
 
+  const { mutate: updatePaiement, isPending: isUpdating } = usePaiementUpdateMutation();
+  const { mutate: removePaiement, isPending: isRemoving } = usePaiementRemoveMutation();
+  const isMutating = isUpdating || isRemoving;
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftAmount, setDraftAmount] = useState<number>(paiement.amount);
+  const [askDelete, setAskDelete] = useState(false);
+
+  const startEdit = () => {
+    setDraftAmount(paiement.amount);
+    setIsEditing(true);
+  };
+
+  const saveEdit = () => {
+    if (!draftAmount || draftAmount <= 0) return;
+    if (draftAmount === paiement.amount) {
+      setIsEditing(false);
+      return;
+    }
+    updatePaiement(
+      { id: paiement.id, patch: { amount: draftAmount } },
+      { onSuccess: () => setIsEditing(false) },
+    );
+  };
+
+  const cancelEdit = () => setIsEditing(false);
+
+  const confirmDelete = () => {
+    removePaiement(paiement.id, {
+      onSuccess: () => setAskDelete(false),
+      onError: () => setAskDelete(false),
+    });
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-3 flex items-start gap-3 hover:border-gray-300 transition">
+    <div
+      className={`bg-white border rounded-xl p-3 flex items-start gap-3 transition ${
+        isEditing ? "border-[#F17922] ring-2 ring-[#F17922]/20" : "border-gray-200 hover:border-gray-300"
+      } ${isMutating ? "opacity-60 pointer-events-none" : ""}`}
+    >
       {/* Icône mode */}
       <div
         className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
@@ -369,16 +424,67 @@ const PaiementRow: React.FC<{ paiement: Paiement }> = ({ paiement }) => {
       {/* Détails */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-bold text-gray-900 tabular-nums">
-            {formatPrix(paiement.amount)}
-          </p>
-          <span
-            className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-            style={{ color: statusMeta.color, backgroundColor: `${statusMeta.color}15` }}
-          >
-            <statusMeta.Icon className="w-2.5 h-2.5" />
-            {statusMeta.label}
-          </span>
+          {isEditing ? (
+            <div className="flex items-center gap-1 flex-1">
+              <input
+                type="number"
+                inputMode="numeric"
+                value={draftAmount || ""}
+                onChange={(e) => setDraftAmount(Number(e.target.value) || 0)}
+                autoFocus
+                className="flex-1 min-w-0 bg-white border border-[#F17922] rounded-lg px-2 py-1 text-sm font-bold focus:outline-none focus:ring-1 focus:ring-[#F17922] tabular-nums"
+              />
+              <button
+                onClick={saveEdit}
+                disabled={!draftAmount || draftAmount <= 0 || isUpdating}
+                className="p-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 transition"
+                aria-label="Valider"
+              >
+                <Check className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={cancelEdit}
+                disabled={isUpdating}
+                className="p-1.5 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition"
+                aria-label="Annuler"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm font-bold text-gray-900 tabular-nums">
+                {formatPrix(paiement.amount)}
+              </p>
+              <div className="flex items-center gap-1 shrink-0">
+                <span
+                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
+                  style={{ color: statusMeta.color, backgroundColor: `${statusMeta.color}15` }}
+                >
+                  <statusMeta.Icon className="w-2.5 h-2.5" />
+                  {statusMeta.label}
+                </span>
+                {canEdit && (
+                  <>
+                    <button
+                      onClick={startEdit}
+                      title="Modifier le montant"
+                      className="p-1 text-gray-400 hover:text-[#F17922] hover:bg-orange-50 rounded transition"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setAskDelete(true)}
+                      title="Supprimer ce paiement"
+                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex items-center gap-2 mt-0.5">
@@ -408,6 +514,24 @@ const PaiementRow: React.FC<{ paiement: Paiement }> = ({ paiement }) => {
           </p>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={askDelete}
+        onClose={() => setAskDelete(false)}
+        onConfirm={confirmDelete}
+        title="Supprimer ce paiement ?"
+        description={
+          <>
+            Paiement de <b>{formatPrix(paiement.amount)}</b> ({modeMeta.label}).
+            <br />
+            Cette action est définitive et le solde de la commande sera recalculé.
+          </>
+        }
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        variant="danger"
+        isLoading={isRemoving}
+      />
     </div>
   );
 };

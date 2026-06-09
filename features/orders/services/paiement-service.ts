@@ -110,6 +110,30 @@ export async function deletePaiement(id: string): Promise<void> {
     }
 }
 
+/** PATCH /paiements/:id — admin uniquement (le backend rejette 403 sinon).
+ *  Le service recalcule automatiquement `order.paied` après modification. */
+export async function updatePaiement(
+    id: string,
+    patch: Partial<Pick<Paiement, "amount" | "mode" | "source" | "status">>,
+): Promise<Paiement> {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(patch),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Paiement;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 export const addPaiement = async (formData: PaiementFormData) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/add');
