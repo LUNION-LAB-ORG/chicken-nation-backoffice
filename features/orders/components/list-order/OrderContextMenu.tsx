@@ -6,6 +6,7 @@ import { OrderStatus } from "../../types/order.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import { Action, Modules } from "../../../users/types/auth.type";
 import { HasPermission } from "../../../users/components/HasPermission";
+import { useIsAdmin } from "../../../users/hook/useIsAdmin";
 import { canEditOrder } from "../../utils/orderMapper";
 
 interface OrderContextMenuProps {
@@ -47,7 +48,11 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
 
   const isAccepted = order.status !== "NOUVELLE";
   const apiStatus = STATUS_REVERSE_MAP[order.status];
-  const isEditable = apiStatus ? canEditOrder(apiStatus) : false;
+  const isAdmin = useIsAdmin();
+  // L'ADMIN peut modifier la commande QUEL QUE SOIT le statut (override total :
+  // CANCELLED / COMPLETED / COLLECTED inclus). Pour les autres rôles, on garde
+  // la règle métier `canEditOrder()` qui bloque les statuts terminaux.
+  const isEditable = isAdmin || (apiStatus ? canEditOrder(apiStatus) : false);
 
   const handleAccept = () => {
     handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS);
@@ -151,8 +156,10 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
             </>
           )}
 
+          {/* Modifier : ADMIN bypass total (n'importe quel statut, sans permission
+              UPDATE_FULL). Pour les autres rôles, gating habituel par permission. */}
           {isEditable && (
-            <HasPermission module={Modules.COMMANDES} action={Action.UPDATE_FULL}>
+            isAdmin ? (
               <button
                 type="button"
                 className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
@@ -164,7 +171,21 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
                 <Edit2 size={16} />
                 <span>Modifier</span>
               </button>
-            </HasPermission>
+            ) : (
+              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE_FULL}>
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
+                  onClick={() => {
+                    handleEditOrder(order);
+                    onClose();
+                  }}
+                >
+                  <Edit2 size={16} />
+                  <span>Modifier</span>
+                </button>
+              </HasPermission>
+            )
           )}
 
           {/* Supprimer — ADMIN uniquement (via DELETE permission) */}

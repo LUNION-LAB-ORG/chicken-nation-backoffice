@@ -459,12 +459,10 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         return;
       }
 
-      // Validation des restaurants
-      if (selectedRestaurants.length === 0) {
-        toast.error("Veuillez sélectionner au moins un restaurant");
-        setIsSubmitting(false);
-        return;
-      }
+      // ⚠️ PAS de validation "au moins un restaurant" : depuis la bascule
+      // inclusion → exclusion, `selectedRestaurants` représente les restaurants
+      // EXCLUS. Une liste vide signifie "vendu dans tous les restaurants"
+      // (comportement par défaut), ce qui est valide et même majoritaire.
 
       // Validation de la réduction
       if (formData.reduction) {
