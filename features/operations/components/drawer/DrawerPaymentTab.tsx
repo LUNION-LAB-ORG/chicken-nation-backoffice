@@ -81,15 +81,14 @@ const STATUS_META: Record<PaiementStatus, { label: string; color: string; Icon: 
 export function DrawerPaymentTab({ order }: Props) {
   const { mutate: addPaiement, isPending } = usePaiementAddMutation();
   const uiOrder = useMemo(() => mapApiOrderToUiOrder(order), [order]);
-  // ADMIN : peut toujours ajouter/corriger un paiement, même après clôture
-  // (ex: ajustement comptable, paiement complémentaire, correction d'erreur de caisse).
+  // ADMIN : conserve l'accès aux contrôles d'édition / suppression sur les
+  // paiements existants (boutons crayon/corbeille de chaque PaiementRow).
+  // Le formulaire d'ajout, lui, reste réservé aux commandes non encore payées.
   const isAdmin = useIsAdmin();
 
   // Pré-remplissage : un paiement au montant total en Espèce (le plus courant).
-  // Si la commande est DÉJÀ payée (cas admin uniquement, paiement complémentaire),
-  // on initialise à 0 : l'admin saisit explicitement le montant correctif.
   const [paiements, setPaiements] = useState<IPaiementLine[]>(() => [
-    { mode: PaiementMode.CASH, source: "cash", amount: order.paied ? 0 : order.amount },
+    { mode: PaiementMode.CASH, source: "cash", amount: order.amount },
   ]);
 
   const totalAmount = paiements.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -157,13 +156,7 @@ export function DrawerPaymentTab({ order }: Props) {
   // ── Render ──────────────────────────────────────────────────────────────
 
   const isFullyPaid = order.paied || remainingDu === 0;
-  // ADMIN : peut enregistrer tout montant > 0 (correction comptable, complément).
-  // Autres : doit couvrir au moins le restant dû (comportement standard caisse).
-  const canSave =
-    paiements.length > 0 &&
-    totalAmount > 0 &&
-    (isAdmin || totalAmount >= order.amount) &&
-    !isPending;
+  const canSave = paiements.length > 0 && totalAmount >= order.amount && !isPending;
 
   return (
     <div className="p-4 space-y-4">
@@ -204,9 +197,10 @@ export function DrawerPaymentTab({ order }: Props) {
       {/* Historique des paiements — toujours affiché si présent */}
       <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
 
-      {/* Si entièrement payée → message neutre pour les non-admin ; l'admin garde
-          l'accès au formulaire pour saisir un paiement correctif/complémentaire. */}
-      {isFullyPaid && !isAdmin && (
+      {/* Si entièrement payée → message neutre. L'admin garde tout de même l'accès
+          aux contrôles d'édition / suppression de chaque paiement de l'historique
+          (boutons crayon / corbeille sur chaque ligne PaiementRow ci-dessus). */}
+      {isFullyPaid && (
         <div className="text-center py-2">
           <p className="text-xs text-gray-400">
             Cette commande a été encaissée. Aucune action supplémentaire requise.
@@ -214,20 +208,9 @@ export function DrawerPaymentTab({ order }: Props) {
         </div>
       )}
 
-      {isFullyPaid && isAdmin && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2">
-          <span className="text-amber-700 text-base">⚠️</span>
-          <div className="flex-1">
-            <p className="text-xs font-semibold text-amber-900">Mode admin — paiement correctif</p>
-            <p className="text-[11px] text-amber-700 mt-0.5">
-              La commande est déjà encaissée. Tout paiement ajouté ici sera tracé comme une correction comptable.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Lignes de paiement (formulaire) — visible si non-payée OU si admin */}
-      {(!isFullyPaid || isAdmin) && (
+      {/* Lignes de paiement (formulaire) — visible uniquement quand la commande
+          n'est pas encore intégralement payée. */}
+      {!isFullyPaid && (
         <>
       <div className="space-y-3">
         {paiements.map((p, i) => (
@@ -278,10 +261,10 @@ export function DrawerPaymentTab({ order }: Props) {
         ))}
       </div>
 
-      {/* Bouton ajout ligne — admin peut toujours en ajouter (split correctif). */}
+      {/* Bouton ajout ligne */}
       <button
         onClick={addNewPaiement}
-        disabled={isPending || (!isAdmin && totalAmount >= order.amount)}
+        disabled={isPending || totalAmount >= order.amount}
         className="w-full py-2.5 px-4 border-2 border-dashed border-[#F17922] rounded-xl text-[#F17922] font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
       >
         <Plus className="w-4 h-4" />
