@@ -1,13 +1,26 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AlertTriangle, ChefHat, PackageCheck, Store, Truck } from "lucide-react";
+import { AlertTriangle, PackageCheck, Store, Truck } from "lucide-react";
 
-import type { Order } from "../../orders/types/order.types";
-import type { IOperationsBuckets, IOrderGroup } from "../types/operations.types";
+import { type Order, OrderStatus } from "../../orders/types/order.types";
+import type { IOperationsBuckets } from "../types/operations.types";
 import { isOrderLate } from "../utils/group-orders";
 import { OperationsCard } from "./OperationsCard";
 import { OrdersGroupCard } from "./OrdersGroupCard";
+
+/**
+ * Priorité d'affichage des commandes "Au restaurant" :
+ *  0. NOUVELLES   (PENDING / ACCEPTED) — l'opérateur doit les prendre en charge
+ *  1. EN PRÉPA    (IN_PROGRESS)        — déjà en cuisine
+ *  2. PRÊTES      (READY)              — n'apparaît qu'à travers OrdersGroupCard,
+ *                                        ajoutées après les Order single-status.
+ */
+function statusOrder(status: OrderStatus): number {
+  if (status === OrderStatus.PENDING || status === OrderStatus.ACCEPTED) return 0;
+  if (status === OrderStatus.IN_PROGRESS) return 1;
+  return 2;
+}
 
 interface Props {
   buckets: IOperationsBuckets;
@@ -22,12 +35,7 @@ interface Props {
  *
  *   ┌─────────────────────────┐  ┌─────────────────────────┐
  *   │ 🍳 Au restaurant        │  │ 🚚 Hors restaurant      │
- *   │   ┌─ À préparer ───┐    │  │  • En livraison         │
- *   │   │   …cards…      │    │  │  • Récupérée client     │
- *   │   └────────────────┘    │  │   …cards…               │
- *   │   ┌─ Prêtes ───────┐    │  │                         │
- *   │   │   …cards…      │    │  │                         │
- *   │   └────────────────┘    │  │                         │
+ *   │   …cards (triées)…      │  │   …cards…               │
  *   └─────────────────────────┘  └─────────────────────────┘
  *
  * Pour chaque colonne :
@@ -36,10 +44,13 @@ interface Props {
  *     payée > seuil) — `isOrderLate()` matérialise aussi un anneau rouge sur
  *     chaque carte concernée.
  *
- * Ordre dans "Au restaurant" : À préparer d'abord (nouvelles à prendre en
- * charge), puis Prêtes (attendent le livreur avec leur code retrait XXL).
+ * Ordre interne "Au restaurant" : nouvelles (PENDING/ACCEPTED) → en préparation
+ * (IN_PROGRESS) → prêtes (READY, groupées par course). Pas de sous-sections
+ * encadrées : chaque card porte son badge de statut, ce qui suffit.
  *
  * Mobile (< lg) : les colonnes s'empilent verticalement.
+ * Grand écran (xl+) : les cards à l'intérieur de chaque colonne passent en
+ * grille 2 colonnes.
  */
 export const OperationsSections: React.FC<Props> = ({
   buckets,
@@ -52,6 +63,17 @@ export const OperationsSections: React.FC<Props> = ({
     () => pretesGroupes.flatMap((g) => g.orders),
     [pretesGroupes],
   );
+
+  // Tri des commandes "À préparer" : nouvelles (PENDING/ACCEPTED) en premier,
+  // puis en préparation (IN_PROGRESS). Tie-break par ancienneté (les plus
+  // anciennes d'abord, pour traiter dans l'ordre d'arrivée).
+  const sortedAPreparer = useMemo<Order[]>(() => {
+    return [...aPreparer].sort((a, b) => {
+      const diff = statusOrder(a.status) - statusOrder(b.status);
+      if (diff !== 0) return diff;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+  }, [aPreparer]);
 
   // Compteurs par colonne (orders, pas groupes).
   const auRestaurantCount = aPreparer.length + pretesOrders.length;
@@ -79,7 +101,7 @@ export const OperationsSections: React.FC<Props> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
       {/* ─── Colonne 1 : Au restaurant ────────────────────────────────── */}
       <KanbanColumn
         Icon={Store}
@@ -91,40 +113,29 @@ export const OperationsSections: React.FC<Props> = ({
         {auRestaurantCount === 0 ? (
           <EmptyState message="Aucune commande au restaurant" />
         ) : (
-          <div className="space-y-4">
-            <SubSection
-              title="À préparer"
-              icon={<ChefHat className="w-4 h-4 text-amber-600" />}
-              count={aPreparer.length}
-              tone="amber"
-            >
-              {aPreparer.map((o) => (
-                <OperationsCard
-                  key={o.id}
-                  order={o}
-                  onClick={() => onCardClick(o)}
-                  onPayClick={() => onPayClick(o)}
-                  showWarningBadge={isOrderLate(o)}
-                  warningLabel="En retard"
-                />
-              ))}
-            </SubSection>
-
-            <SubSection
-              title="Prêtes"
-              icon={<PackageCheck className="w-4 h-4 text-green-600" />}
-              count={pretesGroupes.reduce((s, g) => s + g.orders.length, 0)}
-              tone="green"
-            >
-              {pretesGroupes.map((g) => (
-                <OrdersGroupCard
-                  key={g.key}
-                  group={g}
-                  onCardClick={onCardClick}
-                  onPayClick={onPayClick}
-                />
-              ))}
-            </SubSection>
+          // Une SEULE grille, sans encadrés intermédiaires. Ordre déterministe :
+          // les nouvelles commandes d'abord (PENDING/ACCEPTED), puis "en
+          // préparation" (IN_PROGRESS), puis les groupes "Prêtes" (READY)
+          // — chaque card porte son badge de statut, ce qui suffit à se repérer.
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+            {sortedAPreparer.map((o) => (
+              <OperationsCard
+                key={o.id}
+                order={o}
+                onClick={() => onCardClick(o)}
+                onPayClick={() => onPayClick(o)}
+                showWarningBadge={isOrderLate(o)}
+                warningLabel="En retard"
+              />
+            ))}
+            {pretesGroupes.map((g) => (
+              <OrdersGroupCard
+                key={g.key}
+                group={g}
+                onCardClick={onCardClick}
+                onPayClick={onPayClick}
+              />
+            ))}
           </div>
         )}
       </KanbanColumn>
@@ -193,7 +204,7 @@ function KanbanColumn({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <section className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col h-full">
       {/* En-tête de colonne — toujours visible (sticky pour suivre le scroll vertical interne) */}
       <header
         className={`flex items-center justify-between px-4 py-3 border-b ${ACCENT_HEADER[accent]}`}
@@ -225,53 +236,18 @@ function KanbanColumn({
         )}
       </header>
 
-      {/* Contenu de la colonne */}
-      <div className="p-3">{children}</div>
+      {/* Contenu de la colonne — flex-1 pour que les 2 colonnes aient la même hauteur */}
+      <div className="p-3 flex-1">{children}</div>
     </section>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
+    <div className="h-full min-h-[160px] flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 py-10 text-center">
       <PackageCheck className="w-8 h-8 text-gray-300 mx-auto mb-2" />
       <p className="text-sm text-gray-500">{message}</p>
     </div>
   );
 }
 
-function SubSection({
-  title,
-  icon,
-  count,
-  tone,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  count: number;
-  tone: "amber" | "green";
-  children: React.ReactNode;
-}) {
-  const toneBg =
-    tone === "amber" ? "bg-amber-50 border-amber-200" : "bg-green-50 border-green-200";
-  const hasContent = React.Children.count(children) > 0;
-  return (
-    <div className={`rounded-xl border ${toneBg} p-3`}>
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h4 className="text-sm font-bold text-gray-900">{title}</h4>
-        </div>
-        <span className="text-xs font-medium text-gray-500 bg-white rounded-full px-2 py-0.5 border border-gray-200">
-          {count}
-        </span>
-      </div>
-      {hasContent ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">{children}</div>
-      ) : (
-        <p className="text-xs text-gray-400 text-center py-6">Aucune commande</p>
-      )}
-    </div>
-  );
-}
