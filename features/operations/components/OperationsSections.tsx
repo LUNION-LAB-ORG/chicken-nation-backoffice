@@ -140,7 +140,7 @@ export const OperationsSections: React.FC<Props> = ({
         {horsRestaurantCount === 0 ? (
           <EmptyState message="Aucune commande hors restaurant" />
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
             {recuperees.map((o) => (
               <OperationsCard
                 key={o.id}
@@ -268,7 +268,7 @@ function SubSection({
         </span>
       </div>
       {hasContent ? (
-        <div className="space-y-2">{children}</div>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">{children}</div>
       ) : (
         <p className="text-xs text-gray-400 text-center py-6">Aucune commande</p>
       )}
