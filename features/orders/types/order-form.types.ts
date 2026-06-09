@@ -50,4 +50,7 @@ export interface SupplementOption {
     image?: string;
     price: number;
     type: string;
+    // true si ce supplément est explicitement exclu du plat sélectionné
+    // (modèle "tout par défaut − exclusions"). L'UI le grise et empêche l'ajout.
+    excluded?: boolean;
 }

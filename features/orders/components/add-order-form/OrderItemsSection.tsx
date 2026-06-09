@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
 import Checkbox from "@/components/ui/Checkbox";
 import {
   OrderFormData,
@@ -17,6 +18,7 @@ import { Edit2, Trash } from "lucide-react";
 import { useDishListQuery } from "../../../menus/queries/dish-list.query";
 import { OrderType } from "../../types/order.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
+import { getAllSupplements, Supplement } from "@/services/supplementService";
 
 interface OrderItemsSectionProps {
   formData: OrderFormData;
@@ -37,18 +39,31 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   const [tempSupplements, setTempSupplements] = useState<SupplementItem[]>([]);
   const [tempEpice, setTempEpice] = useState(false);
 
-  // Récupérer tous les plats
+  // Récupérer tous les plats (passe par withEffective() côté backend, donc
+  // contient `excluded_supplement_ids` + `dish_supplements` effectifs).
   const { data: allDishes } = useDishListQuery();
   // Récupérer toutes les catégories
   const { data: categoriesData, isLoading: isLoadingCategories } =
     useCategoryListQuery();
   const categories = categoriesData || [];
 
-  // Récupérer les plats de la catégorie sélectionnée
+  // Récupérer les plats de la catégorie sélectionnée (NB: l'endpoint backend
+  // category.findOne ne passe PAS par withEffective ; on n'utilise donc ces
+  // dishes que pour l'affichage de la grille, et on re-fetch la version
+  // "withEffective" depuis allDishes au moment du clic — voir handleSelectDish).
   const { data: categoryData, isLoading: isLoadingDishes } =
     useCategoryOneQuery(selectedCategoryId);
 
   const dishes = categoryData?.dishes || [];
+
+  // Récupérer TOUS les suppléments du catalogue, groupés par catégorie.
+  // Sert à afficher la liste complète dans la modal (les exclus du plat
+  // apparaissent grisés au lieu d'être masqués).
+  const { data: allSupplementsByCategory } = useQuery({
+    queryKey: ["supplements", "all"],
+    queryFn: getAllSupplements,
+    staleTime: 5 * 60 * 1000,
+  });
 
   const addItemToCart = () => {
     if (!selectedDishForConfig) return;
@@ -105,29 +120,60 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     return allDishes.find((dish: Dish) => dish.id === dishId);
   };
 
-  const getSupplementsOptions = (dish: Dish): SupplementOption[] => {
-    if (!dish.dish_supplements) return [];
+  // Aplatit la map { FOOD, DRINK, ACCESSORY } renvoyée par /supplements en un seul tableau.
+  const allSupplementsFlat = useMemo<Supplement[]>(() => {
+    if (!allSupplementsByCategory) return [];
+    return [
+      ...(allSupplementsByCategory.FOOD ?? []),
+      ...(allSupplementsByCategory.DRINK ?? []),
+      ...(allSupplementsByCategory.ACCESSORY ?? []),
+    ];
+  }, [allSupplementsByCategory]);
 
-    // Depuis la bascule "inclusion → exclusion" côté backend, withEffective() renvoie
-    // `dish_supplements: [{ supplement }]` sans `supplement_id` au niveau de la ligne :
-    // l'id réel est désormais dans `ds.supplement.id`.
-    return dish.dish_supplements
+  // Construit la liste affichée dans la modal.
+  // Source primaire : `dish.dish_supplements` (renvoyée par withEffective côté backend)
+  // qui contient déjà les suppléments NON exclus de ce plat, avec leur info complète.
+  // On enrichit avec les EXCLUS (depuis allSupplementsFlat si chargé) pour les afficher grisés.
+  // Si la query catalogue n'a pas répondu, on liste au moins les non-exclus.
+  const getSupplementsOptions = (dish: Dish): SupplementOption[] => {
+    const excludedIds = new Set(
+      ((dish as unknown as { excluded_supplement_ids?: string[] }).excluded_supplement_ids) ?? [],
+    );
+
+    // 1) Suppléments effectifs (non exclus, déjà filtrés available=true côté backend)
+    const nonExcluded: SupplementOption[] = (dish.dish_supplements ?? [])
       .filter((ds) => ds.supplement && ds.supplement.available !== false)
       .map((ds) => ({
         value: ds.supplement!.id,
-        label: ds.supplement?.name || "",
-        price: ds.supplement?.price || 0,
-        image: formatImageUrl(ds?.supplement?.image),
-        type: ds.supplement?.category || "ACCESSORY",
+        label: ds.supplement!.name,
+        price: ds.supplement!.price,
+        image: formatImageUrl(ds.supplement!.image),
+        type: ds.supplement!.category || "ACCESSORY",
+        excluded: false,
       }));
+
+    // 2) Exclus : depuis le catalogue complet (si chargé), pour avoir leurs name/price/image
+    const excluded: SupplementOption[] = allSupplementsFlat
+      .filter((s) => excludedIds.has(s.id) && s.available !== false)
+      .map((s) => ({
+        value: s.id,
+        label: s.name,
+        price: s.price,
+        image: formatImageUrl(s.image),
+        type: s.category,
+        excluded: true,
+      }));
+
+    return [...nonExcluded, ...excluded];
   };
 
-  // Grouper les suppléments par catégorie
+  // Grouper les suppléments par catégorie, exclus triés à la fin de chaque groupe
+  // pour que les options sélectionnables apparaissent en premier.
   const groupedSupplements = useMemo(() => {
     if (!selectedDishForConfig) return { FOOD: [], DRINK: [], ACCESSORY: [] };
 
     const supplements = getSupplementsOptions(selectedDishForConfig);
-    return supplements.reduce(
+    const grouped = supplements.reduce(
       (acc, supp) => {
         const category = supp.type as "FOOD" | "DRINK" | "ACCESSORY";
         if (!acc[category]) acc[category] = [];
@@ -139,7 +185,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         SupplementOption[]
       >
     );
-  }, [selectedDishForConfig]);
+    (["FOOD", "DRINK", "ACCESSORY"] as const).forEach((cat) => {
+      grouped[cat].sort((a, b) => Number(a.excluded) - Number(b.excluded));
+    });
+    return grouped;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDishForConfig, allSupplementsFlat]);
 
   const calculateItemTotal = (item: OrderItemFormData): number => {
     const dish = getDishById(item.dish_id);
@@ -150,11 +201,15 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         ? dish.promotion_price
         : dish.price;
 
+    // Le prix vient du catalogue complet (allSupplementsFlat) — couvre aussi le
+    // cas d'un supplément ajouté avant qu'il ne devienne exclu du plat.
     const supplementsPrice = item.supplements.reduce((sum, supp) => {
-      const supplement = dish.dish_supplements?.find(
+      const fromCatalog = allSupplementsFlat.find((s) => s.id === supp.id);
+      const fallback = dish.dish_supplements?.find(
         (ds) => ds.supplement?.id === supp.id
       )?.supplement;
-      return sum + (supplement?.price || 0) * supp.quantity;
+      const price = fromCatalog?.price ?? fallback?.price ?? 0;
+      return sum + price * supp.quantity;
     }, 0);
 
     return basePrice * item.quantity + supplementsPrice;
@@ -171,10 +226,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         : selectedDishForConfig.price;
 
     const supplementsPrice = tempSupplements.reduce((sum, supp) => {
-      const supplement = selectedDishForConfig.dish_supplements?.find(
+      const fromCatalog = allSupplementsFlat.find((s) => s.id === supp.id);
+      const fallback = selectedDishForConfig.dish_supplements?.find(
         (ds) => ds.supplement?.id === supp.id
       )?.supplement;
-      return sum + (supplement?.price || 0) * supp.quantity;
+      const price = fromCatalog?.price ?? fallback?.price ?? 0;
+      return sum + price * supp.quantity;
     }, 0);
 
     return basePrice * tempQuantity + supplementsPrice;
@@ -314,7 +371,10 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     className="border-2 border-[#D9D9D9]/50 rounded-xl p-3 hover:border-[#F17922] transition-all cursor-pointer"
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      setSelectedDishForConfig(dish);
+                      // Privilégier la version "withEffective" (qui contient
+                      // excluded_supplement_ids) — celle du categoryData ne l'a pas.
+                      const dishWithExclusions = getDishById(dish.id) || dish;
+                      setSelectedDishForConfig(dishWithExclusions);
                       setEditingItemIndex(null);
                       setTempQuantity(1);
                       setTempSupplements([]);
@@ -476,11 +536,15 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                         <div className="grid grid-cols-2 gap-2">
                           {groupedSupplements[cat].map((supp) => {
                             const qty = getSupplementQuantity(supp.value);
+                            const isExcluded = !!supp.excluded;
                             return (
                               <div
                                 key={supp.value}
+                                title={isExcluded ? "Non disponible pour ce plat" : undefined}
                                 className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all ${
-                                  qty > 0
+                                  isExcluded
+                                    ? "border-[#D9D9D9]/50 bg-gray-100 opacity-60 cursor-not-allowed"
+                                    : qty > 0
                                     ? "border-[#F17922] bg-[#F17922]/10"
                                     : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
                                 }`}
@@ -491,45 +555,49 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                                     alt={supp.label}
                                     width={32}
                                     height={32}
-                                    className="rounded object-cover"
+                                    className={`rounded object-cover ${isExcluded ? "grayscale" : ""}`}
                                   />
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-semibold text-[#595959] truncate">
+                                  <p className={`text-xs font-semibold truncate ${isExcluded ? "text-gray-400 line-through" : "text-[#595959]"}`}>
                                     {supp.label}
                                   </p>
-                                  <p className="text-xs text-[#F17922] font-bold">
-                                    {qty > 0
+                                  <p className={`text-xs font-bold ${isExcluded ? "text-gray-400" : "text-[#F17922]"}`}>
+                                    {isExcluded
+                                      ? "Non proposé"
+                                      : qty > 0
                                       ? `+${supp.price * qty} XOF`
                                       : `+${supp.price} XOF`}
                                   </p>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => updateSupplementQuantity(supp.value, -1)}
-                                    className={`w-7 h-7 rounded-md font-semibold text-sm flex items-center justify-center ${
-                                      qty > 0
-                                        ? "bg-[#F17922] text-white"
-                                        : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    }`}
-                                    whileTap={qty > 0 ? { scale: 0.9 } : undefined}
-                                    disabled={qty === 0}
-                                  >
-                                    −
-                                  </motion.button>
-                                  <span className="text-sm font-semibold text-[#595959] min-w-[20px] text-center">
-                                    {qty}
-                                  </span>
-                                  <motion.button
-                                    type="button"
-                                    onClick={() => updateSupplementQuantity(supp.value, 1)}
-                                    className="w-7 h-7 bg-[#F17922] text-white rounded-md font-semibold text-sm flex items-center justify-center"
-                                    whileTap={{ scale: 0.9 }}
-                                  >
-                                    +
-                                  </motion.button>
-                                </div>
+                                {!isExcluded && (
+                                  <div className="flex items-center gap-1">
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => updateSupplementQuantity(supp.value, -1)}
+                                      className={`w-7 h-7 rounded-md font-semibold text-sm flex items-center justify-center ${
+                                        qty > 0
+                                          ? "bg-[#F17922] text-white"
+                                          : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                      }`}
+                                      whileTap={qty > 0 ? { scale: 0.9 } : undefined}
+                                      disabled={qty === 0}
+                                    >
+                                      −
+                                    </motion.button>
+                                    <span className="text-sm font-semibold text-[#595959] min-w-[20px] text-center">
+                                      {qty}
+                                    </span>
+                                    <motion.button
+                                      type="button"
+                                      onClick={() => updateSupplementQuantity(supp.value, 1)}
+                                      className="w-7 h-7 bg-[#F17922] text-white rounded-md font-semibold text-sm flex items-center justify-center"
+                                      whileTap={{ scale: 0.9 }}
+                                    >
+                                      +
+                                    </motion.button>
+                                  </div>
+                                )}
                               </div>
                             );
                           })}
