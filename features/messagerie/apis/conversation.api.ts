@@ -20,8 +20,17 @@ export const conversationAPI = {
     return apiRequest<PaginatedResponse<IMessage>>(`${BASE}/${conversationId}/messages${qs}`, 'GET');
   },
 
-  envoyerMessage: (conversationId: string, body: string): Promise<IMessage> =>
-    apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', { body }),
+  // Texte seul (JSON) ou avec image (multipart — champ `image` côté backend,
+  // stockée S3 puis renvoyée dans message.meta.imageUrl).
+  envoyerMessage: (conversationId: string, body: string, image?: File): Promise<IMessage> => {
+    if (image) {
+      const formData = new FormData();
+      formData.append('body', body);
+      formData.append('image', image);
+      return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', formData);
+    }
+    return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', { body });
+  },
 
   marquerLu: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/messages/read`, 'POST'),

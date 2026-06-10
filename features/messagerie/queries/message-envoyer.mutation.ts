@@ -7,8 +7,8 @@ export const useEnvoyerMessageMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ conversationId, body }: { conversationId: string; body: string }) =>
-      conversationAPI.envoyerMessage(conversationId, body),
+    mutationFn: ({ conversationId, body, image }: { conversationId: string; body: string; image?: File; previewUrl?: string }) =>
+      conversationAPI.envoyerMessage(conversationId, body, image),
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: messageKeyQuery(variables.conversationId) });
@@ -19,6 +19,8 @@ export const useEnvoyerMessageMutation = () => {
         body: variables.body,
         createdAt: new Date().toISOString(),
         isRead: true,
+        // Aperçu local (object URL) de l'image en cours d'envoi
+        meta: variables.previewUrl ? { imageUrl: variables.previewUrl } : undefined,
         authorUser: { id: 'current-user', name: 'Moi', email: '' },
       };
 
