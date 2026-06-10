@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2 } from 'lucide-react';
+import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2, Tag, ShoppingBag, UserCheck, MessageSquare, Clock, User } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import {
   useTicketDetailQuery,
@@ -21,6 +21,20 @@ interface TicketViewProps {
   ticketId: string | null;
   onBack?: () => void;
 }
+
+// Styles cohérents des badges statut/priorité (4 états chacun, libellés FR).
+const STATUS_BADGE: Record<string, { label: string; cls: string; dot: string }> = {
+  OPEN: { label: 'Ouvert', cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' },
+  IN_PROGRESS: { label: 'En cours', cls: 'bg-orange-50 text-[#F17922] border-orange-200', dot: 'bg-[#F17922]' },
+  RESOLVED: { label: 'Résolu', cls: 'bg-green-50 text-green-700 border-green-200', dot: 'bg-green-500' },
+  CLOSED: { label: 'Fermé', cls: 'bg-gray-100 text-gray-600 border-gray-200', dot: 'bg-gray-400' },
+};
+
+const PRIORITY_BADGE: Record<string, { label: string; cls: string }> = {
+  HIGH: { label: 'Priorité élevée', cls: 'bg-red-50 text-red-700 border-red-200' },
+  MEDIUM: { label: 'Priorité moyenne', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  LOW: { label: 'Priorité faible', cls: 'bg-slate-50 text-slate-600 border-slate-200' },
+};
 
 // Types pour les messages
 
@@ -239,25 +253,14 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             </div>
           </div>
 
-          {/* Partie droite - Badges colorés responsive */}
-          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
-            <span className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-6 md:py-2 rounded-full text-white font-medium text-xs sm:text-sm md:text-base ${ticket.status === 'OPEN' ? 'bg-red-500' :
-              ticket.status === 'IN_PROGRESS' ? 'bg-[#F17922]' :
-                'bg-green-500'
-              }`}>
-              {ticket.status === 'OPEN' ? 'Ouvert' :
-                ticket.status === 'IN_PROGRESS' ? 'En cours' :
-                  ticket.status === 'RESOLVED' ? 'Résolu' :
-                    ticket.status}
+          {/* Partie droite - Badges statut + priorité (4 états cohérents) */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-semibold text-xs sm:text-sm border ${STATUS_BADGE[ticket.status]?.cls ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${STATUS_BADGE[ticket.status]?.dot ?? 'bg-gray-400'}`} />
+              {STATUS_BADGE[ticket.status]?.label ?? ticket.status}
             </span>
-            <span className={`px-2 py-1 sm:px-3 sm:py-1.5 md:px-6 md:py-2 rounded-full text-white font-medium text-xs sm:text-sm md:text-base ${ticket.priority === 'HIGH' ? 'bg-red-500' :
-                ticket.priority === 'MEDIUM' ? 'bg-yellow-500' :
-                  'bg-green-500'
-              }`}>
-              {ticket.priority === 'HIGH' ? 'Élevée' :
-                  ticket.priority === 'MEDIUM' ? 'Moyenne' :
-                    ticket.priority === 'LOW' ? 'Faible' :
-                      ticket.priority}
+            <span className={`inline-flex items-center px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full font-semibold text-xs sm:text-sm border ${PRIORITY_BADGE[ticket.priority]?.cls ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+              {PRIORITY_BADGE[ticket.priority]?.label ?? ticket.priority}
             </span>
           </div>
         </div>
@@ -302,6 +305,79 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
       <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto md:px-6 md:py-4 px-4 py-3">
+          {/* Carte de contexte — remplit le haut de la conversation avec les
+              infos clés du ticket (évite la sensation de panneau vide). */}
+          <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center">
+                  <ShoppingBag className="w-4 h-4 text-[#F17922]" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Commande</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {ticket.order?.reference || '—'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                  <Tag className="w-4 h-4 text-blue-600" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Catégorie</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {ticket.category?.name || '—'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
+                  <User className="w-4 h-4 text-violet-600" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Client</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {ticket.customer?.name || 'Client inconnu'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-slate-500" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Créé le</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                  <UserCheck className="w-4 h-4 text-green-600" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Assigné à</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {ticket.assignee?.fullname || ticket.assignee?.email || 'Non assigné'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="shrink-0 w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center">
+                  <MessageSquare className="w-4 h-4 text-sky-600" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Messages</p>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
+                    {sortedMessages.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="md:space-y-6 space-y-4">
             {sortedMessages && sortedMessages.length > 0 ? (
               sortedMessages.map((msg) => (
@@ -381,8 +457,12 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 </div>
               ))
             ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500 text-sm">Aucun message pour ce ticket</p>
+              <div className="flex flex-col items-center justify-center text-center py-12">
+                <span className="w-14 h-14 rounded-2xl bg-white border border-gray-200 flex items-center justify-center mb-3">
+                  <MessageSquare className="w-6 h-6 text-gray-300" />
+                </span>
+                <p className="text-gray-600 text-sm font-semibold">Aucun message pour le moment</p>
+                <p className="text-gray-400 text-xs mt-1">Écrivez ci-dessous pour répondre au client.</p>
               </div>
             )}
           </div>
