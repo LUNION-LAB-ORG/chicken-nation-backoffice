@@ -43,6 +43,7 @@ export interface PromoCodeUsageOrder {
   id: string;
   reference: string;
   amount: number;
+  status?: string;
 }
 
 export interface PromoCodeUsage {
@@ -120,4 +121,65 @@ export interface UpdatePromoCodeDto extends Partial<CreatePromoCodeDto> {}
 export interface PromoCodeStats {
   activeCount: number;
   totalUsage: number;
+}
+
+// ================================
+// Analytics détaillées (vue détail)
+// ================================
+
+export interface PromoCodeAnalyticsKpis {
+  total_usages: number;
+  unique_customers: number;
+  orders_count: number;
+  total_discount: number;
+  total_revenue: number;
+  avg_basket: number;
+  avg_discount: number;
+  /** Part des clients ayant utilisé le code plus d'une fois (0..1) */
+  repeat_rate: number;
+  first_usage_at: string | null;
+  last_usage_at: string | null;
+}
+
+export interface PromoCodeAnalyticsDay {
+  date: string; // yyyy-MM-dd
+  usages: number;
+  discount: number;
+}
+
+export interface PromoCodeAnalyticsHour {
+  hour: number; // 0..23
+  usages: number;
+}
+
+export interface PromoCodeAnalyticsWeekday {
+  weekday: number; // 0 = dimanche .. 6 = samedi
+  usages: number;
+}
+
+export interface PromoCodeTopCustomer {
+  customer_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  usages: number;
+  total_discount: number;
+}
+
+export interface PromoCodeAnalytics {
+  kpis: PromoCodeAnalyticsKpis;
+  by_day: PromoCodeAnalyticsDay[];
+  by_hour: PromoCodeAnalyticsHour[];
+  by_weekday: PromoCodeAnalyticsWeekday[];
+  top_customers: PromoCodeTopCustomer[];
+}
+
+export interface PromoCodeUsagesPage {
+  data: PromoCodeUsage[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
 }

@@ -17,6 +17,7 @@ import {
   ChevronRight,
   X,
   Sparkles,
+  BarChart3,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { usePromoCodesQuery, usePromoCodeStatsQuery } from "../../../../features/promo_code/queries/promo-code.queries";
@@ -35,6 +36,7 @@ import type {
 } from "../../../../features/promo_code/types/promo-code.types";
 import ProductTargetSelector from "@/components/gestion/Promos/ProductTargetSelector";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import PromoCodeDetail from "./PromoCodeDetail";
 import { getAllMenus } from "@/services/menuService";
 import { getAllCategories, type Category } from "@/services/categoryService";
 import type { MenuItem } from "@/types";
@@ -606,6 +608,7 @@ export default function CodesPromo() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState<PromoCode | null>(null);
   const [deletingPromo, setDeletingPromo] = useState<PromoCode | null>(null);
+  const [viewingPromo, setViewingPromo] = useState<PromoCode | null>(null);
 
   // Build query based on filters
   const effectiveQuery = useMemo<PromoCodeQuery>(() => {
@@ -666,6 +669,27 @@ export default function CodesPromo() {
     },
     [],
   );
+
+  // ===== Vue détail d'un code promo (KPIs, graphiques, commandes) =====
+  if (viewingPromo) {
+    return (
+      <>
+        <PromoCodeDetail
+          promo={viewingPromo}
+          onBack={() => setViewingPromo(null)}
+          onEdit={(p) => setEditingPromo(p)}
+        />
+        {editingPromo && (
+          <PromoCodeFormModal
+            promo={editingPromo}
+            onClose={() => setEditingPromo(null)}
+            onSubmit={handleUpdate}
+            isLoading={updateMutation.isPending}
+          />
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10 space-y-5">
@@ -797,7 +821,9 @@ export default function CodesPromo() {
                 promoCodes.map((promo) => (
                   <tr
                     key={promo.id}
-                    className={`hover:bg-gray-50/50 transition-colors ${
+                    onClick={() => setViewingPromo(promo)}
+                    title="Voir les statistiques du code"
+                    className={`hover:bg-gray-50/50 transition-colors cursor-pointer ${
                       isFetching ? "opacity-60" : ""
                     }`}
                   >
@@ -808,7 +834,10 @@ export default function CodesPromo() {
                           {promo.code}
                         </span>
                         <button
-                          onClick={() => handleCopyCode(promo.code)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyCode(promo.code);
+                          }}
                           className="p-1 hover:bg-gray-100 rounded transition-colors"
                           title="Copier le code"
                         >
@@ -885,7 +914,20 @@ export default function CodesPromo() {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => toggleMutation.mutate(promo.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingPromo(promo);
+                          }}
+                          className="p-1.5 hover:bg-orange-50 rounded-lg transition-colors"
+                          title="Statistiques d'utilisation"
+                        >
+                          <BarChart3 size={16} className="text-[#F17922]" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMutation.mutate(promo.id);
+                          }}
                           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                           title={promo.is_active ? "Désactiver" : "Activer"}
                         >
@@ -896,14 +938,20 @@ export default function CodesPromo() {
                           )}
                         </button>
                         <button
-                          onClick={() => setEditingPromo(promo)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPromo(promo);
+                          }}
                           className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                           title="Modifier"
                         >
                           <Pencil size={16} className="text-gray-500" />
                         </button>
                         <button
-                          onClick={() => setDeletingPromo(promo)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeletingPromo(promo);
+                          }}
                           className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
                           title="Supprimer"
                         >

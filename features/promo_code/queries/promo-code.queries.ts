@@ -6,6 +6,8 @@ import {
   getPromoCodes,
   getPromoCode,
   getPromoCodeStats,
+  getPromoCodeAnalytics,
+  getPromoCodeUsages,
 } from '../services/promo-code.service';
 import { PromoCodeQuery } from '../types/promo-code.types';
 
@@ -46,6 +48,51 @@ export const usePromoCodeQuery = (id: string) => {
         result.error instanceof Error
           ? result.error.message
           : 'Erreur de chargement',
+      );
+    }
+  }, [result.isError, result.error]);
+
+  return result;
+};
+
+// Analytics détaillées d'un code promo (vue détail)
+export const usePromoCodeAnalyticsQuery = (id: string) => {
+  const result = useQuery({
+    queryKey: promoCodeKeyQuery('analytics', id),
+    queryFn: () => getPromoCodeAnalytics(id),
+    enabled: !!id,
+    staleTime: 60 * 1000,
+  });
+
+  React.useEffect(() => {
+    if (result.isError) {
+      toast.error(
+        result.error instanceof Error
+          ? result.error.message
+          : 'Erreur de chargement des analytics',
+      );
+    }
+  }, [result.isError, result.error]);
+
+  return result;
+};
+
+// Utilisations paginées d'un code promo (vue détail)
+export const usePromoCodeUsagesQuery = (id: string, page = 1, limit = 10) => {
+  const result = useQuery({
+    queryKey: promoCodeKeyQuery('usages', id, page, limit),
+    queryFn: () => getPromoCodeUsages(id, page, limit),
+    enabled: !!id,
+    keepPreviousData: true,
+    staleTime: 60 * 1000,
+  });
+
+  React.useEffect(() => {
+    if (result.isError) {
+      toast.error(
+        result.error instanceof Error
+          ? result.error.message
+          : 'Erreur de chargement des utilisations',
       );
     }
   }, [result.isError, result.error]);

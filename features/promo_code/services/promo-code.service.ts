@@ -4,8 +4,10 @@ import { PaginatedResponse } from '../../../types';
 import {
   CreatePromoCodeDto,
   PromoCode,
+  PromoCodeAnalytics,
   PromoCodeQuery,
   PromoCodeStats,
+  PromoCodeUsagesPage,
   UpdatePromoCodeDto,
 } from '../types/promo-code.types';
 
@@ -71,6 +73,32 @@ export const getPromoCode = async (id: string) => {
     const response = await fetch(url, { method: 'GET', headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
     return (await response.json()) as PromoCode;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+// --- Analytics détaillées d'un code promo ---
+
+export const getPromoCodeAnalytics = async (id: string) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/analytics`);
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) throw new Error(`Error: ${response.status}`);
+    return (await response.json()) as PromoCodeAnalytics;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+// --- Utilisations paginées d'un code promo ---
+
+export const getPromoCodeUsages = async (id: string, page = 1, limit = 10) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/usages`, { page, limit });
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) throw new Error(`Error: ${response.status}`);
+    return (await response.json()) as PromoCodeUsagesPage;
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
