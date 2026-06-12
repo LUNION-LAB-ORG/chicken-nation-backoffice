@@ -37,6 +37,10 @@ interface ProductViewProduct {
   image: string;
   available: boolean;
   hubrise_sku?: string;
+  // Champs édités dans la modale — doivent suivre toute la chaîne liste → modale,
+  // sinon le préchargement retombe sur les défauts (« Jamais » + tous les modes).
+  spice_level?: string;
+  available_order_types?: string[];
 }
 
 export default function Inventory() {
@@ -112,6 +116,8 @@ export default function Inventory() {
     image: dish.image || "/images/default-menu.png",
     available: dish.available,
     hubrise_sku: (dish as unknown as { hubrise_sku?: string }).hubrise_sku,
+    spice_level: (dish as unknown as { spice_level?: string }).spice_level,
+    available_order_types: (dish as unknown as { available_order_types?: string[] }).available_order_types,
   }));
 
   const tabs: TabItem[] = [
@@ -189,7 +195,9 @@ export default function Inventory() {
       created_at: "",
       updated_at: "",
       hubrise_sku: product.hubrise_sku,
-    };
+      spice_level: product.spice_level,
+      available_order_types: product.available_order_types,
+    } as Dish;
     setSelectedProduct(dishForEdit);
     setShowEditSupplementModal(true);
   };
