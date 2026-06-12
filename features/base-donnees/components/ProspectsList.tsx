@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Inbox, Loader2, Search } from "lucide-react";
 
-import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
 import { useProspectListQuery } from "../queries/prospect-list.query";
 import {
   ProspectPlatform,
@@ -56,23 +55,21 @@ function formatDate(iso: string) {
 
 export function ProspectsList({
   onRowClick,
-  showStoreFilter = true,
+  restaurantId,
 }: {
   onRowClick?: (id: string) => void;
-  /** Filtre « tous les stores » — masqué pour les store-roles (déjà scopés). */
-  showStoreFilter?: boolean;
+  /** Filtre store piloté par la page (vide = tous ; store-roles déjà scopés côté serveur). */
+  restaurantId?: string;
 } = {}) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<ProspectPlatform | "">("");
   const [status, setStatus] = useState<ProspectStatus | "">("");
-  const [restaurantId, setRestaurantId] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data: restaurantsResp } = useRestaurantListQuery();
-  const restaurants = useMemo(
-    () => (restaurantsResp?.data ?? []) as { id: string; name: string }[],
-    [restaurantsResp],
-  );
+  // Revenir page 1 quand le filtre store global change
+  React.useEffect(() => {
+    setPage(1);
+  }, [restaurantId]);
 
   const query: ProspectQuery = {
     page,
@@ -80,7 +77,7 @@ export function ProspectsList({
     ...(search.trim() ? { search: search.trim() } : {}),
     ...(platform ? { platform } : {}),
     ...(status ? { status } : {}),
-    ...(showStoreFilter && restaurantId ? { restaurantId } : {}),
+    ...(restaurantId ? { restaurantId } : {}),
   };
   const { data, isLoading, isFetching } = useProspectListQuery(query);
 
@@ -104,23 +101,6 @@ export function ProspectsList({
           />
         </div>
         <div className="flex gap-2">
-          {showStoreFilter && (
-            <select
-              value={restaurantId}
-              onChange={(e) => {
-                setRestaurantId(e.target.value);
-                setPage(1);
-              }}
-              className="flex-1 sm:flex-none border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-            >
-              <option value="">Tous les stores</option>
-              {restaurants.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
-          )}
           <select
             value={platform}
             onChange={(e) => {

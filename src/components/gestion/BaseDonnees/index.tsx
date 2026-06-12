@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { BarChart3, Database, Phone, Ticket, TrendingUp, Users, UserPlus } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { BarChart3, Database, Phone, Store, Ticket, TrendingUp, Users, UserPlus } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { ProspectsList } from "../../../../features/base-donnees/components/ProspectsList";
@@ -15,6 +15,7 @@ import { CaptureContactModal } from "../../../../features/base-donnees/component
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 
 type AdminTab = "dashboard" | "liste" | "verification" | "coupons" | "ventes";
 
@@ -55,6 +56,17 @@ export default function BaseDonnees() {
   const [captureOpen, setCaptureOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
+  // Filtre restaurant (store) global au module — s'applique à tous les onglets
+  // et à l'export. Vide = tous les stores. Réservé aux rôles « gestion »
+  // (les store-roles sont déjà scopés côté serveur).
+  const [restaurantId, setRestaurantId] = useState("");
+  const { data: restaurantsResp } = useRestaurantListQuery();
+  const restaurants = useMemo(
+    () => (restaurantsResp?.data ?? []) as { id: string; name: string }[],
+    [restaurantsResp],
+  );
+  const storeFilter = restaurantId || undefined;
+
   const visibleTabs = canManage
     ? ADMIN_TABS
     : ADMIN_TABS.filter((t) => t.key === "liste");
@@ -80,7 +92,7 @@ export default function BaseDonnees() {
                 {
                   label: "Exporter",
                   onClick: () => {},
-                  customComponent: <ExportButton type={exportType} />,
+                  customComponent: <ExportButton type={exportType} restaurantId={storeFilter} />,
                 },
               ]
             : []),
@@ -111,43 +123,67 @@ export default function BaseDonnees() {
             </div>
           }
         >
-          {/* Onglets — scroll horizontal sur mobile ; masqués si un seul (store-roles) */}
+          {/* Onglets + filtre restaurant — scroll horizontal sur mobile ; masqués si un seul (store-roles) */}
           {visibleTabs.length > 1 && (
-            <div className="my-4 w-full overflow-x-auto">
-              <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
-                {visibleTabs.map((t) => {
-                  const active = activeTab === t.key;
-                  return (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setTab(t.key)}
-                      className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-                        active
-                          ? "bg-[#F17922] text-white"
-                          : "text-[#71717A] hover:text-gray-700"
-                      }`}
-                    >
-                      <t.Icon className="w-3.5 h-3.5" />
-                      {t.label}
-                    </button>
-                  );
-                })}
+            <div className="my-4 flex flex-col sm:flex-row sm:items-center gap-2">
+              <div className="w-full sm:flex-1 overflow-x-auto">
+                <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
+                  {visibleTabs.map((t) => {
+                    const active = activeTab === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => setTab(t.key)}
+                        className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+                          active
+                            ? "bg-[#F17922] text-white"
+                            : "text-[#71717A] hover:text-gray-700"
+                        }`}
+                      >
+                        <t.Icon className="w-3.5 h-3.5" />
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Filtre restaurant global (tous les onglets + export) */}
+              <div
+                className={`flex items-center gap-2 border rounded-xl px-3 py-1.5 bg-white shrink-0 ${
+                  restaurantId ? "border-[#F17922]" : "border-gray-200"
+                }`}
+              >
+                <Store className={`w-4 h-4 shrink-0 ${restaurantId ? "text-[#F17922]" : "text-gray-400"}`} />
+                <select
+                  value={restaurantId}
+                  onChange={(e) => setRestaurantId(e.target.value)}
+                  className="text-sm bg-transparent outline-none cursor-pointer max-w-[220px] text-gray-700"
+                  title="Filtrer par restaurant"
+                >
+                  <option value="">Tous les restaurants</option>
+                  {restaurants.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           )}
 
           <div className={visibleTabs.length > 1 ? "" : "mt-4"}>
-            {activeTab === "dashboard" && <DashboardView />}
+            {activeTab === "dashboard" && <DashboardView restaurantId={storeFilter} />}
             {activeTab === "liste" && (
               <ProspectsList
                 onRowClick={canManage ? setDetailId : undefined}
-                showStoreFilter={canManage}
+                restaurantId={canManage ? storeFilter : undefined}
               />
             )}
-            {activeTab === "verification" && <CallCenterView />}
-            {activeTab === "coupons" && <CouponsView />}
-            {activeTab === "ventes" && <SalesView />}
+            {activeTab === "verification" && <CallCenterView restaurantId={storeFilter} />}
+            {activeTab === "coupons" && <CouponsView restaurantId={storeFilter} />}
+            {activeTab === "ventes" && <SalesView restaurantId={storeFilter} />}
           </div>
         </HasPermission>
       )}

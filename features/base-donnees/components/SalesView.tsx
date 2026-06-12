@@ -19,8 +19,8 @@ function fmt(iso?: string | null) {
   }
 }
 
-export function SalesView() {
-  const { data, isLoading } = useProspectSalesQuery();
+export function SalesView({ restaurantId }: { restaurantId?: string } = {}) {
+  const { data, isLoading } = useProspectSalesQuery(restaurantId);
   const rows = data?.data ?? [];
   const totals = data?.totals;
 

@@ -24,8 +24,8 @@ function fmt(iso?: string | null) {
   }
 }
 
-export function CouponsView() {
-  const { data: rows = [], isLoading } = useProspectCouponsQuery();
+export function CouponsView({ restaurantId }: { restaurantId?: string } = {}) {
+  const { data: rows = [], isLoading } = useProspectCouponsQuery(restaurantId);
   const used = rows.filter((r) => r.state === "USED").length;
   const usageRate = rows.length ? Math.round((used / rows.length) * 100) : 0;
 

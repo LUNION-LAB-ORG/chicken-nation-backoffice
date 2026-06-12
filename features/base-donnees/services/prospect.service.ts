@@ -289,8 +289,11 @@ export const scanProspectOrder = async (file: File) => {
 };
 
 // Télécharge un CSV (contacts | coupons | sales)
-export const exportProspectsCsv = async (type: ExportType) => {
-  const { url, headers } = await prepareRequest(BASE_URL, "/export", { type });
+export const exportProspectsCsv = async (type: ExportType, restaurantId?: string) => {
+  const { url, headers } = await prepareRequest(BASE_URL, "/export", {
+    type,
+    ...(restaurantId ? { restaurantId } : {}),
+  });
   const response = await fetch(url, { method: "GET", headers });
   if (!response.ok) {
     throw new Error(`Export impossible (HTTP ${response.status})`);

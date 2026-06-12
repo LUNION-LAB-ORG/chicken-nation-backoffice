@@ -122,8 +122,8 @@ function CallCard({
   );
 }
 
-export function CallCenterView() {
-  const { data, isLoading } = useCallQueueQuery();
+export function CallCenterView({ restaurantId }: { restaurantId?: string } = {}) {
+  const { data, isLoading } = useCallQueueQuery(restaurantId);
   const markCall = useMarkCallMutation();
   const sendCoupon = useSendCouponMutation();
 

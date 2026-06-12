@@ -7,13 +7,13 @@ import { toast } from "react-hot-toast";
 import { exportProspectsCsv } from "../services/prospect.service";
 import { ExportType } from "../types/prospect.types";
 
-export function ExportButton({ type }: { type: ExportType }) {
+export function ExportButton({ type, restaurantId }: { type: ExportType; restaurantId?: string }) {
   const [loading, setLoading] = useState(false);
 
   const onClick = async () => {
     setLoading(true);
     try {
-      await exportProspectsCsv(type);
+      await exportProspectsCsv(type, restaurantId);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

@@ -9,8 +9,8 @@ import { useProspectStatsQuery } from "../queries/prospect-analytics.query";
 
 const f = (n: number) => n.toLocaleString("fr-FR");
 
-export function DashboardView() {
-  const { data: s, isLoading } = useProspectStatsQuery();
+export function DashboardView({ restaurantId }: { restaurantId?: string } = {}) {
+  const { data: s, isLoading } = useProspectStatsQuery(restaurantId);
 
   if (isLoading || !s) {
     return (
