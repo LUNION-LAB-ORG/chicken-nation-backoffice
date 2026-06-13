@@ -28,14 +28,16 @@ interface Props {
 const ORANGE = "#F17922";
 
 /**
- * Normalise un numéro ivoirien : accepte +225 / 00225 / 10 chiffres.
- * Renvoie les 10 chiffres locaux, ou null si invalide.
+ * Normalise un numéro : retire les non-chiffres et le préfixe +225 / 00225 pour
+ * les numéros ivoiriens. Accepte tout numéro de 6 à 15 chiffres (plage E.164),
+ * pour permettre d'enregistrer des clients avec un numéro non standard / étranger.
+ * Renvoie les chiffres normalisés, ou null si invalide.
  */
 function normalizeCiPhone(input: string): string | null {
   let d = input.replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
   if (d.startsWith("225") && d.length === 13) d = d.slice(3);
-  return d.length === 10 ? d : null;
+  return d.length >= 6 && d.length <= 15 ? d : null;
 }
 
 /**
@@ -318,13 +320,13 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
               <input
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                inputMode="numeric"
-                maxLength={14}
-                placeholder="Ex. 0700000000"
+                inputMode="tel"
+                maxLength={20}
+                placeholder="Ex. 0700000000 ou +33612345678"
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
               />
               <p className="text-[11px] text-gray-500 mt-1">
-                Numéro ivoirien à 10 chiffres (avec ou sans +225).
+                Numéro local (10 chiffres) ou international (6–15 chiffres, +225 accepté).
               </p>
               {dup && (
                 <div className="mt-2 flex gap-2 items-center bg-amber-50 text-amber-800 rounded-lg px-3 py-2 text-xs">
