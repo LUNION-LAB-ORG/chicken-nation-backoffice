@@ -117,13 +117,17 @@ export const getProspectDetail = async (id: string) => {
   }
 };
 
-export const getCallQueue = async (restaurantId?: string) => {
+export const getCallQueue = async (
+  restaurantId?: string,
+  startDate?: string,
+  endDate?: string,
+) => {
   try {
-    const { url, headers } = await prepareRequest(
-      BASE_URL,
-      "/call-queue",
-      restaurantId ? { restaurantId } : undefined,
-    );
+    const { url, headers } = await prepareRequest(BASE_URL, "/call-queue", {
+      ...(restaurantId ? { restaurantId } : {}),
+      ...(startDate ? { startDate } : {}),
+      ...(endDate ? { endDate } : {}),
+    });
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

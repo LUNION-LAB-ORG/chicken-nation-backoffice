@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { CheckCircle2, Loader2, Ticket } from "lucide-react";
+import React, { useState } from "react";
+import { CalendarDays, CheckCircle2, Loader2, Ticket, X } from "lucide-react";
 
 import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard";
 
@@ -123,17 +123,79 @@ function CallCard({
 }
 
 export function CallCenterView({ restaurantId }: { restaurantId?: string } = {}) {
-  const { data, isLoading } = useCallQueueQuery(restaurantId);
+  // Filtre de rattrapage : par défaut la file = backlog J+1 (tout jusqu'à hier).
+  // En choisissant une plage de dates, l'agent peut cibler un jour raté antérieur.
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const hasDateFilter = !!(startDate || endDate);
+
+  const { data, isLoading } = useCallQueueQuery(
+    restaurantId,
+    startDate || undefined,
+    endDate || undefined,
+  );
   const markCall = useMarkCallMutation();
   const sendCoupon = useSendCouponMutation();
 
   const queue = data?.queue ?? [];
   const ind = data?.indicators;
 
+  const inputCls =
+    "border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm bg-white text-gray-700 outline-none focus:ring-2 focus:ring-[#F17922] focus:border-transparent";
+
   return (
     <div>
+      {/* Filtre de date — rattrapage des contacts ratés (J-2, J-3…) */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <CalendarDays className="w-4 h-4 text-gray-400 shrink-0" />
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs text-gray-500">Du</label>
+            <input
+              type="date"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs text-gray-500">au</label>
+            <input
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+          {hasDateFilter && (
+            <button
+              type="button"
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+            >
+              <X className="w-3.5 h-3.5" />
+              Réinitialiser
+            </button>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 sm:ml-auto">
+          {hasDateFilter
+            ? "Rattrapage : contacts de la période sélectionnée"
+            : "Par défaut : tout le backlog jusqu'à hier (J+1)"}
+        </p>
+      </div>
+
       <div className="grid grid-cols-3 gap-3 mb-5">
-        <GenericStatCard badgeText="À appeler (file J+1)" badgeColor="#4285F4" value={ind?.toCall ?? 0} />
+        <GenericStatCard
+          badgeText={hasDateFilter ? "À appeler (période)" : "À appeler (file J+1)"}
+          badgeColor="#4285F4"
+          value={ind?.toCall ?? 0}
+        />
         <GenericStatCard badgeText="Joints aujourd'hui" badgeColor="#7C3AED" value={ind?.joinedToday ?? 0} />
         <GenericStatCard badgeText="Coupons envoyés" badgeColor="#F17922" value={ind?.couponsToday ?? 0} />
       </div>
@@ -144,7 +206,9 @@ export function CallCenterView({ restaurantId }: { restaurantId?: string } = {})
         </div>
       ) : queue.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400">
-          🎉 File vide — tous les contacts du jour ont été traités.
+          {hasDateFilter
+            ? "Aucun contact à appeler sur cette période."
+            : "🎉 File vide — tous les contacts du jour ont été traités."}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
