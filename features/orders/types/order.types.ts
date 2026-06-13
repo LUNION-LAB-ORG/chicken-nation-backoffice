@@ -110,6 +110,19 @@ export interface Order {
     paied_at: string | null;
     created_at: string;
     updated_at: string;
+    // Audit staff (affiché côté admin uniquement) : créateur de la commande
+    // (null = passée par le client depuis l'app) + dernier modificateur staff.
+    user?: OrderStaffUser | null;
+    updated_by?: string | null;
+    updated_by_user?: OrderStaffUser | null;
+}
+
+/** Membre du staff (créateur / dernier modificateur d'une commande). */
+export interface OrderStaffUser {
+    id: string;
+    fullname: string | null;
+    email: string | null;
+    role: string;
 }
 
 export interface OrderItem {

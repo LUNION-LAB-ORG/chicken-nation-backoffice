@@ -15,6 +15,7 @@ import {
   MapPin,
   Package,
   PackageCheck,
+  PencilLine,
   Phone,
   ShoppingBag,
   Sparkles,
@@ -22,10 +23,13 @@ import {
   Store,
   Truck,
   User,
+  UserCheck,
   UtensilsCrossed,
 } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
 
+import { useAuthStore } from "../../../users/hook/authStore";
+import { UserRole } from "../../../users/types/user.types";
 import { type Order } from "../../../orders/types/order.types";
 import { useOrderDetailQuery } from "../../../orders/queries/order-detail.query";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
@@ -473,6 +477,17 @@ function ProgressBlock({ ui }: { ui: OrderTable }) {
 // ─── Informations ──────────────────────────────────────────────────────────
 
 function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
+  // Audit créateur / dernier modificateur : réservé à l'ADMIN.
+  const role = useAuthStore((s) => s.user?.role);
+  const isAdmin = role === UserRole.ADMIN;
+
+  const creatorName = source.user
+    ? source.user.fullname || source.user.email || "Staff"
+    : "Client (application)";
+  const modifierName = source.updated_by_user
+    ? source.updated_by_user.fullname || source.updated_by_user.email || "Staff"
+    : null;
+
   return (
     <Card className="p-5 md:p-6">
       <SectionTitle icon={<Hash className="w-4 h-4" />} title="Informations" />
@@ -506,6 +521,26 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
           label="Source"
           value={ui.auto ? "Application" : "Manuel"}
         />
+
+        {/* Audit staff — ADMIN uniquement */}
+        {isAdmin && (
+          <>
+            <Field
+              icon={<UserCheck className="w-3.5 h-3.5" />}
+              label="Créée par"
+              value={creatorName}
+            />
+            <Field
+              icon={<PencilLine className="w-3.5 h-3.5" />}
+              label="Dernière modification"
+              value={
+                modifierName
+                  ? `${modifierName} · ${format(new Date(source.updated_at), "dd/MM HH:mm")}`
+                  : "—"
+              }
+            />
+          </>
+        )}
       </dl>
     </Card>
   );
