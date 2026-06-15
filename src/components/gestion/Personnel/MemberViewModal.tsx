@@ -1,39 +1,23 @@
-import React, { useState } from 'react'
+import React from 'react'
 import type { Member } from './MemberView'
 import Image from 'next/image'
 import ResetPasswordButton from './ReinitializePassWord'
-
 
 interface MemberViewModalProps {
   open: boolean
   member: Member | null
   onClose: () => void
-  onDelete?: (memberId: string) => void
+  onEdit?: (member: Member) => void
+  /** Suspendre (réversible) — délégué au parent (ouvre le modal de confirmation). */
+  onRequestSuspend?: (member: Member) => void
+  /** Supprimer définitivement — délégué au parent. */
+  onRequestDelete?: (member: Member) => void
 }
 
-const MemberViewModal: React.FC<MemberViewModalProps> = ({ open, member, onClose, onDelete }) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteConfirmText, setDeleteConfirmText] = useState('')
-
+const MemberViewModal: React.FC<MemberViewModalProps> = ({ open, member, onClose, onEdit, onRequestSuspend, onRequestDelete }) => {
   if (!open || !member) return null
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true)
-  }
-
-  const handleDeleteConfirm = () => {
-    if (deleteConfirmText.toLowerCase() === 'supprimer' && onDelete) {
-      onDelete(member.id)
-      setShowDeleteConfirm(false)
-      setDeleteConfirmText('')
-      onClose()
-    }
-  }
-
-  const handleDeleteCancel = () => {
-    setShowDeleteConfirm(false)
-    setDeleteConfirmText('')
-  }
+  const isSuspended = member.entity_status === 'DELETED' || member.entity_status === 'INACTIVE'
 
   function getAvatarUrl(member: Member) {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -113,62 +97,40 @@ const MemberViewModal: React.FC<MemberViewModalProps> = ({ open, member, onClose
         <div className="pointer-events-none absolute left-0 bottom-0 w-full h-16 bg-gradient-to-t from-white/90 to-transparent z-20" />
       </div>
 
-      {/* Section de suppression - visible en bas */}
-      {onDelete && (
-        <div className="px-10 py-4 border-t border-[#ECECEC] bg-gray-50">
-          {!showDeleteConfirm ? (
-            <div className="flex justify-center gap-4 items-center">
-              <button
-                type="button"
-                onClick={handleDeleteClick}
-                className="px-6 py-2 bg-red-600 cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors duration-200"
-              >
-                Zone dangereuse
-              </button>
-            
-                 <ResetPasswordButton userId={member.id} />
-             
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-sm text-red-600 font-medium mb-2">
-                  ⚠️ Suppression définitive de l&apos;utilisateur
-                </p>
-                <p className="text-xs text-gray-600 mb-4">
-                  Cette action est irréversible. L&apos;utilisateur perdra définitivement accès à la plateforme.
-                </p>
-                <p className="text-xs text-gray-800 mb-3"> Pour confirmer, tapez <span className="font-bold">supprimer</span> ci-dessous :
-                </p>
-                <input
-                  type="text"
-                  value={deleteConfirmText}
-                  onChange={(e) => setDeleteConfirmText(e.target.value)}
-                  className="w-full max-w-xs mx-auto px-3 py-2 cursor-pointer border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                  placeholder="Tapez 'supprimer'"
-                />
-              </div>
-              <div className="flex justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleDeleteCancel}
-                  className="px-4 py-2 text-xs cursor-pointer bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors"
-                >
-                  Annuler
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDeleteConfirm}
-                  disabled={deleteConfirmText.toLowerCase() !== 'supprimer'}
-                  className="px-4 py-2 text-xs bg-red-600 text-white cursor-pointer rounded-xl hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                >
-                  Supprimer définitivement
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Actions admin — édition + sécurité (suspendre / supprimer) + mot de passe */}
+      <div className="px-10 py-4 border-t border-[#ECECEC] bg-gray-50 flex flex-wrap justify-center items-center gap-3">
+        {onEdit && (
+          <button
+            type="button"
+            onClick={() => onEdit(member)}
+            className="px-6 py-2 bg-[#F17922] cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-orange-600 transition-colors"
+          >
+            Modifier
+          </button>
+        )}
+
+        <ResetPasswordButton userId={member.id} />
+
+        {!isSuspended && onRequestSuspend && (
+          <button
+            type="button"
+            onClick={() => onRequestSuspend(member)}
+            className="px-6 py-2 border border-[#F17922] text-[#F17922] cursor-pointer text-sm font-medium rounded-xl hover:bg-orange-50 transition-colors"
+          >
+            Suspendre
+          </button>
+        )}
+
+        {onRequestDelete && (
+          <button
+            type="button"
+            onClick={() => onRequestDelete(member)}
+            className="px-6 py-2 bg-red-600 cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors"
+          >
+            Supprimer définitivement
+          </button>
+        )}
+      </div>
     </div>
   )
 }

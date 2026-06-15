@@ -12,14 +12,13 @@ import toast from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import {
   User,
-  blockUser,
+  softDeleteUser,
   deleteUser,
   restoreUser,
 } from "../../../../features/users/services/user.service";
 import EditMember from "./EditMember";
 import MemberActionsMenu from "./MemberActionsMenu";
-import MemberBlockModal from "./MemberBlockModal";
-import MemberDeleteModal from "./MemberDeleteModal";
+import MemberRemoveModal from "./MemberRemoveModal";
 import MemberViewModal from "./MemberViewModal";
 
 export interface Member {
@@ -73,9 +72,9 @@ const MemberView: React.FC<MemberViewProps> = ({
   } | null>(null);
   // Modal states
   const [modal, setModal] = useState<{
-    type: "block" | "delete" | "edit";
+    type: "suspend" | "delete";
     member: Member | null;
-  } | null>(null); // Added semicolon and fixed syntax
+  } | null>(null);
   const [editMember, setEditMember] = useState<Member | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showMemberViewModal, setShowMemberViewModal] = useState(false);
@@ -139,14 +138,14 @@ const MemberView: React.FC<MemberViewProps> = ({
         className: "text-green-500 bg-green-50 border-green-200",
       },
       INACTIVE: {
-        label: "Supprimé",
-        icon: "⚠",
-        className: "text-red-500 bg-red-50 border-red-200",
+        label: "Inactif",
+        icon: "⏸",
+        className: "text-amber-600 bg-amber-50 border-amber-200",
       },
       DELETED: {
-        label: "Supprimé",
-        icon: "✕",
-        className: "text-red-500 bg-red-50 border-red-200",
+        label: "Suspendu",
+        icon: "⏸",
+        className: "text-amber-600 bg-amber-50 border-amber-200",
       },
     };
 
@@ -219,15 +218,14 @@ const MemberView: React.FC<MemberViewProps> = ({
     }
   };
 
-  const handleBlockUser = async (userId: string) => {
+  const handleSuspendUser = async (userId: string) => {
     try {
-      await blockUser(userId);
-      toast.success("Utilisateur bloqué avec succès");
+      await softDeleteUser(userId);
+      toast.success("Utilisateur suspendu");
       if (onRefresh) {
         onRefresh();
       }
     } catch (error: unknown) {
-      // console.error('Erreur lors du blocage:', error);
       const userMessage = getHumanReadableError(error);
       toast.error(userMessage);
     }
@@ -464,30 +462,35 @@ const MemberView: React.FC<MemberViewProps> = ({
                   ?.entity_status || "ACTIVE"
               )}
               onViewProfile={() => {
+                const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);
                 setMenuPosition(null);
-                setModal({
-                  type: "edit",
-                  member: filteredMembers.find((m) => m.id === menuOpenId)!,
-                });
+                setEditMember(m);
+                setShowMemberViewModal(true);
               }}
-              onBlock={() => {
+              onEdit={() => {
+                const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);
                 setMenuPosition(null);
-                setModal({
-                  type: "block",
-                  member: filteredMembers.find((m) => m.id === menuOpenId)!,
-                });
+                setEditMember(m);
+                setShowAddModal(true);
               }}
-              onUnblock={() => {
+              onSuspend={() => {
+                const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
+                setMenuOpenId(null);
+                setMenuPosition(null);
+                setModal({ type: "suspend", member: m });
+              }}
+              onRestore={() => {
                 setMenuOpenId(null);
                 setMenuPosition(null);
                 handleRestoreUser(menuOpenId!);
               }}
-              onReactivate={() => {
+              onDelete={() => {
+                const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);
                 setMenuPosition(null);
-                handleRestoreUser(menuOpenId!);
+                setModal({ type: "delete", member: m });
               }}
               onClose={() => {
                 setMenuOpenId(null);
@@ -498,35 +501,21 @@ const MemberView: React.FC<MemberViewProps> = ({
           document.body
         )}
 
-      <MemberDeleteModal
-        open={!!modal && modal.type === "delete"}
+      <MemberRemoveModal
+        open={!!modal}
+        mode={modal?.type === "delete" ? "delete" : "suspend"}
         member={modal?.member || null}
         onClose={() => setModal(null)}
         onConfirm={() => {
           if (modal?.member) {
-            handleDeleteUser(modal.member.id);
+            if (modal.type === "delete") {
+              handleDeleteUser(modal.member.id);
+            } else {
+              handleSuspendUser(modal.member.id);
+            }
           }
           setModal(null);
         }}
-      />
-
-      <MemberBlockModal
-        open={!!modal && modal.type === "block"}
-        member={modal?.member || null}
-        onClose={() => setModal(null)}
-        onConfirm={() => {
-          if (modal?.member) {
-            handleBlockUser(modal.member.id);
-          }
-          setModal(null);
-        }}
-      />
-
-      <MemberViewModal
-        open={!!modal && modal.type === "edit"}
-        member={modal?.member || null}
-        onClose={() => setModal(null)}
-        onDelete={handleDeleteUser}
       />
 
       {showAddModal && editMember && (
@@ -552,7 +541,19 @@ const MemberView: React.FC<MemberViewProps> = ({
           open={showMemberViewModal}
           member={editMember}
           onClose={() => setShowMemberViewModal(false)}
-          onDelete={handleDeleteUser}
+          onEdit={(m) => {
+            setShowMemberViewModal(false);
+            setEditMember(m);
+            setShowAddModal(true);
+          }}
+          onRequestSuspend={(m) => {
+            setShowMemberViewModal(false);
+            setModal({ type: "suspend", member: m });
+          }}
+          onRequestDelete={(m) => {
+            setShowMemberViewModal(false);
+            setModal({ type: "delete", member: m });
+          }}
         />
       )}
     </div>
