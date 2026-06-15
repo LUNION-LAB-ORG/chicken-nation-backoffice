@@ -15,6 +15,7 @@ import {
   softDeleteUser,
   deleteUser,
   restoreUser,
+  setPrincipalManager,
 } from "../../../../features/users/services/user.service";
 import EditMember from "./EditMember";
 import MemberActionsMenu from "./MemberActionsMenu";
@@ -32,6 +33,8 @@ export interface Member {
   address?: string;
   // status?: 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED'; // Removed status field
   entity_status?: "NEW" | "ACTIVE" | "INACTIVE" | "DELETED"; // Kept entity_status
+  // Manager principal de son restaurant (Restaurant.manager === id).
+  isPrincipal?: boolean;
 }
 
 interface MemberViewProps {
@@ -245,6 +248,19 @@ const MemberView: React.FC<MemberViewProps> = ({
     }
   };
 
+  const handleSetPrincipal = async (userId: string) => {
+    try {
+      await setPrincipalManager(userId);
+      toast.success("Manager principal défini");
+      if (onRefresh) {
+        onRefresh();
+      }
+    } catch (error: unknown) {
+      const userMessage = getHumanReadableError(error);
+      toast.error(userMessage);
+    }
+  };
+
   // Fonction utilitaire pour mapper les statuts backend vers les statuts du menu
   const mapStatusForMenu = (
     status: Member["entity_status"]
@@ -325,15 +341,22 @@ const MemberView: React.FC<MemberViewProps> = ({
                   </div>
                 </td>
                 <td className={`px-0 py-2 ${contentOpacity}`}>
-                  <span
-                    className={
-                      member.role === "SuperAdmin"
-                        ? "bg-[#E5F9EB] text-[#34C759] text-[14px] font-bold px-4 py-1 rounded-full inline-block min-w-[240px] text-start"
-                        : "bg-[#FBDBA7] text-[#7A3502] text-[14px] font-bold px-4 py-1 rounded-full inline-block min-w-[240px] text-start"
-                    }
-                  >
-                    {member.role}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={
+                        member.role === "SuperAdmin"
+                          ? "bg-[#E5F9EB] text-[#34C759] text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
+                          : "bg-[#FBDBA7] text-[#7A3502] text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
+                      }
+                    >
+                      {member.role}
+                    </span>
+                    {member.role === "MANAGER" && member.isPrincipal && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#F17922] bg-[#FFF0E4] border border-[#F17922]/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        ★ Principal
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className={`px-0 py-2 ${contentOpacity}`}>
                   {renderStatus(member.entity_status)}
@@ -486,6 +509,17 @@ const MemberView: React.FC<MemberViewProps> = ({
                 setMenuPosition(null);
                 handleRestoreUser(menuOpenId!);
               }}
+              onSetPrincipal={
+                filteredMembers.find((m) => m.id === menuOpenId)?.role ===
+                  "MANAGER" &&
+                !filteredMembers.find((m) => m.id === menuOpenId)?.isPrincipal
+                  ? () => {
+                      setMenuOpenId(null);
+                      setMenuPosition(null);
+                      handleSetPrincipal(menuOpenId!);
+                    }
+                  : undefined
+              }
               onDelete={() => {
                 const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);

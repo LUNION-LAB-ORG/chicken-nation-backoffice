@@ -14,6 +14,8 @@ interface MemberActionsMenuProps {
   onRestore?: () => void;
   /** Supprimer définitivement (irréversible) */
   onDelete?: () => void;
+  /** Définir ce manager comme principal de son restaurant (si non principal) */
+  onSetPrincipal?: () => void;
   onClose: () => void;
 }
 
@@ -27,6 +29,7 @@ export default function MemberActionsMenu({
   onSuspend,
   onRestore,
   onDelete,
+  onSetPrincipal,
 }: MemberActionsMenuProps) {
   const isSuspended = memberStatus === "blocked" || memberStatus === "deleted";
 
@@ -56,6 +59,19 @@ export default function MemberActionsMenu({
             onClick={onEdit}
           >
             Modifier
+          </button>
+        </HasPermission>
+      )}
+
+      {/* Manager : définir comme principal de son restaurant */}
+      {onSetPrincipal && (
+        <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
+          <button
+            type="button"
+            className={`${itemBase} text-[#F17922] hover:bg-[#FFF6E9]`}
+            onClick={onSetPrincipal}
+          >
+            ★ Définir comme principal
           </button>
         </HasPermission>
       )}

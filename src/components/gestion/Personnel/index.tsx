@@ -27,6 +27,8 @@ interface MemberForView {
   phone?: string;
   address?: string;
   entity_status?: "NEW" | "ACTIVE" | "INACTIVE" | "DELETED";
+  // Manager principal de son restaurant (Restaurant.manager === user.id).
+  isPrincipal?: boolean;
 }
 
 export default function Personnel() {
@@ -182,6 +184,10 @@ export default function Personnel() {
     phone: user.phone || "",
     address: user.address || "",
     entity_status: user.entity_status || "ACTIVE",
+    isPrincipal:
+      typeof user.restaurant === "object" &&
+      user.restaurant !== null &&
+      (user.restaurant as { manager?: string }).manager === user.id,
   }));
 
   // Fonction de recherche
