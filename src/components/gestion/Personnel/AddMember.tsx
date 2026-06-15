@@ -14,6 +14,10 @@ import {
 } from "@/utils/errorMessages";
 import { validateCreateUser } from "@/schemas/personnelSchemas";
 import { createMember, createUser } from "../../../../features/users/services/user.service";
+import { getAllRestaurants, Restaurant } from "@/services/restaurantService";
+
+// Rôles « point de vente » : ils exigent un restaurant de rattachement.
+const STORE_ROLES = ["MANAGER", "ASSISTANT_MANAGER", "CAISSIER", "CUISINE"];
 
 interface CreatedMember {
   id: string;
@@ -46,6 +50,9 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
   const [role, setRole] = useState("");
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+  // Sélection du restaurant (admin créant un rôle point de vente).
+  const [restaurantId, setRestaurantId] = useState("");
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [createdUserCredentials, setCreatedUserCredentials] = useState<{
     email: string;
@@ -54,20 +61,55 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
 
   // ✅ PERFORMANCE: Mémoriser les options de rôle pour éviter les re-renders
   const roleOptions = useMemo(() => {
-    return currentUser?.type === "BACKOFFICE"
-      ? [
-          { value: "ADMIN", label: "ADMINISTRATEUR" },
-          { value: "MARKETING", label: "MARKETING" },
-          { value: "MANAGER", label: "MANAGER" },
-          { value: "COMPTABLE", label: "COMPTABLE" },
-          { value: "CALL_CENTER", label: "CALL CENTER" },
-        ]
-      : [
-          { value: "ASSISTANT_MANAGER", label: "ASSISTANT MANAGER" },
-          { value: "CAISSIER", label: "CAISSIER" },
-          { value: "CUISINE", label: "CUISINE" },
-        ];
-  }, [currentUser?.type]);
+    // Admin : TOUS les rôles (backoffice + point de vente).
+    // Manager restaurant : uniquement le staff de son restaurant.
+    if (currentUser?.role === "ADMIN") {
+      return [
+        { value: "ADMIN", label: "ADMINISTRATEUR" },
+        { value: "MARKETING", label: "MARKETING" },
+        { value: "COMPTABLE", label: "COMPTABLE" },
+        { value: "CALL_CENTER", label: "CALL CENTER" },
+        { value: "MANAGER", label: "MANAGER" },
+        { value: "ASSISTANT_MANAGER", label: "ASSISTANT MANAGER" },
+        { value: "CAISSIER", label: "CAISSIER" },
+        { value: "CUISINE", label: "CUISINE" },
+      ];
+    }
+    return [
+      { value: "ASSISTANT_MANAGER", label: "ASSISTANT MANAGER" },
+      { value: "CAISSIER", label: "CAISSIER" },
+      { value: "CUISINE", label: "CUISINE" },
+    ];
+  }, [currentUser?.role]);
+
+  // Un rôle point de vente exige un restaurant. L'admin le choisit ; le manager
+  // crée pour SON restaurant (rattachement automatique).
+  const isStoreRole = STORE_ROLES.includes(role);
+  const isManager = currentUser?.role === "MANAGER";
+  const needsRestaurantPicker = isStoreRole && currentUser?.role === "ADMIN";
+  const resolvedRestaurantId = isManager
+    ? currentUser?.restaurant_id || undefined
+    : needsRestaurantPicker
+      ? restaurantId || undefined
+      : undefined;
+  const memberType: "BACKOFFICE" | "RESTAURANT" = isStoreRole
+    ? "RESTAURANT"
+    : "BACKOFFICE";
+
+  // Charger les restaurants (pour le sélecteur admin).
+  useEffect(() => {
+    let active = true;
+    getAllRestaurants()
+      .then((list) => {
+        if (active) setRestaurants(list.filter((r) => r.active));
+      })
+      .catch(() => {
+        /* non bloquant : le sélecteur sera vide */
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Définir le rôle par défaut
   useEffect(() => {
@@ -102,6 +144,10 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
   }, [showRoleDropdown]);
 
   const validateForm = (): boolean => {
+    if (isStoreRole && !resolvedRestaurantId) {
+      toast.error("Sélectionnez un restaurant pour ce rôle (point de vente).");
+      return false;
+    }
     try {
       // ✅ SÉCURITÉ: Validation avec Zod
       const validationData = {
@@ -110,11 +156,8 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
         phone: formData.phone?.trim() || undefined,
         address: formData.address?.trim() || undefined,
         role: role,
-        type:
-          currentUser?.type === "BACKOFFICE"
-            ? ("BACKOFFICE" as const)
-            : ("RESTAURANT" as const),
-        restaurant_id: currentUser?.restaurant_id || undefined,
+        type: memberType,
+        restaurant_id: resolvedRestaurantId,
         active: true,
       };
 
@@ -181,23 +224,14 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
         phone: formData.phone,
         address: formData.address,
         role: role,
-        type: currentUser?.type === "BACKOFFICE" ? "BACKOFFICE" : "RESTAURANT",
+        type: memberType,
         image: formData.image,
       };
 
-      // Si c'est un manager qui crée un employé restaurant, ajouter le restaurant_id
-      if (
-        currentUser?.role === "MANAGER" &&
-        currentUser?.restaurant_id &&
-        userObj.type === "RESTAURANT"
-      ) {
-        userObj.restaurant_id = currentUser.restaurant_id;
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            "🏢 Manager crée un employé - restaurant_id ajouté:",
-            currentUser.restaurant_id
-          );
-        }
+      // Rôle point de vente → rattachement à un restaurant (choisi par l'admin,
+      // ou celui du manager). Le backend revérifie (resolveStaffType).
+      if (resolvedRestaurantId) {
+        userObj.restaurant_id = resolvedRestaurantId;
       }
       if (process.env.NODE_ENV === "development") {
         console.log("Données envoyées au backend:", userObj);
@@ -248,8 +282,8 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[92vh] overflow-y-auto">
         <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
           <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">
             Créer un membre
@@ -359,6 +393,25 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
                 </div>
               )}
             </div>
+            {needsRestaurantPicker && (
+              <div>
+                <div className="text-[#595959] text-[15px] font-normal mb-1">
+                  Restaurant
+                </div>
+                <select
+                  value={restaurantId}
+                  onChange={(e) => setRestaurantId(e.target.value)}
+                  className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] focus:ring-2 focus:ring-[#F17922]/30"
+                >
+                  <option value="">Choisissez un restaurant</option>
+                  {restaurants.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="flex flex-col gap-2 mt-4">
               <Button
                 type="button"
@@ -379,7 +432,7 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
         </form>
         <form
           onSubmit={handleSubmit}
-          className="md:block px-0 pt-0 pb-0 flex flex-col gap-0 min-w-[600px]"
+          className="hidden md:flex md:flex-col px-0 pt-0 pb-0 gap-0 min-w-[600px]"
         >
           <div className="px-12 pt-5">
             <span className="text-xs text-[#F17922] font-semibold">
@@ -530,6 +583,25 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
             </div>
             <span className="text-[#71717A] font-bold text-2xl ml-2">›</span>
           </div>
+          {needsRestaurantPicker && (
+            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px] px-12">
+              <label className="text-[#595959] w-[160px] text-[15px] font-normal">
+                Restaurant
+              </label>
+              <select
+                value={restaurantId}
+                onChange={(e) => setRestaurantId(e.target.value)}
+                className="ml-2 flex-1 bg-transparent text-[#71717A] text-[15px] font-semibold outline-none h-[40px] cursor-pointer"
+              >
+                <option value="">Choisissez un restaurant</option>
+                {restaurants.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Boutons */}
           <div className="flex justify-end gap-3 mt-6 px-12 pb-6">
             <Button
@@ -565,11 +637,8 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
               password: createdUserCredentials.password,
               fullname: formData.fullname,
               role: role,
-              type:
-                currentUser?.type === "BACKOFFICE"
-                  ? "BACKOFFICE"
-                  : "RESTAURANT",
-              restaurant_id: currentUser?.restaurant_id || undefined,
+              type: memberType,
+              restaurant_id: resolvedRestaurantId,
             };
             onSuccess(memberData);
           }
