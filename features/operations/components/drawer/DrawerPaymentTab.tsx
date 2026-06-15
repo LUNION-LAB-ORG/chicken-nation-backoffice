@@ -86,14 +86,30 @@ export function DrawerPaymentTab({ order }: Props) {
   // Le formulaire d'ajout, lui, reste réservé aux commandes non encore payées.
   const isAdmin = useIsAdmin();
 
-  // Pré-remplissage : un paiement au montant total en Espèce (le plus courant).
+  // Déjà encaissé (paiements réussis existants) → reste réellement dû.
+  // Le formulaire cible CE reste, pas le total commande : cas paiement partiel
+  // (ex. 7 500 F déjà perçus sur 8 000 F → on pré-remplit 500 F, pas 8 000 F).
+  const successPaiements = useMemo(
+    () =>
+      (order.paiements ?? [])
+        .filter((p) => p.status === PaiementStatus.SUCCESS)
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        ),
+    [order.paiements],
+  );
+  const totalEncaisse = successPaiements.reduce((sum, p) => sum + p.amount, 0);
+  const remainingDu = Math.max(0, order.amount - totalEncaisse);
+
+  // Pré-remplissage : un paiement au reste dû en Espèce (le plus courant).
   const [paiements, setPaiements] = useState<IPaiementLine[]>(() => [
-    { mode: PaiementMode.CASH, source: "cash", amount: order.amount },
+    { mode: PaiementMode.CASH, source: "cash", amount: remainingDu },
   ]);
 
   const totalAmount = paiements.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const remainingAmount = Math.max(0, order.amount - totalAmount);
-  const excessAmount = Math.max(0, totalAmount - order.amount);
+  const remainingAmount = Math.max(0, remainingDu - totalAmount);
+  const excessAmount = Math.max(0, totalAmount - remainingDu);
 
   const updatePaiement = (index: number, updates: Partial<IPaiementLine>) => {
     setPaiements((prev) => {
@@ -118,19 +134,8 @@ export function DrawerPaymentTab({ order }: Props) {
     addPaiement({ items: paiements, order: uiOrder });
   };
 
-  // ── Historique : tri chronologique (plus récent en premier) ─────────────
-  const successPaiements = useMemo(
-    () =>
-      (order.paiements ?? [])
-        .filter((p) => p.status === PaiementStatus.SUCCESS)
-        .sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-        ),
-    [order.paiements],
-  );
-  const totalEncaisse = successPaiements.reduce((sum, p) => sum + p.amount, 0);
-  const remainingDu = Math.max(0, order.amount - totalEncaisse);
+  // (`successPaiements` / `totalEncaisse` / `remainingDu` calculés en amont —
+  //  ils servent aussi au pré-remplissage du formulaire ci-dessus.)
 
   // ── Gardes ──────────────────────────────────────────────────────────────
 
@@ -156,7 +161,7 @@ export function DrawerPaymentTab({ order }: Props) {
   // ── Render ──────────────────────────────────────────────────────────────
 
   const isFullyPaid = order.paied || remainingDu === 0;
-  const canSave = paiements.length > 0 && totalAmount >= order.amount && !isPending;
+  const canSave = paiements.length > 0 && totalAmount >= remainingDu && !isPending;
 
   return (
     <div className="p-4 space-y-4">
@@ -264,7 +269,7 @@ export function DrawerPaymentTab({ order }: Props) {
       {/* Bouton ajout ligne */}
       <button
         onClick={addNewPaiement}
-        disabled={isPending || totalAmount >= order.amount}
+        disabled={isPending || totalAmount >= remainingDu}
         className="w-full py-2.5 px-4 border-2 border-dashed border-[#F17922] rounded-xl text-[#F17922] font-semibold hover:bg-orange-50 transition flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
       >
         <Plus className="w-4 h-4" />
@@ -277,7 +282,7 @@ export function DrawerPaymentTab({ order }: Props) {
         <div className="text-right">
           <span
             className={`text-lg font-bold tabular-nums ${
-              totalAmount >= order.amount ? "text-green-600" : "text-[#F17922]"
+              totalAmount >= remainingDu ? "text-green-600" : "text-[#F17922]"
             }`}
           >
             {formatPrix(totalAmount)}
