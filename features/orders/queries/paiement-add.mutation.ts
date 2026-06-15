@@ -15,12 +15,15 @@ export const usePaiementAddMutation = () => {
 	return useMutation({
 		mutationFn: async (data: {
 			items: { mode: PaiementMode; amount: number; source: string }[],
-			order: OrderTable
+			order: OrderTable,
+			/** Reste réellement dû (total − déjà encaissé). Défaut = total commande. */
+			amountDue?: number,
 		}) => {
-			// Validation des données
+			// Validation : on doit couvrir le RESTE DÛ, pas le total commande
+			// (cas paiement partiel : un acompte a déjà pu être encaissé).
 			const validate = validatePaiementForm(
 				data.items,
-				data.order.amount
+				data.amountDue ?? data.order.amount
 			)
 			if (!validate) {
 				throw new Error("Erreur lors de l'ajout du paiement");

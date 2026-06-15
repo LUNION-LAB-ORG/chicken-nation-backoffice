@@ -131,7 +131,9 @@ export function DrawerPaymentTab({ order }: Props) {
   };
 
   const handleSave = () => {
-    addPaiement({ items: paiements, order: uiOrder });
+    // amountDue = reste dû (déduit des paiements déjà réussis) pour autoriser
+    // les paiements partiels (ex. 500 F restants sur 8 000 F).
+    addPaiement({ items: paiements, order: uiOrder, amountDue: remainingDu });
   };
 
   // (`successPaiements` / `totalEncaisse` / `remainingDu` calculés en amont —
