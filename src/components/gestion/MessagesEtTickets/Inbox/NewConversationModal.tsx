@@ -110,14 +110,14 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       // ✅ Problème 1 & 3 : Filtrage selon le rôle de l'utilisateur
       if (user?.role === 'ADMIN') {
         // Admin : voir tous les utilisateurs
-        usersData = await getAllUsers();
+        usersData = await getAllUsers({ type: 'BACKOFFICE' });
       } else if (user?.restaurant_id && ['MANAGER', 'CAISSIER', 'CALL_CENTER', 'CUISINE'].includes(user.role || '')) {
         // Rôles liés à un restaurant : seulement les utilisateurs du même restaurant
         const { getRestaurantUsers } = await import('@/services/restaurantService');
         usersData = await getRestaurantUsers(user.restaurant_id);
       } else {
         // Autres rôles (COMPTABLE, MARKETING, etc.) : voir tous les utilisateurs
-        usersData = await getAllUsers();
+        usersData = await getAllUsers({ type: 'BACKOFFICE' });
       }
 
       const formattedUsers = usersData

@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { getAllUsers } from "../../../../features/users/services/user.service";
-import { User, UserRole } from "../../../../features/users/types/user.types";
+import { User } from "../../../../features/users/types/user.types";
 import AddMember from "./AddMember";
 import EditMember from "./EditMember";
 import MemberView from "./MemberView";
@@ -128,53 +128,26 @@ export default function Personnel() {
           data = allRestaurantUsers.filter(
             (user) => user.id !== currentUser.id
           ) as User[];
+        } else if (selectedTab === "Tous") {
+          // Tous les utilisateurs (backoffice + équipes restaurant).
+          data = await getAllUsers();
+        } else if (selectedTab === "Back Office") {
+          // Uniquement les utilisateurs de type BACKOFFICE.
+          data = await getAllUsers({ type: "BACKOFFICE" });
         } else {
-          // Pour les autres utilisateurs, on récupère selon l'onglet sélectionné
-          if (selectedTab === "Tous") {
-            // Récupérer tous les users
-            data = await getAllUsers();
-          } else if (selectedTab === "Back Office") {
-            // Récupérer tous les users et filtrer par type BACKOFFICE (EXCLURE les MANAGER)
-            const allUsers = await getAllUsers();
-            data = allUsers.filter(
-              (user) => user.type === "BACKOFFICE" && user.role !== "MANAGER"
+          // Onglet restaurant : UNIQUEMENT les membres de ce restaurant
+          // (plus d'injection des admins, conformément au besoin).
+          let selectedRestaurant = restaurants.find(
+            (r) => r.name === selectedTab
+          );
+          if (!selectedRestaurant) {
+            const trimmedTab = selectedTab.trim();
+            selectedRestaurant = restaurants.find(
+              (r) => r.name.trim() === trimmedTab
             );
-          } else {
-            // Trouver l'ID du restaurant sélectionné
-            let selectedRestaurant = restaurants.find(
-              (r) => r.name === selectedTab
-            );
-
-            // Si pas trouvé, essayer avec trim() pour éliminer les espaces
-            if (!selectedRestaurant) {
-              const trimmedTab = selectedTab.trim();
-              const foundRestaurant = restaurants.find(
-                (r) => r.name.trim() === trimmedTab
-              );
-              if (foundRestaurant) {
-                selectedRestaurant = foundRestaurant;
-              }
-            }
-
-            if (selectedRestaurant?.id) {
-              // Récupérer les users de ce restaurant spécifique
-              const restaurantUsers = await getRestaurantUsers(
-                selectedRestaurant.id
-              );
-
-              // S'assurer que restaurantUsers est un tableau
-              const usersArray = Array.isArray(restaurantUsers)
-                ? restaurantUsers
-                : [];
-
-              // Ajouter les SuperAdmin qui doivent apparaître partout
-              const allUsers = await getAllUsers();
-              const superAdmins = allUsers.filter(
-                (user) => user.role === UserRole.ADMIN
-              );
-
-              data = [...superAdmins, ...usersArray] as User[];
-            }
+          }
+          if (selectedRestaurant?.id) {
+            data = await getAllUsers({ restaurantId: selectedRestaurant.id });
           }
         }
 

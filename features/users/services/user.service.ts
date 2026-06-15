@@ -7,12 +7,29 @@ const USERS_ENDPOINT = '/users';
 /**
  * Récupère tous les utilisateurs
  */
-export const getAllUsers = async (): Promise<User[]> => {
+export const getAllUsers = async (
+  params?: { type?: 'BACKOFFICE' | 'RESTAURANT'; restaurantId?: string }
+): Promise<User[]> => {
   try {
-    return api.get<User[]>(USERS_ENDPOINT, true);
+    const qs = new URLSearchParams();
+    if (params?.type) qs.append('type', params.type);
+    if (params?.restaurantId) qs.append('restaurantId', params.restaurantId);
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return api.get<User[]>(`${USERS_ENDPOINT}${suffix}`, true);
   } catch (error) {
     const userMessage = getHumanReadableError(error);
     throw new Error(userMessage);
+  }
+};
+
+/**
+ * Définit un manager comme « principal » de son restaurant (Restaurant.manager).
+ */
+export const setPrincipalManager = async (userId: string): Promise<void> => {
+  try {
+    return api.patch(`${USERS_ENDPOINT}/${userId}/set-principal-manager`, {}, true);
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
   }
 };
 
