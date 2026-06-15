@@ -4,10 +4,14 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
-import {updateUser, softDeleteUser, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
+import {updateMember, softDeleteUser, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
 import toast from 'react-hot-toast'
 import type { Member } from './MemberView'
 import { useAuthStore } from '../../../../features/users/hook/authStore'
+import { getAllRestaurants, Restaurant } from '@/services/restaurantService'
+
+// Rôles « point de vente » : ils exigent un restaurant de rattachement.
+const STORE_ROLES = ['MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'CUISINE']
 import { formatImageUrl } from '@/utils/imageHelpers'
 import { getHumanReadableError, getPersonnelSuccessMessage, getInfoMessage } from '@/utils/errorMessages'
 import { User } from '../../../../features/users/types/user.types'
@@ -29,6 +33,7 @@ interface UpdateUserData {
   phone: string;
   address: string;
   role: string;
+  restaurant_id?: string;
 }
 
 interface EditMemberProps {
@@ -81,22 +86,48 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
   const [showPasswordSection, setShowPasswordSection] = useState(false)
 
   const roleOptions = useMemo(() => {
-    if (currentUser?.type === 'BACKOFFICE') {
+    if (currentUser?.role === 'ADMIN') {
       return [
         { value: 'ADMIN', label: 'ADMINISTRATEUR' },
         { value: 'MARKETING', label: 'MARKETING' },
+        { value: 'COMPTABLE', label: 'COMPTABLE' },
+        { value: 'CALL_CENTER', label: 'CALL CENTER' },
         { value: 'MANAGER', label: 'MANAGER' },
-        { value: 'COMPTABLE', label: 'COMPTABLE' }
+        { value: 'ASSISTANT_MANAGER', label: 'ASSISTANT MANAGER' },
+        { value: 'CAISSIER', label: 'CAISSIER' },
+        { value: 'CUISINE', label: 'CUISINE' },
       ];
     } else if (currentUser?.role === 'MANAGER') {
       return [
+        { value: 'ASSISTANT_MANAGER', label: 'ASSISTANT MANAGER' },
         { value: 'CAISSIER', label: 'CAISSIER' },
-        { value: 'CALL_CENTER', label: 'CALL CENTER' },
-        { value: 'CUISINE', label: 'CUISINE' }
+        { value: 'CUISINE', label: 'CUISINE' },
       ];
     }
     return [];
   }, [currentUser]);
+
+  // Sélection du restaurant (admin éditant un rôle point de vente).
+  const initialRestaurantId =
+    (typeof (existingMember as { restaurant?: unknown }).restaurant === 'object' &&
+      (existingMember as { restaurant?: { id?: string } }).restaurant?.id) || '';
+  const [restaurantId, setRestaurantId] = useState<string>(initialRestaurantId);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  useEffect(() => {
+    let active = true;
+    getAllRestaurants()
+      .then((list) => { if (active) setRestaurants(list.filter((r) => r.active)); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const isStoreRole = STORE_ROLES.includes(role);
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const needsRestaurantPicker = isStoreRole && isAdmin;
+  const resolvedRestaurantId = isStoreRole
+    ? restaurantId ||
+      (currentUser?.role === 'MANAGER' ? currentUser?.restaurant_id || undefined : undefined)
+    : undefined;
 
   useEffect(() => {
     if (roleOptions.length > 0 && !role) {
@@ -280,10 +311,18 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
         isOwnProfile = true;
       }
 
-      // Vérifier les permissions
-      if (!isOwnProfile) {
-        toast.error('Vous n\'avez pas les droits pour modifier ce profil. Contactez votre administrateur.');
-        setIsLoading(false); // Stop loading
+      // Permissions : l'ADMIN édite n'importe quel membre ; les autres seulement
+      // leur propre profil. (Le backend revérifie : PATCH /users/:id.)
+      if (!isOwnProfile && !isAdmin) {
+        toast.error('Vous n\'avez pas les droits pour modifier ce membre.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Un rôle point de vente exige un restaurant de rattachement.
+      if (isStoreRole && !resolvedRestaurantId) {
+        toast.error('Sélectionnez un restaurant pour ce rôle (point de vente).');
+        setIsLoading(false);
         return;
       }
 
@@ -293,8 +332,9 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
         email: formData.email,
         phone: formData.phone || '',
         address: formData.address || '',
-        role: role
-      }; 
+        role: role,
+        ...(resolvedRestaurantId ? { restaurant_id: resolvedRestaurantId } : {}),
+      };
 
       let updatedUser: User;
 
@@ -306,19 +346,23 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
           phone: baseData.phone,
           address: baseData.address,
           role: baseData.role,
+          ...(resolvedRestaurantId ? { restaurant_id: resolvedRestaurantId } : {}),
           image: imageFile as File
         };
-        
-        updatedUser = await updateUser(existingMember.id, dataWithImage);
+
+        updatedUser = await updateMember(existingMember.id, dataWithImage);
       } else {
-        
-        updatedUser = await updateUser(existingMember.id, baseData);
+
+        updatedUser = await updateMember(existingMember.id, baseData);
       }
 
       toast.success(getPersonnelSuccessMessage('update'));
 
-      // Mettre à jour le store d'authentification avec l'objet utilisateur
-      setUser(updatedUser as LoginResponse);
+      // Ne rafraîchir la SESSION que si l'utilisateur a édité SON propre profil
+      // (sinon on remplacerait l'identité connectée par celle du membre édité).
+      if (isOwnProfile) {
+        setUser(updatedUser as LoginResponse);
+      }
 
       if (onSuccess) {
         onSuccess(updatedUser);
@@ -406,14 +450,37 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
               <Input name="address" value={formData.address} onChange={handleChange}
                 className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700" />
             </div>
-            <div className="relative">
+            <div className="relative" ref={roleDropdownRef}>
               <div className="text-[#595959] text-[15px] mb-1">Rôle</div>
-              <div ref={roleDropdownRef} className="flex items-center border border-[#ECECEC] rounded-lg px-4 h-[44px] cursor-pointer">
-                <span className="flex-1 text-[#71717A] font-semibold">{role || 'Choisissez un rôle'}</span>
-                
-              </div>
-            
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={roleOptions.length === 0}
+                className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] font-semibold disabled:bg-gray-50"
+              >
+                {role && !roleOptions.some((o) => o.value === role) && (
+                  <option value={role}>{role}</option>
+                )}
+                {roleOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
             </div>
+            {needsRestaurantPicker && (
+              <div>
+                <div className="text-[#595959] text-[15px] mb-1">Restaurant</div>
+                <select
+                  value={restaurantId}
+                  onChange={(e) => setRestaurantId(e.target.value)}
+                  className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] font-semibold"
+                >
+                  <option value="">Choisissez un restaurant</option>
+                  {restaurants.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Section mot de passe */}
             <div className="mt-3 border-t border-gray-200 pt-3">
@@ -572,11 +639,35 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
 
             <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
               <label className="text-[#71717A] w-[157px] text-[15px] font-normal">Rôle</label>
-              <div >
-                <span className="flex-1 font-semibold text-slate-700 ">{role}</span> 
-                </div>
-
-                </div>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={roleOptions.length === 0}
+                className="ml-2 flex-1 bg-transparent font-semibold text-slate-700 outline-none h-[40px] cursor-pointer disabled:cursor-default"
+              >
+                {role && !roleOptions.some((o) => o.value === role) && (
+                  <option value={role}>{role}</option>
+                )}
+                {roleOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            {needsRestaurantPicker && (
+              <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
+                <label className="text-[#71717A] w-[157px] text-[15px] font-normal">Restaurant</label>
+                <select
+                  value={restaurantId}
+                  onChange={(e) => setRestaurantId(e.target.value)}
+                  className="ml-2 flex-1 bg-transparent font-semibold text-slate-700 outline-none h-[40px] cursor-pointer"
+                >
+                  <option value="">Choisissez un restaurant</option>
+                  {restaurants.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Section mot de passe pour desktop */}
             <div className="mt-6 border-t border-gray-200 pt-4">

@@ -134,6 +134,32 @@ export const updateUser = async (id: string, data: Partial<Omit<CreateUserDto, '
   }
 };
 
+/**
+ * Met à jour un membre CIBLÉ par son id (admin éditant n'importe quel membre,
+ * ou un utilisateur sur son propre profil) — PATCH /users/:id.
+ * (À ne pas confondre avec `updateUser` qui patch le compte connecté.)
+ */
+export const updateMember = async (
+  id: string,
+  data: Partial<Omit<CreateUserDto, 'image'>> & { image?: File | string }
+): Promise<User> => {
+  const formData = new FormData();
+  if (data.fullname !== undefined) formData.append('fullname', data.fullname);
+  if (data.email !== undefined) formData.append('email', data.email);
+  if (data.phone !== undefined) formData.append('phone', data.phone);
+  if (data.address !== undefined) formData.append('address', data.address);
+  if (data.role !== undefined) formData.append('role', data.role);
+  if (data.restaurant_id !== undefined) formData.append('restaurant_id', data.restaurant_id ?? '');
+  if (data.image) {
+    formData.append('image', typeof data.image === 'string' ? data.image : (data.image as File));
+  }
+  try {
+    return await api.patch<User>(`${USERS_ENDPOINT}/${id}`, formData, true);
+  } catch (error) {
+    throw new Error(validatePersonnelError(error, 'update'));
+  }
+};
+
 export const updateUserJSON = async (id: string, data: Partial<User>): Promise<User> => {
   const cleanData: Partial<User> = {};
 
