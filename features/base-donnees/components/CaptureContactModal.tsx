@@ -2,8 +2,8 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  AlertTriangle,
   CheckCircle2,
+  Info,
   Loader2,
   ScanLine,
   UserPlus,
@@ -124,7 +124,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
         if (active) {
           setDup(
             res.exists && res.prospect
-              ? `Doublon possible : « ${res.prospect.name} » déjà enregistré`
+              ? `Client déjà connu (« ${res.prospect.name} ») — enregistrez cette nouvelle commande normalement.`
               : null,
           );
         }
@@ -329,8 +329,8 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                 Numéro local (10 chiffres) ou international (6–15 chiffres, +225 accepté).
               </p>
               {dup && (
-                <div className="mt-2 flex gap-2 items-center bg-amber-50 text-amber-800 rounded-lg px-3 py-2 text-xs">
-                  <AlertTriangle className="w-3.5 h-3.5 flex-none" />
+                <div className="mt-2 flex gap-2 items-center bg-blue-50 text-blue-700 rounded-lg px-3 py-2 text-xs">
+                  <Info className="w-3.5 h-3.5 flex-none" />
                   {dup}
                 </div>
               )}
