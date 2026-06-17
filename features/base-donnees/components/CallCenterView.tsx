@@ -10,8 +10,13 @@ import {
   useMarkCallMutation,
   useSendCouponMutation,
 } from "../queries/prospect-actions.mutation";
-import { CallQueueItem, CallResult } from "../types/prospect.types";
+import {
+  CallQueueItem,
+  CallResult,
+  SendCouponResult,
+} from "../types/prospect.types";
 import { PLATFORM_META } from "../utils/prospect-ui";
+import { CouponSentModal } from "./CouponSentModal";
 
 function buildScript(name: string, platform: string) {
   const plat = platform === "GLOVO" ? "Glovo" : "Yango";
@@ -33,10 +38,12 @@ function CallCard({
   c,
   markCall,
   sendCoupon,
+  onCouponSent,
 }: {
   c: CallQueueItem;
   markCall: ReturnType<typeof useMarkCallMutation>;
   sendCoupon: ReturnType<typeof useSendCouponMutation>;
+  onCouponSent: (result: SendCouponResult) => void;
 }) {
   const meta = PLATFORM_META[c.platform];
   const isJoint = c.status === "JOINT";
@@ -104,7 +111,9 @@ function CallCard({
       <button
         type="button"
         disabled={!isJoint || couponPending}
-        onClick={() => sendCoupon.mutate(c.id)}
+        onClick={() =>
+          sendCoupon.mutate(c.id, { onSuccess: (res) => onCouponSent(res) })
+        }
         className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold disabled:cursor-not-allowed"
         style={{
           backgroundColor: isJoint ? "#F5A623" : "#e5e7eb",
@@ -136,6 +145,8 @@ export function CallCenterView({ restaurantId }: { restaurantId?: string } = {})
   );
   const markCall = useMarkCallMutation();
   const sendCoupon = useSendCouponMutation();
+  // Résultat du dernier envoi de coupon → ouvre le modal de confirmation.
+  const [couponSent, setCouponSent] = useState<SendCouponResult | null>(null);
 
   const queue = data?.queue ?? [];
   const ind = data?.indicators;
@@ -218,10 +229,17 @@ export function CallCenterView({ restaurantId }: { restaurantId?: string } = {})
               c={c}
               markCall={markCall}
               sendCoupon={sendCoupon}
+              onCouponSent={setCouponSent}
             />
           ))}
         </div>
       )}
+
+      {/* Modal de confirmation : code promo + message envoyé + statut */}
+      <CouponSentModal
+        result={couponSent}
+        onClose={() => setCouponSent(null)}
+      />
     </div>
   );
 }
