@@ -56,6 +56,7 @@ export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
       <LoadScript
         googleMapsApiKey={googleMapsApiKey}
         libraries={libraries}
+        version="quarterly"
         onLoad={handleScriptLoad}
       >
         {children}

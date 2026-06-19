@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   Users,
@@ -155,6 +155,12 @@ export default function StatsClients() {
 
   const [selectedMapRestaurant, setSelectedMapRestaurant] = useState<string | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<string | null>(null);
+  // Google a SUPPRIME le Heatmap Layer en Maps JS API v3.65 : le symbole
+  // existe encore mais son constructeur LEVE une exception → un simple
+  // `if (visualization.HeatmapLayer)` ne suffit pas. On sonde réellement le
+  // constructeur (try/catch) et on ne rend la heatmap que si elle marche,
+  // sinon on dégrade proprement sur les marqueurs (plus de crash de page).
+  const [heatmapSupported, setHeatmapSupported] = useState(false);
 
   const queryParams = {
     ...filters,
@@ -185,6 +191,20 @@ export default function StatsClients() {
 
   // ---- Google Maps ----
   const { isScriptLoaded: mapsLoaded } = useGoogleMaps();
+
+  // Sonde l'API Heatmap une fois le script chargé. Si Google l'a retirée
+  // (v3.65+), le `new ... HeatmapLayer()` lève → on capte et on désactive la
+  // heatmap sans jamais planter la page.
+  useEffect(() => {
+    if (!mapsLoaded) return;
+    try {
+      const probe = new google.maps.visualization.HeatmapLayer({ data: [] });
+      probe.setMap(null);
+      setHeatmapSupported(true);
+    } catch {
+      setHeatmapSupported(false);
+    }
+  }, [mapsLoaded]);
 
   const retentionRate = retention.data?.retentionRate ?? 0;
 
@@ -1500,7 +1520,7 @@ export default function StatsClients() {
                     zoom={12}
                     options={MAP_OPTIONS}
                   >
-                    {heatmapData.length > 0 && (
+                    {heatmapSupported && heatmapData.length > 0 && (
                       <HeatmapLayerF
                         data={heatmapData}
                         options={{
