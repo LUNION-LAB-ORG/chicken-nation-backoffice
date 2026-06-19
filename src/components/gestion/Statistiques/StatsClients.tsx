@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   Users,
@@ -43,16 +43,8 @@ import { GoogleMap, HeatmapLayerF, MarkerF, InfoWindowF } from "@react-google-ma
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import { useDashboardStore } from "@/store/dashboardStore";
 import {
-  useClientsOverviewQuery,
-  useClientsAcquisitionQuery,
-  useClientsRetentionQuery,
-  useTopClientsQuery,
+  useClientsDashboardQuery,
   useInactiveClientsQuery,
-  useClientsByZoneQuery,
-  useLoyaltyDistributionQuery,
-  usePaymentMethodDistributionQuery,
-  useRevenueConcentrationQuery,
-  useBasketComparisonQuery,
 } from "../../../../features/statistics/queries/statistics-clients.query";
 import {
   useClientZonesQuery,
@@ -161,6 +153,10 @@ export default function StatsClients() {
   // constructeur (try/catch) et on ne rend la heatmap que si elle marche,
   // sinon on dégrade proprement sur les marqueurs (plus de crash de page).
   const [heatmapSupported, setHeatmapSupported] = useState(false);
+  // Carte lazy : la section n'est chargée (requêtes zones + restaurants) que
+  // lorsqu'elle entre dans le viewport, via l'IntersectionObserver ci-dessous.
+  const [mapVisible, setMapVisible] = useState(false);
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
   const queryParams = {
     ...filters,
@@ -168,26 +164,42 @@ export default function StatsClients() {
   };
 
   // ---- Queries ----
-  const overview = useClientsOverviewQuery(queryParams);
-  const acquisition = useClientsAcquisitionQuery(queryParams);
-  const retention = useClientsRetentionQuery(queryParams.restaurantId);
-  const topClients = useTopClientsQuery({ ...queryParams, limit: 10 });
+  // 1 SEULE requête agrégée pour 9 sous-stats (au lieu de 9 requêtes séparées).
+  const dashboard = useClientsDashboardQuery(queryParams);
+
+  // Adaptateurs : on réexpose chaque sous-stat au format { data } attendu par le
+  // reste du composant — aucune des ~1300 lignes en dessous n'a besoin de changer.
+  const dashData = dashboard.data;
+  const overview = {
+    data: dashData?.overview,
+    isLoading: dashboard.isLoading,
+    isError: dashboard.isError,
+    refetch: dashboard.refetch,
+  };
+  const acquisition = { data: dashData?.acquisition };
+  const retention = { data: dashData?.retention };
+  const topClients = { data: dashData?.topClients };
+  const byZone = { data: dashData?.byZone };
+  const loyalty = { data: dashData?.loyalty };
+  const paymentMethods = { data: dashData?.paymentMethods };
+  const revenueConcentration = { data: dashData?.revenueConcentration };
+  const basketComparison = { data: dashData?.basketComparison };
+
+  // `inactive` garde son propre contrôle (inactiveDays) → requête séparée.
   const inactive = useInactiveClientsQuery({
     restaurantId: queryParams.restaurantId,
     inactiveDays,
     limit: 100,
   });
-  const byZone = useClientsByZoneQuery({ ...queryParams, limit: 10 });
-  const loyalty = useLoyaltyDistributionQuery(queryParams);
-  const paymentMethods = usePaymentMethodDistributionQuery(queryParams);
-  const revenueConcentration = useRevenueConcentrationQuery(queryParams);
-  const basketComparison = useBasketComparisonQuery(queryParams);
-  const clientZones = useClientZonesQuery(queryParams);
-  const restaurantsLocations = useRestaurantsLocationsQuery();
 
+  // Carte (zones clients + restaurants) = LAZY : ces 2 requêtes lourdes ne
+  // partent QUE lorsque la section carte entre dans le viewport (mapSectionRef).
+  // Si l'utilisateur ne scrolle jamais jusqu'à la carte, elles ne tournent pas.
+  const clientZones = useClientZonesQuery(queryParams, mapVisible);
+  const restaurantsLocations = useRestaurantsLocationsQuery(mapVisible);
 
-  const isLoading = overview.isLoading;
-  const isError = overview.isError;
+  const isLoading = dashboard.isLoading;
+  const isError = dashboard.isError;
 
   // ---- Google Maps ----
   const { isScriptLoaded: mapsLoaded } = useGoogleMaps();
@@ -205,6 +217,26 @@ export default function StatsClients() {
       setHeatmapSupported(false);
     }
   }, [mapsLoaded]);
+
+  // Lazy-load de la carte : on n'active les requêtes zones/restaurants que
+  // lorsque la section approche du viewport (économise 2 requêtes lourdes si
+  // l'utilisateur ne descend jamais jusqu'à la carte).
+  useEffect(() => {
+    if (mapVisible) return;
+    const el = mapSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMapVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [mapVisible]);
 
   const retentionRate = retention.data?.retentionRate ?? 0;
 
@@ -1484,7 +1516,9 @@ export default function StatsClients() {
           {/* SECTION : Zones Clients (Heat Map)        */}
           {/* avec marqueurs restaurants + filtre        */}
           {/* ========================================== */}
-          {clientZones.data && clientZones.data.points.length > 0 && (
+          {/* Sentinelle lazy-load : déclenche les requêtes carte à l'approche */}
+          <div ref={mapSectionRef} aria-hidden className="h-0 w-full" />
+          {mapVisible && clientZones.data && clientZones.data.points.length > 0 && (
             <div className={fullScreen ? "fixed inset-0 z-50 bg-white p-6 overflow-auto" : ""}>
               <StatsChartCard
                 title="Zones Clients"

@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getClientsDashboard,
   getClientsOverview,
   getClientsAcquisition,
   getClientsRetention,
@@ -20,6 +21,7 @@ import {
 // ---- Query Key Factory ----
 export const statsClientsKeys = {
   all: () => ['stats', 'clients'] as const,
+  dashboard: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'dashboard', params] as const,
   overview: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'overview', params] as const,
   acquisition: (params?: ClientsStatsQueryParams) => ['stats', 'clients', 'acquisition', params] as const,
   retention: (restaurantId?: string) => ['stats', 'clients', 'retention', restaurantId] as const,
@@ -34,6 +36,20 @@ export const statsClientsKeys = {
 };
 
 // ---- Hooks ----
+
+/**
+ * Tableau de bord agrégé : 1 requête couvrant 9 sous-stats. À privilégier sur la
+ * page Stats > Clients (au lieu des 9 hooks individuels) pour réduire la latence.
+ */
+export const useClientsDashboardQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsClientsKeys.dashboard(params),
+    queryFn: () => getClientsDashboard(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
 
 export const useClientsOverviewQuery = (params: ClientsStatsQueryParams = {}, enabled = true) =>
   useQuery({

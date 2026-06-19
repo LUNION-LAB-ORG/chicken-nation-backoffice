@@ -13,6 +13,7 @@ import {
   PaymentMethodDistributionResponse,
   RevenueConcentrationResponse,
   BasketComparisonResponse,
+  ClientsDashboardResponse,
 } from '../types/clients-stats.types';
 
 const PERIOD_MAP: Record<string, string> = { lastMonth: 'last_month', lastWeek: 'last_week' };
@@ -27,6 +28,18 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
   }
   const str = qs.toString();
   return str ? `?${str}` : '';
+}
+
+/**
+ * Tableau de bord AGRÉGÉ : overview + acquisition + retention + top + by-zone
+ * + loyalty + payment-methods + revenue-concentration + basket-comparison en
+ * UNE seule requête (au lieu de 9).
+ */
+export async function getClientsDashboard(
+  params: ClientsStatsQueryParams = {},
+): Promise<ClientsDashboardResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<ClientsDashboardResponse>(`/statistics/clients/dashboard${qs}`);
 }
 
 /**

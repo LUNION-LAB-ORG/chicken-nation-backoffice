@@ -189,3 +189,18 @@ export interface BasketComparisonResponse {
   newClientsOrders: number;
   recurringClientsOrders: number;
 }
+
+/**
+ * Réponse agrégée du tableau de bord clients (1 requête au lieu de 9).
+ */
+export interface ClientsDashboardResponse {
+  overview: ClientsOverviewResponse;
+  acquisition: ClientsAcquisitionResponse;
+  retention: ClientsRetentionResponse;
+  topClients: TopClientsResponse;
+  byZone: ClientsByZoneResponse;
+  loyalty: LoyaltyDistributionResponse;
+  paymentMethods: PaymentMethodDistributionResponse;
+  revenueConcentration: RevenueConcentrationResponse;
+  basketComparison: BasketComparisonResponse;
+}
