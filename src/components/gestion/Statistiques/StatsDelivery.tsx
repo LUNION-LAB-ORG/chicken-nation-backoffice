@@ -27,10 +27,7 @@ import {
 } from "recharts";
 import { useDashboardStore } from "@/store/dashboardStore";
 import {
-  useDeliveryOverviewQuery,
-  useDeliveryFeesBreakdownQuery,
-  useDeliveryByZoneQuery,
-  useDeliveryPerformanceQuery,
+  useDeliveryDashboardQuery,
 } from "../../../../features/statistics/queries/statistics-delivery.query";
 import {
   StatsFilters,
@@ -145,10 +142,23 @@ export default function StatsDelivery() {
   };
 
   // ---- Queries ----
-  const overview = useDeliveryOverviewQuery(queryParams);
-  const feesBreakdown = useDeliveryFeesBreakdownQuery(queryParams);
-  const byZone = useDeliveryByZoneQuery({ ...queryParams, limit: 10 });
-  const performance = useDeliveryPerformanceQuery(queryParams);
+  // 1 SEULE requête agrégée pour 4 sous-stats (au lieu de 4 requêtes séparées).
+  const dashboard = useDeliveryDashboardQuery(queryParams);
+  const dashData = dashboard.data;
+  const overview = {
+    data: dashData?.overview,
+    isLoading: dashboard.isLoading,
+    isError: dashboard.isError,
+    refetch: dashboard.refetch,
+  };
+  const performance = {
+    data: dashData?.performance,
+    isLoading: dashboard.isLoading,
+    isError: dashboard.isError,
+    refetch: dashboard.refetch,
+  };
+  const feesBreakdown = { data: dashData?.feesBreakdown };
+  const byZone = { data: dashData?.byZone };
 
   // Stats courses (route + dispatch livreur) — fusionnées ici depuis l'ancienne
   // section bas-de-page de /gestion/courses pour respecter la continuité

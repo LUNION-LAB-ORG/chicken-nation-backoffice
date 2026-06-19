@@ -10,6 +10,7 @@ import {
   SalesTrendResponse,
   ChannelBreakdownResponse,
   PromotionPerformanceResponse,
+  ProductsDashboardResponse,
 } from '../types/products-stats.types';
 
 const PERIOD_MAP: Record<string, string> = { lastMonth: 'last_month', lastWeek: 'last_week' };
@@ -24,6 +25,16 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
   }
   const str = qs.toString();
   return str ? `?${str}` : '';
+}
+
+/**
+ * Tableau de bord AGRÉGÉ produits : 6 sous-stats en UNE requête.
+ */
+export async function getProductsDashboard(
+  params: ProductsStatsQueryParams = {},
+): Promise<ProductsDashboardResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<ProductsDashboardResponse>(`/statistics/products/dashboard${qs}`);
 }
 
 /**

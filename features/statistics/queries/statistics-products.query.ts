@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getProductsDashboard,
   getTopProducts,
   getTopCategories,
   getProductsComparison,
@@ -17,6 +18,7 @@ import {
 // ---- Query Key Factory ----
 export const statsProductsKeys = {
   all: () => ['stats', 'products'] as const,
+  dashboard: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'dashboard', params] as const,
   top: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'top', params] as const,
   topCategories: (params?: ProductsStatsQueryParams) => ['stats', 'products', 'top-categories', params] as const,
   comparison: (params?: ProductsComparisonQueryParams) => ['stats', 'products', 'comparison', params] as const,
@@ -28,6 +30,17 @@ export const statsProductsKeys = {
 };
 
 // ---- Hooks ----
+
+/** Tableau de bord agrégé : 1 requête couvrant 6 sous-stats. */
+export const useProductsDashboardQuery = (params: ProductsStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsProductsKeys.dashboard(params),
+    queryFn: () => getProductsDashboard(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
 
 export const useTopProductsQuery = (params: ProductsStatsQueryParams = {}, enabled = true) =>
   useQuery({

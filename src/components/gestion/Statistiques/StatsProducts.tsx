@@ -30,12 +30,7 @@ import {
 } from "recharts";
 import { useDashboardStore } from "@/store/dashboardStore";
 import {
-  useTopProductsQuery,
-  useTopCategoriesQuery,
-  useProductsByRestaurantQuery,
-  useSalesTrendQuery,
-  useChannelBreakdownQuery,
-  usePromotionPerformanceQuery,
+  useProductsDashboardQuery,
 } from "../../../../features/statistics/queries/statistics-products.query";
 import {
   StatsFilters,
@@ -87,15 +82,22 @@ export default function StatsProducts() {
     restaurantId: filters.restaurantId ?? selectedRestaurantId ?? undefined,
   };
 
-  // ---- Queries existantes ----
-  const topProducts = useTopProductsQuery({ ...queryParams, limit: 10 });
-  const topCategories = useTopCategoriesQuery({ ...queryParams, limit: 8 });
-  const byRestaurant = useProductsByRestaurantQuery(queryParams);
-
-  // ---- Nouvelles queries ----
-  const salesTrend = useSalesTrendQuery(queryParams);
-  const channelBreakdown = useChannelBreakdownQuery(queryParams);
-  const promotionPerf = usePromotionPerformanceQuery(queryParams);
+  // ---- Queries ----
+  // 1 SEULE requête agrégée pour 6 sous-stats (au lieu de 6 requêtes séparées).
+  const dashboard = useProductsDashboardQuery(queryParams);
+  const dashData = dashboard.data;
+  // Adaptateurs { data } : le reste du composant n'a pas besoin de changer.
+  const topProducts = {
+    data: dashData?.topProducts,
+    isLoading: dashboard.isLoading,
+    isError: dashboard.isError,
+    refetch: dashboard.refetch,
+  };
+  const topCategories = { data: dashData?.topCategories, refetch: dashboard.refetch };
+  const byRestaurant = { data: dashData?.byRestaurant };
+  const salesTrend = { data: dashData?.salesTrend };
+  const channelBreakdown = { data: dashData?.channelBreakdown };
+  const promotionPerf = { data: dashData?.promotionPerf };
 
   const isLoading = topProducts.isLoading;
   const isError = topProducts.isError;

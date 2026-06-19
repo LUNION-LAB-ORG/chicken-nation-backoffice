@@ -69,3 +69,11 @@ export interface DeliveryPerformanceResponse {
   averageDelayMinutes: number;
   maxDelayMinutes: number;
 }
+
+/** Réponse agrégée des stats livraison (1 requête au lieu de 4). */
+export interface DeliveryDashboardResponse {
+  overview: DeliveryOverviewResponse;
+  feesBreakdown: DeliveryFeesBreakdownResponse;
+  byZone: DeliveryByZoneResponse;
+  performance: DeliveryPerformanceResponse;
+}

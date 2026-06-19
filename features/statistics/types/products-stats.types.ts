@@ -153,3 +153,13 @@ export interface PromotionPerformanceResponse {
   regularAvgBasket: number;
   promoRevenueShare: number;
 }
+
+/** Réponse agrégée des stats produits (1 requête au lieu de 6). */
+export interface ProductsDashboardResponse {
+  topProducts: TopProductsResponse;
+  topCategories: TopCategoriesResponse;
+  byRestaurant: ProductsByRestaurantResponse;
+  salesTrend: SalesTrendResponse;
+  channelBreakdown: ChannelBreakdownResponse;
+  promotionPerf: PromotionPerformanceResponse;
+}

@@ -5,6 +5,7 @@ import {
   DeliveryFeesBreakdownResponse,
   DeliveryByZoneResponse,
   DeliveryPerformanceResponse,
+  DeliveryDashboardResponse,
 } from '../types/delivery-stats.types';
 
 const PERIOD_MAP: Record<string, string> = { lastMonth: 'last_month', lastWeek: 'last_week' };
@@ -19,6 +20,16 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
   }
   const str = qs.toString();
   return str ? `?${str}` : '';
+}
+
+/**
+ * Tableau de bord AGRÉGÉ livraison : 4 sous-stats en UNE requête.
+ */
+export async function getDeliveryDashboard(
+  params: DeliveryStatsQueryParams = {},
+): Promise<DeliveryDashboardResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<DeliveryDashboardResponse>(`/statistics/delivery/dashboard${qs}`);
 }
 
 /**

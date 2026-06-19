@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getDeliveryDashboard,
   getDeliveryOverview,
   getDeliveryFeesBreakdown,
   getDeliveryByZone,
@@ -10,6 +11,7 @@ import { DeliveryStatsQueryParams } from '../types/delivery-stats.types';
 // ---- Query Key Factory ----
 export const statsDeliveryKeys = {
   all: () => ['stats', 'delivery'] as const,
+  dashboard: (params?: DeliveryStatsQueryParams) => ['stats', 'delivery', 'dashboard', params] as const,
   overview: (params?: DeliveryStatsQueryParams) => ['stats', 'delivery', 'overview', params] as const,
   feesBreakdown: (params?: DeliveryStatsQueryParams) => ['stats', 'delivery', 'fees-breakdown', params] as const,
   byZone: (params?: DeliveryStatsQueryParams) => ['stats', 'delivery', 'by-zone', params] as const,
@@ -17,6 +19,17 @@ export const statsDeliveryKeys = {
 };
 
 // ---- Hooks ----
+
+/** Tableau de bord agrégé : 1 requête couvrant 4 sous-stats. */
+export const useDeliveryDashboardQuery = (params: DeliveryStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsDeliveryKeys.dashboard(params),
+    queryFn: () => getDeliveryDashboard(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
 
 export const useDeliveryOverviewQuery = (params: DeliveryStatsQueryParams = {}, enabled = true) =>
   useQuery({
