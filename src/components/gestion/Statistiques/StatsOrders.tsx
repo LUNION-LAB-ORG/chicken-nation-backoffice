@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import {
   TrendingUp,
@@ -31,13 +31,7 @@ import {
   LabelList,
 } from "recharts";
 import {
-  useOrdersOverviewQuery,
-  useOrdersByChannelQuery,
-  useOrdersProcessingTimeQuery,
-  useLateOrdersQuery,
-  useRestaurantPunctualityQuery,
-  useOrdersByRestaurantAndTypeQuery,
-  useOrdersByRestaurantAndSourceQuery,
+  useOrdersDashboardQuery,
   useOrdersDailyTrendQuery,
   useDailyTrendByRestaurantQuery,
   useInfluenceZonesQuery,
@@ -191,26 +185,61 @@ export default function StatsOrders() {
   const [selectedMetric, setSelectedMetric] = useState<MetricType>("count");
   const [fullScreenInfluence, setFullScreenInfluence] = useState(false);
   const [selectedInfluenceRestaurant, setSelectedInfluenceRestaurant] = useState<string | null>(null);
+  // Carte lazy : chargée seulement quand sa section entre dans le viewport.
+  const [mapVisible, setMapVisible] = useState(false);
+  const mapSectionRef = useRef<HTMLDivElement>(null);
   const queryParams = {
     ...filters,
     restaurantId: filters.restaurantId ?? undefined,
   };
 
   // ---- Queries ----
-  const overview = useOrdersOverviewQuery(queryParams);
-  const byChannel = useOrdersByChannelQuery(queryParams);
-  const processingTime = useOrdersProcessingTimeQuery(queryParams);
-  const lateOrders = useLateOrdersQuery(queryParams);
-  const restoPunctuality = useRestaurantPunctualityQuery(queryParams);
-  const byRestaurantAndType = useOrdersByRestaurantAndTypeQuery(queryParams);
-  const byRestaurantAndSource = useOrdersByRestaurantAndSourceQuery(queryParams);
+  // 1 SEULE requête agrégée pour 7 sous-stats (au lieu de 7 requêtes séparées).
+  const dashboard = useOrdersDashboardQuery(queryParams);
+  const dashData = dashboard.data;
+  // Adaptateurs { data } : le reste du composant n'a pas besoin de changer.
+  const overview = {
+    data: dashData?.overview,
+    isLoading: dashboard.isLoading,
+    isError: dashboard.isError,
+    refetch: dashboard.refetch,
+  };
+  const byChannel = { data: dashData?.byChannel };
+  const processingTime = { data: dashData?.processingTime };
+  const lateOrders = { data: dashData?.lateOrders };
+  const restoPunctuality = { data: dashData?.restaurantPunctuality };
+  const byRestaurantAndType = { data: dashData?.byRestaurantAndType };
+  const byRestaurantAndSource = { data: dashData?.byRestaurantAndSource };
+
+  // Courbes à granularité → requêtes séparées (contrôle `granularity` propre).
   const dailyTrend = useOrdersDailyTrendQuery({ ...queryParams, granularity });
   const trendByRestaurant = useDailyTrendByRestaurantQuery({ ...queryParams, granularity });
-  const influenceZones = useInfluenceZonesQuery(queryParams);
-  const restaurantsLocations = useRestaurantsLocationsQuery();
+
+  // Carte (zones d'influence + restaurants) = LAZY : ne part que quand la section
+  // carte approche du viewport (économise 2 requêtes lourdes sinon).
+  const influenceZones = useInfluenceZonesQuery(queryParams, mapVisible);
+  const restaurantsLocations = useRestaurantsLocationsQuery(mapVisible);
 
   // ---- Google Maps ----
   const { isScriptLoaded: mapsLoaded } = useGoogleMaps();
+
+  // Lazy-load : active les requêtes carte quand la section approche du viewport.
+  useEffect(() => {
+    if (mapVisible) return;
+    const el = mapSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setMapVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [mapVisible]);
 
   const restaurantColorMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -821,7 +850,9 @@ export default function StatsOrders() {
           {/* ========================================== */}
           {/* SECTION : Zones d'influence restaurants    */}
           {/* ========================================== */}
-          {influenceZones.data && influenceZones.data.points.length > 0 && (
+          {/* Sentinelle lazy-load : déclenche les requêtes carte à l'approche */}
+          <div ref={mapSectionRef} aria-hidden className="h-0 w-full" />
+          {mapVisible && influenceZones.data && influenceZones.data.points.length > 0 && (
             <div className={fullScreenInfluence ? "fixed inset-0 z-50 bg-white p-6 overflow-auto" : ""}>
               <StatsChartCard
                 title="Zones d'influence Restaurants"

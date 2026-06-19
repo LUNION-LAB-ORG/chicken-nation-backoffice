@@ -14,6 +14,7 @@ import {
   DailyTrendByRestaurantResponse,
   RestaurantsLocationsResponse,
   InfluenceZonesResponse,
+  OrdersDashboardResponse,
 } from '../types/orders-stats.types';
 
 const PERIOD_MAP: Record<string, string> = { lastMonth: 'last_month', lastWeek: 'last_week' };
@@ -28,6 +29,18 @@ function buildQueryString(params: Record<string, string | number | undefined>): 
   }
   const str = qs.toString();
   return str ? `?${str}` : '';
+}
+
+/**
+ * Tableau de bord AGRÉGÉ : overview + by-channel + processing-time + late +
+ * restaurant-punctuality + by-restaurant-and-type + by-restaurant-and-source
+ * en UNE seule requête (au lieu de 7).
+ */
+export async function getOrdersDashboard(
+  params: OrdersStatsQueryParams = {},
+): Promise<OrdersDashboardResponse> {
+  const qs = buildQueryString(params as Record<string, string | number | undefined>);
+  return api.get<OrdersDashboardResponse>(`/statistics/orders/dashboard${qs}`);
 }
 
 /**

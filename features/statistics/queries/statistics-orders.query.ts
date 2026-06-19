@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  getOrdersDashboard,
   getOrdersOverview,
   getOrdersByChannel,
   getOrdersProcessingTime,
@@ -19,6 +20,7 @@ import { OrdersStatsQueryParams } from '../types/orders-stats.types';
 // ---- Query Key Factory ----
 export const statsOrdersKeys = {
   all: () => ['stats', 'orders'] as const,
+  dashboard: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'dashboard', params] as const,
   overview: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'overview', params] as const,
   byChannel: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'by-channel', params] as const,
   processingTime: (params?: OrdersStatsQueryParams) => ['stats', 'orders', 'processing-time', params] as const,
@@ -35,6 +37,20 @@ export const statsOrdersKeys = {
 };
 
 // ---- Hooks ----
+
+/**
+ * Tableau de bord agrégé : 1 requête couvrant 7 sous-stats. À privilégier sur la
+ * page Stats > Commandes au lieu des 7 hooks individuels.
+ */
+export const useOrdersDashboardQuery = (params: OrdersStatsQueryParams = {}, enabled = true) =>
+  useQuery({
+    queryKey: statsOrdersKeys.dashboard(params),
+    queryFn: () => getOrdersDashboard(params),
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+  });
 
 export const useOrdersOverviewQuery = (params: OrdersStatsQueryParams = {}, enabled = true) =>
   useQuery({

@@ -241,3 +241,16 @@ export interface InfluenceZonesResponse {
   totalOrders: number;
   center: { lat: number; lng: number };
 }
+
+/**
+ * Réponse agrégée des stats commandes (1 requête au lieu de 7).
+ */
+export interface OrdersDashboardResponse {
+  overview: OrdersOverviewResponse;
+  byChannel: OrdersByChannelResponse;
+  processingTime: ProcessingTimeResponse;
+  lateOrders: LateOrdersResponse;
+  restaurantPunctuality: RestaurantPunctualityResponse;
+  byRestaurantAndType: OrdersByRestaurantAndTypeResponse;
+  byRestaurantAndSource: OrdersByRestaurantAndSourceResponse;
+}
