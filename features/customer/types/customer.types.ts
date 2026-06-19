@@ -30,6 +30,9 @@ export interface Customer {
   addresses?: Address[];
   favorites?: Favorite[];
   orders?: Order[];
+  // Compte de commandes renvoyé par la liste (findAll) via Prisma `_count`,
+  // pour éviter de charger toutes les commandes juste pour afficher le total.
+  _count?: { orders: number };
   notification_settings?: NotificationSetting;
   loyalty_points?: LoyaltyPoint[];
   promotion_usages?: PromotionUsage[];

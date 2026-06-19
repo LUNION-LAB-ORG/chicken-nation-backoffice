@@ -119,7 +119,7 @@ export function ClientRow({
               <div>
                 <span className="text-gray-500">Commandes: </span>
                 <span className="font-medium text-gray-900">
-                  {client?.orders?.length || 0}
+                  {client?._count?.orders ?? client?.orders?.length ?? 0}
                 </span>
               </div>
               <div>
@@ -179,7 +179,7 @@ export function ClientRow({
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span className="text-sm text-gray-500">
-          {client?.orders?.length || 0}
+          {client?._count?.orders ?? client?.orders?.length ?? 0}
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
