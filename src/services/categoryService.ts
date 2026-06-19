@@ -12,6 +12,8 @@ export interface Category {
   image?: string;
   productCount?: number;
   private?: boolean;
+  // Compte renvoyé par /categories/get-all (plats actifs), évite le N+1 front.
+  _count?: { dishes: number };
 }
 
 // Interface pour les paramètres de requête avec pagination
@@ -78,31 +80,13 @@ export const getAllCategoriesWithProductCount = async (): Promise<Category[]> =>
       return [];
     }
 
-    // ✅ Calculer le nombre de produits pour chaque catégorie en parallèle
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
-        try {
-          // Récupérer les menus de cette catégorie
-          const menus = await getMenusByCategoryId(category.id);
-          const productCount = menus ? menus.length : 0;
-           
-          return {
-            ...category,
-            productCount
-          };
-        } catch (error) {
-          console.error(`❌ Erreur lors du calcul des produits pour la catégorie ${category.name}:`, error);
-          
-          return {
-            ...category,
-            productCount: 0
-          };
-        }
-      })
-    );
- 
-    return categoriesWithCount;
-    
+    // ✅ PERF : le backend renvoie maintenant `_count.dishes` (plats actifs, même
+    // filtre qu'avant) → plus de N+1 (on ne fait plus 1 GET /categories/:id PAR
+    // catégorie juste pour compter).
+    return categories.map((category) => ({
+      ...category,
+      productCount: category._count?.dishes ?? 0,
+    }));
   } catch (error) {
     console.error('❌ Erreur lors de la récupération des catégories avec calcul des produits:', error);
     throw error;
