@@ -116,8 +116,6 @@ export function useCustomersQuery({
   // ✅ Recherche côté serveur - pas de filtrage côté client
   const customers = data?.data || [];
 
-
-  console.log({ data })
   // ✅ Calculer totalPages si l'API ne le fournit pas
   const totalItems = data?.meta?.totalItems || 0;
   const itemsPerPage = data?.meta?.itemsPerPage || 10;

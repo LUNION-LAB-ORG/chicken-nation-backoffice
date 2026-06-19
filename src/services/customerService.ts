@@ -184,10 +184,11 @@ export async function getCustomers(params: CustomerQuery = {}): Promise<Paginate
       throw new Error('Format de réponse invalide: data.meta manquant');
     }
 
-    // Enrichir les données avec les informations sur les commandes
-    const enrichedData = await enrichCustomersWithOrderInfo(data);
-
-    return enrichedData as PaginatedResponse<Customer>;
+    // PERF : on NE fait PLUS d'enrichissement N+1 (1 requête « 100 commandes »
+    // par client juste pour totalOrders/lastOrderDate). Les seuls consommateurs
+    // (modals Messages/Tickets) n'utilisent pas ces champs, et le backend renvoie
+    // déjà `_count.orders` + la dernière commande si besoin.
+    return data as PaginatedResponse<Customer>;
   } catch (error) {
     throw error;
   }
@@ -281,66 +282,6 @@ export async function getAllCustomers(params: CustomerQuery = {}): Promise<Pagin
     return data as PaginatedResponse<Customer>;
   } catch (error) {
     throw error;
-  }
-}
-
-// Fonction pour enrichir les données des clients avec les informations sur les commandes
-async function enrichCustomersWithOrderInfo(customersData: PaginatedResponse<Customer>): Promise<PaginatedResponse<Customer>> {
-  // ✅ Le backend envoie maintenant toujours un objet avec pagination
-
-  if (!customersData.data || !Array.isArray(customersData.data)) {
-    throw new Error('Format de données invalide: customersData.data manquant ou n\'est pas un tableau');
-  }
-
-  // Enrichir les données des clients
-  const enrichedCustomers = await Promise.all(
-    customersData.data.map(async (customer: Customer) => {
-      return await enrichCustomerWithOrderInfo(customer);
-    })
-  );
-
-  return {
-    ...customersData,
-    data: enrichedCustomers
-  };
-}
-
-// Fonction pour enrichir un client individuel avec ses informations de commande
-async function enrichCustomerWithOrderInfo(customer: Customer): Promise<Customer> {
-  // ✅ Toujours définir les valeurs par défaut d'abord
-  const defaultEnrichment = {
-    ...customer,
-    isConnected: customer.entity_status === 'ACTIVE',
-    totalOrders: 0,
-    lastOrderDate: undefined
-  };
-
-  try {
-    // ✅ Récupérer TOUTES les commandes du client pour avoir le bon total
-    const ordersResponse = await getCustomerOrders(customer.id, { page: 1, limit: 100 });
-
-    // Vérifier si la réponse contient des commandes
-    if (ordersResponse && ordersResponse.data && ordersResponse.data.length > 0) {
-      // Trier les commandes par date pour obtenir la plus récente
-      const sortedOrders = ordersResponse.data.sort((a, b) =>
-        new Date(b.created_at || b.date || 0).getTime() - new Date(a.created_at || a.date || 0).getTime()
-      );
-
-
-      return {
-        ...defaultEnrichment,
-
-        totalOrders: ordersResponse.meta?.total || ordersResponse.data.length,
-
-        lastOrderDate: sortedOrders[0]?.created_at || sortedOrders[0]?.date
-      };
-    } else {
-      // Si le client n'a pas de commandes, retourner les valeurs par défaut
-      return defaultEnrichment;
-    }
-  } catch {
-    // Gérer les erreurs de manière explicite
-    return defaultEnrichment;
   }
 }
 
