@@ -42,17 +42,22 @@ const EXPORT_BY_TAB: Partial<Record<AdminTab, "contacts" | "coupons" | "sales">>
 export default function BaseDonnees() {
   const user = useAuthStore((s) => s.user);
   const can = useAuthStore((s) => s.can);
+  // Le call center a les mêmes droits que l'admin sur ce module ; on l'amène
+  // simplement sur l'onglet « Vérification » par défaut (son flux quotidien).
   const isCallCenter = String(user?.role) === "CALL_CENTER";
 
   // Store-roles (manager / assistant-manager / caissière) : accès au seul onglet
-  // Contacts (lecture) + capture. Les rôles « gestion » (admin / marketing) ont
-  // tous les onglets — détecté via une permission que les store-roles n'ont pas.
+  // Contacts (lecture) + capture. Les rôles « gestion » (admin / marketing /
+  // call center) ont tous les onglets — détecté via une permission que les
+  // store-roles n'ont pas.
   const canManage =
     can(Modules.BASE_DONNEES, Action.REPORT) ||
     can(Modules.BASE_DONNEES, Action.UPDATE) ||
     can(Modules.BASE_DONNEES, Action.EXPORT);
 
-  const [tab, setTab] = useState<AdminTab>("dashboard");
+  const [tab, setTab] = useState<AdminTab>(
+    isCallCenter ? "verification" : "dashboard",
+  );
   const [captureOpen, setCaptureOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
 
@@ -74,18 +79,14 @@ export default function BaseDonnees() {
     ? tab
     : visibleTabs[0].key;
 
-  const exportType = !isCallCenter ? EXPORT_BY_TAB[activeTab] : undefined;
+  const exportType = EXPORT_BY_TAB[activeTab];
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10">
       <DashboardPageHeader
         mode="list"
-        title={isCallCenter ? "Vérification — Call Center" : "Acquisition Glovo/Yango"}
-        subtitle={
-          isCallCenter
-            ? "File d'appels J+1 · conversion en client direct"
-            : "Captation & conversion des clients Glovo / Yango"
-        }
+        title="Acquisition Glovo/Yango"
+        subtitle="Captation & conversion des clients Glovo / Yango"
         actions={[
           ...(exportType && can(Modules.BASE_DONNEES, Action.EXPORT)
             ? [
@@ -109,84 +110,78 @@ export default function BaseDonnees() {
         ]}
       />
 
-      {isCallCenter ? (
-        <div className="mt-4">
-          <CallCenterView />
-        </div>
-      ) : (
-        <HasPermission
-          module={Modules.BASE_DONNEES}
-          action={Action.READ}
-          fallback={
-            <div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">
-              Vous n&apos;avez pas accès à ce module.
-            </div>
-          }
-        >
-          {/* Onglets + filtre restaurant — scroll horizontal sur mobile ; masqués si un seul (store-roles) */}
-          {visibleTabs.length > 1 && (
-            <div className="my-4 flex flex-col sm:flex-row sm:items-center gap-2">
-              <div className="w-full sm:flex-1 overflow-x-auto">
-                <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
-                  {visibleTabs.map((t) => {
-                    const active = activeTab === t.key;
-                    return (
-                      <button
-                        key={t.key}
-                        type="button"
-                        onClick={() => setTab(t.key)}
-                        className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
-                          active
-                            ? "bg-[#F17922] text-white"
-                            : "text-[#71717A] hover:text-gray-700"
-                        }`}
-                      >
-                        <t.Icon className="w-3.5 h-3.5" />
-                        {t.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Filtre restaurant global (tous les onglets + export) */}
-              <div
-                className={`flex items-center gap-2 border rounded-xl px-3 py-1.5 bg-white shrink-0 ${
-                  restaurantId ? "border-[#F17922]" : "border-gray-200"
-                }`}
-              >
-                <Store className={`w-4 h-4 shrink-0 ${restaurantId ? "text-[#F17922]" : "text-gray-400"}`} />
-                <select
-                  value={restaurantId}
-                  onChange={(e) => setRestaurantId(e.target.value)}
-                  className="text-sm bg-transparent outline-none cursor-pointer max-w-[220px] text-gray-700"
-                  title="Filtrer par restaurant"
-                >
-                  <option value="">Tous les restaurants</option>
-                  {restaurants.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          <div className={visibleTabs.length > 1 ? "" : "mt-4"}>
-            {activeTab === "dashboard" && <DashboardView restaurantId={storeFilter} />}
-            {activeTab === "liste" && (
-              <ProspectsList
-                onRowClick={canManage ? setDetailId : undefined}
-                restaurantId={canManage ? storeFilter : undefined}
-              />
-            )}
-            {activeTab === "verification" && <CallCenterView restaurantId={storeFilter} />}
-            {activeTab === "coupons" && <CouponsView restaurantId={storeFilter} />}
-            {activeTab === "ventes" && <SalesView restaurantId={storeFilter} />}
+      <HasPermission
+        module={Modules.BASE_DONNEES}
+        action={Action.READ}
+        fallback={
+          <div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">
+            Vous n&apos;avez pas accès à ce module.
           </div>
-        </HasPermission>
-      )}
+        }
+      >
+        {/* Onglets + filtre restaurant — scroll horizontal sur mobile ; masqués si un seul (store-roles) */}
+        {visibleTabs.length > 1 && (
+          <div className="my-4 flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="w-full sm:flex-1 overflow-x-auto">
+              <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
+                {visibleTabs.map((t) => {
+                  const active = activeTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setTab(t.key)}
+                      className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap flex-shrink-0 ${
+                        active
+                          ? "bg-[#F17922] text-white"
+                          : "text-[#71717A] hover:text-gray-700"
+                      }`}
+                    >
+                      <t.Icon className="w-3.5 h-3.5" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Filtre restaurant global (tous les onglets + export) */}
+            <div
+              className={`flex items-center gap-2 border rounded-xl px-3 py-1.5 bg-white shrink-0 ${
+                restaurantId ? "border-[#F17922]" : "border-gray-200"
+              }`}
+            >
+              <Store className={`w-4 h-4 shrink-0 ${restaurantId ? "text-[#F17922]" : "text-gray-400"}`} />
+              <select
+                value={restaurantId}
+                onChange={(e) => setRestaurantId(e.target.value)}
+                className="text-sm bg-transparent outline-none cursor-pointer max-w-[220px] text-gray-700"
+                title="Filtrer par restaurant"
+              >
+                <option value="">Tous les restaurants</option>
+                {restaurants.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        <div className={visibleTabs.length > 1 ? "" : "mt-4"}>
+          {activeTab === "dashboard" && <DashboardView restaurantId={storeFilter} />}
+          {activeTab === "liste" && (
+            <ProspectsList
+              onRowClick={canManage ? setDetailId : undefined}
+              restaurantId={canManage ? storeFilter : undefined}
+            />
+          )}
+          {activeTab === "verification" && <CallCenterView restaurantId={storeFilter} />}
+          {activeTab === "coupons" && <CouponsView restaurantId={storeFilter} />}
+          {activeTab === "ventes" && <SalesView restaurantId={storeFilter} />}
+        </div>
+      </HasPermission>
 
       <CaptureContactModal
         isOpen={captureOpen}
