@@ -13,6 +13,10 @@ interface RawDishItem {
   available: boolean;
   image?: string;
   hubrise_sku?: string | null;
+  // Champs édités dans la modale supplément — doivent transiter par ce mapper,
+  // sinon le préchargement retombe sur les défauts (« Jamais » + tous les modes).
+  spice_level?: string;
+  available_order_types?: string[];
 }
 
 interface UseDishesQueryParams {
@@ -90,6 +94,8 @@ export function useDishesQuery({
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             hubrise_sku: item.hubrise_sku ?? undefined,
+            spice_level: item.spice_level,
+            available_order_types: item.available_order_types,
           });
         });
       }
@@ -108,6 +114,8 @@ export function useDishesQuery({
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             hubrise_sku: item.hubrise_sku ?? undefined,
+            spice_level: item.spice_level,
+            available_order_types: item.available_order_types,
           });
         });
       }
@@ -126,6 +134,8 @@ export function useDishesQuery({
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
             hubrise_sku: item.hubrise_sku ?? undefined,
+            spice_level: item.spice_level,
+            available_order_types: item.available_order_types,
           });
         });
       }
