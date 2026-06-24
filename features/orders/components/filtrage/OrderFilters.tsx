@@ -4,6 +4,7 @@ import { useDashboardStore } from "@/store/dashboardStore";
 import { OrderStatus, OrderType } from "../../types/order.types";
 import { dateRangeToLocalString } from "../../../../utils/date/format-date";
 import DateRangePicker from "@/components/ui/DateRangePicker";
+import { useAuthStore } from "../../../users/hook/authStore";
 
 export function OrderFilters() {
   const {
@@ -11,6 +12,9 @@ export function OrderFilters() {
     setFilter,
     setPagination,
   } = useDashboardStore();
+  const { user } = useAuthStore();
+  // Seul l'ADMIN voit/filtre les commandes PENDING (cohérent avec le backend).
+  const isAdmin = String(user?.role) === "ADMIN";
 
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -26,7 +30,9 @@ export function OrderFilters() {
 
   const filtragesStatus = [
     { id: "", label: "Tous les statuts", icon: "📋" },
-    { id: OrderStatus.PENDING, label: "En attente", icon: "⏳" },
+    ...(isAdmin
+      ? [{ id: OrderStatus.PENDING, label: "En attente", icon: "⏳" }]
+      : []),
     { id: OrderStatus.ACCEPTED, label: "Nouvelles", icon: "🔔" },
     { id: OrderStatus.IN_PROGRESS, label: "En préparation", icon: "👨‍🍳" },
     { id: OrderStatus.READY, label: "Prêtes", icon: "✅" },
