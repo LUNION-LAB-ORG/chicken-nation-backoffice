@@ -290,7 +290,9 @@ function ItemsBlock({ ui }: { ui: OrderTable }) {
 }
 
 function ItemRow({ item }: { item: OrderTableItem }) {
-  const lineTotal = (item.price || 0) * (item.quantity || 1) + (item.supplementsPrice || 0);
+  // item.price = OrderItem.amount = prix_unitaire × quantité (déjà le total de la
+  // ligne, cf. orderv2.helper.ts). NE PAS re-multiplier par quantity (double-comptage).
+  const lineTotal = (item.price || 0) + (item.supplementsPrice || 0);
   return (
     <li className="flex gap-4">
       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 ring-1 ring-gray-200 shrink-0">

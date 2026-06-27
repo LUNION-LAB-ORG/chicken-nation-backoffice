@@ -111,7 +111,7 @@ export function OrderRow({
             </div>
             <div className="flex justify-between items-center mb-2">
               <div className="text-sm font-bold text-black">
-                {(order.amount - order.tax || 0).toLocaleString()} F
+                {(order.amount || 0).toLocaleString()} F
               </div>
               <OrderStatusBadge status={order.status} />
             </div>
@@ -204,7 +204,7 @@ export function OrderRow({
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span className="text-sm font-medium text-black">
-          {(order.amount - order.tax || 0).toLocaleString()} F
+          {(order.amount || 0).toLocaleString()} F
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">

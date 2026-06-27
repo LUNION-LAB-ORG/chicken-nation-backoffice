@@ -139,6 +139,56 @@ export function DrawerPaymentTab({ order }: Props) {
   // (`successPaiements` / `totalEncaisse` / `remainingDu` calculés en amont —
   //  ils servent aussi au pré-remplissage du formulaire ci-dessus.)
 
+  // Récapitulatif transparent des montants : total TTC, taxe, réellement perçu
+  // (Σ paiements SUCCESS) et écart non perçu. Affiché dans les 2 cas (online/offline)
+  // pour que rien ne soit flou (ex. commande à 124 220 F payée 500 F).
+  const tax = order.tax ?? 0;
+  const paymentSummary = (
+    <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-1.5">
+      <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider mb-1">
+        Récapitulatif paiement
+      </p>
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-600">Total commande (TTC)</span>
+        <span className="font-bold text-gray-900 tabular-nums">{formatPrix(order.amount)}</span>
+      </div>
+      {tax > 0 && (
+        <div className="flex justify-between text-xs">
+          <span className="text-gray-400">dont taxe</span>
+          <span className="text-gray-500 tabular-nums">{formatPrix(tax)}</span>
+        </div>
+      )}
+      <div className="flex justify-between text-sm">
+        <span className="text-gray-600">Réellement perçu</span>
+        <span className="font-bold text-green-700 tabular-nums">{formatPrix(totalEncaisse)}</span>
+      </div>
+      {remainingDu > 0 && (
+        <div className="flex justify-between text-sm border-t border-gray-200 pt-1.5 mt-1.5">
+          <span className="text-red-600 font-medium">Non perçu</span>
+          <span className="font-bold text-red-600 tabular-nums">{formatPrix(remainingDu)}</span>
+        </div>
+      )}
+      <div className="flex justify-between items-center pt-1">
+        <span className="text-[10px] uppercase tracking-wider text-gray-400">Statut</span>
+        <span
+          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+            remainingDu === 0
+              ? "bg-green-100 text-green-700"
+              : totalEncaisse > 0
+                ? "bg-amber-100 text-amber-700"
+                : "bg-red-100 text-red-700"
+          }`}
+        >
+          {remainingDu === 0
+            ? "Intégralement payée"
+            : totalEncaisse > 0
+              ? "Partiellement payée"
+              : "Non payée"}
+        </span>
+      </div>
+    </div>
+  );
+
   // ── Gardes ──────────────────────────────────────────────────────────────
 
   if (order.payment_method !== PaymentMethod.OFFLINE) {
@@ -155,6 +205,7 @@ export function DrawerPaymentTab({ order }: Props) {
             </p>
           </div>
         </div>
+        {paymentSummary}
         <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
       </div>
     );
@@ -200,6 +251,8 @@ export function DrawerPaymentTab({ order }: Props) {
           </p>
         </div>
       )}
+
+      {paymentSummary}
 
       {/* Historique des paiements — toujours affiché si présent */}
       <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
