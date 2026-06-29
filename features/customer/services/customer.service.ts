@@ -59,6 +59,29 @@ export const getAllCustomers = async (query?: CustomerQuery) => {
     }
 };
 
+/**
+ * Export Excel des clients selon les filtres COURANTS (segment/onglet + recherche
+ * + restaurant). Récupère le fichier généré par le backend et déclenche le
+ * téléchargement. Ne renvoie rien — c'est un effet de bord navigateur.
+ */
+export const exportCustomers = async (query?: CustomerQuery) => {
+    const { url, headers } = await prepareRequest(BASE_URL, '/export', query);
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+        throw new Error(`Export impossible (HTTP ${response.status})`);
+    }
+    const blob = await response.blob();
+    const href = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = href;
+    const today = new Date().toISOString().split('T')[0];
+    a.download = `clients-${today}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(href);
+};
+
 export const getCustomerById = async (id: string) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
