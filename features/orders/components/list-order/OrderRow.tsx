@@ -122,8 +122,15 @@ export function OrderRow({
               </div>
             </div>
             <div className="flex justify-between items-center mb-2">
-              <div className="text-sm font-bold text-black">
-                {(order.amount || 0).toLocaleString()} F
+              {/* Montant : payé / total */}
+              <div className="text-sm font-bold">
+                <span className={`tabular-nums ${paidClass}`}>
+                  {paidAmount.toLocaleString()}
+                </span>
+                <span className="text-gray-400 font-medium"> / </span>
+                <span className="tabular-nums text-black">
+                  {(order.amount || 0).toLocaleString()} F
+                </span>
               </div>
               <OrderStatusBadge status={order.status} />
             </div>
@@ -146,9 +153,6 @@ export function OrderRow({
                 </span>
                 <PaymentBadge status={order.paymentStatus} />
               </div>
-              <span className={`text-sm font-medium tabular-nums ${paidClass}`}>
-                {paidAmount > 0 ? `Payé ${paidAmount.toLocaleString()} F` : "—"}
-              </span>
             </div>
             <div className="flex justify-end mt-2">
               <div className="relative">
@@ -217,9 +221,16 @@ export function OrderRow({
           {formatAddress(order.address).short}
         </span>
       </td>
+      {/* MONTANT : payé / total (part payée colorée selon soldé/partiel) */}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium text-black">
-          {(order.amount || 0).toLocaleString()} F
+        <span className="text-sm font-medium">
+          <span className={`tabular-nums ${paidClass}`}>
+            {paidAmount.toLocaleString()}
+          </span>
+          <span className="text-gray-400"> / </span>
+          <span className="tabular-nums text-black">
+            {(order.amount || 0).toLocaleString()} F
+          </span>
         </span>
       </td>
       {/* SOURCE (Auto/Manuel) — déplacée AVANT Paiement */}
@@ -248,12 +259,6 @@ export function OrderRow({
           </span>
           <PaymentBadge status={order.paymentStatus} />
         </div>
-      </td>
-      {/* MONTANT PAYÉ (Σ paiements SUCCESS) — après Paiement */}
-      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className={`text-sm font-medium tabular-nums ${paidClass}`}>
-          {paidAmount > 0 ? `${paidAmount.toLocaleString()} F` : "—"}
-        </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
         <button
