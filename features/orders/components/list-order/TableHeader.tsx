@@ -71,12 +71,6 @@ export function TableHeader({
           scope="col"
           className="whitespace-nowrap py-3 px-3 sm:px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
         >
-          Paiement
-        </th>
-        <th
-          scope="col"
-          className="whitespace-nowrap py-3 px-3 sm:px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-        >
           Source
         </th>
         <th
@@ -84,6 +78,18 @@ export function TableHeader({
           className="whitespace-nowrap py-3 px-3 sm:px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
         >
           Statut
+        </th>
+        <th
+          scope="col"
+          className="whitespace-nowrap py-3 px-3 sm:px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+        >
+          Paiement
+        </th>
+        <th
+          scope="col"
+          className="whitespace-nowrap py-3 px-3 sm:px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+        >
+          Montant payé
         </th>
         <th
           scope="col"

@@ -10,6 +10,7 @@ import { formatAddress } from "../../utils/formatAddress";
 import OrderContextMenu from "./OrderContextMenu";
 import PaymentBadge from "../PaymentBadge";
 import { useOrderActions } from "../../hooks/useOrderActions";
+import { PaiementStatus } from "../../types/paiement.types";
 
 interface OrderRowProps {
   order: OrderTable;
@@ -30,6 +31,17 @@ export function OrderRow({
   onViewDetails,
 }: OrderRowProps) {
   const { handleViewOrderDetails } = useOrderActions();
+
+  // Montant réellement payé = Σ des paiements SUCCESS (cohérent drawer/export).
+  const paidAmount = (order.paiements || [])
+    .filter((p) => p.status === PaiementStatus.SUCCESS)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+  const isFullyPaid = paidAmount > 0 && paidAmount >= (order.amount || 0);
+  const paidClass = isFullyPaid
+    ? "text-green-700"
+    : paidAmount > 0
+      ? "text-amber-600"
+      : "text-gray-400";
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
@@ -134,6 +146,9 @@ export function OrderRow({
                 </span>
                 <PaymentBadge status={order.paymentStatus} />
               </div>
+              <span className={`text-sm font-medium tabular-nums ${paidClass}`}>
+                {paidAmount > 0 ? `Payé ${paidAmount.toLocaleString()} F` : "—"}
+              </span>
             </div>
             <div className="flex justify-end mt-2">
               <div className="relative">
@@ -207,6 +222,21 @@ export function OrderRow({
           {(order.amount || 0).toLocaleString()} F
         </span>
       </td>
+      {/* SOURCE (Auto/Manuel) — déplacée AVANT Paiement */}
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <span
+          className={`font-medium text-sm ${
+            !order.auto ? "bg-amber-100" : "bg-green-100"
+          } px-2 py-1 rounded-full`}
+        >
+          {order.auto ? "Auto" : "Manuel"}
+        </span>
+      </td>
+      {/* STATUT — déplacé AVANT Paiement */}
+      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
+        <OrderStatusBadge status={order.status} />
+      </td>
+      {/* PAIEMENT (canal + badge payé/non payé) */}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <div className="flex items-center gap-1.5">
           <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
@@ -219,17 +249,11 @@ export function OrderRow({
           <PaymentBadge status={order.paymentStatus} />
         </div>
       </td>
+      {/* MONTANT PAYÉ (Σ paiements SUCCESS) — après Paiement */}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span
-          className={`font-medium text-sm ${
-            !order.auto ? "bg-amber-100" : "bg-green-100"
-          } px-2 py-1 rounded-full`}
-        >
-          {order.auto ? "Auto" : "Manuel"}
+        <span className={`text-sm font-medium tabular-nums ${paidClass}`}>
+          {paidAmount > 0 ? `${paidAmount.toLocaleString()} F` : "—"}
         </span>
-      </td>
-      <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <OrderStatusBadge status={order.status} />
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
         <button
