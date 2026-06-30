@@ -7,8 +7,11 @@ import {
   CheckCircle,
   Clock,
   Moon,
+  Plus,
   Send,
   Sunrise,
+  Trash2,
+  Truck,
 } from "lucide-react";
 
 import { useSettingMutation, useSettingsQuery } from "@/hooks/useSettingsQuery";
@@ -47,7 +50,39 @@ interface ISettingSection {
  * sont utilisées si une clé est absente en base — les placeholders ici reflètent
  * ces defaults pour que l'admin voie ce qui s'applique même sans écriture en DB.
  */
+/** Grille de frais par défaut (miroir du backend) — affichée tant qu'aucune n'est en base. */
+const DEFAULT_FEE_TIERS: { maxKm: string; price: string }[] = [
+  { maxKm: "2", price: "1000" },
+  { maxKm: "4", price: "1500" },
+  { maxKm: "5", price: "2000" },
+  { maxKm: "7", price: "2500" },
+  { maxKm: "10", price: "3000" },
+  { maxKm: "12.5", price: "3500" },
+  { maxKm: "14", price: "4000" },
+  { maxKm: "16", price: "4500" },
+  { maxKm: "", price: "5000" },
+];
+
 const SECTIONS: ISettingSection[] = [
+  // ── Section 0 : Calcul des frais de livraison (NOUVEAU) ─────────────────
+  {
+    title: "Calcul des frais de livraison",
+    description:
+      "Mode de calcul du frais facturé au client : zones Turbo et/ou grille distance→prix configurable ci-dessous.",
+    Icon: Truck,
+    fields: [
+      {
+        key: "delivery.turbo_zones_enabled",
+        label: "Utiliser les zones Turbo",
+        placeholder: "1",
+        hint: "Oui : les zones Turbo sont prioritaires (la grille sert de secours si Turbo est indisponible). Non : seule la grille distance→prix ci-dessous est utilisée.",
+        options: [
+          { value: "1", label: "Oui — zones Turbo prioritaires" },
+          { value: "0", label: "Non — grille distance uniquement" },
+        ],
+      },
+    ],
+  },
   // ── Section 1 : Offre & refus (existait déjà) ──────────────────────────
   {
     title: "Offre de course & refus",
@@ -553,12 +588,23 @@ const DeliverySettings: React.FC = () => {
     useSettingsQuery("deliverer.");
   const { data: scheduleSettings, isLoading: isLoadingSchedule } =
     useSettingsQuery("schedule.");
+  const { data: deliverySettings, isLoading: isLoadingDelivery } =
+    useSettingsQuery("delivery.");
   const { mutate: updateSetting, isPending } = useSettingMutation();
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
+  // Grille frais de livraison (distance→prix), éditée en tableau.
+  const [tiers, setTiers] = useState<{ maxKm: string; price: string }[]>([]);
 
-  const isLoading = isLoadingCourse || isLoadingDeliverer || isLoadingSchedule;
+  const updateTier = (idx: number, field: "maxKm" | "price", value: string) =>
+    setTiers((prev) => prev.map((t, i) => (i === idx ? { ...t, [field]: value } : t)));
+  const addTier = () => setTiers((prev) => [...prev, { maxKm: "", price: "" }]);
+  const removeTier = (idx: number) =>
+    setTiers((prev) => prev.filter((_, i) => i !== idx));
+
+  const isLoading =
+    isLoadingCourse || isLoadingDeliverer || isLoadingSchedule || isLoadingDelivery;
 
   // Liste plate des champs pour la boucle de save
   const allFields = useMemo(() => SECTIONS.flatMap((s) => s.fields), []);
@@ -569,33 +615,75 @@ const DeliverySettings: React.FC = () => {
     for (const s of courseSettings ?? []) map[s.key] = s.value;
     for (const s of delivererSettings ?? []) map[s.key] = s.value;
     for (const s of scheduleSettings ?? []) map[s.key] = s.value;
+    for (const s of deliverySettings ?? []) map[s.key] = s.value;
     setValues(map);
-  }, [courseSettings, delivererSettings, scheduleSettings]);
+
+    // Hydrate la grille distance→prix depuis le JSON `delivery.fee_grid`.
+    const gridRaw = (deliverySettings ?? []).find(
+      (s) => s.key === "delivery.fee_grid"
+    )?.value;
+    if (gridRaw) {
+      try {
+        const parsed = JSON.parse(gridRaw) as { maxKm: number | null; price: number }[];
+        setTiers(
+          parsed.map((t) => ({
+            maxKm: t.maxKm == null ? "" : String(t.maxKm),
+            price: String(t.price ?? ""),
+          }))
+        );
+      } catch {
+        setTiers(DEFAULT_FEE_TIERS);
+      }
+    } else {
+      setTiers(DEFAULT_FEE_TIERS);
+    }
+  }, [courseSettings, delivererSettings, scheduleSettings, deliverySettings]);
 
   const handleSave = () => {
     // On ne sauve que les champs non-vides (un champ vide = garder le default backend)
     const dirty = allFields.filter(
       (f) => values[f.key] !== undefined && values[f.key] !== ""
     );
-    if (dirty.length === 0) {
+
+    // Grille frais de livraison → JSON (maxKm vide = palier « au-delà » / null)
+    const gridPayload = tiers
+      .filter((t) => t.price !== "")
+      .map((t) => ({
+        maxKm: t.maxKm === "" ? null : Number(t.maxKm),
+        price: Number(t.price) || 0,
+      }));
+    const saveGrid = gridPayload.length > 0;
+
+    const total = dirty.length + (saveGrid ? 1 : 0);
+    if (total === 0) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       return;
     }
 
-    let remaining = dirty.length;
+    let remaining = total;
+    const done = () => {
+      remaining--;
+      if (remaining <= 0) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    };
+
     for (const field of dirty) {
       updateSetting(
         { key: field.key, value: String(values[field.key]), description: field.label },
+        { onSuccess: done }
+      );
+    }
+    if (saveGrid) {
+      updateSetting(
         {
-          onSuccess: () => {
-            remaining--;
-            if (remaining <= 0) {
-              setSaved(true);
-              setTimeout(() => setSaved(false), 2000);
-            }
-          },
-        }
+          key: "delivery.fee_grid",
+          value: JSON.stringify(gridPayload),
+          description: "Grille frais de livraison (distance→prix)",
+        },
+        { onSuccess: done }
       );
     }
   };
@@ -665,6 +753,80 @@ const DeliverySettings: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* Grille éditable distance→prix (section Calcul des frais) */}
+          {section.title === "Calcul des frais de livraison" && (
+            <div className="mt-5">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Grille distance → prix
+              </label>
+              <p className="text-xs text-gray-400 mb-3 leading-relaxed">
+                Chaque palier facture son prix pour tout trajet dont la distance (à vol
+                d&apos;oiseau) est ≤ « Jusqu&apos;à (km) ». Laisse « Jusqu&apos;à » vide
+                pour le dernier palier (au-delà). Utilisée seule si les zones Turbo sont
+                sur « Non », sinon en secours.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border border-gray-200 rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600">
+                        Jusqu&apos;à (km)
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium text-gray-600">
+                        Prix (FCFA)
+                      </th>
+                      <th className="px-3 py-2 w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tiers.map((tier, idx) => (
+                      <tr key={idx} className="border-t border-gray-100">
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            step="0.5"
+                            min={0}
+                            placeholder="(au-delà)"
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            value={tier.maxKm}
+                            onChange={(e) => updateTier(idx, "maxKm", e.target.value)}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            step="50"
+                            min={0}
+                            className="w-full border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                            value={tier.price}
+                            onChange={(e) => updateTier(idx, "price", e.target.value)}
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => removeTier(idx)}
+                            className="text-gray-400 hover:text-red-500"
+                            title="Supprimer ce palier"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button
+                type="button"
+                onClick={addTier}
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-[#e06816]"
+              >
+                <Plus size={16} /> Ajouter un palier
+              </button>
+            </div>
+          )}
         </section>
       ))}
 
