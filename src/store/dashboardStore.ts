@@ -9,7 +9,7 @@ import { Course } from '../../features/courses/types/course.types';
 // --- TYPES ---
 export type TabKey =
   'dashboard' | 'orders' | 'operations' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
-  | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher'
+  | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher' | 'delivery_offers'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
@@ -61,6 +61,7 @@ export interface DashboardState {
   promos: SectionState;
   loyalty: SectionState;
   voucher: SectionState;
+  delivery_offers: SectionState;
   card_requests: SectionState;
   card_nation: SectionState;
   reviews: SectionState;
@@ -103,7 +104,7 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 
 const SECTION_KEYS: TabKey[] = [
   'dashboard', 'orders', 'operations', 'courses', 'menus', 'marketing', 'news', 'clients', 'inventory',
-  'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'voucher', 'inbox',
+  'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'voucher', 'delivery_offers', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing', 'stats_retention_callbacks',
@@ -140,6 +141,7 @@ export const useDashboardStore = create<DashboardState>()(
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
       voucher: createInitialSectionState(),
+      delivery_offers: createInitialSectionState(),
       card_requests: createInitialSectionState(),
       card_nation: createInitialSectionState(),
       reviews: createInitialSectionState(),

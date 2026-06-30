@@ -143,6 +143,12 @@ export const useGetMenuConfig = (): {
           canAccess: () => can(Modules.PROMOTIONS, Action.READ),
         },
         {
+          id: "fidelisation-delivery_offers",
+          label: "Offres de livraison",
+          icon: Truck,
+          canAccess: () => can(Modules.PROMOTIONS, Action.READ),
+        },
+        {
           id: "fidelisation-card_nation",
           label: "Carte de la nation",
           icon: CreditCard,

@@ -73,6 +73,10 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
+  delivery_offers: dynamic(() => import("@/components/gestion/DeliveryOffers"), {
+    loading: () => <LoadingSpinner />,
+  }),
+
   inbox: dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
     loading: () => <LoadingSpinner />,
   }),
