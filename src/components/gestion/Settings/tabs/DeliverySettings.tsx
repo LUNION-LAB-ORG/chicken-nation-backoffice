@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Ban,
   BarChart3,
   Calendar,
   CheckCircle,
@@ -24,8 +25,8 @@ interface ISettingField {
   step?: string;
   min?: number;
   max?: number;
-  /** `'number'` (default) ou `'text'` pour les settings string (ex: "HH:mm-HH:mm"). */
-  type?: 'number' | 'text';
+  /** `'number'` (default), `'text'` (ex: "HH:mm-HH:mm"), ou `'datetime-local'`. */
+  type?: 'number' | 'text' | 'datetime-local';
   /** Si fourni → rendu en `<select>` (ex: jours de la semaine). */
   options?: { value: string; label: string }[];
 }
@@ -64,6 +65,39 @@ const DEFAULT_FEE_TIERS: { maxKm: string; price: string }[] = [
 ];
 
 const SECTIONS: ISettingSection[] = [
+  // ── Disponibilité de la livraison (coupure temporaire app) ─────────────
+  {
+    title: "Disponibilité de la livraison",
+    description:
+      "Couper temporairement la livraison pour les commandes passées via l'app. Le call center n'est jamais affecté.",
+    Icon: Ban,
+    fields: [
+      {
+        key: "delivery.app_disabled",
+        label: "Désactiver la livraison sur l'app",
+        placeholder: "0",
+        hint: "Oui : les clients de l'app ne peuvent plus commander en livraison (ils gardent « À emporter »). Le call center continue normalement.",
+        options: [
+          { value: "0", label: "Non — livraison active" },
+          { value: "1", label: "Oui — livraison coupée (app)" },
+        ],
+      },
+      {
+        key: "delivery.app_disabled_until",
+        label: "Jusqu'au (réactivation auto)",
+        placeholder: "",
+        type: "datetime-local",
+        hint: "Optionnel. Au-delà de cette date/heure, la livraison se réactive automatiquement. Vide = jusqu'à réactivation manuelle.",
+      },
+      {
+        key: "delivery.app_disabled_message",
+        label: "Message affiché au client",
+        placeholder: "La livraison est temporairement indisponible…",
+        type: "text",
+        hint: "Message montré au client de l'app s'il tente de commander en livraison pendant la coupure.",
+      },
+    ],
+  },
   // ── Section 0 : Calcul des frais de livraison (NOUVEAU) ─────────────────
   {
     title: "Calcul des frais de livraison",
