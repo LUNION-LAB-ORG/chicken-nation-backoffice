@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -380,6 +381,49 @@ function OfferFormModal({
     };
   });
 
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(
+    () =>
+      !!(
+        offer &&
+        (offer.days_of_week.length ||
+          offer.time_start ||
+          offer.time_end ||
+          offer.target_standard ||
+          offer.target_premium ||
+          offer.target_gold ||
+          offer.restaurant_ids.length ||
+          offer.max_usage ||
+          offer.max_usage_per_user ||
+          offer.priority)
+      ),
+  );
+
+  const summary = useMemo(() => {
+    const what =
+      form.type === "FREE_DELIVERY"
+        ? "Livraison gratuite"
+        : form.type === "PERCENTAGE"
+          ? `Frais de livraison −${form.value || 0}%`
+          : `Frais de livraison −${(form.value || 0).toLocaleString()} F`;
+    const where =
+      form.channel === "APP"
+        ? "sur l'app"
+        : form.channel === "CALL_CENTER"
+          ? "au call center"
+          : "app + call center";
+    const cond =
+      form.min_order_amount > 0
+        ? ` dès ${form.min_order_amount.toLocaleString()} F d'achat`
+        : "";
+    const when =
+      form.start_date && form.expiration_date
+        ? ` · du ${new Date(form.start_date).toLocaleDateString()} au ${new Date(
+            form.expiration_date,
+          ).toLocaleDateString()}`
+        : "";
+    return `${what} ${where}${cond}${when}.`;
+  }, [form]);
+
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
@@ -441,154 +485,200 @@ function OfferFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[72vh] overflow-y-auto">
-          <div>
-            <label className={label}>Nom de l&apos;offre</label>
-            <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex: Livraison gratuite weekend" className={input} />
-          </div>
-
-          <div>
-            <label className={label}>Description (optionnel)</label>
-            <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} className={`${input} resize-none`} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Type d&apos;offre</label>
-              <select value={form.type} onChange={(e) => set("type", e.target.value as DeliveryOfferType)} className={`${input} bg-white`}>
-                <option value="FREE_DELIVERY">Livraison gratuite</option>
-                <option value="PERCENTAGE">Réduction (%) du frais</option>
-                <option value="FIXED_AMOUNT">Montant fixe déduit (FCFA)</option>
-              </select>
+        <form onSubmit={handleSubmit} className="max-h-[74vh] overflow-y-auto">
+          <div className="p-6 space-y-6">
+            {/* Résumé en clair */}
+            <div className="rounded-xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm text-[#9a4d12]">
+              {summary}
             </div>
-            {form.type !== "FREE_DELIVERY" && (
+
+            {/* ─────────── L'offre ─────────── */}
+            <section className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                L&apos;offre
+              </h3>
               <div>
-                <label className={label}>Valeur {form.type === "PERCENTAGE" ? "(%)" : "(FCFA)"}</label>
-                <input type="number" value={form.value || ""} onChange={(e) => set("value", Number(e.target.value))} min={0} max={form.type === "PERCENTAGE" ? 100 : undefined} className={input} />
+                <label className={label}>Nom de l&apos;offre</label>
+                <input type="text" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="Ex: Livraison gratuite weekend" className={input} />
               </div>
-            )}
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>Type d&apos;offre</label>
+                  <select value={form.type} onChange={(e) => set("type", e.target.value as DeliveryOfferType)} className={`${input} bg-white`}>
+                    <option value="FREE_DELIVERY">Livraison gratuite</option>
+                    <option value="PERCENTAGE">Réduction (%) du frais</option>
+                    <option value="FIXED_AMOUNT">Montant fixe déduit (FCFA)</option>
+                  </select>
+                </div>
+                {form.type !== "FREE_DELIVERY" && (
+                  <div>
+                    <label className={label}>Valeur {form.type === "PERCENTAGE" ? "(%)" : "(FCFA)"}</label>
+                    <input type="number" value={form.value || ""} onChange={(e) => set("value", Number(e.target.value))} min={0} max={form.type === "PERCENTAGE" ? 100 : undefined} className={input} />
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className={label}>Description (optionnel)</label>
+                <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} className={`${input} resize-none`} />
+              </div>
+            </section>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Canal</label>
-              <select value={form.channel} onChange={(e) => set("channel", e.target.value as DeliveryOfferChannel)} className={`${input} bg-white`}>
-                <option value="APP">App uniquement</option>
-                <option value="CALL_CENTER">Call center uniquement</option>
-                <option value="BOTH">Les deux</option>
-              </select>
-            </div>
-            <div>
-              <label className={label}>Montant min. commande (FCFA)</label>
-              <input type="number" value={form.min_order_amount || ""} onChange={(e) => set("min_order_amount", Number(e.target.value))} min={0} step={100} placeholder="0 = aucune condition" className={input} />
-            </div>
-          </div>
+            <div className="border-t border-gray-100" />
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Date de début</label>
-              <input type="datetime-local" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} className={input} />
-            </div>
-            <div>
-              <label className={label}>Date de fin</label>
-              <input type="datetime-local" value={form.expiration_date} onChange={(e) => set("expiration_date", e.target.value)} className={input} />
-            </div>
-          </div>
+            {/* ─────────── Application ─────────── */}
+            <section className="space-y-4">
+              <h3 className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                Application
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>Canal</label>
+                  <select value={form.channel} onChange={(e) => set("channel", e.target.value as DeliveryOfferChannel)} className={`${input} bg-white`}>
+                    <option value="APP">App uniquement</option>
+                    <option value="CALL_CENTER">Call center uniquement</option>
+                    <option value="BOTH">Les deux</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={label}>Montant min. commande (FCFA)</label>
+                  <input type="number" value={form.min_order_amount || ""} onChange={(e) => set("min_order_amount", Number(e.target.value))} min={0} step={100} placeholder="0 = aucune condition" className={input} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={label}>Date de début</label>
+                  <input type="datetime-local" value={form.start_date} onChange={(e) => set("start_date", e.target.value)} className={input} />
+                </div>
+                <div>
+                  <label className={label}>Date de fin</label>
+                  <input type="datetime-local" value={form.expiration_date} onChange={(e) => set("expiration_date", e.target.value)} className={input} />
+                </div>
+              </div>
+            </section>
 
-          {/* Jours + créneau */}
-          <div>
-            <label className={label}>Jours concernés (vide = tous)</label>
-            <div className="flex flex-wrap gap-2">
-              {DAYS.map((d) => (
-                <button
-                  type="button"
-                  key={d.key}
-                  onClick={() => toggleArray("days_of_week", d.key)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
-                    form.days_of_week.includes(d.key)
-                      ? "bg-[#F17922] text-white border-[#F17922]"
-                      : "bg-white text-gray-600 border-gray-200"
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={label}>Heure de début (optionnel)</label>
-              <input type="time" value={form.time_start} onChange={(e) => set("time_start", e.target.value)} className={input} />
-            </div>
-            <div>
-              <label className={label}>Heure de fin (optionnel)</label>
-              <input type="time" value={form.time_end} onChange={(e) => set("time_end", e.target.value)} className={input} />
-            </div>
-          </div>
+            <div className="border-t border-gray-100" />
 
-          {/* Ciblage fidélité */}
-          <div>
-            <label className={label}>Niveaux fidélité ciblés (aucun = tous)</label>
-            <div className="flex gap-3">
-              {([
-                ["target_standard", "Standard"],
-                ["target_premium", "Premium"],
-                ["target_gold", "Gold"],
-              ] as const).map(([key, lbl]) => (
-                <label key={key} className="flex items-center gap-1.5 text-sm text-gray-700">
-                  <input type="checkbox" checked={form[key]} onChange={(e) => set(key, e.target.checked)} />
-                  {lbl}
-                </label>
-              ))}
-            </div>
-          </div>
+            {/* ─────────── Conditions avancées (repliable) ─────────── */}
+            <section>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((s) => !s)}
+                className="flex items-center justify-between w-full text-left"
+              >
+                <span className="text-xs font-bold uppercase tracking-wide text-gray-400">
+                  Conditions avancées
+                  <span className="ml-2 normal-case font-normal text-gray-400">
+                    ciblage, jours, créneaux, limites — optionnel
+                  </span>
+                </span>
+                <ChevronDown size={18} className={`text-gray-400 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />
+              </button>
 
-          {/* Restaurants */}
-          <div>
-            <label className={label}>Restaurants ciblés (aucun = tous)</label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2">
-              {restaurants.map((r) => (
-                <button
-                  type="button"
-                  key={r.id}
-                  onClick={() => toggleArray("restaurant_ids", r.id)}
-                  className={`px-2.5 py-1 rounded-lg text-xs border ${
-                    form.restaurant_ids.includes(r.id)
-                      ? "bg-orange-50 text-[#F17922] border-[#F17922]"
-                      : "bg-white text-gray-600 border-gray-200"
-                  }`}
-                >
-                  {r.name}
-                </button>
-              ))}
-            </div>
-          </div>
+              {showAdvanced && (
+                <div className="space-y-5 mt-5">
+                  {/* Restaurants */}
+                  <div>
+                    <label className={label}>Restaurants ciblés (aucun = tous)</label>
+                    <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                      {restaurants.map((r) => (
+                        <button
+                          type="button"
+                          key={r.id}
+                          onClick={() => toggleArray("restaurant_ids", r.id)}
+                          className={`px-2.5 py-1 rounded-lg text-xs border ${
+                            form.restaurant_ids.includes(r.id)
+                              ? "bg-orange-50 text-[#F17922] border-[#F17922]"
+                              : "bg-white text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {r.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-          {/* Limites d'usage + priorité */}
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className={label}>Usages max (global)</label>
-              <input type="number" value={form.max_usage ?? ""} onChange={(e) => set("max_usage", e.target.value ? Number(e.target.value) : undefined)} min={1} placeholder="∞" className={input} />
-            </div>
-            <div>
-              <label className={label}>Max / client</label>
-              <input type="number" value={form.max_usage_per_user ?? ""} onChange={(e) => set("max_usage_per_user", e.target.value ? Number(e.target.value) : undefined)} min={0} placeholder="∞" className={input} />
-            </div>
-            <div>
-              <label className={label}>Priorité</label>
-              <input type="number" value={form.priority || ""} onChange={(e) => set("priority", Number(e.target.value))} placeholder="0" className={input} />
-            </div>
-          </div>
+                  {/* Jours */}
+                  <div>
+                    <label className={label}>Jours concernés (vide = tous)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {DAYS.map((d) => (
+                        <button
+                          type="button"
+                          key={d.key}
+                          onClick={() => toggleArray("days_of_week", d.key)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
+                            form.days_of_week.includes(d.key)
+                              ? "bg-[#F17922] text-white border-[#F17922]"
+                              : "bg-white text-gray-600 border-gray-200"
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => set("is_active", !form.is_active)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${form.is_active ? "bg-[#F17922]" : "bg-gray-300"}`}
-            >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0"}`} />
-            </button>
-            <span className="text-sm text-gray-700">{form.is_active ? "Active" : "Inactive"}</span>
+                  {/* Créneau horaire */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={label}>Heure de début (optionnel)</label>
+                      <input type="time" value={form.time_start} onChange={(e) => set("time_start", e.target.value)} className={input} />
+                    </div>
+                    <div>
+                      <label className={label}>Heure de fin (optionnel)</label>
+                      <input type="time" value={form.time_end} onChange={(e) => set("time_end", e.target.value)} className={input} />
+                    </div>
+                  </div>
+
+                  {/* Ciblage fidélité */}
+                  <div>
+                    <label className={label}>Niveaux fidélité ciblés (aucun = tous)</label>
+                    <div className="flex gap-4">
+                      {([
+                        ["target_standard", "Standard"],
+                        ["target_premium", "Premium"],
+                        ["target_gold", "Gold"],
+                      ] as const).map(([key, lbl]) => (
+                        <label key={key} className="flex items-center gap-1.5 text-sm text-gray-700">
+                          <input type="checkbox" checked={form[key]} onChange={(e) => set(key, e.target.checked)} />
+                          {lbl}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Limites d'usage + priorité */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className={label}>Usages max (global)</label>
+                      <input type="number" value={form.max_usage ?? ""} onChange={(e) => set("max_usage", e.target.value ? Number(e.target.value) : undefined)} min={1} placeholder="∞" className={input} />
+                    </div>
+                    <div>
+                      <label className={label}>Max / client</label>
+                      <input type="number" value={form.max_usage_per_user ?? ""} onChange={(e) => set("max_usage_per_user", e.target.value ? Number(e.target.value) : undefined)} min={0} placeholder="∞" className={input} />
+                    </div>
+                    <div>
+                      <label className={label}>Priorité</label>
+                      <input type="number" value={form.priority || ""} onChange={(e) => set("priority", Number(e.target.value))} placeholder="0" className={input} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Statut */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => set("is_active", !form.is_active)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${form.is_active ? "bg-[#F17922]" : "bg-gray-300"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.is_active ? "translate-x-5" : "translate-x-0"}`} />
+              </button>
+              <span className="text-sm text-gray-700">{form.is_active ? "Offre active" : "Offre inactive"}</span>
+            </div>
           </div>
         </form>
 
