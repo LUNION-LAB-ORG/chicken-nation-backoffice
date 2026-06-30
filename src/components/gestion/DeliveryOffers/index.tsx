@@ -33,6 +33,7 @@ import {
 } from "../../../../features/delivery_offers/types/delivery-offer.types";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 import { toast } from "react-hot-toast";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 
 const TYPE_LABEL: Record<DeliveryOfferType, string> = {
   FREE_DELIVERY: "Livraison gratuite",
@@ -76,7 +77,7 @@ export default function DeliveryOffers() {
     return q;
   }, [query, search, filterActive]);
 
-  const { data, isLoading } = useDeliveryOffersQuery(effectiveQuery);
+  const { data, isLoading, isFetching } = useDeliveryOffersQuery(effectiveQuery);
   const { data: stats } = useDeliveryOfferStatsQuery();
   const createM = useCreateDeliveryOfferMutation();
   const updateM = useUpdateDeliveryOfferMutation();
@@ -88,36 +89,46 @@ export default function DeliveryOffers() {
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10 space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#F17922] flex items-center gap-2">
-            <Truck size={22} /> Offres de livraison
-          </h1>
-          <p className="text-sm text-gray-500">
-            Promotions sur les frais de livraison (gratuite, réduction…).
-          </p>
+      {/* Header (aligné sur les autres pages) */}
+      <DashboardPageHeader
+        mode="list"
+        title="Offres de livraison"
+        subtitle="Promotions sur les frais de livraison (gratuite, réduction…)."
+        searchConfig={{
+          placeholder: "Rechercher une offre...",
+          value: search,
+          realTimeSearch: true,
+          onSearch: (v: string) => {
+            setSearch(v);
+            setQuery((p) => ({ ...p, page: 1 }));
+          },
+        }}
+        actions={[
+          {
+            label: "Nouvelle offre",
+            onClick: () => setShowCreate(true),
+            variant: "primary" as const,
+            icon: Plus,
+          },
+        ]}
+      />
+
+      {/* Stats rapides */}
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+          <div className="w-2 h-2 rounded-full bg-green-500" />
+          <span>
+            {stats?.active ?? 0} active{(stats?.active ?? 0) > 1 ? "s" : ""}
+          </span>
         </div>
-        <button
-          onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-[#F17922] text-white text-sm font-semibold rounded-xl hover:bg-[#d96810]"
-        >
-          <Plus size={16} /> Nouvelle offre
-        </button>
+        <div className="flex items-center gap-1.5 text-sm text-gray-600">
+          <Truck size={14} />
+          <span>{stats?.total ?? 0} au total</span>
+        </div>
       </div>
 
-      {/* Stats + filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setQuery((p) => ({ ...p, page: 1 }));
-          }}
-          placeholder="Rechercher une offre..."
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-        />
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex bg-gray-100 rounded-lg p-0.5">
           {(["all", "active", "inactive"] as const).map((v) => (
             <button
@@ -126,49 +137,59 @@ export default function DeliveryOffers() {
                 setFilterActive(v);
                 setQuery((p) => ({ ...p, page: 1 }));
               }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md ${
-                filterActive === v ? "bg-white shadow-sm text-gray-900" : "text-gray-600"
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                filterActive === v
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
               }`}
             >
               {v === "all" ? "Toutes" : v === "active" ? "Actives" : "Inactives"}
             </button>
           ))}
         </div>
-        <span className="text-sm text-gray-500 whitespace-nowrap">
-          {stats?.active ?? 0} active(s) / {stats?.total ?? 0}
-        </span>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Nom</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Offre</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Canal</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase hidden md:table-cell">Période</th>
-                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Statut</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Actions</th>
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Nom</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Offre</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Canal</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Période</th>
+                <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-4 py-12 text-center">
-                    <RefreshCw size={16} className="animate-spin mx-auto text-gray-400" />
+                    <div className="flex items-center justify-center gap-2 text-gray-500">
+                      <RefreshCw size={16} className="animate-spin" />
+                      <span>Chargement...</span>
+                    </div>
                   </td>
                 </tr>
               ) : offers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
-                    Aucune offre de livraison
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2 text-gray-400">
+                      <Truck size={32} />
+                      <p className="text-sm">Aucune offre de livraison</p>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 offers.map((o) => (
-                  <tr key={o.id} className="hover:bg-gray-50">
+                  <tr
+                    key={o.id}
+                    className={`hover:bg-gray-50/50 transition-colors ${
+                      isFetching ? "opacity-60" : ""
+                    }`}
+                  >
                     <td className="px-4 py-3 font-medium text-gray-900">{o.name}</td>
                     <td className="px-4 py-3">
                       <span className="inline-block px-2 py-0.5 rounded-full bg-orange-50 text-[#F17922] font-semibold text-xs">
@@ -176,17 +197,20 @@ export default function DeliveryOffers() {
                       </span>
                       <span className="ml-2 text-xs text-gray-400">{TYPE_LABEL[o.type]}</span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{CHANNEL_LABEL[o.channel]}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">
-                      {new Date(o.start_date).toLocaleDateString()} →{" "}
-                      {new Date(o.expiration_date).toLocaleDateString()}
+                    <td className="px-4 py-3 text-gray-600 hidden md:table-cell">{CHANNEL_LABEL[o.channel]}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <div className="text-xs text-gray-600">
+                        <div>{new Date(o.start_date).toLocaleDateString()}</div>
+                        <div className="text-gray-400">au {new Date(o.expiration_date).toLocaleDateString()}</div>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
                           o.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                         }`}
                       >
+                        <span className={`w-1.5 h-1.5 rounded-full ${o.is_active ? "bg-green-500" : "bg-gray-400"}`} />
                         {o.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
@@ -195,7 +219,7 @@ export default function DeliveryOffers() {
                         <button
                           onClick={() => toggleM.mutate(o.id)}
                           title={o.is_active ? "Désactiver" : "Activer"}
-                          className="p-1.5 hover:bg-gray-100 rounded-lg"
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         >
                           {o.is_active ? (
                             <ToggleRight size={18} className="text-green-600" />
@@ -203,10 +227,10 @@ export default function DeliveryOffers() {
                             <ToggleLeft size={18} className="text-gray-400" />
                           )}
                         </button>
-                        <button onClick={() => setEditing(o)} title="Modifier" className="p-1.5 hover:bg-gray-100 rounded-lg">
+                        <button onClick={() => setEditing(o)} title="Modifier" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                           <Pencil size={16} className="text-gray-500" />
                         </button>
-                        <button onClick={() => setDeleting(o)} title="Supprimer" className="p-1.5 hover:bg-red-50 rounded-lg">
+                        <button onClick={() => setDeleting(o)} title="Supprimer" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
                           <Trash2 size={16} className="text-red-500" />
                         </button>
                       </div>
@@ -217,29 +241,49 @@ export default function DeliveryOffers() {
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-500">
-          Page {meta?.page ?? 1} / {meta?.totalPages ?? 1}
-        </span>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setQuery((p) => ({ ...p, page: Math.max(1, (p.page ?? 1) - 1) }))}
-            disabled={(meta?.page ?? 1) <= 1}
-            className="px-3 py-2 border rounded-lg disabled:opacity-50"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={() => setQuery((p) => ({ ...p, page: (p.page ?? 1) + 1 }))}
-            disabled={(meta?.page ?? 1) >= (meta?.totalPages ?? 1)}
-            className="px-3 py-2 border rounded-lg disabled:opacity-50"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+        {/* Pagination */}
+        {meta && meta.totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50/50">
+            <span className="text-sm text-gray-600">
+              {meta.total} résultat{meta.total > 1 ? "s" : ""} - Page {meta.page} sur {meta.totalPages}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setQuery((p) => ({ ...p, page: Math.max(1, meta.page - 1) }))}
+                disabled={meta.page <= 1}
+                className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              {Array.from({ length: Math.min(meta.totalPages, 5) }, (_, i) => {
+                let pageNum: number;
+                if (meta.totalPages <= 5) pageNum = i + 1;
+                else if (meta.page <= 3) pageNum = i + 1;
+                else if (meta.page >= meta.totalPages - 2) pageNum = meta.totalPages - 4 + i;
+                else pageNum = meta.page - 2 + i;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setQuery((p) => ({ ...p, page: pageNum }))}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                      pageNum === meta.page ? "bg-[#F17922] text-white" : "hover:bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setQuery((p) => ({ ...p, page: meta.page + 1 }))}
+                disabled={meta.page >= meta.totalPages}
+                className="p-1.5 rounded-lg hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Modals */}
