@@ -11,6 +11,7 @@ import { generateOrderReport } from "../lib/pdf/order-report-generator";
 import {
   exportReportOrdersToExcel,
   exportDeliveryPivotExcel,
+  exportDeliveriesExcel,
   exportRestaurantPdf,
   exportMarketingReportPdf,
   getAllOrders,
@@ -180,6 +181,45 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     }
   };
 
+  // Export détaillé des livraisons (frais base/remise/facturé + infos pour Turbo).
+  const handleExportDeliveries = async () => {
+    const startDate = !filters?.startDate
+      ? startOfMonth(new Date())
+      : typeof filters?.startDate === "string"
+      ? new Date(filters?.startDate as string)
+      : (filters?.startDate as Date);
+
+    const endDate = !filters?.endDate
+      ? new Date()
+      : typeof filters?.endDate === "string"
+      ? new Date(filters?.endDate as string)
+      : (filters?.endDate as Date);
+
+    setIsExporting(true);
+    setIsOpen(false);
+
+    try {
+      await exportDeliveriesExcel({
+        restaurantId: selectedRestaurantId,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        type: filters?.type ? (filters?.type as OrderType) : undefined,
+        status: filters?.status ? (filters?.status as OrderStatus) : undefined,
+        auto: filters?.source
+          ? filters?.source === "auto"
+            ? true
+            : false
+          : undefined,
+      });
+      toast.success("Export livraisons (Turbo) téléchargé avec succès");
+    } catch (error) {
+      console.error("Error exporting deliveries:", error);
+      toast.error("Erreur lors de l'exportation des livraisons");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const handleExportRestaurantPdf = async () => {
     if (!selectedRestaurantId) {
       toast.error("Veuillez sélectionner un restaurant pour générer ce rapport");
@@ -329,6 +369,17 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             >
               <Truck size={18} className="text-blue-600" />
               <span>Livraisons / Restaurant</span>
+            </button>
+
+            <div className="border-t border-gray-100" />
+
+            {/* Bouton Export Livraisons détaillé (rapprochement Turbo) */}
+            <button
+              onClick={handleExportDeliveries}
+              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+            >
+              <Truck size={18} className="text-[#F17922]" />
+              <span>Livraisons (Turbo)</span>
             </button>
 
             <div className="border-t border-gray-100" />

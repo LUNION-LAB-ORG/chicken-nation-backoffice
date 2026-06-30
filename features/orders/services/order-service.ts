@@ -262,6 +262,36 @@ export const exportDeliveryPivotExcel = async (query: OrderQuery) => {
     }
 };
 
+// Export des livraisons (frais base/remise/facturé + infos pour rapprochement Turbo).
+export const exportDeliveriesExcel = async (query: OrderQuery) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/export-deliveries', query);
+        const response = await fetch(url, { method: 'GET', headers });
+
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({}));
+            throw new Error(error.message || 'Échec du téléchargement de l\'export livraisons');
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+
+        const contentDisposition = response.headers.get('Content-Disposition');
+        const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
+        const filename = filenameMatch?.[1] || `livraisons-turbo-${new Date().getTime()}.xlsx`;
+
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
 export const exportMarketingReportPdf = async (query: OrderQuery) => {
     try {
         const STATS_URL = API_URL + '/statistics/marketing';
