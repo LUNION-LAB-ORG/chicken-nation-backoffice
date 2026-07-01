@@ -36,8 +36,9 @@ export const SOUND_RULES: SoundRulesConfig[] = [
     {
         id: "OVERDUE_ORDERS_CHANNEL",
         src: '/musics/ding-dong.mp3',
-        mode: 'repeat',
-        interval: 5000,
+        // Commande en retard : on alerte UNE SEULE FOIS (au passage en retard), pas en boucle.
+        // Le son se réarme quand la file de retards se vide puis se re-remplit.
+        mode: 'once',
         condition: (s: NotificationState, ctx: SoundContext) => {
             if (!ctx.user) return false;
             if (s.overdueOrders.length > 0) {

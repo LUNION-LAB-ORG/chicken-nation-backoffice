@@ -13,7 +13,10 @@ class SoundManager {
 
     play(condition?: () => boolean) {
         if (typeof window === 'undefined') return;
-        if (this.isPlaying && this.config.mode === 'repeat') return;
+        // Anti-re-jeu pour LES DEUX modes : le moteur rappelle play() à chaque changement de
+        // store tant que la condition est vraie. Sans ce garde, un son `once` se rejouerait à
+        // chaque tick. Il ne se réarme qu'après un stop() (condition redevenue fausse).
+        if (this.isPlaying) return;
 
         this.audio = new Audio(this.config.src);
         this.audio.currentTime = 0;
