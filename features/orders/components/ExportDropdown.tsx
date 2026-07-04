@@ -3,18 +3,14 @@
 import { useDashboardStore } from "@/store/dashboardStore";
 import { startOfMonth } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileText, ChevronDown, Store, TrendingUp, Truck } from "lucide-react";
+import { FileText, ChevronDown, TrendingUp, Truck } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { dateRangeToLocalString } from "../../../utils/date/format-date";
-import { generateOrderReport } from "../lib/pdf/order-report-generator";
 import {
   exportReportOrdersToExcel,
   exportDeliveryPivotExcel,
   exportDeliveriesExcel,
-  exportRestaurantPdf,
   exportMarketingReportPdf,
-  getAllOrders,
 } from "../services/order-service";
 import { OrderStatus, OrderType } from "../types/order.types";
 
@@ -50,58 +46,6 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const handleExportPDF = async () => {
-    const startDate = !filters?.startDate
-      ? startOfMonth(new Date())
-      : typeof filters?.startDate === "string"
-      ? new Date(filters?.startDate as string)
-      : (filters?.startDate as Date);
-
-    const endDate = !filters?.endDate
-      ? new Date()
-      : typeof filters?.endDate === "string"
-      ? new Date(filters?.endDate as string)
-      : (filters?.endDate as Date);
-
-    setIsExporting(true);
-    setIsOpen(false);
-
-    try {
-      const result = await getAllOrders({
-        restaurantId: selectedRestaurantId,
-        pagination: false,
-        page: pagination.page,
-        reference: filters?.search as string,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-        type: filters?.type ? (filters?.type as OrderType) : undefined,
-        status: filters?.status ? (filters?.status as OrderStatus) : undefined,
-        auto: filters?.source
-          ? filters?.source === "auto"
-            ? true
-            : false
-          : undefined,
-      });
-
-      const orders = result.data;
-
-      if (!orders || orders.length === 0) {
-        toast.error("Aucune commande à exporter");
-        return;
-      }
-      const date =
-        startDate && endDate ? dateRangeToLocalString(startDate, endDate) : "";
-
-      await generateOrderReport(orders, date);
-      toast.success("Rapport PDF généré avec succès");
-    } catch (error) {
-      console.error("[v0] Error generating PDF:", error);
-      toast.error("Erreur lors de la génération du PDF");
-    } finally {
-      setIsExporting(false);
-    }
-  };
 
   // Fonction exemple pour l'export Excel (à implémenter)
   const handleExportExcel = async () => {
@@ -220,42 +164,6 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
     }
   };
 
-  const handleExportRestaurantPdf = async () => {
-    if (!selectedRestaurantId) {
-      toast.error("Veuillez sélectionner un restaurant pour générer ce rapport");
-      return;
-    }
-
-    const startDate = !filters?.startDate
-      ? startOfMonth(new Date())
-      : typeof filters?.startDate === "string"
-      ? new Date(filters?.startDate as string)
-      : (filters?.startDate as Date);
-
-    const endDate = !filters?.endDate
-      ? new Date()
-      : typeof filters?.endDate === "string"
-      ? new Date(filters?.endDate as string)
-      : (filters?.endDate as Date);
-
-    setIsExporting(true);
-    setIsOpen(false);
-
-    try {
-      await exportRestaurantPdf({
-        restaurantId: selectedRestaurantId,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-      toast.success("Rapport restaurant PDF téléchargé avec succès");
-    } catch (error) {
-      console.error("Error exporting restaurant PDF:", error);
-      toast.error("Erreur lors de la génération du rapport restaurant");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   const handleExportMarketingPdf = async () => {
     const startDate = !filters?.startDate
       ? startOfMonth(new Date())
@@ -340,17 +248,6 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             transition={{ duration: 0.2 }}
             className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
           >
-            {/* Bouton Export PDF */}
-            <button
-              onClick={handleExportPDF}
-              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
-            >
-              <FileText size={18} className="text-red-600" />
-              <span>Exporter en PDF</span>
-            </button>
-
-            <div className="border-t border-gray-100" />
-
             {/* Bouton Export Excel */}
             <button
               onClick={handleExportExcel}
@@ -380,17 +277,6 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
             >
               <Truck size={18} className="text-[#F17922]" />
               <span>Livraisons (Turbo)</span>
-            </button>
-
-            <div className="border-t border-gray-100" />
-
-            {/* Bouton Rapport Restaurant PDF */}
-            <button
-              onClick={handleExportRestaurantPdf}
-              className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
-            >
-              <Store size={18} className="text-orange-600" />
-              <span>Rapport Restaurant</span>
             </button>
 
             <div className="border-t border-gray-100" />
