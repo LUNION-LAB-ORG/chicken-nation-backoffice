@@ -188,6 +188,27 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
             )
           )}
 
+          {/* Annuler la commande — ADMIN, QUEL QUE SOIT le statut (sauf déjà
+              annulée). Réutilise le modal d'annulation (gère le message de
+              remboursement si payé). Le backend passe la commande en CANCELLED,
+              renseigne cancelled_at / cancelled_by / cancelled_reason et
+              décrémente l'usage promo, et autorise l'annulation depuis n'importe
+              quel statut pour un ADMIN (allowCancelFromAnyStatus). Non affiché
+              pour les NOUVELLE : « Refuser » couvre déjà ce cas. */}
+          {isAdmin && isAccepted && apiStatus !== OrderStatus.CANCELLED && (
+            <button
+              type="button"
+              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-red-50 cursor-pointer"
+              onClick={() => {
+                handleToggleOrderModal(order, "to_cancel");
+                onClose();
+              }}
+            >
+              <X size={16} />
+              <span>Annuler la commande</span>
+            </button>
+          )}
+
           {/* Supprimer — ADMIN uniquement (via DELETE permission) */}
           <HasPermission module={Modules.COMMANDES} action={Action.DELETE}>
             <button
