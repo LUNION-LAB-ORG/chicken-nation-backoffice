@@ -88,17 +88,58 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const openInboxConversation = useDashboardStore(
     (s) => s.openInboxConversation
   );
+  const setActiveTab = useDashboardStore((s) => s.setActiveTab);
+  const setFilter = useDashboardStore((s) => s.setFilter);
 
+  /**
+   * Clic sur une notification : on la marque LUE puis on redirige vers la page
+   * concernée, en appliquant le filtre qui isole la donnée de la notification.
+   * - Nouveau message  → inbox, conversation ouverte
+   * - Commande         → page Commandes filtrée sur la référence
+   * - Nouveau client   → page Clients filtrée sur le client
+   * - Sinon            → détail de la notification (comportement existant)
+   */
   const handleNotificationClick = async (notification: Notification) => {
     setIsOpen(false); // Fermer le dropdown
-    // Deep-link : si la notification porte une conversation (nouveau message),
-    // on redirige directement vers l'inbox sur cette conversation.
-    const data = (notification as { data?: { conversationId?: string } }).data;
+    if (!notification.is_read) markAsRead(notification.id);
+
+    const data = (notification as {
+      data?: {
+        kind?: string;
+        conversationId?: string;
+        reference?: string;
+        order_id?: string;
+        search?: string;
+      };
+    }).data;
+
+    // Nouveau message → conversation de l'inbox
     if (data?.conversationId) {
-      if (!notification.is_read) markAsRead(notification.id);
       openInboxConversation(data.conversationId);
       return;
     }
+
+    // Commande → liste des commandes filtrée sur la référence (on neutralise
+    // les autres filtres pour que la commande soit visible quel que soit
+    // l'état courant de la page).
+    if (data?.kind === "order" || data?.reference || data?.order_id) {
+      if (data?.reference) {
+        setFilter("orders", "search", data.reference);
+        setFilter("orders", "type", "");
+        setFilter("orders", "status", "");
+        setFilter("orders", "source", "");
+      }
+      setActiveTab("orders");
+      return;
+    }
+
+    // Nouveau client → page Clients filtrée sur le nom/téléphone
+    if (data?.kind === "new_customer") {
+      if (data?.search) setFilter("clients", "search", data.search);
+      setActiveTab("clients");
+      return;
+    }
+
     // Sinon, comportement existant : ouvrir le détail de la notification.
     setSelectedNotification(notification);
     setIsModalOpen(true);

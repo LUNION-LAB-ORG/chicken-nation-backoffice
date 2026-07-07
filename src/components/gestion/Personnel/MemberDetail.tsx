@@ -48,6 +48,29 @@ function getAvatarUrl(member: Member) {
   return `${API_BASE_URL}/${member.image}`;
 }
 
+/** Ligne label / valeur — même pattern que les sections du détail Livreurs. */
+const Row: React.FC<{ label: string; value: React.ReactNode }> = ({
+  label,
+  value,
+}) => (
+  <div className="flex flex-row items-start justify-between py-2 border-b border-[#F4F4F5] last:border-b-0">
+    <p className="text-sm text-[#71717A]">{label}</p>
+    <p className="text-sm text-[#18181B] font-semibold text-right max-w-[60%] break-words">
+      {value}
+    </p>
+  </div>
+);
+
+/**
+ * Page détail d'un membre du personnel — layout 2 colonnes, même langage que
+ * la page détail Livreurs (LivreurDetails).
+ *
+ * - Colonne gauche (3/5) : Profil + Coordonnées
+ * - Colonne droite (2/5) : Affectation + Actions admin
+ *
+ * Le bouton retour est géré par le header du module (DashboardPageHeader).
+ * Les modals restants sont des CONFIRMATIONS uniquement.
+ */
 const MemberDetail: React.FC<MemberDetailProps> = ({
   member,
   onEdit,
@@ -86,139 +109,166 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
     }
   };
 
-  const info: Array<{ label: string; value: string }> = [
-    { label: "E-mail", value: member.email || "—" },
-    { label: "Téléphone", value: member.phone || "Non renseigné" },
-    { label: "Adresse", value: member.address || "Non renseignée" },
-    { label: "Restaurant", value: restaurantName || "Back Office" },
-  ];
-
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      {/* En-tête identité */}
-      <div className="bg-white border border-[#E4E4E7] rounded-2xl overflow-hidden">
-        <div className="bg-[#FFF6E9] px-6 py-6 flex flex-col sm:flex-row sm:items-center gap-4">
-          <Image
-            src={getAvatarUrl(member)}
-            alt={member.fullname}
-            width={80}
-            height={80}
-            className="w-20 h-20 rounded-full border-2 border-white shadow-sm object-cover bg-white shrink-0"
-            unoptimized={!member.image || member.image.startsWith("/icons/")}
-          />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-[#5D5C5C] truncate">
-                {member.fullname}
-              </h2>
-              {member.isPrincipal && (
-                <span className="inline-flex items-center gap-1 bg-[#FDF3D6] text-[#9A7008] text-[11px] font-bold px-2 py-0.5 rounded-full">
-                  <Star size={12} /> Manager principal
-                </span>
+    <>
+      <div className="bg-white rounded-xl min-h-screen shadow-sm mt-4">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-12">
+          {/* Colonne gauche : Profil + Coordonnées */}
+          <div className="md:w-3/5 p-4 sm:p-6 h-auto">
+            {/* Profil */}
+            <div className="mb-6">
+              <p className="text-[18px] font-medium text-[#F17922] mb-4">Profil</p>
+              <div className="flex items-start gap-5">
+                <div className="w-28 h-28 flex-shrink-0">
+                  <Image
+                    src={getAvatarUrl(member)}
+                    alt={member.fullname}
+                    width={112}
+                    height={112}
+                    className="w-28 h-28 rounded-full object-cover bg-[#FFF6E9] border border-[#F17922]/20"
+                    unoptimized={!member.image || member.image.startsWith("/icons/")}
+                  />
+                </div>
+                <div className="flex-1 min-w-0 pt-2">
+                  <h1 className="text-2xl font-semibold text-[#18181B]">
+                    {member.fullname}
+                  </h1>
+                  <p className="text-sm text-[#71717A] mt-1 break-words">
+                    {member.email}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#7A3502] bg-[#FBDBA7]">
+                      {ROLE_LABELS[member.role] ?? member.role}
+                    </span>
+                    <span
+                      className={
+                        isSuspended
+                          ? "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#EF4444] bg-[#EF4444]/15"
+                          : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#22C55E] bg-[#22C55E]/15"
+                      }
+                    >
+                      {isSuspended ? "Suspendu" : "Actif"}
+                    </span>
+                    {member.isPrincipal && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#9A7008] bg-[#FDF3D6]">
+                        <Star size={12} /> Manager principal
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Coordonnées */}
+            <div className="mb-6">
+              <p className="text-[18px] font-medium text-[#F17922] mb-2">
+                Coordonnées
+              </p>
+              <Row label="E-mail" value={member.email || "—"} />
+              <Row label="Téléphone" value={member.phone || "—"} />
+              <Row label="Adresse" value={member.address || "—"} />
+            </div>
+          </div>
+
+          {/* Colonne droite : Affectation + Actions */}
+          <div className="md:w-2/5 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto">
+            {/* Affectation */}
+            <div className="mb-6">
+              <p className="text-[18px] font-medium text-[#F17922] mb-2">
+                Affectation
+              </p>
+              <Row
+                label="Restaurant"
+                value={restaurantName || "Back Office"}
+              />
+              <Row label="Rôle" value={ROLE_LABELS[member.role] ?? member.role} />
+              {member.role === "MANAGER" && (
+                <Row
+                  label="Manager principal"
+                  value={member.isPrincipal ? "Oui" : "Non"}
+                />
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2 mt-2">
-              <span className="bg-[#FBDBA7] text-[#7A3502] text-xs font-bold px-3 py-1 rounded-full">
-                {ROLE_LABELS[member.role] ?? member.role}
-              </span>
-              <span
-                className={
-                  isSuspended
-                    ? "bg-[#FDECEA] text-[#C0392B] text-xs font-bold px-3 py-1 rounded-full"
-                    : "bg-[#E5F9EB] text-[#1E8E5A] text-xs font-bold px-3 py-1 rounded-full"
-                }
-              >
-                {isSuspended ? "Suspendu" : "Actif"}
-              </span>
-            </div>
-          </div>
-        </div>
 
-        {/* Informations */}
-        <div className="px-6 py-5">
-          <div className="text-[#F17922] text-sm font-semibold mb-3">
-            Informations
-          </div>
-          <dl className="divide-y divide-[#F1F3F5]">
-            {info.map((row) => (
-              <div
-                key={row.label}
-                className="flex flex-col sm:flex-row sm:items-center py-2.5 gap-0.5 sm:gap-4"
-              >
-                <dt className="text-[#9796A1] text-sm sm:w-40 shrink-0">
-                  {row.label}
-                </dt>
-                <dd className="text-[#232323] font-semibold text-sm break-words">
-                  {row.value}
-                </dd>
+            {/* Actions admin */}
+            {!isReadOnly && (
+              <div className="mb-6">
+                <p className="text-[18px] font-medium text-[#F17922] mb-3">
+                  Actions
+                </p>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    disabled={busy}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#F17922] rounded-lg hover:bg-[#e06816] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Modifier
+                  </button>
+
+                  <ResetPasswordButton
+                    userId={member.id}
+                    label="Réinitialiser le mot de passe"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#F17922] border border-[#F17922] rounded-lg hover:bg-orange-50 cursor-pointer"
+                  />
+
+                  {canSetPrincipal && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        run(
+                          () => setPrincipalManager(member.id),
+                          "Manager principal défini"
+                        )
+                      }
+                      disabled={busy}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#9A7008] border border-[#E5C55B] rounded-lg hover:bg-[#FDF3D6]/60 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Star className="w-4 h-4" />
+                      Définir comme manager principal
+                    </button>
+                  )}
+
+                  {isSuspended ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        run(() => restoreUser(member.id), "Utilisateur restauré")
+                      }
+                      disabled={busy}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Restaurer le compte
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirm("suspend")}
+                      disabled={busy}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#F59E0B] border border-[#F59E0B] rounded-lg hover:bg-[#F59E0B]/10 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Ban className="w-4 h-4" />
+                      Suspendre
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => setConfirm("delete")}
+                    disabled={busy}
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Supprimer définitivement
+                  </button>
+                </div>
               </div>
-            ))}
-          </dl>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* Barre d'actions */}
-      {!isReadOnly && (
-        <div className="mt-4 bg-white border border-[#E4E4E7] rounded-2xl px-4 py-4 flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={onEdit}
-            disabled={busy}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-[#F17922] text-white text-sm font-medium rounded-xl hover:bg-orange-600 transition-colors cursor-pointer disabled:opacity-60"
-          >
-            <Pencil size={16} /> Modifier
-          </button>
-
-          <ResetPasswordButton userId={member.id} />
-
-          {canSetPrincipal && (
-            <button
-              type="button"
-              onClick={() =>
-                run(
-                  () => setPrincipalManager(member.id),
-                  "Manager principal défini"
-                )
-              }
-              disabled={busy}
-              className="inline-flex items-center gap-2 px-5 py-2 border border-[#F17922] text-[#F17922] text-sm font-medium rounded-xl hover:bg-orange-50 transition-colors cursor-pointer disabled:opacity-60"
-            >
-              <Star size={16} /> Définir principal
-            </button>
-          )}
-
-          {isSuspended ? (
-            <button
-              type="button"
-              onClick={() =>
-                run(() => restoreUser(member.id), "Utilisateur restauré")
-              }
-              disabled={busy}
-              className="inline-flex items-center gap-2 px-5 py-2 border border-[#1E8E5A] text-[#1E8E5A] text-sm font-medium rounded-xl hover:bg-green-50 transition-colors cursor-pointer disabled:opacity-60"
-            >
-              <RotateCcw size={16} /> Restaurer
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirm("suspend")}
-              disabled={busy}
-              className="inline-flex items-center gap-2 px-5 py-2 border border-[#F17922] text-[#F17922] text-sm font-medium rounded-xl hover:bg-orange-50 transition-colors cursor-pointer disabled:opacity-60"
-            >
-              <Ban size={16} /> Suspendre
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setConfirm("delete")}
-            disabled={busy}
-            className="inline-flex items-center gap-2 px-5 py-2 bg-red-600 text-white text-sm font-medium rounded-xl hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-60 sm:ml-auto"
-          >
-            <Trash2 size={16} /> Supprimer définitivement
-          </button>
-        </div>
-      )}
 
       {/* Confirmations (seuls modals conservés) */}
       <MemberRemoveModal
@@ -240,7 +290,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
           }
         }}
       />
-    </div>
+    </>
   );
 };
 

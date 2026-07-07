@@ -7,7 +7,7 @@ import {
 } from "@/services/restaurantService";
 import { getHumanReadableError } from "@/utils/errorMessages";
 import { useDashboardStore } from "@/store/dashboardStore";
-import { ChevronLeft } from "lucide-react";
+import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
@@ -274,20 +274,25 @@ export default function Personnel() {
         </>
       ) : (
         <>
-          {/* Barre de retour — seulement sur la page détail (édition/création
-              ont leur propre en-tête avec fermeture). */}
-          {view === "view" && (
-            <div className="flex items-center gap-3 mb-4">
-              <button
-                type="button"
-                onClick={backToList}
-                className="inline-flex items-center gap-1 text-[#F17922] hover:text-orange-600 font-medium text-sm cursor-pointer"
-              >
-                <ChevronLeft size={18} /> Retour
-              </button>
-              <span className="text-[#5D5C5C] font-semibold">Détail du membre</span>
-            </div>
-          )}
+          {/* Header unifié (pattern LivreursHeader) : titre + bouton retour. */}
+          <div className="-mt-10">
+            <DashboardPageHeader
+              mode="view"
+              gradient={true}
+              title={
+                view === "view"
+                  ? selectedUser?.fullname || "Détail du membre"
+                  : view === "edit"
+                  ? "Modifier le membre"
+                  : "Créer un membre"
+              }
+              onBack={
+                view === "edit" && selectedUser
+                  ? () => openDetail(selectedUser)
+                  : backToList
+              }
+            />
+          </div>
 
           {view === "view" && selectedUser && (
             <MemberDetail

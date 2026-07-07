@@ -6,10 +6,17 @@ import UserCredentialsModal from "./UserCredentialsModal";
 
 interface ResetPasswordButtonProps {
     userId: string;
+    /** Classes du bouton déclencheur (permet d'harmoniser avec la page appelante). */
+    className?: string;
+    label?: string;
 }
 
 
-export default function ResetPasswordButton({ userId }: ResetPasswordButtonProps) {
+export default function ResetPasswordButton({
+    userId,
+    className = "px-6 py-2 bg-[#F17922] cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-[#F17922]/80 transition-colors duration-200",
+    label = "Réinitialiser mon mot de passe",
+}: ResetPasswordButtonProps) {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [resetUserCredentials, setResetUserCredentials] = useState<{ email: string; password: string } | null>(null);
@@ -48,9 +55,9 @@ export default function ResetPasswordButton({ userId }: ResetPasswordButtonProps
             {/* Bouton pour ouvrir le premier modal */}
             <button
                 onClick={() => setShowWarningModal(true)}
-                className="px-6 py-2 bg-[#F17922] cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-[#F17922]/80 transition-colors duration-200"
+                className={className}
             >
-                Réinitialiser mon mot de passe
+                {label}
             </button>
 
             {/* Premier Modal - Avertissement */}

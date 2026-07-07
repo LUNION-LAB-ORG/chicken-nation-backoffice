@@ -417,17 +417,19 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
 
   return (
     <div className={asPage
-      ? "w-full max-w-3xl mx-auto"
+      ? "w-full"
       : "fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-2 md:p-4"}>
       <div className={asPage
-        ? "bg-white rounded-2xl shadow-sm border border-[#E4E4E7] w-full p-0 overflow-hidden flex flex-col"
+        ? "bg-white rounded-xl shadow-sm mt-4 w-full p-0 overflow-hidden flex flex-col"
         : "bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col"}>
-        {/* Header */}
-        <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
-          <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">{asPage ? 'Modifier le membre' : 'Modifier votre profil'}</h2>
-          <Image src="/icons/close.png" width={20} height={20} alt="Fermer" onClick={onCancel}
-            className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-4xl font-bold" />
-        </div>
+        {/* Header — en mode page, le titre + retour vivent dans DashboardPageHeader. */}
+        {!asPage && (
+          <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
+            <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">Modifier votre profil</h2>
+            <Image src="/icons/close.png" width={20} height={20} alt="Fermer" onClick={onCancel}
+              className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-4xl font-bold" />
+          </div>
+        )}
         {/* MOBILE */}
         <form onSubmit={handleSubmit} className="block md:hidden w-full flex-1 overflow-y-auto">
           <div className="px-4 pt-4 pb-6 flex flex-col gap-3">
