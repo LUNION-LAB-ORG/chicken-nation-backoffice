@@ -5,11 +5,9 @@ import {
   InfiniteData,
 } from "@tanstack/react-query";
 import { NotificationAPI, Notification } from "@/services/notificationService";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { SOCKET_URL } from "@/config";
-import toast from "react-hot-toast";
-import { useDashboardStore } from "@/store/dashboardStore";
 
 interface UseNotificationsQueryProps {
   userId: string;
@@ -98,7 +96,7 @@ export const useNotificationsQuery = ({
   );
 
 
-  const handleNewNotification = (payload?: any) => {
+  const handleNewNotification = () => {
     queryClient.invalidateQueries({
       queryKey: ["notifications", userId],
     });
@@ -112,43 +110,6 @@ export const useNotificationsQuery = ({
       audioRef.current.play().catch((error) => {
         console.error("Erreur de lecture audio", error);
       });
-    }
-
-    // Toast in-app (coin de l'écran). Au clic → redirection vers la page concernée
-    // (ex. conversation de l'inbox via data.conversationId).
-    const title: string | undefined = payload?.title;
-    const message: string | undefined = payload?.message;
-    const data = (payload?.data ?? {}) as { conversationId?: string; deep_link?: string };
-    if (title || message) {
-      toast.custom(
-        (t) =>
-          React.createElement(
-            "div",
-            {
-              onClick: () => {
-                if (data.conversationId) {
-                  useDashboardStore.getState().openInboxConversation(data.conversationId);
-                }
-                toast.dismiss(t.id);
-              },
-              className:
-                "cursor-pointer bg-white shadow-lg rounded-xl border border-gray-200 px-4 py-3 max-w-sm hover:bg-gray-50 transition-colors",
-            },
-            React.createElement(
-              "div",
-              { className: "text-sm font-semibold text-gray-900" },
-              title || "Notification"
-            ),
-            message
-              ? React.createElement(
-                  "div",
-                  { className: "text-xs text-gray-600 mt-0.5 line-clamp-2" },
-                  message
-                )
-              : null
-          ),
-        { duration: 6000 }
-      );
     }
   };
 

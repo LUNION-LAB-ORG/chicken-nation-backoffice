@@ -8,6 +8,7 @@ import { fr } from "date-fns/locale";
 import NotificationModal from "./NotificationModal";
 import { useNotificationsQuery } from "@/hooks/useNotificationsQuery";
 import { useNotificationStatsQuery } from "@/hooks/useNotificationStatsQuery";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -84,10 +85,23 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     return filteredNotifications.filter((n) => !n.is_read).length;
   }, [filteredNotifications]);
 
+  const openInboxConversation = useDashboardStore(
+    (s) => s.openInboxConversation
+  );
+
   const handleNotificationClick = async (notification: Notification) => {
+    setIsOpen(false); // Fermer le dropdown
+    // Deep-link : si la notification porte une conversation (nouveau message),
+    // on redirige directement vers l'inbox sur cette conversation.
+    const data = (notification as { data?: { conversationId?: string } }).data;
+    if (data?.conversationId) {
+      if (!notification.is_read) markAsRead(notification.id);
+      openInboxConversation(data.conversationId);
+      return;
+    }
+    // Sinon, comportement existant : ouvrir le détail de la notification.
     setSelectedNotification(notification);
     setIsModalOpen(true);
-    setIsOpen(false); // Fermer le dropdown
   };
 
   // Récupérer la notification live du store pour le modal
