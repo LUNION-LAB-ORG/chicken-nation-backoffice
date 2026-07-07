@@ -6,6 +6,8 @@ import {
   Restaurant,
 } from "@/services/restaurantService";
 import { getHumanReadableError } from "@/utils/errorMessages";
+import { useDashboardStore } from "@/store/dashboardStore";
+import { ChevronLeft } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
@@ -13,27 +15,43 @@ import { getAllUsers } from "../../../../features/users/services/user.service";
 import { User } from "../../../../features/users/types/user.types";
 import AddMember from "./AddMember";
 import EditMember from "./EditMember";
-import MemberView from "./MemberView";
+import MemberDetail from "./MemberDetail";
+import MemberView, { Member } from "./MemberView";
 import PersonnelHeader from "./PersonnelHeader";
 import PersonnelTabs from "./PersonnelTabs";
 
-interface MemberForView {
-  id: string;
-  fullname: string;
-  email: string;
-  role: string;
-  image?: string;
-  restaurant?: string | { id: string; name: string };
-  phone?: string;
-  address?: string;
-  entity_status?: "NEW" | "ACTIVE" | "INACTIVE" | "DELETED";
-  // Manager principal de son restaurant (Restaurant.manager === user.id).
-  isPrincipal?: boolean;
+// Convertit un User complet en Member pour la page de détail (affichage).
+function userToMember(u: User): Member {
+  const resto =
+    typeof u.restaurant === "object" && u.restaurant
+      ? { id: u.restaurant.id, name: u.restaurant.name }
+      : "";
+  const isPrincipal =
+    typeof u.restaurant === "object" &&
+    u.restaurant !== null &&
+    (u.restaurant as { manager?: string }).manager === u.id;
+  return {
+    id: u.id,
+    fullname: u.fullname || "",
+    email: u.email,
+    role: u.role,
+    image: u.image || "",
+    restaurant: resto,
+    phone: u.phone || "",
+    address: u.address || "",
+    entity_status: u.entity_status || "ACTIVE",
+    isPrincipal,
+  };
 }
 
 export default function Personnel() {
   const { user: currentUser } = useAuthStore();
-  const [openAdd, setOpenAdd] = useState(false);
+  const {
+    personnel: { view, selectedItem },
+    setSectionView,
+    setSelectedItem,
+  } = useDashboardStore();
+
   const [selectedTab, setSelectedTab] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,14 +59,35 @@ export default function Personnel() {
   const [tabs, setTabs] = useState<string[]>([]);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [selectedMember, setSelectedMember] = useState<MemberForView | null>(
-    null
-  );
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [tabsInitialized, setTabsInitialized] = useState(false);
 
-  const refreshUsers = () => {
-    setRefreshTrigger(Date.now());
+  const refreshUsers = () => setRefreshTrigger(Date.now());
+
+  // Toujours démarrer sur la liste (évite un détail/édition figé au remount).
+  useEffect(() => {
+    setSectionView("personnel", "list");
+    setSelectedItem("personnel", null);
+  }, [setSectionView, setSelectedItem]);
+
+  // --- Navigation (pages, plus de modal) ---
+  const selectedUser = selectedItem as User | null;
+  const openDetail = (u: User) => {
+    setSelectedItem("personnel", u);
+    setSectionView("personnel", "view");
+  };
+  const openEdit = (u: User) => {
+    setSelectedItem("personnel", u);
+    setSectionView("personnel", "edit");
+  };
+  const backToList = () => setSectionView("personnel", "list");
+  const handleOpenDetail = (m: Member) => {
+    const u = users.find((x) => x.id === m.id);
+    if (u) openDetail(u);
+  };
+  const handleOpenEdit = (m: Member) => {
+    const u = users.find((x) => x.id === m.id);
+    if (u) openEdit(u);
   };
 
   // Récupérer les restaurants pour générer les tabs dynamiquement
@@ -56,15 +95,10 @@ export default function Personnel() {
     const fetchRestaurants = async () => {
       try {
         const restaurantData = await getAllRestaurants();
-        const activeRestaurants = restaurantData.filter(
-          (restaurant) => restaurant.active
-        );
-
+        const activeRestaurants = restaurantData.filter((r) => r.active);
         setRestaurants(activeRestaurants);
 
-        // Générer les tabs selon le rôle de l'utilisateur connecté
         if (currentUser?.role === "MANAGER" && currentUser?.restaurant_id) {
-          // Manager : seulement son restaurant
           const managerRestaurant = activeRestaurants.find(
             (r) => r.id === currentUser.restaurant_id
           );
@@ -76,69 +110,45 @@ export default function Personnel() {
             setSelectedTab("Mon Restaurant");
           }
         } else if (currentUser?.role === "ADMIN") {
-          // Admin : tous les restaurants + filtre Back Office
-          setTabs([
-            "Tous",
-            "Back Office",
-            ...activeRestaurants.map((r) => r.name),
-          ]);
-          setSelectedTab("Tous"); // Définir le tab par défaut pour Admin
+          setTabs(["Tous", "Back Office", ...activeRestaurants.map((r) => r.name)]);
+          setSelectedTab("Tous");
         } else {
-          // Autres rôles : accès limité
           setTabs(["Tous"]);
-          setSelectedTab("Tous"); // Définir le tab par défaut pour autres rôles
+          setSelectedTab("Tous");
         }
-
-        // Marquer que les tabs sont initialisés
         setTabsInitialized(true);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des restaurants:", error);
-        const userMessage = getHumanReadableError(error);
-        toast.error(userMessage);
-        // En cas d'erreur, on garde les tabs par défaut
+      } catch (err) {
+        console.error("Erreur lors de la récupération des restaurants:", err);
+        toast.error(getHumanReadableError(err));
         setTabs(["Tous"]);
         setSelectedTab("Tous");
         setRestaurants([]);
         setTabsInitialized(true);
       }
     };
-
-    if (currentUser) {
-      fetchRestaurants();
-    }
+    if (currentUser) fetchRestaurants();
   }, [currentUser]);
 
   useEffect(() => {
-    // Ne pas exécuter fetchUsers si les tabs ne sont pas encore initialisés
-    if (!tabsInitialized || !currentUser || !selectedTab) {
-      return;
-    }
+    if (!tabsInitialized || !currentUser || !selectedTab) return;
 
     const fetchUsers = async () => {
       setLoading(true);
       setError(null);
-
       try {
         let data: User[] = [];
-
-        // Si c'est un manager, on utilise l'endpoint spécifique
         if (currentUser?.role === "MANAGER" && currentUser?.restaurant_id) {
           const allRestaurantUsers = await getRestaurantUsers(
             currentUser.restaurant_id
           );
-          // Filtrer pour exclure le manager lui-même
           data = allRestaurantUsers.filter(
-            (user) => user.id !== currentUser.id
+            (u) => u.id !== currentUser.id
           ) as User[];
         } else if (selectedTab === "Tous") {
-          // Tous les utilisateurs (backoffice + équipes restaurant).
           data = await getAllUsers();
         } else if (selectedTab === "Back Office") {
-          // Uniquement les utilisateurs de type BACKOFFICE.
           data = await getAllUsers({ type: "BACKOFFICE" });
         } else {
-          // Onglet restaurant : UNIQUEMENT les membres de ce restaurant
-          // (plus d'injection des admins, conformément au besoin).
           let selectedRestaurant = restaurants.find(
             (r) => r.name === selectedTab
           );
@@ -152,8 +162,6 @@ export default function Personnel() {
             data = await getAllUsers({ restaurantId: selectedRestaurant.id });
           }
         }
-
-        // S'assurer que data est un tableau avant de l'assigner
         setUsers(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Error fetching users:", err);
@@ -164,45 +172,17 @@ export default function Personnel() {
         setLoading(false);
       }
     };
-
     fetchUsers();
   }, [refreshTrigger, currentUser, selectedTab, restaurants, tabsInitialized]);
 
-  // Convertir les users (type User from service) en format MemberForView pour MemberView
-  const mappedMembersForView: MemberForView[] = users.map((user) => ({
-    id: user.id,
-    fullname: user.fullname || "",
-    email: user.email,
-    role: user.role,
-    image: user.image || "",
-    restaurant:
-      typeof user.restaurant === "object" && user.restaurant !== null
-        ? { id: user.restaurant.id, name: user.restaurant.name }
-        : typeof user.restaurant === "string"
-        ? user.restaurant
-        : "",
-    phone: user.phone || "",
-    address: user.address || "",
-    entity_status: user.entity_status || "ACTIVE",
-    isPrincipal:
-      typeof user.restaurant === "object" &&
-      user.restaurant !== null &&
-      (user.restaurant as { manager?: string }).manager === user.id,
-  }));
+  const mappedMembersForView: Member[] = users.map((user) => userToMember(user));
 
-  // Fonction de recherche
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  const handleSearch = (query: string) => setSearchQuery(query);
 
-  // Filtrage du personnel en temps réel avec useMemo
   const finalFilteredMembers = useMemo(() => {
     if (!searchQuery.trim()) return mappedMembersForView;
-
     const lowerQuery = searchQuery.toLowerCase().trim();
-
     return mappedMembersForView.filter((member) => {
-      // Tous les champs de recherche pour le personnel
       const searchableFields = [
         member.fullname || "",
         member.email || "",
@@ -210,16 +190,12 @@ export default function Personnel() {
         member.phone || "",
         member.address || "",
         member.id || "",
-        // Restaurant (string ou objet)
         typeof member.restaurant === "string"
           ? member.restaurant
           : member.restaurant?.name || "",
-        // Statut d'entité
         member.entity_status || "",
         member.entity_status === "ACTIVE" ? "actif" : "",
         member.entity_status === "INACTIVE" ? "inactif" : "",
-        member.entity_status === "NEW" ? "nouveau" : "",
-        // Traduction des rôles
         member.role === "ADMIN" ? "administrateur" : "",
         member.role === "MANAGER" ? "gestionnaire" : "",
         member.role === "CAISSIER" ? "caissier" : "",
@@ -228,14 +204,13 @@ export default function Personnel() {
         member.role === "MARKETING" ? "marketing" : "",
         member.role === "COMPTABLE" ? "comptable" : "",
       ];
-
       return searchableFields.some((field) =>
         field.toLowerCase().includes(lowerQuery)
       );
     });
   }, [mappedMembersForView, searchQuery]);
 
-  // Vérifier les permissions d'accès
+  // Permissions d'accès
   const hasAccess =
     currentUser?.role === "ADMIN" || currentUser?.role === "MANAGER";
   const isReadOnly =
@@ -244,8 +219,7 @@ export default function Personnel() {
     currentUser?.role || ""
   );
 
-  // Bloquer complètement l'accès pour les employés de restaurant
-  if (isRestaurantEmployee) {
+  if (isRestaurantEmployee || (!hasAccess && !isReadOnly)) {
     return (
       <div className="flex flex-col h-full w-full items-center justify-center">
         <div className="text-center p-8">
@@ -253,28 +227,8 @@ export default function Personnel() {
             Accès non autorisé
           </div>
           <div className="text-gray-600">
-            Vous n&apos;avez pas les permissions nécessaires pour accéder à
-            cette section.
-          </div>
-          <div className="text-sm text-gray-500 mt-2">
-            Rôle détecté: {currentUser?.role}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Vérifier les autres permissions
-  if (!hasAccess && !isReadOnly) {
-    return (
-      <div className="flex flex-col h-full w-full items-center justify-center">
-        <div className="text-center p-8">
-          <div className="text-red-500 text-lg font-semibold mb-2">
-            Accès non autorisé
-          </div>
-          <div className="text-gray-600">
-            Vous n&apos;avez pas les permissions nécessaires pour accéder à
-            cette section.
+            Vous n&apos;avez pas les permissions nécessaires pour accéder à cette
+            section.
           </div>
           <div className="text-sm text-gray-500 mt-2">
             Rôle détecté: {currentUser?.role}
@@ -286,97 +240,95 @@ export default function Personnel() {
 
   return (
     <div className="flex-1 overflow-auto p-4">
-      <div className="-mt-10">
-        <PersonnelHeader
-        onAddPersonnel={hasAccess ? () => setOpenAdd(true) : undefined}
-          onSearch={handleSearch}
-          isReadOnly={isReadOnly}
-        />
-      </div>
-      <div className="flex-1 overflow-y-auto ">
-        <div className="bg-white border border-[#E4E4E7] rounded-xl p-2  ">
-          <PersonnelTabs
-            tabs={tabs}
-            selected={selectedTab}
-            onSelect={setSelectedTab}
-          />
-          {loading ? (
-            <div className="p-4 text-center text-gray-500">Chargement...</div>
-          ) : error ? (
-            <div className="p-4 text-center text-red-500">{error}</div>
-          ) : (
-            <MemberView
-              members={finalFilteredMembers}
+      {view === "list" ? (
+        <>
+          <div className="-mt-10">
+            <PersonnelHeader
+              onAddPersonnel={hasAccess ? () => setSectionView("personnel", "create") : undefined}
+              onSearch={handleSearch}
+              isReadOnly={isReadOnly}
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="bg-white border border-[#E4E4E7] rounded-xl p-2">
+              <PersonnelTabs
+                tabs={tabs}
+                selected={selectedTab}
+                onSelect={setSelectedTab}
+              />
+              {loading ? (
+                <div className="p-4 text-center text-gray-500">Chargement...</div>
+              ) : error ? (
+                <div className="p-4 text-center text-red-500">{error}</div>
+              ) : (
+                <MemberView
+                  members={finalFilteredMembers}
+                  onRefresh={refreshUsers}
+                  isReadOnly={isReadOnly}
+                  onOpenDetail={handleOpenDetail}
+                  onOpenEdit={handleOpenEdit}
+                />
+              )}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Barre de retour — seulement sur la page détail (édition/création
+              ont leur propre en-tête avec fermeture). */}
+          {view === "view" && (
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                type="button"
+                onClick={backToList}
+                className="inline-flex items-center gap-1 text-[#F17922] hover:text-orange-600 font-medium text-sm cursor-pointer"
+              >
+                <ChevronLeft size={18} /> Retour
+              </button>
+              <span className="text-[#5D5C5C] font-semibold">Détail du membre</span>
+            </div>
+          )}
+
+          {view === "view" && selectedUser && (
+            <MemberDetail
+              member={userToMember(selectedUser)}
+              onEdit={() => openEdit(selectedUser)}
+              onBack={backToList}
               onRefresh={refreshUsers}
               isReadOnly={isReadOnly}
-              // @ts-expect-error - Type mismatch between MemberForView and expected type
-              onEdit={
-                hasAccess
-                  ? (member: MemberForView) => {
-                      const originalUser = users.find(
-                        (u) => u.id === member.id
-                      );
-                      if (originalUser) {
-                        setSelectedMember(originalUser);
-                        setOpenAdd(true);
-                      } else {
-                        const userToEdit: MemberForView = {
-                          id: member.id,
-                          fullname: member.fullname,
-                          email: member.email,
-                          role: member.role,
-                          image: member.image,
-                          restaurant:
-                            typeof member.restaurant === "object"
-                              ? {
-                                  id: member.restaurant.id,
-                                  name: member.restaurant.name,
-                                }
-                              : undefined,
-                          phone: member.phone,
-                          address: member.address,
-                          entity_status: member.entity_status,
-                        };
-                        setSelectedMember(userToEdit);
-                        setOpenAdd(true);
-                      }
-                    }
-                  : undefined
-              }
             />
           )}
-        </div>
-      </div>
-      {openAdd &&
-        (selectedMember ? (
-          <EditMember
-            existingMember={selectedMember}
-            onCancel={() => {
-              setOpenAdd(false);
-              setSelectedMember(null);
-            }}
-            onSuccess={(updatedMember) => {
-              setUsers((prevUsers) =>
-                prevUsers.map((user) =>
-                  user.id === updatedMember.id
-                    ? { ...user, ...updatedMember }
-                    : user
-                )
-              );
-              setOpenAdd(false);
-              setSelectedMember(null);
-              refreshUsers();
-            }}
-          />
-        ) : (
-          <AddMember
-            onCancel={() => setOpenAdd(false)}
-            onSuccess={() => {
-              setOpenAdd(false);
-              refreshUsers();
-            }}
-          />
-        ))}
+
+          {view === "edit" && selectedUser && (
+            <EditMember
+              asPage
+              existingMember={selectedUser}
+              onCancel={() => openDetail(selectedUser)}
+              onSuccess={(updated) => {
+                setUsers((prev) =>
+                  prev.map((u) =>
+                    u.id === updated.id ? { ...u, ...updated } : u
+                  )
+                );
+                setSelectedItem("personnel", updated);
+                setSectionView("personnel", "view");
+                refreshUsers();
+              }}
+            />
+          )}
+
+          {view === "create" && (
+            <AddMember
+              asPage
+              onCancel={backToList}
+              onSuccess={() => {
+                backToList();
+                refreshUsers();
+              }}
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }

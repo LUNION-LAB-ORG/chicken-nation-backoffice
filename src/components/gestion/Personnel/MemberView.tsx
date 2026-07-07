@@ -11,16 +11,13 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import {
-  User,
   softDeleteUser,
   deleteUser,
   restoreUser,
   setPrincipalManager,
 } from "../../../../features/users/services/user.service";
-import EditMember from "./EditMember";
 import MemberActionsMenu from "./MemberActionsMenu";
 import MemberRemoveModal from "./MemberRemoveModal";
-import MemberViewModal from "./MemberViewModal";
 
 export interface Member {
   id: string;
@@ -41,12 +38,18 @@ interface MemberViewProps {
   members: Member[];
   onRefresh?: () => void;
   isReadOnly?: boolean;
+  /** Ouvre la PAGE de détail d'un membre (plus de modal). */
+  onOpenDetail?: (member: Member) => void;
+  /** Ouvre la PAGE d'édition d'un membre (plus de modal). */
+  onOpenEdit?: (member: Member) => void;
 }
 
 const MemberView: React.FC<MemberViewProps> = ({
   members,
   onRefresh,
   isReadOnly = false,
+  onOpenDetail,
+  onOpenEdit,
 }) => {
   // Récupérer l'utilisateur connecté pour le filtrer de la liste
   const { user: currentUser } = useAuthStore();
@@ -78,9 +81,6 @@ const MemberView: React.FC<MemberViewProps> = ({
     type: "suspend" | "delete";
     member: Member | null;
   } | null>(null);
-  const [editMember, setEditMember] = useState<Member | null>(null);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showMemberViewModal, setShowMemberViewModal] = useState(false);
   const menuBtnRefs = useRef<Record<string, HTMLSpanElement | null>>({});
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -179,31 +179,6 @@ const MemberView: React.FC<MemberViewProps> = ({
     }
 
     return `${API_BASE_URL}/${member.image}${cacheBuster}`;
-  }
-
-  function normalizeMemberImage(
-    member: Member | null
-  ): (User & { image?: string }) | null {
-    if (!member) return null;
-
-    // Convertir Member en User
-    const userMember: User & { image?: string } = {
-      id: member.id,
-      fullname: member.fullname, // Changed from member.name
-      email: member.email,
-      role: member.role,
-      type: "",
-      restaurant:
-        typeof member.restaurant === "object"
-          ? { ...member.restaurant, name: member.restaurant.name }
-          : undefined,
-      phone: member.phone || "",
-      address: member.address || "",
-      image: member.image,
-      entity_status: member.entity_status,
-    };
-
-    return userMember;
   }
 
   // Fonctions de gestion des actions utilisateur
@@ -316,12 +291,7 @@ const MemberView: React.FC<MemberViewProps> = ({
               <tr
                 key={member.id}
                 className={rowClassName}
-                onClick={() => {
-                  setEditMember(member);
-                  setShowAddModal(false);
-                  setModal(null);
-                  setShowMemberViewModal(true);
-                }}
+                onClick={() => onOpenDetail?.(member)}
               >
                 <td className={`px-0 py-2 ${contentOpacity}`}>
                   <div className="flex ml-10 items-center gap-2 min-w-[180px]">
@@ -488,15 +458,13 @@ const MemberView: React.FC<MemberViewProps> = ({
                 const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);
                 setMenuPosition(null);
-                setEditMember(m);
-                setShowMemberViewModal(true);
+                onOpenDetail?.(m);
               }}
               onEdit={() => {
                 const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
                 setMenuOpenId(null);
                 setMenuPosition(null);
-                setEditMember(m);
-                setShowAddModal(true);
+                onOpenEdit?.(m);
               }}
               onSuspend={() => {
                 const m = filteredMembers.find((mm) => mm.id === menuOpenId)!;
@@ -551,45 +519,6 @@ const MemberView: React.FC<MemberViewProps> = ({
           setModal(null);
         }}
       />
-
-      {showAddModal && editMember && (
-        <EditMember
-          existingMember={normalizeMemberImage(editMember)!}
-          onCancel={() => {
-            setShowAddModal(false);
-            setEditMember(null);
-          }}
-          onSuccess={() => {
-            setShowAddModal(false);
-            setEditMember(null);
-
-            if (onRefresh) {
-              onRefresh();
-            }
-          }}
-        />
-      )}
-
-      {showMemberViewModal && (
-        <MemberViewModal
-          open={showMemberViewModal}
-          member={editMember}
-          onClose={() => setShowMemberViewModal(false)}
-          onEdit={(m) => {
-            setShowMemberViewModal(false);
-            setEditMember(m);
-            setShowAddModal(true);
-          }}
-          onRequestSuspend={(m) => {
-            setShowMemberViewModal(false);
-            setModal({ type: "suspend", member: m });
-          }}
-          onRequestDelete={(m) => {
-            setShowMemberViewModal(false);
-            setModal({ type: "delete", member: m });
-          }}
-        />
-      )}
     </div>
   );
 };

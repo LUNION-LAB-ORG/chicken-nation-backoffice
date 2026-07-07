@@ -32,9 +32,11 @@ interface CreatedMember {
 interface AddMemberProps {
   onCancel: () => void;
   onSuccess?: (member: CreatedMember) => void;
+  /** Rendu en PAGE (pas de modal/overlay). */
+  asPage?: boolean;
 }
 
-export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
+export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMemberProps) {
   const { user: currentUser } = useAuthStore();
   const [formData, setFormData] = useState({
     fullname: "",
@@ -282,8 +284,12 @@ export default function AddMember({ onCancel, onSuccess }: AddMemberProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[92vh] overflow-y-auto">
+    <div className={asPage
+      ? "w-full max-w-3xl mx-auto"
+      : "fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm p-4"}>
+      <div className={asPage
+        ? "bg-white rounded-2xl shadow-sm border border-[#E4E4E7] w-full p-0 overflow-hidden"
+        : "bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[92vh] overflow-y-auto"}>
         <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
           <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">
             Créer un membre
