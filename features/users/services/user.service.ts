@@ -150,6 +150,8 @@ export const updateMember = async (
   if (data.address !== undefined) formData.append('address', data.address);
   if (data.role !== undefined) formData.append('role', data.role);
   if (data.restaurant_id !== undefined) formData.append('restaurant_id', data.restaurant_id ?? '');
+  if (data.email_notifications_enabled !== undefined) formData.append('email_notifications_enabled', String(data.email_notifications_enabled));
+  if (data.in_app_notifications_enabled !== undefined) formData.append('in_app_notifications_enabled', String(data.in_app_notifications_enabled));
   if (data.image) {
     formData.append('image', typeof data.image === 'string' ? data.image : (data.image as File));
   }

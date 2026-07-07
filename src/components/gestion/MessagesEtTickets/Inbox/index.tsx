@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import InboxSidebar from "./InboxSidebar";
 import ConversationView from "./ConversationView";
 import { useQueryClient } from "@tanstack/react-query";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 function InboxModule({
   initialConversationId,
@@ -14,18 +15,23 @@ function InboxModule({
     string | null
   >(initialConversationId || null);
   const queryClient = useQueryClient();
+  const clearPendingConversation = useDashboardStore(
+    (s) => s.clearPendingConversation
+  );
 
   // Fonction pour sélectionner une conversation (le marquage comme lu se fait dans ConversationView)
   const handleSelectConversation = (conversationId: string | null) => {
     setSelectedConversation(conversationId);
   };
 
-  // If initialConversationId changes (opened from header), select it
+  // Deep-link : quand une conversation est demandée (email / notification), on la
+  // sélectionne puis on vide le store (sinon elle se rouvrirait à chaque retour).
   useEffect(() => {
     if (initialConversationId) {
       handleSelectConversation(initialConversationId);
+      clearPendingConversation();
     }
-  }, [initialConversationId, queryClient]);
+  }, [initialConversationId, queryClient, clearPendingConversation]);
 
   return (
     <div className="h-full bg-[#FBFBFB]">

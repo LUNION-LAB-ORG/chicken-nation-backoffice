@@ -41,6 +41,9 @@ interface SectionState<T = unknown> {
 export interface DashboardState {
   // Navigation & Global Context
   activeTab: TabKey | null;
+  // Conversation à ouvrir dans l'inbox (deep-link email / clic notification/toast).
+  // Transient : non persisté, consommé par l'InboxModule puis remis à null.
+  pendingConversationId: string | null;
   selectedRestaurantId: string | null;
   selectedPeriod: PeriodFilter;
 
@@ -81,6 +84,8 @@ export interface DashboardState {
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
+  openInboxConversation: (conversationId: string) => void;
+  clearPendingConversation: () => void;
   setSelectedRestaurantId: (id: string | null) => void;
   setSelectedPeriod: (period: PeriodFilter) => void;
   setSectionView: (section: TabKey, view: ViewType) => void;
@@ -122,6 +127,7 @@ export const useDashboardStore = create<DashboardState>()(
     immer((set) => ({
       // État Initial
       activeTab: null,
+      pendingConversationId: null,
       selectedRestaurantId: null,
       selectedPeriod: 'month',
 
@@ -162,6 +168,14 @@ export const useDashboardStore = create<DashboardState>()(
       // Actions Globales
       setActiveTab: (tab) => set((state) => {
         state.activeTab = tab
+      }),
+      // Ouvre l'inbox sur une conversation précise (deep-link, clic notification/toast).
+      openInboxConversation: (conversationId) => set((state) => {
+        state.activeTab = 'inbox';
+        state.pendingConversationId = conversationId;
+      }),
+      clearPendingConversation: () => set((state) => {
+        state.pendingConversationId = null;
       }),
       setSelectedRestaurantId: (id) => set((state) => { state.selectedRestaurantId = id }),
       setSelectedPeriod: (period) => set((state) => { state.selectedPeriod = period }),

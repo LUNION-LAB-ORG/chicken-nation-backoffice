@@ -38,6 +38,9 @@ export interface User {
     TicketThread?: TicketThread[];
     //   Voucher?: Voucher[];
     TicketUserSkill?: TicketUserSkill[];
+    // Préférences de notification (staff)
+    email_notifications_enabled?: boolean;
+    in_app_notifications_enabled?: boolean;
     // Metadata
     entity_status: EntityStatus;
     created_at: Date | string;
@@ -55,6 +58,8 @@ export interface CreateUserDto {
     role: string;
     type?: string;
     restaurant_id?: string;
+    email_notifications_enabled?: boolean;
+    in_app_notifications_enabled?: boolean;
 }
 
 export interface UpdateUserDto {

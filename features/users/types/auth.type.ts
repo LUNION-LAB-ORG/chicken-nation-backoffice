@@ -58,6 +58,8 @@ export interface LoginResponse {
   created_at: string,
   updated_at: string,
   last_login_at: string,
+  email_notifications_enabled?: boolean,
+  in_app_notifications_enabled?: boolean,
   token: string;
   refreshToken: string;
   permissions: RolePermissions

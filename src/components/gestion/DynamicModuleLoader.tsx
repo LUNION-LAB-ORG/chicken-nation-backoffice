@@ -132,7 +132,14 @@ const modulesMap: Record<string, any> = {
 };
 
 export default function DynamicModuleLoader() {
-  const { activeTab } = useDashboardStore();
+  const { activeTab, pendingConversationId } = useDashboardStore();
+
+  // Inbox : on transmet la conversation en attente (deep-link email / clic
+  // notification/toast). L'InboxModule la sélectionne puis vide le store.
+  if (activeTab === "inbox") {
+    const InboxComp = modulesMap["inbox"];
+    return <InboxComp initialConversationId={pendingConversationId} />;
+  }
 
   const Component =
     modulesMap[

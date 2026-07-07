@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
+import Toggle from '../../ui/Toggle'
 import {updateMember, softDeleteUser, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
 import toast from 'react-hot-toast'
 import type { Member } from './MemberView'
@@ -34,6 +35,8 @@ interface UpdateUserData {
   address: string;
   role: string;
   restaurant_id?: string;
+  email_notifications_enabled?: boolean;
+  in_app_notifications_enabled?: boolean;
 }
 
 interface EditMemberProps {
@@ -67,6 +70,18 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
   })
   
   
+  // Préférences de notification du membre (défaut activé si absent).
+  const [emailNotif, setEmailNotif] = useState<boolean>(
+    typeof (existingMember as User).email_notifications_enabled === 'boolean'
+      ? (existingMember as User).email_notifications_enabled
+      : true,
+  )
+  const [inAppNotif, setInAppNotif] = useState<boolean>(
+    typeof (existingMember as User).in_app_notifications_enabled === 'boolean'
+      ? (existingMember as User).in_app_notifications_enabled
+      : true,
+  )
+
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [selectedImagePreview, setSelectedImagePreview] = useState<string | null>(null)
   const [formErrors, setFormErrors] = useState<Record<string, string>>({})
@@ -334,6 +349,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
         address: formData.address || '',
         role: role,
         ...(resolvedRestaurantId ? { restaurant_id: resolvedRestaurantId } : {}),
+        email_notifications_enabled: emailNotif,
+        in_app_notifications_enabled: inAppNotif,
       };
 
       let updatedUser: User;
@@ -347,6 +364,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
           address: baseData.address,
           role: baseData.role,
           ...(resolvedRestaurantId ? { restaurant_id: resolvedRestaurantId } : {}),
+          email_notifications_enabled: emailNotif,
+          in_app_notifications_enabled: inAppNotif,
           image: imageFile as File
         };
 
@@ -481,6 +500,19 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
                 </select>
               </div>
             )}
+
+            {/* Préférences de notification */}
+            <div className="mt-3 border-t border-gray-200 pt-3">
+              <div className="text-[13px] text-[#F17922] font-semibold mb-2">Notifications</div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-[15px] text-[#71717A]">Alertes par e-mail</span>
+                <Toggle checked={emailNotif} onChange={setEmailNotif} />
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="text-[15px] text-[#71717A]">Notifications in-app</span>
+                <Toggle checked={inAppNotif} onChange={setInAppNotif} />
+              </div>
+            </div>
 
             {/* Section mot de passe */}
             <div className="mt-3 border-t border-gray-200 pt-3">
@@ -668,6 +700,16 @@ export default function EditMember({ onCancel, onSuccess, existingMember }: Edit
                 </select>
               </div>
             )}
+
+            {/* Préférences de notification */}
+            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
+              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Alertes e-mail</label>
+              <Toggle checked={emailNotif} onChange={setEmailNotif} />
+            </div>
+            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
+              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Notifications in-app</label>
+              <Toggle checked={inAppNotif} onChange={setInAppNotif} />
+            </div>
 
             {/* Section mot de passe pour desktop */}
             <div className="mt-6 border-t border-gray-200 pt-4">

@@ -1,8 +1,27 @@
 "use client";
 
+import { useEffect } from "react";
 import DynamicModuleLoader from "@/components/gestion/DynamicModuleLoader";
+import { useDashboardStore } from "@/store/dashboardStore";
 
 export default function GestionPage() {
+  const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
+
+  // Deep-link : un lien d'email (ou de push) du type
+  // /gestion?module=inbox&conversation=<id> ouvre directement la conversation.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const conversation = params.get("conversation");
+    if (conversation) {
+      openInboxConversation(conversation);
+      // Nettoie l'URL pour ne pas rouvrir la conversation au prochain rendu.
+      const url = new URL(window.location.href);
+      url.searchParams.delete("conversation");
+      url.searchParams.delete("module");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [openInboxConversation]);
+
   return (
     <main
       className={
