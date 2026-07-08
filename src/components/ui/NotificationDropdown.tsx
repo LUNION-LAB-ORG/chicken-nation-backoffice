@@ -271,7 +271,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
       {/* Dropdown des notifications */}
       {isOpen && (
-        <div className="absolute left-1/2 md:right-0 md:left-auto mt-2 w-[calc(100vw-1rem)] md:w-80 max-w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 transform -translate-x-1/4 md:translate-x-0">
+        <div className="fixed left-2 right-2 top-[calc(env(safe-area-inset-top)_+_3.75rem)] md:absolute md:left-auto md:right-0 md:top-auto md:mt-2 md:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
             <h3 className="text-lg font-semibold text-gray-900">
@@ -289,7 +289,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           </div>
 
           {/* Contenu */}
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[65vh] md:max-h-96 overflow-y-auto">
             {isLoading ? (
               <div className="p-4 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922] mx-auto"></div>
