@@ -10,9 +10,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppClickListTable } from "../../../../../features/analytics/hooks/useAppClickListTable";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarDays } from "lucide-react";
 import { marketingTableColumns } from "@/components/gestion/Marketing/app-click-list-table/marketing-table-columns";
 import { Pagination } from "@/components/ui/pagination";
+import DateRangePicker from "@/components/ui/DateRangePicker";
 import { DEEPLINK_TYPE_ORDER, deeplinkTypeMeta } from "@/components/gestion/Marketing/deeplink-types";
 
 function AppClickListTable() {
@@ -27,6 +28,7 @@ function AppClickListTable() {
   } = useAppClickListTable();
 
   const columns = marketingTableColumns;
+  const [showDatePicker, setShowDatePicker] = React.useState(false);
 
   return (
     <div className="px-5 pb-5 pt-3 flex flex-col">
@@ -49,33 +51,37 @@ function AppClickListTable() {
             </option>
           ))}
         </select>
-        <div className="flex items-center gap-1.5 text-sm text-slate-500">
-          <span className="hidden sm:inline">Du</span>
-          <input
-            type="date"
-            className="text-sm border border-gray-300 rounded-lg bg-white py-1.5 px-2.5 focus:outline-none"
-            value={filters.dateFrom ? new Date(filters.dateFrom).toISOString().slice(0, 10) : ""}
-            onChange={(e) =>
-              changeFilters({
-                dateFrom: (e.target.value
-                  ? new Date(`${e.target.value}T00:00:00.000Z`)
-                  : null) as unknown as string,
-              })
-            }
-          />
-          <span>au</span>
-          <input
-            type="date"
-            className="text-sm border border-gray-300 rounded-lg bg-white py-1.5 px-2.5 focus:outline-none"
-            value={filters.dateTo ? new Date(filters.dateTo).toISOString().slice(0, 10) : ""}
-            onChange={(e) =>
-              changeFilters({
-                dateTo: (e.target.value
-                  ? new Date(`${e.target.value}T23:59:59.999Z`)
-                  : null) as unknown as string,
-              })
-            }
-          />
+        {/* Période — même composant que la page Commandes */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowDatePicker((s) => !s)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+              filters.dateFrom
+                ? "bg-orange-50 text-[#F17922] border-2 border-[#F17922]"
+                : "bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200"
+            }`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            <span>
+              {filters.dateFrom && filters.dateTo
+                ? `${new Date(filters.dateFrom).toLocaleDateString()} – ${new Date(
+                    filters.dateTo,
+                  ).toLocaleDateString()}`
+                : "Période"}
+            </span>
+          </button>
+          {showDatePicker && (
+            <DateRangePicker
+              onRangeSelect={(range) => {
+                changeFilters({
+                  dateFrom: (range?.start ?? null) as unknown as string,
+                  dateTo: (range?.end ?? null) as unknown as string,
+                });
+                setShowDatePicker(false);
+              }}
+            />
+          )}
         </div>
       </div>
       <Table className="bg-white text-black">
