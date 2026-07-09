@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ITypeClicksStat } from "../../../../features/analytics/types/analytics.type";
-import { deeplinkTypeMeta } from "@/components/gestion/Marketing/deeplink-types";
+import { deeplinkTypeMeta, normalizeDeeplinkType } from "@/components/gestion/Marketing/deeplink-types";
 
 interface Props {
   byType?: ITypeClicksStat[];
@@ -14,10 +14,17 @@ interface Props {
  * C'est l'info de décision : ce que les utilisateurs cliquent le plus.
  */
 export function DeeplinkTypeBreakdown({ byType, isLoading }: Props) {
-  const rows = React.useMemo(
-    () => [...(byType ?? [])].sort((a, b) => b.count - a.count),
-    [byType],
-  );
+  const rows = React.useMemo(() => {
+    // Fusionne les types équivalents (unknown/null → home = "Accueil").
+    const merged = new Map<string, number>();
+    for (const r of byType ?? []) {
+      const key = normalizeDeeplinkType(r.type);
+      merged.set(key, (merged.get(key) ?? 0) + r.count);
+    }
+    return [...merged.entries()]
+      .map(([type, count]) => ({ type, count }))
+      .sort((a, b) => b.count - a.count);
+  }, [byType]);
   const total = rows.reduce((s, r) => s + r.count, 0);
   const max = rows.reduce((m, r) => Math.max(m, r.count), 0) || 1;
 

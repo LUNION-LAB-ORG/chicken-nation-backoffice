@@ -12,7 +12,7 @@ import {
 import { useAppClickListTable } from "../../../../../features/analytics/hooks/useAppClickListTable";
 import { Loader2 } from "lucide-react";
 import { marketingTableColumns } from "@/components/gestion/Marketing/app-click-list-table/marketing-table-columns";
-import TablePagination from "@/components/gestion/Marketing/app-click-list-table/table-pagination";
+import { Pagination } from "@/components/ui/pagination";
 import { DEEPLINK_TYPE_ORDER, deeplinkTypeMeta } from "@/components/gestion/Marketing/deeplink-types";
 
 function AppClickListTable() {
@@ -49,6 +49,34 @@ function AppClickListTable() {
             </option>
           ))}
         </select>
+        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+          <span className="hidden sm:inline">Du</span>
+          <input
+            type="date"
+            className="text-sm border border-gray-300 rounded-lg bg-white py-1.5 px-2.5 focus:outline-none"
+            value={filters.dateFrom ? new Date(filters.dateFrom).toISOString().slice(0, 10) : ""}
+            onChange={(e) =>
+              changeFilters({
+                dateFrom: (e.target.value
+                  ? new Date(`${e.target.value}T00:00:00.000Z`)
+                  : null) as unknown as string,
+              })
+            }
+          />
+          <span>au</span>
+          <input
+            type="date"
+            className="text-sm border border-gray-300 rounded-lg bg-white py-1.5 px-2.5 focus:outline-none"
+            value={filters.dateTo ? new Date(filters.dateTo).toISOString().slice(0, 10) : ""}
+            onChange={(e) =>
+              changeFilters({
+                dateTo: (e.target.value
+                  ? new Date(`${e.target.value}T23:59:59.999Z`)
+                  : null) as unknown as string,
+              })
+            }
+          />
+        </div>
       </div>
       <Table className="bg-white text-black">
         <TableHeader>
@@ -113,7 +141,14 @@ function AppClickListTable() {
           )}
         </TableBody>
       </Table>
-      <TablePagination table={table} />
+      <div className="pt-4">
+        <Pagination
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          onPageChange={(p) => table.setPageIndex(p - 1)}
+          isLoading={isFetching}
+        />
+      </div>
     </div>
   );
 }

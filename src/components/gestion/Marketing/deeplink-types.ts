@@ -16,8 +16,14 @@ export const DEEPLINK_TYPE_META: Record<string, DeeplinkTypeMeta> = {
   loyalty: { label: "Fidélité", color: "#EAB308" },
   nation_card: { label: "Carte Nation", color: "#EF4444" },
   home: { label: "Accueil", color: "#64748B" },
-  unknown: { label: "Non catégorisé", color: "#94A3B8" },
 };
+
+/**
+ * Normalise le type : un clic sans cible précise (null côté DB → "unknown"
+ * côté stats, ou "home") est une simple ouverture de l'app = "Accueil".
+ */
+export const normalizeDeeplinkType = (type?: string | null): string =>
+  !type || type === "unknown" ? "home" : type;
 
 /** Ordre d'affichage stable pour le filtre. */
 export const DEEPLINK_TYPE_ORDER = [
@@ -31,4 +37,4 @@ export const DEEPLINK_TYPE_ORDER = [
 ] as const;
 
 export const deeplinkTypeMeta = (type?: string | null): DeeplinkTypeMeta =>
-  DEEPLINK_TYPE_META[type ?? "unknown"] ?? DEEPLINK_TYPE_META.unknown;
+  DEEPLINK_TYPE_META[normalizeDeeplinkType(type)] ?? DEEPLINK_TYPE_META.home;
