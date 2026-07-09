@@ -13,6 +13,7 @@ import { useAppClickListTable } from "../../../../../features/analytics/hooks/us
 import { Loader2 } from "lucide-react";
 import { marketingTableColumns } from "@/components/gestion/Marketing/app-click-list-table/marketing-table-columns";
 import TablePagination from "@/components/gestion/Marketing/app-click-list-table/table-pagination";
+import { DEEPLINK_TYPE_ORDER, deeplinkTypeMeta } from "@/components/gestion/Marketing/deeplink-types";
 
 function AppClickListTable() {
   const {
@@ -28,14 +29,26 @@ function AppClickListTable() {
   const columns = marketingTableColumns;
 
   return (
-    <div className="col-span-full px-4 bg-white min-h-64 rounded-lg flex flex-col justify-between">
-      <div className="flex items-center gap-2 flex-none text-black pt-4">
+    <div className="px-5 pb-5 pt-3 flex flex-col">
+      <div className="flex flex-wrap items-center gap-2 flex-none text-black py-3">
         <input
           className="min-w-56 text-sm border border-gray-300 rounded-lg bg-white focus-visible:outline-none focus:outline-none py-1.5 px-2.5"
-          placeholder="Entrer un mot clé"
+          placeholder="Rechercher (plateforme, IP, cible…)"
           onChange={(e) => changeFilters({ search: e.target.value })}
           value={filters.search}
         />
+        <select
+          className="text-sm border border-gray-300 rounded-lg bg-white py-1.5 px-2.5 focus:outline-none"
+          value={filters.type ?? ""}
+          onChange={(e) => changeFilters({ type: e.target.value })}
+        >
+          <option value="">Tous les types</option>
+          {DEEPLINK_TYPE_ORDER.map((t) => (
+            <option key={t} value={t}>
+              {deeplinkTypeMeta(t).label}
+            </option>
+          ))}
+        </select>
       </div>
       <Table className="bg-white text-black">
         <TableHeader>

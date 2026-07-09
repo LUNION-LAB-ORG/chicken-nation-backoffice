@@ -6,6 +6,7 @@ export const analyticsFiltersClient: Record<keyof IAppClickSearchParams, SingleP
 	limit: parseAsInteger.withDefault(25),
 	search: parseAsString.withDefault(""),
 	platform: parseAsString.withDefault(""),
+	type: parseAsString.withDefault(""),
 	ip: parseAsString.withDefault(""),
 	dateFrom: parseAsIsoDate,
 	dateTo: parseAsIsoDate,
