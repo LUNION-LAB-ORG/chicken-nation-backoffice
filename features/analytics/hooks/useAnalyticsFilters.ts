@@ -14,6 +14,7 @@ export function useAnalyticsFilters() {
 			limit: filters.limit,
 			search: filters.search,
 			platform: filters.platform,
+			type: filters.type,
 			ip: filters.ip,
 			dateFrom: filters.dateFrom ? filters.dateFrom.toISOString() : undefined,
 			dateTo: filters.dateTo ? filters.dateTo.toISOString() : undefined,

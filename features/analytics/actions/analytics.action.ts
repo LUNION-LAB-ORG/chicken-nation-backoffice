@@ -15,9 +15,9 @@ export async function getAllAnalyticsAction(params: IAppClickSearchParams) {
 	}
 }
 
-export async function getAnalyticsStatsAction() {
+export async function getAnalyticsStatsAction(params?: IAppClickSearchParams) {
 	try {
-		const stats = await getAppClickStats();
+		const stats = await getAppClickStats(params);
 		return {
 			data: stats,
 			success: true,

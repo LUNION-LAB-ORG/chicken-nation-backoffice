@@ -1,14 +1,15 @@
 import { useAppClickStatQuery } from "../queries/analytics-stats.query";
+import { IAppClickSearchParams } from "../types/analytics.type";
 
-export function useAnalyticsStats() {
-	// Total clicks query
+export function useAnalyticsStats(params: IAppClickSearchParams) {
+	// Stats filtrées (mêmes filtres que la liste)
 	const {
 		data,
 		isLoading,
 		isFetching,
 		isError,
 		error
-	} = useAppClickStatQuery();
+	} = useAppClickStatQuery(params);
 
 	return {
 		data,

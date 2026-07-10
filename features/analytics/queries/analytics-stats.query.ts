@@ -9,11 +9,11 @@ import { appClickKeyQuery } from './index.query';
 const queryClient = getQueryClient();
 
 // Option de requête
-export const appClickStatQueryOption = () => {
+export const appClickStatQueryOption = (params: IAppClickSearchParams) => {
 	return {
-		queryKey: appClickKeyQuery('stats'),
+		queryKey: appClickKeyQuery('stats', params),
 		queryFn: async () => {
-			const result = await getAnalyticsStatsAction();
+			const result = await getAnalyticsStatsAction(params);
 			if (!result.success) {
 				throw new Error('Erreur lors de la récupération des stats analytics');
 			}
@@ -25,9 +25,9 @@ export const appClickStatQueryOption = () => {
 	};
 };
 
-// Hook pour récupérer la liste des analytics
-export const useAppClickStatQuery = () => {
-	const query = useQuery<IStatsResponse>(appClickStatQueryOption());
+// Hook pour récupérer les stats (filtrées comme la liste)
+export const useAppClickStatQuery = (params: IAppClickSearchParams) => {
+	const query = useQuery<IStatsResponse>(appClickStatQueryOption(params));
 
 	React.useEffect(() => {
 		if (query.isError || query.error) {
@@ -38,7 +38,7 @@ export const useAppClickStatQuery = () => {
 	return query;
 };
 
-// Hook pour précharger la liste
-export const prefetchAppClickListQuery = () => {
-	return queryClient.prefetchQuery(appClickStatQueryOption());
+// Hook pour précharger les stats
+export const prefetchAppClickStatQuery = (params: IAppClickSearchParams) => {
+	return queryClient.prefetchQuery(appClickStatQueryOption(params));
 };

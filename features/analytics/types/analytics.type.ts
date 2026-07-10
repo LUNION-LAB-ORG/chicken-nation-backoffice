@@ -46,19 +46,11 @@ export interface ITypeClicksStat {
 }
 
 export interface IStatsResponse {
-  total: {
-    allTime: number,
-    currentMonth: number,
-    last24Hours: number,
-  },
-  android: {
-    allTime: number,
-    currentMonth: number,
-  },
-  ios: {
-    allTime: number,
-    currentMonth: number,
-  },
+  /** Tous les compteurs respectent les filtres (période, type…) de la page. */
+  total: number,
+  android: number,
+  ios: number,
+  web: number,
   /** Répartition des clics par type de deeplink (info de décision) */
   byType: ITypeClicksStat[],
 }
