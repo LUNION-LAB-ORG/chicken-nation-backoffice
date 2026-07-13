@@ -95,7 +95,7 @@ export function SchedulePlanDetail({ planId }: Props) {
     );
   }
 
-  const isDraft = plan.status === "DRAFT";
+  const isEditable = plan.status !== "ARCHIVED";
   const periodLabel = `${format(parseISO(plan.period_start), "dd MMM", { locale: fr })} → ${format(parseISO(plan.period_end), "dd MMM yyyy", { locale: fr })}`;
 
   // Livreurs du restaurant pas encore dans le plan (candidats à l'ajout).
@@ -133,9 +133,11 @@ export function SchedulePlanDetail({ planId }: Props) {
         </div>
       </div>
 
-      {isDraft && (
+      {isEditable && (
         <div className="px-5 py-2 bg-orange-50 border-b border-orange-100 text-[11px] text-[#92400E]">
-          Brouillon — clique une cellule pour basculer <b>repos ↔ travail</b> (repos interdit ven/sam/dim).
+          Clique une cellule pour basculer <b>repos ↔ travail</b> (repos interdit ven/sam/dim).
+          {plan.status !== "DRAFT" &&
+            " Les modifications s'appliquent immédiatement au planning en cours."}
         </div>
       )}
 
@@ -168,7 +170,7 @@ export function SchedulePlanDetail({ planId }: Props) {
                     <td
                       key={day}
                       onClick={
-                        isDraft && !dayMut.isPending
+                        isEditable && !dayMut.isPending
                           ? () =>
                               dayMut.mutate({
                                 planId,
@@ -179,10 +181,10 @@ export function SchedulePlanDetail({ planId }: Props) {
                           : undefined
                       }
                       title={
-                        isDraft ? (hasWork ? "Mettre en repos" : "Faire travailler") : undefined
+                        isEditable ? (hasWork ? "Mettre en repos" : "Faire travailler") : undefined
                       }
                       className={`p-1 text-center align-top ${
-                        isDraft ? "cursor-pointer hover:bg-orange-50" : ""
+                        isEditable ? "cursor-pointer hover:bg-orange-50" : ""
                       }`}
                     >
                       <div className="flex flex-col items-center gap-0.5">
