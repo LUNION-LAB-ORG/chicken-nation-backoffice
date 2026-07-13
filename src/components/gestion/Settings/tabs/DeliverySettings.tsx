@@ -98,6 +98,26 @@ const SECTIONS: ISettingSection[] = [
       },
     ],
   },
+  // ── Service de livraison par défaut (commandes auto — SANS rapport avec les prix) ──
+  {
+    title: "Service de livraison par défaut",
+    description:
+      "Prestataire assigné automatiquement aux commandes de l'app. Sans rapport avec les frais de livraison ci-dessous.",
+    Icon: Truck,
+    fields: [
+      {
+        key: "delivery.default_service",
+        label: "Service par défaut (commandes auto)",
+        placeholder: "TURBO",
+        hint: "Service de livraison attribué par défaut aux commandes automatiques de l'app.",
+        options: [
+          { value: "TURBO", label: "Turbo (prestataire externe)" },
+          { value: "CHICKEN_NATION", label: "Chicken Nation (coursier interne)" },
+          { value: "FREE", label: "Gratuit / interne" },
+        ],
+      },
+    ],
+  },
   // ── Section 0 : Calcul des frais de livraison (NOUVEAU) ─────────────────
   {
     title: "Calcul des frais de livraison",
