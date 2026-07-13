@@ -8,6 +8,7 @@ import { LoyaltyPointsList } from "../../../../features/points_fedelite/componen
 import { useLoyaltyPointsListQuery } from "../../../../features/points_fedelite/queries/loyalty.queries";
 import { LoyaltyPointType } from "../../../../features/points_fedelite/types/loyalty.types";
 import LoyaltyConfigManager from "../../../../features/points_fedelite/components/loyalty-config/LoyaltyConfigManager";
+import SendGiftManager from "../../../../features/reward_campaign/components/SendGiftManager";
 
 export default function PointFedelisation() {
   const {
@@ -47,6 +48,7 @@ export default function PointFedelisation() {
         </div>
       )}
       {activeTab == "loyalty" && view === "view" && <LoyaltyConfigManager />}
+      {activeTab == "loyalty" && view === "create" && <SendGiftManager />}
     </div>
   );
 }
