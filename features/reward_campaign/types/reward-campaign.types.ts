@@ -32,6 +32,8 @@ export interface CreateRewardCampaignPayload {
   loyalty_level?: LoyaltyLevel;
   scheduled_at?: string; // ISO
   expires_at?: string; // ISO
+  /** Envoyer même aux clients récemment sollicités (contourne le capping). */
+  ignore_capping?: boolean;
 }
 
 export interface RewardCampaign {
@@ -40,7 +42,13 @@ export interface RewardCampaign {
   type: RewardCampaignType;
   payload: RewardCampaignPayload;
   target_type: "all" | "ids";
-  target_config: { ids?: string[]; loyalty_level?: LoyaltyLevel };
+  target_config: {
+    ids?: string[];
+    loyalty_level?: LoyaltyLevel;
+    ignore_capping?: boolean;
+    /** Clients retirés par le capping anti-fatigue à l'envoi. */
+    skipped_capping?: number;
+  };
   expires_at: string | null;
   total_targeted: number;
   scratched_count: number;

@@ -103,6 +103,7 @@ export default function SendGiftManager() {
   const [scheduled, setScheduled] = useState(false);
   const [scheduledAt, setScheduledAt] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [ignoreCapping, setIgnoreCapping] = useState(false);
 
   const promoQuery = useQuery({
     queryKey: ["promo-codes-active"],
@@ -169,6 +170,7 @@ export default function SendGiftManager() {
     setScheduled(false);
     setScheduledAt("");
     setExpiresAt("");
+    setIgnoreCapping(false);
   };
 
   const addCustomer = (c: { id: string; name: string }) => {
@@ -209,6 +211,7 @@ export default function SendGiftManager() {
         ? { scheduled_at: new Date(scheduledAt).toISOString() }
         : {}),
       ...(expiresAt ? { expires_at: new Date(expiresAt).toISOString() } : {}),
+      ...(ignoreCapping ? { ignore_capping: true } : {}),
     });
   };
 
@@ -527,6 +530,22 @@ export default function SendGiftManager() {
           </div>
         </div>
 
+        {/* Capping anti-fatigue (override) */}
+        <label className="flex items-start gap-2 mb-5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={ignoreCapping}
+            onChange={(e) => setIgnoreCapping(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-[#F17922]"
+          />
+          <span className="text-sm text-[#71717A]">
+            Ignorer le capping anti-fatigue{" "}
+            <span className="text-[#9796A1]">
+              (envoyer même aux clients récemment gâtés)
+            </span>
+          </span>
+        </label>
+
         <button
           type="button"
           onClick={submit}
@@ -600,6 +619,11 @@ export default function SendGiftManager() {
                       </span>
                     </div>
                   )}
+                  {c.target_config?.skipped_capping ? (
+                    <div className="text-[10px] text-[#9796A1] mt-1.5">
+                      {c.target_config.skipped_capping} ignoré(s) — capping anti-fatigue
+                    </div>
+                  ) : null}
                   {c.status === "scheduled" && c.scheduled_at && (
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-[11px] text-[#2B6CB0]">
