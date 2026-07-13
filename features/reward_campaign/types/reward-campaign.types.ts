@@ -44,6 +44,10 @@ export interface RewardCampaign {
   expires_at: string | null;
   total_targeted: number;
   scratched_count: number;
+  /** Funnel d'impact — `null` = non suivi (GIFT). */
+  redeemed_count: number | null;
+  revenue: number | null;
+  discount_cost: number | null;
   status: RewardCampaignStatus;
   scheduled_at: string | null;
   sent_at: string | null;

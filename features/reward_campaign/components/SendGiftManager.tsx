@@ -57,6 +57,28 @@ const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const inputCls =
   "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
+const money = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
+const pct = (part: number, whole: number) =>
+  whole > 0 ? `${Math.round((part / whole) * 100)}%` : null;
+
+/** Case du funnel d'impact (Ciblés / Grattés / Utilisés). */
+const Stat: React.FC<{
+  label: string;
+  value: React.ReactNode;
+  sub?: string | null;
+  color?: string;
+}> = ({ label, value, sub, color = "#18181B" }) => (
+  <div className="rounded-lg bg-[#FAFAFA] py-1.5">
+    <div className="text-[10px] uppercase tracking-wide text-[#9796A1]">{label}</div>
+    <div className="text-sm font-bold" style={{ color }}>
+      {value}
+    </div>
+    <div className="text-[9px] text-[#9796A1] leading-none mt-0.5 min-h-[10px]">
+      {sub ?? ""}
+    </div>
+  </div>
+);
+
 export default function SendGiftManager() {
   const qc = useQueryClient();
 
@@ -463,14 +485,40 @@ export default function SendGiftManager() {
                       {badge.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-[#71717A]">
-                    <span>
-                      Ciblés : <strong className="text-[#18181B]">{c.total_targeted}</strong>
-                    </span>
-                    <span>
-                      Grattés : <strong className="text-[#F17922]">{c.scratched_count}</strong>
-                    </span>
+                  {/* Funnel d'impact : Ciblés → Grattés → Utilisés */}
+                  <div className="grid grid-cols-3 gap-2 text-center mt-2.5">
+                    <Stat label="Ciblés" value={c.total_targeted} />
+                    <Stat
+                      label="Grattés"
+                      value={c.scratched_count}
+                      sub={pct(c.scratched_count, c.total_targeted)}
+                      color="#F17922"
+                    />
+                    <Stat
+                      label="Utilisés"
+                      value={c.redeemed_count == null ? "—" : c.redeemed_count}
+                      sub={
+                        c.redeemed_count == null
+                          ? "non suivi"
+                          : pct(c.redeemed_count, c.scratched_count)
+                      }
+                      color="#1E8E5A"
+                    />
                   </div>
+                  {c.revenue != null && (
+                    <div className="flex items-center justify-between rounded-lg bg-[#F4FAF6] px-2.5 py-1.5 mt-2 text-[11px]">
+                      <span className="text-[#71717A]">
+                        CA généré :{" "}
+                        <strong className="text-[#1E8E5A]">{money(c.revenue)}</strong>
+                      </span>
+                      <span className="text-[#71717A]">
+                        Coût :{" "}
+                        <strong className="text-[#C0392B]">
+                          {money(c.discount_cost ?? 0)}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
                   {c.status === "scheduled" && c.scheduled_at && (
                     <div className="flex items-center justify-between mt-2">
                       <span className="text-[11px] text-[#2B6CB0]">
