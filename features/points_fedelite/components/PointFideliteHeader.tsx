@@ -44,6 +44,10 @@ export default function PointFideliteHeader() {
             label: "Configuration",
             onClick: () => handleViewChange("loyalty", "view"),
           },
+          {
+            label: "Parrainage",
+            onClick: () => handleViewChange("loyalty", "edit"),
+          },
         ]}
       />
     );
@@ -52,7 +56,13 @@ export default function PointFideliteHeader() {
     <DashboardPageHeader
       mode={view}
       onBack={() => handleViewChange("loyalty", "list")}
-      title={view === "create" ? "Envoyer un cadeau" : "Configuration"}
+      title={
+        view === "create"
+          ? "Envoyer un cadeau"
+          : view === "edit"
+          ? "Parrainage"
+          : "Configuration"
+      }
       gradient={true}
     />
   );
