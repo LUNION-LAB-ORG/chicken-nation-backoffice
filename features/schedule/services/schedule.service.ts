@@ -80,3 +80,13 @@ export const regenerateSchedulePlan = (
 
 export const getSchedulePlanStats = (planId: string) =>
   safeCall(() => api.get<ISchedulePlanStats>(`${ENDPOINT}/plans/${planId}/stats`, true));
+
+/** Ajout incrémental d'un livreur (rattaché après coup) à un plan existant. */
+export const addDelivererToPlan = (planId: string, delivererId: string) =>
+  safeCall(() =>
+    api.post<{ added: number }>(
+      `${ENDPOINT}/plans/${planId}/deliverers/${delivererId}`,
+      {},
+      true,
+    ),
+  );

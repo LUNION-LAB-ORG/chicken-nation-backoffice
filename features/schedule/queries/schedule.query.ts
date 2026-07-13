@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
 import {
+  addDelivererToPlan,
   archiveSchedulePlan,
   confirmSchedulePlan,
   deleteSchedulePlan,
@@ -114,6 +115,21 @@ export const useSetDelivererDayMutation = () => {
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Modification impossible"),
+  });
+};
+
+export const useAddDelivererToPlanMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { planId: string; delivererId: string }) =>
+      addDelivererToPlan(vars.planId, vars.delivererId),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: [...KEY, "plan", vars.planId] });
+      qc.invalidateQueries({ queryKey: [...KEY, "plans"] });
+      toast.success("Livreur ajouté au planning");
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Ajout impossible"),
   });
 };
 

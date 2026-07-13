@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CheckCircle2, Loader2, Sun, XCircle, Moon, AlertCircle } from "lucide-react";
+import { CheckCircle2, Loader2, Sun, XCircle, Moon, AlertCircle, UserPlus, X } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getAllLivreurs } from "@/features/livreurs/services/livreur.service";
 
 import {
   useSchedulePlanDetailQuery,
   useSchedulePlanStatsQuery,
   useSetDelivererDayMutation,
+  useAddDelivererToPlanMutation,
 } from "../queries/schedule.query";
 import type {
   IShift,
@@ -38,6 +41,14 @@ export function SchedulePlanDetail({ planId }: Props) {
   const { data: plan, isLoading } = useSchedulePlanDetailQuery(planId);
   const { data: stats } = useSchedulePlanStatsQuery(planId);
   const dayMut = useSetDelivererDayMutation();
+  const addMut = useAddDelivererToPlanMutation();
+  const [showAdd, setShowAdd] = useState(false);
+  // Livreurs du restaurant (pour en ajouter un au plan) — chargé à l'ouverture du modal.
+  const { data: deliverersData } = useQuery({
+    queryKey: ["livreurs-by-resto", plan?.restaurant.id],
+    queryFn: () => getAllLivreurs({ restaurant_id: plan!.restaurant.id }),
+    enabled: showAdd && !!plan?.restaurant.id,
+  });
 
   // Index : pour chaque (delivererId, dateKey, shiftType), retrouver l'assignment
   const matrix = useMemo(() => {
@@ -87,6 +98,14 @@ export function SchedulePlanDetail({ planId }: Props) {
   const isDraft = plan.status === "DRAFT";
   const periodLabel = `${format(parseISO(plan.period_start), "dd MMM", { locale: fr })} → ${format(parseISO(plan.period_end), "dd MMM yyyy", { locale: fr })}`;
 
+  // Livreurs du restaurant pas encore dans le plan (candidats à l'ajout).
+  const inPlanIds = new Set(matrix.deliverers.map((d) => d.id));
+  const eligible: any[] = (
+    Array.isArray(deliverersData)
+      ? deliverersData
+      : (deliverersData as { data?: unknown[] } | undefined)?.data ?? []
+  ).filter((d: any) => !inPlanIds.has(d.id));
+
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
       {/* Header */}
@@ -95,13 +114,23 @@ export function SchedulePlanDetail({ planId }: Props) {
           <h3 className="text-lg font-bold text-gray-900">{plan.restaurant.name}</h3>
           <p className="text-xs text-gray-500">{periodLabel}</p>
         </div>
-        {stats && (
-          <div className="flex items-center gap-2 text-xs">
-            <StatChip label="Confirmés" count={stats.confirmed} color="#166534" bg="#DCFCE7" />
-            <StatChip label="En attente" count={stats.pending} color="#92400E" bg="#FEF3C7" />
-            <StatChip label="Refusés" count={stats.refused} color="#991B1B" bg="#FEE2E2" />
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {stats && (
+            <div className="flex items-center gap-2 text-xs">
+              <StatChip label="Confirmés" count={stats.confirmed} color="#166534" bg="#DCFCE7" />
+              <StatChip label="En attente" count={stats.pending} color="#92400E" bg="#FEF3C7" />
+              <StatChip label="Refusés" count={stats.refused} color="#991B1B" bg="#FEE2E2" />
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowAdd(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] text-white text-xs font-semibold px-3 py-2 hover:bg-[#e06816] whitespace-nowrap"
+            title="Ajouter un livreur rattaché après la génération du plan"
+          >
+            <UserPlus className="w-3.5 h-3.5" /> Livreur
+          </button>
+        </div>
       </div>
 
       {isDraft && (
@@ -176,6 +205,61 @@ export function SchedulePlanDetail({ planId }: Props) {
         <p className="text-sm text-gray-500 italic text-center p-8">
           Aucune affectation dans ce plan.
         </p>
+      )}
+
+      {/* Modal : ajouter un livreur au plan existant (incrémental) */}
+      {showAdd && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setShowAdd(false)}
+        >
+          <div
+            className="bg-white rounded-2xl w-full max-w-sm max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h4 className="font-bold text-gray-900">Ajouter un livreur</h4>
+              <button
+                onClick={() => setShowAdd(false)}
+                className="text-gray-400 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-3 overflow-y-auto">
+              {eligible.length === 0 ? (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Aucun livreur à ajouter (tous déjà dans le plan).
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  {eligible.map((d) => (
+                    <button
+                      key={d.id}
+                      disabled={addMut.isPending}
+                      onClick={() =>
+                        addMut.mutate(
+                          { planId, delivererId: d.id },
+                          { onSuccess: () => setShowAdd(false) },
+                        )
+                      }
+                      className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-orange-50 text-left disabled:opacity-50"
+                    >
+                      <span className="text-sm font-medium text-gray-800">
+                        {(d.first_name ?? d.firstName ?? "")} {(d.last_name ?? d.lastName ?? "")}
+                      </span>
+                      <span className="text-xs font-semibold text-[#F17922]">Ajouter</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <p className="text-[11px] text-gray-400 mt-3 px-1">
+                Le livreur est ajouté au planning existant (les affectations des autres
+                livreurs ne changent pas).
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
