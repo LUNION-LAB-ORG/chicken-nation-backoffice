@@ -5,7 +5,7 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { CheckCircle2, Loader2, Sun, XCircle, Moon, AlertCircle, UserPlus, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getAllLivreurs } from "@/features/livreurs/services/livreur.service";
+import { getAllLivreurs } from "../../livreurs/services/livreur.service";
 
 import {
   useSchedulePlanDetailQuery,
