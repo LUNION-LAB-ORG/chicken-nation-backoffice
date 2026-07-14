@@ -100,11 +100,8 @@ export function SchedulePlanDetail({ planId }: Props) {
 
   // Livreurs du restaurant pas encore dans le plan (candidats à l'ajout).
   const inPlanIds = new Set(matrix.deliverers.map((d) => d.id));
-  const eligible: any[] = (
-    Array.isArray(deliverersData)
-      ? deliverersData
-      : (deliverersData as { data?: unknown[] } | undefined)?.data ?? []
-  ).filter((d: any) => !inPlanIds.has(d.id));
+  // getAllLivreurs renvoie { items, total, page, ... } → l'array est sous `items`.
+  const eligible = (deliverersData?.items ?? []).filter((d) => !inPlanIds.has(d.id));
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
@@ -248,7 +245,7 @@ export function SchedulePlanDetail({ planId }: Props) {
                       className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-orange-50 text-left disabled:opacity-50"
                     >
                       <span className="text-sm font-medium text-gray-800">
-                        {(d.first_name ?? d.firstName ?? "")} {(d.last_name ?? d.lastName ?? "")}
+                        {d.first_name ?? ""} {d.last_name ?? ""}
                       </span>
                       <span className="text-xs font-semibold text-[#F17922]">Ajouter</span>
                     </button>
