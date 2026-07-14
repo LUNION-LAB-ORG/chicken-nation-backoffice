@@ -113,6 +113,26 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
     }
 }
 
+export async function confirmKkiapayPayment(id: string, transactionId: string): Promise<Order> {
+
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}/confirm-payment`);
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ transactionId }),
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as Order;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 export async function deleteOrder(id: string): Promise<void> {
 
     try {

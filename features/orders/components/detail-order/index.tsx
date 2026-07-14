@@ -4,6 +4,7 @@ import React from "react";
 import { useOrderDetailQuery } from "../../queries/order-detail.query";
 import { OrderTable } from "../../types/ordersTable.types";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
+import ConfirmPaymentAction from "./ConfirmPaymentAction";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryProgressSection from "./DeliveryProgressSection";
 import OrderInfoSection from "./OrderInfoSection";
@@ -39,6 +40,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ selectedItem }) => {
               <DeliveryProgressSection order={order} />
 
               <PriceSummarySection order={order} />
+
+              <ConfirmPaymentAction order={order} />
 
               <WorkflowActions order={order} />
             </div>
