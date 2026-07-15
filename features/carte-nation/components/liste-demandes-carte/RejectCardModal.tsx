@@ -4,6 +4,7 @@ import { Loader2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useReviewRequestMutation } from "../../queries/card-nation.mutation";
 import { CardRequest } from "../../types/carte-nation.types";
+import { RequestKindBadge } from "../../utils/getCardLevelBadge";
 
 interface RejectCardModalProps {
   isOpen: boolean;
@@ -55,12 +56,18 @@ export function RejectCardModal({
                 {request.customer?.first_name} {request.customer?.last_name}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Institution :</span>
-              <span className="text-sm font-medium text-gray-900">
-                {request.institution}
-              </span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Type de demande :</span>
+              <RequestKindBadge request={request} size="sm" />
             </div>
+            {request.institution && (
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Institution :</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {request.institution}
+                </span>
+              </div>
+            )}
           </div>
 
           <div>

@@ -1,4 +1,4 @@
-import { Crown, GraduationCap, Star } from "lucide-react";
+import { Crown, FileCheck2, GraduationCap, PenLine, Star } from "lucide-react";
 import { CardLevel, CardRequest, NationCard } from "../types/carte-nation.types";
 
 /**
@@ -104,6 +104,45 @@ export const StudentMarkerBadge = ({ size = "md" }: StudentMarkerBadgeProps) => 
     >
       <GraduationCap className="w-3 h-3" />
       Étudiant
+    </span>
+  );
+};
+
+/**
+ * Une demande porte-t-elle un justificatif (V2) ou est-elle déclarative (V1) ?
+ * La ground truth est per-demande (présence du fichier), indépendante du mode courant.
+ */
+export const hasJustificatif = (entity?: CardRequest | null): boolean =>
+  !!entity?.student_card_file_url;
+
+interface RequestKindBadgeProps {
+  request: CardRequest;
+  size?: "sm" | "md";
+}
+
+/**
+ * Badge distinguant une demande DÉCLARATIVE (V1, sans justificatif) d'une
+ * demande AVEC JUSTIFICATIF (V2). Les deux passent par la validation backoffice.
+ */
+export const RequestKindBadge = ({
+  request,
+  size = "sm",
+}: RequestKindBadgeProps) => {
+  const withDoc = hasJustificatif(request);
+  const pad = size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-3 py-1 text-xs";
+  return withDoc ? (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full font-medium ${pad} bg-blue-100 text-blue-700 border border-blue-200`}
+    >
+      <FileCheck2 className="w-3 h-3" />
+      Avec justificatif
+    </span>
+  ) : (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full font-medium ${pad} bg-gray-100 text-gray-600 border border-gray-200`}
+    >
+      <PenLine className="w-3 h-3" />
+      Déclaratif
     </span>
   );
 };

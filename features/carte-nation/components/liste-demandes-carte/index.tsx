@@ -14,6 +14,7 @@ import {
   CardLevelBadge,
   getProfileTypeLabel,
   isStudentProfile,
+  RequestKindBadge,
   resolveCardLevel,
   StudentMarkerBadge,
 } from "../../utils/getCardLevelBadge";
@@ -29,7 +30,9 @@ export function DemandeCarteList() {
     setSelectedItem,
   } = useDashboardStore();
 
-  // Mode d'émission : V1 déclaratif (auto-approuvé) vs V2 justificatif (revue admin).
+  // Mode de DEMANDE côté client : V1 déclaratif (sans justificatif) vs V2 (justificatif exigé).
+  // ⚠️ Dans les deux cas la carte n'est PLUS émise automatiquement : toute demande
+  // arrive en PENDING et doit être validée ici pour générer la carte.
   const { data: requireJustificatifSetting } = useSettingQuery(
     "card.require_justificatif"
   );
@@ -52,31 +55,21 @@ export function DemandeCarteList() {
   return (
     <div>
       <div className="max-w-7xl mx-auto">
-        {/* Bandeau explicatif du mode courant */}
-        {requireJustificatif ? (
-          <div className="mb-4 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
-            <div className="text-sm text-blue-800">
-              <span className="font-semibold">
-                Mode justificatif (V2) actif.
-              </span>{" "}
-              Les demandes nécessitent un justificatif étudiant et une revue
-              admin (approbation / rejet) avant émission de la carte.
-            </div>
+        {/* Bandeau : la carte n'est plus auto-émise — toute demande est validée ici. */}
+        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+          <div className="text-sm text-amber-800">
+            <span className="font-semibold">Validation requise.</span> Toutes les
+            demandes — <strong>déclaratives</strong> (Étudiant / Professionnel,
+            sans justificatif) comme <strong>avec justificatif</strong> — arrivent{" "}
+            <strong>en attente</strong> et doivent être <strong>approuvées ici</strong>{" "}
+            pour générer la carte. L&apos;approbation émet la carte et notifie le
+            client (« carte prête »).{" "}
+            {requireJustificatif
+              ? "Mode de demande actuel : justificatif étudiant exigé à la création (V2)."
+              : "Mode de demande actuel : demande déclarative sans justificatif (V1)."}
           </div>
-        ) : (
-          <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-            <Info className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-            <div className="text-sm text-emerald-800">
-              <span className="font-semibold">
-                Mode déclaratif (V1) actif.
-              </span>{" "}
-              Les demandes sont <strong>approuvées automatiquement</strong> et la
-              carte émise immédiatement, sans justificatif à examiner. Le profil
-              (Étudiant / Professionnel) est déclaratif.
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* Filtrage */}
         <StatutCardRequestTab />
@@ -163,6 +156,7 @@ export function DemandeCarteList() {
                               )}
                             </span>
                             {student && <StudentMarkerBadge size="sm" />}
+                            <RequestKindBadge request={request} size="sm" />
                             {request.institution && (
                               <span className="text-xs text-gray-500 max-w-xs">
                                 {request.institution}
@@ -209,32 +203,32 @@ export function DemandeCarteList() {
                                 <Eye className="w-4 h-4 text-gray-600" />
                               </button>
                             )}
-                            {/* Revue manuelle : seulement en mode V2. */}
-                            {requireJustificatif &&
-                              request.status === "PENDING" && (
-                                <>
-                                  <button
-                                    onClick={() =>
-                                      handleToggleOrderModal(request, "approve")
-                                    }
-                                    className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
-                                    title="Approuver"
-                                  >
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleToggleOrderModal(request, "reject")
-                                    }
-                                    className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                    title="Rejeter"
-                                  >
-                                    <XCircle className="w-4 h-4 text-red-600" />
-                                  </button>
-                                </>
-                              )}
-                            {/* Aucune action manuelle en V1 (auto-approuvé). */}
-                            {!requireJustificatif && !hasJustificatif && (
+                            {/* Validation manuelle de TOUTE demande en attente,
+                                déclarative (sans justificatif) comme avec justificatif. */}
+                            {request.status === "PENDING" && (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    handleToggleOrderModal(request, "approve")
+                                  }
+                                  className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                                  title="Approuver (génère la carte)"
+                                >
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleToggleOrderModal(request, "reject")
+                                  }
+                                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Rejeter"
+                                >
+                                  <XCircle className="w-4 h-4 text-red-600" />
+                                </button>
+                              </>
+                            )}
+                            {/* Demande déjà traitée et sans justificatif : rien à faire. */}
+                            {request.status !== "PENDING" && !hasJustificatif && (
                               <span className="text-xs text-gray-400">—</span>
                             )}
                           </div>

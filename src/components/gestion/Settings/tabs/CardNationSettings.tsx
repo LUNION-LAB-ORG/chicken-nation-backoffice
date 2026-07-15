@@ -27,7 +27,7 @@ const CardNationSettings: React.FC = () => {
         key: REQUIRE_JUSTIFICATIF_KEY,
         value: requireJustificatif ? "true" : "false",
         description:
-          "Carte de la Nation : exiger un justificatif étudiant + revue admin (V2). false = mode déclaratif V1 (émission automatique).",
+          "Carte de la Nation : exiger un justificatif étudiant à la demande (V2). false = demande déclarative V1 (sans justificatif). Dans les deux cas, la demande arrive en attente et la carte n'est émise qu'après validation au backoffice.",
       },
       {
         onSuccess: () => {
@@ -52,7 +52,9 @@ const CardNationSettings: React.FC = () => {
         Carte de la Nation
       </h3>
       <p className="text-sm text-gray-500 mb-6">
-        Mode d&apos;émission de la carte. La carte est ouverte à tous.
+        Mode de <strong>demande</strong> de la carte. La carte est ouverte à
+        tous. Dans les deux modes, la demande arrive en attente et la carte
+        n&apos;est émise qu&apos;après <strong>validation au backoffice</strong>.
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,9 +80,10 @@ const CardNationSettings: React.FC = () => {
             )}
           </div>
           <p className="text-sm text-gray-600">
-            La demande (opt-in) déclenche l&apos;émission automatique et
-            immédiate de la carte, <strong>sans justificatif</strong>. Le profil
-            (Étudiant / Professionnel) est déclaratif.
+            La demande (opt-in) est <strong>déclarative</strong>, sans
+            justificatif. Le profil (Étudiant / Professionnel) est déclaratif.
+            Elle arrive en attente et est <strong>validée au backoffice</strong>
+            pour générer la carte.
           </p>
         </button>
 
@@ -106,9 +109,9 @@ const CardNationSettings: React.FC = () => {
             )}
           </div>
           <p className="text-sm text-gray-600">
-            La demande exige un <strong>justificatif étudiant</strong> et passe
-            par une <strong>revue admin</strong> (approbation / rejet) avant
-            émission de la carte.
+            La demande exige un <strong>justificatif étudiant</strong>. Comme en
+            mode déclaratif, elle passe par une <strong>revue admin</strong>
+            (approbation / rejet) avant émission de la carte.
           </p>
         </button>
       </div>

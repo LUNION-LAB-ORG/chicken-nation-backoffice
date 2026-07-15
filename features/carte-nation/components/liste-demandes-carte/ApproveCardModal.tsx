@@ -7,6 +7,7 @@ import {
   CardLevelBadge,
   getProfileTypeLabel,
   isStudentProfile,
+  RequestKindBadge,
   resolveCardLevel,
   StudentMarkerBadge,
 } from "../../utils/getCardLevelBadge";
@@ -74,6 +75,10 @@ export function ApproveCardModal({
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Niveau :</span>
               <CardLevelBadge level={resolveCardLevel(request)} size="sm" />
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Type de demande :</span>
+              <RequestKindBadge request={request} size="sm" />
             </div>
             {request.institution && (
               <div className="flex justify-between">
