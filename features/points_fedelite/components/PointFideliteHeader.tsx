@@ -52,6 +52,10 @@ export default function PointFideliteHeader() {
             label: "Gratte & Gagne",
             onClick: () => handleViewChange("loyalty", "scratch"),
           },
+          {
+            label: "Combo Mystère",
+            onClick: () => handleViewChange("loyalty", "combo"),
+          },
         ]}
       />
     );
@@ -67,6 +71,8 @@ export default function PointFideliteHeader() {
           ? "Parrainage"
           : view === "scratch"
           ? "Gratte & Gagne"
+          : view === "combo"
+          ? "Combo Mystère"
           : "Configuration"
       }
       gradient={true}

@@ -23,7 +23,7 @@ export type TabKey =
   // Paramètres
   | 'settings';
 
-export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'scratch';
+export type ViewType = 'list' | 'create' | 'edit' | 'view' | 'scratch' | 'combo';
 
 export type PeriodFilter = 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
 
