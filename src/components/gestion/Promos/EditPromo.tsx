@@ -112,8 +112,8 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
     selectedPublicTypes: types,
     visibility: types.includes('Public') ? 'PUBLIC' : 'PRIVATE',
     targetStandard: types.includes('Utilisateur Standard') || types.includes('Public'),
-    targetPremium: types.includes('Utilisateur Premium') || types.includes('Public'),
-    targetGold: types.includes('Utilisateur Gold') || types.includes('Public')
+    targetPremium: types.includes('Utilisateur VIP') || types.includes('Public'),
+    targetGold: types.includes('Utilisateur VVIP') || types.includes('Public')
   })
 
   // Charger les restaurants, menus et catégories au montage du composant
@@ -236,7 +236,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
   }
 
   // Options pour la visibilité : Public + types privés
-  const publicTypeOptions = ['Utilisateur Standard', 'Utilisateur Premium', 'Utilisateur Gold']
+  const publicTypeOptions = ['Utilisateur Standard', 'Utilisateur VIP', 'Utilisateur VVIP']
 
   const handlePublicTypeToggle = (publicType: string) => {
     const currentTypes = unifiedFormData.selectedPublicTypes

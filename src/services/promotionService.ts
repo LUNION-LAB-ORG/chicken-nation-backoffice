@@ -425,8 +425,8 @@ export const mapApiPromotionToUnifiedFormData = (apiPromo: ApiPromotion): Unifie
     publicTypes.push('Public');
   } else {
     if (apiPromo.target_standard) publicTypes.push('Utilisateur Standard');
-    if (apiPromo.target_premium) publicTypes.push('Utilisateur Premium');
-    if (apiPromo.target_gold) publicTypes.push('Utilisateur Gold');
+    if (apiPromo.target_premium) publicTypes.push('Utilisateur VIP');
+    if (apiPromo.target_gold) publicTypes.push('Utilisateur VVIP');
   }
   baseData.selectedPublicTypes = publicTypes;
   baseData.targetStandard = apiPromo.target_standard;
@@ -593,8 +593,8 @@ export const mapUnifiedFormDataToApiPromotion = (formData: UnifiedPromoFormData,
     // Privé = sélection spécifique des types d'utilisateurs
     apiPromotion.visibility = 'PRIVATE';
     apiPromotion.target_standard = formData.selectedPublicTypes.includes('Utilisateur Standard') || formData.targetStandard || false;
-    apiPromotion.target_premium = formData.selectedPublicTypes.includes('Utilisateur Premium') || formData.targetPremium || false;
-    apiPromotion.target_gold = formData.selectedPublicTypes.includes('Utilisateur Gold') || formData.targetGold || false;
+    apiPromotion.target_premium = formData.selectedPublicTypes.includes('Utilisateur VIP') || formData.targetPremium || false;
+    apiPromotion.target_gold = formData.selectedPublicTypes.includes('Utilisateur VVIP') || formData.targetGold || false;
 
  
     // ✅ VALIDATION : Au moins un type doit être sélectionné en mode privé
@@ -1809,8 +1809,8 @@ export const convertDetailedApiPromotionToUnifiedFormData = (apiPromo: ApiPromot
   } else {
     
     if (apiPromo.target_standard) selectedPublicTypes.push('Utilisateur Standard');
-    if (apiPromo.target_premium) selectedPublicTypes.push('Utilisateur Premium');
-    if (apiPromo.target_gold) selectedPublicTypes.push('Utilisateur Gold');
+    if (apiPromo.target_premium) selectedPublicTypes.push('Utilisateur VIP');
+    if (apiPromo.target_gold) selectedPublicTypes.push('Utilisateur VVIP');
   }
   baseData.selectedPublicTypes = selectedPublicTypes;
  

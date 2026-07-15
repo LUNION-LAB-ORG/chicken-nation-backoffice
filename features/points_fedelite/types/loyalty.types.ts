@@ -2,7 +2,7 @@ import { Customer } from "../../customer/types/customer.types";
 import { Order } from "../../orders/types/order.types";
 
 export type LoyaltyPointType = "EARNED" | "REDEEMED" | "EXPIRED" | "BONUS";
-export type LoyaltyLevel = "STANDARD" | "PREMIUM" | "GOLD";
+export type LoyaltyLevel = "STANDARD" | "VIP" | "VVIP";
 
 export interface LoyaltyPoint {
     id: string;
@@ -54,6 +54,8 @@ export interface CustomerLoyaltyInfo {
     used_points: number;
     expired_points: number;
     current_level: LoyaltyLevel;
+    /** Points de statut cumulés (fenêtre glissante 12 mois) déterminant le niveau. */
+    status_points?: number;
     points_to_next_level: number | null;
     next_level: LoyaltyLevel | null;
     level_history: LoyaltyLevelHistory[];

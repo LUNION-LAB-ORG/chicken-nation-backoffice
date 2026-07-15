@@ -103,7 +103,7 @@ export async function getClientsByZone(
 }
 
 /**
- * Répartition par niveau de fidélité (STANDARD / PREMIUM / GOLD).
+ * Répartition par niveau de fidélité (STANDARD / VIP / VVIP).
  */
 export async function getLoyaltyDistribution(
   params: ClientsStatsQueryParams = {},

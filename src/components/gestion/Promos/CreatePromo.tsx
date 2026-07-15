@@ -175,8 +175,8 @@ const CreatePromo = ({
   // Options pour la visibilité : Public + types privés
   const publicTypeOptions = [
     "Utilisateur Standard",
-    "Utilisateur Premium",
-    "Utilisateur Gold",
+    "Utilisateur VIP",
+    "Utilisateur VVIP",
   ];
 
   const handlePublicTypeToggle = (publicType: string) => {

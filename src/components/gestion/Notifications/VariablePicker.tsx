@@ -8,7 +8,7 @@ const VARIABLES = [
   { key: "last_name", label: "Nom", example: "Koné" },
   { key: "phone", label: "Téléphone", example: "+22507..." },
   { key: "city", label: "Ville", example: "Abidjan" },
-  { key: "loyalty_level", label: "Fidélité", example: "GOLD" },
+  { key: "loyalty_level", label: "Fidélité", example: "VVIP" },
   { key: "total_points", label: "Points", example: "1500" },
 ];
 

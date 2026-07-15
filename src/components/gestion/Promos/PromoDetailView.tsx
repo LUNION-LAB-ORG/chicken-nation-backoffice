@@ -372,7 +372,7 @@ const PromoDetailView = ({
                   <span className="font-medium">Standard</span>
                 </div>
 
-                {/* Premium - toujours affiché */}
+                {/* VIP - toujours affiché */}
                 <div
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg ${
                     promo.visibility === "PRIVATE"
@@ -383,10 +383,10 @@ const PromoDetailView = ({
                   }`}
                 >
                   <span className="text-lg">💎</span>
-                  <span className="font-medium">Premium</span>
+                  <span className="font-medium">VIP</span>
                 </div>
 
-                {/* Gold - toujours affiché */}
+                {/* VVIP - toujours affiché */}
                 <div
                   className={`flex items-center gap-3 px-4 py-2 rounded-lg ${
                     promo.visibility === "PRIVATE"
@@ -397,7 +397,7 @@ const PromoDetailView = ({
                   }`}
                 >
                   <span className="text-lg">👑</span>
-                  <span className="font-medium">Gold</span>
+                  <span className="font-medium">VVIP</span>
                 </div>
               </div>
             </div>

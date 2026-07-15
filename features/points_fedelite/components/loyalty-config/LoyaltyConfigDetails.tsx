@@ -54,12 +54,12 @@ export const LoyaltyConfigDetails = ({ config }: LoyaltyConfigDetailsProps) => {
             color="bg-gray-400"
           />
           <LevelCard
-            level="Premium"
+            level="VIP"
             threshold={config.premium_threshold}
             color="bg-blue-500"
           />
           <LevelCard
-            level="Gold"
+            level="VVIP"
             threshold={config.gold_threshold}
             color="bg-yellow-500"
           />

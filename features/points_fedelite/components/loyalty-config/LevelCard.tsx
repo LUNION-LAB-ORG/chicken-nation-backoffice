@@ -17,7 +17,7 @@ export const LevelCard = ({
       className={`w-12 h-12 ${color} rounded-full mx-auto mb-2 flex items-center justify-center`}
     >
       <span className="text-white text-xl font-bold">
-        {level === "Gold" ? "👑" : level === "Premium" ? "⭐" : "🥉"}
+        {level === "VVIP" ? "👑" : level === "VIP" ? "⭐" : "🥉"}
       </span>
     </div>
     <h4 className="font-semibold text-gray-700 mb-1">{level}</h4>

@@ -19,8 +19,8 @@ interface Props {
 const LOYALTY_LEVELS = [
   { value: "", label: "Tous" },
   { value: "STANDARD", label: "Standard" },
-  { value: "GOLD", label: "Gold" },
-  { value: "PREMIUM", label: "Premium" },
+  { value: "VVIP", label: "VVIP" },
+  { value: "VIP", label: "VIP" },
 ];
 
 export default function CreateSegmentModal({
@@ -197,7 +197,7 @@ export default function CreateSegmentModal({
             <input
               type="text"
               className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              placeholder="Ex: Clients Gold d'Abidjan avec 5+ commandes"
+              placeholder="Ex: Clients VVIP d'Abidjan avec 5+ commandes"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

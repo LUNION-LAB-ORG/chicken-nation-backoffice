@@ -14,7 +14,7 @@ const VisibilitySelector = ({ selectedTypes, onTypesChange, className = '' }: Vi
   const [showPrivateDropdown, setShowPrivateDropdown] = useState(false)
   const privateDropdownRef = useRef<HTMLDivElement>(null)
 
-  const privateTypeOptions = ['Utilisateur Standard', 'Utilisateur Premium', 'Utilisateur Gold']
+  const privateTypeOptions = ['Utilisateur Standard', 'Utilisateur VIP', 'Utilisateur VVIP']
 
   const handlePrivateTypeToggle = (privateType: string) => {
     const newTypes = selectedTypes.includes(privateType)

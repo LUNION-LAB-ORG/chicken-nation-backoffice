@@ -113,13 +113,13 @@ function getRestaurantMarkerIcon(color: string, size = 32, selected = false) {
 // === Couleurs specifiques clients ===
 const LOYALTY_COLORS: Record<string, string> = {
   STANDARD: CHART_COLORS.blue,
-  PREMIUM: CHART_COLORS.primary,
-  GOLD: "#F59E0B",
+  VIP: CHART_COLORS.primary,
+  VVIP: "#F59E0B",
 };
 const LOYALTY_LABELS: Record<string, string> = {
   STANDARD: "Standard",
-  PREMIUM: "Premium",
-  GOLD: "Gold",
+  VIP: "VIP",
+  VVIP: "VVIP",
 };
 const PAYMENT_COLORS: Record<string, string> = {
   ONLINE: CHART_COLORS.success,
@@ -961,9 +961,9 @@ export default function StatsClients() {
                         className="rounded-xl p-2.5"
                         style={{
                           backgroundColor:
-                            item.level === "GOLD"
+                            item.level === "VVIP"
                               ? "rgba(245, 158, 11, 0.1)"
-                              : item.level === "PREMIUM"
+                              : item.level === "VIP"
                               ? "rgba(241, 121, 34, 0.1)"
                               : "rgba(59, 130, 246, 0.1)",
                         }}
@@ -1330,9 +1330,9 @@ export default function StatsClients() {
                     className="text-xs px-2 py-0.5 rounded-full font-medium"
                     style={{
                       backgroundColor:
-                        c.loyaltyLevel === "GOLD"
+                        c.loyaltyLevel === "VVIP"
                           ? "rgba(245, 158, 11, 0.15)"
-                          : c.loyaltyLevel === "PREMIUM"
+                          : c.loyaltyLevel === "VIP"
                           ? "rgba(241, 121, 34, 0.15)"
                           : "rgba(59, 130, 246, 0.1)",
                       color:

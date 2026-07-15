@@ -53,6 +53,16 @@ export const getIsUsedBadge = (points: number, points_used: number) => {
   );
 };
 
+// Libellé humain d'un niveau de fidélité (Standard / VIP / VVIP)
+export const LOYALTY_LEVEL_LABELS: Record<LoyaltyLevel, string> = {
+  STANDARD: "Standard",
+  VIP: "VIP",
+  VVIP: "VVIP",
+};
+
+export const getLoyaltyLevelLabel = (level: LoyaltyLevel | string | null | undefined) =>
+  (level && LOYALTY_LEVEL_LABELS[level as LoyaltyLevel]) || level || "Standard";
+
 // Badge pour le niveau de fidélité
 export const getLoyaltyLevelBadge = (level: LoyaltyLevel) => {
   const badges = {
@@ -61,14 +71,14 @@ export const getLoyaltyLevelBadge = (level: LoyaltyLevel) => {
         <span className="mr-1">⭐</span> Standard
       </span>
     ),
-    PREMIUM: (
+    VIP: (
       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-        <span className="mr-1">⭐⭐</span> Premium
+        <span className="mr-1">⭐⭐</span> VIP
       </span>
     ),
-    GOLD: (
+    VVIP: (
       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-        <span className="mr-1">⭐⭐⭐</span> Gold
+        <span className="mr-1">⭐⭐⭐</span> VVIP
       </span>
     ),
   };

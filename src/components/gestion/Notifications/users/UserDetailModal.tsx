@@ -23,9 +23,15 @@ interface Props {
 }
 
 const LOYALTY_COLORS: Record<string, { bg: string; text: string }> = {
-  GOLD: { bg: "bg-yellow-100", text: "text-yellow-700" },
-  PREMIUM: { bg: "bg-purple-100", text: "text-purple-700" },
+  VVIP: { bg: "bg-yellow-100", text: "text-yellow-700" },
+  VIP: { bg: "bg-purple-100", text: "text-purple-700" },
   STANDARD: { bg: "bg-gray-100", text: "text-gray-600" },
+};
+
+const LOYALTY_LABELS: Record<string, string> = {
+  STANDARD: "Standard",
+  VIP: "VIP",
+  VVIP: "VVIP",
 };
 
 export default function UserDetailModal({ isOpen, onClose, user }: Props) {
@@ -84,7 +90,7 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${colors.bg} ${colors.text}`}
             >
-              {loyalty}
+              {LOYALTY_LABELS[loyalty] ?? loyalty}
             </span>
           </div>
           {detail?.customer?.addresses?.[0]?.city && (

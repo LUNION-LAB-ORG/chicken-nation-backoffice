@@ -94,13 +94,13 @@ export const LoyaltyConfigForm = ({
             type="number"
           />
           <FormField
-            label="Premium"
+            label="VIP"
             value={formData.premium_threshold}
             onChange={(v) => setFormData({ ...formData, premium_threshold: v })}
             type="number"
           />
           <FormField
-            label="Gold"
+            label="VVIP"
             value={formData.gold_threshold}
             onChange={(v) => setFormData({ ...formData, gold_threshold: v })}
             type="number"

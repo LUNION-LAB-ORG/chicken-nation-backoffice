@@ -680,8 +680,8 @@ function OfferFormModal({
                     <div className="flex gap-4">
                       {([
                         ["target_standard", "Standard"],
-                        ["target_premium", "Premium"],
-                        ["target_gold", "Gold"],
+                        ["target_premium", "VIP"],
+                        ["target_gold", "VVIP"],
                       ] as const).map(([key, lbl]) => (
                         <label key={key} className="flex items-center gap-1.5 text-sm text-gray-700">
                           <input type="checkbox" checked={form[key]} onChange={(e) => set(key, e.target.checked)} />

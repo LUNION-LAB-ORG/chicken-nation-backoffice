@@ -208,7 +208,7 @@ export const isEligibleForLoyaltyUpgrade = (customer: Customer): boolean => {
 
     // Logique de mise à niveau (exemple)
     if (currentLevel === 'STANDARD' && points >= 1000) return true
-    if (currentLevel === "PREMIUM" && points >= 5000) return true
+    if (currentLevel === "VIP" && points >= 5000) return true
 
     return false
 }
@@ -220,12 +220,12 @@ export const calculateLoyaltyProgress = (customer: Customer): number => {
     const currentLevel = customer.loyalty_level || "STANDARD"
     const points = customer.total_points || 0
 
-    if (currentLevel === "GOLD") return 100 // Niveau max atteint
+    if (currentLevel === "VVIP") return 100 // Niveau max atteint
 
     const thresholds = {
         "STANDARD": { next: 1000 },
-        "PREMIUM": { next: 5000 },
-        "GOLD": { next: 0 },
+        "VIP": { next: 5000 },
+        "VVIP": { next: 0 },
     }
 
     const threshold = thresholds[currentLevel].next

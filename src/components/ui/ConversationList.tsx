@@ -171,9 +171,9 @@ const ConversationList: React.FC<ConversationListProps> = ({
                     {conversation.client.user_type && (
                       <span className={`
                         text-xs px-2 py-1 rounded-full font-medium
-                        ${conversation.client.user_type === 'PREMIUM' 
-                          ? 'bg-purple-100 text-purple-700' 
-                          : conversation.client.user_type === 'GOLD'
+                        ${conversation.client.user_type === 'VIP'
+                          ? 'bg-purple-100 text-purple-700'
+                          : conversation.client.user_type === 'VVIP'
                           ? 'bg-yellow-100 text-yellow-700'
                           : 'bg-gray-100 text-gray-700'
                         }

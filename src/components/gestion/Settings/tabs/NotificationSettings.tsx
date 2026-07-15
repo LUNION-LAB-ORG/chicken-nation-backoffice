@@ -64,9 +64,9 @@ const AUTO_TAGS = [
   {
     key: "loyalty_level",
     label: "Niveau de fidélité",
-    description: "STANDARD, PREMIUM ou GOLD — offres personnalisées par tier",
+    description: "STANDARD, VIP ou VVIP — offres personnalisées par tier",
     source: "fidélité",
-    example: "Ex : loyalty_level = GOLD → offres VIP exclusives",
+    example: "Ex : loyalty_level = VVIP → offres exclusives",
   },
 ];
 

@@ -39,8 +39,8 @@ const TYPES: {
 
 const LEVELS: { key: LoyaltyLevel; label: string }[] = [
   { key: "STANDARD", label: "Standard" },
-  { key: "PREMIUM", label: "Premium" },
-  { key: "GOLD", label: "Gold" },
+  { key: "VIP", label: "VIP" },
+  { key: "VVIP", label: "VVIP" },
 ];
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {

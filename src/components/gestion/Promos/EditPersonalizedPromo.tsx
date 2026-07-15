@@ -299,8 +299,8 @@ const EditPersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: 
       targetGold = promoData.targetGold || false;
 
       if (targetStandard) selectedPublicTypes.push('Utilisateur Standard');
-      if (targetPremium) selectedPublicTypes.push('Utilisateur Premium');
-      if (targetGold) selectedPublicTypes.push('Utilisateur Gold');
+      if (targetPremium) selectedPublicTypes.push('Utilisateur VIP');
+      if (targetGold) selectedPublicTypes.push('Utilisateur VVIP');
     }
 
     return {

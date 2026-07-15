@@ -55,7 +55,7 @@ const PersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: Pers
 
     // Si c'est privé, afficher les types sélectionnés
     const privateTypes = unifiedFormData.selectedPublicTypes.filter(type =>
-      ['Utilisateur Standard', 'Utilisateur Premium', 'Utilisateur Gold'].includes(type)
+      ['Utilisateur Standard', 'Utilisateur VIP', 'Utilisateur VVIP'].includes(type)
     );
 
     if (privateTypes.length === 0) {

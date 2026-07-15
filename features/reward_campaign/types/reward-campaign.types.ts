@@ -1,6 +1,6 @@
 export type RewardCampaignType = "GIFT" | "VOUCHER" | "PROMO_CODE";
 
-export type LoyaltyLevel = "STANDARD" | "PREMIUM" | "GOLD";
+export type LoyaltyLevel = "STANDARD" | "VIP" | "VVIP";
 
 export type RewardCampaignStatus =
   | "scheduled"
