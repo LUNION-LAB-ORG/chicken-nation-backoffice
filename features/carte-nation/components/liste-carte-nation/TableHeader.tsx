@@ -34,7 +34,7 @@ export function TableHeader({ onSelectAll, isAllSelected }: TableHeaderProps) {
             N° Carte
           </th>
           <th className="whitespace-nowrap py-3 px-4 text-left text-sm font-semibold text-gray-600">
-            Institution
+            Niveau
           </th>
           <th className="whitespace-nowrap py-3 px-4 text-left text-sm font-semibold text-gray-600">
             Statut

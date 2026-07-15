@@ -1,14 +1,22 @@
 "use client";
 
 import { PaginationInfo } from "@/components/TableStates";
+import { useSettingQuery } from "@/hooks/useSettingsQuery";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
-import { CheckCircle2, Eye, XCircle } from "lucide-react";
+import { CheckCircle2, Eye, Info, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { useRequestListQuery } from "../../queries/requests.query";
 import { CardRequest, CardRequestStatus } from "../../types/carte-nation.types";
+import {
+  CardLevelBadge,
+  getProfileTypeLabel,
+  isStudentProfile,
+  resolveCardLevel,
+  StudentMarkerBadge,
+} from "../../utils/getCardLevelBadge";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 import { ApproveCardModal } from "./ApproveCardModal";
 import { RejectCardModal } from "./RejectCardModal";
@@ -20,6 +28,13 @@ export function DemandeCarteList() {
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
+
+  // Mode d'émission : V1 déclaratif (auto-approuvé) vs V2 justificatif (revue admin).
+  const { data: requireJustificatifSetting } = useSettingQuery(
+    "card.require_justificatif"
+  );
+  const requireJustificatif = requireJustificatifSetting?.value === "true";
+
   const { data: requests, isLoading } = useRequestListQuery({
     page: pagination.page,
     limit: pagination.limit,
@@ -37,6 +52,32 @@ export function DemandeCarteList() {
   return (
     <div>
       <div className="max-w-7xl mx-auto">
+        {/* Bandeau explicatif du mode courant */}
+        {requireJustificatif ? (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-600" />
+            <div className="text-sm text-blue-800">
+              <span className="font-semibold">
+                Mode justificatif (V2) actif.
+              </span>{" "}
+              Les demandes nécessitent un justificatif étudiant et une revue
+              admin (approbation / rejet) avant émission de la carte.
+            </div>
+          </div>
+        ) : (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+            <div className="text-sm text-emerald-800">
+              <span className="font-semibold">
+                Mode déclaratif (V1) actif.
+              </span>{" "}
+              Les demandes sont <strong>approuvées automatiquement</strong> et la
+              carte émise immédiatement, sans justificatif à examiner. Le profil
+              (Étudiant / Professionnel) est déclaratif.
+            </div>
+          </div>
+        )}
+
         {/* Filtrage */}
         <StatutCardRequestTab />
         {/* Requests List */}
@@ -49,7 +90,10 @@ export function DemandeCarteList() {
                     Client
                   </th>
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
-                    Institution
+                    Profil
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
+                    Niveau
                   </th>
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
                     Surnom
@@ -68,104 +112,136 @@ export function DemandeCarteList() {
               <tbody>
                 {requests?.data.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center text-gray-500">
+                    <td colSpan={7} className="py-12 text-center text-gray-500">
                       Aucune demande trouvée
                     </td>
                   </tr>
                 ) : (
-                  requests?.data.map((request) => (
-                    <tr
-                      key={request.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-3">
-                          {request.customer?.image ? (
-                            <Image
-                              src={request.customer.image || "/placeholder.svg"}
-                              alt={`${request.customer.first_name} ${request.customer.last_name}`}
-                              width={40}
-                              height={40}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#F17922] to-[#ff9f5a] flex items-center justify-center text-white font-bold text-sm">
-                              {request.customer?.first_name?.charAt(0) ?? ""}
-                              {request.customer?.last_name?.charAt(0) ?? ""}
-                            </div>
-                          )}
-                          <div>
-                            <div className="font-medium text-sm text-gray-900">
-                              {request.customer?.first_name}{" "}
-                              {request.customer?.last_name}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {request.customer?.phone}
+                  requests?.data.map((request) => {
+                    const student = isStudentProfile(request);
+                    const hasJustificatif = !!request.student_card_file_url;
+                    return (
+                      <tr
+                        key={request.id}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-3">
+                            {request.customer?.image ? (
+                              <Image
+                                src={
+                                  request.customer.image || "/placeholder.svg"
+                                }
+                                alt={`${request.customer.first_name} ${request.customer.last_name}`}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#F17922] to-[#ff9f5a] flex items-center justify-center text-white font-bold text-sm">
+                                {request.customer?.first_name?.charAt(0) ?? ""}
+                                {request.customer?.last_name?.charAt(0) ?? ""}
+                              </div>
+                            )}
+                            <div>
+                              <div className="font-medium text-sm text-gray-900">
+                                {request.customer?.first_name}{" "}
+                                {request.customer?.last_name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {request.customer?.phone}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="text-sm text-gray-900 max-w-xs">
-                          {request.institution}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        {request.nickname ? (
-                          <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
-                            {request.nickname}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-400">
-                            Non défini
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="text-sm text-gray-600">
-                          {dateToLocalString(new Date(request.created_at))}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        {getStatusBadgeRequestCard(request.status)}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              handleToggleOrderModal(request, "view")
-                            }
-                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                            title="Voir la carte"
-                          >
-                            <Eye className="w-4 h-4 text-gray-600" />
-                          </button>
-                          {request.status === "PENDING" && (
-                            <>
-                              <button
-                                onClick={() =>
-                                  handleToggleOrderModal(request, "approve")
-                                }
-                                className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
-                                title="Approuver"
-                              >
-                                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleToggleOrderModal(request, "reject")
-                                }
-                                className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                title="Rejeter"
-                              >
-                                <XCircle className="w-4 h-4 text-red-600" />
-                              </button>
-                            </>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-sm text-gray-900">
+                              {getProfileTypeLabel(
+                                request.profile_type ??
+                                  (student ? "STUDENT" : null)
+                              )}
+                            </span>
+                            {student && <StudentMarkerBadge size="sm" />}
+                            {request.institution && (
+                              <span className="text-xs text-gray-500 max-w-xs">
+                                {request.institution}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <CardLevelBadge
+                            level={resolveCardLevel(request)}
+                            size="sm"
+                          />
+                        </td>
+                        <td className="py-4 px-6">
+                          {request.nickname ? (
+                            <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-700 rounded-md text-xs font-medium">
+                              {request.nickname}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">
+                              Non défini
+                            </span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="text-sm text-gray-600">
+                            {dateToLocalString(new Date(request.created_at))}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          {getStatusBadgeRequestCard(request.status)}
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            {/* Justificatif : uniquement s'il existe (V2). */}
+                            {hasJustificatif && (
+                              <button
+                                onClick={() =>
+                                  handleToggleOrderModal(request, "view")
+                                }
+                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Voir le justificatif"
+                              >
+                                <Eye className="w-4 h-4 text-gray-600" />
+                              </button>
+                            )}
+                            {/* Revue manuelle : seulement en mode V2. */}
+                            {requireJustificatif &&
+                              request.status === "PENDING" && (
+                                <>
+                                  <button
+                                    onClick={() =>
+                                      handleToggleOrderModal(request, "approve")
+                                    }
+                                    className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
+                                    title="Approuver"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleToggleOrderModal(request, "reject")
+                                    }
+                                    className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                    title="Rejeter"
+                                  >
+                                    <XCircle className="w-4 h-4 text-red-600" />
+                                  </button>
+                                </>
+                              )}
+                            {/* Aucune action manuelle en V1 (auto-approuvé). */}
+                            {!requireJustificatif && !hasJustificatif && (
+                              <span className="text-xs text-gray-400">—</span>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -220,7 +296,7 @@ export function DemandeCarteList() {
             </button>
             <Image
               src={formatImageUrl(
-                (selectedItem as CardRequest)?.student_card_file_url
+                (selectedItem as CardRequest)?.student_card_file_url ?? undefined
               )}
               alt="Carte étudiante"
               width={1200}

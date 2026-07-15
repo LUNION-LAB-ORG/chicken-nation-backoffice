@@ -1,16 +1,34 @@
 import { Customer } from "../../customer/types/customer.types"
+import { LoyaltyLevel } from "../../points_fedelite/types/loyalty.types"
 
 
 export type CardRequestStatus = "PENDING" | "IN_REVIEW" | "APPROVED" | "REJECTED" | "EXPIRED"
 
 export type NationCardStatus = "ACTIVE" | "SUSPENDED" | "REVOKED"
 
+/**
+ * Profil DECLARATIF choisi par le client à la demande (Phase 3).
+ * Indépendant du niveau (un ETUDIANT peut être VIP/VVIP).
+ */
+export type CardProfileType = "STUDENT" | "PROFESSIONAL"
+
+/** Niveau de la carte, piloté par status_points (Standard / VIP / VVIP). */
+export type CardLevel = LoyaltyLevel
+
 export interface CardRequest {
     id: string;
     customer_id: string;
     nickname: string | null;
-    institution: string;
-    student_card_file_url: string;
+    /** V2 (justificatif) uniquement ; null en V1 déclaratif. */
+    institution: string | null;
+    /** V2 (justificatif) uniquement ; null en V1 déclaratif. */
+    student_card_file_url: string | null;
+    /** Profil déclaratif (Étudiant / Professionnel) — Phase 3. */
+    profile_type?: CardProfileType | null;
+    /** Marqueur ÉTUDIANT déclaratif (indépendant du niveau). */
+    is_student?: boolean | null;
+    /** Niveau calculé à l'émission (Standard/VIP/VVIP). */
+    level?: CardLevel | null;
     status: CardRequestStatus;
     rejection_reason: string | null;
     reviewed_by: string | null;
@@ -31,6 +49,10 @@ export interface NationCard {
     qr_code_value: string;
     card_image_url: string;
     status: NationCardStatus;
+    /** Niveau de la carte (Standard/VIP/VVIP) — régénéré au changement de niveau / reset annuel. */
+    level?: CardLevel | null;
+    /** Marqueur ÉTUDIANT déclaratif (indépendant du niveau). */
+    is_student?: boolean | null;
     created_at: string;
     updated_at: string;
     // Relations

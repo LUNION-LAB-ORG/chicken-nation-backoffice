@@ -3,6 +3,13 @@
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { CardRequest } from "../../types/carte-nation.types";
 import { useReviewRequestMutation } from "../../queries/card-nation.mutation";
+import {
+  CardLevelBadge,
+  getProfileTypeLabel,
+  isStudentProfile,
+  resolveCardLevel,
+  StudentMarkerBadge,
+} from "../../utils/getCardLevelBadge";
 
 interface ApproveCardModalProps {
   isOpen: boolean;
@@ -52,12 +59,30 @@ export function ApproveCardModal({
                 {request.customer?.first_name} {request.customer?.last_name}
               </span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Institution :</span>
-              <span className="text-sm font-medium text-gray-900">
-                {request.institution}
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Profil :</span>
+              <span className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-900">
+                  {getProfileTypeLabel(
+                    request.profile_type ??
+                      (isStudentProfile(request) ? "STUDENT" : null)
+                  )}
+                </span>
+                {isStudentProfile(request) && <StudentMarkerBadge size="sm" />}
               </span>
             </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">Niveau :</span>
+              <CardLevelBadge level={resolveCardLevel(request)} size="sm" />
+            </div>
+            {request.institution && (
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Institution :</span>
+                <span className="text-sm font-medium text-gray-900">
+                  {request.institution}
+                </span>
+              </div>
+            )}
             {request.nickname && (
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">Surnom :</span>

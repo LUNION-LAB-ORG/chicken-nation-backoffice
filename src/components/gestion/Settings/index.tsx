@@ -13,6 +13,7 @@ import MarketingReportSettings from "./tabs/MarketingReportSettings";
 import NotificationSettings from "./tabs/NotificationSettings";
 import HubRiseSettings from "./tabs/HubRiseSettings";
 import PrinterSettings from "./tabs/PrinterSettings";
+import CardNationSettings from "./tabs/CardNationSettings";
 import { ParametresView as BaseDonneesSettings } from "../../../../features/base-donnees/components/ParametresView";
 
 const TABS = [
@@ -24,6 +25,7 @@ const TABS = [
   { key: "payment", label: "Paiements" },
   { key: "marketing_report", label: "Marketing" },
   { key: "notifications", label: "Notifications" },
+  { key: "card_nation", label: "Carte Nation" },
   { key: "hubrise", label: "HubRise" },
   { key: "printer", label: "Imprimante" },
 ];
@@ -57,6 +59,7 @@ const Settings: React.FC = () => {
           </div>
         )}
         {activeTab === "notifications" && <NotificationSettings />}
+        {activeTab === "card_nation" && <CardNationSettings />}
         {activeTab === "hubrise" && <HubRiseSettings />}
         {activeTab === "printer" && <PrinterSettings />}
       </div>

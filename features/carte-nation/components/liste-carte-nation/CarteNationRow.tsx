@@ -6,6 +6,12 @@ import { createPortal } from "react-dom";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { NationCard } from "../../types/carte-nation.types";
 import { getStatusBadgeCard } from "../../utils/getStatusBadgeCard";
+import {
+  CardLevelBadge,
+  isStudentProfile,
+  resolveCardLevel,
+  StudentMarkerBadge,
+} from "../../utils/getCardLevelBadge";
 import CarteNationContextMenu from "./CarteNationContextMenu";
 
 interface ClientRowProps {
@@ -103,10 +109,9 @@ export function CarteNationRow({
               </div>
               {getStatusBadgeCard(carteNation.status)}
             </div>
-            <div className="text-sm text-gray-600 mb-2">
-              <span className="font-medium">
-                {carteNation.card_request?.institution || "N/A"}
-              </span>
+            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+              <CardLevelBadge level={resolveCardLevel(carteNation)} size="sm" />
+              {isStudentProfile(carteNation) && <StudentMarkerBadge size="sm" />}
             </div>
             <div className="flex justify-between items-center text-xs text-gray-500">
               <span>Émise le {formattedDate}</span>
@@ -157,8 +162,11 @@ export function CarteNationRow({
       <td className="py-3 px-4 font-mono text-sm text-gray-600">
         {carteNation.card_number}
       </td>
-      <td className="py-3 px-4 text-sm text-gray-600">
-        {carteNation.card_request?.institution || "---"}
+      <td className="py-3 px-4">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <CardLevelBadge level={resolveCardLevel(carteNation)} size="sm" />
+          {isStudentProfile(carteNation) && <StudentMarkerBadge size="sm" />}
+        </div>
       </td>
       <td className="py-3 px-4">{getStatusBadgeCard(carteNation.status)}</td>
       <td className="py-3 px-4 text-sm text-gray-500">{formattedDate}</td>

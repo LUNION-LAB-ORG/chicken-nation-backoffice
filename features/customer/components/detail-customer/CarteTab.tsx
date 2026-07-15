@@ -4,6 +4,12 @@ import Image from "next/image";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
 import { getStatusBadgeCard } from "../../../carte-nation/utils/getStatusBadgeCard";
+import {
+  CardLevelBadge,
+  isStudentProfile,
+  resolveCardLevel,
+  StudentMarkerBadge,
+} from "../../../carte-nation/utils/getCardLevelBadge";
 import { QRCode } from "@/components/kibo-ui/qr-code";
 import { useState } from "react";
 import { CardRequest } from "../../../carte-nation/types/carte-nation.types";
@@ -39,9 +45,12 @@ export function CarteTab({ customerData }: CarteTabProps) {
                 <h3 className="text-xl font-bold text-gray-900">
                   Carte Nation Active
                 </h3>
-                <p className="text-sm text-gray-600">
-                  Carte étudiante vérifiée
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <CardLevelBadge level={resolveCardLevel(nationCards)} size="sm" />
+                  {isStudentProfile(nationCards) && (
+                    <StudentMarkerBadge size="sm" />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -140,10 +149,17 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       </span>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-sm text-gray-900">
-                        <span className="font-medium">Institution :</span>{" "}
-                        {request.institution}
-                      </div>
+                      {request.institution && (
+                        <div className="text-sm text-gray-900">
+                          <span className="font-medium">Institution :</span>{" "}
+                          {request.institution}
+                        </div>
+                      )}
+                      {isStudentProfile(request) && (
+                        <div className="text-sm text-gray-900">
+                          <span className="font-medium">Profil :</span> Étudiant
+                        </div>
+                      )}
                       {request.rejection_reason && (
                         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                           <p className="text-sm text-red-800">
@@ -156,15 +172,17 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       )}
                     </div>
                   </div>
-                  <div className="shrink-0">
-                    <button
-                      onClick={() => setShowImage({ request, status: true })}
-                      className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex items-center gap-2"
-                    >
-                      <Eye className="w-4 h-4" />
-                      Voir le document
-                    </button>
-                  </div>
+                  {request.student_card_file_url && (
+                    <div className="shrink-0">
+                      <button
+                        onClick={() => setShowImage({ request, status: true })}
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        Voir le document
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -188,7 +206,8 @@ export function CarteTab({ customerData }: CarteTabProps) {
             </button>
             <Image
               src={formatImageUrl(
-                (showImage.request as CardRequest)?.student_card_file_url
+                (showImage.request as CardRequest)?.student_card_file_url ??
+                  undefined
               )}
               alt="Carte étudiante"
               width={1200}
