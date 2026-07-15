@@ -14,21 +14,21 @@ interface ConfirmPaymentActionProps {
  * paiement EN LIGNE (KKiaPay). Rejoue la vérification KKiaPay côté serveur à
  * partir d'une Référence de transaction saisie manuellement.
  *
- * Visibilité : uniquement si la commande est PENDING + payée en ligne.
+ * Visibilité : uniquement si la commande est encore PENDING.
  *  - `order.rawStatus === OrderStatus.PENDING` : statut brut (source de vérité
  *    du workflow, cf. ordersTable.types — `status` n'est qu'un libellé).
- *  - `order.paymentChannel === "Appli"` : canal de paiement dérivé dans
- *    orderMapper (ONLINE → "Appli", OFFLINE / commande manuelle → "Restaurant").
+ *  - Le contexte « paiement en ligne » est garanti par l'emplacement d'appel
+ *    (branche ONLINE du tab Paiement du drawer). On ne filtre donc PLUS sur
+ *    `paymentChannel === "Appli"` : une commande payée en ligne mais créée au
+ *    call center (`auto=false` → channel "Restaurant") doit AUSSI pouvoir être
+ *    réconciliée par l'admin.
  */
 const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [transactionId, setTransactionId] = useState("");
   const { mutate, isPending } = useConfirmPaymentMutation();
 
-  const isPendingOnline =
-    order.rawStatus === OrderStatus.PENDING && order.paymentChannel === "Appli";
-
-  if (!isPendingOnline) return null;
+  if (order.rawStatus !== OrderStatus.PENDING) return null;
 
   const handleConfirm = () => {
     const trimmed = transactionId.trim();

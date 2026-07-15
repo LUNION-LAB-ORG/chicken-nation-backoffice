@@ -26,6 +26,7 @@ import { type Order, PaymentMethod } from "../../../orders/types/order.types";
 import { PaiementMode, PaiementStatus, type Paiement } from "../../../orders/types/paiement.types";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import { useIsAdmin } from "../../../users/hook/useIsAdmin";
+import ConfirmPaymentAction from "../../../orders/components/detail-order/ConfirmPaymentAction";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
@@ -206,6 +207,11 @@ export function DrawerPaymentTab({ order }: Props) {
           </div>
         </div>
         {paymentSummary}
+        {/* Réconciliation admin d'une commande en ligne restée PENDING
+            (webhook KKiaPay perdu) : l'admin saisit la référence de transaction
+            KKiaPay → le serveur re-vérifie et confirme (paiement + points +
+            reward + parrainage). Le composant s'auto-masque hors PENDING. */}
+        {isAdmin && <ConfirmPaymentAction order={uiOrder} />}
         <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
       </div>
     );

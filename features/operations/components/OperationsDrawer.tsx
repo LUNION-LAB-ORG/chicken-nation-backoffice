@@ -6,8 +6,9 @@ import { fr } from "date-fns/locale";
 import { X } from "lucide-react";
 
 import { useOrderDetailQuery } from "../../orders/queries/order-detail.query";
-import { DeliveryService, OrderType, PaymentMethod, type Order } from "../../orders/types/order.types";
+import { DeliveryService, OrderStatus, OrderType, PaymentMethod, type Order } from "../../orders/types/order.types";
 import { useOrderActions } from "../../orders/hooks/useOrderActions";
+import { useIsAdmin } from "../../users/hook/useIsAdmin";
 import { Printer } from "lucide-react";
 import { TYPE_LABEL } from "../utils/status-colors";
 import { DrawerActionsChickenNation } from "./drawer/DrawerActionsChickenNation";
@@ -40,6 +41,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
   const isOpen = order !== null;
   const [tab, setTab] = useState<DrawerTabKey>(initialTab ?? "details");
   const { handlePrintOrder, isLoading } = useOrderActions();
+  const isAdmin = useIsAdmin();
 
   // Live : on récupère la version fraîche de la commande (invalidée par socket).
   // Fallback sur la prop tant que le fetch n'a pas encore résolu.
@@ -62,7 +64,13 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
     !!live &&
     ((live.payment_method === PaymentMethod.OFFLINE &&
       ["PICKED_UP", "COLLECTED", "COMPLETED"].includes(live.status)) ||
-      (live.paiements?.length ?? 0) > 0);
+      (live.paiements?.length ?? 0) > 0 ||
+      // ONLINE encore PENDING (paiement web non enregistré, ex. webhook KKiaPay
+      // perdu) → tab Paiement accessible à l'ADMIN pour réconcilier via la
+      // référence de transaction KKiaPay.
+      (isAdmin &&
+        live.payment_method !== PaymentMethod.OFFLINE &&
+        live.status === OrderStatus.PENDING));
 
   return (
     <>
