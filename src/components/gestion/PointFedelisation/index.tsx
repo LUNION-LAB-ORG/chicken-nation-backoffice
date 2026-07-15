@@ -10,6 +10,7 @@ import { LoyaltyPointType } from "../../../../features/points_fedelite/types/loy
 import LoyaltyConfigManager from "../../../../features/points_fedelite/components/loyalty-config/LoyaltyConfigManager";
 import SendGiftManager from "../../../../features/reward_campaign/components/SendGiftManager";
 import ReferralPanel from "../../../../features/referral/components/ReferralPanel";
+import ScratchGameManager from "../../../../features/scratch_game/components/ScratchGameManager";
 
 export default function PointFedelisation() {
   const {
@@ -51,6 +52,7 @@ export default function PointFedelisation() {
       {activeTab == "loyalty" && view === "view" && <LoyaltyConfigManager />}
       {activeTab == "loyalty" && view === "create" && <SendGiftManager />}
       {activeTab == "loyalty" && view === "edit" && <ReferralPanel />}
+      {activeTab == "loyalty" && view === "scratch" && <ScratchGameManager />}
     </div>
   );
 }

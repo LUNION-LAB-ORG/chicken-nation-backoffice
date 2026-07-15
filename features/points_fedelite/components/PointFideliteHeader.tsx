@@ -48,6 +48,10 @@ export default function PointFideliteHeader() {
             label: "Parrainage",
             onClick: () => handleViewChange("loyalty", "edit"),
           },
+          {
+            label: "Gratte & Gagne",
+            onClick: () => handleViewChange("loyalty", "scratch"),
+          },
         ]}
       />
     );
@@ -61,6 +65,8 @@ export default function PointFideliteHeader() {
           ? "Envoyer un cadeau"
           : view === "edit"
           ? "Parrainage"
+          : view === "scratch"
+          ? "Gratte & Gagne"
           : "Configuration"
       }
       gradient={true}
