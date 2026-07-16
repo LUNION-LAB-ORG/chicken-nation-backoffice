@@ -47,6 +47,7 @@ interface MenuFormData {
   available_from: string;
   available_until: string;
   private: boolean;
+  audiences: string[];
   hubrise_sku: string;
 }
 
@@ -101,6 +102,7 @@ const EditMenuForm = ({
     available_from: "",
     available_until: "",
     private: false,
+    audiences: [],
   });
 
   // Mise à jour avec les données existantes
@@ -144,6 +146,7 @@ const EditMenuForm = ({
           (validatedData as unknown as { available_until?: string | null }).available_until ?? "",
         private:
           (validatedData as unknown as { private?: boolean }).private ?? false,
+        audiences: initialData?.audiences ?? [],
         hubrise_sku:
           (validatedData as unknown as { hubrise_sku?: string }).hubrise_sku ?? "",
       });
@@ -184,6 +187,7 @@ const EditMenuForm = ({
           (initialData as unknown as { available_until?: string | null }).available_until ?? "",
         private:
           (initialData as unknown as { private?: boolean }).private ?? false,
+        audiences: initialData?.audiences ?? [],
         hubrise_sku: (initialData as unknown as { hubrise_sku?: string }).hubrise_sku ?? "",
       });
     }
@@ -978,6 +982,7 @@ const EditMenuForm = ({
         available_from: formData.available_from,
         available_until: formData.available_until,
         private: formData.private,
+        audiences: formData.audiences,
         hubrise_sku: formData.hubrise_sku || undefined,
       };
 
@@ -1346,6 +1351,50 @@ const EditMenuForm = ({
               >
                 Privé
               </label>
+            </div>
+          </motion.div>
+
+          {/* Audience (vide = tout le monde) */}
+          <motion.div
+            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+          >
+            <label className="block text-[13px] font-semibold text-gray-700">
+              Audience (vide = tout le monde)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["ETUDIANT", "Étudiant"],
+                  ["STANDARD", "Standard"],
+                  ["VIP", "VIP"],
+                  ["VVIP", "VVIP"],
+                ] as const
+              ).map(([value, label]) => {
+                const active = formData.audiences.includes(value);
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        audiences: prev.audiences.includes(value)
+                          ? prev.audiences.filter((a) => a !== value)
+                          : [...prev.audiences, value],
+                      }))
+                    }
+                    className={`flex-1 min-w-[70px] text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
+                      active
+                        ? "bg-[#F17922] text-white border-[#F17922]"
+                        : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
           {/* Description */}

@@ -77,6 +77,8 @@ export const MenuItemSchema = z.object({
   available_from: z.string().nullable().optional(),
   available_until: z.string().nullable().optional(),
   private: z.boolean().default(false), // ✅ Nom corrigé sans "s"
+  // Audiences ciblées par le plat (vide = PUBLIC, visible par tout le monde).
+  audiences: z.array(z.enum(['ETUDIANT', 'STANDARD', 'VIP', 'VVIP'])).default([]),
   hubrise_sku: z.string().nullable().optional()
 });
 
@@ -111,6 +113,8 @@ export const ApiMenuDataSchema = z.object({
   available_from: z.string().nullable().optional(),
   available_until: z.string().nullable().optional(),
   private: z.boolean().optional(), // ✅ Nom corrigé sans "s"
+  // Audiences renvoyées par l'API (vide = PUBLIC).
+  audiences: z.array(z.enum(['ETUDIANT', 'STANDARD', 'VIP', 'VVIP'])).default([]),
   hubrise_sku: z.string().nullable().optional()
 });
 

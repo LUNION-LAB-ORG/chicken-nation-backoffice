@@ -232,6 +232,8 @@ export interface MenuItem {
   available_from?: string | null;
   available_until?: string | null;
   private: boolean;
+  // Audiences ciblées par le plat (vide = PUBLIC, visible par tout le monde).
+  audiences: ("ETUDIANT" | "STANDARD" | "VIP" | "VVIP")[];
   hubrise_sku?: string;
 }
 

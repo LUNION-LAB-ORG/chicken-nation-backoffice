@@ -133,6 +133,7 @@ export const formatMenuFromApi = (apiMenu: unknown): ValidatedMenuItem => {
       available_from: (validatedApiMenu as unknown as { available_from?: string | null }).available_from ?? undefined,
       available_until: (validatedApiMenu as unknown as { available_until?: string | null }).available_until ?? undefined,
       private: (validatedApiMenu as unknown as { private?: boolean }).private ?? false, // ✅ Nom corrigé sans "s"
+      audiences: validatedApiMenu.audiences ?? [],
       hubrise_sku: validatedApiMenu.hubrise_sku ?? undefined
     };
 
@@ -489,6 +490,9 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       if (Array.isArray(orderTypesUpdate)) {
         orderTypesUpdate.forEach((t) => { if (t) formData.append('available_order_types', t); });
       }
+      // Audiences ciblées (vide = PUBLIC). Le backend accepte une chaîne CSV.
+      const audiencesUpdate = (validatedMenu as unknown as { audiences?: string[] }).audiences ?? [];
+      formData.append('audiences', audiencesUpdate.join(','));
       const availFromUpdate = (validatedMenu as unknown as { available_from?: string | null }).available_from;
       const availUntilUpdate = (validatedMenu as unknown as { available_until?: string | null }).available_until;
       formData.append('available_from', availFromUpdate ?? '');
@@ -574,6 +578,9 @@ export const menuToFormData = (menu: ValidatedMenuItem, isUpdate: boolean = fals
       if (Array.isArray(orderTypesCreate)) {
         orderTypesCreate.forEach((t) => { if (t) formData.append('available_order_types', t); });
       }
+      // Audiences ciblées (vide = PUBLIC). Le backend accepte une chaîne CSV.
+      const audiencesCreate = (validatedMenu as unknown as { audiences?: string[] }).audiences ?? [];
+      formData.append('audiences', audiencesCreate.join(','));
       const availFromCreate = (validatedMenu as unknown as { available_from?: string | null }).available_from;
       const availUntilCreate = (validatedMenu as unknown as { available_until?: string | null }).available_until;
       formData.append('available_from', availFromCreate ?? '');
