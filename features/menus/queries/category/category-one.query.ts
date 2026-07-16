@@ -4,12 +4,15 @@ import { toast } from "react-hot-toast";
 import { getCategorieById } from "../../services/category-service";
 import { categoryKeyQuery } from "./index.query";
 
-// Option de requête
-export const categoryOneQueryOption = (categoryId: string) => {
+// Option de requête.
+// `customerId` (optionnel) : en prise de commande, masque les plats selon
+// l'audience du client cible. Fait partie de la clé de cache (une même catégorie
+// n'a pas le même contenu selon le client). Absent → clé "all" (staff voit tout).
+export const categoryOneQueryOption = (categoryId: string, customerId?: string) => {
 	return {
-		queryKey: categoryKeyQuery("one", categoryId),
+		queryKey: categoryKeyQuery("one", categoryId, customerId ?? "all"),
 		queryFn: async () => {
-			const result = await getCategorieById(categoryId);
+			const result = await getCategorieById(categoryId, customerId);
 			return result;
 		},
 		keepPreviousData: true,
@@ -19,8 +22,8 @@ export const categoryOneQueryOption = (categoryId: string) => {
 }
 
 // Hook pour récupérer les restaurants
-export const useCategoryOneQuery = (categoryId: string) => {
-	const result = useQuery(categoryOneQueryOption(categoryId));
+export const useCategoryOneQuery = (categoryId: string, customerId?: string) => {
+	const result = useQuery(categoryOneQueryOption(categoryId, customerId));
 	
 	React.useEffect(() => {
 		if (result.isError || result.error) {

@@ -56,10 +56,12 @@ export const getAllCategories = async () => {
   }
 };
 
-export const getCategorieById = async (categoryId: string) => {
+// `customerId` (optionnel) : en prise de commande, on masque les plats selon
+// l'audience du client cible. Absent (gestion des menus) → le backend ne filtre
+// pas (staff voit tout). prepareRequest ignore les valeurs undefined.
+export const getCategorieById = async (categoryId: string, customerId?: string) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${categoryId}`);
-    console.log({ url, categoryId })
+    const { url, headers } = await prepareRequest(BASE_URL, `/${categoryId}`, { customerId });
     const response = await fetch(url, {
       method: 'GET',
       headers

@@ -51,8 +51,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   // category.findOne ne passe PAS par withEffective ; on n'utilise donc ces
   // dishes que pour l'affichage de la grille, et on re-fetch la version
   // "withEffective" depuis allDishes au moment du clic — voir handleSelectDish).
+  //
+  // `formData.customer_id` : si un client est sélectionné pour la commande, on
+  // masque la grille selon SON audience (carte/niveau) — c'est le SEUL endroit
+  // du backoffice où le masque s'applique. Sans client (walk-in) → staff voit tout.
   const { data: categoryData, isLoading: isLoadingDishes } =
-    useCategoryOneQuery(selectedCategoryId);
+    useCategoryOneQuery(selectedCategoryId, formData.customer_id);
 
   const dishes = categoryData?.dishes || [];
 
