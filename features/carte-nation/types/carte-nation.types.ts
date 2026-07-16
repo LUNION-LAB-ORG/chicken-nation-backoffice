@@ -23,6 +23,8 @@ export interface CardRequest {
     institution: string | null;
     /** V2 (justificatif) uniquement ; null en V1 déclaratif. */
     student_card_file_url: string | null;
+    /** Photo du titulaire fournie au formulaire (contrôle backoffice). Clé S3. */
+    photo?: string | null;
     /** Profil déclaratif (Étudiant / Professionnel) — Phase 3. */
     profile_type?: CardProfileType | null;
     /** Marqueur ÉTUDIANT déclaratif (indépendant du niveau). */

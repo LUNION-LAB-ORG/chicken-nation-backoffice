@@ -20,6 +20,7 @@ import {
 } from "../../utils/getCardLevelBadge";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 import { ApproveCardModal } from "./ApproveCardModal";
+import { DetailCardModal } from "./DetailCardModal";
 import { RejectCardModal } from "./RejectCardModal";
 import StatutCardRequestTab from "./StatutCardRequestTab";
 
@@ -158,7 +159,10 @@ export function DemandeCarteList() {
                             {student && <StudentMarkerBadge size="sm" />}
                             <RequestKindBadge request={request} size="sm" />
                             {request.institution && (
-                              <span className="text-xs text-gray-500 max-w-xs">
+                              <span
+                                className="block max-w-[14rem] truncate text-xs text-gray-500"
+                                title={request.institution}
+                              >
                                 {request.institution}
                               </span>
                             )}
@@ -191,6 +195,16 @@ export function DemandeCarteList() {
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
+                            {/* Détail : présent sur TOUTE demande (photo + infos). */}
+                            <button
+                              onClick={() =>
+                                handleToggleOrderModal(request, "detail")
+                              }
+                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              title="Voir le détail"
+                            >
+                              <Info className="w-4 h-4 text-gray-600" />
+                            </button>
                             {/* Justificatif : uniquement s'il existe (V2). */}
                             {hasJustificatif && (
                               <button
@@ -226,10 +240,6 @@ export function DemandeCarteList() {
                                   <XCircle className="w-4 h-4 text-red-600" />
                                 </button>
                               </>
-                            )}
-                            {/* Demande déjà traitée et sans justificatif : rien à faire. */}
-                            {request.status !== "PENDING" && !hasJustificatif && (
-                              <span className="text-xs text-gray-400">—</span>
                             )}
                           </div>
                         </td>
@@ -270,6 +280,13 @@ export function DemandeCarteList() {
           onClose={() => {
             handleToggleOrderModal(null, "reject");
           }}
+        />
+      )}
+      {/* Détail Modal : photo + toutes les infos (toute demande) */}
+      {selectedItem && modals?.detail && (
+        <DetailCardModal
+          request={selectedItem as CardRequest}
+          onClose={() => handleToggleOrderModal(null, "detail")}
         />
       )}
       {/* Image Viewer Modal */}
