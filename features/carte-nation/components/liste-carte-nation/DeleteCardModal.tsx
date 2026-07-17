@@ -57,23 +57,25 @@ export function DeleteCardModal({ isOpen, card, onClose }: DeleteCardModalProps)
           </div>
         </div>
 
+        {/* `flex-1 min-w-0` + text-sm + nowrap : « Supprimer définitivement » ne
+            déborde plus du bouton (avant : deux `w-full` + label long en gras). */}
         <div className="flex gap-3">
           <button
             onClick={onClose}
             disabled={isPending}
-            className="w-full cursor-pointer rounded-lg border border-gray-300 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 shrink cursor-pointer whitespace-nowrap rounded-lg border border-gray-300 px-3 py-3 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Annuler
           </button>
           <button
             onClick={handleDelete}
             disabled={isPending}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-red-600 py-3 font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex min-w-0 flex-[2] cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-red-600 px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Suppression...
+                Suppression…
               </>
             ) : (
               "Supprimer définitivement"

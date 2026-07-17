@@ -16,27 +16,15 @@ import {
   useDeleteRequestMutation,
   useReviewRequestMutation,
 } from "../../queries/card-nation.mutation";
-import { CardRequest, CardType } from "../../types/carte-nation.types";
+import { CardLevel, CardRequest } from "../../types/carte-nation.types";
 import {
   isStudentProfile,
   resolveCardLevel,
 } from "../../utils/getCardLevelBadge";
+import { CardVisualPicker } from "../CardVisualPicker";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 
 type ActionMode = "approve" | "reject" | "delete" | null;
-
-/** Types émettables — le choix pilote le visuel de la carte générée. */
-const CARD_TYPE_OPTIONS: {
-  value: CardType;
-  label: string;
-  hint: string;
-  dot: string;
-}[] = [
-  { value: "ETUDIANT", label: "Étudiant", hint: "Liseré jaune", dot: "#FFD24C" },
-  { value: "STANDARD", label: "Standard", hint: "Orange", dot: "#F17922" },
-  { value: "VIP", label: "VIP", hint: "Or", dot: "#D4AF37" },
-  { value: "VVIP", label: "VVIP", hint: "Rouge", dot: "#C0392B" },
-];
 
 const MIN_REASON = 10;
 
@@ -66,10 +54,13 @@ interface DetailCardModalProps {
 export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
   const [mode, setMode] = useState<ActionMode>(null);
   const [reason, setReason] = useState("");
-  const [cardType, setCardType] = useState<CardType>(
+  // Visuel à émettre — 2 axes pré-remplis depuis la demande (niveau du client +
+  // statut déclaré), mais modifiables indépendamment par le staff.
+  const [cardLevel, setCardLevel] = useState<CardLevel>(
+    resolveCardLevel(request) ?? "STANDARD"
+  );
+  const [cardIsStudent, setCardIsStudent] = useState<boolean>(
     isStudentProfile(request)
-      ? "ETUDIANT"
-      : ((resolveCardLevel(request) as CardType | null) ?? "STANDARD")
   );
 
   const { mutateAsync: review, isPending: isReviewing } =
@@ -88,7 +79,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
   const handleApprove = async () => {
     await review({
       id: request.id,
-      data: { status: "APPROVED", card_type: cardType },
+      data: { status: "APPROVED", level: cardLevel, is_student: cardIsStudent },
     });
     onClose();
   };
@@ -232,41 +223,18 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
           {mode === "approve" && (
             <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4">
               <p className="mb-3 text-sm font-semibold text-emerald-900">
-                Type de carte à émettre
+                Carte à émettre
               </p>
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                {CARD_TYPE_OPTIONS.map((opt) => {
-                  const active = cardType === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => setCardType(opt.value)}
-                      disabled={isBusy}
-                      className={`flex items-center gap-2 rounded-xl border-2 bg-white px-3 py-2.5 text-left transition-colors disabled:opacity-50 ${
-                        active
-                          ? "border-emerald-500 ring-2 ring-emerald-200"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <span
-                        className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white"
-                        style={{ backgroundColor: opt.dot }}
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-sm font-semibold text-gray-900">
-                          {opt.label}
-                        </span>
-                        <span className="block text-[11px] text-gray-500">
-                          {opt.hint}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              <CardVisualPicker
+                level={cardLevel}
+                isStudent={cardIsStudent}
+                onLevelChange={setCardLevel}
+                onStudentChange={setCardIsStudent}
+                disabled={isBusy}
+                accent="emerald"
+              />
               <p className="mt-3 text-xs text-emerald-800">
-                La carte sera générée dans ce type et le client sera notifié
+                La carte sera générée avec ce visuel et le client sera notifié
                 («&nbsp;carte prête&nbsp;»).
               </p>
               <div className="mt-4 flex gap-2">

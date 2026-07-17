@@ -3,14 +3,38 @@
 import { AlertTriangle, Loader2, RefreshCw, XCircle } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { previewCard } from "../../services/carte-nation.service";
-import { CARD_TYPES, CardType } from "../../types/carte-nation.types";
+import { CardLevel } from "../../types/carte-nation.types";
+import { LEVEL_OPTIONS, STUDENT_MARKER_DOT } from "../../utils/cardVisualOptions";
 
-const TYPE_META: Record<CardType, { label: string; hint: string; dot: string }> = {
-  ETUDIANT: { label: "Étudiant", hint: "Liseré jaune", dot: "#FFD24C" },
-  STANDARD: { label: "Standard", hint: "Orange", dot: "#F17922" },
-  VIP: { label: "VIP", hint: "Or", dot: "#D4AF37" },
-  VVIP: { label: "VVIP", hint: "Rouge", dot: "#C0392B" },
-};
+/**
+ * Les 6 visuels possibles = 3 niveaux (dominante couleur) × marqueur étudiant
+ * (jaune, indépendant) — cahier §4.5. Montre notamment « Étudiant + VIP ».
+ */
+const VARIANTS: {
+  key: string;
+  level: CardLevel;
+  is_student: boolean;
+  label: string;
+  hint: string;
+  dot: string;
+}[] = LEVEL_OPTIONS.flatMap((lvl) => [
+  {
+    key: lvl.value,
+    level: lvl.value,
+    is_student: false,
+    label: lvl.label,
+    hint: lvl.hint,
+    dot: lvl.dot,
+  },
+  {
+    key: `${lvl.value}_ETU`,
+    level: lvl.value,
+    is_student: true,
+    label: `${lvl.label} + Étudiant`,
+    hint: "Marqueur jaune par-dessus le niveau",
+    dot: STUDENT_MARKER_DOT,
+  },
+]);
 
 interface CardDesignGalleryProps {
   onClose: () => void;
@@ -26,7 +50,7 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
   const [firstName, setFirstName] = useState("Awa");
   const [lastName, setLastName] = useState("Koné");
   const [nickname, setNickname] = useState("Jojo");
-  const [previews, setPreviews] = useState<Partial<Record<CardType, string>>>({});
+  const [previews, setPreviews] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,17 +59,18 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
     setError(null);
     try {
       const results = await Promise.all(
-        CARD_TYPES.map(async (card_type) => {
+        VARIANTS.map(async (v) => {
           const res = await previewCard({
-            card_type,
+            level: v.level,
+            is_student: v.is_student,
             first_name: firstName,
             last_name: lastName,
             nickname,
           });
-          return [card_type, res.data.image] as const;
+          return [v.key, res.data.image] as const;
         })
       );
-      setPreviews(Object.fromEntries(results) as Partial<Record<CardType, string>>);
+      setPreviews(Object.fromEntries(results));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Génération impossible");
     } finally {
@@ -144,12 +169,11 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
 
           {/* Galerie : un visuel par type de carte */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {CARD_TYPES.map((type) => {
-              const meta = TYPE_META[type];
-              const image = previews[type];
+            {VARIANTS.map((meta) => {
+              const image = previews[meta.key];
               return (
                 <div
-                  key={type}
+                  key={meta.key}
                   className="overflow-hidden rounded-2xl border border-gray-200"
                 >
                   <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">

@@ -5,17 +5,19 @@ import {
     deleteCard,
     deleteRequest,
     previewCard,
+    regenerateCard,
     reviewRequest,
     updateCardStatus,
 } from "../services/carte-nation.service";
 import {
+    CardLevel,
     CardRequestStatus,
-    CardType,
+    CardVisual,
     PreviewCardBody,
 } from "../types/carte-nation.types";
 
 // Mutation pour traiter une demande de carte.
-// `card_type` : type de carte choisi à l'approbation (pilote le visuel émis).
+// À l'approbation : `level` (couleur) + `is_student` (marqueur) — 2 axes, cahier §4.5.
 export const useReviewRequestMutation = () => {
     const invalidate = useInvalidateCardNationQuery();
 
@@ -25,7 +27,12 @@ export const useReviewRequestMutation = () => {
             data,
         }: {
             id: string;
-            data: { status: CardRequestStatus; rejection_reason?: string; card_type?: CardType };
+            data: {
+                status: CardRequestStatus;
+                rejection_reason?: string;
+                level?: CardLevel;
+                is_student?: boolean;
+            };
         }) => reviewRequest(id, data),
         onSuccess: () => {
             invalidate("requests-list");
@@ -64,6 +71,21 @@ export const useDeleteRequestMutation = () => {
         onSuccess: () => {
             invalidate("requests-list");
             toast.success("Demande supprimée définitivement");
+        },
+        onError: (e: Error) => toast.error(e.message),
+    });
+};
+
+// Régénère le visuel d'une carte (niveau + marqueur étudiant ; numéro/QR conservés).
+export const useRegenerateCardMutation = () => {
+    const invalidate = useInvalidateCardNationQuery();
+
+    return useMutation({
+        mutationFn: ({ id, visual }: { id: string; visual: CardVisual }) =>
+            regenerateCard(id, visual),
+        onSuccess: () => {
+            invalidate("cards-list");
+            toast.success("Carte régénérée");
         },
         onError: (e: Error) => toast.error(e.message),
     });

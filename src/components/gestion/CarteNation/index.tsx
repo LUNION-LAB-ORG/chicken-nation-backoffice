@@ -9,6 +9,7 @@ import CarteNationHeader from "../../../../features/carte-nation/components/Cart
 import { CarteNationTable } from "../../../../features/carte-nation/components/liste-carte-nation";
 import { CardDesignGallery } from "../../../../features/carte-nation/components/liste-carte-nation/CardDesignGallery";
 import { DeleteCardModal } from "../../../../features/carte-nation/components/liste-carte-nation/DeleteCardModal";
+import { RegenerateCardModal } from "../../../../features/carte-nation/components/liste-carte-nation/RegenerateCardModal";
 import StatutCardTab from "../../../../features/carte-nation/components/liste-carte-nation/StatutCardTab";
 import { UpdateCardStatusModal } from "../../../../features/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
 import { DemandeCarteList } from "../../../../features/carte-nation/components/liste-demandes-carte";
@@ -139,6 +140,15 @@ export default function CarteNation() {
             />
           </div>
         </div>
+      )}
+
+      {/* Régénération du visuel avec un type choisi */}
+      {selectedItem && modals?.regenerate && (
+        <RegenerateCardModal
+          isOpen={true}
+          card={selectedItem as NationCard}
+          onClose={() => handleToggleCardModal(null, "regenerate")}
+        />
       )}
 
       {/* Suppression DÉFINITIVE d'une carte (≠ révoquer) */}

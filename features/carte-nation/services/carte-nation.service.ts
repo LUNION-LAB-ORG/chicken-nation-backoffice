@@ -2,9 +2,10 @@ import { getAuthToken } from "@/utils/authUtils";
 import { getHumanReadableError } from '@/utils/errorMessages';
 import { PaginatedResponse } from '../../../types';
 import {
+    CardLevel,
     CardRequest,
     CardRequestQuery,
-    CardType,
+    CardVisual,
     NationCard,
     NationCardQuery,
     PreviewCardBody,
@@ -65,7 +66,14 @@ export const getRequestById = async (id: string) => {
 
 export const reviewRequest = async (
     id: string,
-    data: { status: string; rejection_reason?: string; card_type?: CardType },
+    data: {
+        status: string;
+        rejection_reason?: string;
+        /** Couleur de la carte émise (axe 1). */
+        level?: CardLevel;
+        /** Marqueur étudiant, indépendant du niveau (axe 2). */
+        is_student?: boolean;
+    },
 ) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, `/requests/${id}/review`);
@@ -121,6 +129,25 @@ export const updateCardStatus = async (id: string, action: 'suspend' | 'revoke' 
     try {
         const { url, headers } = await prepareRequest(BASE_URL, `/cards/${id}/${action}`);
         const response = await fetch(url, { method: 'PATCH', headers });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
+/**
+ * Régénère le visuel d'une carte avec un type imposé par le staff.
+ * Numéro de carte et QR conservés ; seule l'image (+ niveau/étudiant) change.
+ */
+export const regenerateCard = async (id: string, visual: CardVisual) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/cards/${id}/regenerate`);
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify(visual),
+        });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json();
     } catch (error) {

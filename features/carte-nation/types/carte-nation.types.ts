@@ -79,16 +79,18 @@ export interface NationCardQuery {
 }
 
 /**
- * Type de carte choisi par le staff À L'APPROBATION — pilote le visuel émis :
- * ETUDIANT = carte étudiante (liseré jaune) ; STANDARD/VIP/VVIP = ce niveau.
+ * Carte émise — DEUX AXES INDÉPENDANTS (cahier des charges §4.5) :
+ *  - `level`      : la COULEUR (Standard=Orange → VIP=Or → VVIP=Rouge) ;
+ *  - `is_student` : le MARQUEUR jaune, posé PAR-DESSUS le niveau.
+ * Un étudiant peut donc être « Étudiant + VIP ».
  */
-export type CardType = "ETUDIANT" | "STANDARD" | "VIP" | "VVIP";
-
-export const CARD_TYPES: CardType[] = ["ETUDIANT", "STANDARD", "VIP", "VVIP"];
+export interface CardVisual {
+    level: CardLevel;
+    is_student?: boolean;
+}
 
 /** Corps de `POST /admin/card-nation/preview-card` (galerie / testeur). */
-export interface PreviewCardBody {
-    card_type: CardType;
+export interface PreviewCardBody extends CardVisual {
     first_name?: string;
     last_name?: string;
     nickname?: string;
@@ -98,8 +100,7 @@ export interface PreviewCardBody {
 export interface PreviewCardResponse {
     success: boolean;
     data: {
-        card_type: CardType;
-        level: CardLevel | null;
+        level: CardLevel;
         is_student: boolean;
         image: string;
     };
