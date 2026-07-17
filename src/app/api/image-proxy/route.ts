@@ -4,7 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 const ALLOWED_DOMAINS = [
   'api-private.chicken-nation.com',
   'chicken.turbodeliveryapp.com',
-  'kfy9qwx5yd.ufs.sh'
+  'kfy9qwx5yd.ufs.sh',
+  // CDN CloudFront des médias (photos de carte, etc.) → permet le recadrage
+  // same-origin des photos déjà stockées, sans tainter le canvas.
+  'dvsxt5681pvqm.cloudfront.net'
 ];
 
 const ALLOWED_PROTOCOLS = ['https:'];

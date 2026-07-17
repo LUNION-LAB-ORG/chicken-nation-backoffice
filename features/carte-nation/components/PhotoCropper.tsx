@@ -1,60 +1,57 @@
 "use client";
 
-import { Cropper } from "@origin-space/image-cropper";
 import { Loader2, ZoomIn } from "lucide-react";
 import { useCallback, useState } from "react";
+import Cropper, { type Area, type Point } from "react-easy-crop";
 
 /** Résolution du fichier recadré exporté. */
 const OUTPUT = 512;
 
-type Area = { x: number; y: number; width: number; height: number };
-
 interface PhotoCropperProps {
-  /** Source à recadrer : data-URL (photo locale) ou URL (photo déjà soumise). */
+  /** Source à recadrer : data-URL (photo locale) ou URL http (photo déjà soumise). */
   src: string;
   /** Renvoie la photo recadrée, prête à être envoyée au backend. */
   onApply: (file: File) => void;
   onCancel: () => void;
   applyLabel?: string;
   isBusy?: boolean;
-  /** Erreur d'export (image cross-origin non autorisée au canvas, etc.). */
+  /** Erreur d'export (image inaccessible, canvas taint, etc.). */
   onError?: (message: string) => void;
 }
 
 /**
- * Découpe la zone recadrée (coords natives renvoyées par le cropper) dans un
- * canvas carré → File PNG. Le crop est en 1:1 ; le générateur de carte masque
- * ensuite la photo en cercle (médaillon), donc un carré suffit ici.
+ * Une image http (photo déjà stockée sur CloudFront) chargée en cross-origin
+ * TAINTE le canvas → l'export échoue. On la route par le proxy same-origin du
+ * backoffice (whitelisté), ce qui supprime tout CORS. Les data:/blob: locales
+ * (simulateur, photo juste sélectionnée) passent en direct.
  */
-async function cropToFile(src: string, area: Area): Promise<File> {
-  const img = new Image();
-  img.crossOrigin = "anonymous";
-  await new Promise<void>((resolve, reject) => {
-    img.onload = () => resolve();
+function toSameOrigin(src: string): string {
+  if (src.startsWith("data:") || src.startsWith("blob:")) return src;
+  if (/^https?:\/\//.test(src)) {
+    return `/api/image-proxy?url=${encodeURIComponent(src)}`;
+  }
+  return src;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("Chargement de l'image impossible"));
     img.src = src;
   });
+}
 
+/** Découpe la zone recadrée (coords natives) → File PNG carré (le générateur masque en cercle). */
+async function cropToFile(src: string, area: Area): Promise<File> {
+  const img = await loadImage(src);
   const canvas = document.createElement("canvas");
   canvas.width = OUTPUT;
   canvas.height = OUTPUT;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas indisponible");
-
-  ctx.drawImage(
-    img,
-    area.x,
-    area.y,
-    area.width,
-    area.height,
-    0,
-    0,
-    OUTPUT,
-    OUTPUT
-  );
-
+  ctx.drawImage(img, area.x, area.y, area.width, area.height, 0, 0, OUTPUT, OUTPUT);
   const blob: Blob = await new Promise((resolve, reject) =>
-    // toBlob lève une SecurityError si l'image est cross-origin sans CORS.
     canvas.toBlob(
       (b) => (b ? resolve(b) : reject(new Error("Export impossible"))),
       "image/png"
@@ -65,11 +62,11 @@ async function cropToFile(src: string, area: Area): Promise<File> {
 
 /**
  * Recadrage circulaire d'une photo, côté backoffice, AVANT génération de la carte.
- * Le cadre reproduit le médaillon rond de la carte : ce que le staff cale ici est
- * exactement ce qui sera dessiné.
+ * Le cercle affiché = le médaillon final de la carte.
  *
- * Basé sur @origin-space/image-cropper : headless, ZÉRO dépendance runtime, peer
- * React 19 — plus sûr et plus léger qu'une lib de crop classique.
+ * Basé sur react-easy-crop (`cropShape="round"`) : il gère lui-même l'empilement
+ * image / fenêtre de crop / voile sombre — plus de bug de cercle « qui passe
+ * derrière ». Lib MIT largement éprouvée, 1 seule dépendance (normalize-wheel).
  */
 export function PhotoCropper({
   src,
@@ -79,15 +76,18 @@ export function PhotoCropper({
   isBusy,
   onError,
 }: PhotoCropperProps) {
-  const [area, setArea] = useState<Area | null>(null);
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [pixels, setPixels] = useState<Area | null>(null);
   const [rendering, setRendering] = useState(false);
 
+  const sameOriginSrc = toSameOrigin(src);
+
   const handleApply = useCallback(async () => {
-    if (!area) return;
+    if (!pixels) return;
     setRendering(true);
     try {
-      onApply(await cropToFile(src, area));
+      onApply(await cropToFile(sameOriginSrc, pixels));
     } catch (e) {
       onError?.(
         e instanceof Error ? e.message : "Recadrage impossible sur cette image"
@@ -95,25 +95,26 @@ export function PhotoCropper({
     } finally {
       setRendering(false);
     }
-  }, [area, src, onApply, onError]);
+  }, [pixels, sameOriginSrc, onApply, onError]);
 
   const busy = isBusy || rendering;
 
   return (
     <div className="space-y-3">
-      <Cropper.Root
-        image={src}
-        aspectRatio={1}
-        zoom={zoom}
-        onZoomChange={setZoom}
-        onCropChange={setArea}
-        className="relative mx-auto flex h-72 w-72 items-center justify-center overflow-hidden rounded-2xl bg-gray-900/90 touch-none"
-      >
-        <Cropper.Description className="sr-only" />
-        <Cropper.Image className="pointer-events-none h-full w-full object-cover" />
-        {/* Fenêtre de crop circulaire + voile sombre autour = le médaillon final */}
-        <Cropper.CropArea className="pointer-events-none rounded-full border-4 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] ring-2 ring-[#F17922]" />
-      </Cropper.Root>
+      {/* Conteneur positionné : react-easy-crop se place en absolu à l'intérieur */}
+      <div className="relative mx-auto h-72 w-full overflow-hidden rounded-2xl bg-gray-900">
+        <Cropper
+          image={sameOriginSrc}
+          crop={crop}
+          zoom={zoom}
+          aspect={1}
+          cropShape="round"
+          showGrid={false}
+          onCropChange={setCrop}
+          onZoomChange={setZoom}
+          onCropComplete={(_area, areaPixels) => setPixels(areaPixels)}
+        />
+      </div>
 
       <p className="text-center text-xs text-gray-500">
         Glisse et zoome la photo · le cercle = le rendu final sur la carte
@@ -145,7 +146,7 @@ export function PhotoCropper({
         <button
           type="button"
           onClick={handleApply}
-          disabled={busy || !area}
+          disabled={busy || !pixels}
           className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[#F17922] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
