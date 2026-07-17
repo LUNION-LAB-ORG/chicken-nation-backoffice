@@ -25,6 +25,7 @@ export const useReviewRequestMutation = () => {
         mutationFn: ({
             id,
             data,
+            photo,
         }: {
             id: string;
             data: {
@@ -33,7 +34,9 @@ export const useReviewRequestMutation = () => {
                 level?: CardLevel;
                 is_student?: boolean;
             };
-        }) => reviewRequest(id, data),
+            /** Photo recadrée par le staff avant génération (optionnelle). */
+            photo?: File;
+        }) => reviewRequest(id, data, photo),
         onSuccess: () => {
             invalidate("requests-list");
             toast.success("Demande traitée avec succès");

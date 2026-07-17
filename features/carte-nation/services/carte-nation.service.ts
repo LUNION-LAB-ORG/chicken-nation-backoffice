@@ -74,9 +74,34 @@ export const reviewRequest = async (
         /** Marqueur étudiant, indépendant du niveau (axe 2). */
         is_student?: boolean;
     },
+    /** Photo RECADRÉE par le staff avant génération (optionnelle). */
+    photo?: File,
 ) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, `/requests/${id}/review`);
+
+        // Avec photo → multipart (le navigateur pose le boundary, donc on retire le
+        // Content-Type JSON). Sans photo → JSON comme avant : le backend accepte les deux.
+        if (photo) {
+            const { 'Content-Type': _json, ...authHeaders } = headers as Record<string, string>;
+            const formData = new FormData();
+            formData.append('status', data.status);
+            if (data.rejection_reason) formData.append('rejection_reason', data.rejection_reason);
+            if (data.level) formData.append('level', data.level);
+            if (data.is_student !== undefined) {
+                formData.append('is_student', String(data.is_student));
+            }
+            formData.append('photo', photo);
+
+            const response = await fetch(url, {
+                method: 'PATCH',
+                headers: authHeaders,
+                body: formData,
+            });
+            if (!response.ok) throw new Error(`Error: ${response.status}`);
+            return await response.json();
+        }
+
         const response = await fetch(url, {
             method: 'PATCH',
             headers,

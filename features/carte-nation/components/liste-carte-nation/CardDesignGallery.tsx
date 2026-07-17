@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { previewCard } from "../../services/carte-nation.service";
 import { CardLevel } from "../../types/carte-nation.types";
 import { LEVEL_OPTIONS, STUDENT_MARKER_DOT } from "../../utils/cardVisualOptions";
+import { PhotoCropper } from "../PhotoCropper";
 
 /**
  * Les 6 visuels possibles = 3 niveaux (dominante couleur) × marqueur étudiant
@@ -56,6 +57,7 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
   // Photo de test : sans elle, l'aperçu utilise le champion par défaut.
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const generateAll = useCallback(async () => {
@@ -85,11 +87,12 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
     }
   }, [firstName, lastName, nickname, photo]);
 
+  // On ouvre le recadrage dès la sélection : le staff cale le médaillon avant
+  // de voir le rendu, comme il le fera à l'approbation.
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !file.type.startsWith("image/")) return;
-    setPhoto(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setCropSrc(URL.createObjectURL(file));
   };
 
   useEffect(() => {
@@ -128,6 +131,28 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
         </div>
 
         <div className="space-y-5 p-6">
+          {/* Recadrage : le cercle affiché = le médaillon final sur la carte */}
+          {cropSrc && (
+            <div className="rounded-2xl border-2 border-[#F17922]/30 bg-[#F17922]/5 p-4">
+              <p className="mb-3 text-sm font-semibold text-gray-900">
+                Recadrer la photo de test
+              </p>
+              <PhotoCropper
+                src={cropSrc}
+                applyLabel="Utiliser ce cadrage"
+                onCancel={() => {
+                  setCropSrc(null);
+                  if (photoInputRef.current) photoInputRef.current.value = "";
+                }}
+                onApply={(file) => {
+                  setPhoto(file);
+                  setPhotoPreview(URL.createObjectURL(file));
+                  setCropSrc(null);
+                }}
+              />
+            </div>
+          )}
+
           {/* Testeur : on personnalise le texte rendu sur la carte */}
           <div className="flex flex-wrap items-end gap-3 rounded-xl bg-gray-50 p-4">
             <label className="min-w-0 flex-1">
