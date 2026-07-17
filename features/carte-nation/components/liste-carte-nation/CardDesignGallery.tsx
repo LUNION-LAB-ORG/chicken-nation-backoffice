@@ -140,6 +140,7 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
               <PhotoCropper
                 src={cropSrc}
                 applyLabel="Utiliser ce cadrage"
+                onError={(m) => setError(m)}
                 onCancel={() => {
                   setCropSrc(null);
                   if (photoInputRef.current) photoInputRef.current.value = "";

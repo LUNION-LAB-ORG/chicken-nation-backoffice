@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import {
   useDeleteRequestMutation,
@@ -264,6 +265,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                       isBusy={isBusy}
                       applyLabel="Valider le recadrage"
                       onCancel={() => setIsCropping(false)}
+                      onError={(m) => toast.error(m)}
                       onApply={(file) => {
                         setCroppedPhoto(file);
                         setCroppedPreview(URL.createObjectURL(file));

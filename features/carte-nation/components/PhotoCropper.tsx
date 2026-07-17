@@ -1,11 +1,13 @@
 "use client";
 
+import { Cropper } from "@origin-space/image-cropper";
 import { Loader2, ZoomIn } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
-/** Viewport d'édition (px) et résolution de sortie du recadrage. */
-const VIEWPORT = 280;
+/** Résolution du fichier recadré exporté. */
 const OUTPUT = 512;
+
+type Area = { x: number; y: number; width: number; height: number };
 
 interface PhotoCropperProps {
   /** Source à recadrer : data-URL (photo locale) ou URL (photo déjà soumise). */
@@ -15,16 +17,59 @@ interface PhotoCropperProps {
   onCancel: () => void;
   applyLabel?: string;
   isBusy?: boolean;
+  /** Erreur d'export (image cross-origin non autorisée au canvas, etc.). */
+  onError?: (message: string) => void;
+}
+
+/**
+ * Découpe la zone recadrée (coords natives renvoyées par le cropper) dans un
+ * canvas carré → File PNG. Le crop est en 1:1 ; le générateur de carte masque
+ * ensuite la photo en cercle (médaillon), donc un carré suffit ici.
+ */
+async function cropToFile(src: string, area: Area): Promise<File> {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  await new Promise<void>((resolve, reject) => {
+    img.onload = () => resolve();
+    img.onerror = () => reject(new Error("Chargement de l'image impossible"));
+    img.src = src;
+  });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = OUTPUT;
+  canvas.height = OUTPUT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas indisponible");
+
+  ctx.drawImage(
+    img,
+    area.x,
+    area.y,
+    area.width,
+    area.height,
+    0,
+    0,
+    OUTPUT,
+    OUTPUT
+  );
+
+  const blob: Blob = await new Promise((resolve, reject) =>
+    // toBlob lève une SecurityError si l'image est cross-origin sans CORS.
+    canvas.toBlob(
+      (b) => (b ? resolve(b) : reject(new Error("Export impossible"))),
+      "image/png"
+    )
+  );
+  return new File([blob], "photo-recadree.png", { type: "image/png" });
 }
 
 /**
  * Recadrage circulaire d'une photo, côté backoffice, AVANT génération de la carte.
- * Le cadre reproduit le médaillon rond de la carte : ce que le staff voit ici est
+ * Le cadre reproduit le médaillon rond de la carte : ce que le staff cale ici est
  * exactement ce qui sera dessiné.
  *
- * Fait maison volontairement : aucune lib de crop n'était présente et les
- * candidates ne garantissent pas React 19. Le rendu canvas applique EXACTEMENT la
- * même transformation (cover + zoom + translation) que l'aperçu à l'écran.
+ * Basé sur @origin-space/image-cropper : headless, ZÉRO dépendance runtime, peer
+ * React 19 — plus sûr et plus léger qu'une lib de crop classique.
  */
 export function PhotoCropper({
   src,
@@ -32,124 +77,48 @@ export function PhotoCropper({
   onCancel,
   applyLabel = "Appliquer le recadrage",
   isBusy,
+  onError,
 }: PhotoCropperProps) {
+  const [area, setArea] = useState<Area | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [pos, setPos] = useState({ x: 0, y: 0 });
-  const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [rendering, setRendering] = useState(false);
 
-  const imgRef = useRef<HTMLImageElement>(null);
-  const dragging = useRef(false);
-  const lastPoint = useRef({ x: 0, y: 0 });
-
-  // Échelle « cover » : la photo remplit toujours le cercle, sans bande vide.
-  const baseScale = natural.w
-    ? Math.max(VIEWPORT / natural.w, VIEWPORT / natural.h)
-    : 1;
-  const scale = baseScale * zoom;
-  const drawW = natural.w * scale;
-  const drawH = natural.h * scale;
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    dragging.current = true;
-    lastPoint.current = { x: e.clientX, y: e.clientY };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const dx = e.clientX - lastPoint.current.x;
-    const dy = e.clientY - lastPoint.current.y;
-    lastPoint.current = { x: e.clientX, y: e.clientY };
-    // Bornes : on empêche de sortir la photo du cercle (pas de vide dans le cadre).
-    const maxX = Math.max(0, (drawW - VIEWPORT) / 2);
-    const maxY = Math.max(0, (drawH - VIEWPORT) / 2);
-    setPos((p) => ({
-      x: Math.min(maxX, Math.max(-maxX, p.x + dx)),
-      y: Math.min(maxY, Math.max(-maxY, p.y + dy)),
-    }));
-  };
-
-  const onPointerUp = () => {
-    dragging.current = false;
-  };
-
   const handleApply = useCallback(async () => {
-    const img = imgRef.current;
-    if (!img) return;
+    if (!area) return;
     setRendering(true);
     try {
-      const canvas = document.createElement("canvas");
-      canvas.width = OUTPUT;
-      canvas.height = OUTPUT;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      // Même transformation qu'à l'écran, remise à l'échelle de sortie.
-      const k = OUTPUT / VIEWPORT;
-      const w = drawW * k;
-      const h = drawH * k;
-      const dx = (OUTPUT - w) / 2 + pos.x * k;
-      const dy = (OUTPUT - h) / 2 + pos.y * k;
-      ctx.drawImage(img, dx, dy, w, h);
-
-      const blob: Blob | null = await new Promise((resolve) =>
-        canvas.toBlob(resolve, "image/png"),
+      onApply(await cropToFile(src, area));
+    } catch (e) {
+      onError?.(
+        e instanceof Error ? e.message : "Recadrage impossible sur cette image"
       );
-      if (blob) {
-        onApply(new File([blob], "photo-recadree.png", { type: "image/png" }));
-      }
     } finally {
       setRendering(false);
     }
-  }, [drawW, drawH, pos, onApply]);
+  }, [area, src, onApply, onError]);
 
   const busy = isBusy || rendering;
 
   return (
     <div className="space-y-3">
-      {/* Cadre rond : reproduit le médaillon de la carte */}
-      <div className="flex justify-center">
-        <div
-          className="relative touch-none overflow-hidden rounded-full border-4 border-white bg-gray-100 shadow-inner ring-2 ring-[#F17922]"
-          style={{ width: VIEWPORT, height: VIEWPORT, cursor: "grab" }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerLeave={onPointerUp}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            ref={imgRef}
-            src={src}
-            alt="Photo à recadrer"
-            crossOrigin="anonymous"
-            draggable={false}
-            onLoad={(e) => {
-              const el = e.currentTarget;
-              setNatural({ w: el.naturalWidth, h: el.naturalHeight });
-              setPos({ x: 0, y: 0 });
-              setZoom(1);
-            }}
-            className="pointer-events-none absolute select-none"
-            style={{
-              width: drawW || undefined,
-              height: drawH || undefined,
-              left: "50%",
-              top: "50%",
-              marginLeft: -drawW / 2,
-              marginTop: -drawH / 2,
-              transform: `translate(${pos.x}px, ${pos.y}px)`,
-            }}
-          />
-        </div>
-      </div>
+      <Cropper.Root
+        image={src}
+        aspectRatio={1}
+        zoom={zoom}
+        onZoomChange={setZoom}
+        onCropChange={setArea}
+        className="relative mx-auto flex h-72 w-72 items-center justify-center overflow-hidden rounded-2xl bg-gray-900/90 touch-none"
+      >
+        <Cropper.Description className="sr-only" />
+        <Cropper.Image className="pointer-events-none h-full w-full object-cover" />
+        {/* Fenêtre de crop circulaire + voile sombre autour = le médaillon final */}
+        <Cropper.CropArea className="pointer-events-none rounded-full border-4 border-white shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] ring-2 ring-[#F17922]" />
+      </Cropper.Root>
 
       <p className="text-center text-xs text-gray-500">
-        Glisse la photo pour la cadrer · le cercle = le rendu final sur la carte
+        Glisse et zoome la photo · le cercle = le rendu final sur la carte
       </p>
 
-      {/* Zoom */}
       <div className="flex items-center gap-3">
         <ZoomIn className="h-4 w-4 shrink-0 text-gray-400" />
         <input
@@ -159,18 +128,7 @@ export function PhotoCropper({
           step={0.01}
           value={zoom}
           disabled={busy}
-          onChange={(e) => {
-            const z = Number(e.target.value);
-            setZoom(z);
-            // Re-borne la position : un dézoom ne doit pas laisser de vide.
-            const s = baseScale * z;
-            const maxX = Math.max(0, (natural.w * s - VIEWPORT) / 2);
-            const maxY = Math.max(0, (natural.h * s - VIEWPORT) / 2);
-            setPos((p) => ({
-              x: Math.min(maxX, Math.max(-maxX, p.x)),
-              y: Math.min(maxY, Math.max(-maxY, p.y)),
-            }));
-          }}
+          onChange={(e) => setZoom(Number(e.target.value))}
           className="w-full accent-[#F17922]"
         />
       </div>
@@ -187,7 +145,7 @@ export function PhotoCropper({
         <button
           type="button"
           onClick={handleApply}
-          disabled={busy || !natural.w}
+          disabled={busy || !area}
           className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[#F17922] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
