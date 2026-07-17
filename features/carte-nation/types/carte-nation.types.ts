@@ -77,3 +77,30 @@ export interface NationCardQuery {
     status?: NationCardStatus;
     institution?: string;
 }
+
+/**
+ * Type de carte choisi par le staff À L'APPROBATION — pilote le visuel émis :
+ * ETUDIANT = carte étudiante (liseré jaune) ; STANDARD/VIP/VVIP = ce niveau.
+ */
+export type CardType = "ETUDIANT" | "STANDARD" | "VIP" | "VVIP";
+
+export const CARD_TYPES: CardType[] = ["ETUDIANT", "STANDARD", "VIP", "VVIP"];
+
+/** Corps de `POST /admin/card-nation/preview-card` (galerie / testeur). */
+export interface PreviewCardBody {
+    card_type: CardType;
+    first_name?: string;
+    last_name?: string;
+    nickname?: string;
+}
+
+/** Réponse d'aperçu : `image` est un data-URL base64 (aucun fichier S3 créé). */
+export interface PreviewCardResponse {
+    success: boolean;
+    data: {
+        card_type: CardType;
+        level: CardLevel | null;
+        is_student: boolean;
+        image: string;
+    };
+}

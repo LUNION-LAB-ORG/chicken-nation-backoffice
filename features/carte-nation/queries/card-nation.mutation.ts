@@ -1,16 +1,32 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { useInvalidateCardNationQuery } from "./index.query";
-import { reviewRequest, updateCardStatus } from "../services/carte-nation.service";
-import { CardRequestStatus } from "../types/carte-nation.types";
+import {
+    deleteCard,
+    deleteRequest,
+    previewCard,
+    reviewRequest,
+    updateCardStatus,
+} from "../services/carte-nation.service";
+import {
+    CardRequestStatus,
+    CardType,
+    PreviewCardBody,
+} from "../types/carte-nation.types";
 
-// Mutation pour traiter une demande de carte
+// Mutation pour traiter une demande de carte.
+// `card_type` : type de carte choisi à l'approbation (pilote le visuel émis).
 export const useReviewRequestMutation = () => {
     const invalidate = useInvalidateCardNationQuery();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: { status: CardRequestStatus; rejection_reason?: string } }) =>
-            reviewRequest(id, data),
+        mutationFn: ({
+            id,
+            data,
+        }: {
+            id: string;
+            data: { status: CardRequestStatus; rejection_reason?: string; card_type?: CardType };
+        }) => reviewRequest(id, data),
         onSuccess: () => {
             invalidate("requests-list");
             toast.success("Demande traitée avec succès");
@@ -35,6 +51,42 @@ export const useUpdateCardStatusMutation = () => {
             };
             toast.success(messages[variables.action]);
         },
+        onError: (e: Error) => toast.error(e.message),
+    });
+};
+
+// ⚠️ Suppression DÉFINITIVE d'une demande (+ sa carte si déjà générée).
+export const useDeleteRequestMutation = () => {
+    const invalidate = useInvalidateCardNationQuery();
+
+    return useMutation({
+        mutationFn: (id: string) => deleteRequest(id),
+        onSuccess: () => {
+            invalidate("requests-list");
+            toast.success("Demande supprimée définitivement");
+        },
+        onError: (e: Error) => toast.error(e.message),
+    });
+};
+
+// ⚠️ Suppression DÉFINITIVE d'une carte (+ son image).
+export const useDeleteCardMutation = () => {
+    const invalidate = useInvalidateCardNationQuery();
+
+    return useMutation({
+        mutationFn: (id: string) => deleteCard(id),
+        onSuccess: () => {
+            invalidate("cards-list");
+            toast.success("Carte supprimée définitivement");
+        },
+        onError: (e: Error) => toast.error(e.message),
+    });
+};
+
+// Aperçu d'un design de carte (galerie / testeur). Aucune écriture : rien à invalider.
+export const usePreviewCardMutation = () => {
+    return useMutation({
+        mutationFn: (data: PreviewCardBody) => previewCard(data),
         onError: (e: Error) => toast.error(e.message),
     });
 };

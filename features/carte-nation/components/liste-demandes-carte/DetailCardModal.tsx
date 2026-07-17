@@ -1,7 +1,7 @@
 "use client";
 
 import { formatImageUrl } from "@/utils/imageHelpers";
-import { ImageOff, XCircle } from "lucide-react";
+import { CheckCircle2, ImageOff, Trash2, XCircle } from "lucide-react";
 import Image from "next/image";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import { CardRequest } from "../../types/carte-nation.types";
@@ -19,7 +19,7 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
         {label}
       </p>
-      <p className="text-sm text-gray-800 break-words">{shown}</p>
+      <p className="break-words text-sm text-gray-800">{shown}</p>
     </div>
   );
 }
@@ -27,25 +27,38 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 interface DetailCardModalProps {
   request: CardRequest;
   onClose: () => void;
+  /** Ouvre la modale d'approbation (choix du type de carte). PENDING uniquement. */
+  onApprove?: () => void;
+  /** Ouvre la modale de rejet (motif obligatoire). PENDING uniquement. */
+  onReject?: () => void;
+  /** Ouvre la confirmation de suppression définitive. */
+  onDelete?: () => void;
 }
 
 /**
  * Modale « Détail » d'une demande de Carte de la Nation.
- * Affiche la PHOTO du titulaire (contrôle backoffice) + toutes les infos de la
- * demande + le justificatif éventuel. Lecture seule (l'approbation/le rejet
- * restent sur les boutons dédiés de la liste).
+ * Affiche la PHOTO du titulaire + toutes les infos de la demande, et permet
+ * d'approuver / rejeter / supprimer sans repasser par la liste.
  */
-export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
+export function DetailCardModal({
+  request,
+  onClose,
+  onApprove,
+  onReject,
+  onDelete,
+}: DetailCardModalProps) {
   const fullName = `${request.customer?.first_name ?? ""} ${request.customer?.last_name ?? ""}`.trim();
   const level = resolveCardLevel(request);
+  const student = isStudentProfile(request);
+  const isPending = request.status === "PENDING";
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl"
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -90,12 +103,12 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
           <div className="grid grid-cols-2 gap-x-4 gap-y-4 rounded-xl bg-gray-50 p-4">
             <DetailRow label="Téléphone" value={request.customer?.phone} />
             <DetailRow label="Email" value={request.customer?.email} />
+            <DetailRow label="Étudiant" value={student ? "Oui" : "Non"} />
             <DetailRow label="Surnom" value={request.nickname} />
             <DetailRow
               label="Profil"
               value={getProfileTypeLabel(
-                request.profile_type ??
-                  (isStudentProfile(request) ? "STUDENT" : null)
+                request.profile_type ?? (student ? "STUDENT" : null)
               )}
             />
             <DetailRow label="Établissement" value={request.institution} />
@@ -115,23 +128,38 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
               <p className="text-sm text-red-600">{request.rejection_reason}</p>
             </div>
           )}
+        </div>
 
-          {/* Justificatif étudiant (si fourni — mode V2) */}
-          {request.student_card_file_url && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase text-gray-400">
-                Justificatif étudiant
-              </p>
-              <Image
-                src={formatImageUrl(request.student_card_file_url)}
-                alt="Justificatif étudiant"
-                width={480}
-                height={300}
-                unoptimized
-                className="h-auto w-full rounded-xl border border-gray-200"
-              />
-            </div>
+        {/* Actions */}
+        <div className="sticky bottom-0 flex flex-wrap gap-2 rounded-b-2xl border-t border-gray-100 bg-white px-6 py-4">
+          {isPending && (
+            <>
+              <button
+                onClick={onApprove}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Approuver
+              </button>
+              <button
+                onClick={onReject}
+                className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-red-200 py-2.5 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+              >
+                <XCircle className="h-4 w-4" />
+                Rejeter
+              </button>
+            </>
           )}
+          <button
+            onClick={onDelete}
+            className={`flex items-center justify-center gap-2 rounded-lg border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 ${
+              isPending ? "px-4" : "flex-1"
+            }`}
+            title="Supprimer définitivement la demande"
+          >
+            <Trash2 className="h-4 w-4" />
+            Supprimer
+          </button>
         </div>
       </div>
     </div>

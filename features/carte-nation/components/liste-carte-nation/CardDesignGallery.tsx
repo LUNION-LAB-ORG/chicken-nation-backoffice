@@ -1,0 +1,191 @@
+"use client";
+
+import { AlertTriangle, Loader2, RefreshCw, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { previewCard } from "../../services/carte-nation.service";
+import { CARD_TYPES, CardType } from "../../types/carte-nation.types";
+
+const TYPE_META: Record<CardType, { label: string; hint: string; dot: string }> = {
+  ETUDIANT: { label: "Étudiant", hint: "Liseré jaune", dot: "#FFD24C" },
+  STANDARD: { label: "Standard", hint: "Orange", dot: "#F17922" },
+  VIP: { label: "VIP", hint: "Or", dot: "#D4AF37" },
+  VVIP: { label: "VVIP", hint: "Rouge", dot: "#C0392B" },
+};
+
+interface CardDesignGalleryProps {
+  onClose: () => void;
+}
+
+/**
+ * Galerie des designs de carte + testeur de génération par niveau.
+ * Les visuels sont produits par le VRAI générateur backend (render-only : aucun
+ * fichier n'est créé sur S3, aucune carte n'est enregistrée). On peut changer le
+ * nom / pseudo pour vérifier le rendu réel du texte.
+ */
+export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
+  const [firstName, setFirstName] = useState("Awa");
+  const [lastName, setLastName] = useState("Koné");
+  const [nickname, setNickname] = useState("Jojo");
+  const [previews, setPreviews] = useState<Partial<Record<CardType, string>>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generateAll = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const results = await Promise.all(
+        CARD_TYPES.map(async (card_type) => {
+          const res = await previewCard({
+            card_type,
+            first_name: firstName,
+            last_name: lastName,
+            nickname,
+          });
+          return [card_type, res.data.image] as const;
+        })
+      );
+      setPreviews(Object.fromEntries(results) as Partial<Record<CardType, string>>);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Génération impossible");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [firstName, lastName, nickname]);
+
+  useEffect(() => {
+    generateAll();
+    // Génération initiale uniquement : ensuite c'est « Régénérer » qui pilote.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Designs de carte
+            </h3>
+            <p className="text-xs text-gray-500">
+              Rendus par le générateur réel — aucun fichier créé, aucune carte
+              enregistrée.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            title="Fermer"
+          >
+            <XCircle className="h-6 w-6" />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-6">
+          {/* Testeur : on personnalise le texte rendu sur la carte */}
+          <div className="flex flex-wrap items-end gap-3 rounded-xl bg-gray-50 p-4">
+            <label className="min-w-0 flex-1">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                Prénom
+              </span>
+              <input
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#F17922]"
+              />
+            </label>
+            <label className="min-w-0 flex-1">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                Nom
+              </span>
+              <input
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#F17922]"
+              />
+            </label>
+            <label className="min-w-0 flex-1">
+              <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+                Surnom
+              </span>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#F17922]"
+              />
+            </label>
+            <button
+              onClick={generateAll}
+              disabled={isLoading}
+              className="flex items-center justify-center gap-2 rounded-lg bg-[#F17922] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Régénérer
+            </button>
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          {/* Galerie : un visuel par type de carte */}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {CARD_TYPES.map((type) => {
+              const meta = TYPE_META[type];
+              const image = previews[type];
+              return (
+                <div
+                  key={type}
+                  className="overflow-hidden rounded-2xl border border-gray-200"
+                >
+                  <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+                    <span
+                      className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white"
+                      style={{ backgroundColor: meta.dot }}
+                    />
+                    <span className="text-sm font-semibold text-gray-900">
+                      {meta.label}
+                    </span>
+                    <span className="text-[11px] text-gray-500">
+                      {meta.hint}
+                    </span>
+                  </div>
+                  <div className="flex min-h-[180px] items-center justify-center bg-gray-50 p-3">
+                    {image ? (
+                      // Data-URL renvoyé par le backend → <img> (pas d'optimisation Next).
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={image}
+                        alt={`Carte ${meta.label}`}
+                        className="h-auto w-full rounded-xl shadow-sm"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-gray-400">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        <span className="text-xs">Génération…</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

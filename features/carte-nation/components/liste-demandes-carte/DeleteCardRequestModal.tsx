@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { useDeleteRequestMutation } from "../../queries/card-nation.mutation";
 import { CardRequest } from "../../types/carte-nation.types";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 
@@ -15,11 +16,17 @@ export function DeleteCardRequestModal({
   request,
   onClose,
 }: DeleteCardRequestModalProps) {
-  const isLoading = false;
+  const { mutateAsync: deleteMutation, isPending: isLoading } =
+    useDeleteRequestMutation();
+  // Une carte déjà générée référence la demande → elle est supprimée avec.
+  const hasCard = !!request.nation_card;
 
   if (!isOpen) return null;
 
-  const handleDelete = async () => {};
+  const handleDelete = async () => {
+    await deleteMutation(request.id);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -61,8 +68,12 @@ export function DeleteCardRequestModal({
 
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-800 font-medium">
-              ⚠️ Cette action est irréversible. Toutes les données associées
-              seront perdues.
+              ⚠️ Cette action est irréversible.
+            </p>
+            <p className="text-sm text-red-700 mt-1">
+              {hasCard
+                ? "La carte déjà générée pour cette demande sera SUPPRIMÉE elle aussi (image comprise)."
+                : "La demande et sa photo seront définitivement effacées."}
             </p>
           </div>
         </div>

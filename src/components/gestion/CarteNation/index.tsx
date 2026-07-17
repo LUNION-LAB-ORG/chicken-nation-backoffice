@@ -2,11 +2,13 @@
 
 import { useDashboardStore } from "@/store/dashboardStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
-import { XCircle } from "lucide-react";
+import { Palette, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
 import CarteNationHeader from "../../../../features/carte-nation/components/CarteNationHeader";
 import { CarteNationTable } from "../../../../features/carte-nation/components/liste-carte-nation";
+import { CardDesignGallery } from "../../../../features/carte-nation/components/liste-carte-nation/CardDesignGallery";
+import { DeleteCardModal } from "../../../../features/carte-nation/components/liste-carte-nation/DeleteCardModal";
 import StatutCardTab from "../../../../features/carte-nation/components/liste-carte-nation/StatutCardTab";
 import { UpdateCardStatusModal } from "../../../../features/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
 import { DemandeCarteList } from "../../../../features/carte-nation/components/liste-demandes-carte";
@@ -53,6 +55,16 @@ export default function CarteNation() {
       {/* Carte Nation */}
       {activeTab == "card_nation" && view === "list" && (
         <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]">
+          {/* Galerie des designs + testeur de génération par niveau */}
+          <div className="flex items-center justify-end border-b border-slate-100 px-4 py-3">
+            <button
+              onClick={() => toggleModal("card_nation", "designs")}
+              className="flex items-center gap-2 rounded-lg border border-[#F17922]/30 px-3 py-2 text-sm font-semibold text-[#F17922] transition-colors hover:bg-[#F17922]/10"
+            >
+              <Palette className="h-4 w-4" />
+              Designs de carte
+            </button>
+          </div>
           <StatutCardTab />
           <CarteNationTable
             cartesNationResponse={cartesNation}
@@ -127,6 +139,22 @@ export default function CarteNation() {
             />
           </div>
         </div>
+      )}
+
+      {/* Suppression DÉFINITIVE d'une carte (≠ révoquer) */}
+      {selectedItem && modals?.deleteCard && (
+        <DeleteCardModal
+          isOpen={true}
+          card={selectedItem as NationCard}
+          onClose={() => handleToggleCardModal(null, "deleteCard")}
+        />
+      )}
+
+      {/* Galerie des designs de carte + testeur de génération */}
+      {modals?.designs && (
+        <CardDesignGallery
+          onClose={() => toggleModal("card_nation", "designs")}
+        />
       )}
     </div>
   );

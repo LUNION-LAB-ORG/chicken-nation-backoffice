@@ -4,8 +4,11 @@ import { PaginatedResponse } from '../../../types';
 import {
     CardRequest,
     CardRequestQuery,
+    CardType,
     NationCard,
     NationCardQuery,
+    PreviewCardBody,
+    PreviewCardResponse,
 } from '../types/carte-nation.types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
@@ -60,7 +63,10 @@ export const getRequestById = async (id: string) => {
     }
 };
 
-export const reviewRequest = async (id: string, data: { status: string; rejection_reason?: string }) => {
+export const reviewRequest = async (
+    id: string,
+    data: { status: string; rejection_reason?: string; card_type?: CardType },
+) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, `/requests/${id}/review`);
         const response = await fetch(url, {
@@ -68,6 +74,18 @@ export const reviewRequest = async (id: string, data: { status: string; rejectio
             headers,
             body: JSON.stringify(data)
         });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
+/** ⚠️ Suppression DÉFINITIVE d'une demande (+ sa carte si déjà générée). */
+export const deleteRequest = async (id: string) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/requests/${id}`);
+        const response = await fetch(url, { method: 'DELETE', headers });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json();
     } catch (error) {
@@ -105,6 +123,37 @@ export const updateCardStatus = async (id: string, action: 'suspend' | 'revoke' 
         const response = await fetch(url, { method: 'PATCH', headers });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
+/** ⚠️ Suppression DÉFINITIVE d'une carte (+ son image S3). Préférer `revoke` si réversible. */
+export const deleteCard = async (id: string) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/cards/${id}`);
+        const response = await fetch(url, { method: 'DELETE', headers });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json();
+    } catch (error) {
+        throw new Error(getHumanReadableError(error));
+    }
+};
+
+/**
+ * Aperçu d'un design de carte (galerie / testeur). Le backend rend l'image avec le
+ * VRAI générateur en render-only : renvoie un data-URL, ne crée aucun fichier S3.
+ */
+export const previewCard = async (data: PreviewCardBody) => {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, '/preview-card');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data),
+        });
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+        return await response.json() as PreviewCardResponse;
     } catch (error) {
         throw new Error(getHumanReadableError(error));
     }

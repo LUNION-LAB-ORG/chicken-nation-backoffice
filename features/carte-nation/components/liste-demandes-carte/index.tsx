@@ -1,10 +1,8 @@
 "use client";
 
 import { PaginationInfo } from "@/components/TableStates";
-import { useSettingQuery } from "@/hooks/useSettingsQuery";
 import { useDashboardStore } from "@/store/dashboardStore";
-import { formatImageUrl } from "@/utils/imageHelpers";
-import { CheckCircle2, Eye, Info, XCircle } from "lucide-react";
+import { CheckCircle2, Info, XCircle } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
 import { dateToLocalString } from "../../../../utils/date/format-date";
@@ -14,12 +12,11 @@ import {
   CardLevelBadge,
   getProfileTypeLabel,
   isStudentProfile,
-  RequestKindBadge,
   resolveCardLevel,
-  StudentMarkerBadge,
 } from "../../utils/getCardLevelBadge";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 import { ApproveCardModal } from "./ApproveCardModal";
+import { DeleteCardRequestModal } from "./DeleteCardRequestModal";
 import { DetailCardModal } from "./DetailCardModal";
 import { RejectCardModal } from "./RejectCardModal";
 import StatutCardRequestTab from "./StatutCardRequestTab";
@@ -30,14 +27,6 @@ export function DemandeCarteList() {
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
-
-  // Mode de DEMANDE côté client : V1 déclaratif (sans justificatif) vs V2 (justificatif exigé).
-  // ⚠️ Dans les deux cas la carte n'est PLUS émise automatiquement : toute demande
-  // arrive en PENDING et doit être validée ici pour générer la carte.
-  const { data: requireJustificatifSetting } = useSettingQuery(
-    "card.require_justificatif"
-  );
-  const requireJustificatif = requireJustificatifSetting?.value === "true";
 
   const { data: requests, isLoading } = useRequestListQuery({
     page: pagination.page,
@@ -61,14 +50,11 @@ export function DemandeCarteList() {
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
           <div className="text-sm text-amber-800">
             <span className="font-semibold">Validation requise.</span> Toutes les
-            demandes — <strong>déclaratives</strong> (Étudiant / Professionnel,
-            sans justificatif) comme <strong>avec justificatif</strong> — arrivent{" "}
-            <strong>en attente</strong> et doivent être <strong>approuvées ici</strong>{" "}
-            pour générer la carte. L&apos;approbation émet la carte et notifie le
-            client (« carte prête »).{" "}
-            {requireJustificatif
-              ? "Mode de demande actuel : justificatif étudiant exigé à la création (V2)."
-              : "Mode de demande actuel : demande déclarative sans justificatif (V1)."}
+            demandes arrivent <strong>en attente</strong> et doivent être{" "}
+            <strong>approuvées ici</strong> pour générer la carte. À
+            l&apos;approbation, vous choisissez le <strong>type de carte</strong>{" "}
+            (Étudiant / Standard / VIP / VVIP). L&apos;approbation émet la carte et
+            notifie le client («&nbsp;carte prête&nbsp;») ; le refus le notifie aussi.
           </div>
         </div>
 
@@ -82,6 +68,9 @@ export function DemandeCarteList() {
                 <tr>
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
                     Client
+                  </th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
+                    Étudiant
                   </th>
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
                     Profil
@@ -106,14 +95,13 @@ export function DemandeCarteList() {
               <tbody>
                 {requests?.data.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-gray-500">
+                    <td colSpan={8} className="py-12 text-center text-gray-500">
                       Aucune demande trouvée
                     </td>
                   </tr>
                 ) : (
                   requests?.data.map((request) => {
                     const student = isStudentProfile(request);
-                    const hasJustificatif = !!request.student_card_file_url;
                     return (
                       <tr
                         key={request.id}
@@ -148,16 +136,27 @@ export function DemandeCarteList() {
                             </div>
                           </div>
                         </td>
+                        {/* Étudiant ou non (déclaré à la demande) */}
                         <td className="py-4 px-6">
-                          <div className="flex flex-col gap-1.5">
+                          {student ? (
+                            <span className="inline-flex items-center rounded-md bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700">
+                              Oui
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                              Non
+                            </span>
+                          )}
+                        </td>
+                        {/* Profil : uniquement les infos utiles (plus de « Déclaratif »/« justificatif ») */}
+                        <td className="py-4 px-6">
+                          <div className="flex min-w-0 flex-col gap-1">
                             <span className="text-sm text-gray-900">
                               {getProfileTypeLabel(
                                 request.profile_type ??
                                   (student ? "STUDENT" : null)
                               )}
                             </span>
-                            {student && <StudentMarkerBadge size="sm" />}
-                            <RequestKindBadge request={request} size="sm" />
                             {request.institution && (
                               <span
                                 className="block max-w-[14rem] truncate text-xs text-gray-500"
@@ -205,20 +204,7 @@ export function DemandeCarteList() {
                             >
                               <Info className="w-4 h-4 text-gray-600" />
                             </button>
-                            {/* Justificatif : uniquement s'il existe (V2). */}
-                            {hasJustificatif && (
-                              <button
-                                onClick={() =>
-                                  handleToggleOrderModal(request, "view")
-                                }
-                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                title="Voir le justificatif"
-                              >
-                                <Eye className="w-4 h-4 text-gray-600" />
-                              </button>
-                            )}
-                            {/* Validation manuelle de TOUTE demande en attente,
-                                déclarative (sans justificatif) comme avec justificatif. */}
+                            {/* Validation manuelle de toute demande en attente. */}
                             {request.status === "PENDING" && (
                               <>
                                 <button
@@ -282,41 +268,32 @@ export function DemandeCarteList() {
           }}
         />
       )}
-      {/* Détail Modal : photo + toutes les infos (toute demande) */}
+      {/* Détail Modal : photo + toutes les infos + actions (toute demande) */}
       {selectedItem && modals?.detail && (
         <DetailCardModal
           request={selectedItem as CardRequest}
           onClose={() => handleToggleOrderModal(null, "detail")}
+          onApprove={() => {
+            toggleModal("card_requests", "detail");
+            handleToggleOrderModal(selectedItem as CardRequest, "approve");
+          }}
+          onReject={() => {
+            toggleModal("card_requests", "detail");
+            handleToggleOrderModal(selectedItem as CardRequest, "reject");
+          }}
+          onDelete={() => {
+            toggleModal("card_requests", "detail");
+            handleToggleOrderModal(selectedItem as CardRequest, "delete");
+          }}
         />
       )}
-      {/* Image Viewer Modal */}
-      {selectedItem && modals?.view && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          onClick={() => handleToggleOrderModal(null, "view")}
-        >
-          <div
-            className="relative max-w-4xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => handleToggleOrderModal(null, "view")}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
-            >
-              <XCircle className="w-8 h-8" />
-            </button>
-            <Image
-              src={formatImageUrl(
-                (selectedItem as CardRequest)?.student_card_file_url ?? undefined
-              )}
-              alt="Carte étudiante"
-              width={1200}
-              height={800}
-              unoptimized={true}
-              className="w-full h-auto rounded-xl shadow-2xl"
-            />
-          </div>
-        </div>
+      {/* Suppression définitive d'une demande */}
+      {selectedItem && modals?.delete && (
+        <DeleteCardRequestModal
+          isOpen={true}
+          request={selectedItem as CardRequest}
+          onClose={() => handleToggleOrderModal(null, "delete")}
+        />
       )}
     </div>
   );
