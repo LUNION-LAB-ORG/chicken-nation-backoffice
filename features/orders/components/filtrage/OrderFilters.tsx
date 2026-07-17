@@ -13,8 +13,11 @@ export function OrderFilters() {
     setPagination,
   } = useDashboardStore();
   const { user } = useAuthStore();
-  // Seul l'ADMIN voit/filtre les commandes PENDING (cohérent avec le backend).
-  const isAdmin = String(user?.role) === "ADMIN";
+  // ADMIN **et CALL_CENTER** peuvent filtrer les commandes PENDING (suivi client).
+  // Aligné sur le backend : order.service.ts → `adminWantsPending` autorise déjà
+  // ces deux rôles ; seul ce filtre restait bloqué sur ADMIN.
+  const role = String(user?.role);
+  const canFilterPending = role === "ADMIN" || role === "CALL_CENTER";
 
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -30,7 +33,7 @@ export function OrderFilters() {
 
   const filtragesStatus = [
     { id: "", label: "Tous les statuts", icon: "📋" },
-    ...(isAdmin
+    ...(canFilterPending
       ? [{ id: OrderStatus.PENDING, label: "En attente", icon: "⏳" }]
       : []),
     { id: OrderStatus.ACCEPTED, label: "Nouvelles", icon: "🔔" },
