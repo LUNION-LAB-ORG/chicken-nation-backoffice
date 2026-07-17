@@ -2,7 +2,7 @@
 
 import { PaginationInfo } from "@/components/TableStates";
 import { useDashboardStore } from "@/store/dashboardStore";
-import { CheckCircle2, Info, XCircle } from "lucide-react";
+import { Eye, Info } from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
 import { dateToLocalString } from "../../../../utils/date/format-date";
@@ -15,10 +15,7 @@ import {
   resolveCardLevel,
 } from "../../utils/getCardLevelBadge";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
-import { ApproveCardModal } from "./ApproveCardModal";
-import { DeleteCardRequestModal } from "./DeleteCardRequestModal";
 import { DetailCardModal } from "./DetailCardModal";
-import { RejectCardModal } from "./RejectCardModal";
 import StatutCardRequestTab from "./StatutCardRequestTab";
 
 export function DemandeCarteList() {
@@ -44,7 +41,7 @@ export function DemandeCarteList() {
   );
   return (
     <div>
-      <div className="max-w-7xl mx-auto">
+      <div className="w-full">
         {/* Bandeau : la carte n'est plus auto-émise — toute demande est validée ici. */}
         <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
@@ -192,42 +189,19 @@ export function DemandeCarteList() {
                         <td className="py-4 px-6">
                           {getStatusBadgeRequestCard(request.status)}
                         </td>
+                        {/* Une seule action : tout se passe dans la modale Détail
+                            (approuver / rejeter / supprimer y sont intégrés). */}
                         <td className="py-4 px-6">
-                          <div className="flex items-center gap-2">
-                            {/* Détail : présent sur TOUTE demande (photo + infos). */}
-                            <button
-                              onClick={() =>
-                                handleToggleOrderModal(request, "detail")
-                              }
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                              title="Voir le détail"
-                            >
-                              <Info className="w-4 h-4 text-gray-600" />
-                            </button>
-                            {/* Validation manuelle de toute demande en attente. */}
-                            {request.status === "PENDING" && (
-                              <>
-                                <button
-                                  onClick={() =>
-                                    handleToggleOrderModal(request, "approve")
-                                  }
-                                  className="p-2 hover:bg-emerald-50 rounded-lg transition-colors"
-                                  title="Approuver (génère la carte)"
-                                >
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                </button>
-                                <button
-                                  onClick={() =>
-                                    handleToggleOrderModal(request, "reject")
-                                  }
-                                  className="p-2 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Rejeter"
-                                >
-                                  <XCircle className="w-4 h-4 text-red-600" />
-                                </button>
-                              </>
-                            )}
-                          </div>
+                          <button
+                            onClick={() =>
+                              handleToggleOrderModal(request, "detail")
+                            }
+                            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[#F17922]/40 hover:bg-[#F17922]/10 hover:text-[#F17922]"
+                            title="Voir le détail de la demande"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Voir détail
+                          </button>
                         </td>
                       </tr>
                     );
@@ -248,51 +222,11 @@ export function DemandeCarteList() {
         </div>
       </div>
 
-      {/* Modals */}
-
-      {selectedItem && modals?.approve && (
-        <ApproveCardModal
-          isOpen={true}
-          request={selectedItem as CardRequest}
-          onClose={() => {
-            handleToggleOrderModal(null, "approve");
-          }}
-        />
-      )}
-      {selectedItem && modals?.reject && (
-        <RejectCardModal
-          isOpen={true}
-          request={selectedItem as CardRequest}
-          onClose={() => {
-            handleToggleOrderModal(null, "reject");
-          }}
-        />
-      )}
-      {/* Détail Modal : photo + toutes les infos + actions (toute demande) */}
+      {/* Modale UNIQUE : détail + approuver / rejeter / supprimer (panneaux inline) */}
       {selectedItem && modals?.detail && (
         <DetailCardModal
           request={selectedItem as CardRequest}
           onClose={() => handleToggleOrderModal(null, "detail")}
-          onApprove={() => {
-            toggleModal("card_requests", "detail");
-            handleToggleOrderModal(selectedItem as CardRequest, "approve");
-          }}
-          onReject={() => {
-            toggleModal("card_requests", "detail");
-            handleToggleOrderModal(selectedItem as CardRequest, "reject");
-          }}
-          onDelete={() => {
-            toggleModal("card_requests", "detail");
-            handleToggleOrderModal(selectedItem as CardRequest, "delete");
-          }}
-        />
-      )}
-      {/* Suppression définitive d'une demande */}
-      {selectedItem && modals?.delete && (
-        <DeleteCardRequestModal
-          isOpen={true}
-          request={selectedItem as CardRequest}
-          onClose={() => handleToggleOrderModal(null, "delete")}
         />
       )}
     </div>
