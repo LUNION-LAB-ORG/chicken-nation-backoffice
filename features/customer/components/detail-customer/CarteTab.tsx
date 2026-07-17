@@ -172,14 +172,16 @@ export function CarteTab({ customerData }: CarteTabProps) {
                       )}
                     </div>
                   </div>
-                  {request.student_card_file_url && (
+                  {/* Le justificatif n'est plus exposé : c'est la PHOTO du
+                      titulaire qui sert au contrôle. */}
+                  {request.photo && (
                     <div className="shrink-0">
                       <button
                         onClick={() => setShowImage({ request, status: true })}
                         className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors flex items-center gap-2"
                       >
                         <Eye className="w-4 h-4" />
-                        Voir le document
+                        Voir la photo
                       </button>
                     </div>
                   )}
@@ -206,10 +208,9 @@ export function CarteTab({ customerData }: CarteTabProps) {
             </button>
             <Image
               src={formatImageUrl(
-                (showImage.request as CardRequest)?.student_card_file_url ??
-                  undefined
+                (showImage.request as CardRequest)?.photo ?? undefined
               )}
-              alt="Carte étudiante"
+              alt="Photo du titulaire"
               width={1200}
               height={800}
               unoptimized={true}

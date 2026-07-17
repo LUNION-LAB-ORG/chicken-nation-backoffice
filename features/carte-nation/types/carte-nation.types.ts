@@ -33,6 +33,8 @@ export interface CardRequest {
     level?: CardLevel | null;
     status: CardRequestStatus;
     rejection_reason: string | null;
+    /** Motif auto-généré d'une demande de RÉVISION (modif de carte depuis l'app). */
+    revision_reason?: string | null;
     reviewed_by: string | null;
     reviewed_at: string | null;
     created_at: string;

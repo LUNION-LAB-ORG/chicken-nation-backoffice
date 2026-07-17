@@ -175,6 +175,19 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
           </div>
         </div>
 
+        {/* Demande de RÉVISION : motif auto-généré (ce que le client change) */}
+        {request.revision_reason && (
+          <div className="mx-6 mb-6 rounded-xl border border-amber-200 bg-amber-50 p-3">
+            <p className="mb-1 text-xs font-semibold uppercase text-amber-700">
+              Demande de modification
+            </p>
+            <p className="text-sm text-amber-800">{request.revision_reason}</p>
+            <p className="mt-1 text-xs text-amber-600">
+              Approuver régénère la carte existante (numéro et QR conservés).
+            </p>
+          </div>
+        )}
+
         {/* Motif d'un rejet déjà prononcé */}
         {request.status === "REJECTED" && request.rejection_reason && (
           <div className="mx-6 mb-6 rounded-xl border border-red-100 bg-red-50 p-3">
