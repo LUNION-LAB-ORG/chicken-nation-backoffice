@@ -171,13 +171,26 @@ export const deleteCard = async (id: string) => {
  * Aperçu d'un design de carte (galerie / testeur). Le backend rend l'image avec le
  * VRAI générateur en render-only : renvoie un data-URL, ne crée aucun fichier S3.
  */
-export const previewCard = async (data: PreviewCardBody) => {
+export const previewCard = async (data: PreviewCardBody, photo?: File) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/preview-card');
+        // multipart : la photo de test part en fichier (en base64 dans du JSON elle
+        // dépasserait la limite de body). On RETIRE le Content-Type JSON pour que le
+        // navigateur pose lui-même le boundary multipart.
+        const { 'Content-Type': _json, ...authHeaders } = headers as Record<string, string>;
+
+        const formData = new FormData();
+        formData.append('level', data.level);
+        formData.append('is_student', String(data.is_student ?? false));
+        if (data.first_name) formData.append('first_name', data.first_name);
+        if (data.last_name) formData.append('last_name', data.last_name);
+        if (data.nickname) formData.append('nickname', data.nickname);
+        if (photo) formData.append('photo', photo);
+
         const response = await fetch(url, {
             method: 'POST',
-            headers,
-            body: JSON.stringify(data),
+            headers: authHeaders,
+            body: formData,
         });
         if (!response.ok) throw new Error(`Error: ${response.status}`);
         return await response.json() as PreviewCardResponse;
