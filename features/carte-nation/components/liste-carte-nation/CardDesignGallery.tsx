@@ -1,11 +1,10 @@
 "use client";
 
-import { AlertTriangle, ImagePlus, Loader2, RefreshCw, XCircle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, Loader2, RefreshCw, XCircle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { previewCard } from "../../services/carte-nation.service";
 import { CardLevel } from "../../types/carte-nation.types";
 import { LEVEL_OPTIONS, STUDENT_MARKER_DOT } from "../../utils/cardVisualOptions";
-import { PhotoCropper } from "../PhotoCropper";
 
 /**
  * Les 6 visuels possibles = 3 niveaux (dominante couleur) × marqueur étudiant
@@ -54,11 +53,6 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
   const [previews, setPreviews] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Photo de test : sans elle, l'aperçu utilise le champion par défaut.
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const generateAll = useCallback(async () => {
     setIsLoading(true);
@@ -66,16 +60,14 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
     try {
       const results = await Promise.all(
         VARIANTS.map(async (v) => {
-          const res = await previewCard(
-            {
-              level: v.level,
-              is_student: v.is_student,
-              first_name: firstName,
-              last_name: lastName,
-              nickname,
-            },
-            photo ?? undefined
-          );
+          // La carte affiche TOUJOURS le champion → aucune photo à l'aperçu.
+          const res = await previewCard({
+            level: v.level,
+            is_student: v.is_student,
+            first_name: firstName,
+            last_name: lastName,
+            nickname,
+          });
           return [v.key, res.data.image] as const;
         })
       );
@@ -85,15 +77,7 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [firstName, lastName, nickname, photo]);
-
-  // On ouvre le recadrage dès la sélection : le staff cale le médaillon avant
-  // de voir le rendu, comme il le fera à l'approbation.
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    setCropSrc(URL.createObjectURL(file));
-  };
+  }, [firstName, lastName, nickname]);
 
   useEffect(() => {
     generateAll();
@@ -131,29 +115,6 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
         </div>
 
         <div className="space-y-5 p-6">
-          {/* Recadrage : le cercle affiché = le médaillon final sur la carte */}
-          {cropSrc && (
-            <div className="rounded-2xl border-2 border-[#F17922]/30 bg-[#F17922]/5 p-4">
-              <p className="mb-3 text-sm font-semibold text-gray-900">
-                Recadrer la photo de test
-              </p>
-              <PhotoCropper
-                src={cropSrc}
-                applyLabel="Utiliser ce cadrage"
-                onError={(m) => setError(m)}
-                onCancel={() => {
-                  setCropSrc(null);
-                  if (photoInputRef.current) photoInputRef.current.value = "";
-                }}
-                onApply={(file) => {
-                  setPhoto(file);
-                  setPhotoPreview(URL.createObjectURL(file));
-                  setCropSrc(null);
-                }}
-              />
-            </div>
-          )}
-
           {/* Testeur : on personnalise le texte rendu sur la carte */}
           <div className="flex flex-wrap items-end gap-3 rounded-xl bg-gray-50 p-4">
             <label className="min-w-0 flex-1">
@@ -186,61 +147,6 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
                 className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-[#F17922]"
               />
             </label>
-            {/* Photo de test : sans elle, l'aperçu montre le champion par défaut */}
-            <div className="flex items-end gap-2">
-              <div>
-                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                  Photo
-                </span>
-                <div className="flex items-center gap-2">
-                  {photoPreview ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={photoPreview}
-                      alt=""
-                      className="h-10 w-10 rounded-lg border border-gray-200 object-cover"
-                    />
-                  ) : (
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white text-gray-400"
-                      title="Aucune photo → champion par défaut"
-                    >
-                      <ImagePlus className="h-4 w-4" />
-                    </div>
-                  )}
-                  <input
-                    ref={photoInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => photoInputRef.current?.click()}
-                    disabled={isLoading}
-                    className="whitespace-nowrap rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-[#F17922]/40 hover:text-[#F17922] disabled:opacity-50"
-                  >
-                    {photo ? "Changer" : "Tester une photo"}
-                  </button>
-                  {photo && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPhoto(null);
-                        setPhotoPreview(null);
-                        if (photoInputRef.current) photoInputRef.current.value = "";
-                      }}
-                      disabled={isLoading}
-                      className="whitespace-nowrap rounded-lg px-2 py-2 text-xs font-medium text-gray-400 transition-colors hover:text-gray-600 disabled:opacity-50"
-                      title="Revenir au champion par défaut"
-                    >
-                      Défaut
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
             <button
               onClick={generateAll}
               disabled={isLoading}

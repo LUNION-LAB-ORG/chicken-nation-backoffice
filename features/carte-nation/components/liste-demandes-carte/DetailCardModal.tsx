@@ -4,7 +4,6 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import {
   AlertTriangle,
   CheckCircle2,
-  Crop,
   ImageOff,
   Loader2,
   Trash2,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { toast } from "react-hot-toast";
 import { dateToLocalString } from "../../../../utils/date/format-date";
 import {
   useDeleteRequestMutation,
@@ -24,7 +22,6 @@ import {
   resolveCardLevel,
 } from "../../utils/getCardLevelBadge";
 import { CardVisualPicker } from "../CardVisualPicker";
-import { PhotoCropper } from "../PhotoCropper";
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 
 type ActionMode = "approve" | "reject" | "delete" | null;
@@ -65,10 +62,6 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
   const [cardIsStudent, setCardIsStudent] = useState<boolean>(
     isStudentProfile(request)
   );
-  // Recadrage de la photo AVANT génération (le staff cale le médaillon).
-  const [isCropping, setIsCropping] = useState(false);
-  const [croppedPhoto, setCroppedPhoto] = useState<File | null>(null);
-  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
 
   const { mutateAsync: review, isPending: isReviewing } =
     useReviewRequestMutation();
@@ -84,11 +77,11 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
   const reasonTooShort = reason.trim().length < MIN_REASON;
 
   const handleApprove = async () => {
+    // La photo du client N'EST PLUS imprimée sur la carte (elle sert seulement
+    // à la vérification d'identité ci-dessus) → aucune photo envoyée ici.
     await review({
       id: request.id,
       data: { status: "APPROVED", level: cardLevel, is_student: cardIsStudent },
-      // Photo recadrée par le staff → remplace celle soumise par le client.
-      photo: croppedPhoto ?? undefined,
     });
     onClose();
   };
@@ -256,57 +249,10 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                 accent="emerald"
               />
 
-              {/* Recadrage de la photo avant génération */}
-              {request.photo && (
-                <div className="mt-4 rounded-xl border border-emerald-200 bg-white p-3">
-                  {isCropping ? (
-                    <PhotoCropper
-                      src={formatImageUrl(request.photo)}
-                      isBusy={isBusy}
-                      applyLabel="Valider le recadrage"
-                      onCancel={() => setIsCropping(false)}
-                      onError={(m) => toast.error(m)}
-                      onApply={(file) => {
-                        setCroppedPhoto(file);
-                        setCroppedPreview(URL.createObjectURL(file));
-                        setIsCropping(false);
-                      }}
-                    />
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={croppedPreview ?? formatImageUrl(request.photo)}
-                        alt="Photo du titulaire"
-                        className="h-14 w-14 rounded-full border-2 border-white object-cover ring-2 ring-emerald-300"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gray-900">
-                          {croppedPhoto ? "Photo recadrée" : "Photo du client"}
-                        </p>
-                        <p className="text-[11px] text-gray-500">
-                          {croppedPhoto
-                            ? "C'est ce cadrage qui ira sur la carte."
-                            : "Recadre-la pour caler le médaillon rond de la carte."}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setIsCropping(true)}
-                        disabled={isBusy}
-                        className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-xs font-semibold text-gray-700 transition-colors hover:border-emerald-300 hover:text-emerald-700 disabled:opacity-50"
-                      >
-                        <Crop className="h-3.5 w-3.5" />
-                        {croppedPhoto ? "Refaire" : "Recadrer"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               <p className="mt-3 text-xs text-emerald-800">
-                La carte sera générée avec ce visuel et le client sera notifié
-                («&nbsp;carte prête&nbsp;»).
+                La carte sera générée avec ce visuel (la photo du client sert
+                uniquement à la vérification, elle n'est pas imprimée) et le
+                client sera notifié («&nbsp;carte prête&nbsp;»).
               </p>
               <div className="mt-4 flex gap-2">
                 <button
