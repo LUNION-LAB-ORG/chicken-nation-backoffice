@@ -784,7 +784,9 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 <span className="text-sm sm:text-base font-semibold text-[#595959]">
                   {currentDeliveryFee > 0
                     ? `${currentDeliveryFee.toLocaleString()} XOF`
-                    : "Non calculé"}
+                    : formData.delivery_fee === 0
+                      ? "Gratuit"
+                      : "Non calculé"}
                 </span>
               ) : (
                 <span className="text-sm sm:text-base font-semibold text-green-600">
