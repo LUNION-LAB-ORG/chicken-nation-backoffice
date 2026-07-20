@@ -15,6 +15,7 @@ import MobileBottomNav from "@/components/gestion/mobile/MobileBottomNav";
 import MobileMenuDrawer from "@/components/gestion/mobile/MobileMenuDrawer";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 import { CaptureContactModal } from "../../../features/base-donnees/components/CaptureContactModal";
+import CallOverlay from "../../../features/calls/components/CallOverlay";
 
 export default function GestionLayout({
   children,
@@ -89,6 +90,9 @@ export default function GestionLayout({
       <WelcomeBackModal isOpen={showWelcomeBackModal} />
       <PasswordChangeModal isOpen={showPasswordChangeModal} />
       <EditProfileModal isOpen={showEditProfile} />
+
+      {/* Appels internes (Lunion Meet) — sonnerie entrante + panneau d'appel, global */}
+      <CallOverlay />
     </div>
   );
 }

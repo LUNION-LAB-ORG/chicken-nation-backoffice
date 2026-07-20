@@ -5,6 +5,7 @@
     "": {
       "name": "chicken-nation-dashboard",
       "dependencies": {
+        "@lunionlab/meet-react": "^0.3.0",
         "@next/font": "^14.2.15",
         "@react-google-maps/api": "^2.20.6",
         "@react-pdf/renderer": "^4.3.0",
@@ -152,6 +153,10 @@
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
 
     "@kurkle/color": ["@kurkle/color@0.3.4", "", {}, "sha512-M5UknZPHRu3DEDWoipU6sE8PdkZ6Z/S+v4dD+Ke8IaNlpdSQah50lz1KtcFBa2vsdOnwbbnxJwVM4wty6udA5w=="],
+
+    "@lunionlab/meet-client-js": ["@lunionlab/meet-client-js@1.0.0", "", {}, "sha512-Vks1laEqbXhX15p2opxA+EyuLCJlZHEwyKYAkJrHj9/fVZhW+/+eN0elGJDm3LlRqR5c4Ceg4FIpShl4jJLaLw=="],
+
+    "@lunionlab/meet-react": ["@lunionlab/meet-react@0.3.0", "", { "dependencies": { "@lunionlab/meet-client-js": "1.0.0" }, "peerDependencies": { "react": ">=18" } }, "sha512-DF/0bwZ2M6LgL8TMRiFZ3ijsc/cwutEheMh8CcbC1D+woPwsG7X/+3cIYJgV7BjazUTYyoZn0MMuvfDSIo5A0A=="],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@0.2.12", "", { "dependencies": { "@emnapi/core": "^1.4.3", "@emnapi/runtime": "^1.4.3", "@tybys/wasm-util": "^0.10.0" } }, "sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ=="],
 

@@ -83,6 +83,9 @@ const modulesMap: Record<string, any> = {
   tickets: dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
     loading: () => <LoadingSpinner />,
   }),
+  appel: dynamic(() => import("../../../features/calls/components/AppelView"), {
+    loading: () => <LoadingSpinner />,
+  }),
 
   // ---- Statistiques détaillées ----
   stats_products: dynamic(

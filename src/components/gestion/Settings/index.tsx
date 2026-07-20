@@ -15,8 +15,10 @@ import HubRiseSettings from "./tabs/HubRiseSettings";
 import PrinterSettings from "./tabs/PrinterSettings";
 import CardNationSettings from "./tabs/CardNationSettings";
 import { ParametresView as BaseDonneesSettings } from "../../../../features/base-donnees/components/ParametresView";
+import CallSettings from "../../../../features/calls/components/CallSettings";
+import { useIsAdmin } from "../../../../features/users/hook/useIsAdmin";
 
-const TABS = [
+const BASE_TABS = [
   { key: "general", label: "Général" },
   { key: "email", label: "Email" },
   { key: "orders", label: "Commandes" },
@@ -32,6 +34,10 @@ const TABS = [
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
+  const isAdmin = useIsAdmin();
+
+  // Onglet Appels réservé à l'admin (écriture de la config = permission SETTINGS.UPDATE).
+  const TABS = isAdmin ? [...BASE_TABS, { key: "calls", label: "Appels" }] : BASE_TABS;
 
   return (
     <div className="flex-1 overflow-auto p-4 space-y-6">
@@ -62,6 +68,7 @@ const Settings: React.FC = () => {
         {activeTab === "card_nation" && <CardNationSettings />}
         {activeTab === "hubrise" && <HubRiseSettings />}
         {activeTab === "printer" && <PrinterSettings />}
+        {activeTab === "calls" && isAdmin && <CallSettings />}
       </div>
     </div>
   );

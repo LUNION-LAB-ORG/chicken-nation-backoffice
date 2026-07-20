@@ -10,7 +10,7 @@ import { Course } from '../../features/courses/types/course.types';
 export type TabKey =
   'dashboard' | 'orders' | 'operations' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
   | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher' | 'delivery_offers'
-  | 'inbox' | 'card_requests' | 'card_nation' | 'reviews'
+  | 'inbox' | 'card_requests' | 'card_nation' | 'reviews' | 'appel'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
   | 'stats_delivery' | 'stats_marketing' | 'stats_retention_callbacks'

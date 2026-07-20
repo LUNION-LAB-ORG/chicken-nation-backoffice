@@ -160,7 +160,10 @@ export const useGetMenuConfig = (): {
       id: "messages_tickets",
       label: "Messages et tickets",
       icon: MessageSquare,
-      canAccess: () => can(Modules.MESSAGES, Action.READ),
+      // Visible si l'utilisateur a accès aux messages OU aux appels (ex : un
+      // manager sans MESSAGES doit quand même voir le sous-menu Appel).
+      canAccess: () =>
+        can(Modules.MESSAGES, Action.READ) || can(Modules.CALLS, Action.READ),
       badge: unread.total > 0 ? unread.total : undefined,
       items: [
         {
@@ -176,6 +179,12 @@ export const useGetMenuConfig = (): {
           icon: TicketCheck,
           canAccess: () => can(Modules.MESSAGES, Action.READ),
           badge: unread.tickets > 0 ? unread.tickets : undefined,
+        },
+        {
+          id: "messages_tickets-appel",
+          label: "Appel",
+          icon: Phone,
+          canAccess: () => can(Modules.CALLS, Action.READ),
         },
       ],
     },
