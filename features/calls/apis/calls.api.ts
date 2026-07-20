@@ -3,14 +3,14 @@ import type {
   IAnswerCallResponse,
   ICall,
   ICallsConfig,
+  IStartCallPayload,
   IStartCallResponse,
 } from "../types/call.type";
 
 const BASE = "/calls";
 
 export const callsApi = {
-  start: (data: { targetKind?: string; restaurantId?: string }) =>
-    api.post<IStartCallResponse>(BASE, data),
+  start: (data: IStartCallPayload) => api.post<IStartCallResponse>(BASE, data),
   answer: (id: string) => api.post<IAnswerCallResponse>(`${BASE}/${id}/answer`, {}),
   reject: (id: string) => api.post<{ status: string }>(`${BASE}/${id}/reject`, {}),
   hangup: (id: string) => api.post<{ status: string }>(`${BASE}/${id}/hangup`, {}),

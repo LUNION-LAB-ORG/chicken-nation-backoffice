@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useSocketStore } from "../../websocket/stores/socketStore";
 import { useCallStore } from "../stores/callStore";
-import { startRingtone, stopRingtone } from "../utils/ringtone";
+import { incomingRing, ringbackTone } from "../utils/ringtone";
 import type {
   ICallAcceptedEvent,
   ICallCancelledEvent,
@@ -34,25 +34,27 @@ export function useCallSocket() {
       // Ne pas écraser un appel déjà en cours / une sonnerie déjà affichée.
       if (store().active || store().incoming) return;
       store().setIncoming(e);
-      startRingtone();
+      incomingRing.start();
     };
     const onAccepted = (e: ICallAcceptedEvent) => {
       if (store().active?.callId === e.callId) {
         store().patchActive({ phase: "connected", peerLabel: e.answeredByName });
+        ringbackTone.stop(); // l'appelant : la tonalité d'attente s'arrête
       }
     };
     const onTaken = (e: ICallTakenEvent) => {
       store().clearIncomingIf(e.callId);
-      stopRingtone();
+      incomingRing.stop();
     };
     const onCancelled = (e: ICallCancelledEvent) => {
       store().clearIncomingIf(e.callId);
-      stopRingtone();
+      incomingRing.stop();
     };
     const onEnded = (e: ICallEndedEvent) => {
       store().endIfMatches(e.callId);
       store().clearIncomingIf(e.callId);
-      stopRingtone();
+      incomingRing.stop();
+      ringbackTone.stop();
     };
 
     socket.on("call:incoming", onIncoming);

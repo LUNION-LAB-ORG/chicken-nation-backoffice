@@ -3,12 +3,13 @@
 import { useMemo, useState } from "react";
 import { Phone, Search } from "lucide-react";
 import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
+import type { CallInvoker } from "../types/call.type";
 
 export default function RestaurantCallList({
   call,
   disabled,
 }: {
-  call: (a: { restaurantId?: string; targetLabel: string }) => void;
+  call: CallInvoker;
   disabled: boolean;
 }) {
   const { data } = useRestaurantListQuery();
@@ -46,7 +47,9 @@ export default function RestaurantCallList({
             <span className="text-sm font-medium text-slate-700 truncate">{r.name}</span>
             <button
               type="button"
-              onClick={() => call({ restaurantId: r.id, targetLabel: r.name })}
+              onClick={() =>
+                call({ targetKind: "RESTAURANT", restaurantId: r.id, targetLabel: r.name })
+              }
               disabled={disabled}
               className="h-9 px-3 rounded-lg bg-[#F17922] hover:bg-[#e06a15] text-white text-sm flex items-center gap-1 disabled:opacity-50"
             >

@@ -9,7 +9,19 @@ export enum CallStatus {
   FAILED = "FAILED",
 }
 
-export type CallTargetKind = "RESTAURANT" | "CALL_CENTER";
+export type CallTargetKind = "RESTAURANT" | "CALL_CENTER" | "USER";
+
+/** Payload d'ouverture d'appel. */
+export interface IStartCallPayload {
+  targetKind?: CallTargetKind;
+  restaurantId?: string;
+  targetUserId?: string;
+}
+
+/** Fonction de déclenchement d'appel partagée par les pickers. */
+export type CallInvoker = (
+  args: IStartCallPayload & { targetLabel: string },
+) => void | Promise<void>;
 
 /** Accès à la room renvoyé par le backend (token participant à TTL court). */
 export interface ICallAccess {
@@ -28,6 +40,7 @@ export interface ICall {
   caller_type: UserType;
   target_kind: CallTargetKind;
   target_restaurant_id?: string | null;
+  target_user_id?: string | null;
   answered_by_id?: string | null;
   started_at: string;
   answered_at?: string | null;
@@ -36,6 +49,7 @@ export interface ICall {
   caller?: { id: string; fullname: string; image?: string | null; type: UserType };
   answered_by?: { id: string; fullname: string } | null;
   target_restaurant?: { id: string; name: string } | null;
+  target_user?: { id: string; fullname: string } | null;
 }
 
 export interface IStartCallResponse {

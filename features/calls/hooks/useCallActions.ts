@@ -3,7 +3,7 @@
 import { toast } from "react-hot-toast";
 import { callsApi } from "../apis/calls.api";
 import { useCallStore } from "../stores/callStore";
-import { stopRingtone } from "../utils/ringtone";
+import { incomingRing } from "../utils/ringtone";
 import { useAuthStore } from "../../users/hook/authStore";
 
 /** Actions sur un appel entrant/en cours : décrocher, refuser, raccrocher. */
@@ -15,7 +15,7 @@ export function useCallActions() {
   const accept = async () => {
     const inc = useCallStore.getState().incoming;
     if (!inc) return;
-    stopRingtone();
+    incomingRing.stop();
     try {
       const res = await callsApi.answer(inc.callId);
       if (res.taken || !res.access) {
@@ -41,7 +41,7 @@ export function useCallActions() {
   const reject = async () => {
     const inc = useCallStore.getState().incoming;
     if (!inc) return;
-    stopRingtone();
+    incomingRing.stop();
     setIncoming(null);
     try {
       await callsApi.reject(inc.callId);
@@ -54,7 +54,7 @@ export function useCallActions() {
     const act = useCallStore.getState().active;
     if (!act) return;
     setActive(null);
-    stopRingtone();
+    incomingRing.stop();
     try {
       await callsApi.hangup(act.callId);
     } catch {

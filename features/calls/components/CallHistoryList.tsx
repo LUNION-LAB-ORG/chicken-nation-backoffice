@@ -7,9 +7,9 @@ import { CallStatus, ICall } from "../types/call.type";
 
 function peerLabel(call: ICall, meId?: string): string {
   if (call.caller_id === meId) {
-    return call.target_kind === "CALL_CENTER"
-      ? "Call Center"
-      : call.target_restaurant?.name ?? "Restaurant";
+    if (call.target_kind === "USER") return call.target_user?.fullname ?? "Personne";
+    if (call.target_kind === "CALL_CENTER") return "Call Center";
+    return call.target_restaurant?.name ?? "Restaurant";
   }
   return call.caller?.fullname ?? "Appelant";
 }

@@ -6,6 +6,7 @@ import { Mic, MicOff, Phone, PhoneOff } from "lucide-react";
 import type { ActiveCall } from "../stores/callStore";
 import { useCallActions } from "../hooks/useCallActions";
 import { formatCallTime, roomStatusLabel } from "../utils/call-format";
+import { ringbackTone } from "../utils/ringtone";
 
 /**
  * Panneau d'appel audio flottant. Monté uniquement quand un appel est actif.
@@ -30,7 +31,22 @@ export default function CallPanel({ call }: { call: ActiveCall }) {
     return () => clearInterval(t);
   }, [call.phase]);
 
+  // Tonalité de retour d'appel pour l'appelant tant que ça sonne (non décroché).
+  useEffect(() => {
+    if (call.direction === "outgoing" && call.phase === "calling") {
+      ringbackTone.start();
+    } else {
+      ringbackTone.stop();
+    }
+    return () => ringbackTone.stop();
+  }, [call.direction, call.phase]);
+
+  // Débounce : on ne peut cliquer « raccrocher » qu'une fois.
+  const [ending, setEnding] = useState(false);
   const onHangup = () => {
+    if (ending) return;
+    setEnding(true);
+    ringbackTone.stop();
     leave();
     hangup();
   };
@@ -78,8 +94,9 @@ export default function CallPanel({ call }: { call: ActiveCall }) {
           <button
             type="button"
             onClick={onHangup}
+            disabled={ending}
             aria-label="Raccrocher"
-            className="h-12 w-12 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center"
+            className="h-12 w-12 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center disabled:opacity-50"
           >
             <PhoneOff className="h-5 w-5" />
           </button>

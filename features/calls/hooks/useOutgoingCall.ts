@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { callsApi } from "../apis/calls.api";
 import { useCallStore } from "../stores/callStore";
 import { useAuthStore } from "../../users/hook/authStore";
+import type { CallTargetKind } from "../types/call.type";
 
 /** Démarre un appel sortant et bascule le store en `active` (phase "calling"). */
 export function useOutgoingCall() {
@@ -12,7 +13,12 @@ export function useOutgoingCall() {
   const setActive = useCallStore((s) => s.setActive);
   const user = useAuthStore((s) => s.user);
 
-  const call = async (args: { restaurantId?: string; targetLabel: string }) => {
+  const call = async (args: {
+    targetKind?: CallTargetKind;
+    restaurantId?: string;
+    targetUserId?: string;
+    targetLabel: string;
+  }) => {
     if (starting) return;
     const { active, incoming } = useCallStore.getState();
     if (active || incoming) {
@@ -21,7 +27,11 @@ export function useOutgoingCall() {
     }
     setStarting(true);
     try {
-      const res = await callsApi.start({ restaurantId: args.restaurantId });
+      const res = await callsApi.start({
+        targetKind: args.targetKind,
+        restaurantId: args.restaurantId,
+        targetUserId: args.targetUserId,
+      });
       setActive({
         callId: res.call.id,
         access: res.access,
