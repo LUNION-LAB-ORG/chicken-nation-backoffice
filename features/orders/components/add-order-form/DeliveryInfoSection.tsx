@@ -15,11 +15,14 @@ import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
 interface DeliveryInfoSectionProps {
   formData: OrderFormData;
   onFormDataChange: (data: Partial<OrderFormData>) => void;
+  /** Sous-total du panier → applique les offres de livraison à montant minimum dans l'aperçu. */
+  orderAmount?: number;
 }
 
 const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   formData,
   onFormDataChange,
+  orderAmount,
 }) => {
   const isDelivery = formData.type === OrderType.DELIVERY;
 
@@ -46,6 +49,8 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           lat: adresse.latitude,
           long: adresse.longitude,
           restaurant_id: formData.restaurant_id || undefined,
+          // Sous-total → le backend applique les offres à montant minimum dès l'aperçu.
+          order_amount: orderAmount,
         }
       : undefined
   );

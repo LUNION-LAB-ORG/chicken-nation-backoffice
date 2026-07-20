@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
@@ -24,12 +24,15 @@ interface OrderItemsSectionProps {
   formData: OrderFormData;
   items: OrderItemFormData[];
   onItemsChange: (items: OrderItemFormData[]) => void;
+  /** Remonte le sous-total (plats+suppléments) au parent → sert au calcul des offres de livraison. */
+  onSubtotalChange?: (subtotal: number) => void;
 }
 
 const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   formData,
   items,
   onItemsChange,
+  onSubtotalChange,
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedDishForConfig, setSelectedDishForConfig] =
@@ -282,6 +285,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   const isDelivery = formData.type === OrderType.DELIVERY;
   const currentDeliveryFee = isDelivery ? (formData.delivery_fee || 0) : 0;
   const grandTotal = totalCart + currentDeliveryFee;
+
+  // Remonte le sous-total au parent → transmis au calcul de frais pour appliquer
+  // les offres de livraison conditionnées à un montant minimum.
+  useEffect(() => {
+    onSubtotalChange?.(totalCart);
+  }, [totalCart, onSubtotalChange]);
 
   return (
     <div className="space-y-4">

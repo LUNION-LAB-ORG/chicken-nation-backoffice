@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { motion } from "framer-motion";
 import { useOrderForm } from "../../hooks/useOrderForm";
@@ -24,6 +25,10 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     handleCancel,
     handleCustomerChange,
   } = useOrderForm(editOrder);
+
+  // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
+  // des frais pour appliquer les offres de livraison à montant minimum (aperçu backoffice).
+  const [subtotal, setSubtotal] = useState(0);
 
   return (
     <motion.form
@@ -92,6 +97,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           <DeliveryInfoSection
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
+            orderAmount={subtotal}
           />
         </div>
       </div>
@@ -101,6 +107,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           formData={formData}
           items={formData.items}
           onItemsChange={(items) => setFormData({ ...formData, items })}
+          onSubtotalChange={setSubtotal}
         />
       </div>
 

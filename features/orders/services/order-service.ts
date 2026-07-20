@@ -189,7 +189,7 @@ export const addOrder = async (formData: OrderFormData) => {
     }
 };
 
-export const getDeliveryFee = async (query?: { lat: number, long: number, restaurant_id?: string }) => {
+export const getDeliveryFee = async (query?: { lat: number, long: number, restaurant_id?: string, order_amount?: number }) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/frais-livraison', query);
 
