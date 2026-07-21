@@ -4,6 +4,12 @@ import { toast } from "react-hot-toast";
 import { callsApi } from "../apis/calls.api";
 import { useCallStore } from "../stores/callStore";
 import { incomingRing } from "../utils/ringtone";
+import {
+  closeCallNotification,
+  requestNotificationPermission,
+  stopTitleFlash,
+} from "../utils/notifications";
+import { useInvalidateCallsQuery } from "../queries/index.query";
 import { useAuthStore } from "../../users/hook/authStore";
 
 /** Actions sur un appel entrant/en cours : décrocher, refuser, raccrocher. */
@@ -11,11 +17,20 @@ export function useCallActions() {
   const setActive = useCallStore((s) => s.setActive);
   const setIncoming = useCallStore((s) => s.setIncoming);
   const user = useAuthStore((s) => s.user);
+  const invalidate = useInvalidateCallsQuery();
+
+  const stopAlerts = () => {
+    incomingRing.stop();
+    closeCallNotification();
+    stopTitleFlash();
+  };
 
   const accept = async () => {
     const inc = useCallStore.getState().incoming;
     if (!inc) return;
-    incomingRing.stop();
+    stopAlerts();
+    // Geste utilisateur → bon moment pour demander la permission notifications.
+    void requestNotificationPermission();
     try {
       const res = await callsApi.answer(inc.callId);
       if (res.taken || !res.access) {
@@ -35,18 +50,22 @@ export function useCallActions() {
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Impossible de décrocher");
       setIncoming(null);
+    } finally {
+      invalidate();
     }
   };
 
   const reject = async () => {
     const inc = useCallStore.getState().incoming;
     if (!inc) return;
-    incomingRing.stop();
+    stopAlerts();
     setIncoming(null);
     try {
       await callsApi.reject(inc.callId);
     } catch {
       /* non bloquant */
+    } finally {
+      invalidate();
     }
   };
 
@@ -54,11 +73,13 @@ export function useCallActions() {
     const act = useCallStore.getState().active;
     if (!act) return;
     setActive(null);
-    incomingRing.stop();
+    stopAlerts();
     try {
       await callsApi.hangup(act.callId);
     } catch {
       /* non bloquant */
+    } finally {
+      invalidate();
     }
   };
 

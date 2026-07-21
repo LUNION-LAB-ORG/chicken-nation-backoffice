@@ -2,7 +2,9 @@ import { api } from "@/services/api";
 import type {
   IAnswerCallResponse,
   ICall,
+  ICallStatus,
   ICallsConfig,
+  IIncomingCallEvent,
   IStartCallPayload,
   IStartCallResponse,
 } from "../types/call.type";
@@ -15,6 +17,10 @@ export const callsApi = {
   reject: (id: string) => api.post<{ status: string }>(`${BASE}/${id}/reject`, {}),
   hangup: (id: string) => api.post<{ status: string }>(`${BASE}/${id}/hangup`, {}),
   history: (limit = 30) => api.get<ICall[]>(`${BASE}/history?limit=${limit}`),
+  /** Statut d'un appel — polling de convergence (filet des events socket). */
+  getStatus: (id: string) => api.get<ICallStatus>(`${BASE}/${id}`),
+  /** Appels qui sonnent encore pour moi (resynchro à la connexion). */
+  ringing: () => api.get<IIncomingCallEvent[]>(`${BASE}/ringing`),
   getConfig: () => api.get<ICallsConfig>(`${BASE}/config`),
   updateConfig: (data: ICallsConfig) => api.put<ICallsConfig>(`${BASE}/config`, data),
 };

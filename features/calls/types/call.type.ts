@@ -46,7 +46,13 @@ export interface ICall {
   answered_at?: string | null;
   ended_at?: string | null;
   // relations (include historique)
-  caller?: { id: string; fullname: string; image?: string | null; type: UserType };
+  caller?: {
+    id: string;
+    fullname: string;
+    image?: string | null;
+    type: UserType;
+    restaurant?: { id: string; name: string } | null;
+  };
   answered_by?: { id: string; fullname: string } | null;
   target_restaurant?: { id: string; name: string } | null;
   target_user?: { id: string; fullname: string } | null;
@@ -64,6 +70,16 @@ export interface IAnswerCallResponse {
   taken: boolean;
   call?: { id: string; room_slug: string };
   access?: ICallAccess;
+}
+
+/** Statut léger renvoyé par GET /calls/:id (polling de convergence). */
+export interface ICallStatus {
+  id: string;
+  status: CallStatus;
+  answered_by?: { id: string; fullname: string } | null;
+  started_at: string;
+  answered_at?: string | null;
+  ended_at?: string | null;
 }
 
 export interface ICallerRoleConfig {

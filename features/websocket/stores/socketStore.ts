@@ -16,10 +16,14 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   connected: false,
 
   connect: () => {
-    const { socket, connected } = get();
+    const { socket } = get();
 
-    // 🔒 Déjà connecté → on ne fait RIEN
-    if (socket && connected) return;
+    // 🔒 Un socket existe (connecté OU en cours de connexion) → on ne fait RIEN.
+    // (Tester `connected` créait une course : deux modules appelant connect()
+    // au montage, avant l'événement 'connect', créaient DEUX sockets — le 1er,
+    // remplacé dans le store mais jamais fermé, gardait des listeners orphelins
+    // et des événements se perdaient. La reconnexion est gérée par socket.io.)
+    if (socket) return;
 
     const newSocket = io(SOCKET_URL, {
       query: {
