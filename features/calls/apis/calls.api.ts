@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import type {
+  IActiveCallRestore,
   IAnswerCallResponse,
   ICall,
   ICallStatus,
@@ -21,6 +22,8 @@ export const callsApi = {
   getStatus: (id: string) => api.get<ICallStatus>(`${BASE}/${id}`),
   /** Appels qui sonnent encore pour moi (resynchro à la connexion). */
   ringing: () => api.get<IIncomingCallEvent[]>(`${BASE}/ringing`),
+  /** Mon appel actif (restauré après un rechargement de page) — jeton frais. */
+  active: () => api.get<IActiveCallRestore | null>(`${BASE}/active`),
   getConfig: () => api.get<ICallsConfig>(`${BASE}/config`),
   updateConfig: (data: ICallsConfig) => api.put<ICallsConfig>(`${BASE}/config`, data),
 };

@@ -72,6 +72,15 @@ export interface IAnswerCallResponse {
   access?: ICallAccess;
 }
 
+/** Appel actif restauré après un rechargement de page (GET /calls/active). */
+export interface IActiveCallRestore {
+  callId: string;
+  direction: "outgoing" | "incoming";
+  phase: "calling" | "connected";
+  peerLabel: string;
+  access: ICallAccess;
+}
+
 /** Statut léger renvoyé par GET /calls/:id (polling de convergence). */
 export interface ICallStatus {
   id: string;

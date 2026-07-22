@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { useSettingMutation, useSettingsQuery } from "@/hooks/useSettingsQuery";
+import ServiceByRestaurantSection from "./ServiceByRestaurantSection";
 
 interface ISettingField {
   key: string;
@@ -761,8 +762,8 @@ const DeliverySettings: React.FC = () => {
       </div>
 
       {SECTIONS.map((section) => (
+        <React.Fragment key={section.title}>
         <section
-          key={section.title}
           className="border-t border-gray-100 pt-6 first:border-t-0 first:pt-0"
         >
           <div className="mb-4">
@@ -882,6 +883,11 @@ const DeliverySettings: React.FC = () => {
             </div>
           )}
         </section>
+        {/* Surcharge PAR RESTAURANT, juste sous le service par défaut. */}
+        {section.title === "Service de livraison par défaut" && (
+          <ServiceByRestaurantSection />
+        )}
+        </React.Fragment>
       ))}
 
       <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-100">

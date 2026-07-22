@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSocketStore } from "../../websocket/stores/socketStore";
+import { useAuthStore } from "../../users/hook/authStore";
 import { useCallStore } from "../stores/callStore";
 import { callsApi } from "../apis/calls.api";
 import { incomingRing, ringbackTone } from "../utils/ringtone";
@@ -155,6 +156,27 @@ export function useCallSocket() {
           if (ringing.length > 0) presentIncoming(ringing[0]);
         })
         .catch(() => {});
+
+      // Restauration : un rechargement de page perd l'état en mémoire alors
+      // que l'appel est toujours EN COURS côté serveur → on le récupère avec
+      // un jeton frais et le panneau réapparaît (la room est re-rejointe).
+      if (!store().active) {
+        void callsApi
+          .active()
+          .then((restored) => {
+            if (restored && !store().active) {
+              store().setActive({
+                callId: restored.callId,
+                access: restored.access,
+                direction: restored.direction,
+                phase: restored.phase,
+                peerLabel: restored.peerLabel,
+                myName: useAuthStore.getState().user?.fullname ?? "Moi",
+              });
+            }
+          })
+          .catch(() => {});
+      }
     };
     if (socket.connected) onConnect();
 
