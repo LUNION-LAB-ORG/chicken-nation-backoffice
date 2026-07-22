@@ -16,6 +16,7 @@ import PrinterSettings from "./tabs/PrinterSettings";
 import CardNationSettings from "./tabs/CardNationSettings";
 import { ParametresView as BaseDonneesSettings } from "../../../../features/base-donnees/components/ParametresView";
 import CallSettings from "../../../../features/calls/components/CallSettings";
+import ReferralSettings from "./tabs/ReferralSettings";
 import { useIsAdmin } from "../../../../features/users/hook/useIsAdmin";
 
 const BASE_TABS = [
@@ -28,6 +29,7 @@ const BASE_TABS = [
   { key: "marketing_report", label: "Marketing" },
   { key: "notifications", label: "Notifications" },
   { key: "card_nation", label: "Carte Nation" },
+  { key: "referral", label: "Parrainage" },
   { key: "hubrise", label: "HubRise" },
   { key: "printer", label: "Imprimante" },
 ];
@@ -66,6 +68,7 @@ const Settings: React.FC = () => {
         )}
         {activeTab === "notifications" && <NotificationSettings />}
         {activeTab === "card_nation" && <CardNationSettings />}
+        {activeTab === "referral" && <ReferralSettings />}
         {activeTab === "hubrise" && <HubRiseSettings />}
         {activeTab === "printer" && <PrinterSettings />}
         {activeTab === "calls" && isAdmin && <CallSettings />}
