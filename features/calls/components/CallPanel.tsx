@@ -22,7 +22,25 @@ const KEYFRAMES = `
  * caméra publiée), le flux distant est joué dans des <audio> invisibles.
  * Responsive : carte bas-droite sur desktop, pleine largeur en bas sur mobile.
  */
+/**
+ * Garde-fou : un appel sans accès room valide (payload corrompu/incomplet —
+ * ex. restauration ayant reçu un corps vide) ne doit JAMAIS monter le hook
+ * Lunion (crash `access.url` au 1er rendu). On l'évacue du store et on ne
+ * rend rien ; les hooks Lunion vivent dans CallPanelInner, monté seulement
+ * quand l'accès est valide.
+ */
 export default function CallPanel({ call }: { call: ActiveCall }) {
+  const invalidAccess = !call.access?.url || !call.access?.token;
+  useEffect(() => {
+    if (invalidAccess) {
+      useCallStore.getState().endIfMatches(call.callId);
+    }
+  }, [invalidAccess, call.callId]);
+  if (invalidAccess) return null;
+  return <CallPanelInner call={call} />;
+}
+
+function CallPanelInner({ call }: { call: ActiveCall }) {
   const { hangup } = useCallActions();
   const [minimized, setMinimized] = useState(false);
   const { status, participants, micEnabled, toggleMic, leave } = useLunionRoom({

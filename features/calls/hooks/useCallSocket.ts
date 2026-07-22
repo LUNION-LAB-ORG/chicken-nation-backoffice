@@ -164,7 +164,14 @@ export function useCallSocket() {
         void callsApi
           .active()
           .then((restored) => {
-            if (restored && !store().active) {
+            // ⚠️ apiRequest renvoie {} (truthy) pour un corps VIDE — le backend
+            // répond null quand il n'y a rien à restaurer → valider le payload.
+            if (
+              restored?.callId &&
+              restored.access?.url &&
+              restored.access?.token &&
+              !store().active
+            ) {
               store().setActive({
                 callId: restored.callId,
                 access: restored.access,
