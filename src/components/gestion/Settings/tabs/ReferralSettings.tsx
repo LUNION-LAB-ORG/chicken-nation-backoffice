@@ -3,9 +3,69 @@
 import React, { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
-import { HandCoins, Users } from "lucide-react";
+import { Gift, HandCoins, Users } from "lucide-react";
 import { api } from "@/services/api";
+import {
+  useSettingQuery,
+  useSettingMutation,
+} from "@/hooks/useSettingsQuery";
 import ReferralGiftEditor, { GiftConfig } from "./ReferralGiftEditor";
+
+const WELCOME_AMOUNT_KEY = "reward.welcome.amount";
+
+/** Bon de bienvenue accordé à TOUT nouvel inscrit (même sans parrainage). */
+function WelcomeGiftSetting() {
+  const { data, isLoading } = useSettingQuery(WELCOME_AMOUNT_KEY);
+  const { mutate: updateSetting, isPending } = useSettingMutation();
+  const [amount, setAmount] = useState<number>(500);
+
+  useEffect(() => {
+    if (data?.value != null && data.value !== "") setAmount(Number(data.value));
+  }, [data]);
+
+  return (
+    <div className="rounded-2xl border border-slate-100 p-5">
+      <h4 className="flex items-center gap-2 font-semibold text-slate-800">
+        <Gift className="h-4 w-4 text-[#F17922]" /> Bon de bienvenue (tous les inscrits)
+      </h4>
+      <p className="mb-4 mt-1 text-sm text-slate-500">
+        Carte à gratter offerte à <b>chaque nouvelle inscription</b>, même sans code de
+        parrainage. Mettre <b>0</b> pour désactiver.
+      </p>
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="number"
+          min={0}
+          step={100}
+          value={amount}
+          disabled={isLoading}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          className="h-11 w-40 rounded-xl border border-slate-200 px-3 text-sm"
+          aria-label="Montant du bon de bienvenue (FCFA)"
+        />
+        <span className="text-sm text-slate-500">FCFA</span>
+        <button
+          type="button"
+          disabled={isPending || isLoading}
+          onClick={() =>
+            updateSetting(
+              {
+                key: WELCOME_AMOUNT_KEY,
+                value: String(Math.max(0, Math.round(amount))),
+                description:
+                  "Montant du bon de bienvenue (carte à gratter) offert à tout nouvel inscrit, même sans code de parrainage. 0 = désactivé.",
+              },
+              { onSuccess: () => toast.success("Bon de bienvenue enregistré") },
+            )
+          }
+          className="h-11 rounded-xl bg-slate-800 px-5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+        >
+          {isPending ? "…" : "Enregistrer"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface ReferralConfig {
   filleul: GiftConfig;
@@ -79,6 +139,8 @@ const ReferralSettings: React.FC = () => {
           commande</b>. Les deux sont notifiés par push + carte à gratter.
         </p>
       </div>
+
+      <WelcomeGiftSetting />
 
       <ReferralGiftEditor
         title="Cadeau du filleul"
