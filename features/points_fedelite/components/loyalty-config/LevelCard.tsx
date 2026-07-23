@@ -21,7 +21,18 @@ export const LevelCard = ({
       </span>
     </div>
     <h4 className="font-semibold text-gray-700 mb-1">{level}</h4>
-    <p className="text-2xl font-bold text-[#F17922]">{threshold}</p>
-    <p className="text-xs text-gray-500">points</p>
+    {/* Seuil 0 = niveau d'ENTRÉE : afficher « 0 points » laisserait croire à
+        un palier vide plutôt qu'à un accès immédiat. */}
+    {threshold > 0 ? (
+      <>
+        <p className="text-2xl font-bold text-[#F17922]">{threshold}</p>
+        <p className="text-xs text-gray-500">points</p>
+      </>
+    ) : (
+      <>
+        <p className="text-2xl font-bold text-[#F17922]">—</p>
+        <p className="text-xs text-gray-500">niveau d&apos;entrée</p>
+      </>
+    )}
   </motion.div>
 );

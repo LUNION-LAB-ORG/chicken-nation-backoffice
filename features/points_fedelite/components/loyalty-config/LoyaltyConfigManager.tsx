@@ -21,7 +21,7 @@ const LoyaltyConfigManager = () => {
     minimum_redemption_points:
       config?.minimum_redemption_points?.toString() || "100",
     point_value_in_xof: config?.point_value_in_xof?.toString() || "20",
-    standard_threshold: config?.standard_threshold?.toString() || "300",
+    standard_threshold: config?.standard_threshold?.toString() || "0", // niveau d'entrée
     premium_threshold: config?.premium_threshold?.toString() || "700",
     gold_threshold: config?.gold_threshold?.toString() || "1000",
     is_active: config?.is_active ?? true,

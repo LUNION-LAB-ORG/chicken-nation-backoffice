@@ -20,13 +20,13 @@ export const LoyaltyConfigForm = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Validation locale simple
-    const standard = Number(formData.standard_threshold);
+    // STANDARD est le niveau d'ENTRÉE (seuil 0, non réglable) : seuls les
+    // seuils VIP et VVIP se paramètrent, et dans l'ordre croissant.
     const premium = Number(formData.premium_threshold);
     const gold = Number(formData.gold_threshold);
 
-    if (standard < premium && premium < gold) {
-      onSubmit(formData);
+    if (premium > 0 && premium < gold) {
+      onSubmit({ ...formData, standard_threshold: "0" });
     }
   };
 
@@ -84,15 +84,11 @@ export const LoyaltyConfigForm = ({
         <h3 className="text-lg font-semibold text-[#595959]">
           Seuils des Niveaux de Fidélité
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            label="Standard"
-            value={formData.standard_threshold}
-            onChange={(v) =>
-              setFormData({ ...formData, standard_threshold: v })
-            }
-            type="number"
-          />
+        <p className="text-sm text-[#9796A1] -mt-2">
+          Standard est le niveau d&apos;entrée : tout client en fait partie dès son
+          inscription. Seuls les paliers VIP et VVIP se paramètrent.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             label="VIP"
             value={formData.premium_threshold}
