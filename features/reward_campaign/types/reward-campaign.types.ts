@@ -61,3 +61,26 @@ export interface RewardCampaign {
   sent_at: string | null;
   created_at: string;
 }
+
+/** Statut INDIVIDUEL d'un destinataire de campagne (table Reward). */
+export type RecipientStatus = "PENDING" | "SCRATCHED" | "CONSUMED" | "REVOKED";
+
+export interface CampaignRecipient {
+  reward_id: string;
+  customer_id: string | null;
+  fullname: string | null;
+  phone: string | null;
+  status: RecipientStatus;
+  scratched_at: string | null;
+  consumed_at: string | null;
+  expires_at: string | null;
+  sent_at: string;
+}
+
+export interface CampaignRecipients {
+  campaign_id: string;
+  /** Clients écartés à l'envoi par le capping anti-fatigue. */
+  skipped_capping: number;
+  total: number;
+  recipients: CampaignRecipient[];
+}

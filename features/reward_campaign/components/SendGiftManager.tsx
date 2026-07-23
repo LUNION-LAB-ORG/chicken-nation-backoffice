@@ -10,18 +10,13 @@ import {
   X,
   Send,
   Loader2,
-  Ban,
   Search,
 } from "lucide-react";
 import { getCustomers } from "@/services/customerService";
 import { getAllSupplements, type Supplement } from "@/services/supplementService";
 import { getPromoCodes } from "../../promo_code/services/promo-code.service";
 import { getAllDishes } from "../../menus/services/dish-service";
-import {
-  createRewardCampaign,
-  listRewardCampaigns,
-  cancelRewardCampaign,
-} from "../services/reward-campaign.service";
+import { createRewardCampaign } from "../services/reward-campaign.service";
 import {
   LoyaltyLevel,
   RewardCampaignType,
@@ -44,14 +39,6 @@ const LEVELS: { key: LoyaltyLevel; label: string }[] = [
   { key: "VVIP", label: "VVIP" },
 ];
 
-const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  scheduled: { label: "Programmée", cls: "bg-[#E7F0FB] text-[#2B6CB0]" },
-  sending: { label: "Envoi…", cls: "bg-[#FEF3C7] text-[#92400E]" },
-  sent: { label: "Envoyée", cls: "bg-[#E6F4EC] text-[#1E8E5A]" },
-  cancelled: { label: "Annulée", cls: "bg-[#EEF1F4] text-[#6C757D]" },
-  failed: { label: "Échec", cls: "bg-[#FDECEA] text-[#C0392B]" },
-};
-
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <label className="block text-sm font-medium text-[#71717A] mb-1.5">{children}</label>
 );
@@ -60,28 +47,7 @@ const inputCls =
   "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 const money = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
-const pct = (part: number, whole: number) =>
-  whole > 0 ? `${Math.round((part / whole) * 100)}%` : null;
-
-/** Case du funnel d'impact (Ciblés / Grattés / Utilisés). */
-const Stat: React.FC<{
-  label: string;
-  value: React.ReactNode;
-  sub?: string | null;
-  color?: string;
-}> = ({ label, value, sub, color = "#18181B" }) => (
-  <div className="rounded-lg bg-[#FAFAFA] py-1.5">
-    <div className="text-[10px] uppercase tracking-wide text-[#9796A1]">{label}</div>
-    <div className="text-sm font-bold" style={{ color }}>
-      {value}
-    </div>
-    <div className="text-[9px] text-[#9796A1] leading-none mt-0.5 min-h-[10px]">
-      {sub ?? ""}
-    </div>
-  </div>
-);
-
-export default function SendGiftManager() {
+export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}) {
   const qc = useQueryClient();
 
   const [type, setType] = useState<RewardCampaignType>("GIFT");
@@ -153,29 +119,16 @@ export default function SendGiftManager() {
     enabled: target === "ids" && custSearch.trim().length >= 2,
   });
 
-  const campaignsQuery = useQuery({
-    queryKey: ["reward-campaigns"],
-    queryFn: listRewardCampaigns,
-  });
-
   const createMut = useMutation({
     mutationFn: createRewardCampaign,
     onSuccess: () => {
       toast.success("Campagne créée avec succès");
       resetForm();
       qc.invalidateQueries({ queryKey: ["reward-campaigns"] });
+      onSent?.();
     },
     onError: (e: Error) => toast.error(e.message),
   });
-  const cancelMut = useMutation({
-    mutationFn: cancelRewardCampaign,
-    onSuccess: () => {
-      toast.success("Campagne annulée");
-      qc.invalidateQueries({ queryKey: ["reward-campaigns"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
   const resetForm = () => {
     setName("");
     setGiftDish(null);
@@ -241,7 +194,7 @@ export default function SendGiftManager() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+    <div className="max-w-3xl">
       {/* Formulaire */}
       <div className="lg:col-span-3 bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
         <h2 className="text-[18px] font-semibold text-[#F17922] mb-5">
@@ -683,90 +636,6 @@ export default function SendGiftManager() {
         </button>
       </div>
 
-      {/* Suivi */}
-      <div className="lg:col-span-2 bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
-        <h2 className="text-[18px] font-semibold text-[#F17922] mb-4">Suivi des campagnes</h2>
-        {campaignsQuery.isLoading ? (
-          <div className="text-sm text-[#9796A1]">Chargement…</div>
-        ) : (campaignsQuery.data ?? []).length === 0 ? (
-          <div className="text-sm text-[#9796A1]">Aucune campagne pour le moment.</div>
-        ) : (
-          <div className="flex flex-col gap-3 max-h-[640px] overflow-y-auto">
-            {(campaignsQuery.data ?? []).map((c) => {
-              const badge = STATUS_BADGE[c.status] ?? STATUS_BADGE.sent;
-              return (
-                <div key={c.id} className="border border-[#F1F3F5] rounded-lg p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-[#18181B] truncate">{c.name}</div>
-                      <div className="text-[11px] text-[#9796A1]">
-                        {c.type === "GIFT" ? "Cadeau" : c.type === "VOUCHER" ? "Bon d'achat" : "Code promo"}
-                      </div>
-                    </div>
-                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${badge.cls}`}>
-                      {badge.label}
-                    </span>
-                  </div>
-                  {/* Funnel d'impact : Ciblés → Grattés → Utilisés */}
-                  <div className="grid grid-cols-3 gap-2 text-center mt-2.5">
-                    <Stat label="Ciblés" value={c.total_targeted} />
-                    <Stat
-                      label="Grattés"
-                      value={c.scratched_count}
-                      sub={pct(c.scratched_count, c.total_targeted)}
-                      color="#F17922"
-                    />
-                    <Stat
-                      label="Utilisés"
-                      value={c.redeemed_count == null ? "—" : c.redeemed_count}
-                      sub={
-                        c.redeemed_count == null
-                          ? "non suivi"
-                          : pct(c.redeemed_count, c.scratched_count)
-                      }
-                      color="#1E8E5A"
-                    />
-                  </div>
-                  {c.revenue != null && (
-                    <div className="flex items-center justify-between rounded-lg bg-[#F4FAF6] px-2.5 py-1.5 mt-2 text-[11px]">
-                      <span className="text-[#71717A]">
-                        CA généré :{" "}
-                        <strong className="text-[#1E8E5A]">{money(c.revenue)}</strong>
-                      </span>
-                      <span className="text-[#71717A]">
-                        Coût :{" "}
-                        <strong className="text-[#C0392B]">
-                          {money(c.discount_cost ?? 0)}
-                        </strong>
-                      </span>
-                    </div>
-                  )}
-                  {c.target_config?.skipped_capping ? (
-                    <div className="text-[10px] text-[#9796A1] mt-1.5">
-                      {c.target_config.skipped_capping} ignoré(s) — capping anti-fatigue
-                    </div>
-                  ) : null}
-                  {c.status === "scheduled" && c.scheduled_at && (
-                    <div className="flex items-center justify-between mt-2">
-                      <span className="text-[11px] text-[#2B6CB0]">
-                        Prévu le {new Date(c.scheduled_at).toLocaleString("fr-FR")}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => cancelMut.mutate(c.id)}
-                        disabled={cancelMut.isPending}
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C0392B] hover:underline cursor-pointer"
-                      >
-                        <Ban size={12} /> Annuler
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

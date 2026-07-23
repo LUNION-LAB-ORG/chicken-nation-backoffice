@@ -47,7 +47,7 @@ const prepareRequest = async <T>(
 
 export const getComboGames = async () => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/games");
+    const { url, headers } = await prepareRequest(BASE_URL, "");
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
     return (await response.json()) as ComboGame[];
@@ -58,7 +58,7 @@ export const getComboGames = async () => {
 
 export const getComboGame = async (id: string) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/games/${id}`);
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
     return (await response.json()) as ComboGame;
@@ -69,7 +69,7 @@ export const getComboGame = async (id: string) => {
 
 export const createComboGame = async (data: CreateComboGameDto) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/games");
+    const { url, headers } = await prepareRequest(BASE_URL, "");
     const response = await fetch(url, {
       method: "POST",
       headers,
@@ -87,7 +87,7 @@ export const updateComboGame = async (
   data: UpdateComboGameDto
 ) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/games/${id}`);
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
     const response = await fetch(url, {
       method: "PATCH",
       headers,
@@ -102,7 +102,7 @@ export const updateComboGame = async (
 
 export const deleteComboGame = async (id: string) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/games/${id}`);
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
     const response = await fetch(url, { method: "DELETE", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
     // DELETE peut renvoyer 204 (pas de corps) ou le jeu désactivé
@@ -119,36 +119,44 @@ export const getComboParticipations = async (gameId: string) => {
   try {
     const { url, headers } = await prepareRequest(
       BASE_URL,
-      `/games/${gameId}/participations`
+      `/${gameId}/participations`
     );
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
-    return (await response.json()) as ComboParticipation[];
+    // Le backend renvoie `{ attempts, winners }` : les participations = attempts.
+    const data = (await response.json()) as { attempts?: ComboParticipation[] };
+    return (data?.attempts ?? []) as ComboParticipation[];
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
 };
 
+/**
+ * Gagnants d'une partie. Le backend n'a PAS d'endpoint dédié : `/:id/participations`
+ * renvoie `{ attempts, winners }` — on en extrait les gagnants.
+ */
 export const getComboWinners = async (gameId: string) => {
   try {
     const { url, headers } = await prepareRequest(
       BASE_URL,
-      `/games/${gameId}/winners`
+      `/${gameId}/participations`
     );
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
-    return (await response.json()) as ComboWinner[];
+    const data = (await response.json()) as { winners?: ComboWinner[] };
+    return (data?.winners ?? []) as ComboWinner[];
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
 };
 
-/** Déclenche le tirage au sort de N gagnants parmi les bonnes réponses. */
+/** Déclenche le tirage au sort de N gagnants parmi les bonnes réponses.
+ *  Côté backend, l'opération s'appelle « settle » (règlement de la partie). */
 export const drawComboWinners = async (gameId: string) => {
   try {
     const { url, headers } = await prepareRequest(
       BASE_URL,
-      `/games/${gameId}/draw`
+      `/${gameId}/settle`
     );
     const response = await fetch(url, { method: "POST", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);

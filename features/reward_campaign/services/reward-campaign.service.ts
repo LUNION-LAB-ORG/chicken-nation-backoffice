@@ -1,6 +1,7 @@
 import { getAuthToken } from "@/utils/authUtils";
 import { getHumanReadableError } from "@/utils/errorMessages";
 import {
+  CampaignRecipients,
   CreateRewardCampaignPayload,
   RewardCampaign,
 } from "../types/reward-campaign.types";
@@ -62,6 +63,22 @@ export const cancelRewardCampaign = async (
       throw new Error(err.message || `Erreur ${res.status}`);
     }
     return (await res.json()) as { cancelled: boolean };
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+/**
+ * Destinataires d'une campagne avec leur statut individuel (reçu / gratté /
+ * utilisé) — ce que les compteurs agrégés ne disaient pas.
+ */
+export const getCampaignRecipients = async (
+  id: string
+): Promise<CampaignRecipients> => {
+  try {
+    const res = await fetch(`${BASE_URL}/${id}/recipients`, { headers: headers() });
+    if (!res.ok) throw new Error(`Erreur ${res.status}`);
+    return (await res.json()) as CampaignRecipients;
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
