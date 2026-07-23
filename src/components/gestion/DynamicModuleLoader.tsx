@@ -60,6 +60,15 @@ const modulesMap: Record<string, any> = {
   loyalty: dynamic(() => import("@/components/gestion/PointFedelisation"), {
     loading: () => <LoadingSpinner />,
   }),
+  referral: dynamic(() => import("@/components/gestion/Referral"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  gifts: dynamic(() => import("@/components/gestion/Gifts"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  games: dynamic(() => import("@/components/gestion/Games"), {
+    loading: () => <LoadingSpinner />,
+  }),
   voucher: dynamic(() => import("@/components/gestion/BonDeReduction"), {
     loading: () => <LoadingSpinner />,
   }),

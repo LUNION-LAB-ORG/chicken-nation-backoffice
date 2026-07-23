@@ -8,11 +8,13 @@ import { LoyaltyPointsList } from "../../../../features/points_fedelite/componen
 import { useLoyaltyPointsListQuery } from "../../../../features/points_fedelite/queries/loyalty.queries";
 import { LoyaltyPointType } from "../../../../features/points_fedelite/types/loyalty.types";
 import LoyaltyConfigManager from "../../../../features/points_fedelite/components/loyalty-config/LoyaltyConfigManager";
-import SendGiftManager from "../../../../features/reward_campaign/components/SendGiftManager";
-import ReferralPanel from "../../../../features/referral/components/ReferralPanel";
-import ScratchGameManager from "../../../../features/scratch_game/components/ScratchGameManager";
-import ComboGameManager from "../../../../features/combo/components/ComboGameManager";
 
+/**
+ * Module « Points de fidélité » : liste des mouvements de points + KPI + la
+ * configuration du programme (niveaux, seuils). Parrainage, campagnes cadeaux
+ * et jeux ont leurs PROPRES entrées de menu (Fidélisation → Parrainage /
+ * Cadeaux / Jeux) — plus rien n'est multiplexé ici.
+ */
 export default function PointFedelisation() {
   const {
     activeTab,
@@ -51,10 +53,6 @@ export default function PointFedelisation() {
         </div>
       )}
       {activeTab == "loyalty" && view === "view" && <LoyaltyConfigManager />}
-      {activeTab == "loyalty" && view === "create" && <SendGiftManager />}
-      {activeTab == "loyalty" && view === "edit" && <ReferralPanel />}
-      {activeTab == "loyalty" && view === "scratch" && <ScratchGameManager />}
-      {activeTab == "loyalty" && view === "combo" && <ComboGameManager />}
     </div>
   );
 }

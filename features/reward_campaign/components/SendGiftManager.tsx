@@ -14,6 +14,7 @@ import {
   Search,
 } from "lucide-react";
 import { getCustomers } from "@/services/customerService";
+import { getAllSupplements, type Supplement } from "@/services/supplementService";
 import { getPromoCodes } from "../../promo_code/services/promo-code.service";
 import { getAllDishes } from "../../menus/services/dish-service";
 import {
@@ -92,6 +93,10 @@ export default function SendGiftManager() {
     image: string | null;
   } | null>(null);
   const [dishSearch, setDishSearch] = useState("");
+  // Un cadeau GIFT = un plat/menu OU un supplément (boisson, sauce…).
+  const [giftKind, setGiftKind] = useState<"DISH" | "SUPPLEMENT">("DISH");
+  const [giftSupp, setGiftSupp] = useState<Supplement | null>(null);
+  const [suppSearch, setSuppSearch] = useState("");
   const [amount, setAmount] = useState("");
   const [promoCode, setPromoCode] = useState("");
 
@@ -117,8 +122,20 @@ export default function SendGiftManager() {
   const dishesQuery = useQuery({
     queryKey: ["dishes-all-gift"],
     queryFn: getAllDishes,
-    enabled: type === "GIFT",
+    enabled: type === "GIFT" && giftKind === "DISH",
   });
+
+  const suppQuery = useQuery({
+    queryKey: ["supplements", "all"],
+    queryFn: getAllSupplements,
+    enabled: type === "GIFT" && giftKind === "SUPPLEMENT",
+    staleTime: 5 * 60 * 1000,
+  });
+  const suppsFiltered = Object.values(suppQuery.data ?? {})
+    .flat()
+    .filter((s) => s.available !== false)
+    .filter((s) => s.name.toLowerCase().includes(suppSearch.trim().toLowerCase()))
+    .slice(0, 20);
   const dishesFiltered = ((dishesQuery.data ?? []) as {
     id: string;
     name: string;
@@ -163,6 +180,9 @@ export default function SendGiftManager() {
     setName("");
     setGiftDish(null);
     setDishSearch("");
+    setGiftKind("DISH");
+    setGiftSupp(null);
+    setSuppSearch("");
     setAmount("");
     setPromoCode("");
     setSelected([]);
@@ -182,8 +202,13 @@ export default function SendGiftManager() {
     if (!name.trim()) return toast.error("Donnez un nom à la campagne.");
     const payload: Record<string, unknown> = {};
     if (type === "GIFT") {
-      if (!giftDish) return toast.error("Choisissez le plat offert.");
-      payload.dish_id = giftDish.id;
+      if (giftKind === "SUPPLEMENT") {
+        if (!giftSupp) return toast.error("Choisissez le supplément offert.");
+        payload.supplement_id = giftSupp.id;
+      } else {
+        if (!giftDish) return toast.error("Choisissez le plat offert.");
+        payload.dish_id = giftDish.id;
+      }
     } else if (type === "VOUCHER") {
       const a = Number(amount);
       if (!(a > 0)) return toast.error("Le montant du bon doit être positif.");
@@ -264,8 +289,105 @@ export default function SendGiftManager() {
         {/* Contenu selon le type */}
         {type === "GIFT" && (
           <div className="mb-4">
-            <Label>Plat offert</Label>
-            {giftDish ? (
+            <Label>Article offert</Label>
+            {/* Plat/menu OU supplément (boisson, sauce…) */}
+            <div className="mb-2 flex gap-2">
+              {(
+                [
+                  { key: "DISH", label: "🍗 Plat ou menu" },
+                  { key: "SUPPLEMENT", label: "🥤 Supplément" },
+                ] as const
+              ).map((k) => (
+                <button
+                  key={k.key}
+                  type="button"
+                  onClick={() => {
+                    setGiftKind(k.key);
+                    setGiftDish(null);
+                    setGiftSupp(null);
+                    setDishSearch("");
+                    setSuppSearch("");
+                  }}
+                  className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                    giftKind === k.key
+                      ? "bg-[#F17922] text-white"
+                      : "bg-[#F4F4F5] text-[#71717A] hover:bg-[#E4E4E7]"
+                  }`}
+                >
+                  {k.label}
+                </button>
+              ))}
+            </div>
+            {giftKind === "SUPPLEMENT" ? (
+              giftSupp ? (
+                <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
+                  {giftSupp.image && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={giftSupp.image}
+                      alt=""
+                      className="h-11 w-11 rounded-md object-cover"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-semibold text-[#18181B] truncate">
+                      {giftSupp.name}
+                    </div>
+                    <div className="text-[11px] text-[#9796A1]">
+                      {money(giftSupp.price)} → offert (0 fr)
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGiftSupp(null)}
+                    className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="relative">
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9796A1]"
+                    />
+                    <input
+                      className={`${inputCls} pl-9`}
+                      value={suppSearch}
+                      onChange={(e) => setSuppSearch(e.target.value)}
+                      placeholder="Rechercher un supplément…"
+                    />
+                  </div>
+                  {suppSearch.trim().length >= 1 && (
+                    <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+                      {suppsFiltered.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-[#9796A1]">
+                          {suppQuery.isLoading ? "Chargement…" : "Aucun supplément"}
+                        </div>
+                      ) : (
+                        suppsFiltered.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => {
+                              setGiftSupp(s);
+                              setSuppSearch("");
+                            }}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                          >
+                            <span className="truncate">{s.name}</span>
+                            <span className="text-[#9796A1] shrink-0">
+                              {money(s.price)}
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </>
+              )
+            ) : giftDish ? (
               <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
                 {giftDish.image && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -339,7 +461,7 @@ export default function SendGiftManager() {
               </>
             )}
             <p className="text-[11px] text-[#9796A1] mt-1">
-              Le client pourra ajouter ce plat à son panier à 0 fr, jusqu'à
+              Le client pourra ajouter cet article à son panier à 0 fr, jusqu'à
               expiration.
             </p>
           </div>

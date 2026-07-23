@@ -31,6 +31,9 @@ import {
   BadgeDollarSign,
   Link2,
   Phone,
+  Gift,
+  Handshake,
+  Dices,
 } from "lucide-react";
 
 import { useAuthStore } from "../../features/users/hook/authStore";
@@ -132,8 +135,26 @@ export const useGetMenuConfig = (): {
         },
         {
           id: "fidelisation-loyalty",
-          label: "Point de fidélisation",
+          label: "Points de fidélité",
           icon: BadgeDollarSign,
+          canAccess: () => can(Modules.FIDELITE, Action.READ),
+        },
+        {
+          id: "fidelisation-referral",
+          label: "Parrainage",
+          icon: Handshake,
+          canAccess: () => can(Modules.FIDELITE, Action.READ),
+        },
+        {
+          id: "fidelisation-gifts",
+          label: "Cadeaux",
+          icon: Gift,
+          canAccess: () => can(Modules.FIDELITE, Action.READ),
+        },
+        {
+          id: "fidelisation-games",
+          label: "Jeux",
+          icon: Dices,
           canAccess: () => can(Modules.FIDELITE, Action.READ),
         },
         {

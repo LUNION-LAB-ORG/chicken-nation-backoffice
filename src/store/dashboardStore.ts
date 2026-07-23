@@ -10,6 +10,9 @@ import { Course } from '../../features/courses/types/course.types';
 export type TabKey =
   'dashboard' | 'orders' | 'operations' | 'courses' | 'menus' | 'marketing' | 'news' | 'clients' | 'inventory'
   | 'restaurants' | 'personnel' | 'livreurs' | 'promos' | 'loyalty' | 'voucher' | 'delivery_offers'
+  // Fidélisation éclatée : parrainage, campagnes cadeaux et jeux sont des
+  // modules à part entière (plus multiplexés dans « Points de fidélité »)
+  | 'referral' | 'gifts' | 'games'
   | 'inbox' | 'card_requests' | 'card_nation' | 'reviews' | 'appel'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
@@ -63,6 +66,9 @@ export interface DashboardState {
   livreurs: SectionState<Livreur>;
   promos: SectionState;
   loyalty: SectionState;
+  referral: SectionState;
+  gifts: SectionState;
+  games: SectionState;
   voucher: SectionState;
   delivery_offers: SectionState;
   card_requests: SectionState;
@@ -109,7 +115,8 @@ const createInitialSectionState = <T>(): SectionState<T> => ({
 
 const SECTION_KEYS: TabKey[] = [
   'dashboard', 'orders', 'operations', 'courses', 'menus', 'marketing', 'news', 'clients', 'inventory',
-  'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'voucher', 'delivery_offers', 'inbox',
+  'restaurants', 'personnel', 'livreurs', 'promos', 'loyalty', 'referral', 'gifts', 'games',
+  'voucher', 'delivery_offers', 'inbox',
   'card_requests', 'card_nation', 'reviews',
   // Statistiques
   'stats_products', 'stats_orders', 'stats_clients', 'stats_delivery', 'stats_marketing', 'stats_retention_callbacks',
@@ -146,6 +153,9 @@ export const useDashboardStore = create<DashboardState>()(
       livreurs: createInitialSectionState<Livreur>(),
       promos: createInitialSectionState(),
       loyalty: createInitialSectionState(),
+      referral: createInitialSectionState(),
+      gifts: createInitialSectionState(),
+      games: createInitialSectionState(),
       voucher: createInitialSectionState(),
       delivery_offers: createInitialSectionState(),
       card_requests: createInitialSectionState(),

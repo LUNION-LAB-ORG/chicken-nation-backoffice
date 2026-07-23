@@ -23,13 +23,15 @@ export default function PointFideliteHeader() {
     setSectionView(newTab, newView);
   };
 
+  // Parrainage, Cadeaux et Jeux ont leurs propres entrées de menu : ce header
+  // ne pilote plus que la liste des points et la configuration des niveaux.
   if (view === "list") {
     return (
       <DashboardPageHeader
         mode="list"
-        title={"Points de fidélisation"}
+        title={"Points de fidélité"}
         searchConfig={{
-          placeholder: "Rechercher un point de fidélisation",
+          placeholder: "Rechercher un point de fidélité",
           buttonText: "Chercher",
           value: filters?.search as string,
           onSearch: (search) => handleSearch("loyalty", search),
@@ -37,24 +39,8 @@ export default function PointFideliteHeader() {
         }}
         actions={[
           {
-            label: "Envoyer un cadeau",
-            onClick: () => handleViewChange("loyalty", "create"),
-          },
-          {
-            label: "Configuration",
+            label: "Configuration des niveaux",
             onClick: () => handleViewChange("loyalty", "view"),
-          },
-          {
-            label: "Parrainage",
-            onClick: () => handleViewChange("loyalty", "edit"),
-          },
-          {
-            label: "Gratte & Gagne",
-            onClick: () => handleViewChange("loyalty", "scratch"),
-          },
-          {
-            label: "Combo Mystère",
-            onClick: () => handleViewChange("loyalty", "combo"),
           },
         ]}
       />
@@ -64,17 +50,7 @@ export default function PointFideliteHeader() {
     <DashboardPageHeader
       mode={view}
       onBack={() => handleViewChange("loyalty", "list")}
-      title={
-        view === "create"
-          ? "Envoyer un cadeau"
-          : view === "edit"
-          ? "Parrainage"
-          : view === "scratch"
-          ? "Gratte & Gagne"
-          : view === "combo"
-          ? "Combo Mystère"
-          : "Configuration"
-      }
+      title={"Configuration des niveaux"}
       gradient={true}
     />
   );
