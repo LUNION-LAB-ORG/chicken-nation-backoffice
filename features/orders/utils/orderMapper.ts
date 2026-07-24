@@ -169,16 +169,18 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
 
     // Construire les données brutes des suppléments pour le mode édition
     // On regroupe les suppléments identiques et on calcule leur quantité
-    const rawSupplements: { id: string; name: string; price: number; quantity: number }[] = [];
+    const rawSupplements: { id: string; name: string; price: number; quantity: number; offert: boolean }[] = [];
     if (item.supplements) {
-      const suppMap = new Map<string, { id: string; name: string; price: number; quantity: number }>();
+      const suppMap = new Map<string, { id: string; name: string; price: number; quantity: number; offert: boolean }>();
       for (const s of item.supplements) {
         const qty = (s as { quantity?: number }).quantity || 1;
+        // Offert = flag explicite du backend, ou repli prix 0 (commandes antérieures au flag).
+        const offert = Boolean((s as { offert?: boolean }).offert) || s.price === 0;
         const existing = suppMap.get(s.id);
         if (existing) {
           existing.quantity += qty;
         } else {
-          suppMap.set(s.id, { id: s.id, name: s.name, price: s.price, quantity: qty });
+          suppMap.set(s.id, { id: s.id, name: s.name, price: s.price, quantity: qty, offert });
         }
       }
       rawSupplements.push(...suppMap.values());

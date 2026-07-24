@@ -91,7 +91,17 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                             </span>
                           )}
                           <span className="text-xs text-gray-400 ml-0.5">
-                            {item.supplements}
+                            {item.rawSupplements && item.rawSupplements.length > 0
+                              ? item.rawSupplements.map((s, i) => (
+                                  <span key={s.id || i}>
+                                    {i > 0 ? ", " : ""}
+                                    {s.quantity && s.quantity > 1 ? `${s.name} x${s.quantity}` : s.name}
+                                    {s.offert && (
+                                      <span className="ml-0.5 text-[#F17922] font-medium">(offert)</span>
+                                    )}
+                                  </span>
+                                ))
+                              : item.supplements}
                           </span>
                         </div>
                         <p className="ml-8 shrink-0 text-sm font-medium text-[#71717A]">

@@ -14,8 +14,8 @@ export interface OrderTableItem {
   epice: boolean;
   supplements: string;
   supplementsPrice: number;
-  /** Données brutes des suppléments (pour le mode édition) */
-  rawSupplements?: { id: string; name: string; price: number; quantity?: number }[];
+  /** Données brutes des suppléments (pour le mode édition + marqueur « offert ») */
+  rawSupplements?: { id: string; name: string; price: number; quantity?: number; offert?: boolean }[];
 }
 
 /**
