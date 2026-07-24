@@ -22,10 +22,21 @@ export interface ComboSolutionItem {
   quantity?: number;
 }
 
-/** Le lot mis en jeu = un plat offert (Reward GIFT), récupérable au panier à 0 fr. */
+/** Le lot mis en jeu = un plat OU un supplément offert (Reward GIFT),
+ *  récupérable au panier à 0 fr. */
 export interface ComboGift {
-  dish_id: string;
+  /** Nature du cadeau (snapshot serveur). */
+  item_type?: ComboItemType;
+  /** Renseigné si le cadeau est un plat. */
+  dish_id?: string;
+  /** Renseigné si le cadeau est un supplément. */
+  supplement_id?: string;
   label?: string;
+  /** Nom figé au moment de la config (affichage). */
+  name?: string;
+  /** Prix d'origine figé (affichage). */
+  price?: number;
+  image?: string | null;
   quantity?: number;
 }
 

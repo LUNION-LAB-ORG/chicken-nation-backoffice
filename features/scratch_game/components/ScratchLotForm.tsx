@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { Gift, Ticket, Tag, Loader2, Star } from "lucide-react";
 import { getPromoCodes } from "../../promo_code/services/promo-code.service";
 import { useQuery } from "@tanstack/react-query";
-import DishPicker, { PickedDish } from "./DishPicker";
+import GiftItemPicker, { PickedGift } from "./GiftItemPicker";
 import {
   CreateScratchLotDto,
   ScratchLevel,
@@ -66,16 +66,31 @@ export default function ScratchLotForm({
     lot?.reward_type ?? "GIFT"
   );
 
-  // Payload states
-  const [giftDish, setGiftDish] = useState<PickedDish | null>(
+  // Payload states — cadeau = plat OU supplément
+  const [giftItem, setGiftItem] = useState<PickedGift | null>(
     isFloor || lot?.reward_type !== "GIFT"
       ? null
+      : payload.item_type === "SUPPLEMENT" && payload.supplement_id
+      ? {
+          kind: "SUPPLEMENT",
+          id: String(payload.supplement_id),
+          name:
+            (payload.name as string) ||
+            (payload.label as string) ||
+            "Supplément sélectionné",
+          price: Number(payload.price) || 0,
+          image: (payload.image as string) ?? null,
+        }
       : payload.dish_id
       ? {
+          kind: "DISH",
           id: String(payload.dish_id),
-          name: (payload.label as string) || "Plat sélectionné",
-          price: 0,
-          image: null,
+          name:
+            (payload.name as string) ||
+            (payload.label as string) ||
+            "Plat sélectionné",
+          price: Number(payload.price) || 0,
+          image: (payload.image as string) ?? null,
         }
       : null
   );
@@ -158,11 +173,12 @@ export default function ScratchLotForm({
       rewardType = "POINTS";
       if (floorPoints !== "") builtPayload.points = Number(floorPoints);
     } else if (type === "GIFT") {
-      if (!giftDish) {
-        setError("Choisissez le plat offert.");
+      if (!giftItem) {
+        setError("Choisissez le plat ou le supplément offert.");
         return;
       }
-      builtPayload.dish_id = giftDish.id;
+      if (giftItem.kind === "SUPPLEMENT") builtPayload.supplement_id = giftItem.id;
+      else builtPayload.dish_id = giftItem.id;
       if (giftLabel.trim()) builtPayload.label = giftLabel.trim();
       if (giftQty && Number(giftQty) > 0)
         builtPayload.quantity = Number(giftQty);
@@ -215,7 +231,9 @@ export default function ScratchLotForm({
           <Star size={16} className="text-[#F17922]" />
           <p className="text-sm text-[#7A3502]">
             Lot <strong>PLANCHER</strong> (points). Son type est fixe et il ne
-            peut pas être supprimé — il garantit une récompense minimale.
+            peut pas être supprimé — il garantit une récompense minimale. Sa
+            fréquence se règle globalement dans l&apos;onglet{" "}
+            <strong>Réglages</strong> (« Poids du plancher »), pas ici.
           </p>
         </div>
       )}
@@ -296,8 +314,8 @@ export default function ScratchLotForm({
       ) : type === "GIFT" ? (
         <div className="space-y-4">
           <div>
-            <Label>Plat offert</Label>
-            <DishPicker value={giftDish} onChange={setGiftDish} />
+            <Label>Article offert</Label>
+            <GiftItemPicker value={giftItem} onChange={setGiftItem} />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -357,7 +375,10 @@ export default function ScratchLotForm({
         </div>
       )}
 
-      {/* Paramètres de tirage */}
+      {/* Paramètres de tirage — inutiles pour le plancher : sa fréquence est
+          réglée globalement (Réglages » Poids du plancher), et le moteur ignore
+          ces champs pour le lot plancher. */}
+      {!isFloor && (
       <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-6 space-y-4">
         <h3 className="text-lg font-semibold text-[#595959]">
           Paramètres de tirage
@@ -435,6 +456,7 @@ export default function ScratchLotForm({
           </div>
         </div>
       </div>
+      )}
 
       {/* Actif */}
       <label className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer select-none">

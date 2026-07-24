@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Gift, Loader2, Plus, Trash2, Lightbulb } from "lucide-react";
-import DishPicker, {
-  PickedDish,
-} from "../../scratch_game/components/DishPicker";
+import GiftItemPicker, {
+  PickedGift,
+} from "../../scratch_game/components/GiftItemPicker";
 import ComboSolutionPicker from "./ComboSolutionPicker";
 import {
   ComboGame,
@@ -67,14 +67,23 @@ export default function ComboGameForm({
   );
   const [active, setActive] = useState(game?.active ?? true);
 
-  // Lot = plat offert (GIFT)
-  const [giftDish, setGiftDish] = useState<PickedDish | null>(
-    game?.gift?.dish_id
+  // Lot = plat OU supplément offert (GIFT)
+  const [giftItem, setGiftItem] = useState<PickedGift | null>(
+    game?.gift?.item_type === "SUPPLEMENT" && game?.gift?.supplement_id
       ? {
+          kind: "SUPPLEMENT",
+          id: String(game.gift.supplement_id),
+          name: game.gift.name || game.gift.label || "Supplément sélectionné",
+          price: Number(game.gift.price) || 0,
+          image: game.gift.image ?? null,
+        }
+      : game?.gift?.dish_id
+      ? {
+          kind: "DISH",
           id: String(game.gift.dish_id),
-          name: game.gift.label || "Plat sélectionné",
-          price: 0,
-          image: null,
+          name: game.gift.name || game.gift.label || "Plat sélectionné",
+          price: Number(game.gift.price) || 0,
+          image: game.gift.image ?? null,
         }
       : null
   );
@@ -134,8 +143,8 @@ export default function ComboGameForm({
       return;
     }
 
-    if (!giftDish) {
-      setError("Choisissez le plat offert (lot du jeu).");
+    if (!giftItem) {
+      setError("Choisissez le plat ou le supplément offert (lot du jeu).");
       return;
     }
 
@@ -154,7 +163,9 @@ export default function ComboGameForm({
       max_attempts: attempts,
       winners_count: winners,
       gift: {
-        dish_id: giftDish.id,
+        ...(giftItem.kind === "SUPPLEMENT"
+          ? { item_type: "SUPPLEMENT", supplement_id: giftItem.id }
+          : { item_type: "DISH", dish_id: giftItem.id }),
         ...(giftLabel.trim() ? { label: giftLabel.trim() } : {}),
         ...(giftQty && Number(giftQty) > 0
           ? { quantity: Number(giftQty) }
@@ -303,12 +314,12 @@ export default function ComboGameForm({
           </h3>
         </div>
         <p className="text-[13px] text-[#9796A1] -mt-1">
-          Le lot est un <strong>plat offert</strong> (récompense GIFT),
-          récupérable au panier à 0 fr dans l&apos;app.
+          Le lot est un <strong>plat</strong> ou un <strong>supplément</strong>{" "}
+          offert (récompense GIFT), récupérable au panier à 0 fr dans l&apos;app.
         </p>
         <div>
-          <Label>Plat offert</Label>
-          <DishPicker value={giftDish} onChange={setGiftDish} />
+          <Label>Article offert</Label>
+          <GiftItemPicker value={giftItem} onChange={setGiftItem} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>

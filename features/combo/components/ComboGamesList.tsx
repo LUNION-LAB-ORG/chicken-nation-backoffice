@@ -106,7 +106,10 @@ export default function ComboGamesList({
                     <span className="inline-flex items-center gap-1">
                       <Gift size={13} className="text-[#F17922]" />
                       {game.gift?.label ||
-                        (game.gift?.dish_id
+                        game.gift?.name ||
+                        (game.gift?.supplement_id
+                          ? "Supplément offert"
+                          : game.gift?.dish_id
                           ? "Plat offert"
                           : "—")}
                       {game.gift?.quantity && game.gift.quantity > 1
