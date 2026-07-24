@@ -137,6 +137,14 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
+  // ---- Audits (admin) ----
+  audit_actions: dynamic(() => import("@/components/gestion/Audit/Actions"), {
+    loading: () => <LoadingSpinner />,
+  }),
+  audit_logs: dynamic(() => import("@/components/gestion/Audit/Logs"), {
+    loading: () => <LoadingSpinner />,
+  }),
+
   // ---- Paramètres ----
   settings: dynamic(() => import("@/components/gestion/Settings"), {
     loading: () => <LoadingSpinner />,

@@ -34,6 +34,9 @@ import {
   Gift,
   Handshake,
   Dices,
+  ShieldCheck,
+  ListChecks,
+  ScrollText,
 } from "lucide-react";
 
 import { useAuthStore } from "../../features/users/hook/authStore";
@@ -308,6 +311,28 @@ export const useGetMenuConfig = (): {
           label: "Marketing & Promos",
           icon: Megaphone,
           canAccess: () => can(Modules.MARKETING, Action.READ),
+        },
+      ],
+    },
+    {
+      // Réservé à l'admin : seul le rôle ADMIN possède la permission AUDIT
+      // (via Modules.ALL). Les autres rôles ne voient jamais ce groupe.
+      id: "audits",
+      label: "Audits",
+      icon: ShieldCheck,
+      canAccess: () => can(Modules.AUDIT, Action.READ),
+      items: [
+        {
+          id: "audits-audit_actions",
+          label: "Actions",
+          icon: ListChecks,
+          canAccess: () => can(Modules.AUDIT, Action.READ),
+        },
+        {
+          id: "audits-audit_logs",
+          label: "Logs",
+          icon: ScrollText,
+          canAccess: () => can(Modules.AUDIT, Action.READ),
         },
       ],
     },
