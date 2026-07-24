@@ -105,6 +105,7 @@ export interface ComboParticipation {
   customer_id: string;
   customer_name: string | null;
   customer_phone: string | null;
+  customer_image?: string | null;
   /** Essais consommés (borné à max_attempts, RG-10). */
   attempts_used: number;
   /** A trouvé la bonne combinaison. */
@@ -121,6 +122,7 @@ export interface ComboWinner {
   customer_id: string;
   customer_name: string | null;
   customer_phone: string | null;
+  customer_image?: string | null;
   /** Reward GIFT attribué (récupérable au panier à 0 fr). */
   reward_id: string | null;
   /** Horodatage du tirage. */

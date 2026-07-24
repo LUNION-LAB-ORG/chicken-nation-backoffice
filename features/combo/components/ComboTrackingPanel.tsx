@@ -15,6 +15,7 @@ import {
   useComboWinnersQuery,
 } from "../queries/combo.queries";
 import { useDrawComboWinnersMutation } from "../queries/combo.mutations";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import { ComboGame } from "../types/combo.types";
 import {
   dateTimeFmt,
@@ -46,6 +47,42 @@ const StatCard: React.FC<{
       </div>
       <div className="text-[12px] text-[#9796A1] mt-1">{label}</div>
     </div>
+  </div>
+);
+
+const Avatar: React.FC<{ name: string | null; image?: string | null }> = ({
+  name,
+  image,
+}) => {
+  const initials =
+    (name ?? "")
+      .split(" ")
+      .map((s) => s[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?";
+  return image ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={formatImageUrl(image)}
+      alt=""
+      className="w-8 h-8 rounded-full object-cover shrink-0"
+    />
+  ) : (
+    <div className="w-8 h-8 rounded-full bg-[#FFF6E9] text-[#F17922] text-[11px] font-bold flex items-center justify-center shrink-0">
+      {initials}
+    </div>
+  );
+};
+
+const ClientCell: React.FC<{
+  name: string | null;
+  image?: string | null;
+}> = ({ name, image }) => (
+  <div className="flex items-center gap-2.5">
+    <Avatar name={name} image={image} />
+    <span className="font-medium truncate">{name || "Client"}</span>
   </div>
 );
 
@@ -118,35 +155,34 @@ export default function ComboTrackingPanel({
       exit={{ opacity: 0 }}
       className="space-y-6"
     >
+      {/* Retour à la liste — lien clair EN HAUT, pas collé au titre */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#71717A] hover:text-[#18181B] cursor-pointer"
+      >
+        <ArrowLeft size={16} /> Retour à la liste
+      </button>
+
       {/* En-tête */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="flex items-start gap-3">
-          <button
-            type="button"
-            onClick={onBack}
-            className="mt-0.5 p-2 rounded-lg text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
-            title="Retour à la liste"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-semibold text-[#595959]">
-                {game.title}
-              </h2>
-              <span
-                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_BADGE[status]}`}
-              >
-                {STATUS_LABEL[status]}
-              </span>
-            </div>
-            <p className="text-[13px] text-[#9796A1] mt-0.5">
-              Solution : {describeSolution(game.solution_items)}
-            </p>
-            <p className="text-[12px] text-[#9796A1]">
-              {dateTimeFmt(game.starts_at)} → {dateTimeFmt(game.ends_at)}
-            </p>
+        <div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-lg font-semibold text-[#595959]">
+              {game.title}
+            </h2>
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_BADGE[status]}`}
+            >
+              {STATUS_LABEL[status]}
+            </span>
           </div>
+          <p className="text-[13px] text-[#9796A1] mt-0.5">
+            Solution : {describeSolution(game.solution_items)}
+          </p>
+          <p className="text-[12px] text-[#9796A1]">
+            {dateTimeFmt(game.starts_at)} → {dateTimeFmt(game.ends_at)}
+          </p>
         </div>
 
         {canDraw && (
@@ -245,8 +281,8 @@ export default function ComboTrackingPanel({
                 ) : (
                   winners.map((w) => (
                     <tr key={w.id} className="hover:bg-[#FBF7FF]">
-                      <Td className="font-medium">
-                        {w.customer_name || w.customer_id}
+                      <Td>
+                        <ClientCell name={w.customer_name} image={w.customer_image} />
                       </Td>
                       <Td className="text-[#71717A]">
                         {w.customer_phone || "—"}
@@ -312,8 +348,8 @@ export default function ComboTrackingPanel({
                 ) : (
                   participations.map((p) => (
                     <tr key={p.id} className="hover:bg-[#FFF9F2]">
-                      <Td className="font-medium">
-                        {p.customer_name || p.customer_id}
+                      <Td>
+                        <ClientCell name={p.customer_name} image={p.customer_image} />
                       </Td>
                       <Td className="text-[#71717A]">
                         {p.customer_phone || "—"}

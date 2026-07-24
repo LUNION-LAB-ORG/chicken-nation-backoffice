@@ -39,6 +39,7 @@ type BackendComboGame = {
   prize?: { reward_type?: string; payload?: Record<string, unknown> };
   status?: "SCHEDULED" | "OPEN" | "CLOSED" | "SETTLED";
   attempts_count?: number;
+  correct_count?: number;
   winners_count_actual?: number;
   created_at: string;
   updated_at: string;
@@ -118,7 +119,7 @@ const fromBackend = (g: BackendComboGame): ComboGame => {
     stats: hasStats
       ? {
           participants_count: g.attempts_count ?? 0,
-          correct_count: 0,
+          correct_count: g.correct_count ?? 0,
           winners_count: g.winners_count_actual ?? 0,
         }
       : undefined,
