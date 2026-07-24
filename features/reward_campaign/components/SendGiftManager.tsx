@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { getCustomers } from "@/services/customerService";
 import { getAllSupplements, type Supplement } from "@/services/supplementService";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import { getPromoCodes } from "../../promo_code/services/promo-code.service";
 import { getAllDishes } from "../../menus/services/dish-service";
 import { createRewardCampaign } from "../services/reward-campaign.service";
@@ -277,7 +278,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   {giftSupp.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                      src={giftSupp.image}
+                      src={formatImageUrl(giftSupp.image)}
                       alt=""
                       className="h-11 w-11 rounded-md object-cover"
                     />
@@ -345,7 +346,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 {giftDish.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={giftDish.image}
+                    src={formatImageUrl(giftDish.image)}
                     alt=""
                     className="h-11 w-11 rounded-md object-cover"
                   />

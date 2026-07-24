@@ -8,6 +8,7 @@ import {
   getAllSupplements,
   type Supplement,
 } from "@/services/supplementService";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import { money } from "../utils/scratch.utils";
 
 const inputCls =
@@ -111,7 +112,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
           {value.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={value.image}
+              src={formatImageUrl(value.image)}
               alt=""
               className="h-11 w-11 rounded-md object-cover"
             />

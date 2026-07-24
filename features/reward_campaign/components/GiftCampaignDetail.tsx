@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Gift, Tag, Ticket, Users } from "lucide-react";
 import { getCampaignRecipients } from "../services/reward-campaign.service";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import type {
   RecipientStatus,
   RewardCampaign,
@@ -72,7 +73,7 @@ export default function GiftCampaignDetail({
         <div className="flex items-start gap-4">
           {payload.image ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={payload.image} alt="" className="h-16 w-16 rounded-xl object-cover" />
+            <img src={formatImageUrl(payload.image)} alt="" className="h-16 w-16 rounded-xl object-cover" />
           ) : (
             <div className="h-16 w-16 rounded-xl bg-[#FFF6E9] flex items-center justify-center shrink-0">
               <Icon size={26} className="text-[#F17922]" />

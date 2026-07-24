@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Search, X } from "lucide-react";
 import { getAllDishes } from "../../menus/services/dish-service";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import { money } from "../utils/scratch.utils";
 
 const inputCls =
@@ -44,7 +45,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
         {value.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={value.image}
+            src={formatImageUrl(value.image)}
             alt=""
             className="h-11 w-11 rounded-md object-cover"
           />
