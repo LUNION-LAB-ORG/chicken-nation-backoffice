@@ -93,6 +93,16 @@ export interface Delivery {
   failure_reason?: DeliveryFailureReason | null;
   failure_note?: string | null;
   order: OrderForDelivery;
+  // === Sous-traitance Turbo (flotte externe) ===
+  // Renseignés par les webhooks Turbo quand la livraison est sous-traitée.
+  /** Id de la course côté Turbo (traçabilité / support / litiges). */
+  turbo_course_id?: string | null;
+  turbo_courier_id?: string | null;
+  turbo_courier_name?: string | null;
+  turbo_courier_phone?: string | null;
+  turbo_courier_lat?: number | null;
+  turbo_courier_lng?: number | null;
+  turbo_courier_location_at?: string | null;
 }
 
 export interface RestaurantForCourse {

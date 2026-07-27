@@ -55,6 +55,28 @@ export function DeliveriesList({ deliveries }: Props) {
                   {delivery.failure_note ? ` — ${delivery.failure_note}` : ''}
                 </div>
               )}
+
+              {/* Sous-traitance Turbo : qui livre et comment le joindre.
+                  Le staff doit savoir qu'un livreur EXTERNE va se présenter. */}
+              {(delivery.turbo_course_id || delivery.turbo_courier_id) && (
+                <div className="mt-2 rounded-md bg-[#FFF6E9] border border-[#F5D8AE] px-2.5 py-2">
+                  <div className="font-semibold text-[#7A3502]">
+                    🛵 Livreur externe Turbo
+                  </div>
+                  <div className="text-[#7A3502]">
+                    {delivery.turbo_courier_name ?? 'Livreur non encore communiqué'}
+                    {delivery.turbo_courier_phone ? ` · ${delivery.turbo_courier_phone}` : ''}
+                  </div>
+                  {delivery.turbo_courier_location_at && (
+                    <div className="text-[#9796A1] mt-0.5">
+                      Position reçue le{' '}
+                      {format(new Date(delivery.turbo_courier_location_at), 'dd MMM HH:mm', {
+                        locale: fr,
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );
