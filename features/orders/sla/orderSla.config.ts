@@ -10,6 +10,31 @@ export interface OrderTimer {
 
 const DEFAULT_PREPARATION_TIME = 20; // minutes
 
+/**
+ * Temps de préparation alloué à une commande, en minutes.
+ *
+ * Règle : on prend le plat le PLUS LONG de la commande, pas la somme — une
+ * cuisine prépare les plats en parallèle, une commande de 3 plats de 10 min
+ * n'immobilise pas 30 minutes.
+ *
+ * Sources, par ordre de priorité :
+ *   1. le temps paramétré sur les plats de la commande (fiche menu) ;
+ *   2. `estimated_preparation_time` saisi manuellement sur la commande ;
+ *   3. la valeur par défaut (20 min).
+ */
+export const resolvePreparationMinutes = (order: OrderTable): number => {
+  const parPlat = (order.items ?? [])
+    .map((i) => Number(i.cookingTime))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
+  if (parPlat.length > 0) return Math.max(...parPlat);
+
+  const saisi = Number(order.estimatedPreparationTime);
+  if (Number.isFinite(saisi) && saisi > 0) return saisi;
+
+  return DEFAULT_PREPARATION_TIME;
+};
+
 export type SlaRule = {
   next: OrderTableStatus;
   delayMinutes: number | ((order: OrderTable) => number);
@@ -27,8 +52,7 @@ export const ORDER_SLA: Partial<Record<OrderTableStatus, SlaRule>> = {
 
   "EN PRÉPARATION": {
     next: "PRÊT",
-    delayMinutes: (order) =>
-      Number(order.estimatedPreparationTime) || DEFAULT_PREPARATION_TIME,
+    delayMinutes: (order) => resolvePreparationMinutes(order),
     reason: "Commande en cours de préparation",
     lateReason: "La préparation de la commande a pris trop de temps",
   },

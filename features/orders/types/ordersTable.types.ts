@@ -16,6 +16,8 @@ export interface OrderTableItem {
   supplementsPrice: number;
   /** Données brutes des suppléments (pour le mode édition + marqueur « offert ») */
   rawSupplements?: { id: string; name: string; price: number; quantity?: number; offert?: boolean }[];
+  /** Temps de préparation du plat, en minutes (paramétré dans la fiche menu). */
+  cookingTime?: number | null;
 }
 
 /**

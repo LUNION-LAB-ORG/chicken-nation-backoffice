@@ -197,6 +197,13 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
       supplements: supplementNames,
       supplementsPrice,
       rawSupplements,
+      // Temps de préparation : on privilégie le SNAPSHOT figé sur la ligne de
+      // commande (il reflète le paramétrage au moment de l'achat) et on retombe
+      // sur la fiche du plat si la commande est antérieure au snapshot.
+      cookingTime:
+        (item as { cooking_time?: number | null }).cooking_time ??
+        item.dish?.cooking_time ??
+        null,
     };
   });
 };

@@ -49,6 +49,8 @@ interface MenuFormData {
   private: boolean;
   audiences: string[];
   hubrise_sku: string;
+  /** Temps de préparation en minutes — pilote le minuteur SLA « En préparation ». */
+  cooking_time: string;
 }
 
 interface AddMenuFormProps {
@@ -99,6 +101,7 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
     private: false,
     audiences: [],
     hubrise_sku: "",
+    cooking_time: "",
   });
 
   // ✅ ÉTATS POUR LA CRÉATION
@@ -626,6 +629,8 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
         private: formData.private,
         audiences: formData.audiences,
         hubrise_sku: formData.hubrise_sku || undefined,
+        // Minutes. Vide → non renseigné : le minuteur retombe sur les 20 min par défaut.
+        cooking_time: formData.cooking_time ? Number(formData.cooking_time) : undefined,
       };
 
       // ✅ Soumission sécurisée des données
@@ -1079,6 +1084,38 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
               placeholder="SKU HubRise (ex: DISH-001)"
             />
           </motion.div>
+
+          {/* Temps de préparation — pilote le minuteur « En préparation » des
+              commandes. Vide = 20 min par défaut. */}
+          <div>
+            <label
+              htmlFor="cooking_time"
+              className="block text-[13px] font-semibold text-[#595959] mb-2"
+            >
+              Temps de préparation{" "}
+              <span className="font-normal text-[#9796A1]">— en minutes</span>
+            </label>
+            <motion.div
+              className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
+            >
+              <input
+                type="number"
+                min={1}
+                id="cooking_time"
+                value={formData.cooking_time}
+                onChange={(e) =>
+                  setFormData({ ...formData, cooking_time: e.target.value })
+                }
+                className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+                placeholder="Ex. 10"
+              />
+            </motion.div>
+            <p className="text-[11px] text-[#9796A1] mt-1">
+              Sert au minuteur de la page Commandes. Vide = 20 min par défaut.
+            </p>
+          </div>
         </div>
 
         {/* Colonne droite */}
