@@ -31,6 +31,7 @@ import SafeImage from "@/components/ui/SafeImage";
 import { useAuthStore } from "../../../users/hook/authStore";
 import { UserRole } from "../../../users/types/user.types";
 import { type Order } from "../../../orders/types/order.types";
+import DeliveryMapSection from "../../../orders/components/detail-order/DeliveryMapSection";
 import { useOrderDetailQuery } from "../../../orders/queries/order-detail.query";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
@@ -83,6 +84,8 @@ export function DrawerDetailsTab({ order }: Props) {
       <ItemsBlock ui={ui} />
       <PriceBlock ui={ui} />
       <ProgressBlock ui={ui} />
+      {/* Carte pliable restaurant → client (mêmes pins que l'app livreur). */}
+      <DeliveryMapSection order={ui} />
       <InfoBlock ui={ui} source={source} />
     </div>
   );
