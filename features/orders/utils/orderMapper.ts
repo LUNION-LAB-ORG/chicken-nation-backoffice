@@ -258,6 +258,9 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     // Restaurant
     restaurantId: order.restaurant_id,
     restaurantName: order.restaurant?.name || "Restaurant inconnu",
+    // Pin « départ » de la carte de livraison du drawer.
+    restaurantLatitude: order.restaurant?.latitude ?? null,
+    restaurantLongitude: order.restaurant?.longitude ?? null,
 
     // Items
     items: mapOrderItems(order.order_items),

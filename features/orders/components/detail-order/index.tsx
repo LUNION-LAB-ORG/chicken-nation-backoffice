@@ -7,6 +7,7 @@ import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import ConfirmPaymentAction from "./ConfirmPaymentAction";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryProgressSection from "./DeliveryProgressSection";
+import DeliveryMapSection from "./DeliveryMapSection";
 import OrderInfoSection from "./OrderInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import PriceSummarySection from "./PriceSummarySection";
@@ -38,6 +39,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ selectedItem }) => {
               <CustomerInfoSection order={order} />
 
               <DeliveryProgressSection order={order} />
+
+              <DeliveryMapSection order={order} />
 
               <PriceSummarySection order={order} />
 

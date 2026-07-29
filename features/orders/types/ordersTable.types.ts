@@ -104,6 +104,9 @@ export interface OrderTable {
   // ========== RESTAURANT ==========
   restaurantId: string;
   restaurantName: string;
+  /** Coordonnées du restaurant — pin « départ » de la carte de livraison. */
+  restaurantLatitude?: number | null;
+  restaurantLongitude?: number | null;
 
   // ========== ITEMS ==========
   items: OrderTableItem[];
