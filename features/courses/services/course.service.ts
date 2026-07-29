@@ -75,3 +75,15 @@ export const retryExpiredCourse = (id: string) =>
   safeCall(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/retry`, {}, true),
   );
+
+/** Confie la course à la flotte externe Turbo, sans attendre le délai automatique. */
+export const basculerCourseVersTurbo = (id: string) =>
+  safeCall(() =>
+    api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/turbo`, {}, true),
+  );
+
+/** Reprend une course confiée à Turbo pour la reproposer aux livreurs internes. */
+export const reprendreCourseEnInterne = (id: string) =>
+  safeCall(() =>
+    api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/interne`, {}, true),
+  );

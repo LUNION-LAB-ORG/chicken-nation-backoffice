@@ -3,9 +3,13 @@
 import React from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { AlertTriangle, Ban, Phone, RotateCw, Truck, UserPlus } from "lucide-react";
+import { AlertTriangle, Ban, Phone, RotateCw, Send, Truck, Undo2, UserPlus } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 
+import {
+  useCourseVersInterneMutation,
+  useCourseVersTurboMutation,
+} from "../../queries/course-fleet.mutation";
 import { useCourseRetryMutation } from "../../queries/course-retry.mutation";
 import type { CourseWithAttempts } from "../../types/course.types";
 import { formatDelivererName } from "../../utils/course-labels";
@@ -22,6 +26,8 @@ function formatPrix(n: number): string {
 export function CourseDetailSidebar({ course }: Props) {
   const { toggleModal } = useDashboardStore();
   const { mutate: retryCourse, isPending: isRetrying } = useCourseRetryMutation();
+  const { mutate: versTurbo, isPending: isVersTurbo } = useCourseVersTurboMutation();
+  const { mutate: versInterne, isPending: isVersInterne } = useCourseVersInterneMutation();
 
   const terminal = ["COMPLETED", "CANCELLED", "EXPIRED"].includes(course.statut);
   const delivererName = formatDelivererName(course.deliverer);
@@ -113,6 +119,29 @@ export function CourseDetailSidebar({ course }: Props) {
               {isRetrying ? "Relance en cours…" : "Relancer la recherche"}
             </button>
           )}
+          {/* Bascule de flotte. Le staff tranche sans attendre le délai
+              automatique, dans un sens comme dans l'autre. */}
+          {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
+            <button
+              onClick={() => versTurbo(course.id)}
+              disabled={isVersTurbo}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-[#F17922] text-[#F17922] text-sm font-semibold hover:bg-orange-50 transition disabled:opacity-60"
+            >
+              <Send className={`w-4 h-4 ${isVersTurbo ? "animate-pulse" : ""}`} />
+              {isVersTurbo ? "Envoi à Turbo…" : "Confier à Turbo"}
+            </button>
+          )}
+          {course.statut === "PENDING_ASSIGNMENT" && course.turbo_escalated_at && (
+            <button
+              onClick={() => versInterne(course.id)}
+              disabled={isVersInterne}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-500 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition disabled:opacity-60"
+            >
+              <Undo2 className={`w-4 h-4 ${isVersInterne ? "animate-pulse" : ""}`} />
+              {isVersInterne ? "Reprise en cours…" : "Reprendre en interne"}
+            </button>
+          )}
+
           {!terminal && (
             <button
               onClick={() => toggleModal("courses", "cancel")}
@@ -121,6 +150,16 @@ export function CourseDetailSidebar({ course }: Props) {
               <Ban className="w-4 h-4" />
               Annuler la course
             </button>
+          )}
+
+          {course.turbo_escalated_at && (
+            <div className="flex items-start gap-2 rounded-xl bg-[#FFF6E9] border border-[#F5D8AE] px-3 py-2">
+              <Truck className="w-4 h-4 text-[#F17922] shrink-0 mt-0.5" />
+              <p className="text-xs text-[#7A3502]">
+                Course confiée à <strong>Turbo</strong>. Le suivi est piloté par leurs
+                notifications.
+              </p>
+            </div>
           )}
           {terminal && course.cancelled_reason && (
             <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2">

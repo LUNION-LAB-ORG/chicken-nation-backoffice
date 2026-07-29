@@ -158,6 +158,8 @@ export interface Course {
   cancelled_reason?: string | null;
   offer_expires_at?: string | null;
   refusal_count: number;
+  /** Horodatage de la sous-traitance a la flotte externe Turbo (null = interne). */
+  turbo_escalated_at?: string | null;
   total_delivery_fee: number;
   estimated_duration_min?: number | null;
   created_at: string;
