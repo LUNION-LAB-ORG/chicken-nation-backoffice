@@ -7,7 +7,6 @@ import OrderInfoSection from "./OrderInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryProgressSection from "./DeliveryProgressSection";
-import DeliveryMapSection from "./DeliveryMapSection";
 import PriceSummarySection from "./PriceSummarySection";
 
 interface OrderDetailModalProps {
@@ -53,7 +52,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order: initialOrder
             <div className="md:w-2/5 p-6 bg-[#FBFBFB]">
               <CustomerInfoSection order={order} />
               <DeliveryProgressSection order={order} />
-              <DeliveryMapSection order={order} />
               <PriceSummarySection order={order} />
             </div>
           </div>

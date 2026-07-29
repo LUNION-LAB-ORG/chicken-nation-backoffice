@@ -8,12 +8,15 @@ import {
   MapPin,
   Phone,
   Sparkles,
+  Store,
   User,
   Wallet,
   Zap,
 } from "lucide-react";
 
 import { PaymentMethod, type Order } from "../../orders/types/order.types";
+import { useAuthStore } from "../../users/hook/authStore";
+import { UserType } from "../../users/types/user.types";
 import { OrderStatus, OrderType } from "../../orders/types/order.types";
 import { useTickingElapsed } from "../hooks/use-ticking-elapsed";
 import {
@@ -97,6 +100,11 @@ export const OperationsCard: React.FC<Props> = ({
   const colors = URGENCY_COLORS[urgency];
   const typeMeta = getTypeMeta(order.type);
   const statusBadgeCls = getStatusBadgeClasses(order.status);
+  // Un compte BACKOFFICE (admin, call center) voit les commandes de TOUS les
+  // restaurants sur le même tableau : sans le nom du restaurant sur la carte,
+  // impossible de savoir d'où vient chacune. Un compte RESTAURANT n'en a pas
+  // besoin (il ne voit que le sien) — on ne charge pas sa carte pour rien.
+  const isBackoffice = useAuthStore((s) => s.user?.type) === UserType.BACKOFFICE;
 
   return (
     <button
@@ -160,6 +168,16 @@ export const OperationsCard: React.FC<Props> = ({
               </span>
             )}
           </div>
+
+          {/* Ligne restaurant — comptes BACKOFFICE uniquement (multi-restaurants). */}
+          {isBackoffice && order.restaurant?.name && (
+            <div className="flex items-center gap-1.5 text-xs mb-0.5">
+              <Store className="w-3 h-3 shrink-0 text-[#F17922]" />
+              <span className="truncate font-semibold text-gray-800">
+                {order.restaurant.name}
+              </span>
+            </div>
+          )}
 
           {/* Ligne 3 : client */}
           <div className="flex items-center gap-1.5 text-xs text-gray-700 mb-0.5">

@@ -12,6 +12,8 @@ import {
   Hash,
   Loader2,
   Mail,
+  ChevronDown,
+  ChevronUp,
   MapPin,
   Package,
   PackageCheck,
@@ -31,7 +33,10 @@ import SafeImage from "@/components/ui/SafeImage";
 import { useAuthStore } from "../../../users/hook/authStore";
 import { UserRole } from "../../../users/types/user.types";
 import { type Order } from "../../../orders/types/order.types";
-import DeliveryMapSection from "../../../orders/components/detail-order/DeliveryMapSection";
+import {
+  DeliveryMapCanvas,
+  hasDeliveryPoint,
+} from "../../../orders/components/detail-order/DeliveryMapSection";
 import { useOrderDetailQuery } from "../../../orders/queries/order-detail.query";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
@@ -84,8 +89,6 @@ export function DrawerDetailsTab({ order }: Props) {
       <ItemsBlock ui={ui} />
       <PriceBlock ui={ui} />
       <ProgressBlock ui={ui} />
-      {/* Carte pliable restaurant → client (mêmes pins que l'app livreur). */}
-      <DeliveryMapSection order={ui} />
       <InfoBlock ui={ui} source={source} />
     </div>
   );
@@ -208,6 +211,10 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
 
 function ClientBlock({ ui }: { ui: OrderTable }) {
   const name = ui.clientName || "Client";
+  // Carte restaurant → client, dépliée par un clic sur l'ADRESSE elle-même :
+  // c'est l'information géographique qui sert d'affordance, pas un lien à part.
+  const [mapOpen, setMapOpen] = React.useState(false);
+  const mappable = ui.orderType === "À livrer" && hasDeliveryPoint(ui);
   const initials =
     name
       .split(" ")
@@ -239,14 +246,40 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
               <span className="truncate">{ui.clientEmail}</span>
             </p>
           )}
-          {ui.address && (
-            <p className="flex items-start gap-1.5 text-xs text-gray-600">
-              <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
-              <span>{ui.address}</span>
-            </p>
-          )}
+          {ui.address &&
+            (mappable ? (
+              <button
+                type="button"
+                onClick={() => setMapOpen((v) => !v)}
+                aria-expanded={mapOpen}
+                className="group flex items-start gap-1.5 text-xs text-left cursor-pointer"
+                title={mapOpen ? "Masquer la carte" : "Voir sur la carte"}
+              >
+                <MapPin className="w-3.5 h-3.5 text-[#F17922] mt-0.5 shrink-0" />
+                <span className="text-[#F17922] font-semibold underline decoration-dotted underline-offset-2 group-hover:decoration-solid">
+                  {ui.address}
+                </span>
+                {mapOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-[#F17922] mt-0.5 shrink-0" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-[#F17922] mt-0.5 shrink-0" />
+                )}
+              </button>
+            ) : (
+              <p className="flex items-start gap-1.5 text-xs text-gray-600">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
+                <span>{ui.address}</span>
+              </p>
+            ))}
         </div>
       </div>
+
+      {/* Carte montée uniquement dépliée : aucune tuile Google chargée avant. */}
+      {mappable && mapOpen && (
+        <div className="mt-4">
+          <DeliveryMapCanvas order={ui} height={260} />
+        </div>
+      )}
     </Card>
   );
 }
