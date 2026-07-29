@@ -1,24 +1,31 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef } from "react";
-import { GoogleMap, MarkerF } from "@react-google-maps/api";
+import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import { GoogleMap, MarkerF, PolylineF } from "@react-google-maps/api";
+import { Clock, Navigation } from "lucide-react";
 
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import {
   clientHouseMarkerIcon,
   restaurantMarkerIcon,
 } from "../../../maps/components/marker-icons";
+import { useDirectionsQuery } from "../../../maps/queries/directions.query";
 import { OrderTable } from "../../types/ordersTable.types";
 
 /**
- * Carte STATIQUE de la livraison : deux pins seulement, le restaurant
- * (pastille « R ») et le client (maison), soit les mêmes repères visuels que
- * l'application livreur. Le recadrage englobe les deux pins d'un coup.
+ * Carte de la livraison : restaurant → client, avec le TRAJET ROUTIER dessiné.
  *
- * Composant « canvas » sans déclencheur : c'est l'appelant qui décide de
- * l'affordance (chez nous, l'ADRESSE du bloc Client sert de bouton) — la carte
- * ne se monte que dépliée, donc aucune tuile Google chargée tant qu'on ne
- * l'ouvre pas.
+ * Mêmes repères visuels que l'application livreur (pin restaurant PNG partagé,
+ * maison liserée orange). Fond de carte ÉPURÉ : commerces, transports et
+ * points d'intérêt masqués — seul le trajet doit ressortir.
+ *
+ * Sobriété API Google, à tous les étages :
+ *  - la carte ne se monte que dépliée (l'appelant contrôle) → 0 tuile avant ;
+ *  - l'itinéraire passe par le PROXY BACKEND (clé serveur, cache Redis) et il
+ *    est aussi mis en cache côté client 10 min (React Query) : rouvrir la même
+ *    commande ne rappelle pas Google ;
+ *  - en attendant l'itinéraire (ou s'il échoue), une ligne droite pointillée
+ *    relie les deux points — jamais d'appel superflu, jamais d'écran vide.
  */
 
 interface LatLng {
@@ -66,14 +73,32 @@ export function hasDeliveryPoint(order: OrderTable): boolean {
   return resto !== null || client !== null;
 }
 
+/**
+ * Fond de carte épuré : commerces, POI, transports et reliefs masqués.
+ * Le regard doit aller au trajet, pas aux pharmacies du quartier.
+ */
+const CLEAN_MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
+  { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape.man_made", stylers: [{ visibility: "simplified" }] },
+];
+
 const MAP_OPTIONS: google.maps.MapOptions = {
   disableDefaultUI: true,
   zoomControl: true,
   gestureHandling: "cooperative",
   clickableIcons: false,
-  // Deux pins proches : sans plafond, fitBounds zoomerait à la rue près.
-  maxZoom: 16,
+  styles: CLEAN_MAP_STYLES,
 };
+
+function formatDistance(m: number): string {
+  return m >= 1000 ? `${(m / 1000).toFixed(1).replace(".", ",")} km` : `${Math.round(m)} m`;
+}
+function formatDuration(s: number): string {
+  return `${Math.max(1, Math.round(s / 60))} min`;
+}
 
 export function DeliveryMapCanvas({
   order,
@@ -90,28 +115,49 @@ export function DeliveryMapCanvas({
     [order],
   );
 
-  // Recadrage sur les DEUX pins d'un coup (padding généreux pour que les
-  // marqueurs ne collent pas les bords). Un seul pin → centrage simple.
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !isScriptLoaded) return;
-    const pts = [restoCoords, clientCoords].filter((p): p is LatLng => p !== null);
-    if (pts.length === 0) return;
-    try {
-      if (pts.length === 1) {
-        map.setCenter(pts[0]);
-        map.setZoom(15);
-        return;
-      }
-      const bounds = new google.maps.LatLngBounds();
-      pts.forEach((p) => bounds.extend(p));
-      map.fitBounds(bounds, 56);
-    } catch {
-      /* fitBounds peut jeter avant le premier rendu — sans conséquence */
-    }
-  }, [isScriptLoaded, restoCoords, clientCoords]);
+  // Trajet routier via le proxy backend (clé serveur + cache Redis + cache
+  // React Query 10 min). Uniquement quand les DEUX points existent.
+  const routeParams = useMemo(
+    () =>
+      restoCoords && clientCoords
+        ? { origin: restoCoords, destination: clientCoords }
+        : null,
+    [restoCoords, clientCoords],
+  );
+  const { data: route } = useDirectionsQuery(routeParams);
+  const routePath = route?.path && route.path.length > 1 ? route.path : null;
 
-  // Icônes construites après chargement du script (elles référencent google.maps.*).
+  // Recadrage : les deux pins + LE TRAJET entier (une route qui contourne une
+  // lagune sort largement du rectangle des deux points — sans ça, le tracé
+  // serait coupé). Appliqué à l'onLoad ET à l'arrivée de l'itinéraire.
+  const fitAll = useCallback(
+    (map: google.maps.Map) => {
+      const pts: LatLng[] = [
+        ...(restoCoords ? [restoCoords] : []),
+        ...(clientCoords ? [clientCoords] : []),
+        ...(routePath ?? []),
+      ];
+      if (pts.length === 0) return;
+      try {
+        if (pts.length === 1) {
+          map.setCenter(pts[0]);
+          map.setZoom(15);
+          return;
+        }
+        const bounds = new google.maps.LatLngBounds();
+        pts.forEach((p) => bounds.extend(p));
+        map.fitBounds(bounds, 48);
+      } catch {
+        /* fitBounds peut jeter avant le premier rendu — sans conséquence */
+      }
+    },
+    [restoCoords, clientCoords, routePath],
+  );
+
+  useEffect(() => {
+    if (mapRef.current && isScriptLoaded) fitAll(mapRef.current);
+  }, [isScriptLoaded, fitAll]);
+
   const restoIcon = useMemo(
     () => (isScriptLoaded ? restaurantMarkerIcon() : undefined),
     [isScriptLoaded],
@@ -135,41 +181,80 @@ export function DeliveryMapCanvas({
 
   return (
     <>
-      <GoogleMap
-        mapContainerStyle={{
-          width: "100%",
-          height: `${height}px`,
-          borderRadius: "12px",
-        }}
-        center={center}
-        zoom={14}
-        options={MAP_OPTIONS}
-        onLoad={(map) => {
-          mapRef.current = map;
-        }}
-        onUnmount={() => {
-          mapRef.current = null;
-        }}
-      >
-        {restoCoords && (
-          <MarkerF
-            position={restoCoords}
-            icon={restoIcon}
-            title={order.restaurantName}
-          />
-        )}
-        {clientCoords && (
-          <MarkerF position={clientCoords} icon={clientIcon} title={order.address} />
-        )}
-      </GoogleMap>
+      <div className="rounded-xl overflow-hidden border border-gray-100">
+        <GoogleMap
+          mapContainerStyle={{ width: "100%", height: `${height}px` }}
+          center={center}
+          zoom={14}
+          options={MAP_OPTIONS}
+          onLoad={(map) => {
+            mapRef.current = map;
+            // fitBounds DANS onLoad : l'effet peut s'exécuter avant que la
+            // carte existe, auquel cas il ne recadre rien.
+            fitAll(map);
+          }}
+          onUnmount={() => {
+            mapRef.current = null;
+          }}
+        >
+          {/* Trajet routier réel ; en attendant (ou en cas d'échec Google),
+              ligne droite pointillée — on voit toujours le lien resto→client. */}
+          {routePath ? (
+            <PolylineF
+              path={routePath}
+              options={{
+                strokeColor: "#F17922",
+                strokeOpacity: 0.95,
+                strokeWeight: 5,
+              }}
+            />
+          ) : (
+            restoCoords &&
+            clientCoords && (
+              <PolylineF
+                path={[restoCoords, clientCoords]}
+                options={{
+                  strokeOpacity: 0,
+                  icons: [
+                    {
+                      icon: {
+                        path: "M 0,-1 0,1",
+                        strokeOpacity: 0.6,
+                        strokeColor: "#F17922",
+                        scale: 3,
+                      },
+                      offset: "0",
+                      repeat: "14px",
+                    },
+                  ],
+                }}
+              />
+            )
+          )}
 
-      {/* Légende : mêmes repères que l'app livreur. */}
+          {restoCoords && (
+            <MarkerF
+              position={restoCoords}
+              icon={restoIcon}
+              title={order.restaurantName}
+            />
+          )}
+          {clientCoords && (
+            <MarkerF position={clientCoords} icon={clientIcon} title={order.address} />
+          )}
+        </GoogleMap>
+      </div>
+
+      {/* Légende + résumé du trajet (distance • durée, trafic compris). */}
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#71717A]">
         {restoCoords && (
           <span className="inline-flex items-center gap-1.5">
-            <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#F17922] text-[9px] font-bold text-white">
-              R
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/map/restaurant-marker.png"
+              alt=""
+              className="h-4 w-auto"
+            />
             {order.restaurantName}
           </span>
         )}
@@ -178,11 +263,23 @@ export function DeliveryMapCanvas({
             <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#F17922] bg-white text-[9px]">
               🏠
             </span>
-            <span className="truncate max-w-[260px]">{order.address}</span>
+            <span className="truncate max-w-[240px]">{order.address}</span>
           </span>
         ) : (
           <span className="text-[#C0392B]">
             Adresse du client sans coordonnées GPS.
+          </span>
+        )}
+        {route && (
+          <span className="inline-flex items-center gap-2.5 font-semibold text-gray-700">
+            <span className="inline-flex items-center gap-1">
+              <Navigation className="w-3 h-3 text-[#F17922]" />
+              {formatDistance(route.distanceMeters)}
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <Clock className="w-3 h-3 text-[#F17922]" />
+              {formatDuration(route.durationSeconds)}
+            </span>
           </span>
         )}
       </div>

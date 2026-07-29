@@ -22,16 +22,20 @@ function svgIcon(svg: string, size: number, anchor?: { x: number; y: number }): 
   };
 }
 
-/** Pastille orange « R » — origine du trajet (restaurant / point de retrait). */
+/**
+ * Pin RESTAURANT — le même visuel que l'application livreur (PNG partagé,
+ * copié depuis `chicken-nation-deli/assets/images/livraison/restaurant_marker.png`).
+ * Ancré à la POINTE du pin (bas-centre), comme tout marqueur en forme de goutte.
+ */
 export function restaurantMarkerIcon(selected = false): google.maps.Icon {
-  const size = selected ? 44 : 38;
-  const r = selected ? 15 : 13;
-  const cx = size / 2;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <circle cx="${cx}" cy="${cx}" r="${r}" fill="${ORANGE}" stroke="${WHITE}" stroke-width="3"/>
-    <text x="${cx}" y="${cx + 5}" text-anchor="middle" fill="${WHITE}" font-family="Arial,Helvetica,sans-serif" font-size="${selected ? 16 : 14}" font-weight="700">R</text>
-  </svg>`;
-  return svgIcon(svg, size);
+  // Ratio natif du PNG : 120 × 126.
+  const w = selected ? 44 : 38;
+  const h = Math.round(w * (126 / 120));
+  return {
+    url: "/images/map/restaurant-marker.png",
+    scaledSize: new google.maps.Size(w, h),
+    anchor: new google.maps.Point(w / 2, h),
+  };
 }
 
 /**
