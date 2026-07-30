@@ -270,19 +270,59 @@ export function DeliveryMapCanvas({
             Adresse du client sans coordonnées GPS.
           </span>
         )}
-        {route && (
-          <span className="inline-flex items-center gap-2.5 font-semibold text-gray-700">
-            <span className="inline-flex items-center gap-1">
-              <Navigation className="w-3 h-3 text-[#F17922]" />
-              {formatDistance(route.distanceMeters)}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="w-3 h-3 text-[#F17922]" />
-              {formatDuration(route.durationSeconds)}
-            </span>
-          </span>
-        )}
       </div>
     </>
+  );
+}
+
+/**
+ * Distance et temps de trajet estimé (trafic compris), affichés SOUS l'adresse
+ * du client — visibles sans déplier la carte.
+ *
+ * Même requête (même clé de cache) que la carte : le trajet est récupéré UNE
+ * fois via le proxy backend (Redis) + cache React Query 10 min, et la carte le
+ * réutilise tel quel quand on la déplie. Ouvrir le drawer coûte donc au plus
+ * UN appel Directions par commande et par 10 minutes.
+ */
+export function DeliveryRouteSummary({
+  order,
+  className = "",
+}: {
+  order: OrderTable;
+  className?: string;
+}) {
+  const { resto, client } = useMemo(() => getDeliveryPoints(order), [order]);
+  const params = useMemo(
+    () => (resto && client ? { origin: resto, destination: client } : null),
+    [resto, client],
+  );
+  const { data: route, isLoading } = useDirectionsQuery(
+    order.orderType === "À livrer" ? params : null,
+  );
+
+  if (order.orderType !== "À livrer" || !params) return null;
+
+  if (isLoading) {
+    return (
+      <span
+        className={`inline-block h-4 w-36 rounded bg-gray-100 animate-pulse ${className}`}
+      />
+    );
+  }
+  if (!route) return null;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-3 text-xs font-semibold text-gray-700 ${className}`}
+    >
+      <span className="inline-flex items-center gap-1">
+        <Navigation className="w-3.5 h-3.5 text-[#F17922]" />
+        {formatDistance(route.distanceMeters)}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <Clock className="w-3.5 h-3.5 text-[#F17922]" />
+        {formatDuration(route.durationSeconds)} de trajet
+      </span>
+    </span>
   );
 }

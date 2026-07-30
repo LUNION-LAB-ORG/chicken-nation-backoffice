@@ -35,6 +35,7 @@ import { UserRole } from "../../../users/types/user.types";
 import { type Order } from "../../../orders/types/order.types";
 import {
   DeliveryMapCanvas,
+  DeliveryRouteSummary,
   hasDeliveryPoint,
 } from "../../../orders/components/detail-order/DeliveryMapSection";
 import { useOrderDetailQuery } from "../../../orders/queries/order-detail.query";
@@ -271,6 +272,8 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
                 <span>{ui.address}</span>
               </p>
             ))}
+          {/* Distance + temps de trajet estimé — visibles sans ouvrir la carte. */}
+          <DeliveryRouteSummary order={ui} className="mt-0.5" />
         </div>
       </div>
 
