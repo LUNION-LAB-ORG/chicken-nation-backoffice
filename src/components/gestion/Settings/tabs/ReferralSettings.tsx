@@ -135,8 +135,9 @@ const ReferralSettings: React.FC = () => {
         <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#F17922]" />
         <p>
           Le filleul reçoit son cadeau à gratter <b>dès l'inscription</b> avec un code.
-          Le parrain reçoit le sien <b>quand le filleul utilise son cadeau sur une
-          commande</b>. Les deux sont notifiés par push + carte à gratter.
+          Le parrain, lui, est récompensé <b>uniquement en argent</b> : la prime
+          ambassadeur (et les commissions) créditées quand le filleul utilise son
+          cadeau sur une commande.
         </p>
       </div>
 
@@ -148,12 +149,9 @@ const ReferralSettings: React.FC = () => {
         value={config.filleul}
         onChange={(filleul) => setConfig({ ...config, filleul })}
       />
-      <ReferralGiftEditor
-        title="Cadeau du parrain"
-        subtitle="Offert quand le filleul utilise son cadeau sur une commande."
-        value={config.parrain}
-        onChange={(parrain) => setConfig({ ...config, parrain })}
-      />
+      {/* Décision 30/07 : plus de cadeau à gratter côté PARRAIN — sa récompense
+          est le volet monétaire ci-dessous (prime + commission). L'éditeur
+          « Cadeau du parrain » est retiré ; le backend n'accorde plus ce bon. */}
 
       {/* Volet monétaire (ambassadeur) */}
       <div className="rounded-2xl border border-slate-100 p-5">
