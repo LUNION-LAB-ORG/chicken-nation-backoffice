@@ -112,23 +112,54 @@ export function DrawerPaymentTab({ order }: Props) {
   ]);
 
   const totalAmount = lignes.reduce((sum, p) => sum + (p.amount || 0), 0);
+  // Avec la répartition automatique, la somme ne dépasse jamais le reste dû ;
+  // un écart ne subsiste que si l'unique ligne a été réduite à la main.
   const remainingAmount = Math.max(0, remainingDu - totalAmount);
-  const excessAmount = Math.max(0, totalAmount - remainingDu);
 
-  /** Tap sur une pastille : ajoute (pré-rempli au restant) ou retire le moyen. */
+  /**
+   * Tap sur une pastille : ajoute ou retire le moyen. La somme des lignes est
+   * MAINTENUE automatiquement au reste dû : au retrait d'un moyen, son montant
+   * retourne sur la première ligne restante — zéro re-saisie sur écran tactile.
+   */
   const toggleMoyen = (source: string, mode: PaiementMode) => {
     setLignes((prev) => {
       if (prev.some((l) => l.source === source)) {
-        return prev.filter((l) => l.source !== source);
+        const restantes = prev.filter((l) => l.source !== source).map((l) => ({ ...l }));
+        if (restantes.length > 0) {
+          const deficit = remainingDu - restantes.reduce((s, l) => s + (l.amount || 0), 0);
+          restantes[0].amount = Math.max(0, (restantes[0].amount || 0) + deficit);
+        }
+        return restantes;
       }
-      const dejaSaisi = prev.reduce((sum, l) => sum + (l.amount || 0), 0);
-      const montant = prev.length === 0 ? remainingDu : Math.max(0, remainingDu - dejaSaisi);
-      return [...prev, { mode, source, amount: montant }];
+      // Nouveau moyen : il démarre à 0 — la caissière tape SON montant et les
+      // autres lignes se réduisent automatiquement (cf. setMontant). Premier
+      // moyen sélectionné = tout le reste dû.
+      return [...prev, { mode, source, amount: prev.length === 0 ? remainingDu : 0 }];
     });
   };
 
-  const setMontant = (source: string, amount: number) => {
-    setLignes((prev) => prev.map((l) => (l.source === source ? { ...l, amount } : l)));
+  /**
+   * RÉPARTITION AUTOMATIQUE (écrans de caisse tactiles) : le montant tapé fait
+   * foi sur SA ligne, et les AUTRES lignes absorbent la différence — dans
+   * l'ordre de sélection, plancher 0 — pour que la somme vaille TOUJOURS le
+   * reste dû. Taper 800 sur Orange réduit Espèces à 1 200 tout seul : on ne
+   * manipule jamais deux champs.
+   */
+  const setMontant = (source: string, montantBrut: number) => {
+    setLignes((prev) => {
+      const montant = Math.max(0, Math.min(montantBrut, remainingDu));
+      const lignes = prev.map((l) =>
+        l.source === source ? { ...l, amount: montant } : { ...l },
+      );
+      let reste = remainingDu - lignes.reduce((s, l) => s + (l.amount || 0), 0);
+      for (const l of lignes) {
+        if (l.source === source || reste === 0) continue;
+        const nouveau = Math.max(0, (l.amount || 0) + reste);
+        reste -= nouveau - (l.amount || 0);
+        l.amount = nouveau;
+      }
+      return lignes;
+    });
   };
 
   const handleSave = () => {
@@ -286,15 +317,11 @@ export function DrawerPaymentTab({ order }: Props) {
             </div>
           )}
 
-          {/* Contrôle de somme — visible seulement en cas d'écart. */}
+          {/* Écart possible uniquement si l'unique ligne a été réduite à la
+              main (la répartition automatique maintient la somme sinon). */}
           {lignes.length > 0 && remainingAmount > 0 && (
             <p className="text-[11px] font-semibold text-amber-600 text-right">
               Reste {formatPrix(remainingAmount)} à répartir
-            </p>
-          )}
-          {excessAmount > 0 && (
-            <p className="text-[11px] font-semibold text-blue-600 text-right">
-              Excédent {formatPrix(excessAmount)}
             </p>
           )}
 
