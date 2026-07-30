@@ -37,6 +37,15 @@ export default function PaymentBadge({
           textColor: "text-orange-800",
           borderColor: "border-orange-200",
         };
+      case "PENDING":
+        // Encaissement livreur (Turbo) déclaré à la livraison — le backoffice
+        // doit le confirmer pour terminer la commande.
+        return {
+          text: "Encaissement à confirmer",
+          bgColor: "bg-amber-100",
+          textColor: "text-amber-800",
+          borderColor: "border-amber-200",
+        };
       default:
         return {
           text: "Non payé",

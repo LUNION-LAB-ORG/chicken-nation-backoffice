@@ -7,6 +7,7 @@ import { AlertTriangle, Ban, Phone, RotateCw, Send, Truck, Undo2, UserPlus } fro
 import { useDashboardStore } from "@/store/dashboardStore";
 
 import {
+  useCourseRelancerMutation,
   useCourseVersInterneMutation,
   useCourseVersTurboMutation,
 } from "../../queries/course-fleet.mutation";
@@ -28,9 +29,18 @@ export function CourseDetailSidebar({ course }: Props) {
   const { mutate: retryCourse, isPending: isRetrying } = useCourseRetryMutation();
   const { mutate: versTurbo, isPending: isVersTurbo } = useCourseVersTurboMutation();
   const { mutate: versInterne, isPending: isVersInterne } = useCourseVersInterneMutation();
+  const { mutate: relancer, isPending: isRelancing } = useCourseRelancerMutation();
 
   const terminal = ["COMPLETED", "CANCELLED", "EXPIRED"].includes(course.statut);
   const delivererName = formatDelivererName(course.deliverer);
+  // Relançable : course entièrement annulée, OU annulation Turbo PARTIELLE
+  // (une livraison annulée par Turbo dans une course encore vivante — sa
+  // commande reste active et doit pouvoir repartir dans une nouvelle course).
+  const hasRelancable =
+    course.statut === "CANCELLED" ||
+    course.deliveries.some(
+      (d) => d.statut === "CANCELLED" && d.turbo_cancelled_reason,
+    );
 
   return (
     <div className="space-y-4">
@@ -119,6 +129,20 @@ export function CourseDetailSidebar({ course }: Props) {
               {isRetrying ? "Relance en cours…" : "Relancer la recherche"}
             </button>
           )}
+          {/* Course annulée par Turbo — totalement OU partiellement (les
+              commandes restent vivantes) : relance = NOUVELLE course avec
+              référence neuve, une referenceCourse déjà envoyée à Turbo n'est
+              jamais réutilisée. */}
+          {hasRelancable && (
+            <button
+              onClick={() => relancer(course.id)}
+              disabled={isRelancing}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+            >
+              <RotateCw className={`w-4 h-4 ${isRelancing ? "animate-spin" : ""}`} />
+              {isRelancing ? "Relance en cours…" : "Relancer la livraison"}
+            </button>
+          )}
           {/* Bascule de flotte. Le staff tranche sans attendre le délai
               automatique, dans un sens comme dans l'autre. */}
           {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
@@ -165,8 +189,18 @@ export function CourseDetailSidebar({ course }: Props) {
             <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-3 py-2">
               <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <div className="text-xs">
-                <p className="font-semibold text-red-800">Raison d&apos;annulation</p>
+                <p className="font-semibold text-red-800">
+                  {course.cancelled_by === "turbo"
+                    ? "Annulée par Turbo"
+                    : "Raison d'annulation"}
+                </p>
                 <p className="text-red-700 mt-0.5">{course.cancelled_reason}</p>
+                {course.cancelled_by === "turbo" && (
+                  <p className="text-red-600/80 mt-1">
+                    Les commandes restent actives : relancez la livraison
+                    ci-dessus ou annulez-les manuellement.
+                  </p>
+                )}
               </div>
             </div>
           )}

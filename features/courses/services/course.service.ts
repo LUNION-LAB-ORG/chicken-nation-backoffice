@@ -87,3 +87,18 @@ export const reprendreCourseEnInterne = (id: string) =>
   safeCall(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/interne`, {}, true),
   );
+
+/**
+ * Relance une course ANNULÉE (typiquement par Turbo — les commandes restent
+ * vivantes) : le serveur crée une NOUVELLE course (référence neuve, jamais de
+ * réutilisation d'une referenceCourse déjà envoyée à Turbo) avec les commandes
+ * encore actives, et relance l'affectation selon la flotte.
+ */
+export const relancerCourseAnnulee = (id: string) =>
+  safeCall(() =>
+    api.patch<{ success: boolean; message: string; newCourseId?: string }>(
+      `${ENDPOINT}/${id}/relancer`,
+      {},
+      true,
+    ),
+  );

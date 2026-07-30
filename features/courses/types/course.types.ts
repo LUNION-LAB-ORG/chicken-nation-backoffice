@@ -103,6 +103,12 @@ export interface Delivery {
   turbo_courier_lat?: number | null;
   turbo_courier_lng?: number | null;
   turbo_courier_location_at?: string | null;
+  /**
+   * Raison transmise par Turbo quand ILS annulent cette livraison (annulation
+   * DÉCOUPLÉE : la commande reste vivante). Présente aussi sur une course
+   * encore active en cas d'annulation partielle du groupe.
+   */
+  turbo_cancelled_reason?: string | null;
 }
 
 export interface RestaurantForCourse {

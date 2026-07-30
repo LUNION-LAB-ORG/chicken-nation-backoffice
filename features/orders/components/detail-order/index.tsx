@@ -5,6 +5,7 @@ import { useOrderDetailQuery } from "../../queries/order-detail.query";
 import { OrderTable } from "../../types/ordersTable.types";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import ConfirmPaymentAction from "./ConfirmPaymentAction";
+import PendingCollectionAction from "./PendingCollectionAction";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryProgressSection from "./DeliveryProgressSection";
 import OrderInfoSection from "./OrderInfoSection";
@@ -42,6 +43,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ selectedItem }) => {
               <PriceSummarySection order={order} />
 
               <ConfirmPaymentAction order={order} />
+
+              <PendingCollectionAction order={order} className="mt-4" />
 
               <WorkflowActions order={order} />
             </div>

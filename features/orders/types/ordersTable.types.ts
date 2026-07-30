@@ -108,6 +108,14 @@ export interface OrderTable {
   restaurantLatitude?: number | null;
   restaurantLongitude?: number | null;
 
+  // ========== ANNULATION TURBO (découplée) ==========
+  /**
+   * Renseigné quand Turbo a annulé la course/livraison de cette commande.
+   * La commande reste vivante : le staff relance une livraison ou l'annule
+   * manuellement. Affiché en bannière (drawer + détail).
+   */
+  courseCancellation?: { courseReference: string | null; reason: string } | null;
+
   // ========== ITEMS ==========
   items: OrderTableItem[];
 

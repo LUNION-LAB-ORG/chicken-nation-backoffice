@@ -4,6 +4,7 @@ import SafeImage from "@/components/ui/SafeImage";
 import PaymentBadge from "../PaymentBadge";
 import { OrderTable } from "../../types/ordersTable.types";
 import { useOrderWorkFlow } from "../../hooks/useOrderWorkFlow";
+import TurboCancellationBanner from "./TurboCancellationBanner";
 
 interface OrderInfoSectionProps {
   order: OrderTable;
@@ -17,6 +18,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
   });
   return (
     <div className="mb-4 md:mb-6">
+      <TurboCancellationBanner order={order} className="mb-3" />
       <div className="flex justify-between items-center">
         <h2 className="xl:text-lg text-sm font-medium text-[#F17922]">
           Information sur la commande{" "}

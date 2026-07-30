@@ -40,6 +40,7 @@ import {
 } from "../../../orders/components/detail-order/DeliveryMapSection";
 import { useOrderDetailQuery } from "../../../orders/queries/order-detail.query";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
+import TurboCancellationBanner from "../../../orders/components/detail-order/TurboCancellationBanner";
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
 import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
 
@@ -84,6 +85,7 @@ export function DrawerDetailsTab({ order }: Props) {
 
   return (
     <div className="p-5 md:p-6 space-y-5">
+      <TurboCancellationBanner order={ui} />
       <HeroBlock ui={ui} source={source} />
       <ClientBlock ui={ui} />
       <NoteBlock ui={ui} />

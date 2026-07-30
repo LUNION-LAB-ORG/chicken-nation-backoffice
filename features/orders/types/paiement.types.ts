@@ -10,7 +10,9 @@ export enum PaiementMode {
 export enum PaiementStatus {
     REVERTED = 'REVERTED',
     SUCCESS = 'SUCCESS',
-    FAILED = 'FAILED'
+    FAILED = 'FAILED',
+    /** Encaissement livreur (Turbo) déclaré à la livraison — à confirmer par le backoffice. */
+    PENDING = 'PENDING'
 }
 
 

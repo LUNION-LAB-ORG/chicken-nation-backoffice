@@ -134,6 +134,31 @@ export async function updatePaiement(
     }
 }
 
+/**
+ * PATCH /paiements/:id/confirmer-encaissement — confirme un encaissement
+ * livreur (Turbo) EN ATTENTE : le paiement passe SUCCESS, la commande est
+ * marquée payée et se termine si elle est déjà livrée.
+ */
+export async function confirmerEncaissement(
+    id: string,
+): Promise<{ success: boolean; message: string }> {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}/confirmer-encaissement`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as { success: boolean; message: string };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 export const addPaiement = async (formData: PaiementFormData) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/add');

@@ -27,6 +27,7 @@ import { PaiementMode, PaiementStatus, type Paiement } from "../../../orders/typ
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import { useIsAdmin } from "../../../users/hook/useIsAdmin";
 import ConfirmPaymentAction from "../../../orders/components/detail-order/ConfirmPaymentAction";
+import PendingCollectionAction from "../../../orders/components/detail-order/PendingCollectionAction";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 
 interface Props {
@@ -64,6 +65,8 @@ const STATUS_META: Record<PaiementStatus, { label: string; color: string; Icon: 
   SUCCESS: { label: "Réussi", color: "#166534", Icon: CheckCircle },
   FAILED: { label: "Échec", color: "#991B1B", Icon: XCircle },
   REVERTED: { label: "Annulé", color: "#52525B", Icon: XCircle },
+  // Encaissement livreur déclaré à la livraison — à confirmer (bloc dédié).
+  PENDING: { label: "À confirmer", color: "#92400E", Icon: CheckCircle },
 };
 
 /**
@@ -207,6 +210,8 @@ export function DrawerPaymentTab({ order }: Props) {
           </div>
         </div>
         {paymentSummary}
+        {/* Encaissement livreur (Turbo) déclaré à la livraison — à confirmer. */}
+        <PendingCollectionAction order={uiOrder} />
         {/* Réconciliation admin d'une commande en ligne restée PENDING
             (webhook KKiaPay perdu) : l'admin saisit la référence de transaction
             KKiaPay → le serveur re-vérifie et confirme (paiement + points +
@@ -224,6 +229,9 @@ export function DrawerPaymentTab({ order }: Props) {
 
   return (
     <div className="p-4 space-y-4">
+      {/* Encaissement livreur (Turbo) déclaré à la livraison — à confirmer.
+          Prioritaire sur le formulaire manuel : un clic suffit. */}
+      <PendingCollectionAction order={uiOrder} />
       {/* Hero : à encaisser OU encaissé */}
       {isFullyPaid ? (
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4">

@@ -97,6 +97,23 @@ export interface Order {
     paiements?: Paiement[];
     customer?: Customer;
     restaurant?: Restaurant;
+    /**
+     * Livraison (Course CN). Annulation Turbo DÉCOUPLÉE : quand Turbo annule,
+     * la commande reste vivante — la raison est exposée ici pour la bannière
+     * staff (drawer + détail).
+     */
+    delivery?: {
+        id: string;
+        statut: string;
+        turbo_cancelled_reason?: string | null;
+        course?: {
+            id: string;
+            reference?: string | null;
+            statut: string;
+            cancelled_by?: string | null;
+            cancelled_reason?: string | null;
+        } | null;
+    } | null;
     promotion_id: string | null;
     promotion?: Promotion | null;
     promotion_usages?: PromotionUsage[];

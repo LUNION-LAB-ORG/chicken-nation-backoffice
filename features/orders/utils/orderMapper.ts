@@ -116,20 +116,47 @@ const validateImageUrl = (url?: string | null): string => {
 };
 
 export const getPaymentStatus = (order: Order): PaymentStatus => {
-  if (
-    order.status === OrderStatus.CANCELLED &&
-    order.paiements &&
-    order.paiements.length > 0
-  ) {
-    const hasRevertedPayment = order.paiements?.some(
-      (p) => p.status === "REVERTED"
+  if (order.status === OrderStatus.CANCELLED) {
+    // Seul l'argent réellement PERÇU compte pour le remboursement : un
+    // encaissement livreur resté PENDING (jamais confirmé) n'est pas un
+    // paiement — la commande annulée est simplement « non payée ».
+    const percus = (order.paiements ?? []).filter(
+      (p) => p.status === "SUCCESS" || p.status === "REVERTED"
     );
-    return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
+    if (percus.length > 0) {
+      const hasRevertedPayment = percus.some((p) => p.status === "REVERTED");
+      return hasRevertedPayment ? "REFUNDED" : "TO_REFUND";
+    }
   }
   if (order.paied == false) {
-    return "UNPAID";
+    // Encaissement livreur (Turbo) déclaré mais pas encore confirmé par le
+    // backoffice → « en attente », pas « impayée ».
+    const hasPendingCollection = order.paiements?.some(
+      (p) => p.status === "PENDING"
+    );
+    return hasPendingCollection ? "PENDING" : "UNPAID";
   }
   return "PAID";
+};
+
+/**
+ * Annulation Turbo DÉCOUPLÉE : raison à afficher au staff quand Turbo a annulé
+ * la course/livraison de cette commande (la commande, elle, reste vivante).
+ */
+const extractCourseCancellation = (
+  order: Order
+): { courseReference: string | null; reason: string } | null => {
+  const delivery = order.delivery;
+  if (!delivery) return null;
+
+  const reason =
+    delivery.turbo_cancelled_reason ??
+    (delivery.course?.cancelled_by === "turbo"
+      ? delivery.course?.cancelled_reason ?? "Raison non transmise par Turbo"
+      : null);
+  if (!reason) return null;
+
+  return { courseReference: delivery.course?.reference ?? null, reason };
 };
 
 const formatDate = (dateString: string | null): string => {
@@ -261,6 +288,9 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     // Pin « départ » de la carte de livraison du drawer.
     restaurantLatitude: order.restaurant?.latitude ?? null,
     restaurantLongitude: order.restaurant?.longitude ?? null,
+
+    // Annulation Turbo découplée (bannière staff drawer + détail).
+    courseCancellation: extractCourseCancellation(order),
 
     // Items
     items: mapOrderItems(order.order_items),
