@@ -14,7 +14,7 @@ import {
 import { Dish } from "../../../menus/types/dish.types";
 import { useCategoryListQuery } from "../../../menus/queries/category/category-list.query";
 import { useCategoryOneQuery } from "../../../menus/queries/category/category-one.query";
-import { Edit2, Trash } from "lucide-react";
+import { Edit2, Minus, Plus, Trash, X } from "lucide-react";
 import { useDishListQuery } from "../../../menus/queries/dish-list.query";
 import { OrderType } from "../../types/order.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
@@ -445,14 +445,15 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             }}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-start justify-between mb-4">
-                <h4 className="text-lg font-semibold text-[#595959]">
+              {/* En-tête */}
+              <div className="flex items-center justify-between border-b border-gray-100 px-5 sm:px-6 py-4 shrink-0">
+                <h4 className="text-[15px] font-bold text-gray-800">
                   {editingItemIndex !== null
                     ? "Modifier l'article"
                     : "Configuration du plat"}
@@ -463,70 +464,79 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     setSelectedDishForConfig(null);
                     setEditingItemIndex(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="rounded-lg p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
                 >
-                  ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Image et infos du plat */}
-              <div className="mb-4">
-                {selectedDishForConfig.image && (
-                  <Image
-                    src={formatImageUrl(selectedDishForConfig.image)}
-                    alt={selectedDishForConfig.name}
-                    width={400}
-                    height={200}
-                    className="w-full h-48 object-cover rounded-xl mb-3"
-                  />
-                )}
-                <h5 className="font-semibold text-[#595959] text-lg mb-1">
-                  {selectedDishForConfig.name}
-                </h5>
-                <p className="text-sm text-gray-600 mb-2">
-                  {selectedDishForConfig.description}
-                </p>
-                <p className="text-[#F17922] font-bold">
-                  {selectedDishForConfig.is_promotion &&
-                  selectedDishForConfig.promotion_price ? (
-                    <>
-                      <span className="line-through text-gray-400 text-sm mr-2">
-                        {selectedDishForConfig.price} XOF
-                      </span>
-                      {selectedDishForConfig.promotion_price} XOF
-                    </>
-                  ) : (
-                    `${selectedDishForConfig.price} XOF`
-                  )}
-                </p>
-              </div>
+              {/* Corps : image + infos à gauche, configuration à droite.
+                  Sur mobile les deux colonnes s'empilent et le corps scrolle
+                  d'un bloc ; sur desktop chaque colonne scrolle séparément. */}
+              <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
+                <div className="md:grid md:grid-cols-[340px_minmax(0,1fr)] md:h-full">
+                  {/* ── Colonne plat ── */}
+                  <div className="p-5 sm:p-6 md:h-full md:overflow-y-auto md:border-r md:border-gray-100">
+                    {selectedDishForConfig.image && (
+                      <Image
+                        src={formatImageUrl(selectedDishForConfig.image)}
+                        alt={selectedDishForConfig.name}
+                        width={600}
+                        height={400}
+                        className="mb-4 h-52 w-full rounded-xl object-cover"
+                      />
+                    )}
+                    <h5 className="mb-1 text-xl font-bold text-gray-800">
+                      {selectedDishForConfig.name}
+                    </h5>
+                    {selectedDishForConfig.description && (
+                      <p className="mb-3 text-sm leading-relaxed text-gray-500">
+                        {selectedDishForConfig.description}
+                      </p>
+                    )}
+                    <p className="text-lg font-bold text-[#F17922]">
+                      {selectedDishForConfig.is_promotion &&
+                      selectedDishForConfig.promotion_price ? (
+                        <>
+                          <span className="mr-2 text-sm font-semibold text-gray-400 line-through">
+                            {Number(selectedDishForConfig.price).toLocaleString("fr-FR")} XOF
+                          </span>
+                          {Number(selectedDishForConfig.promotion_price).toLocaleString("fr-FR")} XOF
+                        </>
+                      ) : (
+                        `${Number(selectedDishForConfig.price).toLocaleString("fr-FR")} XOF`
+                      )}
+                    </p>
+                  </div>
 
+                  {/* ── Colonne configuration ── */}
+                  <div className="p-5 sm:p-6 md:h-full md:overflow-y-auto">
               {/* Quantité */}
-              <div className="mb-4">
-                <label className="text-sm font-semibold text-[#595959] mb-2 block">
+              <div className="mb-5 flex items-center justify-between">
+                <label className="text-sm font-semibold text-[#595959]">
                   Quantité
                 </label>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 rounded-full border border-gray-200 p-1">
                   <motion.button
                     type="button"
                     onClick={() =>
                       setTempQuantity(Math.max(1, tempQuantity - 1))
                     }
-                    className="w-10 h-10 bg-[#F5F5F5] rounded-lg font-semibold text-[#595959] hover:bg-[#F17922] hover:text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
                     whileTap={{ scale: 0.9 }}
                   >
-                    −
+                    <Minus className="w-4 h-4" />
                   </motion.button>
-                  <span className="text-lg font-semibold text-[#595959] min-w-[40px] text-center">
+                  <span className="min-w-[44px] text-center text-lg font-bold text-gray-800">
                     {tempQuantity}
                   </span>
                   <motion.button
                     type="button"
                     onClick={() => setTempQuantity(tempQuantity + 1)}
-                    className="w-10 h-10 bg-[#F5F5F5] rounded-lg font-semibold text-[#595959] hover:bg-[#F17922] hover:text-white"
+                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
                     whileTap={{ scale: 0.9 }}
                   >
-                    +
+                    <Plus className="w-4 h-4" />
                   </motion.button>
                 </div>
               </div>
@@ -542,7 +552,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
                   {(["FOOD", "DRINK", "ACCESSORY"] as const).map((cat) =>
                     groupedSupplements[cat].length > 0 ? (
-                      <div key={cat} className="border-2 border-[#D9D9D9]/50 rounded-xl p-3">
+                      <div key={cat} className="rounded-xl border border-gray-200 p-3">
                         <h6 className="text-sm font-semibold text-[#595959] mb-2">
                           {categoryLabels[cat].label}
                         </h6>
@@ -647,31 +657,30 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                   </span>
                 </div>
               )}
-
-              {/* Prix total en temps réel */}
-              <div className="mb-4 p-3 bg-[#F5F5F5] rounded-xl">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-semibold text-[#595959]">
-                    Prix total
-                  </span>
-                  <span className="text-xl font-bold text-[#F17922]">
-                    {calculateTempTotal()} XOF
-                  </span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bouton Ajouter/Modifier */}
-              <motion.button
-                type="button"
-                onClick={addItemToCart}
-                className="w-full py-3 bg-[#F17922] text-white rounded-xl font-semibold hover:bg-[#F17922]/90"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {editingItemIndex !== null
-                  ? "✓ Modifier l'article"
-                  : "Ajouter au panier"}
-              </motion.button>
+              {/* Pied collant : total temps réel + action, toujours visibles
+                  même quand la liste de suppléments est longue. */}
+              <div className="flex shrink-0 items-center justify-between gap-4 border-t border-gray-100 px-5 sm:px-6 py-4">
+                <div>
+                  <p className="text-xs text-gray-400">Prix total</p>
+                  <p className="text-2xl font-bold text-[#F17922]">
+                    {calculateTempTotal().toLocaleString("fr-FR")} XOF
+                  </p>
+                </div>
+                <motion.button
+                  type="button"
+                  onClick={addItemToCart}
+                  className="h-11 min-w-[220px] rounded-xl bg-[#F17922] px-6 text-sm font-semibold text-white transition hover:bg-[#F17922]/90"
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {editingItemIndex !== null
+                    ? "Modifier l'article"
+                    : "Ajouter au panier"}
+                </motion.button>
+              </div>
             </motion.div>
           </motion.div>
         )}

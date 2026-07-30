@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo } from "react";
+import { toast } from "react-hot-toast";
 import {
   Banknote,
   Clock,
@@ -43,6 +44,23 @@ const LABEL_CLASS = "text-xs font-semibold text-gray-500 mb-1.5 block";
 function toCoord(value: unknown): number | null {
   const n = typeof value === "string" ? Number(value) : (value as number);
   return Number.isFinite(n) ? n : null;
+}
+
+/** Distance à vol d'oiseau (km) — suffisant pour comparer des restaurants. */
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }): number {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) *
+      Math.cos((b.lat * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+
+function formatKm(km: number): string {
+  return `${km.toFixed(1).replace(".", ",")} km`;
 }
 
 const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
@@ -121,6 +139,52 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
     return lat !== null && lng !== null ? { lat, lng } : null;
   }, [adresse?.latitude, adresse?.longitude]);
 
+  // ── Restaurant le plus proche de l'adresse choisie ────────────────────────
+  // Comportement historique du formulaire : l'adresse guide le choix du
+  // restaurant. Aucun restaurant sélectionné → on prend le plus proche
+  // automatiquement ; un restaurant déjà choisi mais nettement plus loin →
+  // bannière de suggestion (le staff garde la main).
+  const procheRestaurant = useMemo(() => {
+    if (!clientCoords || !restaurantsData?.data?.length) return null;
+    let best: { id: string; name: string; distanceKm: number } | null = null;
+    for (const r of restaurantsData.data) {
+      const lat = toCoord(r.latitude);
+      const lng = toCoord(r.longitude);
+      if (lat === null || lng === null) continue;
+      const d = haversineKm(clientCoords, { lat, lng });
+      if (!best || d < best.distanceKm) {
+        best = { id: r.id, name: r.name, distanceKm: d };
+      }
+    }
+    return best;
+  }, [clientCoords, restaurantsData?.data]);
+
+  const distanceSelection = useMemo(
+    () =>
+      restoCoords && clientCoords ? haversineKm(clientCoords, restoCoords) : null,
+    [restoCoords, clientCoords]
+  );
+
+  // Auto-sélection : adresse choisie SANS restaurant → le plus proche.
+  useEffect(() => {
+    if (!isDelivery || !procheRestaurant || formData.restaurant_id) return;
+    onFormDataChange({ restaurant_id: procheRestaurant.id });
+    toast.success(
+      `Restaurant le plus proche sélectionné : ${procheRestaurant.name} (${formatKm(procheRestaurant.distanceKm)})`
+    );
+  }, [isDelivery, procheRestaurant?.id, formData.restaurant_id]);
+
+  // Suggestion : un autre restaurant est nettement plus proche (> 500 m d'écart).
+  const suggestionProche =
+    isDelivery &&
+    procheRestaurant &&
+    formData.restaurant_id &&
+    procheRestaurant.id !== formData.restaurant_id &&
+    distanceSelection !== null &&
+    distanceSelection - procheRestaurant.distanceKm > 0.5
+      ? procheRestaurant
+      : null;
+
   // Distance / durée : MÊME clé de cache que la requête interne de la carte →
   // un seul appel Directions (proxy backend + Redis + React Query 10 min).
   const routeParams = useMemo(
@@ -163,6 +227,26 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           onChange={handleAddressChange}
           placeholder="Rechercher votre adresse de livraison"
         />
+      )}
+
+      {/* Un restaurant plus proche existe pour cette adresse : suggestion,
+          jamais d'écrasement silencieux du choix du staff. */}
+      {suggestionProche && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+          <MapPin className="w-4 h-4 shrink-0 text-amber-500" />
+          <p className="flex-1 text-xs text-amber-800">
+            <span className="font-semibold">{suggestionProche.name}</span> est plus
+            proche de cette adresse ({formatKm(suggestionProche.distanceKm)} contre{" "}
+            {formatKm(distanceSelection!)}).
+          </p>
+          <button
+            type="button"
+            onClick={() => onFormDataChange({ restaurant_id: suggestionProche.id })}
+            className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
+          >
+            Choisir
+          </button>
+        </div>
       )}
 
       {/* Carte : où se trouve l'adresse choisie par rapport au restaurant.
