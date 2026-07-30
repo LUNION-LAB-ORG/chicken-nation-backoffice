@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
+import { Bike, ShoppingBag, UtensilsCrossed, type LucideIcon } from "lucide-react";
 import { OrderType } from "../../types/order.types";
 
 interface OrderTypeSelectorProps {
@@ -9,43 +9,81 @@ interface OrderTypeSelectorProps {
   onChange: (type: OrderType) => void;
 }
 
+const ORDER_TYPES: {
+  value: OrderType;
+  label: string;
+  desc: string;
+  icon: LucideIcon;
+}[] = [
+  {
+    value: OrderType.DELIVERY,
+    label: "Livraison",
+    desc: "Livrée chez le client",
+    icon: Bike,
+  },
+  {
+    value: OrderType.PICKUP,
+    label: "Retrait",
+    desc: "Le client vient chercher",
+    icon: ShoppingBag,
+  },
+  {
+    value: OrderType.TABLE,
+    label: "Sur place",
+    desc: "Service à table",
+    icon: UtensilsCrossed,
+  },
+];
+
 const OrderTypeSelector: React.FC<OrderTypeSelectorProps> = ({
   selectedType,
   onChange,
 }) => {
-  const orderTypes = [
-    { value: OrderType.DELIVERY, label: "Livraison", icon: "🚚" },
-    { value: OrderType.PICKUP, label: "Retrait", icon: "🏪" },
-    { value: OrderType.TABLE, label: "Sur place", icon: "🍽️" },
-  ];
-
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-semibold text-[#595959]">
+    <div>
+      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
         Type de commande *
       </label>
-      <div className="grid grid-cols-3 gap-3">
-        {orderTypes.map((type) => (
-          <motion.button
-            key={type.value}
-            type="button"
-            onClick={() => onChange(type.value)}
-            className={`
-              px-4 py-3 rounded-xl border-2 transition-all
-              flex flex-col items-center justify-center gap-2
-              ${
-                selectedType === type.value
-                  ? "border-[#F17922] bg-[#F17922]/10 text-[#F17922]"
-                  : "border-[#D9D9D9] bg-white text-[#595959] hover:border-[#F17922]/50"
-              }
-            `}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <span className="text-2xl">{type.icon}</span>
-            <span className="text-sm font-semibold">{type.label}</span>
-          </motion.button>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        {ORDER_TYPES.map((type) => {
+          const selected = selectedType === type.value;
+          const Icon = type.icon;
+          return (
+            <button
+              key={type.value}
+              type="button"
+              onClick={() => onChange(type.value)}
+              aria-pressed={selected}
+              className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
+                selected
+                  ? "border-[#F17922] bg-orange-50"
+                  : "border-gray-200 bg-white hover:border-[#F17922]/40 hover:bg-gray-50"
+              }`}
+            >
+              <span
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition ${
+                  selected
+                    ? "bg-[#F17922] text-white"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <Icon className="w-4.5 h-4.5" />
+              </span>
+              <span className="min-w-0">
+                <span
+                  className={`block text-sm font-bold ${
+                    selected ? "text-[#F17922]" : "text-gray-700"
+                  }`}
+                >
+                  {type.label}
+                </span>
+                <span className="block truncate text-[11px] text-gray-400">
+                  {type.desc}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );

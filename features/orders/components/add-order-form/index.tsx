@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import SimpleSelect from "@/components/ui/SimpleSelect";
 import { motion } from "framer-motion";
+import { ClipboardList, Loader2, Store } from "lucide-react";
+
+import SimpleSelect from "@/components/ui/SimpleSelect";
 import { useOrderForm } from "../../hooks/useOrderForm";
+import { OrderType } from "../../types/order.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
@@ -13,6 +16,9 @@ import OrderTypeSelector from "./OrderTypeSelector";
 interface AddOrderFormProps {
   editOrder?: OrderTable;
 }
+
+/** Carte blanche standard des sections du formulaire. */
+const CARD_CLASS = "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6";
 
 const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const {
@@ -30,60 +36,71 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // des frais pour appliquer les offres de livraison à montant minimum (aperçu backoffice).
   const [subtotal, setSubtotal] = useState(0);
 
+  // Récap de la barre collante — toujours visible pendant la composition.
+  const itemsCount = formData.items.reduce((sum, item) => sum + item.quantity, 0);
+  const deliveryFee =
+    formData.type === OrderType.DELIVERY ? formData.delivery_fee || 0 : 0;
+  const grandTotal = subtotal + deliveryFee;
+
   return (
     <motion.form
       onSubmit={handleSubmit}
-      className="space-y-8 max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 20 }}
+      className="w-full space-y-5"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.35 }}
     >
-      {/* En-tête */}
-      <div className="bg-white rounded-2xl p-6 border-2 border-[#D9D9D9]/50">
-        <h2 className="text-2xl font-bold text-[#595959] mb-6">
-          {editOrder ? `Modifier la commande #${editOrder.reference}` : "Nouvelle Commande"}
-        </h2>
+      {/* ── 1. Type de commande + restaurant ─────────────────────────────── */}
+      <div className={CARD_CLASS}>
+        <div className="flex items-center gap-2.5 mb-5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
+            <ClipboardList className="w-4 h-4" />
+          </span>
+          <div>
+            <h2 className="text-[15px] font-bold text-gray-800">
+              {editOrder
+                ? `Modifier la commande #${editOrder.reference}`
+                : "Nouvelle commande"}
+            </h2>
+            <p className="text-xs text-gray-400">
+              Choisissez le type de commande et le restaurant qui prépare.
+            </p>
+          </div>
+        </div>
 
-        {/* Type de commande */}
-        <OrderTypeSelector
-          selectedType={formData.type}
-          onChange={(type) => setFormData({ ...formData, type })}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 lg:gap-6 items-end">
+          <OrderTypeSelector
+            selectedType={formData.type}
+            onChange={(type) => setFormData({ ...formData, type })}
+          />
 
-        {/* Restaurant */}
-        <div className="mt-6">
-          <motion.div
-            className="px-3 py-4 border-2 border-[#D9D9D9]/50 flex flex-col sm:flex-row items-center justify-between rounded-2xl"
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.99 }}
-          >
-            <span className="text-lg text-[#595959] font-semibold">
+          <div className="relative z-40">
+            <label className="text-xs font-semibold text-gray-500 mb-1.5 flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-gray-400" />
               Restaurant *
-            </span>
-
-            <div className="ml-2 min-w-0 w-64 relative z-50">
-              {isLoadingRestaurants ? (
-                <div className="bg-[#d8d8d8] text-[#595959] font-semibold px-4 py-2 rounded-xl text-sm">
-                  Chargement...
-                </div>
-              ) : (
-                <SimpleSelect
-                  options={restaurants}
-                  value={formData.restaurant_id}
-                  onChange={(value) =>
-                    setFormData({ ...formData, restaurant_id: value })
-                  }
-                  placeholder="Sélectionnez un restaurant"
-                />
-              )}
-            </div>
-          </motion.div>
+            </label>
+            {isLoadingRestaurants ? (
+              <div className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-[13px] text-gray-400">
+                Chargement...
+              </div>
+            ) : (
+              <SimpleSelect
+                options={restaurants}
+                value={formData.restaurant_id}
+                onChange={(value) =>
+                  setFormData({ ...formData, restaurant_id: value })
+                }
+                placeholder="Sélectionnez un restaurant"
+              />
+            )}
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Colonne gauche - Informations client */}
-        <div className="bg-white rounded-2xl p-6 border-2 border-[#D9D9D9]/50">
+      {/* ── 2. Client | Livraison ────────────────────────────────────────── */}
+      {/* La livraison reçoit la colonne la plus large : elle porte la carte. */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 items-start">
+        <div className={`${CARD_CLASS} xl:col-span-2`}>
           <CustomerInfoSection
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
@@ -92,8 +109,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           />
         </div>
 
-        {/* Colonne droite - Information de livraison */}
-        <div className="bg-white rounded-2xl p-6 border-2 border-[#D9D9D9]/50">
+        <div className={`${CARD_CLASS} xl:col-span-3`}>
           <DeliveryInfoSection
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
@@ -101,8 +117,9 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           />
         </div>
       </div>
-      {/* Articles */}
-      <div className="bg-white rounded-2xl p-6 border-2 border-[#D9D9D9]/50">
+
+      {/* ── 3. Articles ──────────────────────────────────────────────────── */}
+      <div className={CARD_CLASS}>
         <OrderItemsSection
           formData={formData}
           items={formData.items}
@@ -111,31 +128,62 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
         />
       </div>
 
-      {/* Boutons d'action */}
-      <div className="flex items-center justify-center gap-4 mt-6">
-        <motion.button
-          type="button"
-          onClick={handleCancel}
-          className="h-[40px] text-[#9796A1] px-10 rounded-[10px] bg-[#ECECEC] text-[14px] font-semibold items-center justify-center hover:bg-gray-100 min-w-[180px]"
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          disabled={isSubmitting}
-        >
-          Annuler
-        </motion.button>
-        <motion.button
-          type="submit"
-          className="h-[40px] px-10 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[14px] font-semibold min-w-[180px] disabled:opacity-50 disabled:cursor-not-allowed"
-          whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
-          whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-          disabled={isSubmitting || formData.items.length === 0}
-        >
-          {isSubmitting
-            ? "Enregistrement..."
-            : editOrder
-              ? "✓ Mettre à jour la commande"
-              : "✓ Enregistrer la commande"}
-        </motion.button>
+      {/* ── Barre récap collante : total + actions toujours visibles ─────── */}
+      <div className="sticky bottom-4 z-30">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/95 backdrop-blur px-4 sm:px-6 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+          <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-[13px]">
+            <span className="text-gray-500">
+              {itemsCount} article{itemsCount > 1 ? "s" : ""}
+            </span>
+            <span className="text-gray-500">
+              Sous-total{" "}
+              <span className="font-semibold text-gray-700">
+                {subtotal.toLocaleString()} XOF
+              </span>
+            </span>
+            {deliveryFee > 0 && (
+              <span className="text-gray-500">
+                Frais{" "}
+                <span className="font-semibold text-gray-700">
+                  {deliveryFee.toLocaleString()} XOF
+                </span>
+              </span>
+            )}
+            <span className="text-[15px] font-bold text-gray-900">
+              Total{" "}
+              <span className="text-[#F17922]">
+                {grandTotal.toLocaleString()} XOF
+              </span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              className="h-10 rounded-xl bg-gray-100 px-6 text-[13px] font-semibold text-gray-500 transition hover:bg-gray-200 disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting || formData.items.length === 0}
+              className="inline-flex h-10 min-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#F17922] px-6 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : editOrder ? (
+                "Mettre à jour la commande"
+              ) : (
+                "Enregistrer la commande"
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </motion.form>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Loader2, Search, UserRound } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { OrderFormData } from "../../types/order-form.types";
 import { Customer } from "../../../customer/types/customer.types";
@@ -218,53 +219,55 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-[#595959]">
-          Informations client
-        </h3>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
+            <UserRound className="w-4 h-4" />
+          </span>
+          <div>
+            <h3 className="text-[15px] font-bold text-gray-800">Client</h3>
+            <p className="text-xs text-gray-400">
+              Recherchez un client existant ou saisissez-en un nouveau.
+            </p>
+          </div>
+        </div>
         {(selectedCustomer || isKnownCustomer) && (
-          <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">
-            ✓ Client existant
+          <span className="shrink-0 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+            Client existant
           </span>
         )}
         {needsSave && !selectedCustomer && !isKnownCustomer && (
-          <span className="text-xs bg-orange-100 text-orange-700 px-3 py-1 rounded-full font-semibold">
-            ⚠ Nouveau client
+          <span className="shrink-0 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F17922]">
+            Nouveau client
           </span>
         )}
       </div>
 
       {/* Barre de recherche */}
       <div className="relative">
-        <motion.div
-          className="w-full px-3 py-2 border-2 border-[#F17922]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-[#F17922]">🔍</span>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                if (!e.target.value) {
-                  setShowResults(false);
-                }
-              }}
-              onFocus={() => {
-                if (debouncedSearch && customersData?.data) {
-                  setShowResults(true);
-                }
-              }}
-              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
-              placeholder="Rechercher un client (nom, téléphone, email)..."
-            />
-            {isLoading && (
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#F17922]" />
-            )}
-          </div>
-        </motion.div>
+        <div className="flex w-full items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 px-3.5 transition focus-within:border-[#F17922] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#F17922]/15">
+          <Search className="w-4 h-4 shrink-0 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              if (!e.target.value) {
+                setShowResults(false);
+              }
+            }}
+            onFocus={() => {
+              if (debouncedSearch && customersData?.data) {
+                setShowResults(true);
+              }
+            }}
+            className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+            placeholder="Rechercher un client (nom, téléphone, email)..."
+          />
+          {isLoading && (
+            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-[#F17922]" />
+          )}
+        </div>
 
         {/* Résultats de recherche */}
         <AnimatePresence>
@@ -356,52 +359,49 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
       </div>
 
       {/* Nom complet */}
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
+      <div>
+        <label htmlFor="fullname" className="text-xs font-semibold text-gray-500 mb-1.5 block">
+          Nom complet *
+        </label>
         <input
           type="text"
           id="fullname"
           value={formData.fullname || ""}
           onChange={(e) => onFormDataChange({ fullname: e.target.value })}
-          className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="Nom complet du client"
         />
-      </motion.div>
+      </div>
 
       {/* Téléphone */}
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
+      <div>
+        <label htmlFor="phone" className="text-xs font-semibold text-gray-500 mb-1.5 block">
+          Téléphone *
+        </label>
         <input
           type="tel"
           id="phone"
           value={formData.phone || ""}
           onChange={(e) => onFormDataChange({ phone: e.target.value })}
-          className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="+225 07 07 07 07 07"
         />
-      </motion.div>
+      </div>
 
       {/* Email */}
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
+      <div>
+        <label htmlFor="email" className="text-xs font-semibold text-gray-500 mb-1.5 block">
+          Email <span className="font-normal text-gray-400">(facultatif)</span>
+        </label>
         <input
           type="email"
           id="email"
           value={formData.email || ""}
           onChange={(e) => onFormDataChange({ email: e.target.value })}
-          className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="Email du client"
         />
-      </motion.div>
+      </div>
 
       {/* Bouton d'enregistrement pour nouveau client */}
       {needsSave && !selectedCustomer && (
@@ -409,19 +409,17 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           type="button"
           onClick={handleSaveNewCustomer}
           disabled={isPending}
-          className="w-full px-4 py-3 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#F17922]/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          initial={{ opacity: 0, y: -10 }}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
         >
           {isPending ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+              <Loader2 className="w-4 h-4 animate-spin" />
               Enregistrement...
             </>
           ) : (
-            <>✓ Enregistrer ce nouveau client</>
+            "Enregistrer ce nouveau client"
           )}
         </motion.button>
       )}

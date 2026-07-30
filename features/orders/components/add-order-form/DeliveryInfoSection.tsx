@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useEffect, useMemo } from "react";
+import {
+  Banknote,
+  Clock,
+  MapPin,
+  MapPinned,
+  Navigation,
+  StickyNote,
+} from "lucide-react";
+
 import { OrderFormData } from "../../types/order-form.types";
 import { DeliveryService, OrderType } from "../../types/order.types";
 import {
@@ -11,12 +19,30 @@ import {
 import AddressSearchInput from "./AddressSearchInput";
 import { getParsedAddress } from "../../utils/getParsedAddress";
 import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
+import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
+import { useDirectionsQuery } from "../../../maps/queries/directions.query";
+import {
+  RouteMapCanvas,
+  formatDistance,
+  formatDuration,
+} from "../../../maps/components/RouteMapCanvas";
 
 interface DeliveryInfoSectionProps {
   formData: OrderFormData;
   onFormDataChange: (data: Partial<OrderFormData>) => void;
   /** Sous-total du panier → applique les offres de livraison à montant minimum dans l'aperçu. */
   orderAmount?: number;
+}
+
+const INPUT_CLASS =
+  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition";
+
+const LABEL_CLASS = "text-xs font-semibold text-gray-500 mb-1.5 block";
+
+/** Convertit une coordonnée API (number | string | null) en nombre exploitable. */
+function toCoord(value: unknown): number | null {
+  const n = typeof value === "string" ? Number(value) : (value as number);
+  return Number.isFinite(n) ? n : null;
 }
 
 const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
@@ -71,35 +97,132 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
     }
   };
 
+  // ── Carte restaurant → adresse choisie ────────────────────────────────────
+  // Même liste de restaurants que le sélecteur du haut (clé React Query
+  // identique → aucune requête réseau supplémentaire).
+  const { data: restaurantsData } = useRestaurantListQuery();
+  const selectedRestaurant = useMemo(
+    () =>
+      restaurantsData?.data?.find((r) => r.id === formData.restaurant_id) ??
+      null,
+    [restaurantsData?.data, formData.restaurant_id]
+  );
+
+  const restoCoords = useMemo(() => {
+    const lat = toCoord(selectedRestaurant?.latitude);
+    const lng = toCoord(selectedRestaurant?.longitude);
+    return lat !== null && lng !== null ? { lat, lng } : null;
+  }, [selectedRestaurant?.latitude, selectedRestaurant?.longitude]);
+
+  const clientCoords = useMemo(() => {
+    if (!adresse) return null;
+    const lat = toCoord(adresse.latitude);
+    const lng = toCoord(adresse.longitude);
+    return lat !== null && lng !== null ? { lat, lng } : null;
+  }, [adresse?.latitude, adresse?.longitude]);
+
+  // Distance / durée : MÊME clé de cache que la requête interne de la carte →
+  // un seul appel Directions (proxy backend + Redis + React Query 10 min).
+  const routeParams = useMemo(
+    () =>
+      restoCoords && clientCoords
+        ? { origin: restoCoords, destination: clientCoords }
+        : null,
+    [restoCoords, clientCoords]
+  );
+  const { data: route } = useDirectionsQuery(isDelivery ? routeParams : null);
+
+  const sectionTitle = isDelivery
+    ? "Livraison"
+    : formData.type === OrderType.PICKUP
+      ? "Retrait"
+      : "Service";
+  const sectionSubtitle = isDelivery
+    ? "Adresse, trajet depuis le restaurant et frais."
+    : formData.type === OrderType.PICKUP
+      ? "Date et heure de retrait au restaurant."
+      : "Date et heure du service à table.";
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-[#595959]">
-        Informations de{" "}
-        {formData.type === OrderType.DELIVERY
-          ? "livraison"
-          : formData.type === OrderType.PICKUP
-            ? "retrait"
-            : "service"}
-      </h3>
+      {/* En-tête de section */}
+      <div className="flex items-center gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
+          <MapPinned className="w-4 h-4" />
+        </span>
+        <div>
+          <h3 className="text-[15px] font-bold text-gray-800">{sectionTitle}</h3>
+          <p className="text-xs text-gray-400">{sectionSubtitle}</p>
+        </div>
+      </div>
 
       {/* Adresse avec recherche Google Maps */}
       {isDelivery && (
         <AddressSearchInput
-          value={getParsedAddress(formData.address)}
+          value={adresse}
           onChange={handleAddressChange}
           placeholder="Rechercher votre adresse de livraison"
         />
       )}
 
+      {/* Carte : où se trouve l'adresse choisie par rapport au restaurant.
+          Affichée dès qu'au moins un point existe ; placeholder sinon. */}
+      {isDelivery &&
+        (restoCoords || clientCoords ? (
+          <div className="space-y-2">
+            <RouteMapCanvas
+              resto={restoCoords}
+              client={clientCoords}
+              restoLabel={selectedRestaurant?.name ?? "Restaurant"}
+              clientLabel={adresse?.title || adresse?.address || "Client"}
+              height={230}
+            />
+
+            {/* Distance, durée (trafic compris) et zone tarifaire */}
+            {route && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F17922]">
+                  <Navigation className="w-3.5 h-3.5" />
+                  {formatDistance(route.distanceMeters)}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F17922]">
+                  <Clock className="w-3.5 h-3.5" />
+                  {formatDuration(route.durationSeconds)} de trajet
+                </span>
+                {deliveryFee?.zone && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                    <MapPin className="w-3.5 h-3.5" />
+                    Zone {deliveryFee.zone}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {!restoCoords && (
+              <p className="text-[11px] text-gray-400">
+                Sélectionnez un restaurant pour tracer le trajet jusqu'au client.
+              </p>
+            )}
+            {!clientCoords && (
+              <p className="text-[11px] text-gray-400">
+                Recherchez l'adresse du client pour la placer sur la carte.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="flex h-[120px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
+            <MapPin className="w-5 h-5 text-gray-300" />
+            <p className="text-xs text-gray-400 px-6">
+              La carte s'affichera dès qu'un restaurant et une adresse seront
+              choisis.
+            </p>
+          </div>
+        ))}
+
       {/* Service de livraison — Override admin du choix auto */}
       {isDelivery && (
-        <motion.div
-          className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl"
-          whileHover={{ scale: 1.01 }}
-        >
-          <label className="text-xs font-semibold text-[#595959] mb-2 block">
-            Service de livraison
-          </label>
+        <div>
+          <label className={LABEL_CLASS}>Service de livraison</label>
           <div className="flex gap-2">
             {(
               [
@@ -114,89 +237,29 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
                   key={opt.label}
                   type="button"
                   onClick={() => onFormDataChange({ delivery_service: opt.value })}
-                  className={`flex-1 py-2 px-3 rounded-xl text-xs font-semibold border-2 transition ${
+                  className={`flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
                     selected
                       ? "border-[#F17922] bg-orange-50 text-[#F17922]"
-                      : "border-transparent bg-gray-50 text-[#595959] hover:bg-gray-100"
+                      : "border-gray-200 bg-white text-[#595959] hover:border-[#F17922]/40 hover:bg-gray-50"
                   }`}
                 >
                   <div>{opt.label}</div>
-                  <div className="text-[10px] font-normal opacity-70 mt-0.5">{opt.desc}</div>
+                  <div className="mt-0.5 text-[10px] font-normal opacity-70">{opt.desc}</div>
                 </button>
               );
             })}
           </div>
-        </motion.div>
+        </div>
       )}
-
-      <div className="grid grid-cols-2 gap-4">
-        {/* Date */}
-        <motion.div
-          className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-        >
-          <label className="text-xs font-semibold text-[#595959] mb-1 block">
-            Date souhaitée
-          </label>
-          <input
-            type="date"
-            id="date"
-            value={formData.date || ""}
-            onChange={(e) => onFormDataChange({ date: e.target.value })}
-            className="w-full py-1 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
-          />
-        </motion.div>
-
-        {/* Heure */}
-        <motion.div
-          className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-        >
-          <label className="text-xs font-semibold text-[#595959] mb-1 block">
-            Heure souhaitée
-          </label>
-          <input
-            type="time"
-            id="time"
-            value={formData.time || ""}
-            onChange={(e) => onFormDataChange({ time: e.target.value })}
-            className="w-full py-1 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
-          />
-        </motion.div>
-      </div>
-
-      {/* Note */}
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
-        <label className="text-xs font-semibold text-[#595959] mb-1 block">
-          Note ou commentaire
-        </label>
-        <textarea
-          id="note"
-          value={formData.note || ""}
-          onChange={(e) => onFormDataChange({ note: e.target.value })}
-          className="w-full text-[#595959] font-semibold text-[13px] py-1 focus:outline-none focus:border-transparent"
-          rows={3}
-          placeholder="Instructions particulières, allergies, etc."
-        />
-      </motion.div>
 
       {/* Frais de livraison — uniquement pour DELIVERY */}
       {isDelivery && (
-        <motion.div
-          className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.99 }}
-        >
-          <label className="text-xs font-semibold text-[#595959] mb-1 block">
+        <div>
+          <label htmlFor="delivery_fee" className={LABEL_CLASS}>
             Frais de livraison (XOF)
           </label>
-          <div className="flex items-center gap-2">
+          <div className="relative">
+            <Banknote className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="number"
               id="delivery_fee"
@@ -209,21 +272,66 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
                   ? `Auto: ${deliveryFee.montant.toLocaleString()} XOF`
                   : "0"
               }
-              className="w-full py-1 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+              className={`${INPUT_CLASS} pl-10`}
             />
-            {deliveryFee?.montant && !formData.delivery_fee && (
-              <span className="text-xs text-green-600 font-semibold whitespace-nowrap">
-                Auto: {deliveryFee.montant.toLocaleString()}
+            {deliveryFee?.montant !== undefined && (
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-600 whitespace-nowrap">
+                Auto : {deliveryFee.montant.toLocaleString()} XOF
               </span>
             )}
           </div>
-          {deliveryFee?.zone && (
-            <p className="text-xs text-gray-400 mt-1">
-              Zone: {deliveryFee.zone} — {deliveryFee.distance?.toFixed(1)} km
+          {deliveryFee?.distance !== undefined && (
+            <p className="mt-1 text-[11px] text-gray-400">
+              Calculé automatiquement selon la zone ({deliveryFee.distance?.toFixed(1)} km).
+              Modifiez le champ pour forcer un autre montant.
             </p>
           )}
-        </motion.div>
+        </div>
       )}
+
+      {/* Date + Heure */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label htmlFor="date" className={LABEL_CLASS}>
+            Date souhaitée
+          </label>
+          <input
+            type="date"
+            id="date"
+            value={formData.date || ""}
+            onChange={(e) => onFormDataChange({ date: e.target.value })}
+            className={INPUT_CLASS}
+          />
+        </div>
+        <div>
+          <label htmlFor="time" className={LABEL_CLASS}>
+            Heure souhaitée
+          </label>
+          <input
+            type="time"
+            id="time"
+            value={formData.time || ""}
+            onChange={(e) => onFormDataChange({ time: e.target.value })}
+            className={INPUT_CLASS}
+          />
+        </div>
+      </div>
+
+      {/* Note */}
+      <div>
+        <label htmlFor="note" className={`${LABEL_CLASS} flex items-center gap-1.5`}>
+          <StickyNote className="w-3.5 h-3.5 text-gray-400" />
+          Note ou commentaire
+        </label>
+        <textarea
+          id="note"
+          value={formData.note || ""}
+          onChange={(e) => onFormDataChange({ note: e.target.value })}
+          className={`${INPUT_CLASS} resize-none`}
+          rows={3}
+          placeholder="Instructions particulières, allergies, etc."
+        />
+      </div>
     </div>
   );
 };

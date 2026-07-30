@@ -219,68 +219,59 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
 
   if (!isScriptLoaded) {
     return (
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl"
-        whileHover={{ scale: 1.01 }}
-      >
-        <label className="text-xs font-semibold text-[#595959] mb-1 block">
-          Entrez l'adresse complète de livraison
+      <div>
+        <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+          Adresse de livraison *
         </label>
-        <div className="py-1 text-[13px] text-gray-400">
+        <div className="rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-[13px] text-gray-400">
           Chargement de la recherche d'adresse...
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
     <div className="relative">
-      <motion.div
-        className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
-        whileHover={{ scale: 1.01 }}
-        whileTap={{ scale: 0.99 }}
-      >
-        <label className="text-xs font-semibold text-[#595959] mb-1 block">
-          Entrez l'adresse complète de livraison
-        </label>
+      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
+        Adresse de livraison *
+      </label>
 
-        <div className="flex items-center gap-2">
-          <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+      <div className="flex w-full items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 px-3.5 transition focus-within:border-[#F17922] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#F17922]/15">
+        <Search className="w-4 h-4 flex-shrink-0 text-gray-400" />
 
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            onFocus={() => setShowDropdown(true)}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
-            className="flex-1 py-1 text-[13px] focus:outline-none text-[#595959] font-semibold"
-            placeholder={placeholder}
-          />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+          className="flex-1 bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+          placeholder={placeholder}
+        />
 
-          {isLoading && (
-            <div className="w-4 h-4 border-2 border-[#F17922] border-t-transparent rounded-full animate-spin" />
-          )}
+        {isLoading && (
+          <div className="w-4 h-4 border-2 border-[#F17922] border-t-transparent rounded-full animate-spin" />
+        )}
 
-          {searchQuery && !isLoading && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X className="w-4 h-4 text-gray-400" />
-            </button>
-          )}
-
+        {searchQuery && !isLoading && (
           <button
             type="button"
-            onClick={getCurrentLocation}
+            onClick={clearSearch}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-            title="Utiliser ma position"
           >
-            <Navigation className="w-4 h-4 text-[#F17922]" />
+            <X className="w-4 h-4 text-gray-400" />
           </button>
-        </div>
-      </motion.div>
+        )}
+
+        <button
+          type="button"
+          onClick={getCurrentLocation}
+          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          title="Utiliser ma position"
+        >
+          <Navigation className="w-4 h-4 text-[#F17922]" />
+        </button>
+      </div>
 
       {/* Dropdown suggestions */}
       <AnimatePresence>
@@ -327,9 +318,6 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
             <div className="flex-1 text-xs">
               <p className="font-semibold text-[#595959]">{value.title}</p>
               <p className="text-gray-600 mt-1">{value.address}</p>
-              <p className="text-gray-500 mt-1">
-                📍 {value.latitude.toFixed(6)}, {value.longitude.toFixed(6)}
-              </p>
             </div>
           </div>
         </motion.div>
