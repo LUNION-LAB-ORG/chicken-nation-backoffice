@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { KeyRound } from 'lucide-react';
 
 import type { Delivery } from '../../types/course.types';
 import { DELIVERY_FAILURE_LABELS } from '../../utils/course-labels';
@@ -44,6 +45,19 @@ export function DeliveriesList({ deliveries }: Props) {
               <div>
                 Frais : <strong>{delivery.order.delivery_fee.toLocaleString('fr-FR')} F</strong>
               </div>
+
+              {/* Code de récupération : le CLIENT le donne au livreur pour
+                  confirmer la remise. Affiché au staff (support : client qui
+                  ne retrouve plus son code, litige) — jamais au livreur. */}
+              {delivery.delivery_pin && (
+                <div className="mt-1.5 inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                  <KeyRound className="h-3.5 w-3.5 text-[#F17922]" />
+                  <span className="text-[11px] text-gray-500">Code client</span>
+                  <span className="font-mono text-sm font-bold tracking-[0.25em] text-gray-800">
+                    {delivery.delivery_pin}
+                  </span>
+                </div>
+              )}
               {terminalDate && (
                 <div>
                   Terminée le {format(new Date(terminalDate), 'dd MMM yyyy HH:mm', { locale: fr })}

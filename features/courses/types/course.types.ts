@@ -93,6 +93,12 @@ export interface Delivery {
   failure_reason?: DeliveryFailureReason | null;
   failure_note?: string | null;
   order: OrderForDelivery;
+  /**
+   * Code de récupération à 4 chiffres que LE CLIENT donne au livreur pour
+   * confirmer la remise. Présent UNIQUEMENT sur les endpoints ADMIN
+   * (COURSE_ADMIN_INCLUDE) — jamais dans les payloads livreur.
+   */
+  delivery_pin?: string | null;
   // === Sous-traitance Turbo (flotte externe) ===
   // Renseignés par les webhooks Turbo quand la livraison est sous-traitée.
   /** Id de la course côté Turbo (traçabilité / support / litiges). */
