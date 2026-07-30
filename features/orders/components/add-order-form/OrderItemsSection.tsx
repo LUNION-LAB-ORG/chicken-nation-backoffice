@@ -438,7 +438,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4"
             onClick={() => {
               setSelectedDishForConfig(null);
               setEditingItemIndex(null);
@@ -448,7 +448,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-4xl max-h-[92vh] overflow-hidden flex flex-col"
+              className="bg-white rounded-2xl w-full max-w-5xl max-h-[96vh] md:max-h-[92vh] overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* En-tête */}
@@ -474,9 +474,12 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                   Sur mobile les deux colonnes s'empilent et le corps scrolle
                   d'un bloc ; sur desktop chaque colonne scrolle séparément. */}
               <div className="flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
-                <div className="md:grid md:grid-cols-[340px_minmax(0,1fr)] md:h-full">
-                  {/* ── Colonne plat ── */}
-                  <div className="p-5 sm:p-6 md:h-full md:overflow-y-auto md:border-r md:border-gray-100">
+                {/* `grid-rows-[minmax(0,1fr)]` : sans elle, la rangée implicite
+                    s'étire à la hauteur du CONTENU et les colonnes ne scrollent
+                    jamais (le piège classique grid + overflow). */}
+                <div className="md:grid md:grid-cols-[360px_minmax(0,1fr)] md:grid-rows-[minmax(0,1fr)] md:h-full">
+                  {/* ── Colonne plat : image, infos, quantité, épicé ── */}
+                  <div className="p-4 sm:p-6 md:min-h-0 md:h-full md:overflow-y-auto md:border-r md:border-gray-100">
                     {selectedDishForConfig.image && (
                       <Image
                         src={formatImageUrl(selectedDishForConfig.image)}
@@ -507,40 +510,63 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                         `${Number(selectedDishForConfig.price).toLocaleString("fr-FR")} XOF`
                       )}
                     </p>
+
+                    {/* Quantité — sous le prix, avec l'identité du plat */}
+                    <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
+                      <label className="text-sm font-semibold text-[#595959]">
+                        Quantité
+                      </label>
+                      <div className="flex items-center gap-1 rounded-full border border-gray-200 p-1">
+                        <motion.button
+                          type="button"
+                          onClick={() =>
+                            setTempQuantity(Math.max(1, tempQuantity - 1))
+                          }
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </motion.button>
+                        <span className="min-w-[44px] text-center text-lg font-bold text-gray-800">
+                          {tempQuantity}
+                        </span>
+                        <motion.button
+                          type="button"
+                          onClick={() => setTempQuantity(tempQuantity + 1)}
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </motion.button>
+                      </div>
+                    </div>
+
+                    {/* Épicé — sous la quantité */}
+                    {!selectedDishForConfig.is_alway_epice ? (
+                      <div className="mt-3 flex items-center">
+                        <Checkbox
+                          id="temp-epice"
+                          checked={tempEpice}
+                          onChange={setTempEpice}
+                        />
+                        <label
+                          htmlFor="temp-epice"
+                          className="ml-2 text-sm font-semibold text-gray-700 cursor-pointer"
+                        >
+                          🌶️ Épicé
+                        </label>
+                      </div>
+                    ) : (
+                      <div className="mt-3 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl">
+                        <span className="text-sm text-orange-600">
+                          🌶️ Ce plat est toujours épicé
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* ── Colonne configuration ── */}
-                  <div className="p-5 sm:p-6 md:h-full md:overflow-y-auto">
-              {/* Quantité */}
-              <div className="mb-5 flex items-center justify-between">
-                <label className="text-sm font-semibold text-[#595959]">
-                  Quantité
-                </label>
-                <div className="flex items-center gap-1 rounded-full border border-gray-200 p-1">
-                  <motion.button
-                    type="button"
-                    onClick={() =>
-                      setTempQuantity(Math.max(1, tempQuantity - 1))
-                    }
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Minus className="w-4 h-4" />
-                  </motion.button>
-                  <span className="min-w-[44px] text-center text-lg font-bold text-gray-800">
-                    {tempQuantity}
-                  </span>
-                  <motion.button
-                    type="button"
-                    onClick={() => setTempQuantity(tempQuantity + 1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
-                    whileTap={{ scale: 0.9 }}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </motion.button>
-                </div>
-              </div>
-
+                  {/* ── Colonne suppléments (scroll indépendant) ── */}
+                  <div className="p-4 sm:p-6 md:min-h-0 md:h-full md:overflow-y-auto">
               {/* Suppléments groupés par catégorie — avec sélecteur de quantité ± */}
               {(groupedSupplements.FOOD.length > 0 ||
                 groupedSupplements.DRINK.length > 0 ||
@@ -556,7 +582,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                         <h6 className="text-sm font-semibold text-[#595959] mb-2">
                           {categoryLabels[cat].label}
                         </h6>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                           {groupedSupplements[cat].map((supp) => {
                             const qty = getSupplementQuantity(supp.value);
                             const isExcluded = !!supp.excluded;
@@ -631,32 +657,6 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 </div>
               )}
 
-              {/* Épicé */}
-              {!selectedDishForConfig.is_alway_epice && (
-                <div className="mb-4">
-                  <div className="flex items-center">
-                    <Checkbox
-                      id="temp-epice"
-                      checked={tempEpice}
-                      onChange={setTempEpice}
-                    />
-                    <label
-                      htmlFor="temp-epice"
-                      className="ml-2 text-sm font-semibold text-gray-700 cursor-pointer"
-                    >
-                      🌶️ Épicé
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {selectedDishForConfig.is_alway_epice && (
-                <div className="mb-4 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl">
-                  <span className="text-sm text-orange-600">
-                    🌶️ Ce plat est toujours épicé
-                  </span>
-                </div>
-              )}
                   </div>
                 </div>
               </div>
