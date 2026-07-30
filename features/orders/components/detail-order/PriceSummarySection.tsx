@@ -42,7 +42,13 @@ const PriceSummarySection: React.FC<PriceSummarySectionProps> = ({ order }) => {
       <div className="flex justify-between items-center text-sm text-green-400 mb-3">
         <span>Frais de livraison</span>
         <span className="font-bold">
-          {order.deliveryFee ? `${order.deliveryFee.toLocaleString()}F` : "--"}
+          {/* À livrer sans frais = livraison OFFERTE : on le dit clairement
+              au lieu d'un « -- » ambigu. Autres types : pas de livraison. */}
+          {order.deliveryFee
+            ? `${order.deliveryFee.toLocaleString()}F`
+            : order.orderType === "À livrer"
+              ? "Gratuite"
+              : "--"}
         </span>
       </div>
 

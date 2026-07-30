@@ -405,9 +405,14 @@ function PriceBlock({ ui }: { ui: OrderTable }) {
       <dl className="space-y-2.5">
         <Line label="Sous-total" value={formatPrice(ui.netAmount)} />
         {(ui.tax || 0) > 0 && <Line label="Taxe" value={formatPrice(ui.tax)} />}
-        {(ui.deliveryFee || 0) > 0 && (
-          <Line label="Frais de livraison" value={formatPrice(ui.deliveryFee)} />
-        )}
+        {/* À livrer : la ligne apparaît TOUJOURS — « Gratuite » quand les
+            frais sont offerts (offre de livraison), sinon le montant. */}
+        {ui.orderType === "À livrer" &&
+          ((ui.deliveryFee || 0) > 0 ? (
+            <Line label="Frais de livraison" value={formatPrice(ui.deliveryFee)} />
+          ) : (
+            <Line label="Frais de livraison" value="Gratuite" tone="green" />
+          ))}
         {(ui.discount || 0) > 0 && (
           <Line
             label={sources.length > 0 ? `Réduction · ${sources.join(", ")}` : "Réduction"}
