@@ -6,6 +6,8 @@ export interface Comment {
   id: string;
   message: string;
   rating: number;
+  /** Avis approuvé pour la section Témoignages du site (curation). */
+  site_visible?: boolean;
   order_id?: string;
   customer_id?: string;
   dish_id?: string;
@@ -106,6 +108,41 @@ export interface PaginatedCommentsResponse {
  */
 export class CommentService {
   
+  /**
+   * CURATION SITE : rend un avis visible dans la section Témoignages du site
+   * vitrine — ou l'en retire. Seuls les avis approuvés sont affichés (plus
+   * aucune sélection automatique côté serveur).
+   */
+  static async setSiteVisible(id: string, visible: boolean): Promise<{ id: string; site_visible: boolean; message: string }> {
+    const getCookieValue = (name: string): string | null => {
+      if (typeof document === 'undefined') return null;
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [cookieName, value] = cookie.trim().split('=');
+        if (cookieName === name) return decodeURIComponent(value);
+      }
+      return null;
+    };
+    const token = getCookieValue('chicken-nation-token');
+    if (!token) throw new Error("Token d'authentification manquant");
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api-private.chicken-nation.com';
+    const response = await fetch(`${baseUrl}/api/v1/comments/${id}/site-visible`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ visible }),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json?.message || 'Impossible de mettre à jour la visibilité.');
+    }
+    return json;
+  }
+
   /**
    * Récupère tous les commentaires avec pagination et filtres côté serveur
    */

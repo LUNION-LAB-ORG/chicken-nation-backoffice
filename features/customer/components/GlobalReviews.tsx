@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, Download, ChevronDown, Check } from 'lucide-react';
+import { Star, Download, ChevronDown, Check, Globe, Loader2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Checkbox from '@/components/ui/Checkbox';
 import { Pagination } from '@/components/ui/pagination';
 import { exportComments, convertCommentsForExport } from '@/services/exportService';
@@ -7,6 +8,7 @@ import Image from 'next/image';
 import { formatImageUrl } from '@/utils/imageHelpers';
 import toast from 'react-hot-toast';
 import { useCommentsQuery } from '@/hooks/useCommentsQuery';
+import { CommentService } from '@/services/commentService';
 import { useAuthStore } from '../../users/hook/authStore';
 import { getAllRestaurants, Restaurant } from '@/services/restaurantService';
 
@@ -508,6 +510,14 @@ export function GlobalReviews() {
                       minute: '2-digit'
                     }) : 'Date inconnue'}</span>
                   </div>
+
+                  {/* CURATION SITE : c'est ICI qu'on choisit les témoignages
+                      affichés sur le site vitrine — plus aucune sélection
+                      automatique côté serveur. */}
+                  <SiteVisibilityToggle
+                    commentId={comment.id}
+                    visible={comment.site_visible === true}
+                  />
                 </div>
               </div>
             </div>
@@ -546,5 +556,52 @@ export function GlobalReviews() {
 
 
     </div>
+  );
+}
+/**
+ * Bascule « Visible sur le site » d'un avis — la curation des Témoignages.
+ * Vert quand l'avis est publié sur le site vitrine, neutre sinon. La mise à
+ * jour invalide la liste pour refléter l'état serveur.
+ */
+function SiteVisibilityToggle({
+  commentId,
+  visible,
+}: {
+  commentId: string;
+  visible: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: (next: boolean) => CommentService.setSiteVisible(commentId, next),
+    onSuccess: (r) => {
+      toast.success(r.message);
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={() => mutate(!visible)}
+      title={
+        visible
+          ? 'Cet avis est affiché dans les Témoignages du site — cliquer pour le retirer'
+          : 'Cliquer pour afficher cet avis dans les Témoignages du site'
+      }
+      className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+        visible
+          ? 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+          : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+      } disabled:opacity-50`}
+    >
+      {isPending ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Globe className="h-3.5 w-3.5" />
+      )}
+      {visible ? 'Visible sur le site' : 'Afficher sur le site'}
+    </button>
   );
 }
