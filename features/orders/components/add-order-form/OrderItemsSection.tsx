@@ -448,7 +448,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl w-full max-w-5xl max-h-[96vh] md:max-h-[92vh] overflow-hidden flex flex-col"
+              // ⚠️ `md:h-[92vh]` (hauteur FIXE) et non max-h : avec un simple
+              // max-h, la hauteur du modal est « indéfinie » au sens flexbox →
+              // le h-full de la grille interne retombe sur auto, les colonnes
+              // poussent à la hauteur du contenu et l'overflow-hidden du corps
+              // ROGNE les suppléments sans zone défilante. En hauteur fixe,
+              // toute la chaîne (corps → grille → colonnes) est définie et
+              // chaque colonne scrolle indépendamment.
+              className="bg-white rounded-2xl w-full max-w-5xl max-h-[96vh] md:h-[92vh] md:max-h-none overflow-hidden flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* En-tête */}
