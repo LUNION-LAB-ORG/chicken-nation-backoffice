@@ -144,6 +144,40 @@ export class CommentService {
   }
 
   /**
+   * CORRECTION STAFF : modifie le texte d'un avis (faute de frappe). La note
+   * n'est jamais modifiée — elle appartient au client.
+   */
+  static async updateMessage(id: string, message: string): Promise<{ id: string; message: string }> {
+    const getCookieValue = (name: string): string | null => {
+      if (typeof document === 'undefined') return null;
+      const cookies = document.cookie.split(';');
+      for (const cookie of cookies) {
+        const [cookieName, value] = cookie.trim().split('=');
+        if (cookieName === name) return decodeURIComponent(value);
+      }
+      return null;
+    };
+    const token = getCookieValue('chicken-nation-token');
+    if (!token) throw new Error("Token d'authentification manquant");
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api-private.chicken-nation.com';
+    const response = await fetch(`${baseUrl}/api/v1/comments/${id}/message`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    });
+    const json = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(json?.message || 'Impossible de corriger le message.');
+    }
+    return json;
+  }
+
+  /**
    * Récupère tous les commentaires avec pagination et filtres côté serveur
    */
   static async getAllComments(filters: CommentFilters = {}): Promise<PaginatedCommentsResponse> {

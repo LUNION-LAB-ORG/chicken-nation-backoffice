@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Star, Download, ChevronDown, Check, Globe, Loader2 } from 'lucide-react';
+import { Star, Download, ChevronDown, Check, Globe, Loader2, Pencil } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Checkbox from '@/components/ui/Checkbox';
 import { Pagination } from '@/components/ui/pagination';
@@ -496,8 +496,8 @@ export function GlobalReviews() {
                     </div>
                   </div>
 
-                  {/* Message */}
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-3">{comment.message}</p>
+                  {/* Message — éditable par le staff (correction de fautes) */}
+                  <EditableMessage commentId={comment.id} message={comment.message} />
 
                   {/* Informations supplémentaires */}
                   <div className="flex flex-col space-y-1 text-xs text-gray-500">
@@ -603,5 +603,85 @@ function SiteVisibilityToggle({
       )}
       {visible ? 'Visible sur le site' : 'Afficher sur le site'}
     </button>
+  );
+}
+
+/**
+ * Message d'avis ÉDITABLE (staff) — corriger une faute de frappe avant de
+ * mettre l'avis en avant sur le site. Crayon → textarea en place → Enregistrer.
+ * La NOTE n'est jamais modifiable : elle appartient au client.
+ */
+function EditableMessage({
+  commentId,
+  message,
+}: {
+  commentId: string;
+  message: string;
+}) {
+  const queryClient = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [brouillon, setBrouillon] = useState(message);
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: (texte: string) => CommentService.updateMessage(commentId, texte),
+    onSuccess: () => {
+      toast.success('Avis corrigé');
+      setEditing(false);
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  if (!editing) {
+    return (
+      <div className="group mb-3 flex items-start gap-2">
+        <p className="text-gray-600 text-sm line-clamp-3 flex-1">{message}</p>
+        <button
+          type="button"
+          onClick={() => {
+            setBrouillon(message);
+            setEditing(true);
+          }}
+          title="Corriger le texte de l'avis"
+          className="shrink-0 rounded-md p-1 text-gray-300 transition hover:bg-orange-50 hover:text-[#F17922] group-hover:text-gray-400"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  const valide = brouillon.trim().length > 0 && brouillon.trim().length <= 1000;
+
+  return (
+    <div className="mb-3 space-y-2">
+      <textarea
+        value={brouillon}
+        onChange={(e) => setBrouillon(e.target.value)}
+        rows={3}
+        autoFocus
+        disabled={isPending}
+        className="w-full rounded-lg border border-[#F17922] px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#F17922]/20"
+      />
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          disabled={isPending}
+          className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-500 transition hover:bg-gray-200"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          onClick={() => mutate(brouillon.trim())}
+          disabled={!valide || isPending}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#F17922]/90 disabled:opacity-50"
+        >
+          {isPending && <Loader2 className="h-3 w-3 animate-spin" />}
+          Enregistrer
+        </button>
+      </div>
+    </div>
   );
 }
