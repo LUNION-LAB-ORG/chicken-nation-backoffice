@@ -147,4 +147,8 @@ export const SCRATCH_SETTING_KEYS = {
   envelope_pct: "scratch.envelope_pct",
   window_days: "scratch.window_days",
   floor_weight: "scratch.floor_weight",
+  /** Validité des lots gagnés, en jours (défaut serveur 7 ; 0 = sans expiration). */
+  lot_expiry_days: "scratch.lot_expiry_days",
+  /** Fenêtre de la fidélité requise (min commandes / CA), en jours (défaut 90). */
+  eligibility_window_days: "scratch.eligibility_window_days",
 } as const;

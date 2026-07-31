@@ -41,12 +41,16 @@ export default function ScratchSettingsPanel() {
   const [envelopePct, setEnvelopePct] = useState("");
   const [windowDays, setWindowDays] = useState("");
   const [floorWeight, setFloorWeight] = useState("");
+  const [lotExpiryDays, setLotExpiryDays] = useState("");
+  const [eligibilityWindowDays, setEligibilityWindowDays] = useState("");
 
   useEffect(() => {
     setEnabled(current[SCRATCH_SETTING_KEYS.enabled] === "true");
     setEnvelopePct(current[SCRATCH_SETTING_KEYS.envelope_pct] ?? "");
     setWindowDays(current[SCRATCH_SETTING_KEYS.window_days] ?? "");
     setFloorWeight(current[SCRATCH_SETTING_KEYS.floor_weight] ?? "");
+    setLotExpiryDays(current[SCRATCH_SETTING_KEYS.lot_expiry_days] ?? "");
+    setEligibilityWindowDays(current[SCRATCH_SETTING_KEYS.eligibility_window_days] ?? "");
   }, [current]);
 
   const save = async (key: string, value: string, description?: string) => {
@@ -77,6 +81,16 @@ export default function ScratchSettingsPanel() {
       SCRATCH_SETTING_KEYS.floor_weight,
       floorWeight,
       "Poids du lot plancher"
+    );
+    await save(
+      SCRATCH_SETTING_KEYS.lot_expiry_days,
+      lotExpiryDays,
+      "Validité des lots gagnés (jours, 0 = sans expiration)"
+    );
+    await save(
+      SCRATCH_SETTING_KEYS.eligibility_window_days,
+      eligibilityWindowDays,
+      "Fenêtre de la fidélité requise (jours)"
     );
   };
 
@@ -163,6 +177,32 @@ export default function ScratchSettingsPanel() {
               value={floorWeight}
               onChange={(e) => setFloorWeight(e.target.value)}
               placeholder="Ex. 100"
+            />
+          </Field>
+          <Field
+            label="Validité des lots (jours)"
+            hint="Un gain non utilisé expire après ce délai — 0 = sans expiration"
+          >
+            <input
+              type="number"
+              min={0}
+              className={inputCls}
+              value={lotExpiryDays}
+              onChange={(e) => setLotExpiryDays(e.target.value)}
+              placeholder="Ex. 7"
+            />
+          </Field>
+          <Field
+            label="Fenêtre fidélité (jours)"
+            hint="Période des critères « commandes min. / CA min. » des lots"
+          >
+            <input
+              type="number"
+              min={1}
+              className={inputCls}
+              value={eligibilityWindowDays}
+              onChange={(e) => setEligibilityWindowDays(e.target.value)}
+              placeholder="Ex. 90"
             />
           </Field>
         </div>
