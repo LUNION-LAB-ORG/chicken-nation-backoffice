@@ -1,4 +1,5 @@
 import { toast } from "react-hot-toast";
+import { normalizePhoneInternational } from "../../customer/utils/customerFormValidation";
 import { OrderFormData } from "../types/order-form.types";
 import { OrderType } from "../types/order.types";
 
@@ -37,11 +38,14 @@ export const validateOrderForm = (formData: OrderFormData | Partial<OrderFormDat
   }
 
 
-  // Validation du téléphone si fourni
+  // Validation du téléphone si fourni — INTERNATIONAL (décision 30/07 : plus
+  // aucune contrainte de pays). Saisie locale CI (10 chiffres) acceptée,
+  // numéro étranger accepté avec son indicatif (+221…, 00221…, 221…).
   if (formData.phone && formData.phone.trim() !== "") {
-    const phoneRegex = /^\+225\d{10}$/;
-    if (!phoneRegex.test(formData.phone.replace(/\s/g, ""))) {
-      toast.error("Le numéro de téléphone doit être au format +225 XX XX XX XX XX");
+    if (normalizePhoneInternational(formData.phone) === null) {
+      toast.error(
+        "Numéro invalide. Saisissez 10 chiffres (Côte d'Ivoire) ou le numéro complet avec l'indicatif pays (ex : +221 77 123 45 67).",
+      );
       return false;
     }
   }
