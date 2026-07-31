@@ -118,6 +118,9 @@ export default function ScratchLotForm({
   const [weight, setWeight] = useState(String(lot?.weight ?? "1"));
   const [unitCost, setUnitCost] = useState(String(lot?.unit_cost ?? "0"));
   const [minCart, setMinCart] = useState(String(lot?.min_cart ?? "0"));
+  // Fidélité requise (pensée pour les CADEAUX) : l'UN des deux critères suffit.
+  const [minPaidOrders, setMinPaidOrders] = useState(String(lot?.min_paid_orders ?? "0"));
+  const [minRevenue, setMinRevenue] = useState(String(lot?.min_revenue ?? "0"));
   const [frequencyCap, setFrequencyCap] = useState(
     lot?.frequency_cap != null ? String(lot.frequency_cap) : ""
   );
@@ -204,6 +207,8 @@ export default function ScratchLotForm({
       weight: w,
       unit_cost: Number(unitCost) || 0,
       min_cart: Number(minCart) || 0,
+      min_paid_orders: Number(minPaidOrders) || 0,
+      min_revenue: Number(minRevenue) || 0,
       frequency_cap: frequencyCap === "" ? null : Number(frequencyCap),
       stock: stock === "" ? null : Number(stock),
       level_min: levelMin === "" ? null : levelMin,
@@ -435,6 +440,26 @@ export default function ScratchLotForm({
               value={stock}
               onChange={(e) => setStock(e.target.value)}
               placeholder="Illimité"
+            />
+          </div>
+          <div>
+            <Label hint="0 = inactif">Fidélité : commandes payées min.</Label>
+            <input
+              type="number"
+              min={0}
+              className={inputCls}
+              value={minPaidOrders}
+              onChange={(e) => setMinPaidOrders(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label hint="FCFA, 0 = inactif — l'un des deux suffit">Fidélité : CA minimum</Label>
+            <input
+              type="number"
+              min={0}
+              className={inputCls}
+              value={minRevenue}
+              onChange={(e) => setMinRevenue(e.target.value)}
             />
           </div>
           <div>

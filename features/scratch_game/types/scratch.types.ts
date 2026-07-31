@@ -43,6 +43,10 @@ export interface ScratchLot {
   unit_cost: number;
   /** Panier minimum requis pour être éligible (FCFA). */
   min_cart: number;
+  /** Fidélité requise : commandes payées min. sur la fenêtre (0 = inactif). */
+  min_paid_orders: number;
+  /** Fidélité requise : CA net min. (FCFA) sur la fenêtre (0 = inactif). L'un des deux suffit. */
+  min_revenue: number;
   /** Plafond de fréquence par client (null = illimité). */
   frequency_cap: number | null;
   /** Stock total alloué (null = illimité). */
@@ -67,6 +71,8 @@ export interface CreateScratchLotDto {
   weight?: number;
   unit_cost?: number;
   min_cart?: number;
+  min_paid_orders?: number;
+  min_revenue?: number;
   frequency_cap?: number | null;
   stock?: number | null;
   level_min?: ScratchLevel | null;
