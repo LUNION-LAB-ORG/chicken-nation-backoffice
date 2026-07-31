@@ -131,13 +131,17 @@ export default function ScratchSettingsPanel() {
             aria-checked={enabled}
             onClick={() => handleToggle(!enabled)}
             disabled={mutation.isPending}
-            className={`relative h-7 w-12 rounded-full transition-colors cursor-pointer disabled:opacity-60 ${
+            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors cursor-pointer disabled:opacity-60 ${
               enabled ? "bg-[#F17922]" : "bg-[#D9D9D9]"
             }`}
           >
+            {/* Pastille : piste 48px, pastille 24px, marge 2px de chaque côté
+                → course = 48 − 24 − 2 − 2 = 20px. `left-0.5` fixe l'origine et
+                `translate-x-5` (20px) amène EXACTEMENT au bord droit ; l'ancien
+                combo left-implicite + translate faisait dépasser la pastille. */}
             <span
-              className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                enabled ? "translate-x-5" : "translate-x-0.5"
+              className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                enabled ? "translate-x-5" : "translate-x-0"
               }`}
             />
           </button>
