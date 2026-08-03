@@ -1,63 +1,146 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useSettingsQuery, useSettingMutation } from "@/hooks/useSettingsQuery";
-import { CheckCircle, CreditCard } from "lucide-react";
+import { getAllRestaurants } from "@/services/restaurantService";
+import {
+  Building2,
+  CheckCircle,
+  Copy,
+  CreditCard,
+  Globe,
+  Check,
+} from "lucide-react";
 
-const KKIAPAY_KEYS = [
-  { key: "kkiapay_public_key", label: "Clé publique", placeholder: "9a5c6b33..." },
-  { key: "kkiapay_private_key", label: "Clé privée", placeholder: "pk_...", type: "password" },
-  { key: "kkiapay_secret_key", label: "Clé secrète", placeholder: "sk_...", type: "password" },
-  { key: "kkiapay_webhook_secret", label: "Webhook Secret", placeholder: "chicken-nation-apps@2025", type: "password" },
-  { key: "kkiapay_webhook_path", label: "Webhook URL", placeholder: "https://chicken.turbodeliveryapp.com/api/v1/kkiapay/webhook" },
+/**
+ * MULTI-COMPTES KKiaPay : chaque restaurant peut encaisser sur SON compte.
+ *
+ * - « Global » = compte historique (clés `kkiapay_*`), utilisé par défaut et
+ *   comme repli tant qu'un restaurant n'a pas ses clés complètes.
+ * - Par restaurant = clés `kkiapay.<restaurantId>.*` + URL de webhook DÉDIÉE
+ *   (`…/kkiapay/webhook/<restaurantId>`) à coller dans le dashboard KKiaPay du
+ *   compte de CE restaurant, avec SON « secret hash ».
+ *
+ * Les secrets sont WRITE-ONLY : le serveur renvoie un masque (********) et
+ * ignore toute soumission du masque — on peut donc réenregistrer le formulaire
+ * sans écraser les clés. Saisir une nouvelle valeur remplace l'ancienne.
+ */
+
+const MASK = "********";
+
+const GLOBAL_FIELDS = [
+  { suffix: "public_key", key: "kkiapay_public_key", label: "Clé publique", placeholder: "9a5c6b33...", type: "text" },
+  { suffix: "private_key", key: "kkiapay_private_key", label: "Clé privée", placeholder: "pk_...", type: "password" },
+  { suffix: "secret_key", key: "kkiapay_secret_key", label: "Clé secrète", placeholder: "sk_...", type: "password" },
+  { suffix: "webhook_secret", key: "kkiapay_webhook_secret", label: "Webhook Secret", placeholder: "Secret hash du dashboard", type: "password" },
 ];
 
+type RestaurantLite = { id: string; name: string };
+
 const PaymentSettings: React.FC = () => {
-  const { data: settings, isLoading: l1 } = useSettingsQuery("kkiapay_");
+  // « kkiapay » couvre les deux familles : kkiapay_* (global) et kkiapay.<id>.* (par restaurant).
+  const { data: settings, isLoading: l1 } = useSettingsQuery("kkiapay");
   const { mutate: updateSetting, isPending } = useSettingMutation();
+  const { data: restaurants = [], isLoading: l2 } = useQuery<RestaurantLite[]>({
+    queryKey: ["restaurants", "payment-settings"],
+    queryFn: async () => {
+      const all = await getAllRestaurants();
+      return (all ?? []).map((r: { id: string; name: string }) => ({ id: r.id, name: r.name }));
+    },
+  });
+
+  // null = configuration GLOBALE ; sinon id du restaurant sélectionné.
+  const [selected, setSelected] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
   const [sandbox, setSandbox] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
+  const stored = useMemo(() => {
     const map: Record<string, string> = {};
     for (const s of settings ?? []) map[s.key] = s.value;
-    setValues(map);
-    if (map["kkiapay_sandbox"] !== undefined) {
-      setSandbox(map["kkiapay_sandbox"] === "true");
-    }
+    return map;
   }, [settings]);
 
-  const handleSave = () => {
-    const allFields = [
-      ...KKIAPAY_KEYS,
-      { key: "kkiapay_sandbox", label: "Mode Sandbox" },
-    ];
-    let count = allFields.length;
-    for (const field of allFields) {
-      const value = field.key === "kkiapay_sandbox"
-        ? String(sandbox)
-        : values[field.key];
-      if (value !== undefined) {
-        updateSetting(
-          { key: field.key, value, description: `KKiaPay — ${field.label}` },
-          {
-            onSuccess: () => {
-              count--;
-              if (count <= 0) {
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2000);
-              }
-            },
-          }
-        );
-      } else {
-        count--;
-      }
+  useEffect(() => {
+    setValues(stored);
+    if (stored["kkiapay_sandbox"] !== undefined) {
+      setSandbox(stored["kkiapay_sandbox"] === "true");
+    }
+  }, [stored]);
+
+  /** Champs (clé de réglage réelle) du panneau sélectionné. */
+  const fields = useMemo(() => {
+    if (selected === null) return GLOBAL_FIELDS;
+    return GLOBAL_FIELDS.map((f) => ({
+      ...f,
+      key: `kkiapay.${selected}.${f.suffix}`,
+    }));
+  }, [selected]);
+
+  /** Un restaurant est « configuré » si ses 3 clés d'API sont présentes. */
+  const isConfigured = (restaurantId: string) =>
+    ["public_key", "private_key", "secret_key"].every(
+      (s) => (stored[`kkiapay.${restaurantId}.${s}`] ?? "") !== ""
+    );
+
+  /** URL de webhook du panneau courant, dérivée de l'URL globale. */
+  const webhookUrl = useMemo(() => {
+    const base =
+      stored["kkiapay_webhook_path"] ||
+      "https://api-private.chicken-nation.com/api/v1/kkiapay/webhook";
+    return selected === null ? base : `${base.replace(/\/$/, "")}/${selected}`;
+  }, [stored, selected]);
+
+  const copyWebhookUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* presse-papiers indisponible : l'URL reste sélectionnable à la main */
     }
   };
 
-  if (l1) {
+  const handleSave = () => {
+    const toSave: { key: string; value: string; description: string }[] = [];
+    const scope = selected === null
+      ? "Global"
+      : restaurants.find((r) => r.id === selected)?.name ?? selected;
+
+    for (const field of fields) {
+      const value = values[field.key];
+      // On n'envoie que les champs définis ; le serveur ignore le masque
+      // (write-only), donc renvoyer un champ non modifié est sans effet.
+      if (value !== undefined) {
+        toSave.push({ key: field.key, value, description: `KKiaPay ${scope} — ${field.label}` });
+      }
+    }
+    if (selected === null) {
+      const webhookPath = values["kkiapay_webhook_path"];
+      if (webhookPath !== undefined) {
+        toSave.push({ key: "kkiapay_webhook_path", value: webhookPath, description: "KKiaPay — Webhook URL (base)" });
+      }
+      toSave.push({ key: "kkiapay_sandbox", value: String(sandbox), description: "KKiaPay — Mode Sandbox" });
+    }
+
+    let count = toSave.length;
+    if (count === 0) return;
+    for (const item of toSave) {
+      updateSetting(item, {
+        onSuccess: () => {
+          count--;
+          if (count <= 0) {
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2000);
+          }
+        },
+      });
+    }
+  };
+
+  if (l1 || l2) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]" />
@@ -65,56 +148,162 @@ const PaymentSettings: React.FC = () => {
     );
   }
 
+  const selectedName = selected === null
+    ? null
+    : restaurants.find((r) => r.id === selected)?.name ?? "Restaurant";
+
   return (
     <div className="space-y-6">
+      {/* Sélecteur de compte : Global + un par restaurant */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+          Compte à configurer
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSelected(null)}
+            className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors cursor-pointer ${
+              selected === null
+                ? "bg-[#F17922] text-white border-[#F17922]"
+                : "bg-white text-gray-700 border-gray-200 hover:border-[#F17922]/50"
+            }`}
+          >
+            <Globe size={14} /> Global
+          </button>
+          {restaurants.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => setSelected(r.id)}
+              className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors cursor-pointer ${
+                selected === r.id
+                  ? "bg-[#F17922] text-white border-[#F17922]"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-[#F17922]/50"
+              }`}
+            >
+              <Building2 size={14} />
+              {r.name}
+              {isConfigured(r.id) && (
+                <span
+                  className={`inline-block w-1.5 h-1.5 rounded-full ${
+                    selected === r.id ? "bg-white" : "bg-green-500"
+                  }`}
+                  title="Compte dédié configuré"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+        {selected !== null && !isConfigured(selected) && (
+          <p className="text-xs text-amber-600 mt-3">
+            Compte non configuré : les paiements de ce restaurant utilisent le
+            compte Global tant que les trois clés d&apos;API ne sont pas enregistrées.
+          </p>
+        )}
+      </div>
+
+      {/* Clés du compte sélectionné */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-1">
           <CreditCard size={20} className="text-[#F17922]" />
-          <h3 className="text-lg font-bold text-gray-900">Configuration KKiaPay</h3>
+          <h3 className="text-lg font-bold text-gray-900">
+            {selected === null
+              ? "Configuration KKiaPay — Global"
+              : `Configuration KKiaPay — ${selectedName}`}
+          </h3>
         </div>
-        <p className="text-sm text-gray-500 mb-6">Clés API et configuration du paiement mobile</p>
+        <p className="text-sm text-gray-500 mb-6">
+          {selected === null
+            ? "Compte historique : utilisé par défaut et comme repli pour les restaurants non configurés."
+            : "Clés du compte KKiaPay dédié à ce restaurant (dashboard KKiaPay → Développeurs → API)."}
+        </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {KKIAPAY_KEYS.map((field) => (
-            <div key={field.key} className={field.key === "kkiapay_webhook_path" ? "md:col-span-2" : ""}>
+          {fields.map((field) => (
+            <div key={field.key}>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
                 {field.label}
               </label>
               <input
-                type={field.type || "text"}
+                type={field.type}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-mono"
                 placeholder={field.placeholder}
                 value={values[field.key] ?? ""}
                 onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
               />
+              {field.type === "password" && (values[field.key] ?? "") === MASK && (
+                <p className="text-[11px] text-gray-400 mt-1">
+                  Valeur enregistrée (masquée). Saisis une nouvelle valeur pour la remplacer.
+                </p>
+              )}
             </div>
           ))}
+
+          {selected === null && (
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                Webhook URL (base)
+              </label>
+              <input
+                type="text"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-mono"
+                placeholder="https://api-private.chicken-nation.com/api/v1/kkiapay/webhook"
+                value={values["kkiapay_webhook_path"] ?? ""}
+                onChange={(e) => setValues({ ...values, kkiapay_webhook_path: e.target.value })}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* URL de webhook à coller dans le dashboard KKiaPay du compte sélectionné */}
+        <div className="mt-5 rounded-xl bg-gray-50 border border-gray-200 p-4">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+            URL de webhook {selected === null ? "du compte global" : "de ce restaurant"}
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-[13px] text-gray-800 break-all">{webhookUrl}</code>
+            <button
+              type="button"
+              onClick={copyWebhookUrl}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-300 bg-white text-xs font-medium text-gray-700 hover:border-[#F17922]/60 cursor-pointer"
+            >
+              {copied ? <Check size={13} className="text-green-600" /> : <Copy size={13} />}
+              {copied ? "Copiée" : "Copier"}
+            </button>
+          </div>
+          <p className="text-[11px] text-gray-400 mt-2">
+            Dashboard KKiaPay {selected === null ? "" : "de ce restaurant "}→ Développeurs → Webhook :
+            colle cette URL et renseigne le même « Secret hash » que le champ Webhook Secret ci-dessus.
+          </p>
         </div>
       </div>
 
-      {/* Sandbox toggle */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">Mode Sandbox</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Active le mode test pour les paiements (aucune transaction réelle)
-            </p>
-          </div>
-          <button
-            onClick={() => setSandbox(!sandbox)}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
-              sandbox ? "bg-[#F17922]" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
-                sandbox ? "translate-x-6" : "translate-x-1"
+      {/* Sandbox : réglage GLOBAL (hérité par les restaurants sans réglage propre) */}
+      {selected === null && (
+        <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Mode Sandbox</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Active le mode test pour les paiements (aucune transaction réelle)
+              </p>
+            </div>
+            <button
+              onClick={() => setSandbox(!sandbox)}
+              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors cursor-pointer ${
+                sandbox ? "bg-[#F17922]" : "bg-gray-300"
               }`}
-            />
-          </button>
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${
+                  sandbox ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex justify-end items-center gap-3">
         {saved && (
@@ -125,7 +314,7 @@ const PaymentSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
+          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 cursor-pointer"
         >
           {isPending ? "Enregistrement..." : "Enregistrer"}
         </button>
