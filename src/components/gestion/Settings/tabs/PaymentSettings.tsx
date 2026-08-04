@@ -79,9 +79,15 @@ const PaymentSettings: React.FC = () => {
     }));
   }, [selected]);
 
-  /** Un restaurant est « configuré » si ses 3 clés d'API sont présentes. */
+  /**
+   * Un restaurant est « configuré » si ses 4 clés sont présentes — WEBHOOK
+   * SECRET COMPRIS : dès que les 3 clés d'API sont saisies, l'argent bascule
+   * sur le compte du restaurant, or le webhook est l'UNIQUE chemin de
+   * confirmation automatique des commandes. Sans lui, paiements encaissés
+   * mais commandes jamais confirmées.
+   */
   const isConfigured = (restaurantId: string) =>
-    ["public_key", "private_key", "secret_key"].every(
+    ["public_key", "private_key", "secret_key", "webhook_secret"].every(
       (s) => (stored[`kkiapay.${restaurantId}.${s}`] ?? "") !== ""
     );
 
@@ -197,8 +203,11 @@ const PaymentSettings: React.FC = () => {
         </div>
         {selected !== null && !isConfigured(selected) && (
           <p className="text-xs text-amber-600 mt-3">
-            Compte non configuré : les paiements de ce restaurant utilisent le
-            compte Global tant que les trois clés d&apos;API ne sont pas enregistrées.
+            Compte non configuré : les paiements de ce restaurant utilisent le compte
+            Global. ⚠️ Ordre impératif : d&apos;abord poser l&apos;URL de webhook + le
+            Secret hash dans le dashboard KKiaPay du restaurant, PUIS enregistrer ici
+            les 4 clés (webhook secret compris) — dès les clés saisies, l&apos;argent
+            bascule sur ce compte et seul son webhook confirme les commandes.
           </p>
         )}
       </div>
@@ -231,6 +240,21 @@ const PaymentSettings: React.FC = () => {
                 placeholder={field.placeholder}
                 value={values[field.key] ?? ""}
                 onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+                // Au focus d'un secret masqué, on vide le champ : taper à la
+                // suite du masque enverrait « ********sk_… » (refusé serveur).
+                onFocus={() => {
+                  if ((values[field.key] ?? "") === MASK) {
+                    setValues({ ...values, [field.key]: "" });
+                  }
+                }}
+                onBlur={() => {
+                  // Champ laissé vide après avoir vidé le masque : on restaure
+                  // le masque (= « valeur inchangée »), sinon Enregistrer
+                  // écraserait le secret par une chaîne vide.
+                  if ((values[field.key] ?? "") === "" && (stored[field.key] ?? "") !== "") {
+                    setValues({ ...values, [field.key]: stored[field.key] });
+                  }
+                }}
               />
               {field.type === "password" && (values[field.key] ?? "") === MASK && (
                 <p className="text-[11px] text-gray-400 mt-1">
