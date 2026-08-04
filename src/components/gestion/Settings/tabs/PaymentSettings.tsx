@@ -99,6 +99,18 @@ const PaymentSettings: React.FC = () => {
     return selected === null ? base : `${base.replace(/\/$/, "")}/${selected}`;
   }, [stored, selected]);
 
+  /** Génère un secret de webhook fort (48 hex) et le place dans le champ —
+   *  la même valeur doit être collée dans le « Secret hash » du dashboard
+   *  KKiaPay. Après génération, le champ passe en clair le temps de la copie. */
+  const [revealedSecretKey, setRevealedSecretKey] = useState<string | null>(null);
+  const generateWebhookSecret = (fieldKey: string) => {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const secret = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+    setValues((v) => ({ ...v, [fieldKey]: secret }));
+    setRevealedSecretKey(fieldKey);
+  };
+
   const copyWebhookUrl = async () => {
     try {
       await navigator.clipboard.writeText(webhookUrl);
@@ -231,11 +243,22 @@ const PaymentSettings: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {fields.map((field) => (
             <div key={field.key}>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                {field.label}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.label}
+                </label>
+                {field.suffix === "webhook_secret" && (
+                  <button
+                    type="button"
+                    onClick={() => generateWebhookSecret(field.key)}
+                    className="text-xs font-medium text-[#F17922] hover:underline cursor-pointer"
+                  >
+                    Générer un secret
+                  </button>
+                )}
+              </div>
               <input
-                type={field.type}
+                type={revealedSecretKey === field.key ? "text" : field.type}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all font-mono"
                 placeholder={field.placeholder}
                 value={values[field.key] ?? ""}
@@ -259,6 +282,12 @@ const PaymentSettings: React.FC = () => {
               {field.type === "password" && (values[field.key] ?? "") === MASK && (
                 <p className="text-[11px] text-gray-400 mt-1">
                   Valeur enregistrée (masquée). Saisis une nouvelle valeur pour la remplacer.
+                </p>
+              )}
+              {revealedSecretKey === field.key && (
+                <p className="text-[11px] text-amber-600 mt-1">
+                  Copie cette valeur dans le « Secret hash » du dashboard KKiaPay,
+                  puis Enregistrer ici — les deux côtés doivent porter le même secret.
                 </p>
               )}
             </div>
