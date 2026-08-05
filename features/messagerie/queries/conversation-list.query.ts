@@ -8,7 +8,7 @@ export const useConversationListQuery = (enabled = true) => {
     queryFn: () => conversationAPI.obtenirTous(1, 50),
     enabled,
     staleTime: 2 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
     refetchIntervalInBackground: false,
   });
 };
@@ -24,7 +24,7 @@ export const useConversationListInfiniteQuery = (enabled = true) => {
     },
     enabled,
     staleTime: 2 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
     refetchIntervalInBackground: false,
   });
 };

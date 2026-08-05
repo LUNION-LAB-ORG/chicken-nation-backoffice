@@ -9,7 +9,7 @@ export const useTicketListQuery = (filtres: IFiltresTicket = {}, enabled = true)
     queryFn: () => ticketAPI.obtenirTous(filtres),
     enabled,
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
   });
 };
 
@@ -24,7 +24,7 @@ export const useTicketListInfiniteQuery = (filtres: IFiltresTicket = {}, enabled
     },
     enabled,
     staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    refetchInterval: 3 * 60 * 1000,
   });
 };
 

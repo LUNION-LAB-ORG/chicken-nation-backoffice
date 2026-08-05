@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Search, MessageCircle, Plus, Loader2, Bike, User as UserIcon, ChevronDown, ChevronRight, Receipt } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
@@ -31,6 +31,13 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   const [selectedStatus, setSelectedStatus] = useState('Tous les statuts');
   const [selectedPriority, setSelectedPriority] = useState('Toutes priorités');
   const [searchQuery, setSearchQuery] = useState('');
+  // Recherche débouncée : la frappe partait en requête serveur lettre par
+  // lettre, avec un spinner qui clignotait à chaque caractère.
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
   // P-chat livreur : tabs filtre origine du ticket
   const [sourceFilter, setSourceFilter] = useState<TicketSource | 'ALL'>('ALL');
 
@@ -44,7 +51,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   const filters = {
     status: selectedStatus !== 'Tous les statuts' ? [mapFilterValue('status', selectedStatus) as TicketStatus] : undefined,
     priority: selectedPriority !== 'Toutes priorités' ? [mapFilterValue('priority', selectedPriority) as TicketPriority] : undefined,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
   };
 
   // Récupérer les tickets avec les filtres
