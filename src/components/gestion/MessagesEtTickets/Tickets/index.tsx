@@ -10,7 +10,10 @@ import { useTicketSocketSync } from '../../../../../features/messagerie';
 import { useDashboardStore } from '@/store/dashboardStore';
 
 function TicketsModule() {
-  const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  const lastTicketId = useDashboardStore((s) => s.lastTicketId);
+  const setLastTicket = useDashboardStore((s) => s.setLastTicket);
+  // On reprend le ticket ouvert avant de partir sur un autre module.
+  const [selectedTicket, setSelectedTicket] = useState<string | null>(lastTicketId);
   // Ticket demandé depuis ailleurs (escalade Inbox, clic notification) :
   // consommé une fois puis remis à zéro.
   const pendingTicketId = useDashboardStore((s) => s.pendingTicketId);
@@ -37,7 +40,7 @@ function TicketsModule() {
         `}>
           <TicketsSidebar 
             selectedTicket={selectedTicket}
-            onSelectTicket={setSelectedTicket}
+            onSelectTicket={(id) => { setSelectedTicket(id); setLastTicket(id); }}
             onNewTicket={() => setShowNewTicketModal(true)}
             onNewCategory={() => setShowNewCategoryModal(true)}
           />

@@ -51,6 +51,11 @@ export interface DashboardState {
   pendingConversationId: string | null;
   // Ticket à ouvrir (escalade, notification, lien partagé). Même mécanique.
   pendingTicketId: string | null;
+  // Dernière conversation et dernier ticket consultés : conservés pour
+  // retrouver son écran en revenant d'un autre module (avant, tout
+  // repartait de l'écran vide « Sélectionnez une conversation »).
+  lastConversationId: string | null;
+  lastTicketId: string | null;
   selectedRestaurantId: string | null;
   selectedPeriod: PeriodFilter;
 
@@ -99,6 +104,8 @@ export interface DashboardState {
   setActiveTab: (tab: TabKey) => void;
   openTicket: (ticketId: string) => void;
   clearPendingTicket: () => void;
+  setLastConversation: (id: string | null) => void;
+  setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string) => void;
   clearPendingConversation: () => void;
   setSelectedRestaurantId: (id: string | null) => void;
@@ -147,6 +154,8 @@ export const useDashboardStore = create<DashboardState>()(
       activeTab: null,
       pendingConversationId: null,
       pendingTicketId: null,
+      lastConversationId: null,
+      lastTicketId: null,
       selectedRestaurantId: null,
       selectedPeriod: 'month',
 
@@ -210,6 +219,12 @@ export const useDashboardStore = create<DashboardState>()(
       clearPendingTicket: () => set((state) => {
         state.pendingTicketId = null;
       }),
+      setLastConversation: (id) => set((state) => {
+        state.lastConversationId = id;
+      }),
+      setLastTicket: (id) => set((state) => {
+        state.lastTicketId = id;
+      }),
       setSelectedRestaurantId: (id) => set((state) => { state.selectedRestaurantId = id }),
       setSelectedPeriod: (period) => set((state) => { state.selectedPeriod = period }),
 
@@ -266,6 +281,9 @@ export const useDashboardStore = create<DashboardState>()(
           activeTab: state.activeTab,
           selectedRestaurantId: state.selectedRestaurantId,
           selectedPeriod: state.selectedPeriod,
+          // Reprendre où on s'était arrêté dans le support.
+          lastConversationId: state.lastConversationId,
+          lastTicketId: state.lastTicketId,
           ...persistedSections,
         };
       },

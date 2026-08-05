@@ -1,5 +1,6 @@
 "use client";
 
+import toast from 'react-hot-toast';
 import { useDashboardStore } from '@/store/dashboardStore';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
@@ -14,7 +15,7 @@ import {
 } from '../../../../../features/messagerie';
 import { ticketAPI } from '../../../../../features/messagerie/apis/ticket.api';
 import { ticketKeyQuery, ticketStatsKeyQuery } from '../../../../../features/messagerie/queries/index.query';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
@@ -60,6 +61,31 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   const sendMessageMutation = useEnvoyerMessageTicketMutation();
   const assignTicketMutation = useAssignerTicketMutation();
   const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
+
+  // Agents du restaurant, pour l'assignation manuelle.
+  const { data: restaurantUsers } = useQuery({
+    queryKey: ['restaurant-users', user?.restaurant_id],
+    queryFn: () => getRestaurantUsers(user!.restaurant_id!),
+    enabled: !!user?.restaurant_id,
+    staleTime: 5 * 60 * 1000,
+  });
+  const agentOptions = [
+    { value: '', label: 'Non assigné' },
+    ...(restaurantUsers ?? []).map((u: { id: string; fullname: string }) => ({
+      value: u.id,
+      label: u.fullname,
+    })),
+  ];
+
+  const handleAssigneeChange = async (assigneeId: string) => {
+    if (!ticketId || !assigneeId || assigneeId === ticket?.assignee?.id) return;
+    try {
+      await assignTicketMutation.mutateAsync({ ticketId, assigneeId });
+      toast.success('Ticket assigné');
+    } catch {
+      toast.error("L'assignation a échoué");
+    }
+  };
   const updateStatusMutation = useModifierStatutTicketMutation();
   const updatePriorityMutation = useModifierPrioriteTicketMutation();
   const queryClient = useQueryClient();
@@ -301,15 +327,17 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             />
           </div>
 
-          {/* Assigné à */}
-          {ticket.assignee && (
-            <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-3">
-              <span className="text-xs sm:text-sm md:text-base text-gray-800 font-normal whitespace-nowrap">Assigné:</span>
-              <span className="text-xs sm:text-sm md:text-base text-gray-600 bg-gray-100 px-3 py-1 rounded-lg">
-                {ticket.assignee.fullname || ticket.assignee.email || 'Agent'}
-              </span>
-            </div>
-          )}
+          {/* Agent en charge : sélecteur explicite (avant, aucune interface
+              d'assignation n'existait et répondre volait le ticket) */}
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 md:space-x-3">
+            <span className="text-xs sm:text-sm md:text-base text-gray-800 font-normal whitespace-nowrap">Agent :</span>
+            <CustomDropdown
+              options={agentOptions}
+              value={ticket.assignee?.id ?? ''}
+              onChange={handleAssigneeChange}
+              className="min-w-[120px] sm:min-w-[150px] text-xs sm:text-sm md:text-base"
+            />
+          </div>
         </div>
       </div>
 

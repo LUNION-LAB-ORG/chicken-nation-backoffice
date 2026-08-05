@@ -11,9 +11,12 @@ function InboxModule({
 }: {
   initialConversationId?: string | null;
 }) {
+  const lastConversationId = useDashboardStore((s) => s.lastConversationId);
+  const setLastConversation = useDashboardStore((s) => s.setLastConversation);
+  // On reprend la conversation lue avant de partir sur un autre module.
   const [selectedConversation, setSelectedConversation] = useState<
     string | null
-  >(initialConversationId || null);
+  >(initialConversationId || lastConversationId || null);
   const queryClient = useQueryClient();
   const clearPendingConversation = useDashboardStore(
     (s) => s.clearPendingConversation
@@ -22,6 +25,7 @@ function InboxModule({
   // Fonction pour sélectionner une conversation (le marquage comme lu se fait dans ConversationView)
   const handleSelectConversation = (conversationId: string | null) => {
     setSelectedConversation(conversationId);
+    setLastConversation(conversationId);
   };
 
   // Deep-link : quand une conversation est demandée (email / notification), on la
