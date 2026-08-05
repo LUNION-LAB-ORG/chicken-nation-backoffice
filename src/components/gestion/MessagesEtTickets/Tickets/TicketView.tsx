@@ -278,6 +278,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
               </p>
               <p className="text-xs text-gray-400">
                 Client : {ticket.customer?.name || 'Client inconnu'}
+                {ticket.customer?.email ? ` · ${ticket.customer.email}` : ''}
               </p>
               {(ticket as any).conversationId && (
                 <button

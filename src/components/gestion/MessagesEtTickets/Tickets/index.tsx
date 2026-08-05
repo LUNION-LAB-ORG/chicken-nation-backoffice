@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import TicketsSidebar from './TicketsSidebar';
 import TicketView from './TicketView';
-import TicketsRightbar from './TicketsRightbar';
 import NewTicketModal from './NewTicketModal';
 import NewCategoryModal from './NewCategoryModal';
 import { useTicketSocketSync } from '../../../../../features/messagerie';
@@ -51,17 +50,13 @@ function TicketsModule() {
           ${selectedTicket ? 'block' : 'hidden lg:block'} 
           flex-1 flex h-full
         `}>
+          {/* Le panneau de détails a été retiré : il répétait les informations
+              déjà présentes dans l'en-tête du ticket et restait invisible sous
+              1280px. Le fil occupe désormais toute la largeur. */}
           <TicketView 
             ticketId={selectedTicket}
             onBack={() => setSelectedTicket(null)}
           />
-          
-          {/* Sidebar droite - Détails du ticket - Responsive */}
-          {selectedTicket && (
-            <div className="hidden xl:block">
-              <TicketsRightbar ticketId={selectedTicket} />
-            </div>
-          )}
         </div>
       </div>
 

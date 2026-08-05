@@ -259,7 +259,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       <div className="bg-white rounded-2xl md:w-[800px] lg:w-[900px] xl:w-[1000px] w-[95%] max-w-[1000px] mx-4 max-h-[95vh] overflow-y-auto shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-0">
-          <h2 className="md:text-xl text-3xl font-semibold text-[#F17922]">
+          <h2 className="text-xl font-semibold text-[#F17922]">
             Nouvelle conversation
           </h2>
           <button

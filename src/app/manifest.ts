@@ -9,17 +9,20 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Chicken Nation — Backoffice",
     short_name: "Chicken Nation",
-    description: "Gestion Chicken Nation (commandes, clients, acquisition…)",
+    description: "Gestion Chicken Nation : commandes, clients, support",
     start_url: "/gestion",
     scope: "/",
     display: "standalone",
-    orientation: "portrait",
+    // Pas de verrou d'orientation : le module Messages et les tableaux se
+    // consultent en paysage sur tablette.
     background_color: "#ffffff",
     theme_color: "#F17922",
     icons: [
-      { src: "/icons/logo.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icons/logo.png", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/icons/logo.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      // Chaque taille déclarée correspond à un fichier de cette taille réelle
+      // (l'ancien manifest servait le même 512 en le déclarant 192).
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
 }
