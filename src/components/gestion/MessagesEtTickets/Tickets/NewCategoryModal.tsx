@@ -37,10 +37,10 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
 
     try {
       await createCategoryMutation.mutateAsync(categoryData);
-      toast.success('Catégorie créée avec succès');
+      toast.success('Catégorie créée');
       onClose();
     } catch (error) {
-      console.error('Erreur lors de la création de la catégorie:', error);
+      console.error("Erreur création catégorie:", error);
 
       let errorMessage = 'Erreur lors de la création';
 
@@ -74,7 +74,7 @@ function NewCategoryModal({ isOpen, onClose }: NewCategoryModalProps) {
           </h2>
           <button
             onClick={onClose}
-            title="Fermer le modal"
+            title="Fermer"
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="md:w-6 md:h-6 w-5 h-5" />

@@ -185,7 +185,7 @@ export default function ScratchSettingsPanel() {
           </Field>
           <Field
             label="Validité des lots (jours)"
-            hint="Un gain non utilisé expire après ce délai — 0 = sans expiration"
+            hint="Un gain non utilisé expire après ce délai, 0 = sans expiration"
           >
             <input
               type="number"

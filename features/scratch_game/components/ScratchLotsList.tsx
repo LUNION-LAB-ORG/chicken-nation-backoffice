@@ -117,7 +117,7 @@ export default function ScratchLotsList({
                 <Td className="text-right font-medium">{lot.weight}</Td>
                 <Td className="text-right">{money(lot.unit_cost)}</Td>
                 <Td className="text-right">
-                  {lot.min_cart > 0 ? money(lot.min_cart) : "—"}
+                  {lot.min_cart > 0 ? money(lot.min_cart) : "Aucun"}
                 </Td>
                 <Td className="text-right">
                   {lot.stock == null ? (

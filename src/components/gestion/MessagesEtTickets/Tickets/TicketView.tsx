@@ -317,7 +317,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
       <div className="flex-1 bg-gray-50 flex flex-col overflow-hidden">
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto md:px-6 md:py-4 px-4 py-3">
-          {/* Carte de contexte — remplit le haut de la conversation avec les
+          {/* Carte de contexte · remplit le haut de la conversation avec les
               infos clés du ticket (évite la sensation de panneau vide). */}
           <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3">
@@ -328,7 +328,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Commande</p>
                   <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
-                    {ticket.order?.reference || '—'}
+                    {ticket.order?.reference || 'Aucune'}
                   </p>
                 </div>
               </div>
@@ -339,7 +339,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Catégorie</p>
                   <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
-                    {ticket.category?.name || '—'}
+                    {ticket.category?.name || 'Aucune'}
                   </p>
                 </div>
               </div>
@@ -361,7 +361,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-wide text-gray-400 font-semibold">Créé le</p>
                   <p className="text-xs sm:text-sm font-semibold text-gray-800 truncate">
-                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                    {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Aucune'}
                   </p>
                 </div>
               </div>

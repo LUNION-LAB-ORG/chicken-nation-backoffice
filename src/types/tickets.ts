@@ -248,8 +248,8 @@ export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
 
 export const TICKET_PRIORITY_LABELS: Record<TicketPriority, string> = {
   LOW: 'Faible',
-  MEDIUM: 'Moyen',
-  HIGH: 'Élevé'
+  MEDIUM: 'Moyenne',
+  HIGH: 'Élevée'
 };
 
 export const TICKET_CATEGORY_LABELS: Record<TicketCategory, string> = {

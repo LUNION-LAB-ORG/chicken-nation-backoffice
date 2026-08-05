@@ -132,7 +132,7 @@ const PaymentSettings: React.FC = () => {
       // On n'envoie que les champs définis ; le serveur ignore le masque
       // (write-only), donc renvoyer un champ non modifié est sans effet.
       if (value !== undefined) {
-        toSave.push({ key: field.key, value, description: `KKiaPay ${scope} — ${field.label}` });
+        toSave.push({ key: field.key, value, description: `KKiaPay ${scope} · ${field.label}` });
       }
     }
     if (selected === null) {

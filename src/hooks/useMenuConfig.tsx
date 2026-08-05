@@ -192,7 +192,7 @@ export const useGetMenuConfig = (): {
       items: [
         {
           id: "messages_tickets-inbox",
-          label: "Inbox",
+          label: "Messages",
           icon: MessageCircleMore,
           canAccess: () => can(Modules.MESSAGES, Action.READ),
           badge: unread.conversations > 0 ? unread.conversations : undefined,

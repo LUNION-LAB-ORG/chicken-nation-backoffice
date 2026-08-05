@@ -94,7 +94,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
       return roles || 'Équipe';
     } else {
       // Conversation avec client - afficher le téléphone
-      return conversation.customer?.phone || 'N/A';
+      return conversation.customer?.phone || 'Aucune';
     }
   };
 

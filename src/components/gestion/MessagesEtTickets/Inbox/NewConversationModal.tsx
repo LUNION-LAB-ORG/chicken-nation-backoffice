@@ -264,7 +264,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           </h2>
           <button
             onClick={onClose}
-            title="Fermer le modal"
+            title="Fermer"
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="md:w-6 md:h-6 w-5 h-5" />

@@ -45,7 +45,7 @@ function TicketItem({ ticket }: { ticket: Ticket }) {
               <h4 className="md:text-sm lg:text-sm text-xs font-semibold text-gray-900 leading-tight">
                 {ticket.code}
                 {requesterName && (
-                  <span className="font-normal"> — {requesterName}</span>
+                  <span className="font-normal"> · {requesterName}</span>
                 )}
               </h4>
             </div>

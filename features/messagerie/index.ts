@@ -41,3 +41,5 @@ export {
 export { useMessagerieSocketSync } from './hooks/useMessagerieSocketSync';
 export { useTicketSocketSync } from './hooks/useTicketSocketSync';
 export { useSupportBadgesSync } from './hooks/useSupportBadgesSync';
+export { useUnreadCounts } from './hooks/useUnreadCounts';
+export type { UnreadCounts } from './hooks/useUnreadCounts';

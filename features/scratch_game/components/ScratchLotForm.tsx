@@ -22,7 +22,7 @@ const Label: React.FC<{ children: React.ReactNode; hint?: string }> = ({
 }) => (
   <label className="block text-sm font-medium text-[#71717A] mb-1.5">
     {children}
-    {hint && <span className="text-[#9796A1] font-normal"> — {hint}</span>}
+    {hint && <span className="text-[#9796A1] font-normal"> · {hint}</span>}
   </label>
 );
 
@@ -453,7 +453,7 @@ export default function ScratchLotForm({
             />
           </div>
           <div>
-            <Label hint="FCFA, 0 = inactif — l'un des deux suffit">Fidélité : CA minimum</Label>
+            <Label hint="FCFA, 0 = inactif, l'un des deux suffit">Fidélité : CA minimum</Label>
             <input
               type="number"
               min={0}

@@ -387,7 +387,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
           </div>
         ) : ticketsError ? (
           <div className="p-4 text-center text-red-600">
-            <p>Erreur lors du chargement des tickets</p>
+            <p>Chargement des tickets impossible</p>
             <p className="text-sm text-gray-500 mt-1">Vérifiez votre connexion</p>
           </div>
         ) : tickets.length === 0 ? (

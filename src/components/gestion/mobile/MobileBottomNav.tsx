@@ -8,12 +8,14 @@ import {
   Home,
   LayoutGrid,
   LucideIcon,
+  MessageCircleMore,
 } from "lucide-react";
 
 import { TabKey, useDashboardStore } from "@/store/dashboardStore";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
+import { useUnreadCounts } from "../../../../features/messagerie";
 
 type NavItem = {
   key: string;
@@ -21,6 +23,8 @@ type NavItem = {
   Icon: LucideIcon;
   onClick: () => void;
   active?: boolean;
+  /** Nombre de non-lus affiché en pastille sur l'icône. */
+  badge?: number;
 };
 
 /**
@@ -34,6 +38,7 @@ export default function MobileBottomNav() {
   const setActiveTab = useDashboardStore((s) => s.setActiveTab);
   const can = useAuthStore((s) => s.can);
   const openMobileMenu = useMobileNavStore((s) => s.openMobileMenu);
+  const unread = useUnreadCounts();
 
   const isOrders =
     activeTab === "operations" ||
@@ -59,6 +64,16 @@ export default function MobileBottomNav() {
       Icon: ClipboardList,
       active: isOrders,
       onClick: () => setActiveTab("operations" as TabKey),
+    });
+  }
+  if (can(Modules.MESSAGES, Action.READ)) {
+    destinations.push({
+      key: "inbox",
+      label: "Messages",
+      Icon: MessageCircleMore,
+      active: activeTab === "inbox" || activeTab === "tickets",
+      badge: unread.total > 0 ? unread.total : undefined,
+      onClick: () => setActiveTab("inbox" as TabKey),
     });
   }
   if (can(Modules.MENUS, Action.READ)) {
@@ -99,14 +114,21 @@ export default function MobileBottomNav() {
               key={it.key}
               type="button"
               onClick={it.onClick}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 active:bg-gray-50 transition-colors ${
+              className={`flex-1 min-w-[44px] flex flex-col items-center justify-center gap-1 active:bg-gray-50 transition-colors ${
                 it.active ? "text-[#F17922]" : "text-gray-500"
               }`}
             >
-              <Icon
-                size={22}
-                className={it.active ? "text-[#F17922]" : "text-gray-400"}
-              />
+              <span className="relative">
+                <Icon
+                  size={22}
+                  className={it.active ? "text-[#F17922]" : "text-gray-400"}
+                />
+                {!!it.badge && (
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F17922] text-white text-[10px] font-semibold flex items-center justify-center">
+                    {it.badge > 99 ? "99+" : it.badge}
+                  </span>
+                )}
+              </span>
               <span className="text-[11px] font-medium">{it.label}</span>
             </button>
           );

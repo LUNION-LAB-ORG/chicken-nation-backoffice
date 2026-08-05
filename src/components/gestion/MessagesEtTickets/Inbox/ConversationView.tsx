@@ -293,7 +293,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
       const date = new Date(timestamp);
       return format(date, 'HH:mm', { locale: fr });
     } catch {
-      return 'N/A';
+      return 'Aucune';
     }
   };
 
@@ -392,8 +392,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               className="bg-[#F17922] text-white md:px-4 md:py-2.5 px-3 py-2 rounded-xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
             >
               <AlertTriangle className="md:w-4 md:h-4 w-4 h-4 md:mr-2 mr-1.5" />
-              <span className="lg:inline hidden">Escalader en ticket</span>
-              <span className="lg:hidden">Escalader</span>
+              <span className="lg:inline hidden">Convertir en ticket</span>
+              <span className="lg:hidden">Convertir en ticket</span>
             </button>
           </div>
         </div>

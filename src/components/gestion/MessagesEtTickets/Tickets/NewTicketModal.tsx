@@ -177,11 +177,11 @@ function NewTicketModal({
         {/* Header */}
         <div className="flex items-center justify-between md:p-6 p-4 pb-4">
           <h2 className="md:text-xl text-lg font-semibold text-[#F17922]">
-            {conversationId ? 'Escalader en ticket' : 'Créer un nouveau ticket'}
+            {conversationId ? 'Convertir en ticket' : 'Créer un nouveau ticket'}
           </h2>
           <button
             onClick={onClose}
-            title="Fermer le modal"
+            title="Fermer"
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="md:w-6 md:h-6 w-5 h-5" />
