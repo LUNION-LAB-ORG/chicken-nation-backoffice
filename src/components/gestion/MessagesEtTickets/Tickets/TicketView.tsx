@@ -382,8 +382,8 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             {sortedMessages && sortedMessages.length > 0 ? (
               sortedMessages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.authorUserId ? 'justify-end' : 'justify-start'}`}>
-                  {msg.authorCustomerId ? (
-                    /* Message client à gauche */
+                  {!msg.authorUserId ? (
+                    /* Message client ou livreur à gauche */
                     <div className="flex items-start md:space-x-3 space-x-2 md:max-w-2xl max-w-xs">
                       <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
                         {ticket.customer?.image && ticket.customer.image.trim() !== '' && formatImageUrl(ticket.customer.image) ? (
@@ -409,7 +409,13 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center md:space-x-2 space-x-1 mb-1">
-                          <span className="md:text-sm text-xs font-medium text-gray-900">{ticket.customer?.name}</span>
+                          <span className="md:text-sm text-xs font-medium text-gray-900">
+                            {(msg.authorCustomer as any)?.name
+                              ?? [ (msg.authorCustomer as any)?.first_name, (msg.authorCustomer as any)?.last_name ].filter(Boolean).join(' ')
+                              || [ (msg.authorDeliverer as any)?.first_name, (msg.authorDeliverer as any)?.last_name ].filter(Boolean).join(' ')
+                              || ticket.customer?.name
+                              || 'Client'}
+                          </span>
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
                         <div className="bg-white text-gray-900 md:px-4 md:py-3 px-3 py-2 rounded-2xl">
@@ -422,7 +428,9 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                     <div className="flex items-start md:space-x-3 space-x-2 md:max-w-2xl max-w-xs">
                       <div className="flex-1">
                         <div className="flex items-center justify-end md:space-x-2 space-x-1 mb-1">
-                          <span className="md:text-sm text-xs font-medium text-gray-500">{user?.fullname}</span> 
+                          <span className="md:text-sm text-xs font-medium text-gray-500">
+                            {msg.authorUser?.fullname ?? msg.authorUser?.email ?? 'Agent'}
+                          </span>
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
                         <div className="bg-[#F17922] text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
@@ -430,22 +438,21 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                         </div>
                       </div>
                      <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                        {user?.image && user.image.trim() !== '' && formatImageUrl(user?.image) ? (
+                        {msg.authorUser?.image && msg.authorUser.image.trim() !== '' && formatImageUrl(msg.authorUser.image) ? (
                           <Image
-                           src={formatImageUrl(user?.image)}
-                            alt={user?.fullname}
+                            src={formatImageUrl(msg.authorUser.image)}
+                            alt={msg.authorUser?.fullname ?? 'Agent'}
                             width={40}
                             height={40}
                             className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"
                             onError={(e) => {
-                              // Fallback vers l'image par défaut en cas d'erreur
                               (e.target as HTMLImageElement).src = '/images/mascot.png';
                             }}
                           />
                         ) : (
                           <Image
                             src="/images/mascot.png"
-                            alt={user?.fullname || 'Agent'}
+                            alt={msg.authorUser?.fullname || 'Agent'}
                             width={40}
                             height={40}
                             className="md:w-10 md:h-10 w-8 h-8 rounded-full object-cover"

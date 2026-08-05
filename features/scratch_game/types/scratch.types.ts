@@ -152,3 +152,42 @@ export const SCRATCH_SETTING_KEYS = {
   /** Fenêtre de la fidélité requise (min commandes / CA), en jours (défaut 90). */
   eligibility_window_days: "scratch.eligibility_window_days",
 } as const;
+
+
+// ── Historique des tirages ──────────────────────────────────────────────────
+
+export type ScratchDrawStatut =
+  | "A_GRATTER"
+  | "GRATTE"
+  | "UTILISE"
+  | "REVOQUE"
+  | "EXPIRE"
+  | "SANS_GAIN";
+
+export interface ScratchDraw {
+  id: string;
+  date_tirage: string;
+  lot: { id: string; label: string; reward_type: string; unit_cost: number } | null;
+  cout: number;
+  client: { id: string; name: string; phone: string | null; image: string | null } | null;
+  commande_origine: { id: string; reference: string } | null;
+  statut: ScratchDrawStatut;
+  gratte_le: string | null;
+  utilise_le: string | null;
+  commande_utilisation: { id: string; reference: string } | null;
+  expire_le: string | null;
+  stock_restaure: boolean;
+}
+
+export interface ScratchDrawsResponse {
+  data: ScratchDraw[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface ScratchDrawsQuery {
+  page?: number;
+  limit?: number;
+  lotId?: string;
+  startDate?: string;
+  endDate?: string;
+}

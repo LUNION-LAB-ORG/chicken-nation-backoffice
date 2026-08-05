@@ -2,6 +2,8 @@ import { getAuthToken } from "@/utils/authUtils";
 import { getHumanReadableError } from "@/utils/errorMessages";
 import {
   CreateScratchLotDto,
+  ScratchDrawsQuery,
+  ScratchDrawsResponse,
   ScratchEnvelopeResponse,
   ScratchLot,
   ScratchSimulateQuery,
@@ -134,6 +136,18 @@ export const getScratchEnvelope = async () => {
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`Error: ${response.status}`);
     return (await response.json()) as ScratchEnvelopeResponse;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+
+export const getScratchDraws = async (query: ScratchDrawsQuery) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, "/draws", query);
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) throw new Error("Chargement des tirages impossible");
+    return (await response.json()) as ScratchDrawsResponse;
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }

@@ -7,8 +7,9 @@ import {
   getScratchLot,
   getScratchLots,
   simulateScratch,
+  getScratchDraws,
 } from "../services/scratch.service";
-import { ScratchSimulateQuery } from "../types/scratch.types";
+import { ScratchDrawsQuery, ScratchSimulateQuery } from "../types/scratch.types";
 
 // Liste des lots (plancher en tête)
 export const useScratchLotsQuery = () => {
@@ -63,6 +64,23 @@ export const useScratchSimulateQuery = (
     enabled: enabled && query.amount > 0,
     placeholderData: keepPreviousData,
     staleTime: 60 * 1000,
+  });
+};
+
+// Historique des tirages
+export const useScratchDrawsQuery = (query: ScratchDrawsQuery) => {
+  return useQuery({
+    queryKey: scratchKeyQuery(
+      "draws",
+      query.page ?? 1,
+      query.limit ?? 20,
+      query.lotId ?? "ALL",
+      query.startDate ?? "",
+      query.endDate ?? ""
+    ),
+    queryFn: () => getScratchDraws(query),
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
   });
 };
 

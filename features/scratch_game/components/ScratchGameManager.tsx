@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Layers, Calculator, Activity, SlidersHorizontal } from "lucide-react";
+import { Plus, Layers, Calculator, Activity, SlidersHorizontal, History } from "lucide-react";
 import { useScratchLotsQuery } from "../queries/scratch.queries";
 import {
   useCreateScratchLotMutation,
@@ -14,14 +14,16 @@ import ScratchLotForm from "./ScratchLotForm";
 import ScratchSimulator from "./ScratchSimulator";
 import ScratchEnvelopeMonitor from "./ScratchEnvelopeMonitor";
 import ScratchSettingsPanel from "./ScratchSettingsPanel";
+import ScratchDrawsHistory from "./ScratchDrawsHistory";
 import { CreateScratchLotDto, ScratchLot } from "../types/scratch.types";
 import { useAuthStore } from "../../users/hook/authStore";
 import { UserRole } from "../../users/types/user.types";
 
-type ScratchTab = "lots" | "simulator" | "envelope" | "settings";
+type ScratchTab = "lots" | "draws" | "simulator" | "envelope" | "settings";
 
 const TABS: { key: ScratchTab; label: string; icon: React.ElementType }[] = [
   { key: "lots", label: "Lots", icon: Layers },
+  { key: "draws", label: "Tirages", icon: History },
   { key: "simulator", label: "Simulateur", icon: Calculator },
   { key: "envelope", label: "Enveloppe", icon: Activity },
   { key: "settings", label: "Réglages", icon: SlidersHorizontal },
@@ -166,6 +168,15 @@ export default function ScratchGameManager() {
                 onDelete={handleDelete}
                 onToggleActive={handleToggleActive}
               />
+            </motion.div>
+          ) : tab === "draws" ? (
+            <motion.div
+              key="draws"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ScratchDrawsHistory />
             </motion.div>
           ) : tab === "simulator" ? (
             <motion.div
