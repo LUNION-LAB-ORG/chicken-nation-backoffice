@@ -1,5 +1,6 @@
 "use client";
 
+import { useSupportBadgesSync } from '../../../features/messagerie';
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuthStore } from "../../../features/users/hook/authStore";
 import { Notification } from "@/services/notificationService";
@@ -17,6 +18,8 @@ interface NotificationDropdownProps {
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   className = "",
 }) => {
+  // Badges Messages/Tickets tenus à jour en direct partout dans le backoffice.
+  useSupportBadgesSync();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedNotification, setSelectedNotification] =
     useState<Notification | null>(null);

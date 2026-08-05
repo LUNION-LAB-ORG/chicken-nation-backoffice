@@ -1,3 +1,4 @@
+import { acquireSocket, releaseSocket } from '../../features/messagerie/hooks/sharedSocket';
 import {
   useInfiniteQuery,
   useMutation,
@@ -113,21 +114,20 @@ export const useNotificationsQuery = ({
     }
   };
 
-  // ✅ Gestion des sockets
+  // Socket PARTAGÉ du backoffice : l'ancienne version ouvrait une connexion
+  // par montage sans jamais la fermer (fuite mesurée par l'audit).
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      query: {
-        token: NotificationAPI.getToken(),
-        type: "user",
-      },
-    });
-    socket.on("connect", () => {
-      setConnected(true);
-    })
+    const socket = acquireSocket();
+    if (!socket) return;
+    const onConnect = () => setConnected(true);
+    if (socket.connected) setConnected(true);
+    socket.on("connect", onConnect);
     socket.on("notification:new", handleNewNotification);
 
     return () => {
+      socket.off("connect", onConnect);
       socket.off("notification:new", handleNewNotification);
+      releaseSocket();
     };
   }, [queryClient, userId]);
 

@@ -1,10 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { io, Socket } from 'socket.io-client';
-import { NotificationAPI } from '../../../src/services/notificationService';
-import { SOCKET_URL } from '../../../src/config';
 import { ticketKeyQuery, ticketStatsKeyQuery } from '../queries/index.query';
 import { useAuthStore } from '../../users/hook/authStore';
+import { acquireSocket, releaseSocket, shouldPlayOnce } from './sharedSocket';
 
 interface UseTicketSocketSyncProps {
   enabled?: boolean;
@@ -13,6 +11,10 @@ interface UseTicketSocketSyncProps {
   playSound?: boolean;
 }
 
+/**
+ * Synchronise les tickets en direct via le socket PARTAGÉ du backoffice.
+ * Une seule connexion pour toutes les vues, un seul son par événement.
+ */
 export const useTicketSocketSync = ({
   enabled = true,
   onNewTicket,
@@ -21,8 +23,6 @@ export const useTicketSocketSync = ({
 }: UseTicketSocketSyncProps = {}) => {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
-  const socketRef = useRef<Socket | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const invalidateTickets = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ticketKeyQuery() });
@@ -32,73 +32,81 @@ export const useTicketSocketSync = ({
   useEffect(() => {
     if (!enabled) return;
 
-    if (playSound && !audioRef.current && typeof window !== 'undefined') {
-      audioRef.current = new Audio('/musics/notification-sound.mp3');
-      audioRef.current.volume = 0.5;
-    }
+    const socket = acquireSocket();
+    if (!socket) return;
 
-    const socket = io(SOCKET_URL, {
-      query: {
-        token: NotificationAPI.getToken() || '',
-        type: 'user',
-      },
-    });
-    socketRef.current = socket;
+    const audio =
+      playSound && typeof window !== 'undefined'
+        ? new Audio('/musics/notification-sound.mp3')
+        : null;
+    if (audio) audio.volume = 0.5;
 
-    // Backend events (support-websocket.service.ts)
-    socket.on('new:ticket', (data: any) => {
-      if (playSound && audioRef.current) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+    const playFor = (key: string) => {
+      if (audio && shouldPlayOnce(key)) {
+        audio.currentTime = 0;
+        audio.play().catch(() => {});
       }
+    };
+
+    const onNew = (data: any) => {
+      playFor(`ticket:${data?.id ?? data?.ticketId ?? ''}`);
       onNewTicket?.(data);
       invalidateTickets();
-    });
+    };
 
-    socket.on('update:ticket', (data: any) => {
+    const onUpdate = (data: any) => {
       onTicketUpdate?.(data);
       const ticketId = data?.id || data?.ticketId;
       if (ticketId) {
         queryClient.invalidateQueries({ queryKey: ticketKeyQuery('detail', ticketId) });
       }
       invalidateTickets();
-    });
+    };
 
-    socket.on('new:ticket_message', (data: any) => {
+    const onNewTicketMessage = (data: any) => {
       const authorId = data?.authorUser?.id || data?.message?.authorUser?.id;
-      if (playSound && audioRef.current && authorId !== currentUserId) {
-        audioRef.current.currentTime = 0;
-        audioRef.current.play().catch(() => {});
+      if (authorId !== currentUserId) {
+        playFor(`tmsg:${data?.message?.id ?? data?.id ?? ''}`);
       }
       if (data?.ticketId) {
         queryClient.invalidateQueries({ queryKey: ticketKeyQuery('detail', data.ticketId) });
       }
       queryClient.invalidateQueries({ queryKey: ticketKeyQuery('list') });
-    });
+      queryClient.invalidateQueries({ queryKey: ticketStatsKeyQuery() });
+    };
 
-    socket.on('read:ticket_messages', (data: any) => {
+    const onReadTicketMessages = (data: any) => {
       if (data?.ticketId) {
         queryClient.invalidateQueries({ queryKey: ticketKeyQuery('detail', data.ticketId) });
       }
-    });
+      queryClient.invalidateQueries({ queryKey: ticketStatsKeyQuery() });
+    };
 
-    // User-targeted events
-    socket.on('assigned:ticket', (data: any) => {
+    const onAssigned = (data: any) => {
       onTicketUpdate?.(data);
       invalidateTickets();
-    });
+    };
 
-    socket.on('created:ticket', (data: any) => {
+    const onCreated = (data: any) => {
       onNewTicket?.(data);
       invalidateTickets();
-    });
+    };
+
+    socket.on('new:ticket', onNew);
+    socket.on('update:ticket', onUpdate);
+    socket.on('new:ticket_message', onNewTicketMessage);
+    socket.on('read:ticket_messages', onReadTicketMessages);
+    socket.on('assigned:ticket', onAssigned);
+    socket.on('created:ticket', onCreated);
 
     return () => {
-      socket.offAny();
-      socket.disconnect();
-      socketRef.current = null;
+      socket.off('new:ticket', onNew);
+      socket.off('update:ticket', onUpdate);
+      socket.off('new:ticket_message', onNewTicketMessage);
+      socket.off('read:ticket_messages', onReadTicketMessages);
+      socket.off('assigned:ticket', onAssigned);
+      socket.off('created:ticket', onCreated);
+      releaseSocket();
     };
   }, [enabled, currentUserId, queryClient, invalidateTickets, onNewTicket, onTicketUpdate, playSound]);
-
-  return { socket: socketRef.current };
 };

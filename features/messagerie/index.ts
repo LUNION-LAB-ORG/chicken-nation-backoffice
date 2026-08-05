@@ -40,3 +40,4 @@ export {
 // === Socket Sync Hooks ===
 export { useMessagerieSocketSync } from './hooks/useMessagerieSocketSync';
 export { useTicketSocketSync } from './hooks/useTicketSocketSync';
+export { useSupportBadgesSync } from './hooks/useSupportBadgesSync';
