@@ -1,5 +1,6 @@
 "use client";
 
+import { useDashboardStore } from '@/store/dashboardStore';
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
@@ -49,19 +50,24 @@ function EscalateTicketModal({ isOpen, onClose, conversationId, clientName }: Es
     }
 
     try {
-      await escalateMutation.mutateAsync({
+      const created: any = await escalateMutation.mutateAsync({
         conversationId,
         title: ticketSubject.trim(),
         priority: PRIORITY_MAP[priority] || 'MEDIUM',
         category: categoryId || undefined,
       } as any);
 
-      toast.success('Conversation escaladée en ticket');
+      toast.success('Ticket créé');
       onClose();
       resetForm();
+      // Fini le cul-de-sac : on ouvre directement le ticket créé.
+      const ticketId = created?.id ?? created?.data?.id;
+      if (ticketId) {
+        useDashboardStore.getState().openTicket(ticketId);
+      }
     } catch (error) {
-      console.error('Erreur lors de l\'escalation:', error);
-      toast.error('Impossible d\'escalader la conversation');
+      console.error('Erreur transformation en ticket:', error);
+      toast.error("Le ticket n'a pas pu être créé");
     }
   };
 

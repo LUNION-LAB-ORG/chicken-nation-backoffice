@@ -35,6 +35,9 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
       }
     } catch (error) {
       console.error('Erreur création conversation:', error);
+      // Remonter l'échec au modal : sans ce re-throw, il affichait
+      // « Conversation créée » et se fermait alors que rien n'existait.
+      throw error;
     } finally {
       setIsNewConversationModalOpen(false);
     }

@@ -13,7 +13,7 @@ export type TabKey =
   // Fidélisation éclatée : parrainage, campagnes cadeaux et jeux sont des
   // modules à part entière (plus multiplexés dans « Points de fidélité »)
   | 'referral' | 'gifts' | 'games'
-  | 'inbox' | 'card_requests' | 'card_nation' | 'reviews' | 'appel'
+  | 'inbox' | 'tickets' | 'card_requests' | 'card_nation' | 'reviews' | 'appel'
   // Statistiques détaillées
   | 'stats_products' | 'stats_orders' | 'stats_clients'
   | 'stats_delivery' | 'stats_marketing' | 'stats_retention_callbacks'
@@ -49,6 +49,8 @@ export interface DashboardState {
   // Conversation à ouvrir dans l'inbox (deep-link email / clic notification/toast).
   // Transient : non persisté, consommé par l'InboxModule puis remis à null.
   pendingConversationId: string | null;
+  // Ticket à ouvrir (escalade, notification, lien partagé). Même mécanique.
+  pendingTicketId: string | null;
   selectedRestaurantId: string | null;
   selectedPeriod: PeriodFilter;
 
@@ -95,6 +97,8 @@ export interface DashboardState {
 
   // Actions
   setActiveTab: (tab: TabKey) => void;
+  openTicket: (ticketId: string) => void;
+  clearPendingTicket: () => void;
   openInboxConversation: (conversationId: string) => void;
   clearPendingConversation: () => void;
   setSelectedRestaurantId: (id: string | null) => void;
@@ -142,6 +146,7 @@ export const useDashboardStore = create<DashboardState>()(
       // État Initial
       activeTab: null,
       pendingConversationId: null,
+      pendingTicketId: null,
       selectedRestaurantId: null,
       selectedPeriod: 'month',
 
@@ -196,6 +201,14 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       clearPendingConversation: () => set((state) => {
         state.pendingConversationId = null;
+      }),
+      // Ouvre le module Tickets sur un ticket précis (escalade, notification).
+      openTicket: (ticketId) => set((state) => {
+        state.activeTab = 'tickets';
+        state.pendingTicketId = ticketId;
+      }),
+      clearPendingTicket: () => set((state) => {
+        state.pendingTicketId = null;
       }),
       setSelectedRestaurantId: (id) => set((state) => { state.selectedRestaurantId = id }),
       setSelectedPeriod: (period) => set((state) => { state.selectedPeriod = period }),

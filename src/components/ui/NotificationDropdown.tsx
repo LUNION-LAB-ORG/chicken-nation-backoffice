@@ -88,6 +88,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const openInboxConversation = useDashboardStore(
     (s) => s.openInboxConversation
   );
+  const openTicket = useDashboardStore((s) => s.openTicket);
   const setActiveTab = useDashboardStore((s) => s.setActiveTab);
   const setFilter = useDashboardStore((s) => s.setFilter);
 
@@ -110,12 +111,19 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         reference?: string;
         order_id?: string;
         search?: string;
+        ticketId?: string;
       };
     }).data;
 
     // Nouveau message → conversation de l'inbox
     if (data?.conversationId) {
       openInboxConversation(data.conversationId);
+      return;
+    }
+
+    // Ticket → ouvrir le ticket directement
+    if (data?.ticketId) {
+      openTicket(data.ticketId);
       return;
     }
 

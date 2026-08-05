@@ -1,5 +1,6 @@
 "use client";
 
+import { useDashboardStore } from '@/store/dashboardStore';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2, Tag, ShoppingBag, UserCheck, MessageSquare, Clock, User } from 'lucide-react';
@@ -58,6 +59,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
   // Mutations pour les messages et l'assignation
   const sendMessageMutation = useEnvoyerMessageTicketMutation();
   const assignTicketMutation = useAssignerTicketMutation();
+  const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
   const updateStatusMutation = useModifierStatutTicketMutation();
   const updatePriorityMutation = useModifierPrioriteTicketMutation();
   const queryClient = useQueryClient();
@@ -134,12 +136,13 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
     if (!message.trim() || !user?.id || !ticketId) return;
 
     try {
-      // Auto-assigner le ticket si nécessaire
-      if (!ticket?.assignee || ticket.assignee.id !== user.id) {
+      // Un ticket sans agent est pris par celui qui répond. Un ticket déjà
+      // assigné à un collègue reste le sien : répondre ne le vole plus.
+      if (!ticket?.assignee) {
         try {
           await assignTicketMutation.mutateAsync({ ticketId, assigneeId: user.id });
         } catch {
-          // Continue même si l'assignation échoue
+          // L'envoi du message reste prioritaire
         }
       }
 
@@ -248,8 +251,17 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 Ticket #{ticket.code} - {ticket.category?.name}
               </p>
               <p className="text-xs text-gray-400">
-                Client: {ticket.customer?.name || 'Client inconnu'}
+                Client : {ticket.customer?.name || 'Client inconnu'}
               </p>
+              {(ticket as any).conversationId && (
+                <button
+                  type="button"
+                  onClick={() => openInboxConversation((ticket as any).conversationId)}
+                  className="mt-1 text-xs text-[#F17922] hover:underline cursor-pointer"
+                >
+                  Voir la conversation d'origine
+                </button>
+              )}
             </div>
           </div>
 

@@ -7,9 +7,20 @@ import TicketsRightbar from './TicketsRightbar';
 import NewTicketModal from './NewTicketModal';
 import NewCategoryModal from './NewCategoryModal';
 import { useTicketSocketSync } from '../../../../../features/messagerie';
+import { useDashboardStore } from '@/store/dashboardStore';
 
 function TicketsModule() {
   const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
+  // Ticket demandé depuis ailleurs (escalade Inbox, clic notification) :
+  // consommé une fois puis remis à zéro.
+  const pendingTicketId = useDashboardStore((s) => s.pendingTicketId);
+  const clearPendingTicket = useDashboardStore((s) => s.clearPendingTicket);
+  React.useEffect(() => {
+    if (pendingTicketId) {
+      setSelectedTicket(pendingTicketId);
+      clearPendingTicket();
+    }
+  }, [pendingTicketId, clearPendingTicket]);
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
 

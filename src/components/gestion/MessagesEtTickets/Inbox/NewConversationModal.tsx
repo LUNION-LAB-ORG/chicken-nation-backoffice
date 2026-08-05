@@ -96,7 +96,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     } catch (error) {
       console.error('Erreur lors du chargement des clients:', error);
       setErrors(prev => ({ ...prev, clients: 'Erreur lors du chargement des clients' }));
-      toast.error('Erreur lors du chargement des clients');
+      toast.error('Chargement des clients impossible');
     } finally {
       setIsLoadingClients(false);
     }
@@ -134,7 +134,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     } catch (error) {
       console.error('Erreur lors du chargement des utilisateurs:', error);
       setErrors(prev => ({ ...prev, users: 'Erreur lors du chargement des utilisateurs' }));
-      toast.error('Erreur lors du chargement des utilisateurs');
+      toast.error('Chargement des agents impossible');
     } finally {
       setIsLoadingUsers(false);
     }
@@ -224,10 +224,10 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       // Réinitialiser et fermer
       resetForm();
       onClose();
-      toast.success('Conversation créée avec succès');
+      toast.success('Conversation créée');
     } catch (error) {
       console.error('Erreur lors de la création de la conversation:', error);
-      toast.error('Erreur lors de la création de la conversation');
+      toast.error("La conversation n'a pas pu être créée");
     } finally {
       setIsCreating(false);
     }
