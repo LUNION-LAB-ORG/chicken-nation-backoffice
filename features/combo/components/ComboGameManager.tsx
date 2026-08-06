@@ -83,7 +83,7 @@ export default function ComboGameManager() {
               Combo Mystère
             </h1>
             <p className="text-sm text-[#9796A1]">
-              Devinez la combinaison du menu — les bonnes réponses entrent au
+              Devinez la combinaison du menu, les bonnes réponses entrent au
               tirage au sort du lot.
             </p>
           </div>

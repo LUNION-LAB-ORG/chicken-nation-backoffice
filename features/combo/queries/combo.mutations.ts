@@ -20,7 +20,7 @@ export const useCreateComboGameMutation = () => {
     mutationFn: (data: CreateComboGameDto) => createComboGame(data),
     onSuccess: () => {
       invalidate("games");
-      toast.success("Jeu Combo créé avec succès");
+      toast.success("Jeu créé");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -36,7 +36,7 @@ export const useUpdateComboGameMutation = () => {
     onSuccess: (_, variables) => {
       invalidate("games");
       invalidate("game", variables.id);
-      toast.success("Jeu Combo mis à jour avec succès");
+      toast.success("Jeu mis à jour");
     },
     onError: (e: Error) => toast.error(e.message),
   });

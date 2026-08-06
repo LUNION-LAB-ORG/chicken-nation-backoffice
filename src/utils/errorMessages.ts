@@ -100,7 +100,22 @@ export const getHumanReadableError = (error: unknown): string => {
       if (message.toLowerCase().includes('cors')) {
         return 'Erreur de sécurité. Veuillez actualiser la page et réessayer.';
       }
-      
+
+      // Le serveur explique souvent PRÉCISÉMENT son refus (règle métier).
+      // On garde son message plutôt que de le remplacer par une phrase creuse :
+      // c'est la seule information utile pour l'utilisateur. On écarte
+      // uniquement le bruit technique (codes, piles d'appel, JSON brut).
+      if (
+        message &&
+        message.length > 10 &&
+        message.length < 250 &&
+        !/^\s*[{\[<]/.test(message) &&
+        !/^(error|failed|fetch|typeerror|referenceerror)\b/i.test(message) &&
+        !/^Error: \d+$/i.test(message)
+      ) {
+        return message;
+      }
+
       // Message générique
       return 'Une erreur inattendue s\'est produite. Veuillez réessayer ou contacter le support.';
   }

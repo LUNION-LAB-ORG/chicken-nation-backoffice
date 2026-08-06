@@ -220,7 +220,15 @@ export const deleteComboGame = async (id: string) => {
   try {
     const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
     const response = await fetch(url, { method: "DELETE", headers });
-    if (!response.ok) throw new Error(`Error: ${response.status}`);
+    if (!response.ok) {
+      // Le serveur explique POURQUOI il refuse (jeu déjà tiré, par exemple).
+      // Sans cette lecture, l'utilisateur ne voyait qu'« erreur inattendue ».
+      const detail = await response
+        .json()
+        .then((b) => (Array.isArray(b?.message) ? b.message.join(', ') : b?.message))
+        .catch(() => null);
+      throw new Error(detail || `Suppression impossible (${response.status})`);
+    }
     // DELETE peut renvoyer 204 (pas de corps) ou le jeu désactivé
     const text = await response.text();
     return text ? fromBackend(JSON.parse(text) as BackendComboGame) : null;

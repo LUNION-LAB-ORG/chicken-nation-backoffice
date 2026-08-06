@@ -23,7 +23,7 @@ const Label: React.FC<{ children: React.ReactNode; hint?: string }> = ({
 }) => (
   <label className="block text-sm font-medium text-[#71717A] mb-1.5">
     {children}
-    {hint && <span className="text-[#9796A1] font-normal"> — {hint}</span>}
+    {hint && <span className="text-[#9796A1] font-normal">, {hint}</span>}
   </label>
 );
 
@@ -44,7 +44,7 @@ export default function ComboGameForm({
   const [title, setTitle] = useState(game?.title ?? "");
   const [description, setDescription] = useState(game?.description ?? "");
 
-  // Indices (liste éditable) — au moins une ligne visible
+  // Indices (liste éditable), au moins une ligne visible
   const [hints, setHints] = useState<string[]>(
     game?.hints && game.hints.length > 0 ? game.hints : [""]
   );

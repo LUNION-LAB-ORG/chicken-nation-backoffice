@@ -154,11 +154,23 @@ export default function ComboGamesList({
                       >
                         <Pencil size={16} />
                       </button>
+                      {/* Un jeu déjà tiré se conserve pour l'audit des
+                          gagnants : le bouton reste visible mais inactif,
+                          avec l'explication au survol. */}
                       <button
                         type="button"
-                        title="Supprimer"
+                        title={
+                          game.status === "DRAWN"
+                            ? "Un jeu déjà tiré se conserve pour garder la trace des gagnants"
+                            : "Supprimer"
+                        }
+                        disabled={game.status === "DRAWN"}
                         onClick={() => onDelete(game)}
-                        className="p-1.5 rounded-lg text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                        className={`p-1.5 rounded-lg ${
+                          game.status === "DRAWN"
+                            ? "text-gray-300 cursor-not-allowed"
+                            : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                        }`}
                       >
                         <Trash2 size={16} />
                       </button>
