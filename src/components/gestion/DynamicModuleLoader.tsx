@@ -89,17 +89,11 @@ const modulesMap: Record<string, any> = {
   // Messages clients et tickets partagent désormais le même poste de travail :
   // une seule pile, un seul fil, une seule gestuelle. Les deux entrées de menu
   // ouvrent le même écran, avec le filtre correspondant.
-  // ssr désactivé : le poste affiche des horodatages relatifs (« Aujourd'hui »,
-  // « Hier ») calculés depuis l'instant présent. Rendus côté serveur puis
-  // recalculés dans le navigateur, ils provoquaient une erreur d'hydratation.
-  // Un écran authentifié n'a de toute façon rien à gagner au rendu serveur.
-  inbox: dynamic(() => import("../../../features/support/components/SupportWorkspace"), {
+  inbox: dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
     loading: () => <LoadingSpinner />,
-    ssr: false,
   }),
-  tickets: dynamic(() => import("../../../features/support/components/SupportWorkspace"), {
+  tickets: dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
     loading: () => <LoadingSpinner />,
-    ssr: false,
   }),
   appel: dynamic(() => import("../../../features/calls/components/AppelView"), {
     loading: () => <LoadingSpinner />,
@@ -161,7 +155,13 @@ const modulesMap: Record<string, any> = {
 };
 
 export default function DynamicModuleLoader() {
-  const { activeTab } = useDashboardStore();
+  const { activeTab, pendingConversationId } = useDashboardStore();
+
+  // Inbox : on transmet la conversation en attente (deep-link, notification).
+  if (activeTab === "inbox") {
+    const InboxComp = modulesMap["inbox"];
+    return <InboxComp initialConversationId={pendingConversationId} />;
+  }
 
   const Component =
     modulesMap[
