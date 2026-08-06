@@ -32,12 +32,31 @@ import { Puce, Vide } from "./primitives";
  * jeu de gestes. Le type d'élément devient un filtre, pas une autre application.
  */
 
+/**
+ * Extrait la liste quelle que soit la forme renvoyée par l'API : tableau nu,
+ * { data } ou { items }. Le backoffice mélange les trois selon les endpoints,
+ * et supposer la mauvaise forme fait planter tout l'écran.
+ */
+function listeDe<T>(source: unknown): T[] {
+  if (Array.isArray(source)) return source as T[];
+  if (source && typeof source === "object") {
+    const o = source as { data?: unknown; items?: unknown };
+    if (Array.isArray(o.data)) return o.data as T[];
+    if (Array.isArray(o.items)) return o.items as T[];
+  }
+  return [];
+}
+
 const STATUT_VERS_FILTRE: Record<string, ElementSupport["statut"]> = {
   OPEN: "ouvert",
   IN_PROGRESS: "en_cours",
   RESOLVED: "resolu",
   CLOSED: "ferme",
 };
+
+/** Servent uniquement à typer les extractions de listes. */
+const ticketMessagesVide: import("../../messagerie/types/ticket.type").ITicketMessage[] = [];
+const messagesFilVide: import("../../messagerie/types/conversation.type").IMessage[] = [];
 
 export default function SupportWorkspace() {
   const { user } = useAuthStore();
@@ -60,18 +79,19 @@ export default function SupportWorkspace() {
   useMessagerieSocketSync();
   useTicketSocketSync({ enabled: true, playSound: true });
 
-  const { data: conversations = [], isLoading: chargeConv } =
+  const { data: conversationsBrut, isLoading: chargeConv } =
     useConversationListQuery();
-  const { data: ticketsData, isLoading: chargeTickets } = useTicketListQuery({});
-  const tickets: ITicket[] = useMemo(
-    () => (ticketsData as { data?: ITicket[] })?.data ?? [],
-    [ticketsData]
+  const { data: ticketsBrut, isLoading: chargeTickets } = useTicketListQuery({});
+  const conversations = useMemo(
+    () => listeDe<IConversation>(conversationsBrut),
+    [conversationsBrut]
   );
+  const tickets = useMemo(() => listeDe<ITicket>(ticketsBrut), [ticketsBrut]);
 
   /* ── Fusion des deux sources en une pile unique ───────────────────────── */
 
   const elements = useMemo<ElementSupport[]>(() => {
-    const depuisConversations: ElementSupport[] = (conversations as IConversation[]).map(
+    const depuisConversations: ElementSupport[] = conversations.map(
       (c) => {
         const dernier = c.messages?.[c.messages.length - 1];
         const nom =
@@ -179,8 +199,13 @@ export default function SupportWorkspace() {
   /* ── Fil sélectionné ──────────────────────────────────────────────────── */
 
   const estTicket = selection?.type === "ticket";
-  const { data: messagesConv = [], isLoading: chargeMessages } =
-    useMessageListQuery(estTicket ? null : selection?.id ?? null);
+  const { data: messagesBrut, isLoading: chargeMessages } = useMessageListQuery(
+    estTicket ? null : selection?.id ?? null
+  );
+  const messagesConv = useMemo(
+    () => listeDe<(typeof messagesFilVide)[number]>(messagesBrut),
+    [messagesBrut]
+  );
   const { data: ticket, isLoading: chargeTicket } = useTicketDetailQuery(
     estTicket ? selection?.id ?? null : null
   );
@@ -202,7 +227,7 @@ export default function SupportWorkspace() {
 
   const messagesFil = useMemo<MessageFil[]>(() => {
     if (estTicket) {
-      const liste = [...(ticket?.messages ?? [])].sort(
+      const liste = [...listeDe<(typeof ticketMessagesVide)[number]>(ticket?.messages)].sort(
         (a, b) =>
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
