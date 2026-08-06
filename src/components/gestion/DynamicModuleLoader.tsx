@@ -86,10 +86,13 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
-  inbox: dynamic(() => import("@/components/gestion/MessagesEtTickets/Inbox"), {
+  // Messages clients et tickets partagent désormais le même poste de travail :
+  // une seule pile, un seul fil, une seule gestuelle. Les deux entrées de menu
+  // ouvrent le même écran, avec le filtre correspondant.
+  inbox: dynamic(() => import("../../../features/support/components/SupportWorkspace"), {
     loading: () => <LoadingSpinner />,
   }),
-  tickets: dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
+  tickets: dynamic(() => import("../../../features/support/components/SupportWorkspace"), {
     loading: () => <LoadingSpinner />,
   }),
   appel: dynamic(() => import("../../../features/calls/components/AppelView"), {
@@ -152,14 +155,7 @@ const modulesMap: Record<string, any> = {
 };
 
 export default function DynamicModuleLoader() {
-  const { activeTab, pendingConversationId } = useDashboardStore();
-
-  // Inbox : on transmet la conversation en attente (deep-link email / clic
-  // notification/toast). L'InboxModule la sélectionne puis vide le store.
-  if (activeTab === "inbox") {
-    const InboxComp = modulesMap["inbox"];
-    return <InboxComp initialConversationId={pendingConversationId} />;
-  }
+  const { activeTab } = useDashboardStore();
 
   const Component =
     modulesMap[
