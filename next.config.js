@@ -28,10 +28,6 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "chicken.turbodeliveryapp.com",
-      },
-      {
-        protocol: "https",
         hostname: "api-private.chicken-nation.com",
       },
       {

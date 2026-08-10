@@ -93,9 +93,16 @@ const PaymentSettings: React.FC = () => {
 
   /** URL de webhook du panneau courant, dérivée de l'URL globale. */
   const webhookUrl = useMemo(() => {
-    const base =
-      stored["kkiapay_webhook_path"] ||
-      "https://api-private.chicken-nation.com/api/v1/kkiapay/webhook";
+    const defaut = "https://api-private.chicken-nation.com/api/v1/kkiapay/webhook";
+    const enregistre = stored["kkiapay_webhook_path"] || "";
+    // Le réglage a longtemps contenu chicken.turbodeliveryapp.com, domaine hors
+    // service : une URL copiée depuis cet écran envoyait les notifications de
+    // paiement dans le vide, et la commande n'était jamais confirmée. On ignore
+    // donc les domaines morts connus au profit de l'adresse en service.
+    const morts = ["turbodeliveryapp.com", "api-staging.chicken-nation.com"];
+    const base = morts.some((m) => enregistre.includes(m)) || !enregistre
+      ? defaut
+      : enregistre;
     return selected === null ? base : `${base.replace(/\/$/, "")}/${selected}`;
   }, [stored, selected]);
 
