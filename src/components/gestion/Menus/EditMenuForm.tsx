@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Checkbox from "@/components/ui/Checkbox";
+import DishOptionsSection, { DishOptionsSectionHandle } from "../../../../features/menus/components/DishOptionsSection";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { MenuItem, SupplementItem } from "@/types";
@@ -57,6 +58,11 @@ interface EditMenuFormProps {
   initialData: MenuItem; // Obligatoire pour l'édition
   onCancel?: () => void;
   onSubmit: (menuData: MenuItem) => void;
+  /**
+   * Passerelle vers la configuration composable. L'écran parent la lit au
+   * moment d'enregistrer : le formulaire, lui, n'écrit jamais rien lui-même.
+   */
+  optionsRef?: React.RefObject<DishOptionsSectionHandle | null>;
 }
 
 // ✅ TYPES STRICTS POUR LES OPTIONS
@@ -81,6 +87,7 @@ const EditMenuForm = ({
   initialData,
   onCancel,
   onSubmit,
+  optionsRef,
 }: EditMenuFormProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -1610,6 +1617,16 @@ const EditMenuForm = ({
           </div>
         </div>
       </motion.div>
+
+      {/* Menu composable : les questions posées au client avant le panier.
+          Hors de la grille à deux colonnes, illisible sur une demi-largeur. */}
+      <div className="mt-6">
+        <DishOptionsSection
+          ref={optionsRef}
+          dishId={initialData?.id}
+          disabled={isSubmitting}
+        />
+      </div>
 
       {/* Boutons d'action */}
       <div className="flex items-center justify-center gap-4 mt-6">

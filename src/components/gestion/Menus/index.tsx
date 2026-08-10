@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import MenuHeader from "./MenuHeader";
@@ -27,6 +27,9 @@ import {
 } from "@/schemas/menuSchemas";
 import MenuRightSide from "./MenuRightSide";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { DishOptionsSectionHandle } from "../../../../features/menus/components/DishOptionsSection";
+import { configurationInvalide } from "../../../../features/menus/components/DishOptionsEditor";
+import { saveDishOptionConfiguration } from "../../../../features/menus/services/dish-option-service";
 
 interface MenuState {
   view: "list" | "create" | "edit" | "view";
@@ -55,6 +58,13 @@ const Menus = () => {
   // de fermeture (sinon le titre flash en undefined au moment de la fermeture).
   const [menuToDelete, setMenuToDelete] = useState<MenuItem | null>(null);
   const [isDeletingMenu, setIsDeletingMenu] = useState(false);
+
+  /**
+   * MENUS COMPOSABLES : la section d'options vit dans le formulaire, mais son
+   * enregistrement se fait ici, où l'on dispose déjà d'un contexte asynchrone
+   * et de l'identifiant du plat une fois créé.
+   */
+  const optionsRef = useRef<DishOptionsSectionHandle | null>(null);
 
   // ✅ Hook pour la recherche côté serveur
   const {
@@ -423,12 +433,39 @@ const Menus = () => {
   const handleSaveEdit = async (updatedMenu: MenuItem) => {
     if (!menuState.selectedMenu) return;
 
+    // Configuration composable lue AVANT tout appel réseau. `null` signifie
+    // qu'elle n'est pas encore connue : on n'y touche pas, plutôt que de
+    // l'écraser par une liste vide.
+    const groupes = optionsRef.current?.lireGroupes() ?? null;
+    if (groupes) {
+      const probleme = configurationInvalide(groupes);
+      if (probleme) {
+        toast.error(probleme);
+        return;
+      }
+    }
+
     setMenuState({ ...menuState, saving: true });
 
     try {
       // 1. Mettre à jour les informations de base du menu
       const formData = menuToFormData(updatedMenu, true); // ✅ Indiquer qu'il s'agit d'un UPDATE
       await updateMenu(menuState.selectedMenu.id, formData);
+
+      // Les options partent par leur propre route : le formulaire du plat est
+      // envoyé en multipart et son schéma écarte silencieusement tout champ
+      // qu'il ne connaît pas. Un échec ici ne doit pas faire croire que la
+      // mise à jour du plat a échoué, elle vient de réussir.
+      if (groupes) {
+        try {
+          await saveDishOptionConfiguration(menuState.selectedMenu.id, groupes);
+        } catch (erreur) {
+          console.error("Options du plat non enregistrées :", erreur);
+          toast.error(
+            `Plat mis à jour, mais les options n'ont pas été enregistrées : ${(erreur as Error).message}`,
+          );
+        }
+      }
 
       // Le modèle "tout par défaut − exclusions" est géré ENTIÈREMENT par
       // menuToFormData(UPDATE) : l'API remplace les exclusions du plat en une
@@ -588,8 +625,19 @@ const Menus = () => {
         <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
           <div className="w-full min-[1620px]:mr-56">
             <AddMenuForm
+              optionsRef={optionsRef}
               onCancel={() => handleViewChange("list")}
               onSubmit={async (newMenu: MenuItem) => {
+                // En création le plat n'existe pas encore : la configuration
+                // attend en mémoire. On la valide AVANT de créer le plat, pour
+                // ne pas laisser un plat créé avec des options refusées.
+                const groupes = optionsRef.current?.lireGroupes() ?? [];
+                const probleme = configurationInvalide(groupes);
+                if (probleme) {
+                  toast.error(probleme);
+                  return;
+                }
+
                 try {
                   // ✅ DEBUG: Vérifier les données reçues dans index.tsx
                   console.log("🔍 DEBUG index.tsx - Menu reçu:", {
@@ -619,7 +667,18 @@ const Menus = () => {
                   });
 
                   // ✅ Création sécurisée du menu
-                  await createMenu(formData);
+                  const platCree = await createMenu(formData);
+
+                  if (groupes.length > 0 && platCree?.id) {
+                    try {
+                      await saveDishOptionConfiguration(platCree.id, groupes);
+                    } catch (erreur) {
+                      console.error("Options du plat non enregistrées :", erreur);
+                      toast.error(
+                        `Plat créé, mais les options n'ont pas été enregistrées : ${(erreur as Error).message}. Ouvrez le plat pour les saisir.`,
+                      );
+                    }
+                  }
 
                   toast.success("Menu créé avec succès");
                   refetch(); // Recharger les données
@@ -642,6 +701,7 @@ const Menus = () => {
               </div>
             ) : (
               <EditMenuForm
+                optionsRef={optionsRef}
                 initialData={menuState.selectedMenu as unknown as MenuItem}
                 onCancel={() => handleViewChange("list")}
                 onSubmit={handleSaveEdit}

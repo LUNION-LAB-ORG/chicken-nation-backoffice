@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Checkbox from "@/components/ui/Checkbox";
+import DishOptionsSection, { DishOptionsSectionHandle } from "../../../../features/menus/components/DishOptionsSection";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { MenuItem } from "@/types";
@@ -56,6 +57,12 @@ interface MenuFormData {
 interface AddMenuFormProps {
   onCancel?: () => void;
   onSubmit: (menuData: MenuItem) => void;
+  /**
+   * Passerelle vers la configuration composable. Le plat n'existe pas encore
+   * ici : la configuration attend en mémoire, et l'écran parent l'enregistre
+   * juste après avoir créé le plat.
+   */
+  optionsRef?: React.RefObject<DishOptionsSectionHandle | null>;
 }
 
 // ✅ TYPES STRICTS POUR LES OPTIONS
@@ -76,7 +83,7 @@ interface RestaurantOption {
 }
 
 // ✅ COMPOSANT POUR LA CRÉATION DE MENUS
-const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
+const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ✅ INITIALISATION POUR LA CRÉATION (VALEURS VIDES)
@@ -1249,6 +1256,16 @@ const AddMenuForm = ({ onCancel, onSubmit }: AddMenuFormProps) => {
           </div>
         </div>
       </motion.div>
+
+      {/* Menu composable : les questions posées au client avant le panier.
+          Hors de la grille à deux colonnes, illisible sur une demi-largeur. */}
+      <div className="mt-6">
+        <DishOptionsSection
+          ref={optionsRef}
+          dishId={undefined}
+          disabled={isSubmitting}
+        />
+      </div>
 
       {/* Boutons d'action */}
       <div className="flex items-center justify-center gap-4 mt-6">

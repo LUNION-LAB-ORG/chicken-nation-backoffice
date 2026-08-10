@@ -1,9 +1,10 @@
 import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
-import { Mail } from "lucide-react";
+import { Mail, SlidersHorizontal } from "lucide-react";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
 import MenuComments from "./MenuComments";
+import DishOptionsSection from "../../../../features/menus/components/DishOptionsSection";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -19,9 +20,9 @@ export default function DetailsMenu({
   onDelete,
 }: DetailsMenuProps) {
   // ✅ État pour gérer l'onglet actif
-  const [activeTab, setActiveTab] = useState<"description" | "comments">(
-    "description"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "description" | "options" | "comments"
+  >("description");
 
   const getSupplementsByCategory = (category: string) => {
     if (!menu.dish_supplements || !Array.isArray(menu.dish_supplements)) {
@@ -137,6 +138,18 @@ export default function DetailsMenu({
               </button>
               <button
                 type="button"
+                onClick={() => setActiveTab("options")}
+                className={`flex items-center gap-1.5 sm:gap-2 pb-2 border-b-2 transition-colors ${
+                  activeTab === "options"
+                    ? "border-[#F17922] text-[#F17922]"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                <SlidersHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="text-xs sm:text-sm font-medium">Options</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveTab("comments")}
                 className={`flex items-center gap-1.5 sm:gap-2 pb-2 border-b-2 transition-colors ${
                   activeTab === "comments"
@@ -171,6 +184,10 @@ export default function DetailsMenu({
                     <p>{menu.description}</p>
                   </div>
                 </div>
+              )}
+
+              {activeTab === "options" && (
+                <DishOptionsSection dishId={menu.id} lectureSeule />
               )}
 
               {activeTab === "comments" && (
