@@ -278,9 +278,22 @@ function construireHtml(
   const lignes = (order.order_items ?? [])
     .map((item) => {
       const nom = item.dish?.name ?? "Plat";
-      const total = formatMontant(item.amount);
-      const prixUnitaire = item.dish?.price ?? item.amount / Math.max(item.quantity, 1);
+      // Prix FIGÉS d'abord, comme sur le ticket imprimé : les deux rendus
+      // doivent afficher exactement les mêmes montants.
+      const total = formatMontant(item.line_total ?? item.amount);
+      const prixUnitaire =
+        item.unit_price ?? item.dish?.price ?? item.amount / Math.max(item.quantity, 1);
       const supps = Array.isArray(item.supplements) ? item.supplements : [];
+      // MENUS COMPOSABLES : la composition, avant les suppléments.
+      const choix = Array.isArray(item.options) ? item.options : [];
+      const choixHtml = choix.length
+        ? `<div class="options">${choix
+            .map((o) => {
+              const prix = o.price_delta ? ` (${formatMontant(o.price_delta)})` : "";
+              return `${echapperHtml(o.group_name)} : ${echapperHtml(o.label)}${prix}`;
+            })
+            .join("<br>")}</div>`
+        : "";
       const suppsHtml = supps.length
         ? `<div class="supps">${supps
             .map((s) => {
@@ -295,6 +308,7 @@ function construireHtml(
           <td class="nom">
             ${echapperHtml(nom)}${item.epice ? ' <span class="epice">[épicé]</span>' : ""}
             <div class="qp">${item.quantity} × ${formatMontant(prixUnitaire)}</div>
+            ${choixHtml}
             ${suppsHtml}
           </td>
           <td class="total">${total}</td>
@@ -339,6 +353,7 @@ function construireHtml(
     td.total { text-align: right; white-space: nowrap; padding-left: 6px; }
     .qp { font-size: 11px; color: #444; }
     .supps { font-size: 11px; color: #444; padding-left: 8px; margin-top: 2px; }
+    .options { font-size: 11px; color: #000; font-weight: 600; padding-left: 8px; margin-top: 2px; }
     .epice { color: #c00; font-size: 10px; }
     .total-final { font-size: 16px; font-weight: bold; }
     .footer { text-align: center; margin-top: 12px; }

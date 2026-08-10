@@ -239,13 +239,23 @@ export function genererTicketEscPos(
   const items = order.order_items ?? [];
   for (const item of items) {
     const nom = getDishName(item);
-    const totalLigne = formatMontant(item.amount);
+    // Prix FIGÉS d'abord : relire le catalogue vivant réécrirait l'historique
+    // à chaque changement de tarif, et ignorerait le prix des options.
+    const totalLigne = formatMontant(item.line_total ?? item.amount);
     // ligne 1 : nom plat   total
     b.ligne(ligneFlex(trim(nom, COLS - totalLigne.length - 1), totalLigne));
     // ligne 2 : qty x prix unitaire
-    const prixUnitaire = item.dish?.price ?? (item.amount / Math.max(item.quantity, 1));
+    const prixUnitaire =
+      item.unit_price ?? item.dish?.price ?? (item.amount / Math.max(item.quantity, 1));
     const detail = `  ${item.quantity} x ${formatMontant(prixUnitaire)}`;
     b.ligne(item.epice ? `${detail}   [epice]` : detail);
+    // MENUS COMPOSABLES : la composition AVANT les suppléments. Sans elle, la
+    // cuisine reçoit un burger sans savoir quelle sauce y mettre.
+    for (const choix of (Array.isArray(item.options) ? item.options : [])) {
+      const label = `  > ${trim(`${choix.group_name} : ${choix.label}`, COLS - 6)}`;
+      const prix = choix.price_delta ? formatMontant(choix.price_delta) : "";
+      b.ligne(prix ? ligneFlex(label, prix) : label);
+    }
     // supplements
     for (const supp of getSupplements(item)) {
       const qty = (supp as Supplement & { quantity?: number }).quantity ?? 1;

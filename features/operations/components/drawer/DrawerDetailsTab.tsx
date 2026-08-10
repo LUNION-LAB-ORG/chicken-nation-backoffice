@@ -331,9 +331,11 @@ function ItemsBlock({ ui }: { ui: OrderTable }) {
 }
 
 function ItemRow({ item }: { item: OrderTableItem }) {
-  // item.price = OrderItem.amount = prix_unitaire × quantité (déjà le total de la
-  // ligne, cf. orderv2.helper.ts). NE PAS re-multiplier par quantity (double-comptage).
-  const lineTotal = (item.price || 0) + (item.supplementsPrice || 0);
+  // Total FIGÉ à la commande, options comprises. L'ancien calcul additionnait
+  // `amount` et les suppléments : or `amount` porte le prix UNITAIRE sur le
+  // canal centre d'appel, donc toute commande téléphonée de quantité
+  // supérieure à 1 était sous-affichée.
+  const lineTotal = item.lineTotal;
   return (
     <li className="flex gap-4">
       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 ring-1 ring-gray-200 shrink-0">
@@ -369,6 +371,19 @@ function ItemRow({ item }: { item: OrderTableItem }) {
             {item.price === 0 ? "Offert" : formatPrice(lineTotal)}
           </p>
         </div>
+        {item.options.length > 0 && (
+          <div className="mt-2.5 p-2.5 rounded-xl bg-orange-50/70 border border-orange-100">
+            <div className="flex items-center gap-1 mb-1">
+              <UtensilsCrossed className="w-3 h-3 text-[#F17922]" />
+              <span className="text-[10px] font-bold uppercase text-[#F17922] tracking-wider">
+                Composition
+              </span>
+            </div>
+            <p className="text-[11px] font-semibold text-gray-700">
+              {item.options.map((o) => `${o.groupName} : ${o.label}`).join(" · ")}
+            </p>
+          </div>
+        )}
         {item.supplements && (
           <div className="mt-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
             <div className="flex items-center gap-1 mb-1">

@@ -77,6 +77,11 @@ export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData
       quantity: item.quantity,
       supplements: item.supplements.length > 0 ? item.supplements : undefined,
       epice: item.epice,
+      // Vide devient `undefined`, JAMAIS `[]`. En modification, le serveur teste
+      // la présence de ce champ pour décider s'il reconduit les choix déjà
+      // payés : un tableau vide passerait pour « aucun choix transmis » et
+      // effacerait la composition.
+      option_item_ids: item.option_item_ids?.length ? item.option_item_ids : undefined,
     })),
     customer_id: formData.customer_id || undefined,
     restaurant_id: formData.restaurant_id,

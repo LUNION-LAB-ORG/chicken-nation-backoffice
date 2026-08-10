@@ -12,6 +12,12 @@ export interface OrderItemFormData {
     quantity: number;
     supplements: SupplementItem[];
     epice: boolean;
+    /**
+     * MENUS COMPOSABLES : identifiants des choix retenus. Absent pour un plat
+     * ordinaire. Ce tableau ne transporte JAMAIS de montant : le serveur
+     * retrouve le prix dans sa base et vérifie les bornes du plat.
+     */
+    option_item_ids?: string[];
 }
 
 export interface OrderFormData {

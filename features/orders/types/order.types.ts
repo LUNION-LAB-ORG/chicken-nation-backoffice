@@ -142,10 +142,29 @@ export interface OrderStaffUser {
     role: string;
 }
 
+/** MENUS COMPOSABLES : un choix figé sur une ligne de commande. */
+export interface OrderItemOption {
+    id: string;
+    label: string;
+    group_name: string;
+    price_delta: number;
+    supplement_id?: string | null;
+}
+
 export interface OrderItem {
     id: string;
     quantity: number;
     amount: number;
+    /**
+     * Prix FIGÉS à la commande. Absents des commandes antérieures au 06/08,
+     * d'où l'optionnalité. À préférer systématiquement au prix du catalogue,
+     * qui réécrit l'historique à chaque changement de tarif.
+     */
+    unit_price?: number | null;
+    options_price?: number | null;
+    line_total?: number | null;
+    /** Choix du menu composable, figés. `null` sur les commandes antérieures. */
+    options?: OrderItemOption[] | null;
     epice: boolean;
     order_id: string;
     dish_id: string;

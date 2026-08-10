@@ -224,6 +224,22 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
       supplements: supplementNames,
       supplementsPrice,
       rawSupplements,
+      // MENUS COMPOSABLES : choix figés. `null` sur toute commande antérieure,
+      // d'où la garde sur le type réel plutôt que sur la présence du champ.
+      options: Array.isArray(item.options)
+        ? item.options.map((o) => ({
+            id: o.id,
+            label: o.label,
+            groupName: o.group_name,
+            priceDelta: Number(o.price_delta) || 0,
+          }))
+        : [],
+      // Le total figé fait foi. Le repli reproduit l'ancien calcul pour les
+      // commandes antérieures, qui n'ont pas ces colonnes.
+      lineTotal:
+        typeof item.line_total === "number"
+          ? item.line_total
+          : item.amount + supplementsPrice,
       // Temps de préparation : on privilégie le SNAPSHOT figé sur la ligne de
       // commande (il reflète le paramétrage au moment de l'achat) et on retombe
       // sur la fiche du plat si la commande est antérieure au snapshot.

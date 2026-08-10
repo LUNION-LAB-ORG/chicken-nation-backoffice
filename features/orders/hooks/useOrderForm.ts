@@ -37,6 +37,9 @@ const buildFormDataFromOrder = (order: OrderTable, userId: string): OrderFormDat
                 id: s.id,
                 quantity: s.quantity || 1,
             })),
+            // Sans cette reprise, enregistrer une commande composable après
+            // modification effacerait la sauce et le format déjà payés.
+            option_item_ids: (item.options ?? []).map((o) => o.id),
             epice: item.epice,
         })),
         customer_id: order.customerId || "",

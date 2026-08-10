@@ -79,6 +79,18 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                           : `${item.price.toLocaleString()} F`}
                       </p>
                     </div>
+                    {item.options.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-xs font-semibold text-gray-500">
+                          Composition
+                        </span>
+                        <span className="text-xs text-gray-600">
+                          {item.options
+                            .map((o) => `${o.groupName} : ${o.label}`)
+                            .join(" · ")}
+                        </span>
+                      </div>
+                    )}
                     {item.supplements && (
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">

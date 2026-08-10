@@ -18,6 +18,16 @@ export interface OrderTableItem {
   rawSupplements?: { id: string; name: string; price: number; quantity?: number; offert?: boolean }[];
   /** Temps de préparation du plat, en minutes (paramétré dans la fiche menu). */
   cookingTime?: number | null;
+  /**
+   * MENUS COMPOSABLES : les choix retenus par le client, figés à la commande.
+   * Tableau vide pour un plat ordinaire et pour toute commande antérieure.
+   */
+  options: { id: string; label: string; groupName: string; priceDelta: number }[];
+  /**
+   * Total FIGÉ de la ligne, options comprises. Repli sur l'ancien calcul pour
+   * les commandes antérieures aux colonnes de prix figé.
+   */
+  lineTotal: number;
 }
 
 /**

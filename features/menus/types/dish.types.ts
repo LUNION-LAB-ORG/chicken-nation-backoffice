@@ -1,3 +1,4 @@
+import { DishOptionGroup } from "./dish-option.types";
 import { EntityStatus } from "../../../types";
 import { Favorite } from "../../customer/types/favorite.types";
 import { OrderItem } from "../../orders/types/order.types";
@@ -17,6 +18,14 @@ export interface Dish {
   promotion_price: number | null;
   category_id: string;
   cooking_time: number | null;
+  /**
+   * MENUS COMPOSABLES : le plat pose des questions au client avant le panier.
+   * Colonne scalaire, donc présente DANS LES LISTES : c'est ce qui permet de
+   * n'aller chercher le détail que pour les plats qui en ont réellement.
+   */
+  composable?: boolean;
+  /** Servi UNIQUEMENT par le détail d'un plat, jamais par les listes. */
+  option_groups?: DishOptionGroup[];
   // Relations
   category?: Category;
   dish_restaurants?: DishRestaurant[];

@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import Checkbox from "@/components/ui/Checkbox";
 import {
   OrderFormData,
@@ -19,6 +19,16 @@ import { useDishListQuery } from "../../../menus/queries/dish-list.query";
 import { OrderType } from "../../types/order.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { getAllSupplements, Supplement } from "@/services/supplementService";
+import { DishOptionGroup } from "../../../menus/types/dish-option.types";
+import { dishOneQueryOption, useDishOneQuery } from "../../../menus/queries/dish-one.query";
+import DishOptionsPicker from "./DishOptionsPicker";
+import {
+  idsConnus,
+  idsParDefaut,
+  prixOptionsUnitaire,
+  resumeComposition,
+  verifierComposition,
+} from "../../utils/dishOptions";
 
 interface OrderItemsSectionProps {
   formData: OrderFormData;
@@ -41,6 +51,15 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   const [tempQuantity, setTempQuantity] = useState(1);
   const [tempSupplements, setTempSupplements] = useState<SupplementItem[]>([]);
   const [tempEpice, setTempEpice] = useState(false);
+  /**
+   * MENUS COMPOSABLES : choix en cours pour la ligne éditée.
+   *
+   * `null` signifie « rien décidé », ce qui déclenchera la pose des choix par
+   * défaut quand le détail du plat arrivera. En modification, la valeur est
+   * posée AVANT l'arrivée du détail, ce qui empêche les défauts d'écraser une
+   * composition déjà validée.
+   */
+  const [tempOptionIds, setTempOptionIds] = useState<string[] | null>(null);
 
   // Récupérer tous les plats (passe par withEffective() côté backend, donc
   // contient `excluded_supplement_ids` + `dish_supplements` effectifs).
@@ -72,8 +91,63 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     staleTime: 5 * 60 * 1000,
   });
 
+  const queryClient = useQueryClient();
+
+  // MENUS COMPOSABLES. Le marqueur `composable` voyage déjà dans les listes :
+  // un plat ORDINAIRE ne déclenche donc aucune requête supplémentaire, et la
+  // prise de commande reste exactement aussi rapide qu'avant.
+  const platComposable = Boolean(selectedDishForConfig?.composable);
+  const {
+    data: detailPlat,
+    isLoading: chargementOptions,
+    isError: erreurOptions,
+    error: objetErreurOptions,
+    refetch: rechargerOptions,
+  } = useDishOneQuery(platComposable ? selectedDishForConfig?.id : undefined);
+  const groupesModale = detailPlat?.option_groups ?? [];
+
+  // Les lignes déjà composées ont besoin du prix de leurs choix pour le
+  // sous-total du panier. Une requête par plat distinct, cache partagé avec la
+  // modale : rouvrir une ligne ne coûte aucun appel.
+  const platsComposes = useMemo(
+    () =>
+      Array.from(
+        new Set(items.filter((i) => i.option_item_ids?.length).map((i) => i.dish_id)),
+      ),
+    [items],
+  );
+  const detailsPanier = useQueries({
+    queries: platsComposes.map((id) => dishOneQueryOption(id)),
+  });
+  const groupesParPlat = useMemo(() => {
+    const table: Record<string, DishOptionGroup[]> = {};
+    detailsPanier.forEach((r) => {
+      const plat = r.data as Dish | undefined;
+      if (plat?.option_groups) table[plat.id] = plat.option_groups;
+    });
+    if (detailPlat?.option_groups) table[detailPlat.id] = detailPlat.option_groups;
+    return table;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailsPanier, detailPlat]);
+
+  // Choix par défaut posés UNE fois, à l'arrivée du détail, et seulement si
+  // l'opérateur n'a rien décidé. En modification, `tempOptionIds` est déjà
+  // renseigné, donc rien n'est écrasé.
+  useEffect(() => {
+    const groupes = detailPlat?.option_groups;
+    if (!groupes?.length) return;
+    setTempOptionIds((actuel) =>
+      actuel === null ? idsParDefaut(groupes) : idsConnus(groupes, actuel),
+    );
+  }, [detailPlat]);
+
   const addItemToCart = () => {
     if (!selectedDishForConfig) return;
+    // Un plat composable envoyé sans ses choix ferait rejeter TOUTE la
+    // commande par le serveur, pas seulement cette ligne.
+    if (blocageComposition) return;
+
+    const optionIds = platComposable ? (tempOptionIds ?? []) : [];
 
     if (editingItemIndex !== null) {
       // Modifier l'article existant
@@ -83,6 +157,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         quantity: tempQuantity,
         supplements: tempSupplements.filter((s) => s.quantity > 0),
         epice: tempEpice,
+        option_item_ids: optionIds,
       };
       onItemsChange(newItems);
       setEditingItemIndex(null);
@@ -95,6 +170,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
           quantity: tempQuantity,
           supplements: tempSupplements.filter((s) => s.quantity > 0),
           epice: selectedDishForConfig.is_alway_epice ? true : tempEpice,
+          option_item_ids: optionIds,
         },
       ]);
     }
@@ -104,6 +180,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     setTempQuantity(1);
     setTempSupplements([]);
     setTempEpice(false);
+    setTempOptionIds(null);
   };
 
   const removeItem = (index: number) => {
@@ -120,6 +197,9 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     setTempQuantity(item.quantity);
     setTempSupplements(item.supplements);
     setTempEpice(item.epice);
+    // Posé AVANT l'arrivée du détail : sans cela, les choix par défaut
+    // écraseraient en silence la composition déjà validée par l'opérateur.
+    setTempOptionIds(item.option_item_ids ?? []);
   };
 
   const getDishById = (dishId: string): Dish | undefined => {
@@ -219,7 +299,19 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
       return sum + price * supp.quantity;
     }, 0);
 
-    return basePrice * item.quantity + supplementsPrice;
+    // MENUS COMPOSABLES : les options suivent la quantité de la ligne, les
+    // suppléments gardent la leur. C'est exactement la formule du serveur ;
+    // toute divergence se verrait à l'encaissement.
+    const optionsUnitaire = prixOptionsUnitaire(
+      groupesParPlat[item.dish_id] ?? [],
+      item.option_item_ids ?? [],
+    );
+
+    return (
+      basePrice * item.quantity +
+      optionsUnitaire * item.quantity +
+      supplementsPrice
+    );
   };
 
   // Calculer le prix actuel en temps réel dans le modal
@@ -241,8 +333,29 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
       return sum + price * supp.quantity;
     }, 0);
 
-    return basePrice * tempQuantity + supplementsPrice;
+    const optionsUnitaire = prixOptionsUnitaire(groupesModale, tempOptionIds ?? []);
+
+    return (
+      basePrice * tempQuantity +
+      optionsUnitaire * tempQuantity +
+      supplementsPrice
+    );
   };
+
+  /**
+   * Ce qui verrouille « Ajouter au panier », ou `null`.
+   *
+   * Trois cas, tous propres à un plat composable : détail en cours de
+   * chargement, détail introuvable, composition incomplète. Le vérifier ici
+   * évite que le serveur rejette TOUTE la commande pour une seule ligne.
+   */
+  const blocageComposition: string | null = !platComposable
+    ? null
+    : chargementOptions
+      ? "Chargement des options du plat"
+      : erreurOptions
+        ? "Options du plat indisponibles, réessayez"
+        : verifierComposition(groupesModale, tempOptionIds ?? []);
 
   // Helpers pour gérer la quantité des suppléments
   const getSupplementQuantity = (suppId: string): number => {
@@ -383,6 +496,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     key={dish.id}
                     className="border-2 border-[#D9D9D9]/50 rounded-xl p-3 hover:border-[#F17922] transition-all cursor-pointer"
                     whileTap={{ scale: 0.98 }}
+                    onMouseEnter={() => {
+                      // Préchargement au survol : le détail est presque toujours
+                      // en cache au moment du clic, la saisie ne ralentit pas.
+                      // Sans effet sur un plat ordinaire.
+                      if (dish.composable) {
+                        void queryClient.prefetchQuery(dishOneQueryOption(dish.id));
+                      }
+                    }}
                     onClick={() => {
                       // Privilégier la version "withEffective" (qui contient
                       // excluded_supplement_ids) — celle du categoryData ne l'a pas.
@@ -392,6 +513,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                       setTempQuantity(1);
                       setTempSupplements([]);
                       setTempEpice(false);
+                      setTempOptionIds(null);
                     }}
                   >
                     {dish.image && (
@@ -572,8 +694,26 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                     )}
                   </div>
 
-                  {/* ── Colonne suppléments (scroll indépendant) ── */}
+                  {/* ── Colonne composition et suppléments (scroll indépendant) ── */}
                   <div className="p-4 sm:p-6 md:min-h-0 md:h-full md:overflow-y-auto">
+              {/* Composer d'abord le plat, l'enrichir ensuite. */}
+              {platComposable && (
+                <DishOptionsPicker
+                  groups={groupesModale}
+                  selection={tempOptionIds ?? []}
+                  onChange={setTempOptionIds}
+                  chargement={chargementOptions}
+                  erreur={
+                    erreurOptions
+                      ? ((objetErreurOptions as Error)?.message ?? "Chargement impossible")
+                      : null
+                  }
+                  onReessayer={() => {
+                    void rechargerOptions();
+                  }}
+                />
+              )}
+
               {/* Suppléments groupés par catégorie — avec sélecteur de quantité ± */}
               {(groupedSupplements.FOOD.length > 0 ||
                 groupedSupplements.DRINK.length > 0 ||
@@ -676,12 +816,22 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                   <p className="text-2xl font-bold text-[#F17922]">
                     {calculateTempTotal().toLocaleString("fr-FR")} XOF
                   </p>
+                  {blocageComposition && (
+                    <p className="mt-1 text-xs font-semibold text-red-500">
+                      {blocageComposition}
+                    </p>
+                  )}
                 </div>
                 <motion.button
                   type="button"
                   onClick={addItemToCart}
-                  className="h-11 min-w-[220px] rounded-xl bg-[#F17922] px-6 text-sm font-semibold text-white transition hover:bg-[#F17922]/90"
-                  whileTap={{ scale: 0.98 }}
+                  disabled={!!blocageComposition}
+                  className={`h-11 min-w-[220px] rounded-xl px-6 text-sm font-semibold text-white transition ${
+                    blocageComposition
+                      ? "cursor-not-allowed bg-gray-300"
+                      : "bg-[#F17922] hover:bg-[#F17922]/90"
+                  }`}
+                  whileTap={blocageComposition ? undefined : { scale: 0.98 }}
                 >
                   {editingItemIndex !== null
                     ? "Modifier l'article"
@@ -751,6 +901,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                         </span>
                       )}
                     </div>
+                    {(item.option_item_ids?.length ?? 0) > 0 && (
+                      <p className="mt-1 truncate text-xs text-gray-500">
+                        {resumeComposition(
+                          groupesParPlat[item.dish_id] ?? [],
+                          item.option_item_ids ?? [],
+                        ) || "Composition enregistrée"}
+                      </p>
+                    )}
                     <p className="text-[#F17922] font-bold text-sm sm:text-base mt-1">
                       {calculateItemTotal(item).toLocaleString()} XOF
                     </p>

@@ -37,6 +37,30 @@ const prepareRequest = async <T>(baseUrl: string, endpoint: string, query?: T) =
   }
 };
 
+/**
+ * Détail d'un plat, SEULE source de ses groupes d'options : le serveur ne les
+ * sert jamais dans les listes.
+ *
+ * Volontairement `GET /dishes/:id` et non la route de configuration : celle-ci
+ * exige la permission MENUS, qu'un opérateur de centre d'appel n'a pas
+ * forcément. Il se verrait refuser la lecture et ne pourrait plus prendre de
+ * commande.
+ */
+export const getDishDetail = async (dishId: string) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, `/${dishId}`);
+
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json() as Dish;
+  } catch (error) {
+    console.error(error);
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
 export const getAllDishes = async () => {
   try {
     const { url, headers } = await prepareRequest(BASE_URL, '/get-all');
