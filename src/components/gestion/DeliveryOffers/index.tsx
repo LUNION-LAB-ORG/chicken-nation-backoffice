@@ -30,6 +30,7 @@ import {
   DeliveryOfferChannel,
   DeliveryOfferQuery,
   DeliveryOfferType,
+  PalierPrix,
 } from "../../../../features/delivery_offers/types/delivery-offer.types";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 import { toast } from "react-hot-toast";
@@ -39,6 +40,7 @@ const TYPE_LABEL: Record<DeliveryOfferType, string> = {
   FREE_DELIVERY: "Livraison gratuite",
   PERCENTAGE: "Réduction %",
   FIXED_AMOUNT: "Montant fixe",
+  FIXED_PRICE: "Prix imposé",
 };
 const CHANNEL_LABEL: Record<DeliveryOfferChannel, string> = {
   APP: "App",
@@ -58,6 +60,15 @@ const DAYS: { key: string; label: string }[] = [
 function describeOffer(o: DeliveryOffer): string {
   if (o.type === "FREE_DELIVERY") return "Gratuite";
   if (o.type === "PERCENTAGE") return `-${o.value}%`;
+  if (o.type === "FIXED_PRICE") {
+    const paliers = o.price_tiers ?? [];
+    // Un prix imposé n'est pas une remise : on l'annonce comme un prix.
+    if (paliers.length === 0) return `${o.value.toLocaleString()} F`;
+    const tries = [...paliers].sort((a, b) => a.max_km - b.max_km);
+    return tries
+      .map((p) => `${p.price.toLocaleString()} F ≤ ${p.max_km} km`)
+      .join(" · ");
+  }
   return `-${o.value.toLocaleString()} F`;
 }
 
@@ -355,6 +366,129 @@ interface FormData {
   max_usage_per_user: number | undefined;
   is_active: boolean;
   priority: number;
+  /** FIXED_PRICE : paliers de prix par distance. Vide = `value` partout. */
+  price_tiers: PalierPrix[];
+}
+
+/**
+ * Paliers de prix imposé par distance.
+ *
+ * Sans palier, le prix saisi plus haut vaut pour toute distance
+ * (« 1000 F partout »). Avec des paliers, le premier dont la distance couvre
+ * la course donne le prix, et AU-DELÀ du dernier palier l'offre ne s'applique
+ * plus : la livraison retombe sur le système habituel, grille Chicken ou zones
+ * Turbo selon le paramétrage. C'est ce qui permet de brader les courses
+ * proches sans donner un tarif d'appel aux courses lointaines.
+ */
+function PaliersPrix({
+  paliers,
+  prixUnique,
+  onChange,
+}: {
+  paliers: PalierPrix[];
+  prixUnique: number;
+  onChange: (paliers: PalierPrix[]) => void;
+}) {
+  const modifier = (index: number, champ: keyof PalierPrix, valeur: number) => {
+    const copie = paliers.map((p, i) => (i === index ? { ...p, [champ]: valeur } : p));
+    onChange(copie);
+  };
+
+  const ajouter = () => {
+    const dernier = paliers[paliers.length - 1];
+    onChange([
+      ...paliers,
+      {
+        max_km: dernier ? Number((dernier.max_km + 3).toFixed(1)) : 2,
+        price: dernier ? dernier.price + 500 : prixUnique || 1000,
+      },
+    ]);
+  };
+
+  const supprimer = (index: number) => onChange(paliers.filter((_, i) => i !== index));
+
+  // Un palier plus court doit coûter moins cher qu'un palier plus long, sinon
+  // le gestionnaire a interverti deux lignes sans s'en apercevoir.
+  const ordonnes = [...paliers].sort((a, b) => a.max_km - b.max_km);
+  const incoherent = ordonnes.some((p, i) => i > 0 && p.price < ordonnes[i - 1].price);
+
+  return (
+    <div className="rounded-xl bg-gray-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-gray-800">
+            Paliers de distance (optionnel)
+          </p>
+          <p className="mt-0.5 text-[11px] text-[#9796A1]">
+            Sans palier, le prix saisi s&apos;applique à toute distance. Au-delà du
+            dernier palier, la livraison suit la grille habituelle. Une offre ne
+            fait que baisser le prix : si la grille est déjà moins chère, c&apos;est
+            elle qui s&apos;applique.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={ajouter}
+          className="shrink-0 rounded-lg bg-white px-3 py-1.5 text-[12px] font-semibold text-[#F17922] hover:bg-orange-50 cursor-pointer"
+        >
+          + Ajouter
+        </button>
+      </div>
+
+      {paliers.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {paliers.map((palier, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <span className="w-16 shrink-0 text-[12px] text-[#9796A1]">Jusqu&apos;à</span>
+              <input
+                type="number"
+                value={palier.max_km || ""}
+                onChange={(e) => modifier(index, "max_km", Number(e.target.value))}
+                min={0.1}
+                step={0.5}
+                className="w-20 rounded-lg border border-gray-200 px-2 py-1.5 text-[13px] outline-none focus:border-[#F17922]"
+              />
+              <span className="text-[12px] text-[#9796A1]">km</span>
+              <span className="mx-1 text-[12px] text-[#9796A1]">→</span>
+              <input
+                type="number"
+                value={palier.price === 0 ? 0 : palier.price || ""}
+                onChange={(e) => modifier(index, "price", Number(e.target.value))}
+                min={0}
+                step={100}
+                className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-[13px] outline-none focus:border-[#F17922]"
+              />
+              <span className="text-[12px] text-[#9796A1]">FCFA</span>
+              <button
+                type="button"
+                onClick={() => supprimer(index)}
+                title="Retirer ce palier"
+                className="ml-auto rounded-lg p-1.5 text-gray-400 hover:bg-white hover:text-red-500 cursor-pointer"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {incoherent && (
+        <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-600">
+          Un palier plus lointain coûte moins cher qu&apos;un palier plus proche.
+          Le client le plus près paierait le plus cher.
+        </p>
+      )}
+
+      {paliers.length > 0 && (
+        <p className="mt-3 text-[11px] text-[#9796A1]">
+          {ordonnes
+            .map((p) => `jusqu'à ${p.max_km} km : ${p.price.toLocaleString("fr-FR")} F`)
+            .join(" · ")}
+          , puis grille habituelle.
+        </p>
+      )}
+    </div>
+  );
 }
 
 function toLocalInput(iso: string): string {
@@ -400,6 +534,7 @@ function OfferFormModal({
         max_usage_per_user: offer.max_usage_per_user ?? undefined,
         is_active: offer.is_active,
         priority: offer.priority,
+        price_tiers: offer.price_tiers ?? [],
       };
     }
     return {
@@ -422,6 +557,7 @@ function OfferFormModal({
       max_usage_per_user: undefined,
       is_active: true,
       priority: 0,
+      price_tiers: [],
     };
   });
 
@@ -443,12 +579,19 @@ function OfferFormModal({
   );
 
   const summary = useMemo(() => {
+    const paliers = [...form.price_tiers].sort((a, b) => a.max_km - b.max_km);
     const what =
       form.type === "FREE_DELIVERY"
         ? "Livraison gratuite"
         : form.type === "PERCENTAGE"
           ? `Frais de livraison −${form.value || 0}%`
-          : `Frais de livraison −${(form.value || 0).toLocaleString()} F`;
+          : form.type === "FIXED_PRICE"
+            ? paliers.length > 0
+              ? `Livraison à ${paliers
+                  .map((p) => `${p.price.toLocaleString()} F jusqu'à ${p.max_km} km`)
+                  .join(", ")}, puis grille habituelle`
+              : `Livraison à ${(form.value || 0).toLocaleString()} F, quelle que soit la distance`
+            : `Frais de livraison −${(form.value || 0).toLocaleString()} F`;
     const where =
       form.channel === "APP"
         ? "sur l'app"
@@ -484,6 +627,25 @@ function OfferFormModal({
       return toast.error("Le pourcentage doit être entre 1 et 100");
     if (form.type === "FIXED_AMOUNT" && form.value <= 0)
       return toast.error("Le montant doit être supérieur à 0");
+    if (form.type === "FIXED_PRICE") {
+      const valides = form.price_tiers.filter((p) => p.max_km > 0);
+      if (valides.length !== form.price_tiers.length)
+        return toast.error("Chaque palier doit avoir une distance supérieure à 0");
+      if (valides.length === 0 && form.value <= 0)
+        return toast.error(
+          "Indiquez un prix de livraison, ou au moins un palier de distance",
+        );
+      const distances = valides.map((p) => p.max_km);
+      if (new Set(distances).size !== distances.length)
+        return toast.error("Deux paliers ne peuvent pas couvrir la même distance");
+      // L'avertissement affiché sous les paliers ne bloquait rien : l'offre
+      // partait quand même, et le client le plus proche payait le plus cher.
+      const ordonnes = [...valides].sort((a, b) => a.max_km - b.max_km);
+      if (ordonnes.some((p, i) => i > 0 && p.price < ordonnes[i - 1].price))
+        return toast.error(
+          "Un palier plus lointain ne peut pas coûter moins cher qu'un palier plus proche",
+        );
+    }
     if (!form.start_date || !form.expiration_date)
       return toast.error("Les dates de début et de fin sont requises");
     if (new Date(form.expiration_date) <= new Date(form.start_date))
@@ -509,6 +671,15 @@ function OfferFormModal({
       max_usage_per_user: form.max_usage_per_user ?? undefined,
       is_active: form.is_active,
       priority: form.priority || 0,
+      // Les paliers ne concernent que le prix imposé : les envoyer sur un autre
+      // type laisserait une configuration invisible qui reviendrait au premier
+      // changement de type.
+      price_tiers:
+        form.type === "FIXED_PRICE"
+          ? [...form.price_tiers]
+              .filter((p) => p.max_km > 0)
+              .sort((a, b) => a.max_km - b.max_km)
+          : [],
     };
     onSubmit(dto);
   };
@@ -552,15 +723,40 @@ function OfferFormModal({
                     <option value="FREE_DELIVERY">Livraison gratuite</option>
                     <option value="PERCENTAGE">Réduction (%) du frais</option>
                     <option value="FIXED_AMOUNT">Montant fixe déduit (FCFA)</option>
+                    <option value="FIXED_PRICE">Montant fixe appliqué (FCFA)</option>
                   </select>
                 </div>
                 {form.type !== "FREE_DELIVERY" && (
                   <div>
-                    <label className={label}>Valeur {form.type === "PERCENTAGE" ? "(%)" : "(FCFA)"}</label>
-                    <input type="number" value={form.value || ""} onChange={(e) => set("value", Number(e.target.value))} min={0} max={form.type === "PERCENTAGE" ? 100 : undefined} className={input} />
+                    <label className={label}>
+                      {form.type === "PERCENTAGE"
+                        ? "Valeur (%)"
+                        : form.type === "FIXED_PRICE"
+                          ? form.price_tiers.length > 0
+                            ? "Remplacé par les paliers"
+                            : "Prix de la livraison (FCFA)"
+                          : "Valeur (FCFA)"}
+                    </label>
+                    <input
+                      type="number"
+                      value={form.value || ""}
+                      onChange={(e) => set("value", Number(e.target.value))}
+                      min={0}
+                      max={form.type === "PERCENTAGE" ? 100 : undefined}
+                      disabled={form.type === "FIXED_PRICE" && form.price_tiers.length > 0}
+                      className={`${input} ${form.type === "FIXED_PRICE" && form.price_tiers.length > 0 ? "bg-gray-50 text-gray-400" : ""}`}
+                    />
                   </div>
                 )}
               </div>
+
+              {form.type === "FIXED_PRICE" && (
+                <PaliersPrix
+                  paliers={form.price_tiers}
+                  prixUnique={form.value}
+                  onChange={(paliers) => set("price_tiers", paliers)}
+                />
+              )}
               <div>
                 <label className={label}>Description (optionnel)</label>
                 <textarea value={form.description} onChange={(e) => set("description", e.target.value)} rows={2} className={`${input} resize-none`} />

@@ -1,6 +1,17 @@
 import { PaginatedResponse } from "../../../types";
 
-export type DeliveryOfferType = "FREE_DELIVERY" | "PERCENTAGE" | "FIXED_AMOUNT";
+export type DeliveryOfferType =
+  | "FREE_DELIVERY"
+  | "PERCENTAGE"
+  | "FIXED_AMOUNT"
+  /** Prix de livraison IMPOSÉ : remplace la grille, ce n'est pas une remise. */
+  | "FIXED_PRICE";
+
+/** « Jusqu'à N km, la livraison coûte P. » */
+export interface PalierPrix {
+  max_km: number;
+  price: number;
+}
 export type DeliveryOfferChannel = "APP" | "CALL_CENTER" | "BOTH";
 
 export interface DeliveryOffer {
@@ -9,6 +20,8 @@ export interface DeliveryOffer {
   description: string | null;
   type: DeliveryOfferType;
   value: number;
+  /** FIXED_PRICE : paliers de prix par distance. Vide = `value` partout. */
+  price_tiers?: PalierPrix[] | null;
   min_order_amount: number | null;
   channel: DeliveryOfferChannel;
   restaurant_ids: string[];
@@ -35,6 +48,7 @@ export interface CreateDeliveryOfferDto {
   description?: string;
   type: DeliveryOfferType;
   value?: number;
+  price_tiers?: PalierPrix[];
   min_order_amount?: number;
   channel?: DeliveryOfferChannel;
   restaurant_ids?: string[];
