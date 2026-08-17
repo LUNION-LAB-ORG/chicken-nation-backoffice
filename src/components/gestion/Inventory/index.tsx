@@ -10,7 +10,7 @@ import {
 import { deleteSupplement } from "@/services/dishService";
 import { Dish } from "@/types/dish";
 import { useQueryClient } from "@tanstack/react-query";
-import { ChevronDown } from "lucide-react";
+import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import AddCategory from "./AddCategory";
@@ -22,6 +22,7 @@ import EditCategory from "./EditCategory";
 import EditSupplement from "./EditSupplement";
 import SupplementTabs, { TabItem } from "./SupplementTabs";
 import SupplementView from "./SupplementView";
+import ReorderSupplementsModal from "./ReorderSupplementsModal";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -65,6 +66,7 @@ export default function Inventory() {
   const [isDeleteCategoryModalOpen, setIsDeleteCategoryModalOpen] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showReorderModal, setShowReorderModal] = useState(false);
   const { can } = useAuthStore();
   const queryClient = useQueryClient();
   // État pour la recherche
@@ -354,7 +356,23 @@ export default function Inventory() {
             />
           )}
 
-          <div className="w-[120px]"></div>
+          {/* Le classement se fait catégorie par catégorie : sur l'onglet
+              « Tous », les positions de trois familles se mélangeraient. */}
+          <div className="flex w-[120px] justify-end">
+            {currentView === "products" &&
+              selectedTab !== "all" &&
+              can(Modules.INVENTAIRE, Action.UPDATE) && (
+                <button
+                  type="button"
+                  onClick={() => setShowReorderModal(true)}
+                  title={`Ordre d'affichage des ${translateCategory(selectedTab).toLowerCase()} dans l'application`}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-gray-200 px-3 py-1.5 text-[10px] font-medium text-[#71717A] hover:bg-gray-50 lg:text-[13px]"
+                >
+                  <ArrowUpDown size={14} />
+                  Ordre
+                </button>
+              )}
+          </div>
         </div>
 
         {currentView === "categories" ? (
@@ -462,6 +480,14 @@ export default function Inventory() {
           />
         )}
       </Modal>
+
+      {selectedTab !== "all" && (
+        <ReorderSupplementsModal
+          isOpen={showReorderModal}
+          onClose={() => setShowReorderModal(false)}
+          categorie={selectedTab}
+        />
+      )}
     </div>
   );
 }

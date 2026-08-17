@@ -1,4 +1,5 @@
 import { API_URL } from '@/config';
+import { api } from './api';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
 
@@ -47,4 +48,30 @@ export const convertSupplementsToOptions = (supplements: Supplement[]) => {
     category: supplement.category,
     available: supplement.available
   }));
+};
+
+/**
+ * Suppléments d'UNE catégorie, dans l'ordre d'affichage enregistré et sans
+ * pagination : l'écran de classement a besoin de la liste entière, sinon on
+ * ne pourrait déplacer un supplément que dans sa propre page.
+ */
+export const getSupplementsOfCategory = async (
+  category: 'FOOD' | 'DRINK' | 'ACCESSORY'
+): Promise<Supplement[]> => {
+  const response = await fetch(`${API_URL}/api/v1/supplements/category/${category}`);
+  if (!response.ok) {
+    throw new Error(`Erreur: ${response.status}`);
+  }
+  return await response.json();
+};
+
+/**
+ * Enregistre l'ordre d'affichage d'une catégorie.
+ *
+ * On transmet la liste complète des identifiants dans l'ordre voulu : le
+ * serveur renumérote tout d'un bloc, ce qui évite deux suppléments au même
+ * rang si un enregistrement échoue à mi-chemin.
+ */
+export const reorderSupplements = async (ids: string[]): Promise<{ reordonnes: number }> => {
+  return api.post<{ reordonnes: number }>('/supplements/reorder', { ids });
 };
