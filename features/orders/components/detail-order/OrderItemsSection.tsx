@@ -86,7 +86,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                         </span>
                         <span className="text-xs text-gray-600">
                           {item.options
-                            .map((o) => `${o.groupName} : ${o.label}`)
+                            .map((o) => o.label)
                             .join(" · ")}
                         </span>
                       </div>

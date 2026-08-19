@@ -290,7 +290,7 @@ function construireHtml(
         ? `<div class="options">${choix
             .map((o) => {
               const prix = o.price_delta ? ` (${formatMontant(o.price_delta)})` : "";
-              return `${echapperHtml(o.group_name)} : ${echapperHtml(o.label)}${prix}`;
+              return `${echapperHtml(o.label)}${prix}`;
             })
             .join("<br>")}</div>`
         : "";

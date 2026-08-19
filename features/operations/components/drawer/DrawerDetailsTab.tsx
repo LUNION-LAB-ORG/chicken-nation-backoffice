@@ -380,7 +380,9 @@ function ItemRow({ item }: { item: OrderTableItem }) {
               </span>
             </div>
             <p className="text-[11px] font-semibold text-gray-700">
-              {item.options.map((o) => `${o.groupName} : ${o.label}`).join(" · ")}
+              {/* Valeurs seules : le nom du groupe se devine, « Taille : XL »
+                  n'apprend rien de plus que « XL » et double la longueur. */}
+              {item.options.map((o) => o.label).join(" · ")}
             </p>
           </div>
         )}

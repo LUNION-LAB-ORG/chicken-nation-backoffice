@@ -252,7 +252,9 @@ export function genererTicketEscPos(
     // MENUS COMPOSABLES : la composition AVANT les suppléments. Sans elle, la
     // cuisine reçoit un burger sans savoir quelle sauce y mettre.
     for (const choix of (Array.isArray(item.options) ? item.options : [])) {
-      const label = `  > ${trim(`${choix.group_name} : ${choix.label}`, COLS - 6)}`;
+      // Valeur seule : 42 colonnes sur un ticket, le nom du groupe
+      // mangeait la moitié de la ligne pour ne rien apprendre.
+      const label = `  > ${trim(choix.label, COLS - 6)}`;
       const prix = choix.price_delta ? formatMontant(choix.price_delta) : "";
       b.ligne(prix ? ligneFlex(label, prix) : label);
     }
