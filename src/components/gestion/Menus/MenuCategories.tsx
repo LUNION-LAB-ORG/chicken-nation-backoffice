@@ -99,8 +99,16 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
         const allMenuPromises = selectedCategoryIds.map(id => getMenusByCategoryId(id));
         const menuArrays = await Promise.all(allMenuPromises);
         
-        // Fusionner tous les tableaux de menus en un seul
-        const combinedMenus = menuArrays.flat();
+        // Fusionner tous les tableaux de menus en un seul, SANS doublon.
+        // Un menu peut désormais remonter sous deux catégories à la fois : la
+        // sienne, et la vitrine des promotions qui le rassemble sans qu'il
+        // ait été déplacé. Sélectionner les deux le faisait apparaître deux
+        // fois dans la liste.
+        const parId = new Map<string, MenuItemType>();
+        for (const menu of menuArrays.flat()) {
+          if (!parId.has(menu.id)) parId.set(menu.id, menu);
+        }
+        const combinedMenus = Array.from(parId.values());
         
         setAllMenus(combinedMenus);
         setError(null);

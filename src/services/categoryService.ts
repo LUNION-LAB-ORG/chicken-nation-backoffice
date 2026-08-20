@@ -12,6 +12,12 @@ export interface Category {
   image?: string;
   productCount?: number;
   private?: boolean;
+  /**
+   * Vitrine : la catégorie rassemble d'elle-même les plats en promotion, sans
+   * qu'on ait à les y déplacer. Le plat reste dans sa catégorie d'origine et
+   * apparaît AUSSI ici.
+   */
+  auto_promotions?: boolean;
   // Compte renvoyé par /categories/get-all (plats actifs), évite le N+1 front.
   _count?: { dishes: number };
 }

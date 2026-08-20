@@ -27,6 +27,7 @@ export default function AddCategory({
     description: "",
     image: undefined as File | undefined,
     private: false,
+    auto_promotions: false,
     hubrise_sku: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -54,6 +55,7 @@ export default function AddCategory({
         description: category.description || "",
         image: undefined,
         private: category.private,
+        auto_promotions: category.auto_promotions ?? false,
         hubrise_sku: category.hubrise_sku || "",
       });
 
@@ -115,6 +117,7 @@ export default function AddCategory({
       fd.append("name", formData.name);
       fd.append("description", formData.description);
       fd.append("private", String(formData.private));
+      fd.append("auto_promotions", String(formData.auto_promotions));
       if (formData.hubrise_sku.trim()) {
         fd.append("hubrise_sku", formData.hubrise_sku.trim());
       }
@@ -259,6 +262,29 @@ export default function AddCategory({
             <label className="block text-[13px] text-gray-600 mb-1">
               Privée
             </label>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="auto_promotions"
+              checked={formData.auto_promotions}
+              onChange={(checked) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  auto_promotions: checked,
+                }));
+              }}
+            />
+            <div>
+              <label className="block text-[13px] text-gray-600">
+                Vitrine des promotions
+              </label>
+              <p className="text-[11px] text-gray-400 leading-4 mt-0.5">
+                Rassemble d&apos;elle-même tous les menus en promotion. Plus besoin de
+                les déplacer : chaque menu reste dans sa catégorie et apparaît
+                aussi ici.
+              </p>
+            </div>
           </div>
         </div>
       </div>
