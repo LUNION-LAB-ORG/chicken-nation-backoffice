@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
   copyDishOptionConfiguration,
+  getDishGiftUsages,
   getDishOptionConfiguration,
+  repointGiftReward,
+  revokeGiftReward,
   saveDishOptionConfiguration,
 } from "../services/dish-option-service";
 import {
@@ -89,3 +92,46 @@ export const useCopyDishOptionConfigurationMutation = () => {
     },
   });
 };
+
+
+
+/** Fait pointer un cadeau déjà distribué sur un autre plat. */
+export const useRepointGiftRewardMutation = () =>
+  useMutation({
+    mutationFn: ({ rewardId, dishId }: { rewardId: string; dishId: string }) =>
+      repointGiftReward(rewardId, dishId),
+    onSuccess: () => {
+      toast.success("Cadeau repointé");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+/** Annule un cadeau déjà distribué. */
+export const useRevokeGiftRewardMutation = () =>
+  useMutation({
+    mutationFn: ({ rewardId, motif }: { rewardId: string; motif?: string }) =>
+      revokeGiftReward(rewardId, motif),
+    onSuccess: () => {
+      toast.success("Cadeau annulé");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+/**
+ * Ce qui empêche un plat de devenir composable.
+ *
+ * Interrogé dès que le gestionnaire DÉSIGNE un plat cible, avant toute
+ * tentative : il vaut mieux prévenir que refuser. La clé porte le suffixe
+ * `usages-cadeau` pour ne pas écraser la configuration du plat en cache.
+ */
+export const useDishGiftUsagesQuery = (dishId?: string) =>
+  useQuery({
+    queryKey: [...dishOptionKeyQuery(dishId ?? ""), "usages-cadeau"],
+    queryFn: () => getDishGiftUsages(dishId as string),
+    enabled: Boolean(dishId),
+    staleTime: 0,
+  });

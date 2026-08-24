@@ -34,6 +34,7 @@ const enTete = () => {
  */
 const lireErreur = async (response: Response): Promise<never> => {
   let message = `Erreur ${response.status}`;
+  let detail: ErreurMetier | undefined;
   try {
     const corps = await response.json();
     const brut = corps?.message ?? corps?.error;
@@ -42,10 +43,103 @@ const lireErreur = async (response: Response): Promise<never> => {
     } else if (typeof brut === "string" && brut.trim()) {
       message = brut;
     }
+    // Refus DOCUMENTÉ : le serveur joint un code et le détail de ce qui bloque.
+    // Sans cette remontée, l'écran ne peut afficher qu'une phrase dans un toast
+    // de trois secondes, et le gestionnaire perd l'information avant d'avoir pu
+    // agir dessus.
+    if (typeof corps?.code === "string") {
+      detail = { code: corps.code, usages: corps.usages };
+    }
   } catch {
     // Réponse sans corps lisible : le code de statut suffira.
   }
-  throw new Error(message);
+  const erreur = new Error(message) as Error & ErreurMetier;
+  if (detail) {
+    erreur.code = detail.code;
+    erreur.usages = detail.usages;
+  }
+  throw erreur;
+};
+
+/** Détail structuré que le serveur joint à certains refus. */
+export type ErreurMetier = {
+  code?: string;
+  usages?: UsagesCadeau;
+};
+
+/** Ce qui empêche un plat de devenir composable. */
+export type UsagesCadeau = {
+  lots: { id: string; label: string; active: boolean }[];
+  campagnes: { id: string; name: string; status: string }[];
+  cadeaux: {
+    id: string;
+    status: string;
+    expires_at: string | null;
+    client: string;
+    telephone: string | null;
+  }[];
+  combos: { id: string; title: string; status: string }[];
+  bloquant: boolean;
+};
+
+/** Ce qui empêche ce plat de devenir composable, sans passer par un refus. */
+export const getDishGiftUsages = async (
+  dishId: string,
+): Promise<UsagesCadeau> => {
+  try {
+    const response = await fetch(
+      `${API_URL}/dishes/${dishId}/option-groups/usages-cadeau`,
+      { method: "GET", headers: enTete() },
+    );
+    if (!response.ok) return await lireErreur(response);
+    return (await response.json()) as UsagesCadeau;
+  } catch (error) {
+    console.error(error);
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+/**
+ * Fait pointer un cadeau DÉJÀ DISTRIBUÉ sur un autre plat.
+ *
+ * Repointer le lot ou la campagne ne suffit pas : le contenu d'un cadeau est
+ * figé au moment du tirage. C'est le seul geste qui débloque réellement un plat
+ * promis à un client.
+ */
+export const repointGiftReward = async (
+  rewardId: string,
+  dishId: string,
+): Promise<{ id: string }> => {
+  try {
+    const response = await fetch(`${API_URL}/fidelity/rewards/${rewardId}/plat`, {
+      method: "PATCH",
+      headers: enTete(),
+      body: JSON.stringify({ dish_id: dishId }),
+    });
+    if (!response.ok) return await lireErreur(response);
+    return (await response.json()) as { id: string };
+  } catch (error) {
+    console.error(error);
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+/** Annule un cadeau déjà distribué. Dernier recours. */
+export const revokeGiftReward = async (
+  rewardId: string,
+  motif?: string,
+): Promise<{ id: string }> => {
+  try {
+    const response = await fetch(
+      `${API_URL}/fidelity/rewards/${rewardId}/revoquer`,
+      { method: "PATCH", headers: enTete(), body: JSON.stringify({ motif }) },
+    );
+    if (!response.ok) return await lireErreur(response);
+    return (await response.json()) as { id: string };
+  } catch (error) {
+    console.error(error);
+    throw new Error(getHumanReadableError(error));
+  }
 };
 
 export const getDishOptionConfiguration = async (
