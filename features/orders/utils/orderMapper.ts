@@ -1,5 +1,6 @@
 import { Order, OrderStatus, OrderType } from "../types/order.types";
 import { OrderTable, OrderTableItem, OrderTableStatus, OrderTableType, PaymentStatus } from "../types/ordersTable.types";
+import { formatImageUrl } from "@/utils/imageHelpers";
 import { Paiement } from "../types/paiement.types";
 
 
@@ -102,17 +103,6 @@ const extractPaymentMode = (paiements?: Paiement[]): string => {
   const methode = extractPaymentMethod(paiements);
   const source = extractPaymentSource(paiements);
   return methode + " : " + source;
-};
-
-const validateImageUrl = (url?: string | null): string => {
-  if (!url?.trim()) return DEFAULT_IMAGE;
-
-  const cleanUrl = url.trim();
-  if (cleanUrl.startsWith("/") || cleanUrl.startsWith("http")) {
-    return cleanUrl;
-  }
-
-  return DEFAULT_IMAGE;
 };
 
 export const getPaymentStatus = (order: Order): PaymentStatus => {
@@ -219,7 +209,16 @@ const mapOrderItems = (orderItems?: Order["order_items"]): OrderTableItem[] => {
       name: item.dish?.name || "Article inconnu",
       quantity: item.quantity,
       price: item.amount,
-      image: validateImageUrl(item.dish?.image),
+      /**
+       * Les images de plats sont stockées en CLÉ S3 (`chicken-nation/dishes/…`),
+       * pas en URL. L'ancien contrôle ne gardait que les valeurs commençant par
+       * « / » ou « http » et retombait sur l'image par défaut pour tout le
+       * reste : autant dire pour TOUTES les images de plats. Le tiroir de
+       * commande affichait donc une assiette de frites sur chaque article,
+       * quel qu'il soit, alors que la page Menus les affichait correctement
+       * parce qu'elle passe, elle, par `formatImageUrl`.
+       */
+      image: formatImageUrl(item.dish?.image, DEFAULT_IMAGE),
       epice: item.epice,
       supplements: supplementNames,
       supplementsPrice,
