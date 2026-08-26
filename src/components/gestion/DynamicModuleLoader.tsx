@@ -95,6 +95,10 @@ const modulesMap: Record<string, any> = {
   tickets: dynamic(() => import("@/components/gestion/MessagesEtTickets/Tickets"), {
     loading: () => <LoadingSpinner />,
   }),
+  diffusions: dynamic(
+    () => import("@/components/gestion/MessagesEtTickets/Diffusions"),
+    { loading: () => <LoadingSpinner /> },
+  ),
   appel: dynamic(() => import("../../../features/calls/components/AppelView"), {
     loading: () => <LoadingSpinner />,
   }),

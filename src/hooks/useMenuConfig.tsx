@@ -205,6 +205,15 @@ export const useGetMenuConfig = (): {
           badge: unread.tickets > 0 ? unread.tickets : undefined,
         },
         {
+          id: "messages_tickets-diffusions",
+          label: "Diffusions",
+          icon: Megaphone,
+          // ⚠️ MARKETING, et non MESSAGES : les rôles CAISSIER et CALL_CENTER
+          // détiennent MESSAGES pour répondre aux clients. Écrire à toute la
+          // base est une décision de marketing, pas un geste de caisse.
+          canAccess: () => can(Modules.MARKETING, Action.READ),
+        },
+        {
           id: "messages_tickets-appel",
           label: "Appel",
           icon: Phone,
