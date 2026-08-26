@@ -7,13 +7,26 @@ import { toast } from "react-hot-toast";
 import { exportProspectsCsv } from "../services/prospect.service";
 import { ExportType } from "../types/prospect.types";
 
-export function ExportButton({ type, restaurantId }: { type: ExportType; restaurantId?: string }) {
+/**
+ * Le bouton exporte EXACTEMENT ce que l'écran affiche.
+ *
+ * Il ne recevait que le restaurant : la plateforme, le statut, la recherche et
+ * les dates choisis dans la liste étaient perdus, et le fichier sortait avec
+ * tout le monde dedans.
+ */
+export function ExportButton({
+  type,
+  filtres,
+}: {
+  type: ExportType;
+  filtres?: Record<string, string | undefined>;
+}) {
   const [loading, setLoading] = useState(false);
 
   const onClick = async () => {
     setLoading(true);
     try {
-      await exportProspectsCsv(type, restaurantId);
+      await exportProspectsCsv(type, filtres);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

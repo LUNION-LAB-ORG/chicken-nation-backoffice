@@ -72,6 +72,17 @@ export default function BaseDonnees() {
   );
   const storeFilter = restaurantId || undefined;
 
+  /**
+   * Filtres de l'onglet Contacts, remontés par la liste.
+   *
+   * Le bouton d'export vit dans l'en-tête, les filtres vivent dans l'onglet :
+   * sans ce relais, l'export ignorait la plateforme et le statut choisis, et
+   * un export « GLOVO » sortait avec les contacts Yango dedans.
+   */
+  const [filtresContacts, setFiltresContacts] = useState<
+    Record<string, string | undefined>
+  >({});
+
   const visibleTabs = canManage
     ? ADMIN_TABS
     : ADMIN_TABS.filter((t) => t.key === "liste");
@@ -93,7 +104,16 @@ export default function BaseDonnees() {
                 {
                   label: "Exporter",
                   onClick: () => {},
-                  customComponent: <ExportButton type={exportType} restaurantId={storeFilter} />,
+                  customComponent: (
+                    <ExportButton
+                      type={exportType}
+                      filtres={
+                        activeTab === "liste"
+                          ? { ...filtresContacts, restaurantId: storeFilter }
+                          : { restaurantId: storeFilter }
+                      }
+                    />
+                  ),
                 },
               ]
             : []),
@@ -175,6 +195,7 @@ export default function BaseDonnees() {
             <ProspectsList
               onRowClick={canManage ? setDetailId : undefined}
               restaurantId={canManage ? storeFilter : undefined}
+              onFiltresChange={setFiltresContacts}
             />
           )}
           {activeTab === "verification" && <CallCenterView restaurantId={storeFilter} />}

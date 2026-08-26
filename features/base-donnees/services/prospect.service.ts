@@ -292,11 +292,22 @@ export const scanProspectOrder = async (file: File) => {
   return (await response.json()) as ScanResult;
 };
 
-// Télécharge un CSV (contacts | coupons | sales)
-export const exportProspectsCsv = async (type: ExportType, restaurantId?: string) => {
+/**
+ * Télécharge un CSV (contacts | coupons | sales).
+ *
+ * ⚠️ Les filtres de l'écran sont transmis. Seul le restaurant l'était : demander
+ * les contacts GLOVO rendait un fichier plein de contacts Yango.
+ */
+export const exportProspectsCsv = async (
+  type: ExportType,
+  filtres: Record<string, string | undefined> = {},
+) => {
+  const nettoyes = Object.fromEntries(
+    Object.entries(filtres).filter(([, v]) => v !== undefined && v !== ""),
+  ) as Record<string, string>;
   const { url, headers } = await prepareRequest(BASE_URL, "/export", {
     type,
-    ...(restaurantId ? { restaurantId } : {}),
+    ...nettoyes,
   });
   const response = await fetch(url, { method: "GET", headers });
   if (!response.ok) {

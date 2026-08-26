@@ -56,10 +56,17 @@ function formatDate(iso: string) {
 export function ProspectsList({
   onRowClick,
   restaurantId,
+  onFiltresChange,
 }: {
   onRowClick?: (id: string) => void;
   /** Filtre store piloté par la page (vide = tous ; store-roles déjà scopés côté serveur). */
   restaurantId?: string;
+  /**
+   * Remonte les filtres à la page, pour que le bouton d'export exporte ce que
+   * l'utilisateur voit. Sans cela, le bouton vit dans l'en-tête et ne peut pas
+   * connaître la plateforme ni le statut choisis ici.
+   */
+  onFiltresChange?: (filtres: Record<string, string | undefined>) => void;
 } = {}) {
   const [search, setSearch] = useState("");
   const [platform, setPlatform] = useState<ProspectPlatform | "">("");
@@ -80,6 +87,18 @@ export function ProspectsList({
     ...(restaurantId ? { restaurantId } : {}),
   };
   const { data, isLoading, isFetching } = useProspectListQuery(query);
+
+  React.useEffect(() => {
+    onFiltresChange?.({
+      search: search.trim() || undefined,
+      platform: platform || undefined,
+      status: status || undefined,
+      restaurantId: restaurantId || undefined,
+    });
+    // `onFiltresChange` est volontairement hors dépendances : la page la
+    // redéfinit à chaque rendu, l'y mettre relancerait l'effet en boucle.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, platform, status, restaurantId]);
 
   const rows = data?.data ?? [];
   const meta = data?.meta;
