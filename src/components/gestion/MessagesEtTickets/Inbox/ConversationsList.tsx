@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Search, Plus, Users } from 'lucide-react';
-import { useConversationListQuery, useMessagerieSocketSync } from '../../../../../features/messagerie';
+import { useConversationListInfiniteQuery, useMessagerieSocketSync } from '../../../../../features/messagerie';
+import { useSentinelleDefilement } from '../../../../../features/messagerie/hooks/useSentinelleDefilement';
 import type { IConversation } from '../../../../../features/messagerie';
 import { formatImageUrl } from '@/utils/imageHelpers';
 import { format } from 'date-fns';
@@ -22,14 +23,42 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
 
   const {
     data: conversationsData,
-    isLoading
-  } = useConversationListQuery();
+    isLoading,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+    fetchNextPage,
+  } = useConversationListInfiniteQuery();
 
   // 🔌 WebSocket pour les mises à jour temps réel
   useMessagerieSocketSync();
 
-  // Récupérer les conversations depuis React Query
-  const conversations = conversationsData?.data || [];
+  /**
+   * Toutes les pages chargées, aplaties et DÉDOUBLONNÉES par identifiant : une
+   * conversation qui remonte en tête entre deux pages apparaîtrait deux fois.
+   */
+  const conversations = useMemo(() => {
+    const pages = conversationsData?.pages ?? [];
+    const vus = new Set<string>();
+    const liste: IConversation[] = [];
+    for (const page of pages) {
+      for (const c of page?.data ?? []) {
+        if (c?.id && vus.has(c.id)) continue;
+        if (c?.id) vus.add(c.id);
+        liste.push(c);
+      }
+    }
+    return liste;
+  }, [conversationsData]);
+
+  /** Total SERVEUR. L'onglet affichait la taille de page, pas le nombre réel. */
+  const totalServeur = conversationsData?.pages?.[0]?.meta?.total;
+
+  const { conteneurRef, sentinelleRef } = useSentinelleDefilement({
+    encore: Boolean(hasNextPage),
+    enCours: isFetchingNextPage || isFetching,
+    charger: fetchNextPage,
+  });
 
   // Fonction pour formater le timestamp
   const formatTimestamp = (dateString: string) => {
@@ -168,27 +197,27 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
-            Toutes ({conversations.length})
+            Toutes ({totalServeur ?? conversations.length})
           </button>
           <button
             onClick={() => setActiveFilter('client')}
             className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
-            Clients ({conversations.filter(c => c.customer).length})
+            Clients ({conversations.filter(c => c.customer).length}{hasNextPage ? '+' : ''})
           </button>
           <button
             onClick={() => setActiveFilter('internal')}
             className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
-            Internes ({conversations.filter(c => !c.customer).length})
+            Internes ({conversations.filter(c => !c.customer).length}{hasNextPage ? '+' : ''})
           </button>
         </div>
       </div>
 
       {/* Conversations List */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={conteneurRef} className="flex-1 overflow-y-auto">
         {/* Loading state */}
         {isLoading && (
           <div className="flex items-center justify-center p-8">
@@ -225,8 +254,15 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             <div
               key={conversation.id}
               onClick={() => onSelectConversation(conversation.id)}
-              className={`md:px-4 md:py-4  px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${selectedConversation === conversation.id ? 'bg-orange-50' : ''
-                }`}
+              className={`md:px-4 md:py-4  px-3 py-3 border-b border-slate-300 cursor-pointer hover:bg-gray-50 ${
+                conversation.unreadNumber > 0 ? 'shadow-[inset_4px_0_0_0_#F17922]' : ''
+              } ${
+                selectedConversation === conversation.id
+                  ? 'bg-orange-50'
+                  : conversation.unreadNumber > 0
+                    ? 'bg-orange-50/50'
+                    : ''
+              }`}
             >
               <div className="flex items-start md:space-x-3 space-x-2">
                 {/* Avatar */}
@@ -317,6 +353,21 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             </div>
           )
         })}
+
+        {/* Défilement infini : cette ligne déclenche la page suivante. */}
+        <div ref={sentinelleRef} className="h-px" />
+
+        {isFetchingNextPage && (
+          <div className="py-4 text-center text-[13px] text-gray-400">
+            Chargement de la suite…
+          </div>
+        )}
+
+        {!isLoading && !hasNextPage && conversations.length > 0 && (
+          <div className="py-4 text-center text-[12px] text-gray-400">
+            {conversations.length} conversation{conversations.length > 1 ? 's' : ''}, c&apos;est tout
+          </div>
+        )}
       </div>
     </div>
   );

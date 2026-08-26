@@ -9,8 +9,19 @@ interface PaginatedResponse<T> {
 const BASE = '/tickets';
 
 export const ticketAPI = {
-  obtenirTous: (filtres: IFiltresTicket = {}): Promise<PaginatedResponse<ITicket>> => {
+  /**
+   * Liste paginée. ⚠️ `page` et `limit` n'étaient PAS transmis : le serveur
+   * appliquait donc son défaut, dix tickets, et l'écran n'avait aucun moyen
+   * d'aller au-delà. Le gestionnaire croyait voir toute sa file.
+   */
+  obtenirTous: (
+    filtres: IFiltresTicket = {},
+    page = 1,
+    limit = 20,
+  ): Promise<PaginatedResponse<ITicket>> => {
     const params = new URLSearchParams();
+    params.append('page', String(page));
+    params.append('limit', String(limit));
     if (filtres.status?.length) filtres.status.forEach(s => params.append('status', s));
     if (filtres.priority?.length) filtres.priority.forEach(p => params.append('priority', p));
     if (filtres.category?.length) filtres.category.forEach(c => params.append('category', c));

@@ -4,7 +4,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { Search, MessageCircle, Plus, Loader2, Bike, User as UserIcon, ChevronDown, ChevronRight, Receipt } from 'lucide-react';
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import { useTicketListQuery } from '../../../../../features/messagerie';
+import { useTicketListInfiniteQuery } from '../../../../../features/messagerie';
+import { useSentinelleDefilement } from '../../../../../features/messagerie/hooks/useSentinelleDefilement';
 import { useTicketCategoriesQuery } from '@/hooks/useTicketCategoriesQuery';
 import {
   Ticket,
@@ -55,12 +56,49 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   };
 
   // Récupérer les tickets avec les filtres
-  const { data: ticketsData, isLoading: ticketsLoading, error: ticketsError } = useTicketListQuery(filters);
+  const {
+    data: ticketsData,
+    isLoading: ticketsLoading,
+    error: ticketsError,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching: ticketsFetching,
+    fetchNextPage,
+  } = useTicketListInfiniteQuery(filters);
 
   // Récupérer les catégories pour les afficher
   const { data: categoriesData } = useTicketCategoriesQuery({ status: 'ACTIVE' });
 
-  const allTickets = ticketsData?.data || [];
+  /**
+   * Toutes les pages chargées, aplaties et DÉDOUBLONNÉES par identifiant.
+   *
+   * La pagination par décalage peut renvoyer deux fois la même ligne quand un
+   * ticket remonte en tête entre deux pages, ce qui arrive maintenant à chaque
+   * message reçu. React n'aime pas deux clés identiques, et le gestionnaire
+   * encore moins.
+   */
+  const allTickets = React.useMemo(() => {
+    const pages = ticketsData?.pages ?? [];
+    const vus = new Set<string>();
+    const liste: typeof pages[number]['data'] = [];
+    for (const page of pages) {
+      for (const t of page?.data ?? []) {
+        if (t?.id && vus.has(t.id)) continue;
+        if (t?.id) vus.add(t.id);
+        liste.push(t);
+      }
+    }
+    return liste;
+  }, [ticketsData]);
+
+  /** Total SERVEUR, tous filtres appliqués. C'est lui qui fait foi. */
+  const totalServeur = ticketsData?.pages?.[0]?.meta?.total;
+
+  const { conteneurRef, sentinelleRef } = useSentinelleDefilement({
+    encore: Boolean(hasNextPage),
+    enCours: isFetchingNextPage || ticketsFetching,
+    charger: fetchNextPage,
+  });
   // Filtrage côté client par origine (pas encore exposé via filtre backend)
   const tickets = sourceFilter === 'ALL'
     ? allTickets
@@ -101,8 +139,12 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
     setExpandedGroups((prev) => ({ ...prev, [group.key]: !isGroupExpanded(group) }));
 
   // Compteurs pour les tabs source
+  // ⚠️ `ALL` vient du SERVEUR, pas de la longueur du tableau chargé. C'est ce
+  // décalage qui faisait lire « Tous (10) » sur une file bien plus longue.
+  // Les deux autres restent calculés sur le chargé, faute de filtre serveur par
+  // type de demandeur : ils sont donc suffixés d'un « + » dans le rendu.
   const counts = {
-    ALL: allTickets.length,
+    ALL: totalServeur ?? allTickets.length,
     CUSTOMER: allTickets.filter((t) => getTicketSource(t as Ticket) === 'CUSTOMER').length,
     DELIVERER: allTickets.filter((t) => getTicketSource(t as Ticket) === 'DELIVERER').length,
   };
@@ -172,7 +214,19 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   };
 
   // Carte ticket (réutilisée à plat et dans les groupes dépliables)
-  const renderTicketCard = (ticket: (typeof tickets)[number], inGroup = false) => (
+  const renderTicketCard = (ticket: (typeof tickets)[number], inGroup = false) => {
+    /**
+     * Ticket qui attend une réponse. Le badge chiffré existait déjà, mais tout
+     * en bas de la carte : dans une liste longue, il fallait le chercher.
+     *
+     * ⚠️ Le repère est un liseré posé en OMBRE INTERNE, pas en bordure. Ce
+     * conteneur porte déjà `border-b` ; ajouter `border-l-4 border-[#F17922]`
+     * réécrirait la couleur des QUATRE côtés, le liseré sortirait gris et les
+     * séparateurs entre lignes deviendraient orange.
+     */
+    const nonLu = (ticket.unreadCount ?? 0) > 0;
+
+    return (
     <div
       key={ticket.id}
       onClick={() => onSelectTicket(ticket.id)}
@@ -180,7 +234,13 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
         inGroup
           ? 'md:pl-8 pl-6 md:pr-4 pr-3 md:py-3 py-2.5 border-b border-slate-200 last:border-b-0'
           : 'md:px-4 md:py-4 px-3 py-3 border-b border-slate-300'
-      } ${selectedTicket === ticket.id ? 'bg-orange-50' : ''}`}
+      } ${nonLu ? 'shadow-[inset_4px_0_0_0_#F17922]' : ''} ${
+        selectedTicket === ticket.id
+          ? 'bg-orange-50'
+          : nonLu
+            ? 'bg-orange-50/50'
+            : ''
+      }`}
     >
       <div className={inGroup ? 'mb-1' : 'mb-3'}>
         {/* Titre et badges */}
@@ -287,7 +347,8 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -386,7 +447,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
       </div>
 
       {/* Tickets List */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={conteneurRef} className="flex-1 overflow-y-auto">
         {ticketsLoading ? (
           <div className="flex items-center justify-center p-8">
             <Loader2 className="w-6 h-6 animate-spin text-[#F17922]" />
@@ -462,6 +523,21 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
               </div>
             );
           })
+        )}
+
+        {/* Défilement infini : cette ligne déclenche la page suivante. */}
+        <div ref={sentinelleRef} className="h-px" />
+
+        {isFetchingNextPage && (
+          <div className="py-4 text-center text-[13px] text-gray-400">
+            Chargement de la suite…
+          </div>
+        )}
+
+        {!ticketsLoading && !hasNextPage && allTickets.length > 0 && (
+          <div className="py-4 text-center text-[12px] text-gray-400">
+            {allTickets.length} ticket{allTickets.length > 1 ? 's' : ''}, c&apos;est tout
+          </div>
         )}
       </div>
     </div>

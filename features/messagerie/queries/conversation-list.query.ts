@@ -2,6 +2,9 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { conversationAPI } from '../apis/conversation.api';
 import { conversationKeyQuery, statsMessagesKeyQuery } from './index.query';
 
+/** Taille de page de la liste des conversations. */
+export const TAILLE_PAGE_CONVERSATIONS = 20;
+
 export const useConversationListQuery = (enabled = true) => {
   return useQuery({
     queryKey: conversationKeyQuery('list'),
@@ -16,7 +19,7 @@ export const useConversationListQuery = (enabled = true) => {
 export const useConversationListInfiniteQuery = (enabled = true) => {
   return useInfiniteQuery({
     queryKey: conversationKeyQuery('list-infinite'),
-    queryFn: ({ pageParam = 1 }) => conversationAPI.obtenirTous(pageParam, 10),
+    queryFn: ({ pageParam = 1 }) => conversationAPI.obtenirTous(pageParam, TAILLE_PAGE_CONVERSATIONS),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (!lastPage?.meta) return undefined;
@@ -24,8 +27,10 @@ export const useConversationListInfiniteQuery = (enabled = true) => {
     },
     enabled,
     staleTime: 2 * 60 * 1000,
-    refetchInterval: 3 * 60 * 1000,
-    refetchIntervalInBackground: false,
+    /**
+     * ⚠️ PAS de `refetchInterval` : sur une requête infinie il redemande TOUTES
+     * les pages chargées, en série. La fraîcheur vient du socket.
+     */
   });
 };
 
