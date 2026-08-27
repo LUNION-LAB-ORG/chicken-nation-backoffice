@@ -81,3 +81,17 @@ export const useReprendreDiffusionMutation = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 };
+
+/**
+ * Recherche de clients pour la sélection personnalisée.
+ *
+ * Ne cherche qu'à partir de deux caractères : le serveur refuse en deçà, et
+ * lancer une requête à chaque lettre pour rien est un gaspillage.
+ */
+export const useRechercheClientsQuery = (terme: string) =>
+  useQuery({
+    queryKey: diffusionKey('clients', terme),
+    queryFn: () => diffusionAPI.chercherClients(terme),
+    enabled: terme.trim().length >= 2,
+    staleTime: 60 * 1000,
+  });

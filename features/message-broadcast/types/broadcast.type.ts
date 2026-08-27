@@ -10,6 +10,7 @@ export interface IDiffusion {
   target_type: Ciblage;
   target_config: Record<string, any>;
   status: StatutDiffusion;
+  image_url?: string | null;
   scheduled_at: string | null;
   started_at: string | null;
   sent_at: string | null;
@@ -30,6 +31,29 @@ export interface ICreerDiffusion {
   target_type: Ciblage;
   target_config: Record<string, any>;
   scheduled_at?: string;
+  /** Image jointe, facultative. Part en multipart. */
+  image?: File | null;
+}
+
+export interface IClientCible {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string;
+}
+
+/**
+ * Aperçu d'audience.
+ *
+ * ⚠️ DEUX nombres, et c'est volontaire. Le ciblage désigne `cibles` clients,
+ * mais seuls ceux qui ont ouvert l'application verront le message : la table
+ * des clients contient aussi les demandes de Carte Nation faites depuis le
+ * site et les comptes créés au backoffice.
+ */
+export interface IApercuAudience {
+  total: number;
+  cibles: number;
+  sans_application: number;
 }
 
 export const LIBELLES_STATUT: Record<StatutDiffusion, string> = {

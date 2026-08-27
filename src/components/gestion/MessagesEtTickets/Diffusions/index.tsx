@@ -3,20 +3,16 @@
 import React, { useMemo, useState } from 'react';
 import { Megaphone, Plus, RefreshCw, Send, Users } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import { CustomDropdown } from '@/components/ui/CustomDropdown';
-import Modal from '@/components/ui/Modal';
 import { HasPermission } from '../../../../../features/users/components/HasPermission';
 import { Action, Modules } from '../../../../../features/users/types/auth.type';
+import CreationView from './CreationView';
 import {
-  useApercuAudienceMutation,
-  useCreerDiffusionMutation,
   useDiffusionsQuery,
   useEnvoyerDiffusionMutation,
   useReprendreDiffusionMutation,
 } from '../../../../../features/message-broadcast/queries/broadcast.query';
 import {
   LIBELLES_STATUT,
-  SEGMENTS_SYSTEME,
   type IDiffusion,
 } from '../../../../../features/message-broadcast/types/broadcast.type';
 
@@ -57,6 +53,10 @@ export default function DiffusionsModule() {
   const [creation, setCreation] = useState(false);
   const { data, isLoading, isError, refetch } = useDiffusionsQuery();
   const diffusions = useMemo(() => data?.data ?? [], [data]);
+
+  // ⚠️ Une PAGE, pas une fenêtre : rédiger un message qui partira à des
+  // milliers de personnes demande de la place et un retour en arrière.
+  if (creation) return <CreationView onRetour={() => setCreation(false)} />;
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -120,7 +120,6 @@ export default function DiffusionsModule() {
         )}
       </div>
 
-      <ModaleCreation ouverte={creation} onFermer={() => setCreation(false)} />
     </div>
   );
 }
@@ -221,151 +220,5 @@ function LigneDiffusion({ diffusion }: { diffusion: IDiffusion }) {
         isLoading={envoyer.isPending}
       />
     </div>
-  );
-}
-
-function ModaleCreation({ ouverte, onFermer }: { ouverte: boolean; onFermer: () => void }) {
-  const [nom, setNom] = useState('');
-  const [corps, setCorps] = useState('');
-  const [segment, setSegment] = useState('all');
-  const [quand, setQuand] = useState('');
-
-  const apercu = useApercuAudienceMutation();
-  const creer = useCreerDiffusionMutation();
-
-  const valide = nom.trim().length >= 2 && corps.trim().length >= 2;
-
-  /**
-   * Le compte affiché appartient TOUJOURS au segment affiché : changer de
-   * segment efface l'aperçu précédent. Sinon le gestionnaire lirait « 1 200
-   * clients » sous un segment qui n'en vise que douze.
-   */
-  const changerSegment = (valeur: string) => {
-    setSegment(valeur);
-    apercu.reset();
-  };
-
-  const fermer = () => {
-    apercu.reset();
-    onFermer();
-  };
-
-  return (
-    <Modal isOpen={ouverte} onClose={fermer} title="Nouvelle diffusion">
-      <div className="p-4 md:p-6">
-        <p className="text-[12px] text-gray-500">
-          Le message arrive dans le fil Chicken Nation du client.
-        </p>
-
-        <label htmlFor="diffusion-nom" className="block mt-5 text-[13px] font-semibold text-gray-700">
-          Nom, pour vous y retrouver
-        </label>
-        <input
-          id="diffusion-nom"
-          value={nom}
-          onChange={(e) => setNom(e.target.value)}
-          maxLength={120}
-          placeholder="Ex : Promo week-end de mars"
-          className="mt-1 w-full h-[42px] rounded-xl border border-[#D8D8D8] bg-white px-3 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
-        />
-
-        <label htmlFor="diffusion-corps" className="block mt-4 text-[13px] font-semibold text-gray-700">
-          Message
-        </label>
-        <textarea
-          id="diffusion-corps"
-          value={corps}
-          onChange={(e) => setCorps(e.target.value)}
-          rows={4}
-          maxLength={LONGUEUR_MAX}
-          placeholder="Bonjour {{first_name}}, ce week-end les burgers sont à moins 20 pour cent."
-          className="mt-1 w-full rounded-xl border border-[#D8D8D8] bg-white px-3 py-2 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
-        />
-        <div className="flex items-start justify-between gap-3 mt-1">
-          <p className="text-[11px] text-gray-400">
-            {'{{first_name}}'} est remplacé par le prénom du client, ou par rien
-            s&apos;il n&apos;en a pas.
-          </p>
-          <span className="text-[11px] text-gray-400 shrink-0 tabular-nums">
-            {corps.length} / {LONGUEUR_MAX}
-          </span>
-        </div>
-
-        <label className="block mt-4 text-[13px] font-semibold text-gray-700">
-          Destinataires
-        </label>
-        <div className="mt-1">
-          <CustomDropdown
-            options={SEGMENTS_SYSTEME.map((s) => ({ value: s.cle, label: s.libelle }))}
-            value={segment}
-            onChange={changerSegment}
-          />
-        </div>
-
-        <button
-          type="button"
-          disabled={apercu.isPending}
-          onClick={() =>
-            apercu.mutate({ target_type: 'segment', target_config: { segment } })
-          }
-          className="mt-2 text-[12px] font-semibold text-[#F17922] cursor-pointer disabled:opacity-50"
-        >
-          {apercu.isPending ? 'Calcul en cours' : 'Combien de clients ?'}
-        </button>
-        {apercu.data && (
-          <p className="text-[13px] text-gray-700 mt-1">
-            <strong>{accord(apercu.data.total)}</strong> ce message.
-          </p>
-        )}
-        {apercu.isError && (
-          <p className="text-[12px] text-red-600 mt-1">Comptage impossible pour le moment.</p>
-        )}
-
-        <label htmlFor="diffusion-date" className="block mt-4 text-[13px] font-semibold text-gray-700">
-          Départ différé, facultatif
-        </label>
-        <input
-          id="diffusion-date"
-          type="datetime-local"
-          value={quand}
-          min={new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16)}
-          onChange={(e) => setQuand(e.target.value)}
-          className="mt-1 w-full h-[42px] rounded-xl border border-[#D8D8D8] bg-white px-3 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
-        />
-        <p className="text-[11px] text-gray-400 mt-1">
-          Laissé vide, la diffusion reste en brouillon et part quand vous cliquez sur
-          Envoyer.
-        </p>
-
-        <div className="flex justify-end gap-2 mt-6">
-          <button
-            type="button"
-            onClick={fermer}
-            className="h-[42px] px-5 rounded-xl bg-[#ECECEC] text-[13px] font-semibold text-[#9796A1] cursor-pointer"
-          >
-            Annuler
-          </button>
-          <button
-            type="button"
-            disabled={!valide || creer.isPending}
-            onClick={() =>
-              creer.mutate(
-                {
-                  name: nom.trim(),
-                  body: corps.trim(),
-                  target_type: 'segment',
-                  target_config: { segment },
-                  ...(quand ? { scheduled_at: new Date(quand).toISOString() } : {}),
-                },
-                { onSuccess: fermer },
-              )
-            }
-            className="h-[42px] px-5 rounded-xl bg-[#F17922] text-[13px] font-semibold text-white disabled:opacity-50 cursor-pointer"
-          >
-            {creer.isPending ? 'Création en cours' : 'Créer'}
-          </button>
-        </div>
-      </div>
-    </Modal>
   );
 }
