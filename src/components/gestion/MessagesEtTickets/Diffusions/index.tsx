@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import { Megaphone, Plus, RefreshCw, Send, Users } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
-import CustomDropdown from '@/components/ui/CustomDropdown';
+import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import Modal from '@/components/ui/Modal';
 import { HasPermission } from '../../../../../features/users/components/HasPermission';
 import { Action, Modules } from '../../../../../features/users/types/auth.type';
