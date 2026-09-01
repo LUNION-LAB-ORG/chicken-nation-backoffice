@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Star, Download, ChevronDown, Check, Globe, Loader2, Pencil } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Checkbox from '@/components/ui/Checkbox';
+import { HasPermission } from '../../users/components/HasPermission';
+import { Action, Modules } from '../../users/types/auth.type';
 import { Pagination } from '@/components/ui/pagination';
 import { exportComments, convertCommentsForExport } from '@/services/exportService';
 import Image from 'next/image';
@@ -497,7 +499,23 @@ export function GlobalReviews() {
                   </div>
 
                   {/* Message — éditable par le staff (correction de fautes) */}
-                  <EditableMessage commentId={comment.id} message={comment.message} />
+                  {/*
+                    ⚠️ Réécrire l'avis d'un client et le publier sur le site
+                    sont désormais réservés au rôle qui en a le droit. Sans ce
+                    filtrage, un caissier verrait les commandes, cliquerait, et
+                    recevrait un refus du serveur sans comprendre pourquoi. Le
+                    texte reste lisible par tous, seule la modification est
+                    réservée.
+                  */}
+                  <HasPermission
+                    module={Modules.COMMENTAIRES}
+                    action={Action.UPDATE}
+                    fallback={
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.message}</p>
+                    }
+                  >
+                    <EditableMessage commentId={comment.id} message={comment.message} />
+                  </HasPermission>
 
                   {/* Informations supplémentaires */}
                   <div className="flex flex-col space-y-1 text-xs text-gray-500">
@@ -514,10 +532,12 @@ export function GlobalReviews() {
                   {/* CURATION SITE : c'est ICI qu'on choisit les témoignages
                       affichés sur le site vitrine — plus aucune sélection
                       automatique côté serveur. */}
-                  <SiteVisibilityToggle
-                    commentId={comment.id}
-                    visible={comment.site_visible === true}
-                  />
+                  <HasPermission module={Modules.COMMENTAIRES} action={Action.UPDATE}>
+                    <SiteVisibilityToggle
+                      commentId={comment.id}
+                      visible={comment.site_visible === true}
+                    />
+                  </HasPermission>
                 </div>
               </div>
             </div>
