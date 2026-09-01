@@ -26,6 +26,8 @@ import {
   Hash,
   TrendingUp,
   Calendar,
+  CheckCheck,
+  MousePointerClick,
 } from "lucide-react";
 
 const COLORS = {
@@ -130,7 +132,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <KpiCard
           icon={<Hash size={18} />}
           label="Campagnes"
@@ -150,12 +152,33 @@ export default function AnalyticsDashboard() {
           color="bg-green-50 text-green-600"
         />
         <KpiCard
+          icon={<CheckCheck size={18} />}
+          label="Remis"
+          value={(stats.totalDelivered ?? 0).toLocaleString("fr-FR")}
+          color="bg-emerald-50 text-emerald-600"
+        />
+        <KpiCard
+          icon={<MousePointerClick size={18} />}
+          label="Ouvertures"
+          value={(stats.totalOpened ?? 0).toLocaleString("fr-FR")}
+          color="bg-sky-50 text-sky-600"
+        />
+        <KpiCard
           icon={<AlertTriangle size={18} />}
           label="Échecs"
           value={stats.totalFailed.toLocaleString("fr-FR")}
           color="bg-red-50 text-red-500"
         />
       </div>
+
+      <p className="text-[11px] text-gray-400 leading-relaxed -mt-1">
+        « Remis » signifie remis à Apple ou à Google, et non affiché sur l'écran
+        du client. « Ouvertures » compte les notifications réellement touchées,
+        remontées par les téléphones : c'est un plancher, car les clients dont
+        l'application n'est pas à jour n'en remontent aucune. Ces deux chiffres
+        ne se remplissent que pour les campagnes envoyées depuis la mise en
+        place de la mesure.
+      </p>
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
