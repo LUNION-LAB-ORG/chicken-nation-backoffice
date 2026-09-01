@@ -97,17 +97,23 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                           <span className="text-xs font-semibold text-gray-500">
                             Suppléments
                           </span>
-                          {item.rawSupplements && item.rawSupplements.length > 0 && (
-                            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#F17922]/10 text-[#F17922] text-[10px] font-bold">
-                              {item.rawSupplements.reduce((sum, s) => sum + (s.quantity || 1), 0)}
-                            </span>
-                          )}
                           <span className="text-xs text-gray-400 ml-0.5">
+                            {/*
+                              ⚠️ La quantité est TOUJOURS affichée, y compris
+                              quand elle vaut 1. Elle n'apparaissait qu'au delà,
+                              si bien qu'un supplément sans mention se lisait
+                              « une portion » alors que rien ne le disait. Une
+                              caissière ne doit pas avoir à déduire une
+                              quantité de son absence.
+                            */}
                             {item.rawSupplements && item.rawSupplements.length > 0
                               ? item.rawSupplements.map((s, i) => (
                                   <span key={s.id || i}>
                                     {i > 0 ? ", " : ""}
-                                    {s.quantity && s.quantity > 1 ? `${s.name} x${s.quantity}` : s.name}
+                                    <span className="font-bold text-gray-700 tabular-nums">
+                                      ×{s.quantity || 1}
+                                    </span>{" "}
+                                    {s.name}
                                     {s.offert && (
                                       <span className="ml-0.5 text-[#F17922] font-medium">(offert)</span>
                                     )}

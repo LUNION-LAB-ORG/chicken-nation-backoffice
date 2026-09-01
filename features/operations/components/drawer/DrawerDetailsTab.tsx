@@ -309,15 +309,24 @@ function NoteBlock({ ui }: { ui: OrderTable }) {
 // ─── Articles ──────────────────────────────────────────────────────────────
 
 function ItemsBlock({ ui }: { ui: OrderTable }) {
-  const count = ui.items?.length ?? 0;
+  const lignes = ui.items?.length ?? 0;
+  /**
+   * ⚠️ On compte les ARTICLES A PREPARER, pas les lignes.
+   *
+   * L'en-tête affichait `items.length`. Sur une commande de deux burgers et
+   * une boisson, elle annonçait « 2 articles » alors qu'il y en a trois à
+   * mettre dans le sac. C'est exactement le genre d'écart qui fait partir une
+   * commande incomplète.
+   */
+  const articles = ui.items?.reduce((n, it) => n + (it.quantity || 1), 0) ?? 0;
   return (
     <Card className="p-5 md:p-6">
       <SectionTitle
         icon={<UtensilsCrossed className="w-4 h-4" />}
         title="Articles"
-        suffix={count > 0 ? `${count} article${count > 1 ? "s" : ""}` : undefined}
+        suffix={articles > 0 ? `${articles} article${articles > 1 ? "s" : ""}` : undefined}
       />
-      {count === 0 ? (
+      {lignes === 0 ? (
         <p className="text-sm text-gray-400 text-center py-6">Aucun article</p>
       ) : (
         <ul className="space-y-5">
@@ -336,6 +345,9 @@ function ItemRow({ item }: { item: OrderTableItem }) {
   // canal centre d'appel, donc toute commande téléphonée de quantité
   // supérieure à 1 était sous-affichée.
   const lineTotal = item.lineTotal;
+  const multiple = (item.quantity || 1) > 1;
+  const supplementsUnites =
+    item.rawSupplements?.reduce((n, sup) => n + (sup.quantity || 1), 0) ?? 0;
   return (
     <li className="flex gap-4">
       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 ring-1 ring-gray-200 shrink-0">
@@ -351,14 +363,39 @@ function ItemRow({ item }: { item: OrderTableItem }) {
             Offert
           </span>
         )}
-        <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-white/95 shadow text-[10px] font-bold text-gray-900">
+        {/*
+          ⚠️ Pastille de quantité LISIBLE.
+          C'était un « ×1 » de 10 px en blanc translucide posé sur une image
+          claire : illisible d'un coup d'œil. Une quantité supérieure à 1 passe
+          en orange plein, parce que c'est le seul cas où se tromper coûte
+          quelque chose.
+        */}
+        <span
+          className={`absolute top-1.5 right-1.5 rounded-lg shadow-sm font-black tabular-nums ${
+            multiple
+              ? "px-2 py-1 text-sm bg-[#F17922] text-white ring-2 ring-white"
+              : "px-1.5 py-0.5 text-[11px] bg-gray-900/85 text-white"
+          }`}
+        >
           ×{item.quantity}
         </span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h4 className="text-sm font-bold text-gray-900 truncate">{item.name}</h4>
+            {/*
+              Second rappel de la quantité, juste avant le nom, et seulement
+              quand elle dépasse 1. La redondance est volontaire : une caissière
+              lit vite, et deux occasions de voir « ×2 » valent mieux qu'une.
+            */}
+            <h4 className="text-sm font-bold text-gray-900 flex items-baseline gap-1.5 min-w-0">
+              {multiple && (
+                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-[#F17922] text-white text-xs font-black tabular-nums">
+                  ×{item.quantity}
+                </span>
+              )}
+              <span className="truncate">{item.name}</span>
+            </h4>
             <div className="mt-1.5 flex gap-1 flex-wrap">
               {item.epice ? (
                 <Chip tone="warm">🌶️ Épicé</Chip>
@@ -388,23 +425,63 @@ function ItemRow({ item }: { item: OrderTableItem }) {
         )}
         {item.supplements && (
           <div className="mt-2.5 p-2.5 rounded-xl bg-gray-50 border border-gray-100">
-            <div className="flex items-center gap-1 mb-1">
+            <div className="flex items-center gap-1.5 mb-1.5">
               <Package className="w-3 h-3 text-gray-400" />
               <span className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">
                 Suppléments
               </span>
-              {item.rawSupplements && item.rawSupplements.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-[#F17922]/10 text-[#F17922] text-[10px] font-bold">
-                  {item.rawSupplements.reduce((s, x) => s + (x.quantity || 1), 0)}
+              {supplementsUnites > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-[#F17922]/10 text-[#F17922] text-[10px] font-bold tabular-nums">
+                  {/*
+                    ⚠️ Le mot « unité » est indispensable.
+                    Ce compteur affichait un nombre nu, qui se lisait aussi bien
+                    comme « une ligne de supplément » que comme « une unité ».
+                  */}
+                  {supplementsUnites} unité{supplementsUnites > 1 ? "s" : ""}
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-700">{item.supplements}</p>
-            {(item.supplementsPrice || 0) > 0 && (
-              <p className="text-[10px] font-semibold text-gray-500 mt-1 tabular-nums">
-                + {formatPrice(item.supplementsPrice)}
-              </p>
+            {/*
+              ⚠️ Un supplément PAR LIGNE, avec sa quantité.
+              Le bloc affichait une chaîne assemblée d'avance, sans aucune
+              quantité : « CHEDDAR FRIES » se lisait comme une portion alors
+              qu'il pouvait y en avoir trois. La donnée existait pourtant,
+              simplement jetée à l'affichage.
+            */}
+            {item.rawSupplements && item.rawSupplements.length > 0 ? (
+              <ul className="space-y-1">
+                {item.rawSupplements.map((sup, i) => {
+                  const qte = sup.quantity || 1;
+                  return (
+                    <li key={sup.id || i} className="flex items-center gap-2">
+                      <span
+                        className={`shrink-0 w-8 text-center px-1 py-0.5 rounded-md text-[11px] font-black tabular-nums ${
+                          qte > 1 ? "bg-[#F17922] text-white" : "bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        ×{qte}
+                      </span>
+                      <span className="flex-1 min-w-0 truncate text-xs font-semibold text-gray-800">
+                        {sup.name}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-semibold text-gray-500 tabular-nums">
+                        {sup.offert ? "offert" : `+ ${formatPrice((sup.price || 0) * qte)}`}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              // Repli pour les commandes anciennes, dont le détail par
+              // supplément n'a pas été conservé.
+              <p className="text-xs text-gray-700">{item.supplements}</p>
             )}
+            {(item.supplementsPrice || 0) > 0 &&
+              (item.rawSupplements?.length ?? 0) !== 1 && (
+                <p className="mt-1.5 pt-1.5 border-t border-gray-200 text-[11px] font-bold text-gray-600 text-right tabular-nums">
+                  Total suppléments : {formatPrice(item.supplementsPrice)}
+                </p>
+              )}
           </div>
         )}
       </div>
