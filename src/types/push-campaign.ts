@@ -231,9 +231,11 @@ export interface PushCampaignStats {
   totalCampaigns: number;
   totalSent: number;
   totalFailed: number;
+  /** Remis à l'opérateur de notification. Pas « vu par le client ». */
+  totalDelivered: number;
   recentCampaigns: Pick<
     PushCampaign,
-    "id" | "name" | "status" | "total_targeted" | "total_sent" | "total_failed" | "sent_at" | "created_at"
+    "id" | "name" | "status" | "total_targeted" | "total_sent" | "total_delivered" | "total_failed" | "sent_at" | "created_at"
   >[];
 }
 

@@ -66,10 +66,20 @@ export default function AnalyticsDashboard() {
   const { data: stats, isLoading: statsLoading } = useCampaignStatsQuery();
   const { data: chartData, isLoading: chartLoading } = useCampaignChartQuery(period);
 
-  const deliveryRate = useMemo(() => {
-    if (!stats || stats.totalSent === 0) return "0.0";
-    const rate = ((stats.totalSent - stats.totalFailed) / stats.totalSent) * 100;
-    return rate.toFixed(1);
+  /**
+   * Taux d'ACCEPTATION, et non de livraison.
+   *
+   * Ce chiffre dit quelle part des envois a été acceptée par l'opérateur de
+   * notification. Il ne dit rien de ce qui est arrivé sur les téléphones. Il
+   * s'appelait « taux de livraison », ce qui était doublement faux : le nom
+   * promettait une remise, et la formule retranchait les échecs d'un total qui
+   * les contenait déjà, donc les comptait deux fois.
+   */
+  const tauxAcceptation = useMemo(() => {
+    if (!stats) return "0.0";
+    const presentes = stats.totalSent + stats.totalFailed;
+    if (presentes === 0) return "0.0";
+    return ((stats.totalSent / presentes) * 100).toFixed(1);
   }, [stats]);
 
   const isLoading = statsLoading || chartLoading;
@@ -135,8 +145,8 @@ export default function AnalyticsDashboard() {
         />
         <KpiCard
           icon={<CheckCircle size={18} />}
-          label="Taux de livraison"
-          value={`${deliveryRate}%`}
+          label="Taux d'acceptation"
+          value={`${tauxAcceptation}%`}
           color="bg-green-50 text-green-600"
         />
         <KpiCard

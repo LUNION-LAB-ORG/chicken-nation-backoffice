@@ -57,6 +57,20 @@ export function useCampaignQuery(id: string) {
     queryFn: () => pushService.getCampaign(id),
     enabled: !!id,
     staleTime: 15_000,
+    /**
+     * Le compteur « Remis » se remplit en différé, côté serveur, dans l'heure
+     * qui suit l'envoi. Sans ce rafraîchissement, il ne bougerait qu'au
+     * rechargement de la page et le gestionnaire croirait la mesure figée.
+     *
+     * On ne sollicite le serveur QUE pendant la fenêtre utile : au delà, le
+     * chiffre est définitif et un rafraîchissement périodique serait du bruit.
+     */
+    refetchInterval: (query) => {
+      const campagne = query.state.data;
+      if (!campagne?.sent_at) return false;
+      const ecoule = Date.now() - new Date(campagne.sent_at).getTime();
+      return ecoule < 90 * 60 * 1000 ? 60_000 : false;
+    },
   });
 }
 

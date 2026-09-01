@@ -35,6 +35,30 @@ function formatNumber(n?: number) {
   return n.toLocaleString("fr-FR");
 }
 
+/**
+ * Ce qu'il faut afficher dans la case « Remis ».
+ *
+ * Le compteur se remplit en différé : l'opérateur de notification ne publie ses
+ * accusés qu'au bout de quelques dizaines de minutes, et cesse de les publier
+ * après vingt-quatre heures. Afficher un zéro brut pendant ce temps ferait
+ * croire à un échec total.
+ *
+ * La règle ne dépend d'aucune date de mise en service, elle se lit sur les
+ * données elles mêmes : passé vingt-quatre heures sans le moindre accusé, la
+ * mesure n'existera jamais pour cette campagne. C'est le cas de toutes celles
+ * envoyées avant la mise en place, et il faut le dire plutôt que laisser
+ * croire à une panne.
+ */
+function etatRemises(campaign: PushCampaign) {
+  if (!campaign.sent_at || !campaign.total_sent) return formatNumber(campaign.total_delivered);
+  if (campaign.total_delivered > 0) return formatNumber(campaign.total_delivered);
+
+  const ecoule = Date.now() - new Date(campaign.sent_at).getTime();
+  const VINGT_QUATRE_HEURES = 24 * 60 * 60 * 1000;
+  if (ecoule > VINGT_QUATRE_HEURES) return "non mesuré";
+  return "en cours";
+}
+
 function getStatusBadge(status: string) {
   const styles: Record<string, string> = {
     sent: "bg-green-50 text-green-600",
@@ -108,8 +132,10 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
           <p className="text-2xl font-bold text-gray-900">{formatNumber(campaign.total_sent)}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
-          <p className="text-xs text-gray-500 font-medium mb-1">Livrés</p>
-          <p className="text-2xl font-bold text-gray-900">{formatNumber(campaign.total_delivered)}</p>
+          <p className="text-xs text-gray-500 font-medium mb-1" title="Remis à Apple ou à Google. Cela ne veut pas dire affiché sur l'écran du client.">
+            Remis
+          </p>
+          <p className="text-2xl font-bold text-gray-900">{etatRemises(campaign)}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-4">
           <p className="text-xs text-gray-500 font-medium mb-1">Échoués</p>
@@ -146,6 +172,15 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
+                  <CheckCircle size={14} className="text-emerald-500" />
+                  <span className="text-sm text-gray-600">Remis à l'opérateur</span>
+                </div>
+                <span className="text-sm font-medium text-emerald-600">
+                  {etatRemises(campaign)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <XCircle size={14} className="text-red-500" />
                   <span className="text-sm text-gray-600">Échoués</span>
                 </div>
@@ -153,6 +188,14 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
                   {formatNumber(campaign.total_failed)}
                 </span>
               </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed pt-1">
+                « Remis » signifie remis à Apple ou à Google, et non affiché sur
+                l'écran du client. Le chiffre se consolide dans les minutes qui
+                suivent l'envoi. Les campagnes antérieures à la mise en place de
+                cette mesure resteront sans valeur : les accusés ne sont
+                conservés que vingt-quatre heures et ne peuvent pas être
+                rattrapés.
+              </p>
 
               {/* Progress bar */}
               {campaign.total_targeted > 0 && (
