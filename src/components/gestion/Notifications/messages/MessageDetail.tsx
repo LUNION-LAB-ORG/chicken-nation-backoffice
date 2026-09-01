@@ -11,6 +11,7 @@ import {
   Users,
   Copy,
   Loader2,
+  MousePointerClick,
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 
@@ -188,6 +189,22 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
                   {formatNumber(campaign.total_failed)}
                 </span>
               </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MousePointerClick size={14} className="text-blue-500" />
+                  <span className="text-sm text-gray-600">Ouvertures mesurées</span>
+                </div>
+                <span className="text-sm font-medium text-blue-600">
+                  {formatNumber(campaign.total_opened)}
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400 leading-relaxed pt-1">
+                Les ouvertures sont remontées par le téléphone au moment du
+                geste. Ce chiffre est donc un plancher, et non un total : les
+                clients dont l'application n'est pas à jour n'en remontent
+                aucune, et rien ne permet de savoir combien ils sont. Ne calculez
+                pas de taux de clic sur cette base.
+              </p>
               <p className="text-[11px] text-gray-400 leading-relaxed pt-1">
                 « Remis » signifie remis à Apple ou à Google, et non affiché sur
                 l'écran du client. Le chiffre se consolide dans les minutes qui
