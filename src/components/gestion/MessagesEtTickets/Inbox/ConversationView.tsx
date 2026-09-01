@@ -172,6 +172,41 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     }
   }, [conversationId]);
 
+  /**
+   * ⚠️ Le composeur est VIDE à chaque changement de conversation.
+   *
+   * Sans cette remise à zéro, le contenu en attente suivait l'agent d'un fil à
+   * l'autre : ce composant n'est jamais démonté quand on change de
+   * conversation, le parent le rend sans clé et seul l'identifiant change.
+   *
+   * Le scénario n'a rien de théorique. L'agent enregistre « Bonjour Awa, votre
+   * commande part dans dix minutes », un message d'un autre client arrive, il
+   * clique dessus, tape « Bonjour » et valide : la note vocale nommant Awa part
+   * chez l'autre client. Le même trou existait pour l'image en attente et pour
+   * le texte saisi, il est refermé d'un coup.
+   *
+   * L'enregistrement en cours est arrêté et le micro rendu : laisser tourner un
+   * micro au dessus d'une autre conversation serait pire encore.
+   */
+  useEffect(() => {
+    setMessage('');
+    setPendingImage(null);
+    setPendingPreview(null);
+    setPendingAudio(null);
+    vocal.annuler();
+    /**
+     * ⚠️ On ne révoque volontairement PAS les aperçus locaux ici.
+     *
+     * Le message optimiste qui vient de partir s'appuie sur la même adresse
+     * locale pour afficher sa photo et faire écouter sa note vocale, le temps
+     * que le serveur réponde. La révoquer au moindre changement d'état
+     * casserait la lecture de ce qu'on vient d'envoyer. L'adresse abandonnée
+     * est reprise par le navigateur au rechargement de la page, ce qui est un
+     * coût négligeable comparé au défaut qu'on éviterait.
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+
   // 📜 Scroll automatique vers le bas - avec gestion intelligente
   const scrollToBottom = (behavior: 'smooth' | 'instant' = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });

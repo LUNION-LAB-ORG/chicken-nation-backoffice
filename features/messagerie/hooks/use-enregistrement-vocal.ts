@@ -14,16 +14,106 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * qu'on lui envoie. Transcoder exigerait ffmpeg côté serveur, pour un gain nul.
  */
 
+/**
+ * ⚠️ `audio/mp4` d'abord, et ce n'est pas un détail de préférence.
+ *
+ * Safari produit du mp4, que tout le monde sait lire. Chrome, lui, ne sait
+ * produire que du webm, et le webm N'EST PAS LISIBLE par le lecteur audio natif
+ * d'iOS : une note vocale enregistrée par un agent sous Chrome arrivait chez un
+ * client iPhone sous la forme d'un fichier muet. On demande donc du mp4 en
+ * premier, et le repli webm est rattrapé plus bas par une conversion.
+ */
 const FORMATS_CANDIDATS = [
+  'audio/mp4',
   'audio/webm;codecs=opus',
   'audio/webm',
-  'audio/mp4',
   'audio/ogg;codecs=opus',
 ];
 
 function choisirFormat(): string | undefined {
   if (typeof MediaRecorder === 'undefined') return undefined;
   return FORMATS_CANDIDATS.find((f) => MediaRecorder.isTypeSupported(f));
+}
+
+/** Un format que TOUS les lecteurs visés savent lire sans conversion. */
+function dejaUniversel(type: string) {
+  return type.includes('mp4') || type.includes('m4a') || type.includes('wav');
+}
+
+/**
+ * Emballe des échantillons bruts dans un fichier WAV.
+ *
+ * Le WAV n'a rien d'élégant, mais c'est le seul format que le navigateur sait
+ * produire ET que le lecteur natif d'iOS comme celui d'Android savent lire, sans
+ * bibliothèque tierce ni transcodage sur le serveur. Le poids reste raisonnable
+ * parce qu'on descend à 16 kHz en mono, largement suffisant pour de la parole :
+ * environ deux mégaoctets par minute.
+ */
+function emballerWav(echantillons: Float32Array, frequence: number): Blob {
+  const octets = new ArrayBuffer(44 + echantillons.length * 2);
+  const vue = new DataView(octets);
+  const texte = (position: number, valeur: string) => {
+    for (let i = 0; i < valeur.length; i++) vue.setUint8(position + i, valeur.charCodeAt(i));
+  };
+  texte(0, 'RIFF');
+  vue.setUint32(4, 36 + echantillons.length * 2, true);
+  texte(8, 'WAVE');
+  texte(12, 'fmt ');
+  vue.setUint32(16, 16, true); // taille du bloc de format
+  vue.setUint16(20, 1, true); // PCM non compressé
+  vue.setUint16(22, 1, true); // mono
+  vue.setUint32(24, frequence, true);
+  vue.setUint32(28, frequence * 2, true); // octets par seconde
+  vue.setUint16(32, 2, true); // alignement
+  vue.setUint16(34, 16, true); // bits par échantillon
+  texte(36, 'data');
+  vue.setUint32(40, echantillons.length * 2, true);
+  let position = 44;
+  for (let i = 0; i < echantillons.length; i++) {
+    // Bornage avant conversion : un échantillon hors bornes produirait un
+    // craquement au lieu d'un simple écrêtage.
+    const valeur = Math.max(-1, Math.min(1, echantillons[i]));
+    vue.setInt16(position, valeur < 0 ? valeur * 0x8000 : valeur * 0x7fff, true);
+    position += 2;
+  }
+  return new Blob([octets], { type: 'audio/wav' });
+}
+
+const FREQUENCE_PAROLE = 16000;
+
+/**
+ * Convertit un enregistrement en WAV lisible partout.
+ *
+ * En cas d'échec on rend l'original : mieux vaut une note vocale que certains
+ * téléphones liront qu'aucune note vocale du tout.
+ */
+async function versFormatUniversel(blob: Blob): Promise<Blob> {
+  if (dejaUniversel(blob.type)) return blob;
+  try {
+    const Contexte =
+      window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Contexte || typeof OfflineAudioContext === 'undefined') return blob;
+
+    const contexte = new Contexte();
+    const decode = await contexte.decodeAudioData(await blob.arrayBuffer());
+    await contexte.close();
+
+    // Une destination mono suffit à mélanger les canaux, et le contexte hors
+    // écran fait le rééchantillonnage au passage.
+    const horsEcran = new OfflineAudioContext(
+      1,
+      Math.max(1, Math.ceil(decode.duration * FREQUENCE_PAROLE)),
+      FREQUENCE_PAROLE,
+    );
+    const source = horsEcran.createBufferSource();
+    source.buffer = decode;
+    source.connect(horsEcran.destination);
+    source.start();
+    const rendu = await horsEcran.startRendering();
+    return emballerWav(rendu.getChannelData(0), FREQUENCE_PAROLE);
+  } catch {
+    return blob;
+  }
 }
 
 export interface VocalEnregistre {
@@ -98,18 +188,27 @@ export function useEnregistrementVocal() {
     }
     const duree = Date.now() - debutRef.current;
     return new Promise((resoudre) => {
-      recorder.onstop = () => {
+      recorder.onstop = async () => {
         libererLeMicro();
         setEnregistre(false);
         const morceaux = morceauxRef.current;
         morceauxRef.current = [];
         if (morceaux.length === 0) return resoudre(null);
         const type = recorder.mimeType || 'audio/webm';
-        const blob = new Blob(morceaux, { type });
-        // L'extension suit le format réel, pour que le stockage et les
-        // lecteurs ne se trompent pas de type.
-        const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
-        const fichier = new File([blob], `note-vocale.${extension}`, { type });
+        const brut = new Blob(morceaux, { type });
+        // Conversion si nécessaire, pour qu'un iPhone puisse écouter ce que
+        // Chrome vient d'enregistrer.
+        const blob = await versFormatUniversel(brut);
+        // L'extension suit le format RÉEL après conversion, sans quoi le
+        // stockage et les lecteurs se tromperaient de type.
+        const extension = blob.type.includes('wav')
+          ? 'wav'
+          : blob.type.includes('mp4')
+            ? 'm4a'
+            : blob.type.includes('ogg')
+              ? 'ogg'
+              : 'webm';
+        const fichier = new File([blob], `note-vocale.${extension}`, { type: blob.type });
         resoudre({ fichier, dureeMs: duree, urlLocale: URL.createObjectURL(blob) });
       };
       recorder.stop();
