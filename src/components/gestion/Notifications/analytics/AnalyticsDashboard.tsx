@@ -42,6 +42,7 @@ const STATUS_COLORS: Record<string, string> = {
   sent: "#22c55e",
   failed: "#ef4444",
   scheduled: "#f59e0b",
+  sending: "#fb923c",
   draft: "#6b7280",
 };
 
@@ -49,6 +50,7 @@ const STATUS_LABELS: Record<string, string> = {
   sent: "Envoyé",
   failed: "Échoué",
   scheduled: "Planifié",
+  sending: "En cours d'envoi",
   draft: "Brouillon",
 };
 

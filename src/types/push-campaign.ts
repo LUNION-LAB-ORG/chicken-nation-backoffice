@@ -22,7 +22,10 @@ export interface PushCampaign {
    */
   total_opened: number;
   total_failed: number;
-  status: "draft" | "sent" | "scheduled" | "failed";
+  /** `sending` : campagne créée avant l'envoi par la tâche planifiée. Une
+   *  campagne interrompue en cours de route y reste, ce qui la distingue
+   *  d'une campagne réellement partie. */
+  status: "draft" | "sent" | "sending" | "scheduled" | "failed";
   scheduled_at?: string | null;
   sent_at?: string | null;
   created_by: string;

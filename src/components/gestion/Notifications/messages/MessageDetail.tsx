@@ -65,12 +65,16 @@ function getStatusBadge(status: string) {
     sent: "bg-green-50 text-green-600",
     failed: "bg-red-50 text-red-600",
     scheduled: "bg-yellow-50 text-yellow-600",
+    // ⚠️ « sending » vient de la tâche planifiée : sans lui, le gestionnaire
+    // voyait le mot anglais brut, avec le style de « Brouillon ».
+    sending: "bg-orange-50 text-orange-600",
     draft: "bg-blue-50 text-blue-600",
   };
   const labels: Record<string, string> = {
     sent: "Envoyé",
     failed: "Échoué",
     scheduled: "Planifié",
+    sending: "En cours d'envoi",
     draft: "Brouillon",
   };
 

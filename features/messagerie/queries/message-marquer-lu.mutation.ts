@@ -15,7 +15,21 @@ export const useMarquerLuMutation = () => {
             ...old,
             pages: old.pages.map((page: any) => ({
               ...page,
-              data: page.data?.map((m: any) => ({ ...m, isRead: true })) || [],
+              /**
+               * ⚠️ On ne blanchit QUE les messages du camp d'en face.
+               *
+               * Ce cache forçait `isRead: true` sur TOUS les messages, alors
+               * que le serveur ne marque que ceux du client. Conséquence :
+               * dès qu'un agent ouvrait une conversation, ses PROPRES messages
+               * affichaient « Vu », donnant à croire que le client les avait
+               * lus alors qu'il n'était peut-être jamais revenu. Un accusé de
+               * lecture qui ment est pire que pas d'accusé du tout.
+               *
+               * `readAt` et l'accusé de l'agent viennent désormais
+               * exclusivement du serveur.
+               */
+              data:
+                page.data?.map((m: any) => (m.authorCustomer ? { ...m, isRead: true } : m)) || [],
             })),
           };
         }
