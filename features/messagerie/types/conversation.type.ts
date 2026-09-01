@@ -16,6 +16,13 @@ export interface IAuteurClient {
 export interface IMessage {
   id: string;
   isRead: boolean;
+  /**
+   * Heure à laquelle le destinataire a ouvert la conversation.
+   *
+   * ⚠️ Sémantique honnête : « la conversation a été ouverte », et non « ce
+   * message précis a été lu ». C'est le seul signal dont dispose le serveur.
+   */
+  readAt?: string | null;
   body: string;
   meta?: Record<string, unknown>;
   authorUser?: IAuteurUtilisateur | null;

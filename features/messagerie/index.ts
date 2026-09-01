@@ -43,3 +43,7 @@ export { useTicketSocketSync } from './hooks/useTicketSocketSync';
 export { useSupportBadgesSync } from './hooks/useSupportBadgesSync';
 export { useUnreadCounts } from './hooks/useUnreadCounts';
 export type { UnreadCounts } from './hooks/useUnreadCounts';
+
+// Notes vocales
+export { useEnregistrementVocal, formaterDuree } from './hooks/use-enregistrement-vocal';
+export { default as LecteurVocal } from './components/LecteurVocal';

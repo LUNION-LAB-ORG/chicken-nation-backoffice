@@ -20,13 +20,32 @@ export const conversationAPI = {
     return apiRequest<PaginatedResponse<IMessage>>(`${BASE}/${conversationId}/messages${qs}`, 'GET');
   },
 
-  // Texte seul (JSON) ou avec image (multipart — champ `image` côté backend,
-  // stockée S3 puis renvoyée dans message.meta.imageUrl).
-  envoyerMessage: (conversationId: string, body: string, image?: File): Promise<IMessage> => {
-    if (image) {
+  /**
+   * Texte seul (JSON), ou pièce jointe (multipart).
+   *
+   * Champs côté serveur : `image` et `audio`. Les fichiers partent vers le
+   * stockage et reviennent dans `message.meta` sous `imageUrl` et `audioUrl`.
+   *
+   * ⚠️ `audioDurationMs` est envoyé par le navigateur car la durée réelle d'un
+   * enregistrement en flux continu n'est pas toujours lisible dans le fichier
+   * produit : certains navigateurs annoncent une durée infinie tant que le
+   * fichier n'a pas été parcouru en entier.
+   */
+  envoyerMessage: (
+    conversationId: string,
+    body: string,
+    image?: File,
+    audio?: File,
+    audioDurationMs?: number,
+  ): Promise<IMessage> => {
+    if (image || audio) {
       const formData = new FormData();
       formData.append('body', body);
-      formData.append('image', image);
+      if (image) formData.append('image', image);
+      if (audio) {
+        formData.append('audio', audio);
+        if (audioDurationMs) formData.append('audioDurationMs', String(Math.round(audioDurationMs)));
+      }
       return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', formData);
     }
     return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', { body });

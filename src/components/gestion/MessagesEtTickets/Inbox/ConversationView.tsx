@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2 } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2, Mic, Check, CheckCheck } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
@@ -13,6 +13,9 @@ import {
   useEnvoyerMessageMutation,
   useMarquerLuMutation,
   useMessagerieSocketSync,
+  useEnregistrementVocal,
+  formaterDuree,
+  LecteurVocal,
 } from '../../../../../features/messagerie';
 import type { IMessage } from '../../../../../features/messagerie';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -38,6 +41,17 @@ const getMessageImage = (msg: IMessage): string | null => {
   return resolveMessageImage(meta?.imageUrl);
 };
 
+/**
+ * URL écoutable d'une note vocale. Même résolution que les images : un aperçu
+ * local pendant l'envoi, une clé de stockage ensuite.
+ */
+const getMessageAudio = (msg: IMessage): string | null => {
+  const meta = msg.meta as { audioUrl?: string | null } | undefined;
+  return resolveMessageImage(meta?.audioUrl);
+};
+
+const MAX_AUDIO_SIZE = 16 * 1024 * 1024; // 16 Mo, aligné sur la limite du serveur
+
 /** Libellé du séparateur de jour (Aujourd'hui / Hier / date complète). */
 const dayLabel = (dateStr: string): string => {
   try {
@@ -62,6 +76,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const [message, setMessage] = useState('');
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
+  const [pendingAudio, setPendingAudio] = useState<{
+    fichier: File;
+    dureeMs: number;
+    urlLocale: string;
+  } | null>(null);
+  const vocal = useEnregistrementVocal();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [isMobileRightbarOpen, setIsMobileRightbarOpen] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
@@ -250,15 +270,17 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
   const handleSendMessage = async () => {
     const body = message.trim();
-    if ((!body && !pendingImage) || !conversationId || sendMessageMutation.isPending) return;
+    if ((!body && !pendingImage && !pendingAudio) || !conversationId || sendMessageMutation.isPending) return;
 
     const image = pendingImage;
     const previewUrl = pendingPreview;
+    const audio = pendingAudio;
 
     // Vider immédiatement (optimiste)
     setMessage('');
     setPendingImage(null);
     setPendingPreview(null);
+    setPendingAudio(null);
 
     try {
       await sendMessageMutation.mutateAsync({
@@ -266,9 +288,14 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         body,
         image: image ?? undefined,
         previewUrl: previewUrl ?? undefined,
+        audio: audio?.fichier,
+        audioDurationMs: audio?.dureeMs,
+        audioPreviewUrl: audio?.urlLocale,
       });
-      // Le message serveur (URL S3) remplace l'optimiste → on libère l'aperçu local
+      // Le message serveur (URL de stockage) remplace l'optimiste, on libère
+      // les aperçus locaux.
       if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (audio) URL.revokeObjectURL(audio.urlLocale);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       toast.error("Échec de l'envoi du message");
@@ -278,6 +305,49 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         setPendingImage(image);
         setPendingPreview(previewUrl);
       }
+      if (audio) setPendingAudio(audio);
+    }
+  };
+
+  // --- Note vocale ---
+
+  const basculerEnregistrement = async () => {
+    if (vocal.enregistre) {
+      const resultat = await vocal.arreter();
+      if (!resultat) {
+        toast.error("Rien n'a été enregistré");
+        return;
+      }
+      if (resultat.dureeMs < 700) {
+        // Un appui involontaire ne doit pas partir comme une note vocale.
+        URL.revokeObjectURL(resultat.urlLocale);
+        toast.error('Note vocale trop courte');
+        return;
+      }
+      if (resultat.fichier.size > MAX_AUDIO_SIZE) {
+        URL.revokeObjectURL(resultat.urlLocale);
+        toast.error('Note vocale trop longue (16 Mo maximum)');
+        return;
+      }
+      setPendingAudio(resultat);
+      return;
+    }
+    if (pendingAudio) {
+      toast.error('Envoyez ou supprimez la note vocale en attente');
+      return;
+    }
+    const demarre = await vocal.demarrer();
+    if (!demarre && vocal.erreur) toast.error(vocal.erreur);
+  };
+
+  const annulerVocal = () => {
+    if (vocal.enregistre) {
+      vocal.annuler();
+      return;
+    }
+    if (pendingAudio) {
+      URL.revokeObjectURL(pendingAudio.urlLocale);
+      setPendingAudio(null);
     }
   };
 
@@ -297,7 +367,10 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     }
   };
 
-  const canSend = (message.trim().length > 0 || !!pendingImage) && !sendMessageMutation.isPending;
+  const canSend =
+    (message.trim().length > 0 || !!pendingImage || !!pendingAudio) &&
+    !vocal.enregistre &&
+    !sendMessageMutation.isPending;
 
   return (
     <div className="h-full flex">
@@ -437,7 +510,16 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                     : prev?.authorCustomer?.id === msg.authorCustomer?.id);
 
                 const imageUrl = getMessageImage(msg);
-                const hasBody = !!msg.body && msg.body.trim().length > 0;
+                const audioUrl = getMessageAudio(msg);
+                // ⚠️ Le corps de repli écrit par le serveur (« Photo »,
+                // « Message vocal ») ne doit pas s'afficher SOUS la pièce
+                // jointe : il n'existe que pour que les clients qui ignorent
+                // `meta` voient quelque chose.
+                const corpsDeRepli =
+                  (!!imageUrl && msg.body === 'Photo') ||
+                  (!!audioUrl && msg.body === 'Message vocal');
+                const hasBody =
+                  !!msg.body && msg.body.trim().length > 0 && !corpsDeRepli;
                 const isTemp = String(msg.id).startsWith('temp-');
 
                 const authorName = isAgent
@@ -513,13 +595,24 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                                 />
                               </button>
                             )}
+                            {audioUrl && (
+                              <LecteurVocal
+                                url={audioUrl}
+                                dureeMs={
+                                  typeof msg.meta?.audioDurationMs === 'number'
+                                    ? (msg.meta.audioDurationMs as number)
+                                    : null
+                                }
+                                sombre={isAgent}
+                              />
+                            )}
                             {hasBody && (
                               <p className="md:text-sm text-xs leading-relaxed whitespace-pre-wrap break-words px-3.5 py-2.5">
                                 {msg.body}
                               </p>
                             )}
                             {/* Heure pour les messages groupés (pas d'en-tête) */}
-                            {sameAuthorAsPrev && !imageUrl && (
+                            {sameAuthorAsPrev && !imageUrl && !audioUrl && (
                               <span
                                 className={`absolute bottom-1 ${isAgent ? 'left-1.5' : 'right-1.5'} text-[9px] ${
                                   isAgent ? 'text-white/60' : 'text-gray-300'
@@ -527,6 +620,39 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                               />
                             )}
                           </div>
+
+                          {/*
+                            Accusé de lecture, sous les seules bulles de
+                            l'agent. Un accusé sous le message du client
+                            n'aurait aucun sens : c'est nous qui l'avons lu.
+
+                            ⚠️ Vocabulaire honnête. « Vu » signifie que le
+                            client a OUVERT la conversation dans son
+                            application, et non qu'il a lu ce message précis.
+                            C'est le seul signal dont dispose le serveur, et
+                            promettre davantage serait mentir.
+
+                            Les messages encore en cours d'envoi n'affichent
+                            rien : un accusé sur un message non parti serait
+                            pire que pas d'accusé du tout.
+                          */}
+                          {isAgent && !isTemp && (
+                            <div className="flex items-center justify-end gap-1 mt-0.5 px-1">
+                              {msg.isRead ? (
+                                <>
+                                  <CheckCheck className="w-3.5 h-3.5 text-[#F17922]" />
+                                  <span className="text-[10px] text-gray-400">
+                                    {msg.readAt ? `Vu à ${formatMessageTime(msg.readAt)}` : 'Vu'}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-gray-300" />
+                                  <span className="text-[10px] text-gray-300">Envoyé</span>
+                                </>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -566,6 +692,48 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             </div>
           )}
 
+          {/* Enregistrement en cours */}
+          {vocal.enregistre && (
+            <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-red-50 border border-red-100 rounded-xl">
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+              <span className="text-xs text-red-600 font-medium tabular-nums">
+                {formaterDuree(vocal.dureeMs)}
+              </span>
+              <span className="text-xs text-gray-500 flex-1">Enregistrement en cours</span>
+              <button
+                onClick={annulerVocal}
+                className="p-1 hover:bg-red-100 rounded-full transition-colors"
+                title="Annuler l'enregistrement"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+          )}
+
+          {/* Note vocale prête à partir */}
+          {pendingAudio && !vocal.enregistre && (
+            <div className="mb-2 px-2 py-1 bg-orange-50 border border-orange-100 rounded-xl">
+              <div className="flex items-center gap-1">
+                <div className="flex-1 min-w-0">
+                  <LecteurVocal url={pendingAudio.urlLocale} dureeMs={pendingAudio.dureeMs} />
+                </div>
+                <button
+                  onClick={annulerVocal}
+                  disabled={sendMessageMutation.isPending}
+                  className="p-1 hover:bg-orange-100 rounded-full transition-colors shrink-0"
+                  title="Supprimer la note vocale"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+              <p className="text-[11px] text-gray-500 px-2 pb-1.5 leading-relaxed">
+                Une note vocale n'est écoutable que sur la nouvelle version de
+                l'application. Les clients qui ne l'ont pas encore installée
+                verront la mention « Message vocal » sans pouvoir l'écouter.
+              </p>
+            </div>
+          )}
+
           {/* Champ de saisie */}
           <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent transition-shadow">
             <input
@@ -577,11 +745,21 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={sendMessageMutation.isPending}
+              disabled={sendMessageMutation.isPending || vocal.enregistre}
               className="p-2 rounded-full hover:bg-orange-100 transition-colors shrink-0 cursor-pointer disabled:opacity-50"
               title="Joindre une image"
             >
               <ImagePlus className="w-5 h-5 text-[#F17922]" />
+            </button>
+            <button
+              onClick={basculerEnregistrement}
+              disabled={sendMessageMutation.isPending}
+              className={`p-2 rounded-full transition-colors shrink-0 cursor-pointer disabled:opacity-50 ${
+                vocal.enregistre ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-orange-100'
+              }`}
+              title={vocal.enregistre ? "Terminer l'enregistrement" : 'Enregistrer une note vocale'}
+            >
+              <Mic className={`w-5 h-5 ${vocal.enregistre ? 'text-red-500' : 'text-[#F17922]'}`} />
             </button>
             <textarea
               value={message}
