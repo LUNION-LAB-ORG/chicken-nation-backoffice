@@ -8,6 +8,8 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import MenuItemSimple from '@/components/ui/MenuItemSimple'   
 import { MenuItem as MenuItemType } from '@/types'
 import Select from '@/components/ui/Select'
+import { useSalesTrendQuery } from '../../../../features/statistics/queries/statistics-products.query'
+import type { ProductsStatsQueryParams } from '../../../../features/statistics/types/products-stats.types'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
@@ -15,17 +17,60 @@ interface MenuRightSideProps {
   similarMenus: MenuItemType[]
   onEditMenu: (menu: MenuItemType) => void
   onViewMenu: (menu: MenuItemType) => void
+  /** Plat consulté : sans lui, la tendance agrégerait tout le catalogue. */
+  dishId?: string
 }
 
-const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu }: MenuRightSideProps) => {
-  const [selectedPeriod, setSelectedPeriod] = useState('cette-semaine')
+type Periode = NonNullable<ProductsStatsQueryParams['period']>
+
+/**
+ * ⚠️ Le graphique affichait des valeurs ECRITES EN DUR
+ * (`[40, 20, 40, 35, 38, 100, 0]`) et le sélecteur de période ne faisait
+ * RIEN : il changeait un état que personne ne lisait. Autrement dit, ce bloc
+ * racontait la même histoire quel que soit le plat et quelle que soit la
+ * période.
+ *
+ * Il consomme désormais la vraie tendance de ventes, restreinte à ce plat.
+ */
+const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu, dishId }: MenuRightSideProps) => {
+  const [selectedPeriod, setSelectedPeriod] = useState<Periode>('week')
+
+  const { data: tendance, isLoading, isError } = useSalesTrendQuery(
+    { dishId, period: selectedPeriod },
+    // Inutile d'interroger le serveur tant qu'on ne sait pas de quel plat il s'agit.
+    Boolean(dishId),
+  )
+
+  /**
+   * Sur une année, le serveur rend un point PAR JOUR, soit plus de trois cents
+   * barres : illisible. On regroupe donc par mois au delà de six semaines. En
+   * deçà, le détail quotidien est ce qui intéresse.
+   */
+  const points = React.useMemo(() => {
+    const jours = tendance?.dailyData ?? []
+    if (jours.length <= 42) {
+      return jours.map((j) => ({ label: j.label, valeur: j.totalQuantity }))
+    }
+    const parMois = new Map<string, { label: string; valeur: number }>()
+    for (const j of jours) {
+      const cle = j.date.slice(0, 7)
+      const libelle = new Date(`${cle}-01T00:00:00`).toLocaleDateString('fr-FR', {
+        month: 'short',
+        year: '2-digit',
+      })
+      const existant = parMois.get(cle)
+      if (existant) existant.valeur += j.totalQuantity
+      else parMois.set(cle, { label: libelle, valeur: j.totalQuantity })
+    }
+    return [...parMois.values()]
+  }, [tendance])
 
   const data = {
-    labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+    labels: points.map((p) => p.label),
     datasets: [
       {
-        label: 'Commandes',
-        data: [40, 20, 40, 35, 38, 100, 0],
+        label: 'Quantité commandée',
+        data: points.map((p) => p.valeur),
         backgroundColor: '#F17922',
       },
     ],
@@ -90,9 +135,18 @@ const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu }: MenuRightSidePr
     },
   }
 
-  const periodOptions = [
-    { value: 'semaine-derniere', label: 'La semaine dernière' },
-    { value: 'cette-semaine', label: 'Cette semaine' }
+  /**
+   * Les sept périodes que le serveur sait réellement calculer. L'écran n'en
+   * proposait que deux, dont aucune n'était appliquée.
+   */
+  const periodOptions: { value: Periode; label: string }[] = [
+    { value: 'today', label: "Aujourd'hui" },
+    { value: 'yesterday', label: 'Hier' },
+    { value: 'week', label: 'Cette semaine' },
+    { value: 'lastWeek', label: 'La semaine dernière' },
+    { value: 'month', label: 'Ce mois-ci' },
+    { value: 'lastMonth', label: 'Le mois dernier' },
+    { value: 'year', label: 'Cette année' },
   ]
 
   return (
@@ -111,16 +165,49 @@ const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu }: MenuRightSidePr
           </div>
           <div className="w-1/3 min-w-[120px] flex-shrink-0">
             <Select 
-              placeholder='Cette semaine' 
+              placeholder='Cette semaine'
               options={periodOptions}
               value={selectedPeriod}
-              onChange={setSelectedPeriod}
+              onChange={(valeur) => setSelectedPeriod(valeur as Periode)}
             />
           </div>
         </div>
         <div className="w-full h-[200px] xs:h-[250px] sm:h-[300px]">
-          <Bar data={data} options={{...options, maintainAspectRatio: false}} />
+          {/*
+            Trois états distincts, parce qu'un graphique vide ne dit pas
+            pourquoi il est vide : chargement, échec, ou aucune vente sur la
+            période. Sans cette distinction, une panne se lit comme un plat qui
+            ne se vend pas.
+          */}
+          {isLoading ? (
+            <div className="h-full w-full rounded-xl bg-gray-50 animate-pulse" />
+          ) : isError ? (
+            <div className="h-full flex items-center justify-center text-center px-4">
+              <p className="text-xs text-red-500">
+                Les ventes n&apos;ont pas pu être chargées.
+              </p>
+            </div>
+          ) : points.length === 0 || points.every((p) => p.valeur === 0) ? (
+            <div className="h-full flex items-center justify-center text-center px-4">
+              <p className="text-xs text-gray-400">
+                Aucune vente de ce plat sur la période choisie.
+              </p>
+            </div>
+          ) : (
+            <Bar data={data} options={{...options, maintainAspectRatio: false}} />
+          )}
         </div>
+        {!isLoading && !isError && (tendance?.totalQuantity ?? 0) > 0 && (
+          <p className="mt-2 text-[11px] text-gray-500">
+            <span className="font-bold text-gray-700">{tendance?.totalQuantity}</span>{' '}
+            unité{(tendance?.totalQuantity ?? 0) > 1 ? 's' : ''} vendue
+            {(tendance?.totalQuantity ?? 0) > 1 ? 's' : ''} sur la période, pour{' '}
+            <span className="font-bold text-gray-700">
+              {(tendance?.totalRevenue ?? 0).toLocaleString('fr-FR')} FCFA
+            </span>
+            .
+          </p>
+        )}
       </div>
 
       <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm">

@@ -9,6 +9,8 @@ export interface ProductsStatsQueryParams {
   endDate?: string;
   period?: 'today' | 'yesterday' | 'week' | 'lastWeek' | 'month' | 'lastMonth' | 'year';
   categoryId?: string;
+  /** Restreint la statistique à UN plat, pour la fiche d'un plat. */
+  dishId?: string;
   limit?: number;
 }
 

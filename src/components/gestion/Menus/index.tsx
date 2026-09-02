@@ -733,6 +733,7 @@ const Menus = () => {
           </div>
           <div className="xl:w-1/3">
             <MenuRightSide
+              dishId={menuState.selectedMenu?.id}
               similarMenus={
                 searchResults
                   .filter(
