@@ -2,6 +2,7 @@
 
 import { Download, Gift, IdCard, Sparkles } from "lucide-react";
 import { BoutonCopierLien } from "@/components/ui/CopierLien";
+import { QrCodeLien } from "@/components/ui/QrCodeLien";
 import {
   lienBons,
   lienCarteNation,
@@ -109,8 +110,9 @@ export function LiensDePartage() {
                   redirection enregistre les clics.
                 </p>
               )}
-              <div className="mt-2">
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
                 <BoutonCopierLien lien={lien} quoi={titre} compact />
+                <QrCodeLien lien={lien} titre={titre} />
               </div>
             </div>
           </li>

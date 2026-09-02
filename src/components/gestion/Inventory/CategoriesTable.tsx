@@ -9,6 +9,7 @@ import { useCategoriesQuery } from "@/hooks/useCategoriesQuery";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useCopieLien } from "@/components/ui/CopierLien";
 import { lienCategorie, referenceOuId } from "@/utils/deeplinks";
+import { QrCodeModal } from "@/components/ui/QrCodeLien";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -32,6 +33,9 @@ export default function CategoriesTable({
 }: CategoriesTableProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const { copier } = useCopieLien();
+  // Fenêtre unique pour tout le tableau : un menu de ligne se referme au clic
+  // et ne peut donc pas héberger sa propre fenêtre.
+  const [qrCategorie, setQrCategorie] = useState<{ lien: string; titre: string } | null>(null);
 
   // ✅ Utiliser TanStack Query pour les catégories
   const { categories, totalPages, currentPage, isLoading, setCurrentPage } =
@@ -182,6 +186,19 @@ export default function CategoriesTable({
                                 className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
                               >
                                 Copier le lien de partage
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setQrCategorie({
+                                    lien: lienCategorie(referenceOuId(category)),
+                                    titre: category.name,
+                                  });
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              >
+                                Afficher le QR code
                               </button>
                               <HasPermission
                                 module={Modules.INVENTAIRE}
@@ -347,6 +364,19 @@ export default function CategoriesTable({
                               >
                                 Copier le lien de partage
                               </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setQrCategorie({
+                                    lien: lienCategorie(referenceOuId(category)),
+                                    titre: category.name,
+                                  });
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              >
+                                Afficher le QR code
+                              </button>
                               <HasPermission
                                 module={Modules.INVENTAIRE}
                                 action={Action.UPDATE}
@@ -401,6 +431,16 @@ export default function CategoriesTable({
           isLoading={isLoading}
         />
       </div>
+
+      {/* Fenêtre unique du QR code, pilotée par le menu de chaque ligne. */}
+      {qrCategorie && (
+        <QrCodeModal
+          lien={qrCategorie.lien}
+          titre={qrCategorie.titre}
+          ouvert
+          onClose={() => setQrCategorie(null)}
+        />
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
 import { Mail, Pencil, SlidersHorizontal } from "lucide-react";
 import { BoutonCopierLien } from "@/components/ui/CopierLien";
+import { QrCodeLien } from "@/components/ui/QrCodeLien";
 import { lienPlat, referenceOuId } from "@/utils/deeplinks";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
@@ -103,6 +104,7 @@ export default function DetailsMenu({
               accessible depuis la liste des menus.
             */}
             <BoutonCopierLien lien={lienPlat(referenceOuId(menu))} quoi="Lien du plat" />
+            <QrCodeLien lien={lienPlat(referenceOuId(menu))} titre={menu.name} />
             <HasPermission module={Modules.MENUS} action={Action.UPDATE}>
               <button
                 type="button"
