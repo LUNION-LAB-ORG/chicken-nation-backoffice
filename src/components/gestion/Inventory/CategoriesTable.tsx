@@ -8,7 +8,7 @@ import { Pagination } from "@/components/ui/pagination";
 import { useCategoriesQuery } from "@/hooks/useCategoriesQuery";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useCopieLien } from "@/components/ui/CopierLien";
-import { lienCategorie } from "@/utils/deeplinks";
+import { lienCategorie, referenceOuId } from "@/utils/deeplinks";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -174,7 +174,7 @@ export default function CategoriesTable({
                                 type="button"
                                 onClick={() => {
                                   void copier(
-                                    lienCategorie(category.id),
+                                    lienCategorie(referenceOuId(category)),
                                     "Lien de la catégorie",
                                   );
                                   setOpenMenuId(null);
@@ -338,7 +338,7 @@ export default function CategoriesTable({
                                 type="button"
                                 onClick={() => {
                                   void copier(
-                                    lienCategorie(category.id),
+                                    lienCategorie(referenceOuId(category)),
                                     "Lien de la catégorie",
                                   );
                                   setOpenMenuId(null);

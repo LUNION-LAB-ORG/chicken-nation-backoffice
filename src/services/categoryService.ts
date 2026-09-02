@@ -7,6 +7,11 @@ const CATEGORIES_ENDPOINT = '/categories';
  
 export interface Category {
   id: string;
+  /**
+   * Référence lisible, servant aux liens de partage. Nullable : tous les
+   * enregistrements n'en ont pas, d'où le repli sur l'identifiant.
+   */
+  reference?: string | null;
   name: string;
   description?: string;
   image?: string;

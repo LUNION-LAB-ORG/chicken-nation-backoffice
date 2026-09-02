@@ -169,16 +169,17 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
               {format(new Date(source.created_at), "EEEE dd MMMM yyyy · HH:mm", { locale: fr })}
             </p>
             {/*
-              ⚠️ Le lien porte l'identifiant TECHNIQUE, jamais la référence
-              affichée au dessus. L'application pousse « /orders/<valeur> » sans
-              rien résoudre : avec une référence du type CN-1234, le client
-              tomberait sur une commande introuvable.
+              Le lien porte la RÉFÉRENCE, lisible, et non l'identifiant
+              technique. Le serveur sait résoudre les deux depuis que la
+              distinction porte sur la forme et non sur la longueur : la
+              référence d'une commande fait seize caractères, elle était donc
+              prise pour un identifiant et la recherche échouait.
 
               Utile pour un suivi envoyé par message au client.
             */}
             <div className="mt-2.5">
               <BoutonCopierLien
-                lien={lienCommande(ui.id)}
+                lien={lienCommande(ui.reference)}
                 quoi="Lien de suivi"
                 libelle="Copier le lien de suivi"
                 compact

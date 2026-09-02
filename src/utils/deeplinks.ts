@@ -19,6 +19,17 @@ const BASE = `${SITE}/fr/app-mobile/deep-link`;
  * résout la valeur en appelant l'API par identifiant.
  */
 export const lienPlat = (dishId: string) => `${BASE}?product=${encodeURIComponent(dishId)}`;
+
+/**
+ * Préfère la RÉFÉRENCE lisible à l'identifiant technique.
+ *
+ * Un lien partagé sur les réseaux ou imprimé sur une affiche se lit ; un UUID
+ * ne se lit pas. Le serveur accepte les deux, il distingue désormais la forme
+ * plutôt que la longueur. Repli sur l'identifiant quand la référence est vide,
+ * car elle n'est pas obligatoire sur les plats et les catégories.
+ */
+export const referenceOuId = (objet: { reference?: string | null; id: string }) =>
+  objet.reference?.trim() || objet.id;
 export const lienCategorie = (categoryId: string) => `${BASE}?category=${encodeURIComponent(categoryId)}`;
 export const lienCommande = (orderId: string) => `${BASE}?order=${encodeURIComponent(orderId)}`;
 export const lienBons = () => `${BASE}?voucher=true`;

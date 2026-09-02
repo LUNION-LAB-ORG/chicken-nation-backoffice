@@ -2,7 +2,7 @@ import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
 import { Mail, Pencil, SlidersHorizontal } from "lucide-react";
 import { BoutonCopierLien } from "@/components/ui/CopierLien";
-import { lienPlat } from "@/utils/deeplinks";
+import { lienPlat, referenceOuId } from "@/utils/deeplinks";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
 import MenuComments from "./MenuComments";
@@ -102,7 +102,7 @@ export default function DetailsMenu({
               ajouté à côté pour ne rien retirer : l'édition reste par ailleurs
               accessible depuis la liste des menus.
             */}
-            <BoutonCopierLien lien={lienPlat(menu.id)} quoi="Lien du plat" />
+            <BoutonCopierLien lien={lienPlat(referenceOuId(menu))} quoi="Lien du plat" />
             <HasPermission module={Modules.MENUS} action={Action.UPDATE}>
               <button
                 type="button"

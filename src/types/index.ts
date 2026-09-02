@@ -170,6 +170,11 @@ export interface MenuCategory {
 // ✅ INTERFACE MENU ITEM SÉCURISÉE
 export interface MenuItem {
   id: string;
+  /**
+   * Référence lisible, servant aux liens de partage. Nullable : tous les
+   * enregistrements n'en ont pas, d'où le repli sur l'identifiant.
+   */
+  reference?: string | null;
   name: string;
   description: string;
   restaurant: string;
