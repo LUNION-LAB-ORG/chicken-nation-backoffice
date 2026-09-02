@@ -29,6 +29,8 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
+import { BoutonCopierLien } from "@/components/ui/CopierLien";
+import { lienCommande } from "@/utils/deeplinks";
 
 import { useAuthStore } from "../../../users/hook/authStore";
 import { UserRole } from "../../../users/types/user.types";
@@ -166,6 +168,22 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
             <p className="mt-1 text-xs text-gray-500 capitalize">
               {format(new Date(source.created_at), "EEEE dd MMMM yyyy · HH:mm", { locale: fr })}
             </p>
+            {/*
+              ⚠️ Le lien porte l'identifiant TECHNIQUE, jamais la référence
+              affichée au dessus. L'application pousse « /orders/<valeur> » sans
+              rien résoudre : avec une référence du type CN-1234, le client
+              tomberait sur une commande introuvable.
+
+              Utile pour un suivi envoyé par message au client.
+            */}
+            <div className="mt-2.5">
+              <BoutonCopierLien
+                lien={lienCommande(ui.id)}
+                quoi="Lien de suivi"
+                libelle="Copier le lien de suivi"
+                compact
+              />
+            </div>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">À payer</p>

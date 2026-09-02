@@ -4,6 +4,7 @@ import { GenericStatCard } from "@/components/gestion/Dashboard/GenericStatCard"
 import AppClickListTable from "@/components/gestion/Marketing/app-click-list-table";
 import { DeeplinkTypeBreakdown } from "@/components/gestion/Marketing/DeeplinkTypeBreakdown";
 import { AnalyticsFilterBar } from "@/components/gestion/Marketing/AnalyticsFilterBar";
+import { LiensDePartage } from "@/components/gestion/Marketing/LiensDePartage";
 import { useAnalyticsFilters } from "../../../../features/analytics/hooks/useAnalyticsFilters";
 import { useAnalyticsStats } from "../../../../features/analytics/hooks/useAnalyticsStats";
 
@@ -27,6 +28,10 @@ function MarketingModule() {
           subtitle="Suivi des clics d'ouverture de l'application et de ce qui est ciblé"
         />
       </div>
+
+      {/* Les quatre liens qui ne visent aucun objet précis. Ils vivent ici,
+          dans le module qui mesure déjà leurs clics. */}
+      <LiensDePartage />
 
       {/* Barre de filtres (recherche, type, période, réinitialiser) */}
       <AnalyticsFilterBar filters={filters} changeFilters={changeFilters} />

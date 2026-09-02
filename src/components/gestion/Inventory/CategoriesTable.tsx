@@ -7,6 +7,8 @@ import { Category as ApiCategory } from "@/services";
 import { Pagination } from "@/components/ui/pagination";
 import { useCategoriesQuery } from "@/hooks/useCategoriesQuery";
 import { formatImageUrl } from "@/utils/imageHelpers";
+import { useCopieLien } from "@/components/ui/CopierLien";
+import { lienCategorie } from "@/utils/deeplinks";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -29,6 +31,7 @@ export default function CategoriesTable({
   searchQuery = "",
 }: CategoriesTableProps) {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const { copier } = useCopieLien();
 
   // ✅ Utiliser TanStack Query pour les catégories
   const { categories, totalPages, currentPage, isLoading, setCurrentPage } =
@@ -160,7 +163,26 @@ export default function CategoriesTable({
 
                           {/* Dropdown menu */}
                           {openMenuId === category.id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                            <div className="absolute right-0 mt-1 w-56 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                              {/*
+                                Lien de partage : volontairement HORS
+                                permission. Copier une adresse publique ne
+                                modifie rien, et c'est le centre d'appel qui
+                                s'en sert le plus.
+                              */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void copier(
+                                    lienCategorie(category.id),
+                                    "Lien de la catégorie",
+                                  );
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              >
+                                Copier le lien de partage
+                              </button>
                               <HasPermission
                                 module={Modules.INVENTAIRE}
                                 action={Action.UPDATE}
@@ -305,7 +327,26 @@ export default function CategoriesTable({
                           </button>
                           {/* Dropdown menu */}
                           {openMenuId === category.id && (
-                            <div className="absolute right-0 mt-1 w-48 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                            <div className="absolute right-0 mt-1 w-56 bg-white rounded-[10px] shadow-lg py-1 z-10">
+                              {/*
+                                Lien de partage : volontairement HORS
+                                permission. Copier une adresse publique ne
+                                modifie rien, et c'est le centre d'appel qui
+                                s'en sert le plus.
+                              */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void copier(
+                                    lienCategorie(category.id),
+                                    "Lien de la catégorie",
+                                  );
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              >
+                                Copier le lien de partage
+                              </button>
                               <HasPermission
                                 module={Modules.INVENTAIRE}
                                 action={Action.UPDATE}
