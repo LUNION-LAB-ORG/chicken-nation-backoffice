@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { MenuItem as MenuItemType } from "@/types";
-import { Mail, SlidersHorizontal } from "lucide-react";
+import { Check, Link2, Mail, Pencil, SlidersHorizontal } from "lucide-react";
+import toast from "react-hot-toast";
+import { copierDansLePressePapiers, lienPlat } from "@/utils/deeplinks";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
 import MenuComments from "./MenuComments";
@@ -23,6 +25,26 @@ export default function DetailsMenu({
   const [activeTab, setActiveTab] = useState<
     "description" | "options" | "comments"
   >("description");
+
+  /**
+   * Retour visuel de la copie. Une pastille verte deux secondes suffit : sans
+   * elle, le gestionnaire ne sait pas si son clic a fait quelque chose, et
+   * clique une seconde fois.
+   */
+  const [lienCopie, setLienCopie] = useState(false);
+
+  const copierLeLien = async () => {
+    const lien = lienPlat(menu.id);
+    const ok = await copierDansLePressePapiers(lien);
+    if (!ok) {
+      // On montre le lien : mieux vaut une copie manuelle qu'un échec muet.
+      toast.error(`Copie impossible. Le lien est : ${lien}`, { duration: 8000 });
+      return;
+    }
+    setLienCopie(true);
+    toast.success("Lien du menu copié");
+    setTimeout(() => setLienCopie(false), 2000);
+  };
 
   const getSupplementsByCategory = (category: string) => {
     if (!menu.dish_supplements || !Array.isArray(menu.dish_supplements)) {
@@ -93,20 +115,36 @@ export default function DetailsMenu({
                 <span className="text-[#F17922]">{menu.price} FCFA</span>
               )}
             </span>
+            {/*
+              ⚠️ Ce bouton portait l'infobulle « Partager le menu » et une icône
+              de partage, mais déclenchait la MODIFICATION. Il retrouve ici le
+              geste que son icône annonce, et un vrai bouton de modification est
+              ajouté à côté pour ne rien retirer : l'édition reste par ailleurs
+              accessible depuis la liste des menus.
+            */}
+            <button
+              type="button"
+              onClick={copierLeLien}
+              className="h-8 sm:h-10 flex items-center gap-2 border border-slate-200 rounded-xl px-2.5 sm:px-3 hover:bg-slate-50 transition-colors"
+              title="Copier le lien de partage de ce menu"
+            >
+              {lienCopie ? (
+                <Check className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
+              ) : (
+                <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-[#F17922]" />
+              )}
+              <span className="hidden sm:inline text-xs font-medium text-slate-600">
+                {lienCopie ? "Copié" : "Copier le lien"}
+              </span>
+            </button>
             <HasPermission module={Modules.MENUS} action={Action.UPDATE}>
               <button
                 type="button"
                 onClick={onEdit}
-                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center border border-slate-200 rounded-xl p-1.5 sm:p-2"
-                title="Partager le menu"
+                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center border border-slate-200 rounded-xl p-1.5 sm:p-2 hover:bg-slate-50 transition-colors"
+                title="Modifier le menu"
               >
-                <Image
-                  src="/icons/share.png"
-                  alt="share"
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 sm:w-6 sm:h-6"
-                />
+                <Pencil className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500" />
               </button>
             </HasPermission>
           </div>
