@@ -285,6 +285,9 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     amount: order.amount,
     netAmount: order.net_amount,
     deliveryFee: order.delivery_fee,
+    deliveryFeeBase: (order as { delivery_fee_base?: number }).delivery_fee_base,
+    deliveryDiscount: (order as { delivery_discount?: number }).delivery_discount,
+    deliveryZoneId: (order as { zone_id?: string | null }).zone_id ?? null,
     tax: order.tax,
     discount: order.discount,
 

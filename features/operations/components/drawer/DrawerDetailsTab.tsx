@@ -524,7 +524,22 @@ function PriceBlock({ ui }: { ui: OrderTable }) {
           ((ui.deliveryFee || 0) > 0 ? (
             <Line label="Frais de livraison" value={formatPrice(ui.deliveryFee)} />
           ) : (
-            <Line label="Frais de livraison" value="Gratuite" tone="green" />
+            /*
+              ⚠️ « Gratuite » ne suffit pas : il faut dire POURQUOI.
+              Une remise non nulle signifie qu'une offre s'est appliquée, c'est
+              une décision commerciale. Une remise nulle sur un frais nul est
+              un DEFAUT de tarification, et l'écran doit le montrer plutôt que
+              de le maquiller en cadeau.
+            */
+            <Line
+              label="Frais de livraison"
+              value={
+                (ui.deliveryDiscount || 0) > 0
+                  ? `Offerte (${formatPrice(ui.deliveryFeeBase)} remisés)`
+                  : "Gratuite — aucune offre appliquée"
+              }
+              tone={(ui.deliveryDiscount || 0) > 0 ? "green" : "red"}
+            />
           ))}
         {(ui.discount || 0) > 0 && (
           <Line
@@ -559,14 +574,19 @@ function Line({
 }: {
   label: string;
   value: string;
-  tone?: "green";
+  // « red » signale une anomalie de tarification, pas une erreur technique.
+  tone?: "green" | "red";
 }) {
   return (
     <div className="flex items-center justify-between">
       <dt className="text-sm text-gray-600">{label}</dt>
       <dd
         className={`text-sm font-semibold tabular-nums ${
-          tone === "green" ? "text-green-700" : "text-gray-900"
+          tone === "green"
+            ? "text-green-700"
+            : tone === "red"
+              ? "text-red-600"
+              : "text-gray-900"
         }`}
       >
         {value}

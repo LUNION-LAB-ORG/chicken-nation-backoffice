@@ -98,6 +98,17 @@ export interface OrderTable {
   amount: number;
   netAmount: number;
   deliveryFee: number;
+  /**
+   * Frais PLEIN avant offre, remise appliquée, et zone retenue.
+   *
+   * ⚠️ Sans eux, l'écran ne peut pas dire POURQUOI une livraison est gratuite :
+   * offre commerciale assumée, ou défaut de tarification. C'est exactement la
+   * question restée sans réponse sur la commande de 22,6 km facturée
+   * « Gratuite ».
+   */
+  deliveryFeeBase?: number;
+  deliveryDiscount?: number;
+  deliveryZoneId?: string | null;
   tax: number;
   discount: number;
 
