@@ -1,7 +1,7 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
-import { LoadScript } from '@react-google-maps/api';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { useJsApiLoader } from '@react-google-maps/api';
 
 const libraries: ("places" | "visualization")[] = ["places", "visualization"];
 
@@ -25,42 +25,43 @@ interface GoogleMapsProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Chargement de Google Maps, une seule fois pour toute l'application.
+ *
+ * ⚠️ DEUX DEFAUTS corrigés ici, qui produisaient tous deux le message
+ * « Impossible de charger Google Maps correctement sur cette page ».
+ *
+ * 1. `LoadScript` RETIRE le script quand il est démonté, puis le réinjecte au
+ *    remontage. Google refuse alors la seconde injection et affiche cette
+ *    bannière sur la carte. C'est la raison pour laquelle la bibliothèque
+ *    fournit `useJsApiLoader` : il charge le script une fois, sans jamais le
+ *    décharger, et un second appel ne fait rien.
+ *
+ * 2. L'ancienne version changeait la FORME de l'arbre : au premier rendu les
+ *    enfants étaient rendus seuls, puis, une fois `isClient` passé à vrai, ils
+ *    se retrouvaient à l'intérieur de `<LoadScript>`. React voit un élément
+ *    différent à cette position et REMONTE tout le sous-arbre, c'est-à-dire
+ *    l'application entière. Les enfants sont désormais toujours au même
+ *    endroit, quel que soit l'état du chargement.
+ *
+ * La carte doit toujours attendre `isScriptLoaded` avant de s'afficher : le
+ * contexte le rend, c'est le contrat inchangé.
+ */
 export function GoogleMapsProvider({ children }: GoogleMapsProviderProps) {
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [isClient, setIsClient] = useState(false);
 
- 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  const handleScriptLoad = useCallback(() => {
-    setIsScriptLoaded(true);
-  }, []);
-
-  //  Récupération sécurisée de la clé API côté client uniquement
-  const googleMapsApiKey = isClient ? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '' : '';
-
-  // Pendant l'hydratation ou si pas de clé API
-  if (!isClient || !googleMapsApiKey) {
-    return (
-      <GoogleMapsContext.Provider value={{ isScriptLoaded: false, map: null, setMap }}>
-        {children}
-      </GoogleMapsContext.Provider>
-    );
-  }
+  const { isLoaded } = useJsApiLoader({
+    // Identifiant STABLE : c'est lui qui garantit qu'un second montage ne
+    // réinjecte pas le script.
+    id: 'chicken-nation-google-maps',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '',
+    libraries,
+    version: 'quarterly',
+  });
 
   return (
-    <GoogleMapsContext.Provider value={{ isScriptLoaded, map, setMap }}>
-      <LoadScript
-        googleMapsApiKey={googleMapsApiKey}
-        libraries={libraries}
-        version="quarterly"
-        onLoad={handleScriptLoad}
-      >
-        {children}
-      </LoadScript>
+    <GoogleMapsContext.Provider value={{ isScriptLoaded: isLoaded, map, setMap }}>
+      {children}
     </GoogleMapsContext.Provider>
   );
 }
