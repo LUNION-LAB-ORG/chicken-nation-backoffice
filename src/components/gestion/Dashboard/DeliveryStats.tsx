@@ -77,7 +77,8 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ data, isLoading }) => {
           {/* Icône de camion ou de livraison */}
           <div className="w-[14px] h-[14px] mr-2 flex items-center justify-center">
             <Image
-              src="/icons/delivery-icon.png"
+              // Le fichier s'appelle deliver.png : « delivery-icon.png » n'a jamais existé et partait en 404.
+              src="/icons/deliver.png"
               alt="delivery"
               width={14}
               height={14}
