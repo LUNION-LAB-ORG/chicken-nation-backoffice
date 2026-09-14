@@ -816,8 +816,9 @@ const DeliverySettings: React.FC = () => {
                 Grille distance → prix
               </label>
               <p className="text-xs text-gray-400 mb-3 leading-relaxed">
-                Chaque palier facture son prix pour tout trajet dont la distance (à vol
-                d&apos;oiseau) est ≤ « Jusqu&apos;à (km) ». Laisse « Jusqu&apos;à » vide
+                Chaque palier facture son prix pour tout trajet dont la distance est ≤
+                « Jusqu&apos;à (km) ». La distance retenue est celle <b>par la route</b>,
+                la même que celle affichée sur la commande. Laisse « Jusqu&apos;à » vide
                 pour le dernier palier (au-delà). Utilisée seule si les zones Turbo sont
                 sur « Non », sinon en secours.
               </p>

@@ -420,10 +420,11 @@ function PaliersPrix({
             Paliers de distance (optionnel)
           </p>
           <p className="mt-0.5 text-[11px] text-[#9796A1]">
-            Sans palier, le prix saisi s&apos;applique à toute distance. Au-delà du
-            dernier palier, la livraison suit la grille habituelle. Une offre ne
-            fait que baisser le prix : si la grille est déjà moins chère, c&apos;est
-            elle qui s&apos;applique.
+            Sans palier, le prix saisi s&apos;applique à toute distance. Les
+            distances s&apos;entendent par la route, comme celles affichées sur la
+            commande. Au-delà du dernier palier, la livraison suit la grille
+            habituelle. Une offre ne fait que baisser le prix : si la grille est
+            déjà moins chère, c&apos;est elle qui s&apos;applique.
           </p>
         </div>
         <button
