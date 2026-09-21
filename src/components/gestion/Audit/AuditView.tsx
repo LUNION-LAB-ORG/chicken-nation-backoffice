@@ -155,7 +155,9 @@ export default function AuditView({
           <>
             <select value={method} onChange={(e) => setMethod(e.target.value)} className={selectCls} aria-label="Méthode">
               <option value="">Toutes méthodes</option>
-              {["GET", "POST", "PATCH", "PUT", "DELETE"].map((m) => (
+              {/* EVENEMENT : lignes qui ne viennent pas d'une requête HTTP, comme
+                  l'issue d'un paiement KKiaPay traitée en arrière-plan. */}
+              {["GET", "POST", "PATCH", "PUT", "DELETE", "EVENEMENT"].map((m) => (
                 <option key={m} value={m}>
                   {m}
                 </option>
