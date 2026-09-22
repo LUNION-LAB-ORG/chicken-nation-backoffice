@@ -104,6 +104,15 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   // Fonction pour obtenir le nom d'affichage d'une conversation
   const getConversationDisplayName = (conversation: IConversation) => {
     if (!conversation.customer) {
+      /**
+       * Un GROUPE porte son NOM. La concaténation des participants reste
+       * acceptable à deux, elle devient illisible à cinq et change même de
+       * libellé selon qui regarde.
+       */
+      const estGroupe = conversation.isGroup ?? conversation.users.length > 2;
+      if (estGroupe && conversation.subject?.trim()) {
+        return conversation.subject.trim();
+      }
       // Conversation interne - afficher les noms des participants
       const participantNames = conversation.users.map(user => user.fullName).join(', ');
       return participantNames || 'Discussion interne';
@@ -118,6 +127,14 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
   // Fonction pour obtenir les infos secondaires d'une conversation
   const getConversationSecondaryInfo = (conversation: IConversation) => {
     if (!conversation.customer) {
+      // Pour un groupe, l'utile est QUI en fait partie, pas l'empilement des
+      // rôles : le nom du groupe occupe déjà la ligne du dessus.
+      const estGroupe = conversation.isGroup ?? conversation.users.length > 2;
+      if (estGroupe) {
+        const noms = conversation.users.map((u) => u.fullName).filter(Boolean);
+        const tete = noms.slice(0, 3).join(', ');
+        return noms.length > 3 ? `${tete} +${noms.length - 3}` : tete || 'Équipe';
+      }
       // Conversation interne - afficher les rôles
       const roles = conversation.users.map(user => user.role).join(', ');
       return roles || 'Équipe';
@@ -295,6 +312,14 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                             </div>
                           );
                         })}
+                        {/* Au-delà de deux, on dit combien de personnes ne sont
+                            pas montrées, sinon un groupe de six ressemble à un
+                            tête-à-tête. */}
+                        {conversation.users.length > 2 && (
+                          <span className="absolute bottom-0 left-0 md:text-[10px] text-[9px] font-bold text-white bg-[#F17922] rounded-full px-1 leading-4">
+                            +{conversation.users.length - 2}
+                          </span>
+                        )}
                       </div>
                     ) : (
                       // Affichage pour conversation avec client

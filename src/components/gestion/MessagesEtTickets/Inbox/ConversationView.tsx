@@ -21,6 +21,7 @@ import type { IMessage } from '../../../../../features/messagerie';
 import { format, isToday, isYesterday } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatImageUrl } from '@/utils/imageHelpers';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 
 interface ConversationViewProps {
   conversationId: string | null;
@@ -73,6 +74,8 @@ const dayKey = (dateStr: string): string => {
 };
 
 function ConversationView({ conversationId, onBack }: ConversationViewProps) {
+  /** Sert à reconnaître SES messages parmi ceux des collègues dans un groupe. */
+  const utilisateurConnecteId = useAuthStore((etat) => etat.user?.id);
   const [message, setMessage] = useState('');
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
@@ -115,12 +118,27 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const currentConversation = useMemo(() => {
     if (!conversationId) return null;
 
-    // Récupérer la conversation depuis le cache React Query (clé = ['conversation', 'list'])
-    const conversationsData = queryClient.getQueryData(['conversation', 'list']) as any;
-    const conversations = conversationsData?.data || [];
-    const conversation = conversations.find((c: any) => c.id === conversationId);
+    /**
+     * ⚠️ La clé lue était ['conversation', 'list'], que PLUS PERSONNE ne
+     * remplit : la liste de la boîte de réception est servie par la requête
+     * INFINIE, sous ['conversation', 'list-infinite'], et sa donnée est
+     * paginée. `currentConversation` valait donc null en permanence, et
+     * l'en-tête de la conversation ouverte affichait son texte de repli depuis
+     * le passage à la pagination. On lit la bonne clé et on aplatit les pages ;
+     * l'ancienne reste consultée en second recours, au cas où un écran
+     * l'alimenterait encore.
+     */
+    const infinie = queryClient.getQueryData(['conversation', 'list-infinite']) as
+      | { pages?: Array<{ data?: any[] }> }
+      | undefined;
+    const depuisInfinie = (infinie?.pages ?? []).flatMap((page) => page?.data ?? []);
 
-    return conversation || null;
+    const simple = queryClient.getQueryData(['conversation', 'list']) as
+      | { data?: any[] }
+      | undefined;
+
+    const conversations = depuisInfinie.length ? depuisInfinie : simple?.data ?? [];
+    return conversations.find((c: any) => c?.id === conversationId) ?? null;
   }, [conversationId, queryClient, conversationMessages]);
 
   // Fonction utilitaire pour obtenir les informations d'affichage de la conversation
@@ -141,9 +159,15 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
       // Conversation interne
       const participantNames = currentConversation.users?.map((user: any) => user.fullName).join(', ') || 'Discussion interne';
       const participantCount = Math.max(1, currentConversation.users?.length || 1);
+      /**
+       * Un GROUPE s'annonce par son NOM. L'énumération des participants tient
+       * à deux, plus du tout à cinq, et elle ne dit pas de quoi on parle.
+       */
+      const estGroupe = currentConversation.isGroup ?? participantCount > 2;
+      const nomGroupe = currentConversation.subject?.trim();
 
       return {
-        name: participantNames,
+        name: estGroupe && nomGroupe ? nomGroupe : participantNames,
         image: currentConversation.users?.[0]?.image || null,
         email: null,
         isInternal: true,
@@ -495,6 +519,10 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
           {/* Actions */}
           <div className="flex items-center shrink-0">
+            {/* Un ticket de support se rattache à un CLIENT : le proposer sur un
+                échange interne n'a pas de sens, et la fenêtre y afficherait le
+                nom du groupe en guise de nom de client. */}
+            {!getConversationInfo.isInternal && (
             <button
               onClick={() => setIsEscalateModalOpen(true)}
               className="bg-[#F17922] text-white md:px-4 md:py-2.5 px-3 py-2 rounded-xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
@@ -503,6 +531,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               <span className="lg:inline hidden">Convertir en ticket</span>
               <span className="lg:hidden">Convertir en ticket</span>
             </button>
+            )}
           </div>
         </div>
 
@@ -532,7 +561,38 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             ) : (
               conversationMessages.map((msg, index) => {
                 const prev = conversationMessages[index - 1];
+                /**
+                 * IDENTITE de l'auteur : « écrit par le personnel ».
+                 *
+                 * ⚠️ Ne JAMAIS y mêler « écrit par moi ». Cette variable décide
+                 * aussi du NOM et de la PHOTO affichés, et sa branche contraire
+                 * retombe sur le client de la conversation. Un message de
+                 * collègue jugé « pas à moi » s'afficherait donc signé du nom et
+                 * de la photo du CLIENT : faux, et trompeur dans une boîte de
+                 * réception partagée entre caissiers et call center.
+                 */
                 const isAgent = !!msg.authorUser;
+
+                /**
+                 * ALIGNEMENT, qui est une tout autre question.
+                 *
+                 * Face à un client, le partage se fait par camp : le personnel à
+                 * droite, le client à gauche, quel que soit l'agent qui a écrit.
+                 * Dans une conversation interne, tout le monde est du personnel :
+                 * le partage se fait alors entre MES messages et ceux des autres,
+                 * sans quoi un groupe de cinq devient une colonne unique où l'on
+                 * ne reconnaît plus rien.
+                 *
+                 * « current-user » est l'identifiant provisoire que porte un
+                 * message tant que le serveur ne l'a pas confirmé. Sans lui,
+                 * chacun de mes envois basculerait du mauvais côté pendant tout
+                 * l'aller-retour, plusieurs secondes sur une photo.
+                 */
+                const estMoi =
+                  !!msg.authorUser &&
+                  (msg.authorUser.id === utilisateurConnecteId ||
+                    msg.authorUser.id === 'current-user');
+                const aDroite = getConversationInfo.isInternal ? estMoi : isAgent;
                 const newDay = !prev || dayKey(prev.createdAt) !== dayKey(msg.createdAt);
                 // Regroupement : on n'affiche avatar + nom que quand l'auteur change (ou nouveau jour)
                 const prevIsAgent = prev ? !!prev.authorUser : null;
@@ -582,8 +642,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                       </div>
                     )}
 
-                    <div className={`flex ${isAgent ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}>
-                      <div className={`flex items-end gap-2 md:max-w-[70%] max-w-[85%] ${isAgent ? 'flex-row-reverse' : ''}`}>
+                    <div className={`flex ${aDroite ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}>
+                      <div className={`flex items-end gap-2 md:max-w-[70%] max-w-[85%] ${aDroite ? 'flex-row-reverse' : ''}`}>
                         {/* Avatar (uniquement sur le premier message du groupe) */}
                         <div className="w-8 h-8 shrink-0">
                           {!sameAuthorAsPrev && (
@@ -597,10 +657,10 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                           )}
                         </div>
 
-                        <div className={`flex flex-col ${isAgent ? 'items-end' : 'items-start'} min-w-0`}>
+                        <div className={`flex flex-col ${aDroite ? 'items-end' : 'items-start'} min-w-0`}>
                           {/* Nom + heure (premier message du groupe) */}
                           {!sameAuthorAsPrev && (
-                            <div className={`flex items-center gap-1.5 mb-1 px-1 ${isAgent ? 'flex-row-reverse' : ''}`}>
+                            <div className={`flex items-center gap-1.5 mb-1 px-1 ${aDroite ? 'flex-row-reverse' : ''}`}>
                               <span className="text-xs font-semibold text-gray-700">{authorName}</span>
                               <span className="text-[11px] text-gray-400">{formatMessageTime(msg.createdAt)}</span>
                             </div>
@@ -609,7 +669,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                           {/* Bulle */}
                           <div
                             className={`relative rounded-2xl overflow-hidden ${
-                              isAgent
+                              aDroite
                                 ? 'bg-[#F17922] text-white rounded-br-md'
                                 : 'bg-white text-gray-900 border border-gray-100 shadow-sm rounded-bl-md'
                             } ${isTemp ? 'opacity-70' : ''}`}
@@ -638,7 +698,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                                     ? (msg.meta.audioDurationMs as number)
                                     : null
                                 }
-                                sombre={isAgent}
+                                sombre={aDroite}
                               />
                             )}
                             {hasBody && (
@@ -649,8 +709,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                             {/* Heure pour les messages groupés (pas d'en-tête) */}
                             {sameAuthorAsPrev && !imageUrl && !audioUrl && (
                               <span
-                                className={`absolute bottom-1 ${isAgent ? 'left-1.5' : 'right-1.5'} text-[9px] ${
-                                  isAgent ? 'text-white/60' : 'text-gray-300'
+                                className={`absolute bottom-1 ${aDroite ? 'left-1.5' : 'right-1.5'} text-[9px] ${
+                                  aDroite ? 'text-white/60' : 'text-gray-300'
                                 } opacity-0 group-hover:opacity-100`}
                               />
                             )}
@@ -671,7 +731,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                             rien : un accusé sur un message non parti serait
                             pire que pas d'accusé du tout.
                           */}
-                          {isAgent && !isTemp && (
+                          {aDroite && !isTemp && (
                             <div className="flex items-center justify-end gap-1 mt-0.5 px-1">
                               {msg.isRead ? (
                                 <>

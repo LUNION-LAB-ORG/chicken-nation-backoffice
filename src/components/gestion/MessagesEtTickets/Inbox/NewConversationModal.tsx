@@ -21,6 +21,8 @@ interface ConversationData {
   subject: string;
   initialMessage?: string;
   participantId?: string | null;
+  /** Tous les participants d'un groupe interne, hors créateur. */
+  participantIds?: string[];
 }
 
 // Types pour les options des dropdowns
@@ -49,8 +51,17 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
   // États du formulaire
   // ✅ Problème 3 : Définir le type par défaut selon le rôle
   const [conversationType, setConversationType] = useState(user?.role === 'ADMIN' ? 'Interne' : 'Avec client');
+  /**
+   * Seuls les responsables ouvrent un GROUPE : un groupe alerte tous ses
+   * membres à chaque message. Le serveur applique la même règle, celle-ci
+   * n'est là que pour ne pas proposer ce qui sera refusé.
+   */
+  const peutCreerGroupe = ['ADMIN', 'MANAGER', 'ASSISTANT_MANAGER'].includes(user?.role ?? '');
   const [selectedClientId, setSelectedClientId] = useState('');
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
+  /** Deux destinataires ou plus, donc un groupe : le créateur s'y ajoute. */
+  const estGroupe =
+    conversationType === 'Interne' && selectedParticipantIds.length >= 2;
   const [subject, setSubject] = useState('');
   const [initialMessage, setInitialMessage] = useState('');
 
@@ -111,7 +122,10 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       if (user?.role === 'ADMIN') {
         // Admin : voir tous les utilisateurs
         usersData = await getAllUsers({ type: 'BACKOFFICE' });
-      } else if (user?.restaurant_id && ['MANAGER', 'CAISSIER', 'CALL_CENTER', 'CUISINE'].includes(user.role || '')) {
+        // ASSISTANT_MANAGER doit figurer ici : absent de cette liste, il
+        // recevait le personnel de TOUT le réseau au lieu de son équipe, alors
+        // que le serveur cloisonne désormais les participants par restaurant.
+      } else if (user?.restaurant_id && ['MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'CALL_CENTER', 'CUISINE'].includes(user.role || '')) {
         // Rôles liés à un restaurant : seulement les utilisateurs du même restaurant
         const { getRestaurantUsers } = await import('@/services/restaurantService');
         usersData = await getRestaurantUsers(user.restaurant_id);
@@ -121,7 +135,9 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       }
 
       const formattedUsers = usersData
-        .filter(user => user.entity_status === 'ACTIVE')
+        // On ne se propose pas soi-même : se cocher annonçait un groupe et
+        // créait un tête-à-tête, le serveur s'excluant du décompte.
+        .filter(u => u.entity_status === 'ACTIVE' && u.id !== user?.id)
         .map(user => ({
           id: user.id,
           label: user.fullname || user.email || user.id,
@@ -213,6 +229,9 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           restaurantId: user?.restaurant_id
         }),
         ...(conversationType === 'Interne' && {
+          // La liste ENTIERE : un seul identifiant fait une conversation à deux,
+          // deux ou plus font un groupe. C'est le serveur qui tranche.
+          participantIds: selectedParticipantIds,
           participantId: selectedParticipantIds[0] || undefined,
           restaurantId: user?.restaurant_id
         })
@@ -342,25 +361,40 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
             <>
               {/* Participants avec recherche */}
               <SearchableDropdown
-                label="Participants"
+                label={peutCreerGroupe ? 'Participants' : 'Destinataire'}
                 placeholder="Rechercher des employés..."
                 options={users}
-                value={selectedParticipantIds[0] || ''}
-                onChange={(value) => setSelectedParticipantIds(value ? [value as string] : [])}
+                value={peutCreerGroupe ? selectedParticipantIds : selectedParticipantIds[0] || ''}
+                onChange={(value) =>
+                  setSelectedParticipantIds(
+                    Array.isArray(value)
+                      ? (value as string[])
+                      : value
+                        ? [value as string]
+                        : [],
+                  )
+                }
                 onSearchChange={setUserSearchTerm}
                 isLoading={isLoadingUsers}
                 error={errors.participants}
                 required
-                multiSelect={false}
-                className="mb-6"
+                multiSelect={peutCreerGroupe}
+                className="mb-2"
               />
+              <p className="md:text-xs text-[11px] text-[#9796A1] mb-6">
+                {peutCreerGroupe
+                  ? estGroupe
+                    ? `Groupe de ${selectedParticipantIds.length + 1} personnes, vous compris. Donnez-lui un nom ci-dessous.`
+                    : 'Choisissez deux collègues ou plus pour créer un groupe.'
+                  : 'Conversation à deux.'}
+              </p>
             </>
           )}
 
           {/* Sujet */}
           <div className="mb-6">
             <label className="block md:text-sm text-xs font-medium text-black mb-2">
-              Sujet de la conversation
+              {estGroupe ? 'Nom du groupe' : 'Sujet de la conversation'}
               <span className="text-red-500 ml-1">*</span>
             </label>
             <input

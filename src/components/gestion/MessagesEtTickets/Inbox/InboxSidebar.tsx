@@ -16,14 +16,23 @@ function InboxSidebar({ selectedConversation, onSelectConversation }: InboxSideb
 
   const invalidateConversations = useInvalidateConversationQuery();
 
-  const handleCreateConversation = async (conversationData: { type: string; clientId?: string; restaurantId?: string; subject: string; initialMessage?: string; participantId?: string | null }) => {
+  const handleCreateConversation = async (conversationData: { type: string; clientId?: string; restaurantId?: string; subject: string; initialMessage?: string; participantId?: string | null; participantIds?: string[] }) => {
     try {
       const dto: ICreerConversationDTO = {
         seed_message: conversationData.initialMessage || conversationData.subject || 'Nouvelle conversation',
         subject: conversationData.subject,
       };
 
-      if (conversationData.participantId) dto.receiver_user_id = conversationData.participantId;
+      /**
+       * Deux destinataires ou plus : c'est un groupe, on envoie la liste
+       * entière. Un seul : on garde `receiver_user_id`, le champ historique,
+       * pour ne rien changer au comportement du tête-à-tête.
+       */
+      if ((conversationData.participantIds?.length ?? 0) >= 2) {
+        dto.participant_user_ids = conversationData.participantIds;
+      } else if (conversationData.participantId) {
+        dto.receiver_user_id = conversationData.participantId;
+      }
       if (conversationData.clientId) dto.customer_to_contact_id = conversationData.clientId;
       if (conversationData.restaurantId) dto.restaurant_id = conversationData.restaurantId;
 

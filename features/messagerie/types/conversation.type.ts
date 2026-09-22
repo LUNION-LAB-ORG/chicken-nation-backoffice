@@ -69,6 +69,11 @@ export interface IConversation {
   customer: IClient | null;
   users: IParticipantConversation[];
   subject?: string | null;
+  /**
+   * Groupe interne : aucun client et plus de deux participants. Calculé par le
+   * serveur pour que tous les écrans s'accordent sur la même règle.
+   */
+  isGroup?: boolean;
 }
 
 export interface IStatsMessages {
@@ -80,6 +85,11 @@ export interface IStatsMessages {
 
 export interface ICreerConversationDTO {
   receiver_user_id?: string;
+  /**
+   * Groupe interne : les collègues à réunir, hors créateur. Deux ou plus créent
+   * un groupe ; un seul équivaut à `receiver_user_id`.
+   */
+  participant_user_ids?: string[];
   seed_message: string;
   restaurant_id?: string;
   subject?: string;
