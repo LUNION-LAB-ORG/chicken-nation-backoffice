@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { conversationKeyQuery, messageKeyQuery, statsMessagesKeyQuery } from '../queries/index.query';
+import { conversationKeyQuery, messageKeyQuery, statsMessagesKeyQuery, ticketKeyQuery } from '../queries/index.query';
 import { useAuthStore } from '../../users/hook/authStore';
 import { acquireSocket, releaseSocket, shouldPlayOnce } from './sharedSocket';
 
@@ -102,6 +102,47 @@ export const useMessagerieSocketSync = ({
       }
     };
 
+    /**
+     * RÉACTIONS, en direct.
+     *
+     * On retouche le message concerné dans le cache plutôt que d'invalider :
+     * une invalidation recharge toute la page de messages, fait clignoter le
+     * fil et, sur la liste des conversations, ferait remuer des compteurs de
+     * non-lus qu'un pouce n'a aucune raison de toucher.
+     *
+     * La charge utile est déjà calculée POUR MOI par le serveur : `mine` y est
+     * juste, il n'y a rien à recalculer ici.
+     */
+    const retoucherReactions = (
+      queryKey: unknown[],
+      messageId: string,
+      reactions: unknown,
+    ) => {
+      queryClient.setQueryData(queryKey, (ancien: any) => {
+        if (!ancien || typeof ancien !== 'object') return ancien;
+        const maj = (liste?: any[]) =>
+          liste?.map((m) => (m?.id === messageId ? { ...m, reactions } : m));
+        if (Array.isArray(ancien.pages)) {
+          return { ...ancien, pages: ancien.pages.map((p: any) => ({ ...p, data: maj(p?.data) })) };
+        }
+        if (Array.isArray(ancien.data)) return { ...ancien, data: maj(ancien.data) };
+        if (Array.isArray(ancien.messages)) return { ...ancien, messages: maj(ancien.messages) };
+        return ancien;
+      });
+    };
+
+    const onReactions = (data: any) => {
+      if (!data?.conversationId || !data?.messageId) return;
+      retoucherReactions(messageKeyQuery(data.conversationId), data.messageId, data.reactions);
+    };
+
+    const onReactionsTicket = (data: any) => {
+      if (!data?.ticketId || !data?.messageId) return;
+      retoucherReactions(ticketKeyQuery('detail', data.ticketId), data.messageId, data.reactions);
+    };
+
+    socket.on('message:reactions', onReactions);
+    socket.on('ticket_message:reactions', onReactionsTicket);
     socket.on('new:message', onNewMessage);
     socket.on('messages:read', onMessagesRead);
     socket.on('new:conversation', onNewConversation);
@@ -114,6 +155,8 @@ export const useMessagerieSocketSync = ({
       socket.off('new:conversation', onNewConversation);
       socket.off('conversation:participants', onParticipantsChanged);
       socket.off('conversation:retire', onRetire);
+      socket.off('message:reactions', onReactions);
+      socket.off('ticket_message:reactions', onReactionsTicket);
       releaseSocket();
     };
   }, [enabled, currentUserId, queryClient, invalidateConversations, invalidateMessages]);

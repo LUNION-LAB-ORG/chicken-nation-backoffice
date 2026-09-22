@@ -84,6 +84,17 @@ export const conversationAPI = {
       receives_alerts: recevoir,
     }),
 
+  /**
+   * Pose, remplace ou retire une réaction. `PUT` : la requête décrit un état
+   * voulu, la rejouer ne crée jamais de seconde réaction.
+   */
+  basculerReaction: (
+    conversationId: string,
+    messageId: string,
+    emoji: string,
+  ): Promise<{ messageId: string; reactions: { emoji: string; count: number; mine: boolean }[] }> =>
+    apiRequest(`${BASE}/${conversationId}/messages/${messageId}/reactions`, 'PUT', { emoji }),
+
   archiver: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/archive`, 'POST'),
 

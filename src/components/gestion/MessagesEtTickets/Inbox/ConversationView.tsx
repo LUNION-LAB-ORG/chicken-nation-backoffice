@@ -17,6 +17,8 @@ import {
   useEnregistrementVocal,
   formaterDuree,
   LecteurVocal,
+  Reactions,
+  useBasculerReactionMessageMutation,
 } from '../../../../../features/messagerie';
 import type { IMessage } from '../../../../../features/messagerie';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -77,6 +79,7 @@ const dayKey = (dateStr: string): string => {
 function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   /** Sert à reconnaître SES messages parmi ceux des collègues dans un groupe. */
   const utilisateurConnecteId = useAuthStore((etat) => etat.user?.id);
+  const basculerReaction = useBasculerReactionMessageMutation();
   const [message, setMessage] = useState('');
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
@@ -671,7 +674,9 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                       </div>
                     )}
 
-                    <div className={`flex ${aDroite ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}>
+                    {/* `group` : le bouton d'ajout de réaction ne se montre qu'au survol de CE
+                        message, sinon le fil serait parsemé d'icônes. */}
+                    <div className={`group flex ${aDroite ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}>
                       <div className={`flex items-end gap-2 md:max-w-[70%] max-w-[85%] ${aDroite ? 'flex-row-reverse' : ''}`}>
                         {/* Avatar (uniquement sur le premier message du groupe) */}
                         <div className="w-8 h-8 shrink-0">
@@ -765,6 +770,26 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                             rien : un accusé sur un message non parti serait
                             pire que pas d'accusé du tout.
                           */}
+                          {/*
+                            RÉACTIONS, sous la bulle. Posées avant l'accusé de
+                            lecture pour que l'ordre de lecture reste naturel :
+                            le message, ce qu'on en pense, puis son état.
+                          */}
+                          {!isTemp && !estSysteme && (
+                            <Reactions
+                              reactions={msg.reactions}
+                              aDroite={aDroite}
+                              onBasculer={(emoji) =>
+                                conversationId &&
+                                basculerReaction.mutate({
+                                  parentId: conversationId,
+                                  messageId: msg.id,
+                                  emoji,
+                                })
+                              }
+                            />
+                          )}
+
                           {aDroite && !isTemp && (
                             <div className="flex items-center justify-end gap-1 mt-0.5 px-1">
                               {msg.isRead ? (

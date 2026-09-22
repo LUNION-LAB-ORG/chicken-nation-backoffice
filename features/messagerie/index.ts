@@ -16,6 +16,9 @@ export * from './queries/index.query';
 // === Conversation Queries ===
 export { useConversationListQuery, useConversationListInfiniteQuery, useStatsMessagesQuery } from './queries/conversation-list.query';
 export { useAjouterParticipantsMutation, useRetirerParticipantMutation, useRenommerGroupeMutation, useBasculerAlertesMutation } from './queries/groupe.mutation';
+export { useBasculerReactionMessageMutation, useBasculerReactionTicketMutation } from './queries/reaction.mutation';
+export { default as Reactions } from './components/Reactions';
+export { EMOJIS_REACTION } from './constantes/emojis-reaction';
 export { useMessageListQuery } from './queries/message-list.query';
 
 // === Conversation Mutations ===

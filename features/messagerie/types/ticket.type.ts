@@ -54,6 +54,7 @@ export interface ITicketCategorie {
 }
 
 export interface ITicketMessage {
+  reactions?: import('./conversation.type').IReaction[];
   id: string;
   ticketId: string;
   authorUserId?: string | null;

@@ -13,7 +13,19 @@ export interface IAuteurClient {
   image?: string | null;
 }
 
+/**
+ * Réaction déjà AGRÉGÉE par le serveur : l'emoji, son compte, et « l'ai-je
+ * posé ». Ce n'est pas au client de recalculer, sinon le backoffice, l'app et
+ * la caisse en tireraient trois résultats différents.
+ */
+export interface IReaction {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
+
 export interface IMessage {
+  reactions?: IReaction[];
   id: string;
   isRead: boolean;
   /**

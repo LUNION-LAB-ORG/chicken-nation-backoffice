@@ -58,6 +58,14 @@ export const ticketAPI = {
   supprimer: (id: string): Promise<void> =>
     apiRequest<void>(`${BASE}/${id}`, 'DELETE'),
 
+  /** Réaction sur un message de ticket. Même contrat que la messagerie. */
+  basculerReaction: (
+    ticketId: string,
+    messageId: string,
+    emoji: string,
+  ): Promise<{ messageId: string; reactions: { emoji: string; count: number; mine: boolean }[] }> =>
+    apiRequest(`${BASE}/${ticketId}/messages/${messageId}/reactions`, 'PUT', { emoji }),
+
   modifierStatut: (id: string, status: string): Promise<ITicket> =>
     apiRequest<ITicket>(`${BASE}/${id}`, 'PATCH', { status }),
 

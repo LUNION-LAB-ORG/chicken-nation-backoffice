@@ -8,6 +8,8 @@ import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2, Tag, ShoppingBag, UserCh
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import {
   useTicketDetailQuery,
+  Reactions,
+  useBasculerReactionTicketMutation,
   useEnvoyerMessageTicketMutation,
   useAssignerTicketMutation,
   useModifierStatutTicketMutation,
@@ -44,6 +46,7 @@ const PRIORITY_BADGE: Record<string, { label: string; cls: string }> = {
 // Les données des tickets sont maintenant récupérées via l'API
 
 function TicketView({ ticketId, onBack }: TicketViewProps) {
+  const basculerReaction = useBasculerReactionTicketMutation();
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'public' | 'internal'>('public');
 
@@ -422,7 +425,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           <div className="md:space-y-6 space-y-4">
             {sortedMessages && sortedMessages.length > 0 ? (
               sortedMessages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.authorUserId ? 'justify-end' : 'justify-start'}`}>
+                <div key={msg.id} className={`group flex ${msg.authorUserId ? 'justify-end' : 'justify-start'}`}>
                   {!msg.authorUserId ? (
                     /* Message client ou livreur à gauche */
                     <div className="flex items-start md:space-x-3 space-x-2 md:max-w-2xl max-w-xs">
@@ -468,6 +471,16 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                         <div className="bg-white text-gray-900 md:px-4 md:py-3 px-3 py-2 rounded-2xl">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
+                        {/* Réactions : même composant que la messagerie, pour que les deux
+                            écrans se comportent exactement pareil. */}
+                        <Reactions
+                          reactions={msg.reactions}
+                          aDroite={false}
+                          onBasculer={(emoji) =>
+                            ticketId &&
+                            basculerReaction.mutate({ parentId: ticketId, messageId: msg.id, emoji })
+                          }
+                        />
                       </div>
                     </div>
                   ) : (
@@ -483,6 +496,16 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                         <div className="bg-[#F17922] text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
+                        {/* Réactions : même composant que la messagerie, pour que les deux
+                            écrans se comportent exactement pareil. */}
+                        <Reactions
+                          reactions={msg.reactions}
+                          aDroite={true}
+                          onBasculer={(emoji) =>
+                            ticketId &&
+                            basculerReaction.mutate({ parentId: ticketId, messageId: msg.id, emoji })
+                          }
+                        />
                       </div>
                      <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
                         {msg.authorUser?.image && msg.authorUser.image.trim() !== '' && formatImageUrl(msg.authorUser.image) ? (
