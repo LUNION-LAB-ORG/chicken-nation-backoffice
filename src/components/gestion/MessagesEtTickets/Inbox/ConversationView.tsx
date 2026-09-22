@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2, Mic, Check, CheckCheck } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2, Mic, Check, CheckCheck, MoreVertical, Info } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
@@ -90,7 +90,18 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   } | null>(null);
   const vocal = useEnregistrementVocal();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
-  const [isMobileRightbarOpen, setIsMobileRightbarOpen] = useState(false);
+  /**
+   * Panneau d'informations, à la manière de WhatsApp : il ne s'ouvre QUE
+   * lorsqu'on le demande, par le menu de l'en-tête. Affiché en permanence, il
+   * mangeait un tiers de la largeur pour une information qu'on ne consulte
+   * qu'occasionnellement.
+   *
+   * Un seul état pour les deux formats : sur grand écran c'est une colonne, en
+   * dessous un tiroir, et c'est la feuille de style qui choisit lequel des deux
+   * se montre. Deux états auraient fini par diverger.
+   */
+  const [infosOuvertes, setInfosOuvertes] = useState(false);
+  const [menuOuvert, setMenuOuvert] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -475,7 +486,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             {/* Info conversation - Cliquable sur mobile/tablette */}
             <div
               className="flex items-center md:space-x-4 space-x-3 xl:cursor-default cursor-pointer xl:pointer-events-none min-w-0"
-              onClick={() => setIsMobileRightbarOpen(true)}
+              onClick={() => setInfosOuvertes(true)}
             >
               {/* Avatar */}
               <div className="relative md:w-11 md:h-11 w-10 h-10 shrink-0">
@@ -540,20 +551,62 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center shrink-0">
-            {/* Un ticket de support se rattache à un CLIENT : le proposer sur un
-                échange interne n'a pas de sens, et la fenêtre y afficherait le
-                nom du groupe en guise de nom de client. */}
-            {!getConversationInfo.isInternal && (
+          {/* Actions : tout passe par un menu, comme sur WhatsApp. */}
+          <div className="relative flex items-center shrink-0">
             <button
-              onClick={() => setIsEscalateModalOpen(true)}
-              className="bg-[#F17922] text-white md:px-4 md:py-2.5 px-3 py-2 rounded-xl md:text-sm text-xs font-medium flex items-center cursor-pointer hover:bg-orange-600 transition-all duration-200"
+              onClick={() => setMenuOuvert((v) => !v)}
+              aria-label="Menu de la discussion"
+              aria-expanded={menuOuvert}
+              className="h-9 w-9 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors cursor-pointer"
             >
-              <AlertTriangle className="md:w-4 md:h-4 w-4 h-4 md:mr-2 mr-1.5" />
-              <span className="lg:inline hidden">Convertir en ticket</span>
-              <span className="lg:hidden">Convertir en ticket</span>
+              <MoreVertical className="w-5 h-5" />
             </button>
+
+            {menuOuvert && (
+              <>
+                {/*
+                  Voile transparent plein écran : il ferme le menu au premier
+                  clic n'importe où. Plus sûr qu'un écouteur global, qui se
+                  déclenche aussi sur le bouton lui-même et le rouvre aussitôt.
+                */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setMenuOuvert(false)}
+                />
+                <div className="absolute right-0 top-11 z-50 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOuvert(false);
+                      setInfosOuvertes(true);
+                    }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-gray-700 hover:bg-gray-50 cursor-pointer"
+                  >
+                    <Info className="h-4 w-4 text-gray-400" />
+                    {estGroupe
+                      ? 'Infos du groupe'
+                      : getConversationInfo.isInternal
+                        ? 'Infos de la discussion'
+                        : 'Infos du contact'}
+                  </button>
+
+                  {/* Un ticket de support se rattache à un CLIENT : le proposer
+                      sur un échange interne n'a pas de sens. */}
+                  {!getConversationInfo.isInternal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOuvert(false);
+                        setIsEscalateModalOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-gray-700 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <AlertTriangle className="h-4 w-4 text-gray-400" />
+                      Convertir en ticket
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -940,8 +993,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         </div>
       </div>
 
-      {/* Sidebar droite avec informations */}
-      <div className="hidden xl:block">
+      {/* Panneau d'informations, sur demande seulement (grand écran). */}
+      <div className={infosOuvertes ? 'hidden xl:block' : 'hidden'}>
         <InboxRightbar
           conversationId={conversationId}
           clientName={getConversationInfo.name}
@@ -953,14 +1006,20 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           isGroup={estGroupe}
           groupName={currentConversation?.subject}
           recoitAlertes={!!currentConversation?.receivesAlerts}
+          onClose={() => setInfosOuvertes(false)}
           onQuitteGroupe={onBack}
         />
       </div>
 
-      {/* Sidebar mobile qui s'ouvre par la droite */}
+      {/*
+        Même panneau, en tiroir, sous le seuil où la colonne s'affiche. Le
+        `xl:hidden` l'empêche de se superposer à la colonne quand les deux
+        seraient ouverts par le même état.
+      */}
+      <div className="xl:hidden">
       <MobileRightSidebar
-        isOpen={isMobileRightbarOpen}
-        onClose={() => setIsMobileRightbarOpen(false)}
+        isOpen={infosOuvertes}
+        onClose={() => setInfosOuvertes(false)}
         conversationId={conversationId}
         clientName={getConversationInfo.name}
         clientEmail={getConversationInfo.email}
@@ -972,10 +1031,11 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         groupName={currentConversation?.subject}
         recoitAlertes={!!currentConversation?.receivesAlerts}
         onQuitteGroupe={() => {
-          setIsMobileRightbarOpen(false);
+          setInfosOuvertes(false);
           onBack?.();
         }}
       />
+      </div>
 
       {/* Modal d'escalation */}
       <EscalateTicketModal

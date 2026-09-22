@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, X } from 'lucide-react';
 import { formatImageUrl } from '@/utils/imageHelpers';
 
 // Types pour les participants
@@ -37,6 +37,8 @@ interface InboxRightbarProps {
   isGroup?: boolean;
   groupName?: string | null;
   recoitAlertes?: boolean;
+  /** Ferme le panneau. Indispensable depuis qu'il s'ouvre sur demande. */
+  onClose?: () => void;
   onQuitteGroupe?: () => void;
 }
 
@@ -51,6 +53,7 @@ function InboxRightbar({
   isGroup = false,
   groupName,
   recoitAlertes = false,
+  onClose,
   onQuitteGroupe
 }: InboxRightbarProps) {
   const { user } = useAuthStore();
@@ -67,9 +70,36 @@ function InboxRightbar({
     avatar: user?.image ? formatImageUrl(user.image) : '/icons/imageprofile.png'
   };
 
+  const titre = isGroup
+    ? 'Infos du groupe'
+    : isInternal
+      ? 'Infos de la discussion'
+      : 'Infos du contact';
+
   return (
-    <div className="h-full md:w-80 w-64 bg-white border-l border-slate-300 overflow-y-auto">
-      <div className="md:p-6 p-4">
+    <div className="h-full md:w-80 w-64 bg-white border-l border-slate-300 flex flex-col">
+      {/*
+        Barre de titre fixe, à la manière de WhatsApp : l'intitulé dit de quoi
+        il s'agit, la croix ferme. Hors du défilement, pour rester atteignable
+        quelle que soit la longueur de la liste des membres.
+      */}
+      <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-3 shrink-0">
+        <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9796A1]">
+          {titre}
+        </span>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            className="h-7 w-7 rounded-full flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600 cursor-pointer"
+          >
+            <X size={15} />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto md:p-6 p-4">
         <h3 className="lg:text-lg md:text-base text-sm font-regular text-[#F17922] md:mb-4 mb-3">
           {isInternal
             ? (isGroup && groupName?.trim() ? groupName.trim() : 'Discussion interne')
