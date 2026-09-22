@@ -3,6 +3,13 @@
 import React from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+// ⚠️ Import RELATIF entre features : `@/` pointe sur src/, et `features/` est
+// à la racine. `@/features` compile mais casse `next build`.
+import {
+  AVANCE_PREPARATION_MS,
+  estProgrammee,
+  momentSouhaite,
+} from "../../../orders/utils/momentSouhaite";
 import {
   Banknote,
   Calendar,
@@ -168,6 +175,47 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
             <p className="mt-1 text-xs text-gray-500 capitalize">
               {format(new Date(source.created_at), "EEEE dd MMMM yyyy · HH:mm", { locale: fr })}
             </p>
+
+            {/*
+              HEURE SOUHAITÉE par le client.
+              
+              Elle existait en base mais n'était affichée nulle part : un plat
+              attendu pour 20 h pouvait donc partir en préparation à 14 h, sans
+              que personne en cuisine ne sache qu'il était en avance de six
+              heures. On ne la montre que sur les commandes réellement
+              programmées, sinon elle répéterait l'heure de création sur chaque
+              ligne et finirait par ne plus être lue.
+            */}
+            {(() => {
+              const moment = momentSouhaite(source.date, source.time);
+              if (!estProgrammee(moment, source.created_at) || !moment) return null;
+
+              const ouverture = new Date(moment.getTime() - AVANCE_PREPARATION_MS);
+              const enAttente = Date.now() < ouverture.getTime();
+
+              return (
+                <div
+                  className={`mt-2.5 inline-flex flex-col gap-0.5 rounded-xl border px-3 py-2 ${
+                    enAttente
+                      ? "border-[#F3D5B0] bg-[#FDF3E7]"
+                      : "border-[#CDEBD9] bg-[#EAF7F0]"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#8A4B00]">
+                    <Clock className="h-3.5 w-3.5" />
+                    À récupérer
+                  </span>
+                  <span className="text-[13px] font-semibold capitalize text-gray-900">
+                    {format(moment, "EEEE dd MMMM · HH'h'mm", { locale: fr })}
+                  </span>
+                  <span className="text-[11px] text-gray-600">
+                    {enAttente
+                      ? `Préparation possible à partir de ${format(ouverture, "HH'h'mm", { locale: fr })}`
+                      : "La préparation peut commencer"}
+                  </span>
+                </div>
+              );
+            })()}
             {/*
               Le lien porte la RÉFÉRENCE, lisible, et non l'identifiant
               technique. Le serveur sait résoudre les deux depuis que la

@@ -4,6 +4,9 @@ import React from "react";
 import { CheckCircle, Info, Truck } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
+import { format } from "date-fns";
+// ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
+import { AVANCE_PREPARATION_MS, momentSouhaite } from "../../../orders/utils/momentSouhaite";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
 
@@ -21,17 +24,40 @@ interface Props {
 export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
   const pickup = (order as unknown as { delivery?: { course?: { pickup_code: string } } }).delivery?.course?.pickup_code;
+  /**
+   * La préparation ne s'ouvre qu'une heure avant l'heure souhaitée.
+   *
+   * Le serveur applique la même règle et refuserait de toute façon : ce
+   * blocage-ci sert à l'expliquer AVANT le clic, plutôt que de laisser
+   * découvrir un refus. Les deux calculs partagent le même utilitaire, pour
+   * qu'aucun ne dérive de l'autre.
+   */
+  const moment = momentSouhaite(order.date, order.time);
+  const ouverture = moment ? new Date(moment.getTime() - AVANCE_PREPARATION_MS) : null;
+  const tropTot = !!ouverture && Date.now() < ouverture.getTime();
+
 
   if (order.status === OrderStatus.ACCEPTED) {
     return (
       <div className="space-y-2">
         <button
           onClick={() => handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS)}
-          disabled={isLoading}
+          disabled={isLoading || tropTot}
+          title={
+            tropTot && ouverture
+              ? `Commande programmée : la préparation s'ouvre à ${format(ouverture, "HH'h'mm")}`
+              : undefined
+          }
           className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl transition disabled:bg-gray-300"
         >
           {isLoading ? "…" : "Commencer la préparation"}
         </button>
+        {tropTot && ouverture && (
+          <p className="text-[11px] text-[#8A4B00] text-center">
+            Commande programmée pour {format(moment!, "HH'h'mm")} · préparation à partir de{" "}
+            {format(ouverture, "HH'h'mm")}
+          </p>
+        )}
         <DrawerCancelAction order={order} />
       </div>
     );
