@@ -15,6 +15,7 @@ export * from './queries/index.query';
 
 // === Conversation Queries ===
 export { useConversationListQuery, useConversationListInfiniteQuery, useStatsMessagesQuery } from './queries/conversation-list.query';
+export { useAjouterParticipantsMutation, useRetirerParticipantMutation, useRenommerGroupeMutation } from './queries/groupe.mutation';
 export { useMessageListQuery } from './queries/message-list.query';
 
 // === Conversation Mutations ===

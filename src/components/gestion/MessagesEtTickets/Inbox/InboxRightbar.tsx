@@ -14,6 +14,7 @@ interface Participant {
 }
 
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
+import GroupeMembres from './GroupeMembres';
 
 // Données mockées pour les participants - remplacées par l'utilisateur connecté
 
@@ -32,6 +33,10 @@ interface InboxRightbarProps {
   clientPhone?: string;
   isInternal?: boolean;
   participants?: ConversationParticipant[];
+  /** Groupe interne : ouvre la gestion de la composition. */
+  isGroup?: boolean;
+  groupName?: string | null;
+  onQuitteGroupe?: () => void;
 }
 
 function InboxRightbar({
@@ -41,7 +46,10 @@ function InboxRightbar({
   clientImage,
   clientPhone,
   isInternal = false,
-  participants = []
+  participants = [],
+  isGroup = false,
+  groupName,
+  onQuitteGroupe
 }: InboxRightbarProps) {
   const { user } = useAuthStore();
 
@@ -61,7 +69,9 @@ function InboxRightbar({
     <div className="h-full md:w-80 w-64 bg-white border-l border-slate-300 overflow-y-auto">
       <div className="md:p-6 p-4">
         <h3 className="lg:text-lg md:text-base text-sm font-regular text-[#F17922] md:mb-4 mb-3">
-          {isInternal ? 'Discussion interne' : 'Informations client'}
+          {isInternal
+            ? (isGroup && groupName?.trim() ? groupName.trim() : 'Discussion interne')
+            : 'Informations client'}
         </h3>
 
         {!isInternal && (
@@ -152,6 +162,19 @@ function InboxRightbar({
               </div>
             )}
           </div>
+
+          {/* Composition du groupe : ajouter, retirer, quitter, renommer. */}
+          {isGroup && conversationId && (
+            <GroupeMembres
+              // `key` : repartir de zéro en changeant de groupe, sinon un nom
+              // en cours de saisie s'appliquerait au groupe suivant.
+              key={conversationId}
+              conversationId={conversationId}
+              membres={participants}
+              nomGroupe={groupName}
+              onQuitte={onQuitteGroupe}
+            />
+          )}
         </div>
       </div>
     </div>

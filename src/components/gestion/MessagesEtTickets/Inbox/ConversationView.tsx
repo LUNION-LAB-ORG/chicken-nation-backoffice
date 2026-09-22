@@ -9,6 +9,7 @@ import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
 import EscalateTicketModal from './EscalateTicketModal';
 import {
+  useConversationListInfiniteQuery,
   useMessageListQuery,
   useEnvoyerMessageMutation,
   useMarquerLuMutation,
@@ -114,32 +115,42 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isInitialLoadRef = useRef(true);
 
-  // Récupérer la conversation actuelle depuis la liste des conversations
+  /**
+   * La conversation ouverte, prise dans la liste — EN S'Y ABONNANT.
+   *
+   * Deux défauts se cumulaient ici. La clé lue était ['conversation','list'],
+   * que plus personne ne remplit depuis le passage à la liste infinie : cet
+   * objet valait donc `null` en permanence et l'en-tête affichait son texte de
+   * repli. Et surtout, un `useMemo` sur `queryClient.getQueryData` ne s'abonne
+   * à rien : invalider le cache ne le recalculait pas, si bien qu'un ajout de
+   * membre ou un renommage ne se voyait jamais sans recharger la page.
+   *
+   * On utilise donc la requête elle-même. Elle est déjà montée par la liste et
+   * partage sa clé : aucun appel réseau supplémentaire, seulement un abonnement
+   * aux mêmes données.
+   */
+  const { data: listeConversations } = useConversationListInfiniteQuery();
+
   const currentConversation = useMemo(() => {
     if (!conversationId) return null;
+    const pages = (listeConversations as { pages?: Array<{ data?: any[] }> } | undefined)?.pages ?? [];
+    const toutes = pages.flatMap((page) => page?.data ?? []);
+    return toutes.find((c: any) => c?.id === conversationId) ?? null;
+  }, [conversationId, listeConversations]);
 
-    /**
-     * ⚠️ La clé lue était ['conversation', 'list'], que PLUS PERSONNE ne
-     * remplit : la liste de la boîte de réception est servie par la requête
-     * INFINIE, sous ['conversation', 'list-infinite'], et sa donnée est
-     * paginée. `currentConversation` valait donc null en permanence, et
-     * l'en-tête de la conversation ouverte affichait son texte de repli depuis
-     * le passage à la pagination. On lit la bonne clé et on aplatit les pages ;
-     * l'ancienne reste consultée en second recours, au cas où un écran
-     * l'alimenterait encore.
-     */
-    const infinie = queryClient.getQueryData(['conversation', 'list-infinite']) as
-      | { pages?: Array<{ data?: any[] }> }
-      | undefined;
-    const depuisInfinie = (infinie?.pages ?? []).flatMap((page) => page?.data ?? []);
-
-    const simple = queryClient.getQueryData(['conversation', 'list']) as
-      | { data?: any[] }
-      | undefined;
-
-    const conversations = depuisInfinie.length ? depuisInfinie : simple?.data ?? [];
-    return conversations.find((c: any) => c?.id === conversationId) ?? null;
-  }, [conversationId, queryClient, conversationMessages]);
+  /**
+   * Groupe interne : aucun client et plus de deux participants. Le serveur
+   * tranche via `isGroup` ; le repli sur le nombre de participants couvre les
+   * conversations servies par une version antérieure du backend.
+   */
+  const estGroupe = useMemo(
+    () =>
+      !!currentConversation &&
+      !currentConversation.customer &&
+      (currentConversation.isGroup ??
+        (currentConversation.users?.length ?? 0) > 2),
+    [currentConversation],
+  );
 
   // Fonction utilitaire pour obtenir les informations d'affichage de la conversation
   const getConversationInfo = useMemo(() => {
@@ -187,7 +198,16 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   }, [currentConversation]);
 
   // 🔌 Hook WebSocket pour les mises à jour en temps réel
-  useMessagerieSocketSync({ conversationId, enabled: !!conversationId });
+  useMessagerieSocketSync({
+    conversationId,
+    enabled: !!conversationId,
+    // Retiré du groupe ouvert : on quitte l'écran plutôt que de laisser lire et
+    // écrire dans une conversation à laquelle on n'a plus accès.
+    onRetireDuGroupe: () => {
+      toast('Vous ne faites plus partie de ce groupe');
+      onBack?.();
+    },
+  });
 
   // Marquer comme lu via l'API serveur quand la conversation change
   useEffect(() => {
@@ -891,6 +911,9 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           clientPhone={getConversationInfo.isInternal ? "" : currentConversation?.customer?.phone || ""}
           isInternal={getConversationInfo.isInternal}
           participants={currentConversation?.users || []}
+          isGroup={estGroupe}
+          groupName={currentConversation?.subject}
+          onQuitteGroupe={onBack}
         />
       </div>
 
@@ -905,6 +928,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         clientPhone={getConversationInfo.isInternal ? "" : currentConversation?.customer?.phone || ""}
         isInternal={getConversationInfo.isInternal}
         participants={currentConversation?.users || []}
+        isGroup={estGroupe}
+        groupName={currentConversation?.subject}
+        onQuitteGroupe={() => {
+          setIsMobileRightbarOpen(false);
+          onBack?.();
+        }}
       />
 
       {/* Modal d'escalation */}

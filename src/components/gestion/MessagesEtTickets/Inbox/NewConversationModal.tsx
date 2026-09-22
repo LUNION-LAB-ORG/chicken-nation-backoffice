@@ -6,6 +6,7 @@ import { SearchableDropdown } from '@/components/ui/SearchableDropdown';
 import { getRestaurantCustomers } from '@/services/customerService';
 import { getAllUsers } from '../../../../../features/users/services/user.service';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
+import { useCollegues } from '../../../../../features/messagerie/hooks/use-collegues';
 import toast from 'react-hot-toast';
 
 interface NewConversationModalProps {
@@ -67,15 +68,15 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
   // États des données
   const [clients, setClients] = useState<ClientOption[]>([]);
-  const [users, setUsers] = useState<UserOption[]>([]);
+  const { collegues: users, chargement: isLoadingUsers } = useCollegues();
 
   // États de chargement
   const [isLoadingClients, setIsLoadingClients] = useState(false);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
 
   // États de recherche
   const [clientSearchTerm, setClientSearchTerm] = useState('');
-  const [userSearchTerm, setUserSearchTerm] = useState('');
+
 
   // États d'erreur
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -113,78 +114,13 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     }
   }, [clientSearchTerm, user?.restaurant_id]);
 
-  const loadUsers = useCallback(async () => {
-    setIsLoadingUsers(true);
-    try {
-      let usersData;
-
-      // ✅ Problème 1 & 3 : Filtrage selon le rôle de l'utilisateur
-      if (user?.role === 'ADMIN') {
-        /**
-         * TOUT le personnel, et non les seuls comptes « backoffice ».
-         *
-         * Le commentaire annonçait déjà « voir tous les utilisateurs » mais le
-         * filtre ne retenait que le siège. Or les agents de terrain, call
-         * center et caissiers compris, sont rattachés à un restaurant : ils
-         * n'apparaissaient pas dans la liste, et un administrateur ne pouvait
-         * donc pas constituer un groupe avec eux, ce qui est précisément
-         * l'usage attendu.
-         */
-        usersData = await getAllUsers();
-        // ASSISTANT_MANAGER doit figurer ici : absent de cette liste, il
-        // recevait le personnel de TOUT le réseau au lieu de son équipe, alors
-        // que le serveur cloisonne désormais les participants par restaurant.
-      } else if (user?.restaurant_id && ['MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'CALL_CENTER', 'CUISINE'].includes(user.role || '')) {
-        // Rôles liés à un restaurant : seulement les utilisateurs du même restaurant
-        const { getRestaurantUsers } = await import('@/services/restaurantService');
-        usersData = await getRestaurantUsers(user.restaurant_id);
-      } else {
-        // Autres rôles (COMPTABLE, MARKETING, etc.) : voir tous les utilisateurs
-        usersData = await getAllUsers({ type: 'BACKOFFICE' });
-      }
-
-      /**
-       * Le RÔLE est affiché en sous-titre et devient cherchable.
-       *
-       * Le sélecteur cherche dans le libellé et dans ce champ : taper « call »
-       * ramène ainsi tous les agents du call center d'un coup, au lieu de les
-       * repérer un par un dans une liste de noms.
-       */
-      const libelleRole: Record<string, string> = {
-        ADMIN: 'Administrateur',
-        MARKETING: 'Agent Marketing',
-        COMPTABLE: 'Agent Comptable',
-        CALL_CENTER: 'Agent Call Center',
-        MANAGER: 'Manager',
-        ASSISTANT_MANAGER: 'Assistant Manager',
-        CAISSIER: 'Agent Caissier',
-        CUISINE: 'Agent Cuisinier',
-      };
-
-      const formattedUsers = usersData
-        // On ne se propose pas soi-même : se cocher annonçait un groupe et
-        // créait un tête-à-tête, le serveur s'excluant du décompte.
-        .filter(u => u.entity_status === 'ACTIVE' && u.id !== user?.id)
-        .map(u => {
-          const role = libelleRole[u.role ?? ''] ?? u.role ?? '';
-          return {
-            id: u.id,
-            label: u.fullname || u.email || u.id,
-            email: [role, u.email].filter(Boolean).join(' · ') || undefined,
-            phone: u.phone || undefined,
-            image: u.image || undefined,
-          };
-        });
-
-      setUsers(formattedUsers);
-    } catch (error) {
-      console.error('Erreur lors du chargement des utilisateurs:', error);
-      setErrors(prev => ({ ...prev, users: 'Erreur lors du chargement des utilisateurs' }));
-      toast.error('Chargement des agents impossible');
-    } finally {
-      setIsLoadingUsers(false);
-    }
-  }, [user?.role, user?.restaurant_id]);
+  /**
+   * La liste des collègues sélectionnables vient d'un point unique
+   * (`useCollegues`) : la règle est subtile — un administrateur doit voir TOUT
+   * le personnel, un responsable de point de vente seulement son équipe — et
+   * elle a déjà été fausse une fois, les agents de terrain étant alors
+   * invisibles. Une seule copie, un seul endroit à corriger.
+   */
 
   // Charger les données au montage du composant
   useEffect(() => {
@@ -193,10 +129,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
       if (user?.role !== 'ADMIN') {
         loadClients();
       }
-      // Charger les utilisateurs pour les deux types de conversation
-      loadUsers();
     }
-  }, [isOpen, loadClients, loadUsers, user?.role]);
+  }, [isOpen, loadClients, user?.role]);
 
   // Recherche avec debounce pour les clients
   useEffect(() => {
@@ -208,17 +142,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
     return () => clearTimeout(timeoutId);
   }, [clientSearchTerm, conversationType, loadClients, user?.role]);
-
-  // Recherche avec debounce pour les utilisateurs
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (userSearchTerm.trim() && conversationType === 'Interne') {
-        loadUsers();
-      }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [userSearchTerm, conversationType, loadUsers]);
 
   // Validation du formulaire
   const validateForm = (): boolean => {
@@ -296,7 +219,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
     setInitialMessage('');
     setErrors({});
     setClientSearchTerm('');
-    setUserSearchTerm('');
   };
 
   if (!isOpen) {
@@ -404,7 +326,6 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                         : [],
                   )
                 }
-                onSearchChange={setUserSearchTerm}
                 isLoading={isLoadingUsers}
                 error={errors.participants}
                 required

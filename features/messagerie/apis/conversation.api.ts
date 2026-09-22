@@ -65,6 +65,20 @@ export const conversationAPI = {
   creer: (dto: ICreerConversationDTO): Promise<IConversation> =>
     apiRequest<IConversation>(BASE, 'POST', dto),
 
+  // ─── Gestion d'un groupe interne ───
+  // Le serveur applique les règles : il faut être membre, et être responsable
+  // pour toucher aux autres. Retirer son propre identifiant = quitter le groupe.
+  ajouterParticipants: (conversationId: string, userIds: string[]): Promise<IConversation> =>
+    apiRequest<IConversation>(`${BASE}/${conversationId}/participants`, 'POST', {
+      user_ids: userIds,
+    }),
+
+  retirerParticipant: (conversationId: string, userId: string): Promise<IConversation> =>
+    apiRequest<IConversation>(`${BASE}/${conversationId}/participants/${userId}`, 'DELETE'),
+
+  renommerGroupe: (conversationId: string, subject: string): Promise<IConversation> =>
+    apiRequest<IConversation>(`${BASE}/${conversationId}/subject`, 'PATCH', { subject }),
+
   archiver: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/archive`, 'POST'),
 

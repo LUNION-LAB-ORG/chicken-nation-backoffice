@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { X, Mail, Phone } from 'lucide-react';
 import { formatImageUrl } from '@/utils/imageHelpers';
+import GroupeMembres from './GroupeMembres';
 
 interface ConversationParticipant {
   id: string;
@@ -22,6 +23,10 @@ interface MobileRightSidebarProps {
   clientPhone?: string;
   isInternal?: boolean;
   participants?: ConversationParticipant[];
+  /** Groupe interne : la composition se gère ici aussi, pas seulement en grand écran. */
+  isGroup?: boolean;
+  groupName?: string | null;
+  onQuitteGroupe?: () => void;
 }
 
 function MobileRightSidebar({ 
@@ -33,7 +38,10 @@ function MobileRightSidebar({
   clientImage, 
   clientPhone,
   isInternal = false,
-  participants = []
+  participants = [],
+  isGroup = false,
+  groupName,
+  onQuitteGroupe
 }: MobileRightSidebarProps) {
   if (!isOpen || !conversationId) {
     return null;
@@ -56,7 +64,9 @@ function MobileRightSidebar({
         {/* Header avec bouton fermer */}
         <div className="flex items-center justify-between p-4 border-b border-slate-300">
           <h3 className="text-lg font-semibold text-[#F17922]">
-            {isInternal ? 'Discussion interne' : 'Informations client'}
+            {isInternal
+            ? (isGroup && groupName?.trim() ? groupName.trim() : 'Discussion interne')
+            : 'Informations client'}
           </h3>
           <button
             onClick={onClose}
@@ -143,6 +153,21 @@ function MobileRightSidebar({
                 <p className="text-sm text-gray-400">Aucun participant</p>
               )}
             </div>
+
+            {/* Même gestion qu'en grand écran : le panneau latéral large est
+                masqué en dessous de xl, sans quoi un responsable sur portable
+                ne pourrait jamais toucher à la composition de son groupe. */}
+            {isGroup && conversationId && (
+              <GroupeMembres
+                // `key` : repartir de zéro en changeant de groupe, sinon un nom
+                // en cours de saisie s'appliquerait au groupe suivant.
+                key={conversationId}
+                conversationId={conversationId}
+                membres={participants}
+                nomGroupe={groupName}
+                onQuitte={onQuitteGroupe}
+              />
+            )}
           </div>
         </div>
       </div>
