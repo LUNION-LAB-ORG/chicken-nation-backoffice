@@ -26,6 +26,9 @@ export interface IReaction {
 
 export interface IMessage {
   reactions?: IReaction[];
+  /** Message retiré : le serveur a déjà remplacé le corps et retiré la pièce jointe. */
+  deleted?: boolean;
+  deletedAt?: string | null;
   id: string;
   isRead: boolean;
   /**

@@ -9,7 +9,9 @@ import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import {
   useTicketDetailQuery,
   Reactions,
+  SupprimerMessage,
   useBasculerReactionTicketMutation,
+  useSupprimerMessageTicketMutation,
   useEnvoyerMessageTicketMutation,
   useAssignerTicketMutation,
   useModifierStatutTicketMutation,
@@ -47,6 +49,10 @@ const PRIORITY_BADGE: Record<string, { label: string; cls: string }> = {
 
 function TicketView({ ticketId, onBack }: TicketViewProps) {
   const basculerReaction = useBasculerReactionTicketMutation();
+  const supprimerMessage = useSupprimerMessageTicketMutation();
+  const utilisateurConnecteId = useAuthStore((etat) => etat.user?.id);
+  /** Un administrateur peut retirer le message d'un collègue parti en tournée. */
+  const estAdmin = useAuthStore((etat) => etat.user?.role) === 'ADMIN';
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'public' | 'internal'>('public');
 
@@ -506,6 +512,26 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                             basculerReaction.mutate({ parentId: ticketId, messageId: msg.id, emoji })
                           }
                         />
+                        {/*
+                          Retrait proposé sur SES propres messages, et sur ceux
+                          d'un collègue quand on est administrateur. Le serveur
+                          applique la même règle : ce qui est montré ici ne fait
+                          qu'éviter un bouton qui échouerait.
+                        */}
+                        {!msg.deleted &&
+                          (msg.authorUser?.id === utilisateurConnecteId || estAdmin) && (
+                          <div className="flex justify-end mt-0.5">
+                            <SupprimerMessage
+                              aDroite
+                              onSupprimer={() =>
+                                supprimerMessage.mutateAsync({
+                                  ticketId: ticketId!,
+                                  messageId: msg.id,
+                                })
+                              }
+                            />
+                          </div>
+                        )}
                       </div>
                      <div className="md:w-10 md:h-10 w-8 h-8 rounded-full flex-shrink-0 bg-gray-200 flex items-center justify-center">
                         {msg.authorUser?.image && msg.authorUser.image.trim() !== '' && formatImageUrl(msg.authorUser.image) ? (

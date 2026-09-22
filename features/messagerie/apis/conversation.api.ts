@@ -95,6 +95,13 @@ export const conversationAPI = {
   ): Promise<{ messageId: string; reactions: { emoji: string; count: number; mine: boolean }[] }> =>
     apiRequest(`${BASE}/${conversationId}/messages/${messageId}/reactions`, 'PUT', { emoji }),
 
+  /**
+   * Retire un message envoyé par erreur. Le serveur renvoie le message déjà
+   * nettoyé : on n'a rien à masquer soi-même.
+   */
+  supprimerMessage: (conversationId: string, messageId: string): Promise<IMessage> =>
+    apiRequest<IMessage>(`${BASE}/${conversationId}/messages/${messageId}`, 'DELETE'),
+
   archiver: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/archive`, 'POST'),
 

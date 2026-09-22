@@ -58,6 +58,10 @@ export const ticketAPI = {
   supprimer: (id: string): Promise<void> =>
     apiRequest<void>(`${BASE}/${id}`, 'DELETE'),
 
+  /** Retire un message de ticket envoyé par erreur. */
+  supprimerMessage: (ticketId: string, messageId: string): Promise<ITicketMessage> =>
+    apiRequest<ITicketMessage>(`${BASE}/${ticketId}/messages/${messageId}`, 'DELETE'),
+
   /** Réaction sur un message de ticket. Même contrat que la messagerie. */
   basculerReaction: (
     ticketId: string,

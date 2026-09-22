@@ -18,7 +18,9 @@ import {
   formaterDuree,
   LecteurVocal,
   Reactions,
+  SupprimerMessage,
   useBasculerReactionMessageMutation,
+  useSupprimerMessageMutation,
 } from '../../../../../features/messagerie';
 import type { IMessage } from '../../../../../features/messagerie';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -79,7 +81,10 @@ const dayKey = (dateStr: string): string => {
 function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   /** Sert à reconnaître SES messages parmi ceux des collègues dans un groupe. */
   const utilisateurConnecteId = useAuthStore((etat) => etat.user?.id);
+  /** Un administrateur peut retirer le message d'un collègue parti en tournée. */
+  const estAdmin = useAuthStore((etat) => etat.user?.role) === 'ADMIN';
   const basculerReaction = useBasculerReactionMessageMutation();
+  const supprimerMessage = useSupprimerMessageMutation();
   const [message, setMessage] = useState('');
   const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [pendingPreview, setPendingPreview] = useState<string | null>(null);
@@ -828,7 +833,28 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                             lecture pour que l'ordre de lecture reste naturel :
                             le message, ce qu'on en pense, puis son état.
                           */}
-                          {!isTemp && !estSysteme && (
+                          {/*
+                            Retrait proposé sur SES propres messages, et sur
+                            ceux du personnel quand on est administrateur. Le
+                            serveur applique la même règle : ce qui est montré
+                            ici ne fait qu'éviter un bouton qui échouerait.
+                          */}
+                          {!isTemp && !estSysteme && !msg.deleted && isAgent &&
+                            (msg.authorUser?.id === utilisateurConnecteId || estAdmin) && (
+                            <div className={`flex ${aDroite ? 'justify-end' : 'justify-start'} mt-0.5`}>
+                              <SupprimerMessage
+                                aDroite={aDroite}
+                                onSupprimer={() =>
+                                  supprimerMessage.mutateAsync({
+                                    conversationId: conversationId!,
+                                    messageId: msg.id,
+                                  })
+                                }
+                              />
+                            </div>
+                          )}
+
+                          {!isTemp && !estSysteme && !msg.deleted && (
                             <Reactions
                               reactions={msg.reactions}
                               aDroite={aDroite}

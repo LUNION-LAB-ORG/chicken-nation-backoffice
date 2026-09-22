@@ -17,7 +17,9 @@ export * from './queries/index.query';
 export { useConversationListQuery, useConversationListInfiniteQuery, useStatsMessagesQuery } from './queries/conversation-list.query';
 export { useAjouterParticipantsMutation, useRetirerParticipantMutation, useRenommerGroupeMutation, useBasculerAlertesMutation } from './queries/groupe.mutation';
 export { useBasculerReactionMessageMutation, useBasculerReactionTicketMutation } from './queries/reaction.mutation';
+export { useSupprimerMessageMutation, useSupprimerMessageTicketMutation } from './queries/supprimer-message.mutation';
 export { default as Reactions } from './components/Reactions';
+export { default as SupprimerMessage } from './components/SupprimerMessage';
 export { EMOJIS_REACTION } from './constantes/emojis-reaction';
 export { useMessageListQuery } from './queries/message-list.query';
 

@@ -141,6 +141,44 @@ export const useMessagerieSocketSync = ({
       retoucherReactions(ticketKeyQuery('detail', data.ticketId), data.messageId, data.reactions);
     };
 
+    /**
+     * Un message vient d'être RETIRÉ par quelqu'un.
+     *
+     * Le serveur envoie le message déjà nettoyé : on le remplace tel quel, sans
+     * décider soi-même de ce qu'il faut masquer. L'aperçu de la liste montrant
+     * le dernier message, il est invalidé aussi.
+     */
+    const onSupprime = (data: any) => {
+      const convId = data?.conversationId;
+      const msg = data?.message;
+      if (!convId || !msg?.id) return;
+      retoucherReactions(messageKeyQuery(convId), msg.id, msg.reactions ?? []);
+      queryClient.setQueryData(messageKeyQuery(convId), (ancien: any) => {
+        if (!ancien || typeof ancien !== 'object') return ancien;
+        const maj = (liste?: any[]) => liste?.map((m) => (m?.id === msg.id ? { ...m, ...msg } : m));
+        if (Array.isArray(ancien.pages)) {
+          return { ...ancien, pages: ancien.pages.map((p: any) => ({ ...p, data: maj(p?.data) })) };
+        }
+        if (Array.isArray(ancien.data)) return { ...ancien, data: maj(ancien.data) };
+        return ancien;
+      });
+      invalidateConversations();
+    };
+
+    const onSupprimeTicket = (data: any) => {
+      const msg = data?.message;
+      if (!data?.ticketId || !msg?.id) return;
+      queryClient.setQueryData(ticketKeyQuery('detail', data.ticketId), (ancien: any) => {
+        if (!Array.isArray(ancien?.messages)) return ancien;
+        return {
+          ...ancien,
+          messages: ancien.messages.map((m: any) => (m?.id === msg.id ? { ...m, ...msg } : m)),
+        };
+      });
+    };
+
+    socket.on('message:supprime', onSupprime);
+    socket.on('ticket_message:supprime', onSupprimeTicket);
     socket.on('message:reactions', onReactions);
     socket.on('ticket_message:reactions', onReactionsTicket);
     socket.on('new:message', onNewMessage);
@@ -157,6 +195,8 @@ export const useMessagerieSocketSync = ({
       socket.off('conversation:retire', onRetire);
       socket.off('message:reactions', onReactions);
       socket.off('ticket_message:reactions', onReactionsTicket);
+      socket.off('message:supprime', onSupprime);
+      socket.off('ticket_message:supprime', onSupprimeTicket);
       releaseSocket();
     };
   }, [enabled, currentUserId, queryClient, invalidateConversations, invalidateMessages]);
