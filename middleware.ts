@@ -29,7 +29,20 @@ export function middleware(request: NextRequest) {
 
     // ✅ SÉCURITÉ: Vérifier l'expiration du token avec gestion d'erreurs
     try {
-      const payload = JSON.parse(atob(parts[1]));
+      /**
+       * ⚠️ `atob` ne lit PAS le base64url, et un JWT est encodé en base64url.
+       *
+       * Sa partie centrale remplace « + » par « - » et « / » par « _ », deux
+       * caractères que `atob` refuse : il lève, le `catch` juste en dessous
+       * redirige vers l'accueil, et l'utilisateur est déconnecté sans rien
+       * comprendre. Selon le contenu du jeton, cela touche une session sur
+       * plusieurs, ce qui est le pire des cas : intermittent, donc
+       * inexplicable. On rétablit l'alphabet standard et le remplissage avant
+       * de décoder.
+       */
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const rembourre = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const payload = JSON.parse(atob(rembourre));
       if (payload.exp && payload.exp * 1000 < Date.now()) {
         return NextResponse.redirect(new URL('/', request.url));
       }

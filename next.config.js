@@ -9,7 +9,10 @@ const nextConfig = {
 
   // ✅ PERFORMANCE: Optimisations du bundle (temporairement réduites)
   experimental: {
-    serverExternalPackages: ["puppeteer"],
+    // `serverExternalPackages` retiré : la clé était déclarée ICI alors qu'elle
+    // est de premier niveau, donc ignorée depuis toujours — d'où l'avertissement
+    // au démarrage. Et elle ne désignait que `puppeteer`, qui n'était importé
+    // nulle part et vient d'être retiré des dépendances. Rien à déplacer.
     optimizeCss: false,
     optimizePackageImports: ["lucide-react", "date-fns"],
     forceSwcTransforms: false,
@@ -53,10 +56,9 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  eslint: {
-    ignoreDuringBuilds: true,
-    dirs: [],
-  },
+  // La clé `eslint` a disparu en Next 16, en même temps que `next lint` : elle
+  // n'est plus reconnue et le signalait à chaque démarrage. Rien n'est perdu,
+  // le lint ne s'exécute plus au build de toute façon.
   typescript: {
     ignoreBuildErrors: true,
   },

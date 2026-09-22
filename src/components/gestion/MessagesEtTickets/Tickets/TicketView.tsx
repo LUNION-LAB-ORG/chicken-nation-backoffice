@@ -451,8 +451,14 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                       <div className="flex-1">
                         <div className="flex items-center md:space-x-2 space-x-1 mb-1">
                           <span className="md:text-sm text-xs font-medium text-gray-900">
-                            {(msg.authorCustomer as any)?.name
-                              ?? [ (msg.authorCustomer as any)?.first_name, (msg.authorCustomer as any)?.last_name ].filter(Boolean).join(' ')
+                            {/* ⚠️ Le `??` est PARENTHÉSÉ : la grammaire JavaScript
+                                interdit de le mêler à des `||` au même niveau.
+                                Next 15 l'acceptait, Next 16 refuse de compiler.
+                                Le sens est inchangé : le nom du client s'il
+                                existe, sinon son prénom-nom reconstitué ; si le
+                                tout est vide, on descend la chaîne. */}
+                            {((msg.authorCustomer as any)?.name
+                              ?? [ (msg.authorCustomer as any)?.first_name, (msg.authorCustomer as any)?.last_name ].filter(Boolean).join(' '))
                               || [ (msg.authorDeliverer as any)?.first_name, (msg.authorDeliverer as any)?.last_name ].filter(Boolean).join(' ')
                               || ticket.customer?.name
                               || 'Client'}
