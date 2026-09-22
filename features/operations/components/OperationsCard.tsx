@@ -14,6 +14,13 @@ import {
   Zap,
 } from "lucide-react";
 
+import { format } from "date-fns";
+// ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
+import {
+  AVANCE_PREPARATION_MS,
+  estProgrammee,
+  momentSouhaite,
+} from "../../orders/utils/momentSouhaite";
 import { PaymentMethod, type Order } from "../../orders/types/order.types";
 import { useAuthStore } from "../../users/hook/authStore";
 import { UserType } from "../../users/types/user.types";
@@ -133,6 +140,44 @@ export const OperationsCard: React.FC<Props> = ({
               {formatPrix(order.amount)}
             </span>
           </div>
+
+          {/*
+            COMMANDE PROGRAMMÉE : à traiter plus tard.
+            
+            En tête de la rangée, avant le statut, parce que c'est
+            l'information qui décide s'il faut s'en occuper MAINTENANT. Sans
+            elle, une commande attendue pour 20 h se mélangeait aux autres et
+            partait en préparation six heures trop tôt.
+            
+            Le libellé change avec le moment : « Plus tard » tant que la
+            préparation n'est pas ouverte, « À préparer » dès qu'elle l'est.
+          */}
+          {(() => {
+            const moment = momentSouhaite(order.date, order.time);
+            if (!estProgrammee(moment, order.created_at) || !moment) return null;
+            const ouverture = new Date(moment.getTime() - AVANCE_PREPARATION_MS);
+            const plusTard = Date.now() < ouverture.getTime();
+            return (
+              <div className="mb-2">
+                <span
+                  className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg border ${
+                    plusTard
+                      ? "bg-[#FDF3E7] text-[#8A4B00] border-[#F3D5B0]"
+                      : "bg-[#EAF7F0] text-[#1E8E5A] border-[#CDEBD9]"
+                  }`}
+                  title={
+                    plusTard
+                      ? `À traiter plus tard — préparation à partir de ${format(ouverture, "HH'h'mm")}`
+                      : "La préparation peut commencer"
+                  }
+                >
+                  <Clock className="w-3 h-3" />
+                  {plusTard ? "Plus tard · " : "À préparer · "}
+                  {format(moment, "HH'h'mm")}
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Ligne 2 — rangée unique de badges : statut · type · source · warning */}
           <div className="flex items-center gap-1.5 flex-wrap mb-2">

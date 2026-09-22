@@ -201,17 +201,21 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
                       : "border-[#CDEBD9] bg-[#EAF7F0]"
                   }`}
                 >
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-[#8A4B00]">
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide ${
+                      enAttente ? "text-[#8A4B00]" : "text-[#1E8E5A]"
+                    }`}
+                  >
                     <Clock className="h-3.5 w-3.5" />
-                    À récupérer
+                    {enAttente ? "À traiter plus tard" : "À préparer maintenant"}
                   </span>
                   <span className="text-[13px] font-semibold capitalize text-gray-900">
-                    {format(moment, "EEEE dd MMMM · HH'h'mm", { locale: fr })}
+                    Récupération {format(moment, "EEEE dd MMMM 'à' HH'h'mm", { locale: fr })}
                   </span>
                   <span className="text-[11px] text-gray-600">
                     {enAttente
-                      ? `Préparation possible à partir de ${format(ouverture, "HH'h'mm", { locale: fr })}`
-                      : "La préparation peut commencer"}
+                      ? `Ne pas préparer avant ${format(ouverture, "HH'h'mm", { locale: fr })} : le plat attendrait et refroidirait.`
+                      : "L'heure approche, la préparation peut commencer."}
                   </span>
                 </div>
               );
