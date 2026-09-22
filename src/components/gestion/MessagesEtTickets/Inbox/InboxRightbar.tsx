@@ -36,6 +36,7 @@ interface InboxRightbarProps {
   /** Groupe interne : ouvre la gestion de la composition. */
   isGroup?: boolean;
   groupName?: string | null;
+  recoitAlertes?: boolean;
   onQuitteGroupe?: () => void;
 }
 
@@ -49,6 +50,7 @@ function InboxRightbar({
   participants = [],
   isGroup = false,
   groupName,
+  recoitAlertes = false,
   onQuitteGroupe
 }: InboxRightbarProps) {
   const { user } = useAuthStore();
@@ -172,6 +174,7 @@ function InboxRightbar({
               conversationId={conversationId}
               membres={participants}
               nomGroupe={groupName}
+              recoitAlertes={recoitAlertes}
               onQuitte={onQuitteGroupe}
             />
           )}

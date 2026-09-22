@@ -592,6 +592,13 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                  * réception partagée entre caissiers et call center.
                  */
                 const isAgent = !!msg.authorUser;
+                /**
+                 * Message du SYSTÈME : aucun auteur, ni personnel ni client.
+                 * C'est une alerte, elle ne doit ressembler à la bulle de
+                 * personne, et surtout pas emprunter le nom du client par le
+                 * jeu des replis.
+                 */
+                const estSysteme = !msg.authorUser && !msg.authorCustomer;
 
                 /**
                  * ALIGNEMENT, qui est une tout autre question.
@@ -637,7 +644,9 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                   !!msg.body && msg.body.trim().length > 0 && !corpsDeRepli;
                 const isTemp = String(msg.id).startsWith('temp-');
 
-                const authorName = isAgent
+                const authorName = estSysteme
+                  ? 'Système'
+                  : isAgent
                   ? (msg.authorUser?.name || 'Support')
                   : (msg.authorCustomer?.name ||
                       `${msg.authorCustomer?.first_name || ''} ${msg.authorCustomer?.last_name || ''}`.trim() ||
@@ -689,7 +698,12 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                           {/* Bulle */}
                           <div
                             className={`relative rounded-2xl overflow-hidden ${
-                              aDroite
+                              estSysteme
+                                ? // Une alerte ne ressemble à la bulle de personne : ni la
+                                  // couleur du personnel, ni celle du client. Elle se
+                                  // repère d'un coup d'œil en remontant le fil.
+                                  'bg-[#FDF3E7] text-[#8A4B00] border border-[#F3D5B0] rounded-bl-md'
+                                : aDroite
                                 ? 'bg-[#F17922] text-white rounded-br-md'
                                 : 'bg-white text-gray-900 border border-gray-100 shadow-sm rounded-bl-md'
                             } ${isTemp ? 'opacity-70' : ''}`}
@@ -913,6 +927,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
           participants={currentConversation?.users || []}
           isGroup={estGroupe}
           groupName={currentConversation?.subject}
+          recoitAlertes={!!currentConversation?.receivesAlerts}
           onQuitteGroupe={onBack}
         />
       </div>
@@ -930,6 +945,7 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         participants={currentConversation?.users || []}
         isGroup={estGroupe}
         groupName={currentConversation?.subject}
+        recoitAlertes={!!currentConversation?.receivesAlerts}
         onQuitteGroupe={() => {
           setIsMobileRightbarOpen(false);
           onBack?.();

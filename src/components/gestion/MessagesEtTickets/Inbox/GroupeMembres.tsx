@@ -9,6 +9,7 @@ import {
   useAjouterParticipantsMutation,
   useRetirerParticipantMutation,
   useRenommerGroupeMutation,
+  useBasculerAlertesMutation,
 } from '../../../../../features/messagerie';
 import { useCollegues, ROLES_GESTION_GROUPE } from '../../../../../features/messagerie/hooks/use-collegues';
 
@@ -23,6 +24,8 @@ interface GroupeMembresProps {
   conversationId: string;
   membres: Membre[];
   nomGroupe?: string | null;
+  /** Ce groupe reçoit-il déjà les alertes du système ? */
+  recoitAlertes?: boolean;
   /** Prévenir le parent qu'on vient de quitter : la conversation n'est plus à nous. */
   onQuitte?: () => void;
 }
@@ -35,7 +38,7 @@ interface GroupeMembresProps {
  * refuse ce qui doit l'être, on se contente de ne pas proposer ce qui sera
  * refusé.
  */
-function GroupeMembres({ conversationId, membres, nomGroupe, onQuitte }: GroupeMembresProps) {
+function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = false, onQuitte }: GroupeMembresProps) {
   const { user } = useAuthStore();
   const peutGerer = ROLES_GESTION_GROUPE.includes(user?.role ?? '');
 
@@ -53,6 +56,7 @@ function GroupeMembres({ conversationId, membres, nomGroupe, onQuitte }: GroupeM
   const ajouter = useAjouterParticipantsMutation();
   const retirer = useRetirerParticipantMutation();
   const renommer = useRenommerGroupeMutation();
+  const basculerAlertes = useBasculerAlertesMutation();
 
   const confirmerAjout = async () => {
     if (selection.length === 0) return;
@@ -142,6 +146,51 @@ function GroupeMembres({ conversationId, membres, nomGroupe, onQuitte }: GroupeM
           </button>
         )}
       </div>
+
+      {/* Canal d'alertes */}
+      {peutGerer && (
+        <div className="mb-4 rounded-xl bg-gray-50 p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-gray-800">
+                Alertes du système
+              </p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-[#9796A1]">
+                Le système écrit ici quand un paiement est encaissé sans que la
+                commande se confirme, qu&apos;une commande se termine sans être
+                payée ou avec un paiement partiel, ou que les notifications de
+                paiement sont refusées.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await basculerAlertes.mutateAsync({ conversationId, recevoir: !recoitAlertes });
+                  toast.success(
+                    recoitAlertes
+                      ? 'Ce groupe ne recevra plus les alertes'
+                      : 'Ce groupe recevra les alertes du système',
+                  );
+                } catch (e) {
+                  toast.error((e as Error)?.message || "Le réglage n'a pas été enregistré");
+                }
+              }}
+              disabled={basculerAlertes.isPending}
+              aria-label="Recevoir les alertes du système"
+              className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 cursor-pointer ${
+                recoitAlertes ? 'bg-[#F17922]' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  recoitAlertes ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Ajout de membres */}
       {peutGerer && (

@@ -79,6 +79,11 @@ export const conversationAPI = {
   renommerGroupe: (conversationId: string, subject: string): Promise<IConversation> =>
     apiRequest<IConversation>(`${BASE}/${conversationId}/subject`, 'PATCH', { subject }),
 
+  basculerAlertes: (conversationId: string, recevoir: boolean): Promise<IConversation> =>
+    apiRequest<IConversation>(`${BASE}/${conversationId}/alerts`, 'PATCH', {
+      receives_alerts: recevoir,
+    }),
+
   archiver: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/archive`, 'POST'),
 

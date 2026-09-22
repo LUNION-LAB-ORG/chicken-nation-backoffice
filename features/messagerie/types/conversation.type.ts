@@ -74,6 +74,8 @@ export interface IConversation {
    * serveur pour que tous les écrans s'accordent sur la même règle.
    */
   isGroup?: boolean;
+  /** Ce groupe reçoit les alertes du système. */
+  receivesAlerts?: boolean;
 }
 
 export interface IStatsMessages {

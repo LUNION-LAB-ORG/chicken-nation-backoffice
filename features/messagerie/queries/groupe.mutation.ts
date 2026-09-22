@@ -36,6 +36,15 @@ export const useRetirerParticipantMutation = () => {
   });
 };
 
+export const useBasculerAlertesMutation = () => {
+  const invalider = useInvalider();
+  return useMutation({
+    mutationFn: ({ conversationId, recevoir }: { conversationId: string; recevoir: boolean }) =>
+      conversationAPI.basculerAlertes(conversationId, recevoir),
+    onSuccess: invalider,
+  });
+};
+
 export const useRenommerGroupeMutation = () => {
   const invalider = useInvalider();
   return useMutation({

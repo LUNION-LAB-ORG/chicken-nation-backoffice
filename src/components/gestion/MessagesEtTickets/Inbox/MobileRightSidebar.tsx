@@ -26,6 +26,7 @@ interface MobileRightSidebarProps {
   /** Groupe interne : la composition se gère ici aussi, pas seulement en grand écran. */
   isGroup?: boolean;
   groupName?: string | null;
+  recoitAlertes?: boolean;
   onQuitteGroupe?: () => void;
 }
 
@@ -41,6 +42,7 @@ function MobileRightSidebar({
   participants = [],
   isGroup = false,
   groupName,
+  recoitAlertes = false,
   onQuitteGroupe
 }: MobileRightSidebarProps) {
   if (!isOpen || !conversationId) {
@@ -165,6 +167,7 @@ function MobileRightSidebar({
                 conversationId={conversationId}
                 membres={participants}
                 nomGroupe={groupName}
+                recoitAlertes={recoitAlertes}
                 onQuitte={onQuitteGroupe}
               />
             )}
