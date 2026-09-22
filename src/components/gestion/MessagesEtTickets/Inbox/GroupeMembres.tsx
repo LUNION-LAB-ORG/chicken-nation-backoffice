@@ -45,6 +45,14 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
   const [ajoutOuvert, setAjoutOuvert] = useState(false);
   const [selection, setSelection] = useState<string[]>([]);
   const [renommage, setRenommage] = useState<string | null>(null);
+  /**
+   * Retirer quelqu'un, ou partir soi-même, ne doit pas tenir à un clic.
+   * `aConfirmer` porte l'identifiant visé : le bouton demande confirmation
+   * avant d'agir. `enCours` n'immobilise QUE la ligne concernée, et non toutes
+   * les autres comme le faisait un indicateur unique.
+   */
+  const [aConfirmer, setAConfirmer] = useState<string | null>(null);
+  const [enCours, setEnCours] = useState<string | null>(null);
 
   const idsMembres = useMemo(() => membres.map((m) => m.id), [membres]);
   // Chargé seulement quand on ouvre l'ajout : le panneau, lui, est toujours là.
@@ -72,13 +80,23 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
 
   const retirerMembre = async (membre: Membre) => {
     const estMoi = membre.id === user?.id;
+    setEnCours(membre.id);
     try {
       await retirer.mutateAsync({ conversationId, userId: membre.id });
       toast.success(estMoi ? 'Vous avez quitté le groupe' : `${membre.fullName} a été retiré`);
       if (estMoi) onQuitte?.();
     } catch (e) {
       toast.error((e as Error)?.message || "Le retrait n'a pas abouti");
+    } finally {
+      setEnCours(null);
+      setAConfirmer(null);
     }
+  };
+
+  /** Premier clic : demander. Second clic : agir. */
+  const demanderOuRetirer = (membre: Membre) => {
+    if (aConfirmer === membre.id) void retirerMembre(membre);
+    else setAConfirmer(membre.id);
   };
 
   const confirmerRenommage = async () => {
@@ -251,11 +269,20 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
                 <span className="truncate text-[13px] text-gray-700">{membre.fullName}</span>
                 <button
                   type="button"
-                  onClick={() => retirerMembre(membre)}
-                  disabled={retirer.isPending}
-                  className="shrink-0 rounded-lg border border-gray-200 px-2 py-1 text-[11px] font-medium text-[#C0392B] hover:border-[#C0392B]/50 disabled:opacity-50 cursor-pointer"
+                  onClick={() => demanderOuRetirer(membre)}
+                  onBlur={() => setAConfirmer((v) => (v === membre.id ? null : v))}
+                  disabled={enCours === membre.id}
+                  className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] font-medium disabled:opacity-50 cursor-pointer ${
+                    aConfirmer === membre.id
+                      ? 'border-[#C0392B] bg-[#FDECEA] text-[#C0392B]'
+                      : 'border-gray-200 text-[#C0392B] hover:border-[#C0392B]/50'
+                  }`}
                 >
-                  Retirer
+                  {enCours === membre.id
+                    ? 'Retrait…'
+                    : aConfirmer === membre.id
+                      ? 'Confirmer ?'
+                      : 'Retirer'}
                 </button>
               </div>
             ))}
@@ -267,12 +294,18 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
         type="button"
         onClick={() => {
           const moi = membres.find((m) => m.id === user?.id);
-          if (moi) void retirerMembre(moi);
+          if (moi) demanderOuRetirer(moi);
         }}
-        disabled={retirer.isPending || !membres.some((m) => m.id === user?.id)}
+        onBlur={() => setAConfirmer((v) => (v === user?.id ? null : v))}
+        disabled={enCours === user?.id || !membres.some((m) => m.id === user?.id)}
         className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#C0392B] hover:underline disabled:opacity-50 cursor-pointer"
       >
-        <LogOut size={13} /> Quitter le groupe
+        <LogOut size={13} />
+        {enCours === user?.id
+          ? 'Sortie du groupe…'
+          : aConfirmer === user?.id
+            ? 'Confirmer la sortie ?'
+            : 'Quitter le groupe'}
       </button>
     </div>
   );
