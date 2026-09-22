@@ -120,8 +120,17 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
       // ✅ Problème 1 & 3 : Filtrage selon le rôle de l'utilisateur
       if (user?.role === 'ADMIN') {
-        // Admin : voir tous les utilisateurs
-        usersData = await getAllUsers({ type: 'BACKOFFICE' });
+        /**
+         * TOUT le personnel, et non les seuls comptes « backoffice ».
+         *
+         * Le commentaire annonçait déjà « voir tous les utilisateurs » mais le
+         * filtre ne retenait que le siège. Or les agents de terrain, call
+         * center et caissiers compris, sont rattachés à un restaurant : ils
+         * n'apparaissaient pas dans la liste, et un administrateur ne pouvait
+         * donc pas constituer un groupe avec eux, ce qui est précisément
+         * l'usage attendu.
+         */
+        usersData = await getAllUsers();
         // ASSISTANT_MANAGER doit figurer ici : absent de cette liste, il
         // recevait le personnel de TOUT le réseau au lieu de son équipe, alors
         // que le serveur cloisonne désormais les participants par restaurant.
@@ -134,17 +143,38 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
         usersData = await getAllUsers({ type: 'BACKOFFICE' });
       }
 
+      /**
+       * Le RÔLE est affiché en sous-titre et devient cherchable.
+       *
+       * Le sélecteur cherche dans le libellé et dans ce champ : taper « call »
+       * ramène ainsi tous les agents du call center d'un coup, au lieu de les
+       * repérer un par un dans une liste de noms.
+       */
+      const libelleRole: Record<string, string> = {
+        ADMIN: 'Administrateur',
+        MARKETING: 'Agent Marketing',
+        COMPTABLE: 'Agent Comptable',
+        CALL_CENTER: 'Agent Call Center',
+        MANAGER: 'Manager',
+        ASSISTANT_MANAGER: 'Assistant Manager',
+        CAISSIER: 'Agent Caissier',
+        CUISINE: 'Agent Cuisinier',
+      };
+
       const formattedUsers = usersData
         // On ne se propose pas soi-même : se cocher annonçait un groupe et
         // créait un tête-à-tête, le serveur s'excluant du décompte.
         .filter(u => u.entity_status === 'ACTIVE' && u.id !== user?.id)
-        .map(user => ({
-          id: user.id,
-          label: user.fullname || user.email || user.id,
-          email: user.email || undefined,
-          phone: user.phone || undefined,
-          image: user.image || undefined
-        }));
+        .map(u => {
+          const role = libelleRole[u.role ?? ''] ?? u.role ?? '';
+          return {
+            id: u.id,
+            label: u.fullname || u.email || u.id,
+            email: [role, u.email].filter(Boolean).join(' · ') || undefined,
+            phone: u.phone || undefined,
+            image: u.image || undefined,
+          };
+        });
 
       setUsers(formattedUsers);
     } catch (error) {
