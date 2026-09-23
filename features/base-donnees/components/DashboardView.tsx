@@ -35,18 +35,18 @@ export function DashboardView({ restaurantId }: { restaurantId?: string } = {}) 
       {/* KPIs — répartition plateformes */}
       <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
         <GenericStatCard
-          badgeText="Total coordonnées"
+          title="Total coordonnées" badgeText="Total coordonnées"
           badgeColor="#F17922"
           value={f(s.total)}
         />
         <GenericStatCard
-          badgeText="Contacts Glovo"
+          title="Contacts Glovo" badgeText="Contacts Glovo"
           badgeColor="#4285F4"
           value={f(s.platform.glovo)}
           unit={s.total ? `(${Math.round((s.platform.glovo / s.total) * 100)}%)` : ""}
         />
         <GenericStatCard
-          badgeText="Contacts Yango"
+          title="Contacts Yango" badgeText="Contacts Yango"
           badgeColor="#EA4335"
           value={f(s.platform.yango)}
           unit={s.total ? `(${Math.round((s.platform.yango / s.total) * 100)}%)` : ""}
@@ -55,10 +55,10 @@ export function DashboardView({ restaurantId }: { restaurantId?: string } = {}) 
 
       {/* KPIs — qualification & performance */}
       <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-6">
-        <GenericStatCard badgeText="Vérifiés" badgeColor="#7C3AED" value={f(s.funnel.verifies)} />
-        <GenericStatCard badgeText="Inscrits" badgeColor="#16A34A" value={f(s.funnel.inscrits)} />
-        <GenericStatCard badgeText="Taux de conversion" badgeColor="#F17922" value={s.conversion_rate} unit="%" />
-        <GenericStatCard badgeText="CA généré" badgeColor="#16A34A" value={f(s.sales.ca)} unit="FCFA" />
+        <GenericStatCard title="Vérifiés" badgeText="Vérifiés" badgeColor="#7C3AED" value={f(s.funnel.verifies)} />
+        <GenericStatCard title="Inscrits" badgeText="Inscrits" badgeColor="#16A34A" value={f(s.funnel.inscrits)} />
+        <GenericStatCard title="Taux de conversion" badgeText="Taux de conversion" badgeColor="#F17922" value={s.conversion_rate} unit="%" />
+        <GenericStatCard title="CA généré" badgeText="CA généré" badgeColor="#16A34A" value={f(s.sales.ca)} unit="FCFA" />
       </div>
 
       <div className="grid lg:grid-cols-2 grid-cols-1 gap-6">

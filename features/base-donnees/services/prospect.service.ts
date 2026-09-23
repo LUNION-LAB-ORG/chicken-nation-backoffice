@@ -12,7 +12,10 @@ import {
   ProspectDetail,
   ProspectQuery,
   ProspectSettings,
+  ProspectStats,
   ResendCouponResult,
+  ResultatGroupe,
+  SalesFiltres,
   SalesResponse,
   ScanResult,
   SendCouponResult,
@@ -188,6 +191,50 @@ export const resendProspectCoupon = async (id: string) => {
 };
 
 // ============================================================
+// ACTIONS GROUPÉES
+// ============================================================
+
+export const markProspectCallBulk = async (payload: {
+  ids: string[];
+  result: CallResult;
+  note?: string;
+}) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, "/bulk/call");
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as ResultatGroupe;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+export const sendProspectCouponBulk = async (ids: string[]) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, "/bulk/coupon");
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ids }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as ResultatGroupe;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
+// ============================================================
 // PHASE 3 — Analytics
 // ============================================================
 
@@ -221,13 +268,9 @@ export const getProspectCoupons = async (restaurantId?: string) => {
   }
 };
 
-export const getProspectSales = async (restaurantId?: string) => {
+export const getProspectSales = async (filtres: SalesFiltres = {}) => {
   try {
-    const { url, headers } = await prepareRequest(
-      BASE_URL,
-      "/sales",
-      restaurantId ? { restaurantId } : undefined,
-    );
+    const { url, headers } = await prepareRequest(BASE_URL, "/sales", filtres);
     const response = await fetch(url, { method: "GET", headers });
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return (await response.json()) as SalesResponse;

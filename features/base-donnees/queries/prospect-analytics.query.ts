@@ -6,6 +6,7 @@ import {
   getProspectStats,
 } from "../services/prospect.service";
 import { prospectKeyQuery } from "./index.query";
+import { SalesFiltres } from "../types/prospect.types";
 
 export const useProspectStatsQuery = (restaurantId?: string) =>
   useQuery({
@@ -21,9 +22,17 @@ export const useProspectCouponsQuery = (restaurantId?: string) =>
     staleTime: 30 * 1000,
   });
 
-export const useProspectSalesQuery = (restaurantId?: string) =>
+export const useProspectSalesQuery = (filtres: SalesFiltres = {}) =>
   useQuery({
-    queryKey: prospectKeyQuery("sales", restaurantId ?? "all"),
-    queryFn: () => getProspectSales(restaurantId),
+    // Chaque filtre entre dans la clé : sans cela, changer de période
+    // réafficherait le résultat précédent jusqu'au rafraîchissement.
+    queryKey: prospectKeyQuery(
+      "sales",
+      filtres.restaurantId ?? "all",
+      filtres.platform ?? "all",
+      filtres.startDate ?? "",
+      filtres.endDate ?? "",
+    ),
+    queryFn: () => getProspectSales(filtres),
     staleTime: 30 * 1000,
   });

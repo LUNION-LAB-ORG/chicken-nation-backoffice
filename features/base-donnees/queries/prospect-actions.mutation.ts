@@ -3,10 +3,12 @@ import { toast } from "react-hot-toast";
 
 import {
   markProspectCall,
+  markProspectCallBulk,
   resendProspectCoupon,
   sendProspectCoupon,
+  sendProspectCouponBulk,
 } from "../services/prospect.service";
-import { CallResult } from "../types/prospect.types";
+import { CallResult, ResultatGroupe } from "../types/prospect.types";
 import { useInvalidateProspectQuery } from "./index.query";
 
 export const useMarkCallMutation = () => {
@@ -51,6 +53,59 @@ export const useResendCouponMutation = () => {
       } else {
         toast(
           `SMS non envoyé (code ${res.code}) — vérifiez le numéro / Twilio`,
+          { icon: "⚠️", duration: 6000 },
+        );
+      }
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+/**
+ * Résumé lisible d'un lot : ce qui est passé, ce qui ne l'est pas.
+ * Le détail des écartés est rendu par l'écran, une notification ne peut pas
+ * porter vingt lignes.
+ */
+const resumer = (r: ResultatGroupe, verbe: string) => {
+  const pluriel = r.reussis > 1 ? "s" : "";
+  if (r.echecs.length === 0) {
+    return `${r.reussis} contact${pluriel} ${verbe}`;
+  }
+  return `${r.reussis} sur ${r.demandes} ${verbe}, ${r.echecs.length} écarté${
+    r.echecs.length > 1 ? "s" : ""
+  }`;
+};
+
+export const useMarkCallBulkMutation = () => {
+  const invalidate = useInvalidateProspectQuery();
+  return useMutation({
+    mutationFn: (vars: { ids: string[]; result: CallResult; note?: string }) =>
+      markProspectCallBulk(vars),
+    onSuccess: async (res) => {
+      await invalidate();
+      if (res.reussis === 0) toast.error("Aucun contact qualifié");
+      else toast.success(resumer(res, "qualifiés"));
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+export const useSendCouponBulkMutation = () => {
+  const invalidate = useInvalidateProspectQuery();
+  return useMutation({
+    mutationFn: (ids: string[]) => sendProspectCouponBulk(ids),
+    onSuccess: async (res) => {
+      await invalidate();
+      if (res.reussis === 0) {
+        toast.error("Aucun coupon envoyé");
+        return;
+      }
+      toast.success(resumer(res, "servis"));
+      // Le coupon existe, le SMS n'est pas parti : il faut dicter le code au
+      // client. Ça se signale à part, sinon ça passe pour un envoi réussi.
+      if (res.sansSms && res.sansSms > 0) {
+        toast(
+          `${res.sansSms} coupon(s) générés sans SMS, communiquez le code au client`,
           { icon: "⚠️", duration: 6000 },
         );
       }

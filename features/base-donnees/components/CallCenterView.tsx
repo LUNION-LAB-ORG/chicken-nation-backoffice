@@ -203,12 +203,12 @@ export function CallCenterView({ restaurantId }: { restaurantId?: string } = {})
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         <GenericStatCard
-          badgeText={hasDateFilter ? "À appeler (période)" : "À appeler (file J+1)"}
+          title="A appeler" badgeText={hasDateFilter ? "À appeler (période)" : "À appeler (file J+1)"}
           badgeColor="#4285F4"
           value={ind?.toCall ?? 0}
         />
-        <GenericStatCard badgeText="Joints aujourd'hui" badgeColor="#7C3AED" value={ind?.joinedToday ?? 0} />
-        <GenericStatCard badgeText="Coupons envoyés" badgeColor="#F17922" value={ind?.couponsToday ?? 0} />
+        <GenericStatCard title="Joints aujourd'hui" badgeText="Joints aujourd'hui" badgeColor="#7C3AED" value={ind?.joinedToday ?? 0} />
+        <GenericStatCard title="Coupons envoyés" badgeText="Coupons envoyés" badgeColor="#F17922" value={ind?.couponsToday ?? 0} />
       </div>
 
       {isLoading ? (

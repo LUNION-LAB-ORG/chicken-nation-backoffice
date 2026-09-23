@@ -192,9 +192,38 @@ export interface SaleRow {
   date: string | null;
 }
 
+/** Ventilation d'un total, par plateforme ou par mois. */
+export interface VentilationPlateforme {
+  platform: ProspectPlatform;
+  count: number;
+  ca: number;
+}
+
+export interface VentilationMois {
+  /** Clé AAAA-MM. */
+  mois: string;
+  count: number;
+  ca: number;
+}
+
 export interface SalesResponse {
   data: SaleRow[];
   totals: { count: number; ca: number; average: number };
+  parPlateforme: VentilationPlateforme[];
+  parMois: VentilationMois[];
+}
+
+/**
+ * Filtres de l'onglet Ventes.
+ *
+ * ⚠️ `debut` et `fin` bornent la date d'ENCAISSEMENT, pas celle de capture du
+ * contact : c'est la période où l'opération a rapporté qu'on mesure ici.
+ */
+export interface SalesFiltres {
+  restaurantId?: string;
+  platform?: ProspectPlatform;
+  startDate?: string;
+  endDate?: string;
 }
 
 export type ScanEngine = "TESSERACT" | "GEMINI" | "OPENAI" | "ANTHROPIC";
@@ -221,3 +250,25 @@ export interface ScanResult {
 }
 
 export type ExportType = "contacts" | "coupons" | "sales";
+
+/** Un contact écarté par une action groupée, et la raison du refus. */
+export interface EchecGroupe {
+  id: string;
+  nom: string | null;
+  motif: string;
+}
+
+/**
+ * Compte rendu d'une action groupée.
+ *
+ * Une sélection réussit rarement en bloc : un contact pas encore joint, un
+ * autre déjà pourvu d'un coupon. Le serveur traite tout le lot et rend compte
+ * de chacun plutôt que de s'arrêter au premier refus.
+ */
+export interface ResultatGroupe {
+  demandes: number;
+  reussis: number;
+  /** Coupons créés dont le SMS n'est pas parti : le code existe, à dicter. */
+  sansSms?: number;
+  echecs: EchecGroupe[];
+}

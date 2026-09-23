@@ -32,9 +32,9 @@ export function CouponsView({ restaurantId }: { restaurantId?: string } = {}) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
-        <GenericStatCard badgeText="Coupons émis" badgeColor="#F17922" value={rows.length} />
-        <GenericStatCard badgeText="Utilisés" badgeColor="#16A34A" value={used} />
-        <GenericStatCard badgeText="Taux d'utilisation" badgeColor="#4285F4" value={usageRate} unit="%" />
+        <GenericStatCard title="Coupons émis" badgeText="Coupons émis" badgeColor="#F17922" value={rows.length} />
+        <GenericStatCard title="Utilisés" badgeText="Utilisés" badgeColor="#16A34A" value={used} />
+        <GenericStatCard title="Taux d'utilisation" badgeText="Taux d'utilisation" badgeColor="#4285F4" value={usageRate} unit="%" />
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
