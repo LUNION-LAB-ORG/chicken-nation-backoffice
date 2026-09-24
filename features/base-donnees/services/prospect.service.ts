@@ -197,19 +197,6 @@ export const sendProspectCoupon = async (id: string) => {
 };
 
 
-export const sendProspectCoupon = async (id: string) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/coupon`);
-    const response = await fetch(url, { method: "POST", headers, body: "{}" });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as SendCouponResult;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
 
 export const resendProspectCoupon = async (id: string) => {
   try {

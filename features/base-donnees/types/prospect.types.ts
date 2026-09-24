@@ -1,4 +1,4 @@
-export type ProspectPlatform = "GLOVO" | "YANGO";
+export type ProspectPlatform = "GLOVO" | "YANGO" | "APP_ORGANIC";
 
 export type ProspectStatus =
   | "NOUVEAU"
