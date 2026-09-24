@@ -24,7 +24,6 @@ function buildScript(name: string, platform: string) {
   }
   const plat = platform === "GLOVO" ? "Glovo" : "Yango";
   return `« Bonjour ${name}, je suis du service client de Chicken Nation. Vous avez récemment commandé via ${plat}, merci ! Désormais, commandez directement sur notre application : même bon Chicken Nation, livré à moindre coût. Je vous envoie le lien de l'app + un code promo valable 1 semaine. »`;
-}, je suis du service client de Chicken Nation. Vous avez récemment commandé via ${plat}, merci ! Désormais, commandez directement sur notre application : même bon Chicken Nation, livré à moindre coût. Je vous envoie le lien de l'app + un code promo valable 1 semaine. »`;
 }
 
 const RESULT_CLASS: Record<CallResult, string> = {
