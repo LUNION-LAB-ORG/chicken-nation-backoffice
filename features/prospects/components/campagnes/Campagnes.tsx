@@ -22,7 +22,7 @@ export function Campagnes({
   peutAnalyser: boolean;
 }) {
   const moi = useAuthStore((s) => s.user?.id);
-  const { data: campagnes = [], isLoading, isError, error } = useCampagnesQuery();
+  const { data: campagnes = [], isPending, isError, error } = useCampagnesQuery();
   const [vue, setVue] = useState<"liste" | "comparatif">("liste");
   const [ouverteId, setOuverteId] = useState<string | null>(null);
   const [edition, setEdition] = useState<{ campagne: ICampagne | null } | null>(null);
@@ -89,10 +89,10 @@ export function Campagnes({
 
       {vue === "comparatif" ? (
         <Comparatif />
-      ) : isLoading ? (
-        <Chargement />
       ) : isError ? (
         <Erreur message={(error as Error)?.message} />
+      ) : isPending ? (
+        <Chargement />
       ) : campagnes.length === 0 ? (
         <Vide
           Icone={Megaphone}

@@ -27,17 +27,17 @@ export function FicheProspect({
   estGestionnaire: boolean;
 }) {
   const moi = useAuthStore((s) => s.user?.id);
-  const { data: p, isLoading, isError, error } = useProspectFicheQuery(id);
+  const { data: p, isError, error } = useProspectFicheQuery(id);
 
   const pilote = !!p?.campagnes.some((m) => !m.released_at && m.campaign.lead_agent_id === moi);
   const converti = p?.status === "CONVERTI";
 
   return (
     <Modal isOpen={!!id} onClose={onFermer} title="Fiche prospect" size="large">
-      {isLoading ? (
-        <Chargement />
-      ) : isError || !p ? (
+      {isError ? (
         <Erreur message={(error as Error)?.message} />
+      ) : !p ? (
+        <Chargement />
       ) : (
         <div className="space-y-5">
           <FicheEntete p={p} />

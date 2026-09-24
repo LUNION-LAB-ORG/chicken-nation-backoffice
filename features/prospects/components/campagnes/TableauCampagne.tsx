@@ -31,7 +31,7 @@ export function TableauCampagne({
   onModifier: () => void;
   onEquipe: () => void;
 }) {
-  const { data: s, isLoading, isError, error } = useCampagneStatsQuery(c.status === "PLANIFIED" ? null : c.id);
+  const { data: s, isError, error } = useCampagneStatsQuery(c.status === "PLANIFIED" ? null : c.id);
 
   return (
     <div className="space-y-4">
@@ -61,10 +61,10 @@ export function TableauCampagne({
           Le tableau de bord se remplit dès le lancement.
           {c.offer && ` Les coupons proposeront : ${c.offer.label}.`}
         </p>
-      ) : isLoading ? (
-        <Chargement />
-      ) : isError || !s ? (
+      ) : isError ? (
         <Erreur message={(error as Error)?.message} />
+      ) : !s ? (
+        <Chargement />
       ) : (
         <>
           <KpisCampagne s={s} />

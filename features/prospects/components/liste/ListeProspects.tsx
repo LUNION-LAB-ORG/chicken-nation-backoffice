@@ -31,7 +31,7 @@ export function ListeProspects({
 }) {
   const [filtres, setFiltres] = useState<IProspectFiltres>(filtresInitiaux);
   const [selection, setSelection] = useState<Set<string>>(new Set());
-  const { data, isLoading, isError, error, isFetching } = useProspectsQuery(filtres);
+  const { data, isPending, isError, error, isFetching } = useProspectsQuery(filtres);
   const lignes = data?.data ?? [];
 
   const changerFiltres = useCallback((f: IProspectFiltres) => {
@@ -61,9 +61,13 @@ export function ListeProspects({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-gray-600">
-          <span className="font-semibold text-gray-900">{fmtNombre(data?.meta.total ?? 0)}</span> prospect
-          {(data?.meta.total ?? 0) > 1 ? "s" : ""}
-          {isFetching && !isLoading && <span className="text-xs text-gray-400"> · mise à jour…</span>}
+          {data && (
+            <>
+              <span className="font-semibold text-gray-900">{fmtNombre(data.meta.total)}</span> prospect
+              {data.meta.total > 1 ? "s" : ""}
+            </>
+          )}
+          {isFetching && !isPending && <span className="text-xs text-gray-400"> · mise à jour…</span>}
         </p>
         <div className="flex items-center gap-2">
           <select
@@ -82,10 +86,10 @@ export function ListeProspects({
         </div>
       </div>
 
-      {isLoading ? (
-        <Chargement />
-      ) : isError ? (
+      {isError ? (
         <Erreur message={(error as Error)?.message} />
+      ) : isPending ? (
+        <Chargement />
       ) : lignes.length === 0 ? (
         <Vide
           Icone={Users}

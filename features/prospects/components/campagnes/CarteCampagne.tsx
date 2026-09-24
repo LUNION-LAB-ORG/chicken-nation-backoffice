@@ -1,7 +1,7 @@
 import React from "react";
 import { CalendarDays, ChevronRight, UserRound } from "lucide-react";
 import { ICampagne } from "../../types/campagne.type";
-import { fmtDate, fmtNombre } from "../../utils/prospect-ui";
+import { accord, fmtDate, fmtNombre } from "../../utils/prospect-ui";
 import { PuceCampagne } from "../commun/Puces";
 
 function Barre({ valeur, total }: { valeur: number; total: number }) {
@@ -44,9 +44,9 @@ export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => v
         <div className="mt-3 space-y-2">
           <div className="flex justify-between text-xs text-gray-600">
             <span>
-              {fmtNombre(r.traites)} traités sur {fmtNombre(r.cibles)}
+              {fmtNombre(r.traites)} {accord(r.traites, "traité")} sur {fmtNombre(r.cibles)}
             </span>
-            <span className="font-semibold text-emerald-700">{fmtNombre(r.conversions)} conversions</span>
+            <span className="font-semibold text-emerald-700">{fmtNombre(r.conversions)} {accord(r.conversions, "conversion")}</span>
           </div>
           <Barre valeur={r.traites} total={r.cibles} />
         </div>

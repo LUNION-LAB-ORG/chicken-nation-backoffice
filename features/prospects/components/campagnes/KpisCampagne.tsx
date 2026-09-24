@@ -1,7 +1,7 @@
 import React from "react";
 import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
 import { ICampagneStats } from "../../types/campagne.type";
-import { fmtMontant, fmtNombre, fmtPct } from "../../utils/prospect-ui";
+import { accord, fmtMontant, fmtNombre, fmtPct } from "../../utils/prospect-ui";
 
 /** Indicateurs clés d'une campagne (cahier §6.3). */
 export function KpisCampagne({ s }: { s: ICampagneStats }) {
@@ -15,12 +15,12 @@ export function KpisCampagne({ s }: { s: ICampagneStats }) {
       <StatsCard
         title="Ciblés"
         value={fmtNombre(i.cibles)}
-        subtitle={`${fmtNombre(i.restants)} ${s.campagne.status === "COMPLETED" ? "jamais appelés à la clôture" : "restants à appeler"}`}
+        subtitle={`${fmtNombre(i.restants)} ${s.campagne.status === "COMPLETED" ? `${accord(i.restants, "jamais appelé")} à la clôture` : `${accord(i.restants, "restant")} à appeler`}`}
       />
       <StatsCard
         title="Traités"
         value={fmtNombre(i.traites)}
-        subtitle={`Couverture ${fmtPct(i.couverture)}${i.objectif_contacts ? ` · objectif ${fmtNombre(i.objectif_contacts)} traités` : ""}`}
+        subtitle={`Couverture ${fmtPct(i.couverture)}${i.objectif_contacts ? ` · objectif ${fmtNombre(i.objectif_contacts)} ${accord(i.objectif_contacts, "traité")}` : ""}`}
         color="blue"
       />
       <StatsCard title="Joints" value={fmtNombre(i.joints)} subtitle={`Taux de contact ${fmtPct(i.taux_contact)}`} color="purple" />

@@ -3,7 +3,7 @@ import { CalendarRange } from "lucide-react";
 import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartCard";
 import { useCohortesQuery } from "../../queries/analyse.query";
 import { fmtNombre, fmtPct } from "../../utils/prospect-ui";
-import { Chargement } from "../commun/Etats";
+import { EtatRequete } from "../commun/Etats";
 
 const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
 const libelleMois = (m: string) => `${MOIS[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}`;
@@ -17,14 +17,13 @@ const fond = (taux: number, max: number) => `rgba(22, 163, 74, ${max > 0 ? 0.08 
  * inscrits finissent par commander.
  */
 export function Cohortes() {
-  const { data = [], isLoading } = useCohortesQuery();
+  const requete = useCohortesQuery();
+  const data = requete.data ?? [];
   const max = Math.max(0, ...data.map((c) => c.taux));
 
   return (
     <StatsChartCard title="Cohortes par mois d'inscription" subtitle="Tous les clients depuis l'ouverture" icon={CalendarRange}>
-      {isLoading ? (
-        <Chargement />
-      ) : (
+      <EtatRequete requete={requete}>
         <div className="overflow-x-auto -mx-5 max-h-96">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-white">
@@ -53,7 +52,7 @@ export function Cohortes() {
             </tbody>
           </table>
         </div>
-      )}
+      </EtatRequete>
     </StatsChartCard>
   );
 }

@@ -61,6 +61,9 @@ export const fmtNombre = (n: number | null | undefined) => (n == null ? "" : nom
 export const fmtMontant = (n: number | null | undefined) => (n == null ? "" : `${nombre.format(Math.round(n))} F`);
 export const fmtPct = (n: number | null | undefined) => (n == null ? "" : `${String(n).replace(".", ",")} %`);
 
+/** Accord à la française : singulier sous 2 (« 0 prospect », « 1,5 tentative »). */
+export const accord = (n: number, singulier: string, pluriel = `${singulier}s`) => (Math.abs(n) >= 2 ? pluriel : singulier);
+
 export function fmtDate(valeur?: string | null): string {
   if (!valeur) return "";
   return new Date(valeur).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });

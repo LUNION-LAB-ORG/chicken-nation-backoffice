@@ -40,3 +40,21 @@ export function Erreur({ message }: { message?: string }) {
     </div>
   );
 }
+
+interface EtatDeRequete {
+  isPending: boolean;
+  isError: boolean;
+  error: unknown;
+}
+
+/**
+ * Chargement, erreur, puis contenu. Une requête qui échoue ne doit jamais se
+ * faire passer pour une liste vide : on inviterait à recréer ce qui existe.
+ * `isPending` plutôt que `isLoading` : onglet en arrière-plan, TanStack met
+ * les nouvelles tentatives en pause et `isLoading` repasse à faux sans données.
+ */
+export function EtatRequete({ requete, children }: { requete: EtatDeRequete; children: React.ReactNode }) {
+  if (requete.isError) return <Erreur message={(requete.error as Error)?.message} />;
+  if (requete.isPending) return <Chargement />;
+  return <>{children}</>;
+}

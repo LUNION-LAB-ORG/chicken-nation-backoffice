@@ -45,7 +45,7 @@ export function TableauDeBord({ onOuvrir }: { onOuvrir: (id: string) => void }) 
         </div>
       </div>
 
-      {vue.isLoading ? <Chargement /> : vue.isError || !vue.data ? <Erreur message={(vue.error as Error)?.message} /> : <KpisGlobaux v={vue.data} />}
+      {vue.isError ? <Erreur message={(vue.error as Error)?.message} /> : !vue.data ? <Chargement /> : <KpisGlobaux v={vue.data} />}
 
       <div className="grid gap-4 xl:grid-cols-2">
         {vue.data && <Entonnoir etapes={vue.data.entonnoir} />}

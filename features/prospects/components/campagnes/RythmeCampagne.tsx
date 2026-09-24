@@ -5,13 +5,14 @@ import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartC
 import ChartTooltip from "@/components/gestion/Statistiques/shared/ChartTooltip";
 import { AXIS_STYLE, CHART_COLORS, GRID_STYLE } from "../../../statistics/utils/chart-config";
 import { ICampagneStats } from "../../types/campagne.type";
+import { accord } from "../../utils/prospect-ui";
 
 const court = (jour: string) => jour.slice(8, 10) + "/" + jour.slice(5, 7);
 
 /** Rythme quotidien réalisé contre objectif, en cumulé (cahier §6.3). */
 export function RythmeCampagne({ rythme }: { rythme: ICampagneStats["rythme"] }) {
   const sousTitre = rythme.objectif_jour
-    ? `Objectif : ${String(rythme.objectif_jour).replace(".", ",")} prospects traités par jour`
+    ? `Objectif : ${String(rythme.objectif_jour).replace(".", ",")} ${accord(rythme.objectif_jour, "prospect traité", "prospects traités")} par jour`
     : "Aucun objectif de volume n'a été fixé";
 
   return (

@@ -6,15 +6,16 @@ import ChartTooltip from "@/components/gestion/Statistiques/shared/ChartTooltip"
 import { AXIS_STYLE, CHART_COLORS, GRID_STYLE } from "../../../statistics/utils/chart-config";
 import { useComparatifQuery } from "../../queries/campagne.query";
 import { fmtDate, fmtMontant, fmtNombre, fmtPct } from "../../utils/prospect-ui";
-import { Chargement, Vide } from "../commun/Etats";
+import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { PuceCampagne } from "../commun/Puces";
 
 const COLONNES = ["Campagne", "Ciblés", "Couverture", "Contact", "Coupons utilisés", "Conversions", "CA", "Durée"];
 
 /** Historique et benchmark de toutes les campagnes lancées (cahier §6.3 et §7). */
 export function Comparatif() {
-  const { data = [], isLoading } = useComparatifQuery(true);
-  if (isLoading) return <Chargement />;
+  const { data = [], isPending, isError, error } = useComparatifQuery(true);
+  if (isError) return <Erreur message={(error as Error)?.message} />;
+  if (isPending) return <Chargement />;
   if (data.length === 0) return <Vide titre="Aucune campagne lancée" texte="Le comparatif apparaît après le premier lancement." />;
 
   const graphe = data.map((c) => ({ nom: c.name, conversion: c.indicateurs.taux_conversion, couverture: c.indicateurs.couverture }));

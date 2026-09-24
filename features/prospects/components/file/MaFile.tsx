@@ -19,10 +19,10 @@ function Indicateur({ label, valeur, large }: { label: string; valeur: number; l
  * commande en disparaît aussitôt (temps réel), inutile de l'appeler.
  */
 export function MaFile({ onOuvrir }: { onOuvrir: (id: string) => void }) {
-  const { data, isLoading, isError, error } = useMaFileQuery();
+  const { data, isError, error } = useMaFileQuery();
 
-  if (isLoading) return <Chargement texte="Chargement de votre file…" />;
-  if (isError || !data) return <Erreur message={(error as Error)?.message} />;
+  if (isError) return <Erreur message={(error as Error)?.message} />;
+  if (!data) return <Chargement texte="Chargement de votre file…" />;
 
   const i = data.indicateurs;
   const vide = ["rappels", "interesses", "nouveaux", "relances", "coupons"].every(
