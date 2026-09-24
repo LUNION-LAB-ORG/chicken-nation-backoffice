@@ -151,6 +151,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       return;
     }
 
+    // Module Prospects (prospects non appelés, campagne terminée)
+    if (data?.kind === "conversion") {
+      setActiveTab("prospects");
+      return;
+    }
+
     // Sinon, comportement existant : ouvrir le détail de la notification.
     setSelectedNotification(notification);
     setIsModalOpen(true);

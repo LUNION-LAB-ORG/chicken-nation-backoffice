@@ -37,6 +37,7 @@ import {
   ShieldCheck,
   ListChecks,
   ScrollText,
+  Target,
 } from "lucide-react";
 
 import { useAuthStore } from "../../features/users/hook/authStore";
@@ -90,7 +91,8 @@ export const useGetMenuConfig = (): {
       id: "base_donnees",
       label: "Base de Données",
       icon: Database,
-      canAccess: () => can(Modules.CLIENTS, Action.READ),
+      // Prospects aussi : un profil de lecture seule peut n'avoir que ce module.
+      canAccess: () => can(Modules.CLIENTS, Action.READ) || can(Modules.PROSPECTS, Action.READ),
       items: [
         {
           id: "base_donnees-clients",
@@ -115,6 +117,12 @@ export const useGetMenuConfig = (): {
           label: "Acquisition Glovo/Yango",
           icon: UserPlus,
           canAccess: () => can(Modules.BASE_DONNEES, Action.READ),
+        },
+        {
+          id: "base_donnees-prospects",
+          label: "Prospects",
+          icon: Target,
+          canAccess: () => can(Modules.PROSPECTS, Action.READ),
         },
       ],
     },

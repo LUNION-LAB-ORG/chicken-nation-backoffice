@@ -143,6 +143,10 @@ const modulesMap: Record<string, any> = {
   acquisition: dynamic(() => import("@/components/gestion/BaseDonnees"), {
     loading: () => <LoadingSpinner />,
   }),
+  // ---- Prospects : inscrits qui n'ont jamais commandé ----
+  prospects: dynamic(() => import("@/components/gestion/Prospects"), {
+    loading: () => <LoadingSpinner />,
+  }),
 
   // ---- Audits (admin) ----
   audit_actions: dynamic(() => import("@/components/gestion/Audit/Actions"), {

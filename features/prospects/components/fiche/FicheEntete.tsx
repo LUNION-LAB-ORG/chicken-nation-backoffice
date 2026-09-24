@@ -1,0 +1,69 @@
+import React from "react";
+import { CreditCard, Mail, MessageCircle, Phone } from "lucide-react";
+import { IProspectFiche } from "../../types/prospect.type";
+import { depuis, fmtDate, fmtTelephone, lienAppel } from "../../utils/prospect-ui";
+import { PuceStatut } from "../commun/Puces";
+
+function Info({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">{label}</p>
+      <div className="text-sm text-gray-800 mt-0.5">{children}</div>
+    </div>
+  );
+}
+
+/** Identité et signaux utiles avant de décrocher (cahier §4.1). */
+export function FicheEntete({ p }: { p: IProspectFiche }) {
+  const c = p.customer;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">{p.nom}</h2>
+          <p className="text-sm text-gray-500">Inscrit le {fmtDate(p.registered_at)} ({depuis(p.registered_at)})</p>
+        </div>
+        <PuceStatut statut={p.status} />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <a
+          href={lienAppel(c.phone)}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15]"
+        >
+          <Phone className="w-4 h-4" /> {fmtTelephone(c.phone)}
+        </a>
+        {c.email && (
+          <a
+            href={`mailto:${c.email}`}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+          >
+            <Mail className="w-4 h-4" /> {c.email}
+          </a>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 rounded-xl p-4">
+        <Info label="Dernière connexion">{c.last_login_at ? depuis(c.last_login_at) : "Jamais connecté"}</Info>
+        <Info label="Tentatives d'appel">{p.call_count}</Info>
+        <Info label="WhatsApp">
+          <span className="inline-flex items-center gap-1">
+            <MessageCircle className="w-3.5 h-3.5 text-gray-400" />
+            {c.whatsapp_opt_in ? "Accepté" : "Non renseigné"}
+          </span>
+        </Info>
+        <Info label="Agent">{p.assigned_to?.fullname ?? "Sans agent"}</Info>
+      </div>
+
+      {p.abandoned_orders > 0 && (
+        <div className="flex items-start gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+          <CreditCard className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>
+            A tenté de payer en ligne {p.abandoned_orders} fois sans aboutir. Le blocage est peut-être le paiement :
+            proposez-lui de l&apos;aider, ou le paiement à la livraison.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -141,23 +141,6 @@ export const getCallQueue = async (
   }
 };
 
-// ============================================================
-// PHASE 2 — Call Center (Agent Queue)
-// ============================================================
-
-export const getAgentQueue = async (status?: string) => {
-  try {
-    const { url, headers } = await prepareRequest('/campaigns/prospects', `/my-queue`, status ? { status } : undefined);
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return (await response.json());
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
 export const markProspectCall = async (
   id: string,
   payload: { result: CallResult; note?: string },

@@ -23,6 +23,8 @@ export type TabKey =
   | 'planning_livreurs'
   // Acquisition Glovo/Yango (module Base de Données)
   | 'acquisition'
+  // Prospects : inscrits qui n'ont jamais commandé (module Base de Données)
+  | 'prospects'
   // Audits (admin) : actions du personnel + logs techniques
   | 'audit_actions' | 'audit_logs'
   // Paramètres
@@ -96,6 +98,8 @@ export interface DashboardState {
   planning_livreurs: SectionState;
   // Acquisition Glovo/Yango
   acquisition: SectionState;
+  // Prospects (conversion des inscrits sans commande)
+  prospects: SectionState;
   // Audits
   audit_actions: SectionState;
   audit_logs: SectionState;
@@ -142,6 +146,8 @@ const SECTION_KEYS: TabKey[] = [
   'planning_livreurs',
   // Acquisition Glovo/Yango
   'acquisition',
+  // Prospects
+  'prospects',
   // Audits
   'audit_actions', 'audit_logs',
 ];
@@ -195,6 +201,8 @@ export const useDashboardStore = create<DashboardState>()(
       planning_livreurs: createInitialSectionState(),
       // Acquisition Glovo/Yango
       acquisition: createInitialSectionState(),
+      // Prospects
+      prospects: createInitialSectionState(),
       // Audits
       audit_actions: createInitialSectionState(),
       audit_logs: createInitialSectionState(),
