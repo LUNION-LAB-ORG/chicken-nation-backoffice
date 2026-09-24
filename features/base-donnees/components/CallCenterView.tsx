@@ -19,8 +19,12 @@ import { PLATFORM_META } from "../utils/prospect-ui";
 import { CouponSentModal } from "./CouponSentModal";
 
 function buildScript(name: string, platform: string) {
+  if (platform === "APP_ORGANIC") {
+    return `« Bonjour ${name}, je suis du service client de Chicken Nation. Nous avons remarqué que vous avez récemment créé un compte sur notre application, bienvenue ! Avez-vous besoin d'aide pour passer votre première commande ? Je vous envoie un code promo valable 1 semaine pour vous souhaiter la bienvenue. »`;
+  }
   const plat = platform === "GLOVO" ? "Glovo" : "Yango";
   return `« Bonjour ${name}, je suis du service client de Chicken Nation. Vous avez récemment commandé via ${plat}, merci ! Désormais, commandez directement sur notre application : même bon Chicken Nation, livré à moindre coût. Je vous envoie le lien de l'app + un code promo valable 1 semaine. »`;
+}, je suis du service client de Chicken Nation. Vous avez récemment commandé via ${plat}, merci ! Désormais, commandez directement sur notre application : même bon Chicken Nation, livré à moindre coût. Je vous envoie le lien de l'app + un code promo valable 1 semaine. »`;
 }
 
 const RESULT_CLASS: Record<CallResult, string> = {

@@ -20,6 +20,7 @@ export const PLATFORM_META: Record<
 > = {
   GLOVO: { label: "Glovo", emoji: "🛵", className: "bg-[#FFC244] text-[#7a5a00]" },
   YANGO: { label: "Yango", emoji: "🚕", className: "bg-[#FFE9E7] text-[#FF3B30]" },
+  APP_ORGANIC: { label: "Organique", emoji: "📱", className: "bg-[#DCFCE7] text-[#166534]" },
 };
 
 export const PROSPECT_STATUSES: ProspectStatus[] = [
