@@ -24,7 +24,7 @@ export type TabKey =
   // Acquisition Glovo/Yango (module Base de Données)
   | 'acquisition'
   // Prospects : inscrits qui n'ont jamais commandé (module Base de Données)
-  | 'prospects'
+  | 'crm'
   // Audits (admin) : actions du personnel + logs techniques
   | 'audit_actions' | 'audit_logs'
   // Paramètres
@@ -53,6 +53,8 @@ export interface DashboardState {
   pendingConversationId: string | null;
   // Ticket à ouvrir (escalade, notification, lien partagé). Même mécanique.
   pendingTicketId: string | null;
+  // Public du CRM à afficher à l'ouverture (bouton « Rappeler » des statistiques).
+  pendingCrmSegment: 'INACTIF' | 'JAMAIS_COMMANDE' | null;
   // Dernière conversation et dernier ticket consultés : conservés pour
   // retrouver son écran en revenant d'un autre module (avant, tout
   // repartait de l'écran vide « Sélectionnez une conversation »).
@@ -99,7 +101,7 @@ export interface DashboardState {
   // Acquisition Glovo/Yango
   acquisition: SectionState;
   // Prospects (conversion des inscrits sans commande)
-  prospects: SectionState;
+  crm: SectionState;
   // Audits
   audit_actions: SectionState;
   audit_logs: SectionState;
@@ -108,6 +110,8 @@ export interface DashboardState {
   setActiveTab: (tab: TabKey) => void;
   openTicket: (ticketId: string) => void;
   clearPendingTicket: () => void;
+  openCrm: (segment: 'INACTIF' | 'JAMAIS_COMMANDE') => void;
+  clearPendingCrm: () => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string) => void;
@@ -147,7 +151,7 @@ const SECTION_KEYS: TabKey[] = [
   // Acquisition Glovo/Yango
   'acquisition',
   // Prospects
-  'prospects',
+  'crm',
   // Audits
   'audit_actions', 'audit_logs',
 ];
@@ -159,6 +163,7 @@ export const useDashboardStore = create<DashboardState>()(
       // État Initial
       activeTab: null,
       pendingConversationId: null,
+      pendingCrmSegment: null,
       pendingTicketId: null,
       lastConversationId: null,
       lastTicketId: null,
@@ -202,7 +207,7 @@ export const useDashboardStore = create<DashboardState>()(
       // Acquisition Glovo/Yango
       acquisition: createInitialSectionState(),
       // Prospects
-      prospects: createInitialSectionState(),
+      crm: createInitialSectionState(),
       // Audits
       audit_actions: createInitialSectionState(),
       audit_logs: createInitialSectionState(),
@@ -226,6 +231,14 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       clearPendingTicket: () => set((state) => {
         state.pendingTicketId = null;
+      }),
+      // Ouvre le CRM sur la liste d'un public (ex. les clients inactifs).
+      openCrm: (segment) => set((state) => {
+        state.activeTab = 'crm';
+        state.pendingCrmSegment = segment;
+      }),
+      clearPendingCrm: () => set((state) => {
+        state.pendingCrmSegment = null;
       }),
       setLastConversation: (id) => set((state) => {
         state.lastConversationId = id;

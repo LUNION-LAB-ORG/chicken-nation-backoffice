@@ -137,7 +137,7 @@ const ACQUISITION_COLORS = {
 } as const;
 
 export default function StatsClients() {
-  const { selectedRestaurantId, setActiveTab } = useDashboardStore();
+  const { selectedRestaurantId, openCrm } = useDashboardStore();
   const [filters, setFilters] = useState<StatsFilters>({
     ...DEFAULT_STATS_FILTERS,
     restaurantId: selectedRestaurantId ?? undefined,
@@ -1492,7 +1492,7 @@ export default function StatsClients() {
                   action: (
                     <button
                       onClick={() => {
-                        setActiveTab("stats_retention_callbacks" as any);
+                        openCrm("INACTIF");
                       }}
                       className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium text-[#F17922] bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors whitespace-nowrap"
                     >

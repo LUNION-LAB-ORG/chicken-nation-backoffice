@@ -124,10 +124,11 @@ const modulesMap: Record<string, any> = {
     () => import("@/components/gestion/Statistiques/StatsMarketing"),
     { loading: () => <LoadingSpinner /> }
   ),
-  stats_retention_callbacks: dynamic(
-    () => import("@/components/gestion/Statistiques/StatsRetentionCallbacks"),
-    { loading: () => <LoadingSpinner /> }
-  ),
+  // L'ancienne « Rétention clients » vit désormais dans le CRM : un onglet
+  // mémorisé ou un ancien lien y mène.
+  stats_retention_callbacks: dynamic(() => import("@/components/gestion/Crm"), {
+    loading: () => <LoadingSpinner />,
+  }),
 
   // ---- Notifications ----
   notifications: dynamic(() => import("@/components/gestion/Notifications"), {
@@ -143,8 +144,8 @@ const modulesMap: Record<string, any> = {
   acquisition: dynamic(() => import("@/components/gestion/BaseDonnees"), {
     loading: () => <LoadingSpinner />,
   }),
-  // ---- Prospects : inscrits qui n'ont jamais commandé ----
-  prospects: dynamic(() => import("@/components/gestion/Prospects"), {
+  // ---- CRM : inscrits sans commande et clients inactifs ----
+  crm: dynamic(() => import("@/components/gestion/Crm"), {
     loading: () => <LoadingSpinner />,
   }),
 

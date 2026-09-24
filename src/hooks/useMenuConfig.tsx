@@ -91,8 +91,8 @@ export const useGetMenuConfig = (): {
       id: "base_donnees",
       label: "Base de Données",
       icon: Database,
-      // Prospects aussi : un profil de lecture seule peut n'avoir que ce module.
-      canAccess: () => can(Modules.CLIENTS, Action.READ) || can(Modules.PROSPECTS, Action.READ),
+      // Le CRM aussi : un profil de consultation peut n'avoir que ce module.
+      canAccess: () => can(Modules.CLIENTS, Action.READ) || can(Modules.CRM, Action.READ),
       items: [
         {
           id: "base_donnees-clients",
@@ -107,22 +107,17 @@ export const useGetMenuConfig = (): {
           canAccess: () => can(Modules.COMMENTAIRES, Action.READ),
         },
         {
-          id: "base_donnees-stats_retention_callbacks",
-          label: "Rétention clients",
-          icon: Phone,
-          canAccess: () => can(Modules.CLIENTS, Action.READ),
-        },
-        {
           id: "base_donnees-acquisition",
           label: "Acquisition Glovo/Yango",
           icon: UserPlus,
           canAccess: () => can(Modules.BASE_DONNEES, Action.READ),
         },
         {
-          id: "base_donnees-prospects",
-          label: "Prospects",
+          // Inscrits sans commande et clients inactifs (l'ancienne « Rétention clients »).
+          id: "base_donnees-crm",
+          label: "CRM",
           icon: Target,
-          canAccess: () => can(Modules.PROSPECTS, Action.READ),
+          canAccess: () => can(Modules.CRM, Action.READ),
         },
       ],
     },

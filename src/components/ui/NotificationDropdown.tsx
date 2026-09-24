@@ -151,9 +151,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       return;
     }
 
-    // Module Prospects (prospects non appelés, campagne terminée)
-    if (data?.kind === "conversion") {
-      setActiveTab("prospects");
+    // CRM (contacts non appelés, campagne terminée)
+    if (data?.kind === "crm") {
+      setActiveTab("crm");
       return;
     }
 
