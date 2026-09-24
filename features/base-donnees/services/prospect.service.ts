@@ -163,14 +163,11 @@ export const markProspectCall = async (
   payload: { result: CallResult; note?: string },
 ) => {
   try {
-    const { url, headers } = await prepareRequest('/campaigns/prospects', `/${id}/call-status`);
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/call`);
     const response = await fetch(url, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({
-        status: payload.result,
-        comment: payload.note
-      }),
+      body: JSON.stringify(payload),
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -184,7 +181,7 @@ export const markProspectCall = async (
 
 export const sendProspectCoupon = async (id: string) => {
   try {
-    const { url, headers } = await prepareRequest('/campaigns/prospects', `/${id}/trigger-whatsapp`);
+    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/coupon`);
     const response = await fetch(url, { method: "POST", headers, body: "{}" });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -195,8 +192,6 @@ export const sendProspectCoupon = async (id: string) => {
     throw new Error((error as Error).message);
   }
 };
-
-
 
 export const resendProspectCoupon = async (id: string) => {
   try {
