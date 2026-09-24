@@ -1,6 +1,7 @@
 import React from "react";
 import { IContactFiltres } from "../../types/contact.type";
 import { useRaisonsQuery, useStatutsAppelQuery } from "../../queries/reglage.query";
+import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
 import { ChampSelect, ChampTexte } from "../commun/Champs";
 
 const TRIS = [
@@ -37,6 +38,8 @@ export function FiltresAvances({
 }) {
   const { data: raisons = [] } = useRaisonsQuery();
   const { data: statuts = [] } = useStatutsAppelQuery();
+  const { data: restaurants } = useRestaurantListQuery({ limit: 100 });
+  const listeRestaurants = ((restaurants?.data ?? []) as { id: string; name: string }[]).map((r) => ({ value: r.id, label: r.name }));
 
   return (
     <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-gray-100 pt-3">
@@ -75,6 +78,17 @@ export function FiltresAvances({
       <div className="grid grid-cols-2 gap-2">
         <ChampTexte label="Inscrit du" type="date" valeur={filtres.registered_from ?? ""} onChange={(v) => onChange({ registered_from: v || undefined })} />
         <ChampTexte label="au" type="date" valeur={filtres.registered_to ?? ""} onChange={(v) => onChange({ registered_to: v || undefined })} />
+      </div>
+      <ChampSelect
+        label="Capté au restaurant"
+        valeur={filtres.restaurant_id ?? ""}
+        onChange={(v) => onChange({ restaurant_id: v || undefined })}
+        vide="Tous"
+        options={listeRestaurants}
+      />
+      <div className="grid grid-cols-2 gap-2">
+        <ChampTexte label="Capté du" type="date" valeur={filtres.captured_from ?? ""} onChange={(v) => onChange({ captured_from: v || undefined })} />
+        <ChampTexte label="au" type="date" valeur={filtres.captured_to ?? ""} onChange={(v) => onChange({ captured_to: v || undefined })} />
       </div>
       <div className="grid grid-cols-2 gap-2">
         <ChampTexte label="Dernier appel du" type="date" valeur={filtres.last_call_from ?? ""} onChange={(v) => onChange({ last_call_from: v || undefined })} />

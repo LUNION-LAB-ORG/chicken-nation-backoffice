@@ -8,7 +8,7 @@ export interface Onglet<K extends string> {
   badge?: number;
 }
 
-/** Onglets du module, identiques à ceux de l'acquisition Glovo/Yango. */
+/** Onglets du module CRM. */
 export function Onglets<K extends string>({
   onglets,
   actif,

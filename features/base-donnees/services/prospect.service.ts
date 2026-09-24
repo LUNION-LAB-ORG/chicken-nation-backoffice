@@ -1,25 +1,12 @@
 import { getHumanReadableError } from "@/utils/errorMessages";
 import { getAuthToken } from "@/utils/authUtils";
-import { PaginatedResponse } from "../../../types";
-import {
-  CallQueueResponse,
-  CallResult,
-  CheckPhoneResult,
-  CouponRow,
-  CreateProspectPayload,
-  ExportType,
-  Prospect,
-  ProspectDetail,
-  ProspectQuery,
-  ProspectSettings,
-  ProspectStats,
-  ResendCouponResult,
-  ResultatGroupe,
-  SalesFiltres,
-  SalesResponse,
-  ScanResult,
-  SendCouponResult,
-} from "../types/prospect.types";
+import { CheckPhoneResult, CreateProspectPayload, Prospect, ProspectSettings, ScanResult } from "../types/prospect.types";
+
+/**
+ * Capture des clients Glovo/Yango (caisse, barre mobile, page Commandes) et
+ * réglages du scan. Le suivi de ces clients (appels, coupons, ventes) vit
+ * dans le CRM.
+ */
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
 const BASE_URL = API_URL + "/prospects";
@@ -56,19 +43,6 @@ const prepareRequest = async <T>(
   };
 };
 
-export const getAllProspects = async (query?: ProspectQuery) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/", query);
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as PaginatedResponse<Prospect>;
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
 export const createProspect = async (payload: CreateProspectPayload) => {
   try {
     const { url, headers } = await prepareRequest(BASE_URL, "/");
@@ -103,186 +77,7 @@ export const checkProspectPhone = async (phone: string) => {
   }
 };
 
-// ============================================================
-// PHASE 2 — Call Center
-// ============================================================
-
-export const getProspectDetail = async (id: string) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}`);
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as ProspectDetail;
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
-export const getCallQueue = async (
-  restaurantId?: string,
-  startDate?: string,
-  endDate?: string,
-) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/call-queue", {
-      ...(restaurantId ? { restaurantId } : {}),
-      ...(startDate ? { startDate } : {}),
-      ...(endDate ? { endDate } : {}),
-    });
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as CallQueueResponse;
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
-export const markProspectCall = async (
-  id: string,
-  payload: { result: CallResult; note?: string },
-) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/call`);
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as Prospect;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-export const sendProspectCoupon = async (id: string) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/coupon`);
-    const response = await fetch(url, { method: "POST", headers, body: "{}" });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as SendCouponResult;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-export const resendProspectCoupon = async (id: string) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/coupon/resend`);
-    const response = await fetch(url, { method: "POST", headers, body: "{}" });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as ResendCouponResult;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-// ============================================================
-// ACTIONS GROUPÉES
-// ============================================================
-
-export const markProspectCallBulk = async (payload: {
-  ids: string[];
-  result: CallResult;
-  note?: string;
-}) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/bulk/call");
-    const response = await fetch(url, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(payload),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as ResultatGroupe;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-export const sendProspectCouponBulk = async (ids: string[]) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/bulk/coupon");
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ ids }),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP error! status: ${response.status}`);
-    }
-    return (await response.json()) as ResultatGroupe;
-  } catch (error) {
-    throw new Error((error as Error).message);
-  }
-};
-
-// ============================================================
-// PHASE 3 — Analytics
-// ============================================================
-
-export const getProspectStats = async (restaurantId?: string) => {
-  try {
-    const { url, headers } = await prepareRequest(
-      BASE_URL,
-      "/stats",
-      restaurantId ? { restaurantId } : undefined,
-    );
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return (await response.json()) as ProspectStats;
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
-export const getProspectCoupons = async (restaurantId?: string) => {
-  try {
-    const { url, headers } = await prepareRequest(
-      BASE_URL,
-      "/coupons",
-      restaurantId ? { restaurantId } : undefined,
-    );
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return (await response.json()) as CouponRow[];
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
-export const getProspectSales = async (filtres: SalesFiltres = {}) => {
-  try {
-    const { url, headers } = await prepareRequest(BASE_URL, "/sales", filtres);
-    const response = await fetch(url, { method: "GET", headers });
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return (await response.json()) as SalesResponse;
-  } catch (error) {
-    throw new Error(getHumanReadableError(error));
-  }
-};
-
-// ============================================================
-// PHASE 4 — Réglages & exports
-// ============================================================
-
+// Réglages du moteur de scan (la remise et les messages sont dans les Réglages du CRM)
 export const getProspectSettings = async () => {
   try {
     const { url, headers } = await prepareRequest(BASE_URL, "/settings");
@@ -333,36 +128,4 @@ export const scanProspectOrder = async (file: File) => {
     throw new Error(err.message || `HTTP error! status: ${response.status}`);
   }
   return (await response.json()) as ScanResult;
-};
-
-/**
- * Télécharge un CSV (contacts | coupons | sales).
- *
- * ⚠️ Les filtres de l'écran sont transmis. Seul le restaurant l'était : demander
- * les contacts GLOVO rendait un fichier plein de contacts Yango.
- */
-export const exportProspectsCsv = async (
-  type: ExportType,
-  filtres: Record<string, string | undefined> = {},
-) => {
-  const nettoyes = Object.fromEntries(
-    Object.entries(filtres).filter(([, v]) => v !== undefined && v !== ""),
-  ) as Record<string, string>;
-  const { url, headers } = await prepareRequest(BASE_URL, "/export", {
-    type,
-    ...nettoyes,
-  });
-  const response = await fetch(url, { method: "GET", headers });
-  if (!response.ok) {
-    throw new Error(`Export impossible (HTTP ${response.status})`);
-  }
-  const blob = await response.blob();
-  const href = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = href;
-  a.download = `prospects-${type}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(href);
 };

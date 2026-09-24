@@ -194,6 +194,18 @@ export async function apiRequest<T>(
       } catch {
         errorMessage = 'Requête invalide (400)';
       }
+    } else if (response.status === 409 || response.status === 403) {
+      // Conflit ou refus métier (« Déjà pris par … », « Ce client est suivi par
+      // un collègue ») : le message du serveur est écrit pour l'utilisateur.
+      // Le refus générique des gardes (« Forbidden resource ») reste masqué.
+      const parDefaut = response.status === 409 ? 'Action impossible : la donnée a changé entre-temps.' : 'Accès non autorisé.';
+      try {
+        const errorData = JSON.parse(await response.text());
+        const message = typeof errorData.message === 'string' ? errorData.message : '';
+        errorMessage = message && message !== 'Forbidden resource' ? message : parDefaut;
+      } catch {
+        errorMessage = parDefaut;
+      }
     } else {
       switch (response.status) {
         case 401:
@@ -218,7 +230,8 @@ export async function apiRequest<T>(
       }
     }
 
-    throw new Error(errorMessage);
+    // Le statut accompagne le message : un écran peut réagir à un conflit (409) sans lire le texte.
+    throw Object.assign(new Error(errorMessage), { status: response.status });
   } catch (error) {
     // Gérer les erreurs de réseau ou autres
     if (error instanceof Error) {

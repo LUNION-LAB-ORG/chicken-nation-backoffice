@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BarChart3, Headset, Megaphone, Settings, Ticket, Users } from "lucide-react";
+import { BarChart3, Headset, Megaphone, Receipt, Settings, Ticket, Users } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -15,22 +15,24 @@ import { IContactFiltres } from "../../../../features/crm/types/contact.type";
 import { Onglet, Onglets } from "../../../../features/crm/components/commun/Onglets";
 import { TableauDeBord } from "../../../../features/crm/components/analyse/TableauDeBord";
 import { CouponsVue } from "../../../../features/crm/components/analyse/CouponsVue";
+import { Ventes } from "../../../../features/crm/components/analyse/Ventes";
 import { FILTRES_DEFAUT, ListeContacts } from "../../../../features/crm/components/liste/ListeContacts";
 import { MaFile } from "../../../../features/crm/components/file/MaFile";
 import { Campagnes } from "../../../../features/crm/components/campagnes/Campagnes";
 import { Reglages } from "../../../../features/crm/components/reglages/Reglages";
 import { FicheContact } from "../../../../features/crm/components/fiche/FicheContact";
 
-type Cle = "tableau" | "file" | "contacts" | "campagnes" | "coupons" | "reglages";
+type Cle = "tableau" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" | "reglages";
 
 /**
- * CRM : relance des inscrits qui n'ont jamais commandé et des anciens clients
- * devenus inactifs (l'ancienne « Rétention clients »). Glovo et Yango y
- * entreront à leur tour.
+ * CRM : relance des inscrits qui n'ont jamais commandé, des anciens clients
+ * devenus inactifs (l'ancienne « Rétention clients ») et des clients
+ * Glovo/Yango relevés en caisse (l'ancienne « Acquisition Glovo/Yango »).
  *
  * Les onglets suivent le rôle (cahier §9) : la direction pilote (tableau de
- * bord, campagnes, réglages), l'agent traite sa file, la lecture seule ne
- * voit que les tableaux de bord. Le serveur applique les mêmes règles.
+ * bord, campagnes, réglages), l'agent traite sa file et consulte les
+ * tableaux de bord, la lecture seule ne voit que ceux-ci. Le serveur
+ * applique les mêmes règles.
  */
 export default function Crm() {
   const can = useAuthStore((s) => s.can);
@@ -58,6 +60,7 @@ export default function Crm() {
       { cle: "contacts", label: "Contacts", Icone: Users, visible: peutTraiter },
       { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: true },
       { cle: "coupons", label: "Coupons", Icone: Ticket, visible: peutAnalyser },
+      { cle: "ventes", label: "Ventes", Icone: Receipt, visible: peutAnalyser },
       { cle: "reglages", label: "Réglages", Icone: Settings, visible: estGestionnaire },
     ];
     return liste.filter((o) => o.visible);
@@ -65,7 +68,11 @@ export default function Crm() {
 
   const [cle, setCle] = useState<Cle>(estGestionnaire || !peutTraiter ? onglets[0]?.cle ?? "campagnes" : "file");
   const [filtresListe, setFiltresListe] = useState<IContactFiltres>(FILTRES_DEFAUT);
-  const [ficheId, setFicheId] = useState<string | null>(null);
+  // Le numéro tapé dans « Un client appelle ? » accompagne la fiche : lui seul
+  // ouvre en lecture la fiche d'un client suivi par un collègue.
+  const [fiche, setFiche] = useState<{ id: string; telephone?: string } | null>(null);
+  const setFicheId = (id: string | null) => setFiche(id ? { id } : null);
+  const ouvrirParNumero = (id: string, telephone?: string) => setFiche({ id, telephone });
   const actif: Cle = onglets.some((o) => o.cle === cle) ? cle : (onglets[0]?.cle ?? "campagnes");
 
   // Ouverture demandée depuis un autre écran (ex. « Rappeler » dans les statistiques clients).
@@ -80,7 +87,11 @@ export default function Crm() {
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10">
-      <DashboardPageHeader mode="list" title="CRM" subtitle="Inscrits sans commande et clients inactifs : relance, coupons et campagnes" />
+      <DashboardPageHeader
+        mode="list"
+        title="CRM"
+        subtitle="Inscrits sans commande, clients inactifs et clients Glovo/Yango : relance, coupons et campagnes"
+      />
 
       <HasPermission
         module={Modules.CRM}
@@ -92,7 +103,7 @@ export default function Crm() {
         </div>
 
         {actif === "tableau" && <TableauDeBord onOuvrir={setFicheId} />}
-        {actif === "file" && <MaFile onOuvrir={setFicheId} />}
+        {actif === "file" && <MaFile onOuvrir={ouvrirParNumero} />}
         {actif === "contacts" && (
           <ListeContacts
             key={JSON.stringify(filtresListe)}
@@ -112,10 +123,11 @@ export default function Crm() {
             }}
           />
         )}
+        {actif === "ventes" && <Ventes onOuvrir={setFicheId} />}
         {actif === "reglages" && <Reglages />}
       </HasPermission>
 
-      <FicheContact id={ficheId} onFermer={() => setFicheId(null)} estGestionnaire={estGestionnaire} />
+      <FicheContact id={fiche?.id ?? null} telephone={fiche?.telephone} onFermer={() => setFiche(null)} estGestionnaire={estGestionnaire} />
     </div>
   );
 }

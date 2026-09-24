@@ -34,12 +34,26 @@ export const PUBLIC_META: Record<Public, Meta & { court: string; aide: string }>
     className: "bg-violet-50 text-violet-700",
     aide: "Ont déjà commandé, plus rien depuis le délai réglé",
   },
-  GLOVO: { label: "Clients Glovo", court: "Glovo", className: "bg-emerald-50 text-emerald-700", aide: "" },
-  YANGO: { label: "Clients Yango", court: "Yango", className: "bg-yellow-50 text-yellow-800", aide: "" },
+  GLOVO: {
+    label: "Clients Glovo",
+    court: "Glovo",
+    className: "bg-emerald-50 text-emerald-700",
+    aide: "Relevés en caisse sur une commande Glovo : à faire commander en direct",
+  },
+  YANGO: {
+    label: "Clients Yango",
+    court: "Yango",
+    className: "bg-yellow-50 text-yellow-800",
+    aide: "Relevés en caisse sur une commande Yango : à faire commander en direct",
+  },
 };
 
-/** Publics ouverts aujourd'hui (Glovo et Yango arrivent au lot 2). */
-export const PUBLICS: Public[] = ["JAMAIS_COMMANDE", "INACTIF"];
+export const PUBLICS: Public[] = ["JAMAIS_COMMANDE", "INACTIF", "GLOVO", "YANGO"];
+
+/** Publics qu'une campagne peut cibler : Glovo et Yango passent par la file commune. */
+export const PUBLICS_CAMPAGNE: Public[] = ["JAMAIS_COMMANDE", "INACTIF"];
+
+export const estCapte = (segment: Public) => segment === "GLOVO" || segment === "YANGO";
 
 export const CANAL_ACHAT: Record<"APPLICATION" | "CENTRE_APPEL" | "MIXTE", string> = {
   APPLICATION: "surtout dans l'application",
@@ -76,6 +90,7 @@ export const CANAL_LABEL: Record<CanalCoupon, string> = {
   WHATSAPP: "WhatsApp",
   SMS: "SMS",
   AUCUN: "non envoyé",
+  INCONNU: "canal non noté",
 };
 
 export const CAMPAGNE_META: Record<CampagneStatut, Meta> = {
@@ -125,22 +140,36 @@ export function depuis(valeur?: string | null): string {
   return mois < 12 ? `il y a ${mois} mois` : `il y a ${Math.round(mois / 12)} an${mois >= 24 ? "s" : ""}`;
 }
 
-/** 0707070707 → « 07 07 07 07 07 », lisible au moment de composer. */
+const chiffres = (phone?: string | null) => {
+  const d = (phone ?? "").replace(/\D/g, "");
+  return d.startsWith("00") ? d.slice(2) : d;
+};
+
+/** Numéro ivoirien, avec ou sans indicatif : ses 10 chiffres locaux. */
+const local = (d: string) => (d.length === 10 ? d : d.length === 13 && d.startsWith("225") ? d.slice(3) : null);
+
+/** 0707070707 → « 07 07 07 07 07 », lisible au moment de composer. Un numéro étranger reste tel quel. */
 export function fmtTelephone(phone?: string | null): string {
-  const chiffres = (phone ?? "").replace(/\D/g, "").slice(-10);
-  return chiffres.length === 10 ? chiffres.replace(/(\d{2})(?=\d)/g, "$1 ") : phone ?? "";
+  const l = local(chiffres(phone));
+  return l ? l.replace(/(\d{2})(?=\d)/g, "$1 ") : phone ?? "";
 }
 
+/** Même règle que le serveur : 10 chiffres prennent l'indicatif 225, un numéro qui a déjà le sien part tel quel. */
 export function lienAppel(phone?: string | null): string {
-  const chiffres = (phone ?? "").replace(/\D/g, "").slice(-10);
-  return `tel:+225${chiffres}`;
+  const d = chiffres(phone);
+  return `tel:+${d.length === 10 ? `225${d}` : d}`;
 }
 
 export const aujourdhuiISO = () => new Date().toISOString().slice(0, 10);
 
-/** D'où vient le contact, en quelques mots : « inscrit il y a 3 j », « dernière commande il y a 2 mois ». */
-export function origine(p: { segment: Public; registered_at: string; last_order_at: string | null }): string {
-  return p.segment === "INACTIF" && p.last_order_at
-    ? `dernière commande ${depuis(p.last_order_at)}`
-    : `inscrit ${depuis(p.registered_at)}`;
+/** D'où vient le contact, en quelques mots : « inscrit il y a 3 j », « capté sur Glovo il y a 5 j ». */
+export function origine(p: {
+  segment: Public;
+  segment_since: string;
+  registered_at: string | null;
+  last_order_at: string | null;
+}): string {
+  if (estCapte(p.segment)) return `capté sur ${PUBLIC_META[p.segment].court} ${depuis(p.segment_since)}`;
+  if (p.segment === "INACTIF" && p.last_order_at) return `dernière commande ${depuis(p.last_order_at)}`;
+  return `inscrit ${depuis(p.registered_at ?? p.segment_since)}`;
 }

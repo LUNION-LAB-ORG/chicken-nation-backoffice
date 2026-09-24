@@ -16,7 +16,8 @@ export type EtatCoupon = "ACTIF" | "UTILISE" | "EXPIRE";
 /** Public du CRM : d'où vient le contact et ce qu'on attend de lui. */
 export type Public = "JAMAIS_COMMANDE" | "INACTIF" | "GLOVO" | "YANGO";
 
-export type CanalCoupon = "WHATSAPP" | "SMS" | "AUCUN";
+/** INCONNU : coupon repris de l'ancienne acquisition, canal non noté à l'époque. */
+export type CanalCoupon = "WHATSAPP" | "SMS" | "AUCUN" | "INCONNU";
 
 export interface IRef {
   id: string;
@@ -44,14 +45,21 @@ export interface ICouponResume {
 
 export interface IContactLigne {
   id: string;
+  /** Nom du compte appli, sinon celui relevé à la capture, sinon « Client sans nom ». */
   nom: string;
+  /** Numéro à appeler : celui du compte, sinon celui de la capture. */
+  telephone: string;
+  /** Numéro et nom relevés à la capture Glovo/Yango. */
+  phone: string | null;
+  name: string | null;
   status: ContactStatut;
   segment: Public;
   /** Entrée dans le public : l'inscription, ou le jour où il est devenu inactif. */
   segment_since: string;
   cycle: number;
   last_order_at: string | null;
-  registered_at: string;
+  /** Inscription sur l'application : absente pour un client Glovo/Yango sans compte. */
+  registered_at: string | null;
   call_count: number;
   last_call_at: string | null;
   last_call_outcome: AppelEffet | null;
@@ -64,7 +72,8 @@ export interface IContactLigne {
   assigned_at: string | null;
   campaign_id: string | null;
   assigned_to_id: string | null;
-  customer: IClientContact;
+  /** Absent pour un client Glovo/Yango qui n'a pas de compte sur l'application. */
+  customer: IClientContact | null;
   assigned_to: IRef | null;
   campaign: { id: string; name: string; status: string } | null;
   last_call_status: { id: string; label: string } | null;
@@ -105,8 +114,26 @@ export interface IEvenement {
   campaign: { id: string; name: string } | null;
 }
 
+/** Commande Glovo/Yango relevée en caisse pour ce client. */
+export interface ICapture {
+  id: string;
+  platform: "GLOVO" | "YANGO";
+  order_number: string;
+  name: string | null;
+  created_at: string;
+  restaurant: { name: string } | null;
+  creator: { fullname: string } | null;
+}
+
+/**
+ * Ce que l'utilisateur peut faire de la fiche : tout (gestion), la traiter
+ * (sienne, ou prise dans la file commune en agissant), ou seulement la lire
+ * (client d'un collègue retrouvé par son numéro).
+ */
+export type ModeFiche = "gestion" | "sien" | "commune" | "lecture";
+
 export interface IContactFiche extends Omit<IContactLigne, "coupon" | "customer"> {
-  customer: IClientContact & { created_at: string; last_login_at: string | null; whatsapp_opt_in: boolean };
+  customer: (IClientContact & { created_at: string; last_login_at: string | null; whatsapp_opt_in: boolean }) | null;
   coupon: ICouponResume | null;
   first_reached_at: string | null;
   qualified_at: string | null;
@@ -141,14 +168,8 @@ export interface IContactFiche extends Omit<IContactLigne, "coupon" | "customer"
     derniere: string | null;
     canal: "APPLICATION" | "CENTRE_APPEL" | "MIXTE";
   } | null;
-  acquisition: {
-    id: string;
-    platform: string;
-    status: string;
-    created_at: string;
-    coupon_sent_at: string | null;
-    restaurant: { name: string } | null;
-  }[];
+  captures: ICapture[];
+  mode: ModeFiche;
 }
 
 export interface IContactFiltres {
@@ -164,6 +185,10 @@ export interface IContactFiltres {
   coupon?: "AUCUN" | EtatCoupon;
   registered_from?: string;
   registered_to?: string;
+  /** Restaurant où le client a été capté (Glovo/Yango). */
+  restaurant_id?: string;
+  captured_from?: string;
+  captured_to?: string;
   last_call_from?: string;
   last_call_to?: string;
   never_called?: "true";
@@ -196,6 +221,8 @@ export interface IFileAgent {
   relances: IContactLigne[];
   coupons: IContactLigne[];
   rappels_planifies: IContactLigne[];
+  /** File commune Glovo/Yango (J+1) : le premier agent qui compose le numéro prend le client. */
+  commune: IContactLigne[];
   indicateurs: {
     appels_jour: number;
     joints_jour: number;
@@ -210,6 +237,11 @@ export interface IAppelDTO {
   loss_reason_id?: string;
   comment?: string;
   callback_at?: string;
+}
+
+export interface IPrise {
+  pris: boolean;
+  assigned_to_id: string | null;
 }
 
 export interface IAssignerDTO {

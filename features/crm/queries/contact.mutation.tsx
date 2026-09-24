@@ -58,3 +58,20 @@ export const useRenvoyerCouponMutation = () => {
     onError: (e: Error) => toast.error(e.message),
   });
 };
+
+/**
+ * Prise d'un client de la file commune, au moment où l'agent compose son
+ * numéro. Un collègue plus rapide l'a déjà pris : la file est rafraîchie et
+ * l'agent passe au suivant.
+ */
+export const usePrendreMutation = () => {
+  const invalider = useInvalidateCrmQuery();
+  return useMutation({
+    mutationFn: (id: string) => contactAPI.prendre(id),
+    onSuccess: () => invalider(),
+    onError: (e: Error & { status?: number }) => {
+      toast.error(e.status === 409 ? `${e.message} : passez au suivant` : e.message);
+      invalider();
+    },
+  });
+};

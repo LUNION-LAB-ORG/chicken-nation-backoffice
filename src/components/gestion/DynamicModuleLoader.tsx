@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { useAuthStore } from "../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../features/users/types/auth.type";
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center h-64">
@@ -140,11 +142,7 @@ const modulesMap: Record<string, any> = {
     loading: () => <LoadingSpinner />,
   }),
 
-  // ---- Acquisition Glovo/Yango (module Base de Données) ----
-  acquisition: dynamic(() => import("@/components/gestion/BaseDonnees"), {
-    loading: () => <LoadingSpinner />,
-  }),
-  // ---- CRM : inscrits sans commande et clients inactifs ----
+  // ---- CRM : inscrits sans commande, clients inactifs et clients Glovo/Yango ----
   crm: dynamic(() => import("@/components/gestion/Crm"), {
     loading: () => <LoadingSpinner />,
   }),
@@ -165,6 +163,7 @@ const modulesMap: Record<string, any> = {
 
 export default function DynamicModuleLoader() {
   const { activeTab, pendingConversationId } = useDashboardStore();
+  const peutCrm = useAuthStore((s) => s.can(Modules.CRM, Action.READ));
 
   // Inbox : on transmet la conversation en attente (deep-link, notification).
   if (activeTab === "inbox") {
@@ -172,11 +171,17 @@ export default function DynamicModuleLoader() {
     return <InboxComp initialConversationId={pendingConversationId} />;
   }
 
+  // « acquisition » : onglet retiré (Glovo/Yango vit dans le CRM), encore mémorisé
+  // chez certains. Vers le CRM pour qui y a droit, sinon vers le tableau de bord.
   const Component =
     modulesMap[
       activeTab === "card_requests"
         ? "card_nation"
-        : activeTab
+        : (activeTab as string) === "acquisition"
+          ? peutCrm
+            ? "crm"
+            : "dashboard"
+          : activeTab
     ] ?? modulesMap["dashboard"];
   return <Component />;
 }

@@ -27,7 +27,7 @@ export function LigneContact({
       )}
       <td className="px-4 py-3">
         <p className="font-semibold text-gray-800">{p.nom}</p>
-        <p className="text-xs text-gray-500 tabular-nums">{fmtTelephone(p.customer.phone)}</p>
+        <p className="text-xs text-gray-500 tabular-nums">{fmtTelephone(p.telephone)}</p>
       </td>
       <td className="px-4 py-3 whitespace-nowrap">
         <PucePublic segment={p.segment} />

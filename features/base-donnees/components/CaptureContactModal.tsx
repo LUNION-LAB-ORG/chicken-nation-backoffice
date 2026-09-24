@@ -41,7 +41,7 @@ function normalizeCiPhone(input: string): string | null {
 }
 
 /**
- * Capture d'un client Glovo/Yango (cf. cahier §4.3) — utilisable depuis la page
+ * Capture d'un client Glovo/Yango (cf. cahier §4.3), utilisable depuis la page
  * Commandes. 4 champs obligatoires. Store pré-rempli pour un agent store ;
  * sélectionnable pour l'admin central. Affiche un écran de confirmation après création.
  */
@@ -81,7 +81,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
       if (res.name) setName(res.name);
       if (res.phone) setPhone(res.phone);
       if (res.order_number) setOrderNumber(res.order_number);
-      toast.success("Champs préremplis — vérifiez avant d'enregistrer");
+      toast.success("Champs préremplis : vérifiez avant d'enregistrer");
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -124,7 +124,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
         if (active) {
           setDup(
             res.exists && res.prospect
-              ? `Client déjà connu (« ${res.prospect.name} ») — enregistrez cette nouvelle commande normalement.`
+              ? `Client déjà connu (« ${res.prospect.name} ») : enregistrez cette nouvelle commande normalement.`
               : null,
           );
         }
@@ -204,7 +204,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
             <h4 className="text-xl font-bold text-gray-900 mb-2">Contact créé</h4>
             <p className="text-sm text-gray-500 leading-relaxed mb-7 max-w-sm mx-auto">
               Le contact a bien été enregistré. Il sera appelé dès demain (J+1) par
-              le call center. Vous n&apos;avez rien d&apos;autre à faire.
+              le centre d&apos;appel. Vous n&apos;avez rien d&apos;autre à faire.
             </p>
             <div className="flex gap-2 justify-center">
               <button
@@ -326,7 +326,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
               />
               <p className="text-[11px] text-gray-500 mt-1">
-                Numéro local (10 chiffres) ou international (6–15 chiffres, +225 accepté).
+                Numéro local (10 chiffres) ou international (de 6 à 15 chiffres, +225 accepté).
               </p>
               {dup && (
                 <div className="mt-2 flex gap-2 items-center bg-blue-50 text-blue-700 rounded-lg px-3 py-2 text-xs">
@@ -353,7 +353,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                   onChange={(e) => setRestaurantId(e.target.value)}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#F17922]/40"
                 >
-                  <option value="">— Choisir un restaurant —</option>
+                  <option value="">Choisir un restaurant</option>
                   {restaurants.map((r) => (
                     <option key={r.id} value={r.id}>
                       {r.name}

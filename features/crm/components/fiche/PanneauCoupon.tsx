@@ -10,8 +10,11 @@ import { Bouton, ChampSelect } from "../commun/Champs";
 /**
  * Coupon de bienvenue (cahier §4.3 et §8). Un seul coupon actif à la fois :
  * tant qu'il vit, on le renvoie au lieu d'en créer un second.
+ *
+ * En lecture seule (client d'un collègue qui appelle), seul le renvoi du
+ * coupon déjà envoyé est permis : le serveur le trace « demande du client ».
  */
-export function PanneauCoupon({ p }: { p: IContactFiche }) {
+export function PanneauCoupon({ p, lectureSeule = false }: { p: IContactFiche; lectureSeule?: boolean }) {
   const { data: offres = [] } = useOffresQuery();
   const envoyer = useCouponMutation();
   const renvoyer = useRenvoyerCouponMutation();
@@ -50,6 +53,13 @@ export function PanneauCoupon({ p }: { p: IContactFiche }) {
             <RotateCw className="w-4 h-4" /> Renvoyer le message
           </Bouton>
         </div>
+      ) : lectureSeule ? (
+        <p className="text-sm text-gray-500">
+          Aucun coupon actif.{" "}
+          {p.assigned_to
+            ? `Seul l'agent de ce client peut lui en envoyer un : prévenez ${p.assigned_to.fullname}.`
+            : "Il faut d'abord que ce client soit confié à un agent."}
+        </p>
       ) : (
         <>
           <ChampSelect

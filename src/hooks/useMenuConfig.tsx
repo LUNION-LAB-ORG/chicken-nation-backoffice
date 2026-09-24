@@ -26,7 +26,6 @@ import {
   TrendingUp,
   UserCog,
   Users,
-  UserPlus,
   Tag,
   BadgeDollarSign,
   Link2,
@@ -107,13 +106,8 @@ export const useGetMenuConfig = (): {
           canAccess: () => can(Modules.COMMENTAIRES, Action.READ),
         },
         {
-          id: "base_donnees-acquisition",
-          label: "Acquisition Glovo/Yango",
-          icon: UserPlus,
-          canAccess: () => can(Modules.BASE_DONNEES, Action.READ),
-        },
-        {
-          // Inscrits sans commande et clients inactifs (l'ancienne « Rétention clients »).
+          // Inscrits sans commande, clients inactifs (l'ancienne « Rétention clients »)
+          // et clients Glovo/Yango (l'ancienne « Acquisition Glovo/Yango »).
           id: "base_donnees-crm",
           label: "CRM",
           icon: Target,

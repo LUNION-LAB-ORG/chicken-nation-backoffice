@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { analyseAPI } from "../apis/analyse.api";
-import { IPeriode } from "../types/analyse.type";
+import { IPeriode, IVentesFiltres } from "../types/analyse.type";
 import { crmKeyQuery } from "./index.query";
 
 const options = { staleTime: 60_000, placeholderData: keepPreviousData };
@@ -28,3 +28,6 @@ export const useTendanceQuery = (p: IPeriode) =>
 
 export const useVerbatimsQuery = (p: IPeriode & { search?: string; page?: number }) =>
   useQuery({ queryKey: crmKeyQuery("analyse", "verbatims", p), queryFn: () => analyseAPI.verbatims(p), ...options });
+
+export const useVentesQuery = (p: IVentesFiltres) =>
+  useQuery({ queryKey: crmKeyQuery("analyse", "ventes", p), queryFn: () => analyseAPI.ventes(p), ...options });

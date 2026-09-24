@@ -2,9 +2,11 @@
 
 import { create } from 'zustand';
 import { login as apiLogin, refreshToken as apiRefreshToken, logout as apiLogout } from '../services/auth.service';
+import { api } from '../../../src/services/api';
 import { getCookie, setCookie, deleteCookie } from '@/utils/cookieHelpers';
 import { useDashboardStore } from '@/store/dashboardStore';
 import { Action, LoginCredentials, LoginResponse, Modules, RolePermissions } from '../types/auth.type';
+import { UserRole } from '../types/user.types';
 
 interface AuthStore {
   user: LoginResponse;
@@ -19,6 +21,7 @@ interface AuthStore {
   refreshAccessToken: () => Promise<boolean>;
   setUser: (user: LoginResponse) => void;
   hydrate: () => void;
+  rafraichirDroits: () => Promise<void>;
 }
 
 // Fonctions utilitaires pour gérer les cookies d'authentification
@@ -222,6 +225,24 @@ export const useAuthStore = create<AuthStore>()((set, get) => {
       } catch {
         await get().logout();
         return false;
+      }
+    },
+
+    /**
+     * Relit les droits du rôle sur le serveur. Ils sont copiés dans le cookie à
+     * la connexion, pour 7 jours : sans cette relecture, un droit ajouté ou
+     * retiré (nouvel onglet, rôle changé) n'apparaîtrait qu'après une reconnexion.
+     */
+    rafraichirDroits: async () => {
+      const { user, isAuthenticated } = get();
+      if (!isAuthenticated || !user) return;
+      try {
+        const frais = await api.get<{ role: UserRole; permissions: RolePermissions | null }>('/auth/permissions');
+        if (!frais?.permissions) return;
+        if (frais.role === user.role && JSON.stringify(frais.permissions) === JSON.stringify(user.permissions)) return;
+        get().setUser({ ...user, role: frais.role, permissions: frais.permissions });
+      } catch {
+        // Hors ligne ou session expirée : on garde les droits connus, l'API refusera ce qui n'est plus permis.
       }
     },
 

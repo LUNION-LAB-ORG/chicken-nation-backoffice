@@ -9,7 +9,9 @@ import {
   IFileAgent,
   IContactFiche,
   IContactFiltres,
+  IContactLigne,
   IContactPage,
+  IPrise,
   ContactStatut,
 } from "../types/contact.type";
 import { telecharger, versQuery } from "../utils/requete";
@@ -20,7 +22,16 @@ export const contactAPI = {
   obtenirTous: (filtres?: IContactFiltres) =>
     api.get<IContactPage>(`${BASE}/contacts${versQuery(filtres)}`),
 
-  obtenirParId: (id: string) => api.get<IContactFiche>(`${BASE}/contacts/${id}`),
+  /** `telephone` : numéro tapé pour un client qui appelle (lecture de la fiche d'un collègue). */
+  obtenirParId: (id: string, telephone?: string) =>
+    api.get<IContactFiche>(`${BASE}/contacts/${id}${versQuery({ telephone })}`),
+
+  /** Client qui appelle : sa fiche retrouvée par son numéro exact, quel que soit son agent. */
+  rechercher: (telephone: string) =>
+    api.get<IContactLigne[]>(`${BASE}/contacts/recherche${versQuery({ telephone })}`),
+
+  /** Prendre un client de la file commune au moment de composer son numéro (409 si un collègue l'a déjà pris). */
+  prendre: (id: string) => api.post<IPrise>(`${BASE}/contacts/${id}/prendre`, {}),
 
   assigner: (dto: IAssignerDTO) => api.patch<{ count: number }>(`${BASE}/contacts/assign`, dto),
 

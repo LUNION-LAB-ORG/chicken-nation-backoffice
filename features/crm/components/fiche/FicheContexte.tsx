@@ -1,7 +1,7 @@
 import React from "react";
 import { History, Megaphone, ShoppingBag, Store } from "lucide-react";
 import { IContactFiche } from "../../types/contact.type";
-import { CANAL_ACHAT, fmtDate, fmtMontant, fmtNombre } from "../../utils/crm-ui";
+import { CANAL_ACHAT, estCapte, fmtDate, fmtMontant, fmtNombre } from "../../utils/crm-ui";
 
 function Bloc({ titre, Icone, children }: { titre: string; Icone: typeof Store; children: React.ReactNode }) {
   return (
@@ -16,7 +16,22 @@ function Bloc({ titre, Icone, children }: { titre: string; Icone: typeof Store; 
 
 const PLATEFORME: Record<string, string> = { GLOVO: "Glovo", YANGO: "Yango" };
 
-/** Conversion, campagnes et passage éventuel par l'acquisition Glovo/Yango. */
+/** Titre du bloc de la commande qui a fait sortir le contact, selon son public. */
+const TITRE_COMMANDE: Record<IContactFiche["segment"], string> = {
+  JAMAIS_COMMANDE: "Première commande",
+  INACTIF: "Commande de retour",
+  GLOVO: "Commande en direct",
+  YANGO: "Commande en direct",
+};
+
+const DEPUIS_ENTREE: Record<IContactFiche["segment"], string> = {
+  JAMAIS_COMMANDE: "l'inscription",
+  INACTIF: "être devenu inactif",
+  GLOVO: "la capture",
+  YANGO: "la capture",
+};
+
+/** Achats, conversion, campagnes et commandes Glovo/Yango relevées en caisse. */
 export function FicheContexte({ p }: { p: IContactFiche }) {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
@@ -36,14 +51,14 @@ export function FicheContexte({ p }: { p: IContactFiche }) {
       )}
 
       {p.commande && (
-        <Bloc titre={p.segment === "INACTIF" ? "Commande de retour" : "Première commande"} Icone={ShoppingBag}>
+        <Bloc titre={TITRE_COMMANDE[p.segment]} Icone={ShoppingBag}>
           <p>
             {p.commande.reference} du {fmtDate(p.commande.created_at)}, <strong>{fmtMontant(p.commande.amount)}</strong>
           </p>
           <p>
             {p.commande.restaurant?.name ?? "Restaurant inconnu"}
             {p.delai_conversion_jours != null &&
-              ` · ${p.delai_conversion_jours} j après ${p.segment === "INACTIF" ? "être devenu inactif" : "l'inscription"}`}
+              ` · ${p.delai_conversion_jours} j après ${DEPUIS_ENTREE[p.segment]}`}
           </p>
           {p.commande.status === "CANCELLED" && <p className="text-rose-600">Commande annulée depuis.</p>}
         </Bloc>
@@ -64,16 +79,23 @@ export function FicheContexte({ p }: { p: IContactFiche }) {
         </Bloc>
       )}
 
-      {p.acquisition.length > 0 && (
-        <Bloc titre="Déjà contacté par l'acquisition Glovo/Yango" Icone={Store}>
-          {p.acquisition.map((a) => (
+      {p.captures.length > 0 && (
+        <Bloc
+          titre={`Commande${p.captures.length > 1 ? "s" : ""} Glovo/Yango relevée${p.captures.length > 1 ? "s" : ""} en caisse`}
+          Icone={Store}
+        >
+          {p.captures.map((a) => (
             <p key={a.id}>
-              {PLATEFORME[a.platform] ?? a.platform}, capté le {fmtDate(a.created_at)}
+              {PLATEFORME[a.platform] ?? a.platform} n° {a.order_number}, le {fmtDate(a.created_at)}
               {a.restaurant && ` à ${a.restaurant.name}`}
-              {a.coupon_sent_at && `, coupon reçu le ${fmtDate(a.coupon_sent_at)}`}
+              {a.creator && <span className="text-gray-400"> · relevée par {a.creator.fullname}</span>}
             </p>
           ))}
-          <p className="text-xs text-gray-400">Adaptez le discours : ce client connaît déjà l&apos;offre Glovo/Yango.</p>
+          {!estCapte(p.segment) && (
+            <p className="text-xs text-gray-400">
+              Ce client commande aussi sur Glovo ou Yango : parlez-lui de l&apos;avantage de commander en direct.
+            </p>
+          )}
         </Bloc>
       )}
 

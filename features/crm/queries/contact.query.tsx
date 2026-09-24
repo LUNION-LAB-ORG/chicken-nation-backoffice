@@ -12,12 +12,26 @@ export const useContactsQuery = (filtres: IContactFiltres, actif = true) =>
     enabled: actif,
   });
 
-export const useContactFicheQuery = (id: string | null) =>
+export const useContactFicheQuery = (id: string | null, telephone?: string) =>
   useQuery({
-    queryKey: crmKeyQuery("fiche", id),
-    queryFn: () => contactAPI.obtenirParId(id!),
+    queryKey: crmKeyQuery("fiche", id, telephone ?? null),
+    queryFn: () => contactAPI.obtenirParId(id!, telephone),
     enabled: !!id,
   });
+
+/**
+ * Client qui appelle : recherche par numéro complet. `valide` : saisie jugée
+ * complète (10 chiffres, ou Entrée pour un numéro étranger plus court).
+ */
+export const useRechercheNumeroQuery = (telephone: string, valide: boolean) => {
+  const chiffres = telephone.replace(/\D/g, "");
+  return useQuery({
+    queryKey: crmKeyQuery("recherche", chiffres),
+    queryFn: () => contactAPI.rechercher(chiffres),
+    enabled: valide && chiffres.length >= 8,
+    staleTime: 10_000,
+  });
+};
 
 export const useMaFileQuery = (actif = true) =>
   useQuery({

@@ -2,7 +2,7 @@ import React from "react";
 import { useAgentsQuery } from "../../queries/contact.query";
 import { useOffresQuery } from "../../queries/reglage.query";
 import { Public } from "../../types/contact.type";
-import { PUBLICS, PUBLIC_META } from "../../utils/crm-ui";
+import { PUBLICS_CAMPAGNE, PUBLIC_META } from "../../utils/crm-ui";
 import { ChampSelect, ChampTexte, Libelle, classeChamp } from "../commun/Champs";
 import { ChoixEquipe } from "./ChoixEquipe";
 
@@ -59,7 +59,7 @@ export function ChampsCampagne({ f, maj, lancee }: { f: EtatForm; maj: (p: Parti
         <div>
           <Libelle requis>Publics visés</Libelle>
           <div className="grid sm:grid-cols-2 gap-2">
-            {PUBLICS.map((p) => (
+            {PUBLICS_CAMPAGNE.map((p) => (
               <label key={p} className={`flex items-start gap-2 rounded-lg border px-3 py-2 cursor-pointer text-sm ${f.segments.includes(p) ? "border-[#F17922] bg-orange-50" : "border-gray-200"}`}>
                 <input
                   type="checkbox"

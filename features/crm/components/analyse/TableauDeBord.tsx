@@ -66,8 +66,8 @@ export function TableauDeBord({ onOuvrir }: { onOuvrir: (id: string) => void }) 
         <Verbatims periode={periode} onOuvrir={onOuvrir} />
       </div>
 
-      {/* Les cohortes suivent des inscriptions : elles ne disent rien des anciens clients. */}
-      {periode.segment !== "INACTIF" && <Cohortes />}
+      {/* Les cohortes suivent des inscriptions : elles ne disent rien des anciens clients ni des clients Glovo/Yango. */}
+      {(!periode.segment || periode.segment === "JAMAIS_COMMANDE") && <Cohortes />}
     </div>
   );
 }

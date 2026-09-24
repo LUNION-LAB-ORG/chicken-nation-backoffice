@@ -21,9 +21,7 @@ export type TabKey =
   | 'hubrise'
   // Planning livreurs (sous-page dédiée)
   | 'planning_livreurs'
-  // Acquisition Glovo/Yango (module Base de Données)
-  | 'acquisition'
-  // Prospects : inscrits qui n'ont jamais commandé (module Base de Données)
+  // CRM : inscrits sans commande, clients inactifs et clients Glovo/Yango (module Base de Données)
   | 'crm'
   // Audits (admin) : actions du personnel + logs techniques
   | 'audit_actions' | 'audit_logs'
@@ -98,9 +96,7 @@ export interface DashboardState {
   hubrise: SectionState;
   // Planning livreurs
   planning_livreurs: SectionState;
-  // Acquisition Glovo/Yango
-  acquisition: SectionState;
-  // Prospects (conversion des inscrits sans commande)
+  // CRM
   crm: SectionState;
   // Audits
   audit_actions: SectionState;
@@ -148,9 +144,7 @@ const SECTION_KEYS: TabKey[] = [
   'hubrise',
   // Planning livreurs
   'planning_livreurs',
-  // Acquisition Glovo/Yango
-  'acquisition',
-  // Prospects
+  // CRM
   'crm',
   // Audits
   'audit_actions', 'audit_logs',
@@ -204,9 +198,7 @@ export const useDashboardStore = create<DashboardState>()(
       hubrise: createInitialSectionState(),
       // Planning livreurs
       planning_livreurs: createInitialSectionState(),
-      // Acquisition Glovo/Yango
-      acquisition: createInitialSectionState(),
-      // Prospects
+      // CRM
       crm: createInitialSectionState(),
       // Audits
       audit_actions: createInitialSectionState(),

@@ -7,6 +7,8 @@ import {
   IPeriode,
   IQualite,
   ITendanceJour,
+  IVentes,
+  IVentesFiltres,
   IVerbatims,
   IVueEnsemble,
 } from "../types/analyse.type";
@@ -22,6 +24,7 @@ export const analyseAPI = {
   qualite: (p: IPeriode) => api.get<IQualite>(`${BASE}/quality${versQuery(p)}`),
   agents: (p: IPeriode) => api.get<IAgentPerf[]>(`${BASE}/agents${versQuery(p)}`),
   tendance: (p: IPeriode) => api.get<ITendanceJour[]>(`${BASE}/trend${versQuery(p)}`),
+  ventes: (p: IVentesFiltres) => api.get<IVentes>(`${BASE}/sales${versQuery(p)}`),
   verbatims: (p: IPeriode & { search?: string; loss_reason_id?: string; agent_id?: string; page?: number }) =>
     api.get<IVerbatims>(`${BASE}/verbatims${versQuery(p)}`),
 };

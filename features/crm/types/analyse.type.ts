@@ -104,3 +104,31 @@ export interface IVerbatims {
   meta: { total: number; page: number; limit: number; totalPages: number };
   mots: { mot: string; nombre: number }[];
 }
+
+export interface IVentesFiltres extends IPeriode {
+  restaurant_id?: string;
+}
+
+export interface IVente {
+  id: string;
+  converted_at: string;
+  segment: Public;
+  amount: number;
+  /** CRM, ou ACQUISITION_HISTORIQUE pour une vente d'avant la bascule. */
+  source: "CRM" | "ACQUISITION_HISTORIQUE";
+  reference: string | null;
+  restaurant: string | null;
+  contact_id: string;
+  nom: string;
+}
+
+/** Ventes du CRM : une par personne et par cycle, une commande ne comptant qu'une fois. */
+export interface IVentes {
+  /** Jour où le CRM a pris le relais de l'ancienne acquisition Glovo/Yango. */
+  bascule: string | null;
+  total: { ventes: number; ca: number; panier_moyen: number; historique: number };
+  par_public: { segment: Public; ventes: number; ca: number }[];
+  par_mois: { mois: string; segment: Public; ventes: number; ca: number; historique: number }[];
+  captures_par_restaurant: { restaurant_id: string | null; restaurant: string; captures: number; personnes: number; ventes: number }[];
+  dernieres: IVente[];
+}

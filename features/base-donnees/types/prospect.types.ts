@@ -39,17 +39,8 @@ export interface Prospect {
   converted_at?: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface ProspectQuery {
-  restaurantId?: string;
-  platform?: ProspectPlatform;
-  status?: ProspectStatus;
-  search?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  limit?: number;
+  /** Fiche CRM à laquelle la capture a été rattachée. */
+  contact_id?: string | null;
 }
 
 export interface CreateProspectPayload {
@@ -71,172 +62,12 @@ export interface CheckPhoneResult {
   } | null;
 }
 
-// ============================================================
-// PHASE 2 — Call Center
-// ============================================================
-
-export type CallResult = "JOINT" | "NON_JOIGNABLE" | "REFUS";
-
-export type ProspectMessageKind =
-  | "DECOUVERTE"
-  | "RELANCE_1"
-  | "RELANCE_2_FIDELITE";
-
-export interface ProspectCall {
-  id: string;
-  result: CallResult;
-  rank: number;
-  note?: string | null;
-  created_at: string;
-  agent?: { id: string; fullname: string } | null;
-}
-
-export interface ProspectMessage {
-  id: string;
-  kind: ProspectMessageKind;
-  rank: number;
-  body: string;
-  sms_sent: boolean;
-  created_at: string;
-}
-
-export interface ResendCouponResult {
-  smsSent: boolean;
-  message: string;
-  code: string;
-}
-
-export interface ProspectCouponLite {
-  id: string;
-  code: string;
-  expiration_date: string;
-  is_active?: boolean;
-  usage_count?: number;
-}
-
-export interface ProspectDetail extends Prospect {
-  customer?: {
-    id: string;
-    first_name: string | null;
-    last_name: string | null;
-    phone: string;
-  } | null;
-  promo_code?: ProspectCouponLite | null;
-  calls: ProspectCall[];
-  messages: ProspectMessage[];
-}
-
-export interface CallQueueItem extends Prospect {
-  _count?: { calls: number; messages: number };
-}
-
-export interface CallQueueResponse {
-  queue: CallQueueItem[];
-  indicators: { toCall: number; joinedToday: number; couponsToday: number };
-}
-
-export interface SendCouponResult {
-  prospect: Prospect;
-  coupon: { code: string; expiration_date: string };
-  message: string;
-  smsSent: boolean;
-}
-
-// ============================================================
-// PHASE 3 — Analytics
-// ============================================================
-
-export interface ProspectStoreStat {
-  restaurant_id: string;
-  name: string;
-  total: number;
-  converted: number;
-}
-
-export interface ProspectStats {
-  total: number;
-  funnel: {
-    saisis: number;
-    verifies: number;
-    coupon_envoye: number;
-    inscrits: number;
-    convertis: number;
-  };
-  platform: { glovo: number; yango: number };
-  conversion_rate: number;
-  coupons: { sent: number; used: number; usage_rate: number };
-  sales: { count: number; ca: number; average: number };
-  by_store: ProspectStoreStat[];
-}
-
-export type CouponState = "ACTIVE" | "USED" | "EXPIRED";
-
-export interface CouponRow {
-  id: string;
-  code: string;
-  name: string;
-  platform: ProspectPlatform;
-  restaurant?: ProspectRestaurantLite | null;
-  sent_at: string | null;
-  expiration_date: string | null;
-  state: CouponState;
-}
-
-export interface SaleRow {
-  id: string;
-  name: string;
-  platform: ProspectPlatform;
-  restaurant?: ProspectRestaurantLite | null;
-  coupon: string | null;
-  amount: number;
-  date: string | null;
-}
-
-/** Ventilation d'un total, par plateforme ou par mois. */
-export interface VentilationPlateforme {
-  platform: ProspectPlatform;
-  count: number;
-  ca: number;
-}
-
-export interface VentilationMois {
-  /** Clé AAAA-MM. */
-  mois: string;
-  count: number;
-  ca: number;
-}
-
-export interface SalesResponse {
-  data: SaleRow[];
-  totals: { count: number; ca: number; average: number };
-  parPlateforme: VentilationPlateforme[];
-  parMois: VentilationMois[];
-}
-
-/**
- * Filtres de l'onglet Ventes.
- *
- * ⚠️ `debut` et `fin` bornent la date d'ENCAISSEMENT, pas celle de capture du
- * contact : c'est la période où l'opération a rapporté qu'on mesure ici.
- */
-export interface SalesFiltres {
-  restaurantId?: string;
-  platform?: ProspectPlatform;
-  startDate?: string;
-  endDate?: string;
-}
-
 export type ScanEngine = "TESSERACT" | "GEMINI" | "OPENAI" | "ANTHROPIC";
 
+/** Réglages du scan de commande. La remise et les messages sont dans les Réglages du CRM. */
 export interface ProspectSettings {
-  coupon_validity_days: number;
-  coupon_discount_type: "PERCENTAGE" | "FIXED_AMOUNT";
-  coupon_discount_value: number;
-  app_link: string;
-  msg_decouverte: string;
-  msg_relance_1: string;
-  msg_relance_2: string;
   scan_engine: ScanEngine;
+  /** Masquée par le serveur une fois enregistrée : renvoyer le masque ne la change pas. */
   scan_api_key: string;
   scan_model: string;
 }
@@ -247,28 +78,4 @@ export interface ScanResult {
   name: string | null;
   phone: string | null;
   order_number: string | null;
-}
-
-export type ExportType = "contacts" | "coupons" | "sales";
-
-/** Un contact écarté par une action groupée, et la raison du refus. */
-export interface EchecGroupe {
-  id: string;
-  nom: string | null;
-  motif: string;
-}
-
-/**
- * Compte rendu d'une action groupée.
- *
- * Une sélection réussit rarement en bloc : un contact pas encore joint, un
- * autre déjà pourvu d'un coupon. Le serveur traite tout le lot et rend compte
- * de chacun plutôt que de s'arrêter au premier refus.
- */
-export interface ResultatGroupe {
-  demandes: number;
-  reussis: number;
-  /** Coupons créés dont le SMS n'est pas parti : le code existe, à dicter. */
-  sansSms?: number;
-  echecs: EchecGroupe[];
 }

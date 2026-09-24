@@ -10,6 +10,7 @@ export function SectionFile({
   lignes,
   onOuvrir,
   replieeParDefaut = false,
+  commune = false,
 }: {
   titre: string;
   aide: string;
@@ -17,6 +18,8 @@ export function SectionFile({
   lignes: IContactLigne[];
   onOuvrir: (id: string) => void;
   replieeParDefaut?: boolean;
+  /** File commune Glovo/Yango : appeler prend d'abord le client. */
+  commune?: boolean;
 }) {
   const [repliee, setRepliee] = useState(replieeParDefaut);
   if (lignes.length === 0) return null;
@@ -42,7 +45,7 @@ export function SectionFile({
       {!repliee && (
         <div className="space-y-2">
           {lignes.map((p) => (
-            <CarteFile key={p.id} p={p} onOuvrir={() => onOuvrir(p.id)} />
+            <CarteFile key={p.id} p={p} onOuvrir={() => onOuvrir(p.id)} commune={commune} />
           ))}
         </div>
       )}

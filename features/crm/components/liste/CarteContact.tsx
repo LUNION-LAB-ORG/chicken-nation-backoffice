@@ -39,7 +39,7 @@ export function CarteContact({
           <PuceStatut statut={p.status} segment={p.segment} />
         </div>
         <p className="text-xs text-gray-500 tabular-nums">
-          {fmtTelephone(p.customer.phone)} · {origine(p)}
+          {fmtTelephone(p.telephone)} · {origine(p)}
         </p>
         <div className="flex items-center gap-2 mt-2 flex-wrap text-xs text-gray-500">
           <PucePublic segment={p.segment} />

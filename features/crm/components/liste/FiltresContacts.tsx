@@ -38,6 +38,7 @@ export function FiltresContacts({
   const nbAvances = [
     filtres.coupon, filtres.loss_reason_id, filtres.call_status_id, filtres.registered_from, filtres.registered_to,
     filtres.last_call_from, filtres.last_call_to, filtres.never_called, filtres.abandoned,
+    filtres.restaurant_id, filtres.captured_from, filtres.captured_to,
   ].filter(Boolean).length;
   const actifs = Object.entries(filtres).some(([k, v]) => !["page", "limit", "sort"].includes(k) && v);
 

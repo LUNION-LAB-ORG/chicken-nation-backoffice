@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useResponsiveLayout } from "@/hooks/useResponsiveLayout";
 import { useWelcomeModals } from "@/hooks/useWelcomeModals";
@@ -16,6 +17,7 @@ import MobileMenuDrawer from "@/components/gestion/mobile/MobileMenuDrawer";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 import { CaptureContactModal } from "../../../features/base-donnees/components/CaptureContactModal";
 import CallOverlay from "../../../features/calls/components/CallOverlay";
+import { useAuthStore } from "../../../features/users/hook/authStore";
 
 export default function GestionLayout({
   children,
@@ -41,6 +43,12 @@ export default function GestionLayout({
     showWelcomeBackModal,
   } = useUIStore();
   const { isCaptureOpen, closeCapture } = useMobileNavStore();
+
+  // Droits relus à chaque ouverture du tableau de bord (voir authStore.rafraichirDroits).
+  const rafraichirDroits = useAuthStore((s) => s.rafraichirDroits);
+  useEffect(() => {
+    void rafraichirDroits();
+  }, [rafraichirDroits]);
 
   return (
     <div className="flex h-[100dvh] overflow-hidden bg-gray-50">
