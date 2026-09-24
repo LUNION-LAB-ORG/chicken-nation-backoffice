@@ -141,16 +141,36 @@ export const getCallQueue = async (
   }
 };
 
+// ============================================================
+// PHASE 2 — Call Center (Agent Queue)
+// ============================================================
+
+export const getAgentQueue = async (status?: string) => {
+  try {
+    const { url, headers } = await prepareRequest('/campaigns/prospects', `/my-queue`, status ? { status } : undefined);
+    const response = await fetch(url, { method: "GET", headers });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return (await response.json());
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
 export const markProspectCall = async (
   id: string,
   payload: { result: CallResult; note?: string },
 ) => {
   try {
-    const { url, headers } = await prepareRequest(BASE_URL, `/${id}/call`);
+    const { url, headers } = await prepareRequest('/campaigns/prospects', `/${id}/call-status`);
     const response = await fetch(url, {
       method: "PATCH",
       headers,
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        status: payload.result,
+        comment: payload.note
+      }),
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -161,6 +181,21 @@ export const markProspectCall = async (
     throw new Error((error as Error).message);
   }
 };
+
+export const sendProspectCoupon = async (id: string) => {
+  try {
+    const { url, headers } = await prepareRequest('/campaigns/prospects', `/${id}/trigger-whatsapp`);
+    const response = await fetch(url, { method: "POST", headers, body: "{}" });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP error! status: ${response.status}`);
+    }
+    return (await response.json()) as SendCouponResult;
+  } catch (error) {
+    throw new Error((error as Error).message);
+  }
+};
+
 
 export const sendProspectCoupon = async (id: string) => {
   try {

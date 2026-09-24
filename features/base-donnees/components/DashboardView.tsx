@@ -33,7 +33,7 @@ export function DashboardView({ restaurantId }: { restaurantId?: string } = {}) 
   return (
     <div className="space-y-6">
       {/* KPIs — répartition plateformes */}
-      <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
+                  <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-6">
         <GenericStatCard
           title="Total coordonnées" badgeText="Total coordonnées"
           badgeColor="#F17922"
