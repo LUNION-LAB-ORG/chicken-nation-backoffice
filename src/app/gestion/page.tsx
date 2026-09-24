@@ -27,7 +27,7 @@ export default function GestionPage() {
       className={
         // Largeur quasi pleine (plafond 1800px sur très grands écrans) au lieu du
         // `container` Tailwind qui laissait beaucoup de vide de part et d'autre.
-        "flex-1 overflow-y-auto w-full max-w-[1800px] mx-auto " +
+        "flex-1 overflow-y-auto w-full max-w-450 mx-auto " +
         // Décale sous l'app-bar (mobile, + safe-area) ou le header fixe (desktop)
         "pt-[calc(3.5rem+env(safe-area-inset-top))] md:pt-14 " +
         // Dégage la barre d'onglets mobile (+ safe-area) ; aucun padding sur desktop

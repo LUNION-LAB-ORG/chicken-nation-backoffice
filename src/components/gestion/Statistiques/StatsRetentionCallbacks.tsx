@@ -218,7 +218,7 @@ export default function StatsRetentionCallbacks({ initialCustomerId }: Props) {
       </div>
 
       {/* Content */}
-      <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-[600px]">
+      <div className="bg-white border border-slate-100 rounded-xl sm:rounded-2xl overflow-hidden min-h-150">
         {activeTab === "clients_inactifs" && <InactiveClientsTab initialCustomerId={initialCustomerId} />}
         {activeTab === "dashboard" && <DashboardTab />}
         {activeTab === "historique" && <HistoriqueTab />}
