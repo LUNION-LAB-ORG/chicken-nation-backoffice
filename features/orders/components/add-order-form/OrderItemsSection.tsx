@@ -29,6 +29,7 @@ import {
   resumeComposition,
   verifierComposition,
 } from "../../utils/dishOptions";
+import { ReductionAffichee } from "../../types/coupon.types";
 
 interface OrderItemsSectionProps {
   formData: OrderFormData;
@@ -36,6 +37,13 @@ interface OrderItemsSectionProps {
   onItemsChange: (items: OrderItemFormData[]) => void;
   /** Remonte le sous-total (plats+suppléments) au parent → sert au calcul des offres de livraison. */
   onSubtotalChange?: (subtotal: number) => void;
+  /**
+   * Réduction calculée par le serveur (coupon vérifié, ou remise figée en
+   * modification). `montant` à null : en attente de vérification, rien n'est déduit.
+   */
+  reduction?: ReductionAffichee;
+  /** Taxe figée d'une commande modifiée (le serveur la reconduit). Zéro en création. */
+  taxe?: number;
 }
 
 const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
@@ -43,6 +51,8 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   items,
   onItemsChange,
   onSubtotalChange,
+  reduction,
+  taxe = 0,
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedDishForConfig, setSelectedDishForConfig] =
@@ -397,7 +407,13 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   // Frais de livraison depuis le formData (auto-rempli par DeliveryInfoSection)
   const isDelivery = formData.type === OrderType.DELIVERY;
   const currentDeliveryFee = isDelivery ? (formData.delivery_fee || 0) : 0;
-  const grandTotal = totalCart + currentDeliveryFee;
+  // Le coupon ne couvre jamais la livraison : la remise se déduit des articles seuls.
+  // Coupon vérifié : sous-total et articles remisés viennent du serveur.
+  const remise = reduction?.montant ?? 0;
+  const sousTotalAffiche = reduction?.sousTotal ?? totalCart;
+  const sousTotalRecalcule = Math.round(sousTotalAffiche) !== Math.round(totalCart);
+  const articlesApresRemise = reduction?.totalArticles ?? Math.max(0, totalCart - remise);
+  const grandTotal = articlesApresRemise + taxe + currentDeliveryFee;
 
   // Remonte le sous-total au parent → transmis au calcul de frais pour appliquer
   // les offres de livraison conditionnées à un montant minimum.
@@ -943,9 +959,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             <div className="flex justify-between items-center">
               <span className="text-sm sm:text-base text-[#71717A] font-medium">
                 Sous-total articles
+                {sousTotalRecalcule && (
+                  <span className="block text-[11px] font-normal text-gray-400">
+                    Recalculé par le serveur aux prix du jour
+                  </span>
+                )}
               </span>
               <span className="text-sm sm:text-base font-semibold text-[#595959]">
-                {totalCart.toLocaleString()} XOF
+                {sousTotalAffiche.toLocaleString()} XOF
               </span>
             </div>
 
@@ -968,6 +989,32 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 </span>
               )}
             </div>
+
+            {/* Taxe figée (modification d'une commande de l'app) */}
+            {taxe > 0 && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm sm:text-base text-[#71717A] font-medium">
+                  Taxe
+                </span>
+                <span className="text-sm sm:text-base font-semibold text-[#595959]">
+                  {taxe.toLocaleString()} XOF
+                </span>
+              </div>
+            )}
+
+            {/* Réduction (montant renvoyé par le serveur) */}
+            {reduction && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm sm:text-base text-green-700 font-medium">
+                  Réduction{reduction.libelle ? ` · ${reduction.libelle}` : ""}
+                </span>
+                <span className="text-sm sm:text-base font-semibold text-green-700">
+                  {reduction.montant === null
+                    ? "En attente"
+                    : `−${reduction.montant.toLocaleString()} XOF`}
+                </span>
+              </div>
+            )}
 
             {/* Séparateur */}
             <div className="border-t-2 border-dashed border-[#D9D9D9]/50 my-2" />

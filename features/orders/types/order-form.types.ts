@@ -37,6 +37,11 @@ export interface OrderFormData {
     delivery_fee?: number;
     /** Override admin : force FREE (Chicken Nation) ou TURBO (sous-traitant). Si absent, auto-détection backend. */
     delivery_service?: DeliveryService;
+    /**
+     * Code promo ou bon, à la création seulement. Jamais gardé dans l'état du
+     * formulaire : l'envoi le pose depuis le dernier aperçu réussi du serveur.
+     */
+    code_promo?: string;
 }
 
 // ✅ TYPES POUR LES OPTIONS

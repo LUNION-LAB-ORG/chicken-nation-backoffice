@@ -7,7 +7,9 @@ import { ClipboardList, Loader2, Store } from "lucide-react";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { useOrderForm } from "../../hooks/useOrderForm";
 import { OrderType } from "../../types/order.types";
+import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderTable } from "../../types/ordersTable.types";
+import CouponSection, { CouponLectureSeule } from "./CouponSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
@@ -30,6 +32,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     handleSubmit,
     handleCancel,
     handleCustomerChange,
+    coupon,
   } = useOrderForm(editOrder);
 
   // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
@@ -40,7 +43,26 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const itemsCount = formData.items.reduce((sum, item) => sum + item.quantity, 0);
   const deliveryFee =
     formData.type === OrderType.DELIVERY ? formData.delivery_fee || 0 : 0;
-  const grandTotal = subtotal + deliveryFee;
+
+  // Réduction : en création, celle du dernier aperçu réussi du serveur ; en
+  // modification, la remise figée à la création (le serveur la reconduit).
+  const remiseFigee = editOrder && editOrder.discount > 0 ? editOrder.discount : 0;
+  const reduction: ReductionAffichee | undefined = editOrder
+    ? remiseFigee > 0
+      ? { libelle: editOrder.codePromo || undefined, montant: remiseFigee }
+      : undefined
+    : coupon.reduction;
+  const remise = reduction?.montant ?? 0;
+  // Modification : le serveur reconduit aussi la taxe figée (commandes de
+  // l'app ; zéro pour celles du personnel). Sans elle, le total affiché
+  // était inférieur au montant enregistré.
+  const taxeFigee = editOrder && editOrder.tax > 0 ? editOrder.tax : 0;
+  // Coupon vérifié : sous-total et articles remisés sont ceux du serveur, donc
+  // le total affiché égale celui que la création enregistrera. Sinon, calcul
+  // de l'écran. Le coupon ne couvre jamais la livraison.
+  const sousTotalAffiche = reduction?.sousTotal ?? subtotal;
+  const articlesApresRemise = reduction?.totalArticles ?? Math.max(0, subtotal - remise);
+  const grandTotal = articlesApresRemise + taxeFigee + deliveryFee;
 
   return (
     <motion.form
@@ -125,8 +147,34 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           items={formData.items}
           onItemsChange={(items) => setFormData({ ...formData, items })}
           onSubtotalChange={setSubtotal}
+          reduction={reduction}
+          taxe={taxeFigee}
         />
       </div>
+
+      {/* ── 4. Réduction : code promo ou bon ─────────────────────────────── */}
+      {editOrder ? (
+        (remiseFigee > 0 || editOrder.codePromo) && (
+          <div className={CARD_CLASS}>
+            <CouponLectureSeule
+              code={editOrder.codePromo}
+              remise={remiseFigee}
+              // 0 pendant le chargement du catalogue : pas d'alerte à tort.
+              sousTotal={formData.items.length > 0 && subtotal > 0 ? subtotal : undefined}
+            />
+          </div>
+        )
+      ) : (
+        coupon.actif && (
+          <div className={CARD_CLASS}>
+            <CouponSection
+              coupon={coupon}
+              totalApresRemise={grandTotal}
+              verrouille={isSubmitting}
+            />
+          </div>
+        )
+      )}
 
       {/* ── Barre récap collante : total + actions toujours visibles ─────── */}
       <div className="sticky bottom-4 z-30">
@@ -138,7 +186,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
             <span className="text-gray-500">
               Sous-total{" "}
               <span className="font-semibold text-gray-700">
-                {subtotal.toLocaleString()} XOF
+                {sousTotalAffiche.toLocaleString()} XOF
               </span>
             </span>
             {deliveryFee > 0 && (
@@ -146,6 +194,24 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
                 Frais{" "}
                 <span className="font-semibold text-gray-700">
                   {deliveryFee.toLocaleString()} XOF
+                </span>
+              </span>
+            )}
+            {taxeFigee > 0 && (
+              <span className="text-gray-500">
+                Taxe{" "}
+                <span className="font-semibold text-gray-700">
+                  {taxeFigee.toLocaleString()} XOF
+                </span>
+              </span>
+            )}
+            {reduction && (
+              <span className="text-green-700">
+                Réduction{" "}
+                <span className="font-semibold">
+                  {reduction.montant === null
+                    ? "en attente"
+                    : `−${reduction.montant.toLocaleString()} XOF`}
                 </span>
               </span>
             )}

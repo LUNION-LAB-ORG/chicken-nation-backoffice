@@ -347,9 +347,11 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
             <input
               type="number"
               id="delivery_fee"
+              min={0}
               value={formData.delivery_fee || ""}
+              // Jamais négatif : le serveur refuse des frais sous zéro (400).
               onChange={(e) =>
-                onFormDataChange({ delivery_fee: Number(e.target.value) })
+                onFormDataChange({ delivery_fee: Math.max(0, Number(e.target.value) || 0) })
               }
               placeholder={
                 deliveryFee?.montant

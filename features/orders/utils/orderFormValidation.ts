@@ -1,6 +1,7 @@
 import { toast } from "react-hot-toast";
 import { normalizePhoneInternational } from "../../customer/utils/customerFormValidation";
-import { OrderFormData } from "../types/order-form.types";
+import { ArticleCommandeDTO } from "../types/coupon.types";
+import { OrderFormData, OrderItemFormData } from "../types/order-form.types";
 import { OrderType } from "../types/order.types";
 
 export const validateOrderForm = (formData: OrderFormData | Partial<OrderFormData>): boolean => {
@@ -62,6 +63,27 @@ export const validateOrderForm = (formData: OrderFormData | Partial<OrderFormDat
   return true;
 };
 
+/**
+ * Lignes d'articles telles que le serveur les reçoit. Partagé par la création,
+ * la modification et l'aperçu du coupon : le serveur calcule la remise sur
+ * exactement le panier qui partira ensuite.
+ */
+export const preparerArticles = (items: OrderItemFormData[]): ArticleCommandeDTO[] =>
+  items.map(item => ({
+    dish_id: item.dish_id,
+    quantity: item.quantity,
+    supplements: item.supplements.length > 0 ? item.supplements : undefined,
+    epice: item.epice,
+    // Vide devient `undefined`, JAMAIS `[]`. En modification, le serveur teste
+    // la présence de ce champ pour décider s'il reconduit les choix déjà
+    // payés : un tableau vide passerait pour « aucun choix transmis » et
+    // effacerait la composition.
+    option_item_ids: item.option_item_ids?.length ? item.option_item_ids : undefined,
+  }));
+
+/** Majuscules, sans espaces autour ; chaîne vide si rien n'est saisi. */
+export const normaliserCode = (code?: string | null): string => (code ?? "").trim().toUpperCase();
+
 export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData>): OrderFormData => {
   return {
     type: formData.type,
@@ -72,17 +94,10 @@ export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData
     phone: formData.phone?.trim() || undefined,
     email: formData.email?.trim() || undefined,
     note: formData.note?.trim() || undefined,
-    items: formData.items.map(item => ({
-      dish_id: item.dish_id,
-      quantity: item.quantity,
-      supplements: item.supplements.length > 0 ? item.supplements : undefined,
-      epice: item.epice,
-      // Vide devient `undefined`, JAMAIS `[]`. En modification, le serveur teste
-      // la présence de ce champ pour décider s'il reconduit les choix déjà
-      // payés : un tableau vide passerait pour « aucun choix transmis » et
-      // effacerait la composition.
-      option_item_ids: item.option_item_ids?.length ? item.option_item_ids : undefined,
-    })),
+    items: preparerArticles(formData.items),
+    // Rempli seulement par l'envoi d'une création, depuis un aperçu réussi
+    // (useCouponCommande.pourEnvoi), jamais depuis la saisie brute.
+    code_promo: normaliserCode(formData.code_promo) || undefined,
     customer_id: formData.customer_id || undefined,
     restaurant_id: formData.restaurant_id,
     auto: formData.auto,
