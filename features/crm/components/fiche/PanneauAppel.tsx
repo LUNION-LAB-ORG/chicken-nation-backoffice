@@ -25,8 +25,12 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
   const [rappel, setRappel] = useState("");
 
   const actifs = useMemo(() => statuts.filter((s) => s.is_active), [statuts]);
+  const raisonsActives = raisons.filter((r) => r.is_active);
   const effet = actifs.find((s) => s.id === statutId)?.outcome;
   const raisonRequise = effet === "NON_INTERESSE";
+  // La raison se voit dès l'ouverture, à côté du commentaire. Elle n'a pas de
+  // sens quand le client n'a pas été joint (pas de réponse, numéro invalide).
+  const clientJoint = effet !== "NON_JOINT" && effet !== "NUMERO_INVALIDE";
 
   const enregistrer = () =>
     appel.mutate(
@@ -34,7 +38,7 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
         id: contactId,
         dto: {
           call_status_id: statutId,
-          loss_reason_id: raisonId || undefined,
+          loss_reason_id: clientJoint ? raisonId || undefined : undefined,
           comment: commentaire.trim() || undefined,
           callback_at: effet === "A_RAPPELER" && rappel ? new Date(rappel).toISOString() : undefined,
         },
@@ -77,15 +81,24 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
         </label>
         {effet && <p className="text-xs text-gray-500 -mt-1">{EFFET_META[effet].aide}</p>}
 
-        {(raisonRequise || effet === "A_RAPPELER") && (
-          <ChampSelect
-            label="Raison de non-commande"
-            requis={raisonRequise}
-            valeur={raisonId}
-            onChange={setRaisonId}
-            vide={raisonRequise ? "Choisir…" : "Aucune"}
-            options={raisons.filter((r) => r.is_active).map((r) => ({ value: r.id, label: r.name }))}
-          />
+        {clientJoint && (
+          <div>
+            <ChampSelect
+              label="Raison de non-commande"
+              requis={raisonRequise}
+              valeur={raisonId}
+              onChange={setRaisonId}
+              vide={raisonRequise ? "Choisir…" : "Aucune"}
+              options={raisonsActives.map((r) => ({ value: r.id, label: r.name }))}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {raisonsActives.length === 0
+                ? "Aucune raison n'est configurée : la direction peut en ajouter dans Réglages."
+                : raisonRequise
+                  ? "Pourquoi le client ne commande pas : elle alimente le tableau des raisons."
+                  : "Obligatoire si le client n'est pas intéressé, facultative sinon."}
+            </p>
+          </div>
         )}
         {effet === "A_RAPPELER" && (
           <ChampTexte label="Rappeler le" type="datetime-local" valeur={rappel} onChange={setRappel} min={new Date().toISOString().slice(0, 16)} />

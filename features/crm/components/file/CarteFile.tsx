@@ -42,13 +42,14 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
           )}
         </div>
         <p className="text-sm text-gray-600 mt-0.5">{contexte}</p>
-        {(p.last_comment || p.campaign) && (
+        {(p.last_comment || p.campaign || p.loss_reason) && (
           <p className="text-xs text-gray-400 mt-1 truncate">
             {p.campaign && (
               <span className="inline-flex items-center gap-1 mr-2">
                 <Megaphone className="w-3 h-3" /> {p.campaign.name}
               </span>
             )}
+            {p.loss_reason && <span className="text-rose-600 mr-2">Raison : {p.loss_reason.name}</span>}
             {p.last_comment && `« ${p.last_comment} »`}
           </p>
         )}
