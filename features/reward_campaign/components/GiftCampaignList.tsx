@@ -9,6 +9,8 @@ import {
   cancelRewardCampaign,
 } from "../services/reward-campaign.service";
 import type { RewardCampaign, RewardCampaignType } from "../types/reward-campaign.types";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   scheduled: { label: "Programmée", cls: "bg-[#E7F0FB] text-[#2B6CB0]" },
@@ -61,6 +63,10 @@ export default function GiftCampaignList({
   onOpen: (campaign: RewardCampaign) => void;
 }) {
   const qc = useQueryClient();
+  // Envoyer = POST /fidelity/reward-campaigns (FIDELITE CREATE) ;
+  // annuler = PATCH .../:id/cancel (FIDELITE UPDATE).
+  const peutEnvoyer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
+  const peutAnnuler = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
   const campaignsQuery = useQuery({
     queryKey: ["reward-campaigns"],
     queryFn: listRewardCampaigns,
@@ -86,13 +92,15 @@ export default function GiftCampaignList({
             Qui a été ciblé, qui a gratté, qui a utilisé son cadeau.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={onCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer shrink-0"
-        >
-          <Plus size={16} /> Envoyer un cadeau
-        </button>
+        {peutEnvoyer && (
+          <button
+            type="button"
+            onClick={onCreate}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer shrink-0"
+          >
+            <Plus size={16} /> Envoyer un cadeau
+          </button>
+        )}
       </div>
 
       {campaignsQuery.isLoading ? (
@@ -101,13 +109,15 @@ export default function GiftCampaignList({
         <div className="py-12 text-center">
           <Gift size={36} className="mx-auto text-[#D9D9D9]" />
           <p className="text-sm text-[#9796A1] mt-3">Aucune campagne pour le moment.</p>
-          <button
-            type="button"
-            onClick={onCreate}
-            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer"
-          >
-            <Plus size={16} /> Envoyer un premier cadeau
-          </button>
+          {peutEnvoyer && (
+            <button
+              type="button"
+              onClick={onCreate}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer"
+            >
+              <Plus size={16} /> Envoyer un premier cadeau
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -179,7 +189,7 @@ export default function GiftCampaignList({
                 {/* Capping : l'explication la plus fréquente d'un « rien reçu ». */}
                 {c.target_config?.skipped_capping ? (
                   <div className="mt-2 rounded-lg bg-[#FFF7ED] px-2.5 py-1.5 text-[10px] text-[#9A5B12]">
-                    {c.target_config.skipped_capping} client(s) écarté(s) — capping anti-fatigue
+                    {c.target_config.skipped_capping} client(s) écarté(s) par le capping anti-fatigue
                     (déjà gâtés récemment)
                   </div>
                 ) : null}
@@ -189,23 +199,25 @@ export default function GiftCampaignList({
                     <span className="text-[11px] text-[#2B6CB0]">
                       Prévu le {new Date(c.scheduled_at).toLocaleString("fr-FR")}
                     </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cancelMut.mutate(c.id);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                    {peutAnnuler && (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
                           e.stopPropagation();
                           cancelMut.mutate(c.id);
-                        }
-                      }}
-                      className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C0392B] hover:underline cursor-pointer"
-                    >
-                      <Ban size={12} /> Annuler
-                    </span>
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.stopPropagation();
+                            cancelMut.mutate(c.id);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C0392B] hover:underline cursor-pointer"
+                      >
+                        <Ban size={12} /> Annuler
+                      </span>
+                    )}
                   </div>
                 )}
               </button>

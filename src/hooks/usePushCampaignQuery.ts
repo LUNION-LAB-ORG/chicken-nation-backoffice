@@ -233,7 +233,7 @@ export function useCreateTemplateMutation() {
       pushService.createTemplate(payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["push", "templates"] });
-      toast.success("Template créé avec succès");
+      toast.success("Modèle créé");
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la création du template");
@@ -248,7 +248,7 @@ export function useUpdateTemplateMutation() {
       pushService.updateTemplate(id, payload),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["push", "templates"] });
-      toast.success("Template mis à jour");
+      toast.success("Modèle mis à jour");
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la mise à jour du template");
@@ -262,7 +262,7 @@ export function useDeleteTemplateMutation() {
     mutationFn: (id: string) => pushService.deleteTemplate(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["push", "templates"] });
-      toast.success("Template supprimé");
+      toast.success("Modèle supprimé");
     },
     onError: (err: Error) => {
       toast.error(err.message || "Erreur lors de la suppression du template");

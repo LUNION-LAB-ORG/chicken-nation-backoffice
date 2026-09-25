@@ -32,6 +32,8 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
   // Client de la file commune : composer le numéro le prend d'abord, sinon un
   // collègue pourrait l'appeler en même temps.
   const aPrendre = p.mode === "commune" && p.status !== "CONVERTI";
+  // Consultation (marketing, manager) : le numéro et l'e-mail se lisent, ils ne s'appellent pas.
+  const consultation = p.mode === "consultation";
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -49,7 +51,11 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {aPrendre ? (
+        {consultation ? (
+          <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 tabular-nums">
+            <Phone className="w-4 h-4 text-gray-400" /> {fmtTelephone(p.telephone)}
+          </span>
+        ) : aPrendre ? (
           <button
             type="button"
             disabled={prendre.isPending}
@@ -66,14 +72,19 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
             <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
           </a>
         )}
-        {c?.email && (
-          <a
-            href={`mailto:${c.email}`}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-          >
-            <Mail className="w-4 h-4" /> {c.email}
-          </a>
-        )}
+        {c?.email &&
+          (consultation ? (
+            <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
+              <Mail className="w-4 h-4 text-gray-400" /> {c.email}
+            </span>
+          ) : (
+            <a
+              href={`mailto:${c.email}`}
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <Mail className="w-4 h-4" /> {c.email}
+            </a>
+          ))}
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-50 rounded-xl p-4">

@@ -14,9 +14,12 @@ import {
 interface ComboGamesListProps {
   games: ComboGame[] | undefined;
   isLoading: boolean;
-  onEdit: (game: ComboGame) => void;
-  onDelete: (game: ComboGame) => void;
+  /** Éditer et supprimer ne sont affichés que si leur rappel est fourni (droit accordé). */
+  onEdit?: (game: ComboGame) => void;
+  onDelete?: (game: ComboGame) => void;
   onTrack: (game: ComboGame) => void;
+  /** Invite à créer un jeu quand la liste est vide (droit de création). */
+  canCreate?: boolean;
 }
 
 const Th: React.FC<{ children: React.ReactNode; className?: string }> = ({
@@ -43,6 +46,7 @@ export default function ComboGamesList({
   onEdit,
   onDelete,
   onTrack,
+  canCreate = false,
 }: ComboGamesListProps) {
   if (isLoading) {
     return (
@@ -58,7 +62,9 @@ export default function ComboGamesList({
         <div className="text-5xl mb-3">🍔</div>
         <h3 className="text-lg font-semibold text-gray-700">Aucun jeu</h3>
         <p className="text-gray-500">
-          Créez un jeu pour lancer un Combo Mystère.
+          {canCreate
+            ? "Créez un jeu pour lancer un Combo Mystère."
+            : "Aucun Combo Mystère n'a encore été créé."}
         </p>
       </div>
     );
@@ -146,34 +152,38 @@ export default function ComboGamesList({
                       >
                         <BarChart3 size={16} />
                       </button>
-                      <button
-                        type="button"
-                        title="Éditer"
-                        onClick={() => onEdit(game)}
-                        className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
-                      >
-                        <Pencil size={16} />
-                      </button>
+                      {onEdit && (
+                        <button
+                          type="button"
+                          title="Éditer"
+                          onClick={() => onEdit(game)}
+                          className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
                       {/* Un jeu déjà tiré se conserve pour l'audit des
                           gagnants : le bouton reste visible mais inactif,
                           avec l'explication au survol. */}
-                      <button
-                        type="button"
-                        title={
-                          game.status === "DRAWN"
-                            ? "Un jeu déjà tiré se conserve pour garder la trace des gagnants"
-                            : "Supprimer"
-                        }
-                        disabled={game.status === "DRAWN"}
-                        onClick={() => onDelete(game)}
-                        className={`p-1.5 rounded-lg ${
-                          game.status === "DRAWN"
-                            ? "text-gray-300 cursor-not-allowed"
-                            : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
-                        }`}
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {onDelete && (
+                        <button
+                          type="button"
+                          title={
+                            game.status === "DRAWN"
+                              ? "Un jeu déjà tiré se conserve pour garder la trace des gagnants"
+                              : "Supprimer"
+                          }
+                          disabled={game.status === "DRAWN"}
+                          onClick={() => onDelete(game)}
+                          className={`p-1.5 rounded-lg ${
+                            game.status === "DRAWN"
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                          }`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </Td>
                 </tr>

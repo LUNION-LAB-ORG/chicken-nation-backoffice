@@ -13,8 +13,18 @@ import { Bouton, ChampSelect } from "../commun/Champs";
  *
  * En lecture seule (client d'un collègue qui appelle), seul le renvoi du
  * coupon déjà envoyé est permis : le serveur le trace « demande du client ».
+ * En consultation (marketing, manager), le coupon s'affiche sans aucun geste :
+ * ni envoi, ni renvoi.
  */
-export function PanneauCoupon({ p, lectureSeule = false }: { p: IContactFiche; lectureSeule?: boolean }) {
+export function PanneauCoupon({
+  p,
+  lectureSeule = false,
+  consultation = false,
+}: {
+  p: IContactFiche;
+  lectureSeule?: boolean;
+  consultation?: boolean;
+}) {
   const { data: offres = [] } = useOffresQuery();
   const envoyer = useCouponMutation();
   const renvoyer = useRenvoyerCouponMutation();
@@ -36,23 +46,30 @@ export function PanneauCoupon({ p, lectureSeule = false }: { p: IContactFiche; l
         <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
           <div className="flex items-center justify-between gap-2">
             <p className="font-mono text-lg font-bold tracking-wider text-[#C2410C]">{actif.code}</p>
-            <button type="button" onClick={() => copier(actif.code)} className="p-1.5 rounded hover:bg-white" aria-label="Copier le code">
-              <Copy className="w-4 h-4 text-[#C2410C]" />
-            </button>
+            {/* En consultation, le serveur masque le code : rien à copier. */}
+            {!consultation && (
+              <button type="button" onClick={() => copier(actif.code)} className="p-1.5 rounded hover:bg-white" aria-label="Copier le code">
+                <Copy className="w-4 h-4 text-[#C2410C]" />
+              </button>
+            )}
           </div>
           <p className="text-xs text-gray-600 mt-1">
             {actif.offer_label} · jusqu&apos;au {fmtDate(actif.expires_at)} · {CANAL_LABEL[actif.channel]}
             {actif.resent_count > 0 && ` · renvoyé ${actif.resent_count} fois`}
           </p>
           {actif.send_error && <p className="text-xs text-rose-700 mt-1">{actif.send_error}</p>}
-          <Bouton
-            className="w-full mt-3"
-            desactive={renvoyer.isPending}
-            onClick={() => renvoyer.mutate(p.id, { onSuccess: (r) => setMessage({ texte: r.message, parti: r.envoye }) })}
-          >
-            <RotateCw className="w-4 h-4" /> Renvoyer le message
-          </Bouton>
+          {!consultation && (
+            <Bouton
+              className="w-full mt-3"
+              desactive={renvoyer.isPending}
+              onClick={() => renvoyer.mutate(p.id, { onSuccess: (r) => setMessage({ texte: r.message, parti: r.envoye }) })}
+            >
+              <RotateCw className="w-4 h-4" /> Renvoyer le message
+            </Bouton>
+          )}
         </div>
+      ) : consultation ? (
+        <p className="text-sm text-gray-500">Aucun coupon actif.</p>
       ) : lectureSeule ? (
         <p className="text-sm text-gray-500">
           Aucun coupon actif.{" "}

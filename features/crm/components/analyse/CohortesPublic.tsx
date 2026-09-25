@@ -149,7 +149,13 @@ function TableCaptes({ c }: { c: ICohortesCaptes }) {
   );
 }
 
+/** Sans ligne pour un point de vente : les inscrits n'appartiennent à aucun restaurant. */
+const horsRestaurant = (c: ICohortePublic) => c.type === "INSCRITS" && !!c.hors_restaurant;
+
 function Contenu({ c }: { c: ICohortePublic }) {
+  if (horsRestaurant(c)) {
+    return <p className="text-sm text-gray-500 py-6 px-5 text-center">Les inscrits qui n&apos;ont jamais commandé ne sont rattachés à aucun restaurant.</p>;
+  }
   if (c.lignes.length === 0) return <p className="text-sm text-gray-400 py-6 text-center">Aucune cohorte sur cette période.</p>;
   if (c.type === "INACTIFS") return <TableInactifs c={c} />;
   if (c.type === "CAPTES") return <TableCaptes c={c} />;
@@ -215,7 +221,7 @@ export function CohortesPublic({ periode }: { periode: IPeriode }) {
             <div className={`overflow-x-auto -mx-5 max-h-96 ${requete.isPlaceholderData ? "opacity-60" : ""}`}>
               <Contenu c={c} />
             </div>
-            <p className="text-xs text-gray-500 mt-3">{AIDE[c.type]}</p>
+            {!horsRestaurant(c) && <p className="text-xs text-gray-500 mt-3">{AIDE[c.type]}</p>}
             {periode.campaign_id && (
               <p className="text-xs text-amber-700 mt-1">
                 Toute la population : le filtre campagne ne s'applique pas aux cohortes.

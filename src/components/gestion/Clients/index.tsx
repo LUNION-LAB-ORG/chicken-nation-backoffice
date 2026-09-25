@@ -10,6 +10,7 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useCustomerListQuery } from "../../../../features/customer/queries/customer-list.query";
 import { UserType } from "../../../../features/users/types/user.types";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { ClientsTable } from "../../../../features/customer/components/list-customer";
 import { ClientDetail } from "../../../../features/customer/components/detail-customer";
 import { CustomerSegment } from "../../../../features/customer/types/customer.types";
@@ -39,6 +40,9 @@ const SEGMENT_TABS: {
 
 export default function Clients() {
   const { user } = useAuthStore();
+  // Exporter le fichier clients est un droit à part (le serveur exige EXPORT) :
+  // la consultation seule ne l'ouvre pas.
+  const peutExporter = useAuthStore((s) => s.can(Modules.CLIENTS, Action.EXPORT));
 
   const {
     clients: { view, selectedItem, filters, pagination },
@@ -127,7 +131,7 @@ export default function Clients() {
               ))}
             </div>
 
-            {/* Filtre restaurant (BACKOFFICE uniquement) + Export Excel */}
+            {/* Filtre restaurant (BACKOFFICE uniquement) + Export Excel (droit EXPORT) */}
             <div className="flex items-center gap-2 shrink-0">
               {isBackoffice && (
                 <RestaurantFilterSelect
@@ -135,20 +139,22 @@ export default function Clients() {
                   onChange={handleRestaurantChange}
                 />
               )}
-              <button
-                type="button"
-                onClick={handleExport}
-                disabled={exporting}
-                title="Exporter les clients filtrés (Excel)"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#F17922] text-white hover:bg-[#d96a18] disabled:opacity-60 cursor-pointer shrink-0"
-              >
-                {exporting ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Download size={16} />
-                )}
-                Exporter
-              </button>
+              {peutExporter && (
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  disabled={exporting}
+                  title="Exporter les clients filtrés (Excel)"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#F17922] text-white hover:bg-[#d96a18] disabled:opacity-60 cursor-pointer shrink-0"
+                >
+                  {exporting ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Download size={16} />
+                  )}
+                  Exporter
+                </button>
+              )}
             </div>
           </div>
 

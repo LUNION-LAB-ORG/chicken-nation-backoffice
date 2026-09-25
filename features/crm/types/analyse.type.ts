@@ -208,6 +208,11 @@ export interface ICohortesFiltres {
 export interface ICohortesInscrits {
   type: "INSCRITS";
   segment: "JAMAIS_COMMANDE" | null;
+  /**
+   * Compte de point de vente : un inscrit qui n'a jamais commandé n'est
+   * rattaché à aucun restaurant, le serveur ne rend alors aucune ligne.
+   */
+  hors_restaurant?: boolean;
   lignes: {
     mois: string;
     inscrits: number;

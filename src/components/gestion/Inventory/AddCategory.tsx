@@ -56,7 +56,11 @@ export default function AddCategory({
         image: undefined,
         private: category.private,
         auto_promotions: category.auto_promotions ?? false,
-        hubrise_sku: category.hubrise_sku || "",
+        // Le type Category du service ne déclare pas hubrise_sku, que le
+        // serveur renvoie pourtant.
+        hubrise_sku:
+          (category as Category & { hubrise_sku?: string | null }).hubrise_sku ||
+          "",
       });
 
       if (category.image) {

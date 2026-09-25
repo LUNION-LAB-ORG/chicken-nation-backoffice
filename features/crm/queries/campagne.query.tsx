@@ -6,13 +6,18 @@ import { IApercuInput, ICampagneDTO, ICampagnesFiltres, ICloture, ILancement } f
 import { accord, fmtNombre } from "../utils/crm-ui";
 import { crmKeyQuery, useInvalidateCrmQuery } from "./index.query";
 
-/** Liste des campagnes ; sans filtre, toutes celles que l'utilisateur peut voir. */
-export const useCampagnesQuery = (filtres: ICampagnesFiltres = {}) =>
+/**
+ * Liste des campagnes ; sans filtre, toutes celles que l'utilisateur peut voir.
+ * `actif` faux pour un compte de point de vente : le serveur lui refuse les
+ * campagnes, la requête ne part pas.
+ */
+export const useCampagnesQuery = (filtres: ICampagnesFiltres = {}, actif = true) =>
   useQuery({
     queryKey: crmKeyQuery("campagnes", "liste", filtres),
     queryFn: () => campagneAPI.obtenirTous(filtres),
     staleTime: 30_000,
     placeholderData: keepPreviousData,
+    enabled: actif,
   });
 
 /** Détail d'une campagne : l'écran reste ouvert même si un filtre de la liste l'écarte après un geste. */

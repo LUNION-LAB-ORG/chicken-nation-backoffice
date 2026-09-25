@@ -379,7 +379,7 @@ export default function CreateScheduledModal({
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Image URL (optionnel)
+              Adresse de l'image (facultatif)
             </label>
             <input
               type="url"
@@ -691,7 +691,7 @@ export default function CreateScheduledModal({
                   selectedDays,
                   monthDay,
                   customCron
-                ) ?? "—"}
+                ) ?? "non défini"}
               </code>
             </div>
           )}

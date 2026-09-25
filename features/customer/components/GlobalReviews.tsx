@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import { useCommentsQuery } from '@/hooks/useCommentsQuery';
 import { CommentService } from '@/services/commentService';
 import { useAuthStore } from '../../users/hook/authStore';
+import { UserType } from '../../users/types/user.types';
 import { getAllRestaurants, Restaurant } from '@/services/restaurantService';
 
 // ✅ Composant Dropdown Custom
@@ -150,32 +151,22 @@ export function GlobalReviews() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loadingRestaurants, setLoadingRestaurants] = useState(true);
 
-  // ✅ Déterminer les permissions
-  const canSelectRestaurant = user?.role === 'ADMIN' || user?.role === 'MARKETING';
-  const isRestaurantManager = user?.role === 'MANAGER' || user?.role === 'CAISSIER' || user?.role === 'CALL_CENTER' || user?.role === 'CUISINE';
+  // ✅ Déterminer le périmètre selon le TYPE de compte, comme la liste des
+  // clients : le siège (BACKOFFICE) choisit librement son restaurant ; un
+  // compte de point de vente (RESTAURANT : manager, caissier…) ne voit que
+  // le sien, et c'est le serveur qui l'impose. Pas de sélecteur pour lui :
+  // il laisserait croire qu'on peut lire les avis d'un autre restaurant.
+  const canSelectRestaurant = user?.type === UserType.BACKOFFICE;
+  const estCompteRestaurant = user?.type === UserType.RESTAURANT;
+  const restaurantImpose = estCompteRestaurant ? user?.restaurant_id || undefined : undefined;
 
-  // ✅ Récupérer la liste des restaurants au chargement
+  // ✅ Liste des restaurants : seulement pour qui peut en choisir un
   useEffect(() => {
+    if (!canSelectRestaurant) return;
     const fetchRestaurants = async () => {
       try {
         const allRestaurants = await getAllRestaurants();
-        const activeRestaurants = allRestaurants.filter(restaurant => restaurant.active);
-
-        // ✅ Filtrer selon les permissions
-        let filteredRestaurants = activeRestaurants;
-
-                 if (isRestaurantManager && user?.restaurant_id) {
-           // Manager : seulement son restaurant (filtrage automatique en arrière-plan)
-           setFilters(prev => ({ ...prev, restaurantId: user.restaurant_id || '' }));
-         } else if (canSelectRestaurant) {
-           // Admin/Marketing : tous les restaurants avec sélection
-           filteredRestaurants = activeRestaurants;
-         }
-
-                  // ✅ Seulement charger les restaurants si l'utilisateur peut les sélectionner
-         if (canSelectRestaurant) {
-           setRestaurants(filteredRestaurants);
-         }
+        setRestaurants(allRestaurants.filter(restaurant => restaurant.active));
       } catch (error) {
         console.error('Erreur lors de la récupération des restaurants:', error);
         toast.error('Erreur lors du chargement des restaurants');
@@ -184,10 +175,8 @@ export function GlobalReviews() {
       }
     };
 
-         if (user) {
-       fetchRestaurants();
-     }
-   }, [user, isRestaurantManager, canSelectRestaurant]);
+    fetchRestaurants();
+  }, [canSelectRestaurant]);
 
   // ✅ Utiliser TanStack Query avec les filtres supportés par l'API
   const {
@@ -199,7 +188,7 @@ export function GlobalReviews() {
     setCurrentPage
   } = useCommentsQuery({
     rating: filters.rating,
-    restaurantId: filters.restaurantId || undefined,
+    restaurantId: estCompteRestaurant ? restaurantImpose : filters.restaurantId || undefined,
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined
   });
@@ -297,33 +286,37 @@ export function GlobalReviews() {
             {showFilters ? 'Masquer les filtres' : 'Afficher les filtres'}
           </button>
 
-          <button
-            type="button"
-            onClick={handleExport}
-            disabled={comments.length === 0 || isExporting}
-            className={`flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition-all ${
-              comments.length === 0 || isExporting
-                ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                : 'text-white bg-[#F17922] hover:bg-[#e06816] hover:shadow-md'
-            }`}
-          >
-            {isExporting ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Export...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                Exporter 
-              </>
-            )}
-          </button>
+          {/* Export CSV fabriqué dans le navigateur : le serveur ne peut pas
+              le refuser, seul le droit EXPORT affiche le bouton. */}
+          <HasPermission module={Modules.COMMENTAIRES} action={Action.EXPORT}>
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={comments.length === 0 || isExporting}
+              className={`flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition-all ${
+                comments.length === 0 || isExporting
+                  ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
+                  : 'text-white bg-[#F17922] hover:bg-[#e06816] hover:shadow-md'
+              }`}
+            >
+              {isExporting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                  Export...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Exporter 
+                </>
+              )}
+            </button>
+          </HasPermission>
 
         </div>
       </div>
 
-            {/* ✅ Interface de filtres (sélection restaurant visible seulement pour ADMIN/MARKETING) */}
+            {/* ✅ Interface de filtres (sélection restaurant visible seulement pour les comptes du siège) */}
       {showFilters && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <div className={`grid grid-cols-1 ${canSelectRestaurant ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'} gap-4`}>
@@ -375,7 +368,7 @@ export function GlobalReviews() {
               />
             </div>
 
-            {/* Filtre par restaurant - SEULEMENT pour ADMIN et MARKETING */}
+            {/* Filtre par restaurant : SEULEMENT pour les comptes du siège (BACKOFFICE) */}
             {canSelectRestaurant && (
               <div>
                 {loadingRestaurants ? (
@@ -409,13 +402,11 @@ export function GlobalReviews() {
             <button
               type="button"
               onClick={() => {
+                // Le restaurant d'un compte de point de vente ne passe pas par
+                // ce filtre : il est imposé à la requête.
                 setFilters({
                   rating: '',
-                  restaurantId: isRestaurantManager && user?.restaurant_id
-                    ? user.restaurant_id
-                    : canSelectRestaurant
-                    ? ''
-                    : filters.restaurantId,
+                  restaurantId: '',
                   dateFrom: '',
                   dateTo: ''
                 });
@@ -607,7 +598,7 @@ function SiteVisibilityToggle({
       onClick={() => mutate(!visible)}
       title={
         visible
-          ? 'Cet avis est affiché dans les Témoignages du site — cliquer pour le retirer'
+          ? 'Cet avis est affiché dans les Témoignages du site. Cliquer pour le retirer'
           : 'Cliquer pour afficher cet avis dans les Témoignages du site'
       }
       className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${

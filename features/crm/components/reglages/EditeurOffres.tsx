@@ -8,11 +8,12 @@ import { fmtMontant } from "../../utils/crm-ui";
 import { Bouton } from "../commun/Champs";
 import { EtatRequete } from "../commun/Etats";
 import { FormOffre } from "./FormOffre";
+import { EtatActif } from "./LigneOrdonnee";
 
 const remise = (o: IOffre) => (o.discount_type === "PERCENTAGE" ? `${o.discount_value} %` : fmtMontant(o.discount_value));
 
-/** Offres proposables en coupon (cahier §4.1 : « Offre associée »). */
-export function EditeurOffres() {
+/** Offres proposables en coupon (cahier §4.1 : « Offre associée »). `lectureSeule` : la liste et son état, sans geste. */
+export function EditeurOffres({ lectureSeule = false }: { lectureSeule?: boolean }) {
   const requete = useOffresQuery();
   const offres = requete.data ?? [];
   const liste = useListeMutation("offres");
@@ -24,7 +25,8 @@ export function EditeurOffres() {
       subtitle="La remise créée pour chaque coupon"
       icon={Ticket}
       rightContent={
-        requete.data && (
+        requete.data &&
+        !lectureSeule && (
           <Bouton variante="primaire" onClick={() => setEdition("nouvelle")}>
             <Plus className="w-4 h-4" /> Offre
           </Bouton>
@@ -43,18 +45,24 @@ export function EditeurOffres() {
                   {o.max_discount_amount ? ` · plafond ${fmtMontant(o.max_discount_amount)}` : ""}
                 </p>
               </div>
-              <Toggle checked={o.is_active} onChange={(v) => liste.mutate({ type: "modifier", id: o.id, dto: { is_active: v } })} />
-              <button type="button" onClick={() => setEdition(o)} className="p-1.5 rounded hover:bg-gray-100" aria-label="Modifier">
-                <Pencil className="w-4 h-4 text-gray-500" />
-              </button>
-              <button type="button" onClick={() => liste.mutate({ type: "supprimer", id: o.id })} className="p-1.5 rounded hover:bg-rose-50" aria-label="Retirer">
-                <Trash2 className="w-4 h-4 text-rose-500" />
-              </button>
+              {lectureSeule ? (
+                <EtatActif actif={o.is_active} feminin />
+              ) : (
+                <>
+                  <Toggle checked={o.is_active} onChange={(v) => liste.mutate({ type: "modifier", id: o.id, dto: { is_active: v } })} />
+                  <button type="button" onClick={() => setEdition(o)} className="p-1.5 rounded hover:bg-gray-100" aria-label="Modifier">
+                    <Pencil className="w-4 h-4 text-gray-500" />
+                  </button>
+                  <button type="button" onClick={() => liste.mutate({ type: "supprimer", id: o.id })} className="p-1.5 rounded hover:bg-rose-50" aria-label="Retirer">
+                    <Trash2 className="w-4 h-4 text-rose-500" />
+                  </button>
+                </>
+              )}
             </li>
           ))}
         </ul>
       </EtatRequete>
-      {edition && (
+      {edition && !lectureSeule && (
         <FormOffre key={edition === "nouvelle" ? "nouvelle" : edition.id} offre={edition === "nouvelle" ? null : edition} onFermer={() => setEdition(null)} />
       )}
     </StatsChartCard>

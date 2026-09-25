@@ -20,12 +20,17 @@ import RevenueChart from "./RevenueChart";
 import WeeklyOrdersChart from "./WeeklyOrdersChart";
 import RestaurantTabs from "../../../../features/orders/components/filtrage/RestaurantTabs";
 import { UserType } from "../../../../features/users/types/user.types";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 // import BestSalesChart from "./BestSalesChart";
 
 const Dashboard = () => {
   const { setActiveTab, selectedRestaurantId, selectedPeriod } =
     useDashboardStore();
   const { user } = useAuthStore();
+  // Une carte n'ouvre que l'écran que le compte peut voir.
+  const voitMenus = useAuthStore((s) => s.can(Modules.MENUS, Action.READ));
+  const voitCommandes = useAuthStore((s) => s.can(Modules.COMMANDES, Action.READ));
+  const voitClients = useAuthStore((s) => s.can(Modules.CLIENTS, Action.READ));
 
   useAuthCleanup();
 
@@ -139,7 +144,7 @@ const Dashboard = () => {
               value: statsData.menusSold.objective,
               percentage: statsData.menusSold.percentage,
             }}
-            onClick={() => setActiveTab("menus")}
+            onClick={voitMenus ? () => setActiveTab("menus") : undefined}
           />
           <GenericStatCard
             title=""
@@ -150,7 +155,7 @@ const Dashboard = () => {
                 : "Total de commandes"
             }
             badgeColor="#4FCB71"
-            onClick={() => setActiveTab("orders")}
+            onClick={voitCommandes ? () => setActiveTab("orders") : undefined}
           />
           <GenericStatCard
             title=""
@@ -159,7 +164,7 @@ const Dashboard = () => {
               selectedRestaurantId ? "Nombre de clients" : "Clients total"
             }
             badgeColor="#007AFF"
-            onClick={() => setActiveTab("clients")}
+            onClick={voitClients ? () => setActiveTab("clients") : undefined}
           />
         </div>
 

@@ -15,6 +15,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import CreateSegmentModal from "./CreateSegmentModal";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   searchQuery: string;
@@ -26,6 +28,9 @@ export default function SegmentList({ searchQuery, onCreate }: Props) {
   const deleteMutation = useDeleteSegmentMutation();
   const [editSegment, setEditSegment] = useState<PushSegment | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  // Mêmes droits que le serveur (push-campaign.controller.ts, module NOTIFICATIONS).
+  const peutModifier = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.DELETE));
 
   if (isLoading) {
     return (
@@ -97,21 +102,29 @@ export default function SegmentList({ searchQuery, onCreate }: Props) {
                       {segment.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => setEditSegment(segment)}
-                      className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(segment)}
-                      disabled={deleteMutation.isPending}
-                      className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  {(peutModifier || peutSupprimer) && (
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {peutModifier && (
+                        <button
+                          onClick={() => setEditSegment(segment)}
+                          title="Modifier"
+                          className="p-1 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                      )}
+                      {peutSupprimer && (
+                        <button
+                          onClick={() => handleDelete(segment)}
+                          disabled={deleteMutation.isPending}
+                          title="Supprimer"
+                          className="p-1 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
                   {segment.description}
@@ -157,15 +170,17 @@ export default function SegmentList({ searchQuery, onCreate }: Props) {
         </div>
       )}
 
-      {/* Edit modal */}
-      <CreateSegmentModal
-        isOpen={showCreate || !!editSegment}
-        onClose={() => {
-          setShowCreate(false);
-          setEditSegment(null);
-        }}
-        editSegment={editSegment}
-      />
+      {/* Edit modal (monté seulement avec NOTIFICATIONS UPDATE) */}
+      {peutModifier && (
+        <CreateSegmentModal
+          isOpen={showCreate || !!editSegment}
+          onClose={() => {
+            setShowCreate(false);
+            setEditSegment(null);
+          }}
+          editSegment={editSegment}
+        />
+      )}
     </div>
   );
 }

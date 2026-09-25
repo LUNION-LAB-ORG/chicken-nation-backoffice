@@ -23,6 +23,8 @@ import {
   Send,
   Image as ImageIcon,
 } from "lucide-react";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   item: ScheduledNotification;
@@ -53,7 +55,7 @@ const TARGET_LABELS: Record<string, string> = {
 };
 
 function formatDate(date: string | null | undefined) {
-  if (!date) return "—";
+  if (!date) return "Non renseignée";
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "long",
     timeStyle: "short",
@@ -64,6 +66,9 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
   const toggleMutation = useToggleScheduledMutation();
   const deleteMutation = useDeleteScheduledMutation();
   const migrateMutation = useMigrateScheduledMutation();
+  // Mêmes droits que le serveur (push-campaign.controller.ts, module NOTIFICATIONS).
+  const peutModifier = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.DELETE));
 
   const payload = item.payload;
   const targeting = item.targeting;
@@ -111,48 +116,55 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onEdit(item)}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer"
-            >
-              <Pencil size={14} /> Modifier
-            </button>
-            <button
-              onClick={() => toggleMutation.mutate(item.id)}
-              disabled={toggleMutation.isPending}
-              className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl cursor-pointer disabled:opacity-50 ${
-                item.active
-                  ? "text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
-                  : "text-green-700 bg-green-50 hover:bg-green-100"
-              }`}
-            >
-              {item.active ? <Pause size={14} /> : <Play size={14} />}
-              {item.active ? "Désactiver" : "Activer"}
-            </button>
-            {isOneSignal && (
+            {peutModifier && (
+              <>
+                <button
+                  onClick={() => onEdit(item)}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 cursor-pointer"
+                >
+                  <Pencil size={14} /> Modifier
+                </button>
+                <button
+                  onClick={() => toggleMutation.mutate(item.id)}
+                  disabled={toggleMutation.isPending}
+                  className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-xl cursor-pointer disabled:opacity-50 ${
+                    item.active
+                      ? "text-yellow-700 bg-yellow-50 hover:bg-yellow-100"
+                      : "text-green-700 bg-green-50 hover:bg-green-100"
+                  }`}
+                >
+                  {item.active ? <Pause size={14} /> : <Play size={14} />}
+                  {item.active ? "Désactiver" : "Activer"}
+                </button>
+                {isOneSignal && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Migrer "${item.name}" vers Expo Push ?`)) {
+                        migrateMutation.mutate(item.id);
+                      }
+                    }}
+                    disabled={migrateMutation.isPending}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100 cursor-pointer disabled:opacity-50"
+                  >
+                    <ArrowRightLeft size={14} /> Migrer
+                  </button>
+                )}
+              </>
+            )}
+            {peutSupprimer && (
               <button
                 onClick={() => {
-                  if (confirm(`Migrer "${item.name}" vers Expo Push ?`)) {
-                    migrateMutation.mutate(item.id);
+                  if (confirm(`Supprimer "${item.name}" ?`)) {
+                    deleteMutation.mutate(item.id, { onSuccess: onBack });
                   }
                 }}
-                disabled={migrateMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-xl hover:bg-blue-100 cursor-pointer disabled:opacity-50"
+                disabled={deleteMutation.isPending}
+                title="Supprimer"
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 cursor-pointer disabled:opacity-50"
               >
-                <ArrowRightLeft size={14} /> Migrer
+                <Trash2 size={14} />
               </button>
             )}
-            <button
-              onClick={() => {
-                if (confirm(`Supprimer "${item.name}" ?`)) {
-                  deleteMutation.mutate(item.id, { onSuccess: onBack });
-                }
-              }}
-              disabled={deleteMutation.isPending}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-xl hover:bg-red-100 cursor-pointer disabled:opacity-50"
-            >
-              <Trash2 size={14} />
-            </button>
           </div>
         </div>
       </div>
@@ -174,7 +186,7 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
         <StatCard
           icon={<CalendarClock size={18} />}
           label="Prochain envoi"
-          value={item.active && item.next_run_at ? formatDate(item.next_run_at) : "—"}
+          value={item.active && item.next_run_at ? formatDate(item.next_run_at) : "Aucun"}
           color="bg-orange-50 text-orange-600"
           small
         />
@@ -281,7 +293,7 @@ export default function ScheduledDetailView({ item, onBack, onEdit }: Props) {
                             {title || "Notification"}
                           </p>
                           <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-3">
-                            {body || "—"}
+                            {body || "Sans texte"}
                           </p>
                         </div>
                       </div>

@@ -2,13 +2,14 @@
 
 import React, { useState, useRef, useMemo, useEffect } from "react";
 import Image from "next/image";
-import { ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Eye, Menu } from "lucide-react";
 import Checkbox from "@/components/ui/Checkbox";
 import Toggle from "@/components/ui/Toggle";
 import SupplementActionsMenu from "./SupplementActionsMenu";
 import { createPortal } from "react-dom";
 import { Pagination } from "@/components/ui/pagination";
 import { formatImageUrl } from "@/utils/imageHelpers";
+import BadgeDisponibilite from "./BadgeDisponibilite";
 
 type ProductCategory = "all" | "FOOD" | "DRINK" | "ACCESSORY";
 
@@ -23,9 +24,17 @@ interface ProductViewItem {
   available: boolean;
 }
 
+/**
+ * Chaque geste d'écriture n'apparaît que si l'écran parent passe son rappel,
+ * et il ne le passe que si le profil en a le droit. Sans `onUpdateAvailability`,
+ * la disponibilité s'affiche en badge ; sans aucune action, la colonne
+ * « Actions » disparaît et `onView` ouvre la fiche en lecture.
+ */
 interface ProductsViewProps {
   selectedTab: ProductCategory;
   onEdit?: (product: ProductViewItem) => void;
+  /** Fiche en lecture seule, pour un profil qui ne peut pas modifier. */
+  onView?: (product: ProductViewItem) => void;
   onCreateProduct?: () => void;
   products: ProductViewItem[];
   onUpdateAvailability?: (productId: string, available: boolean) => void;
@@ -43,6 +52,7 @@ interface ProductsViewProps {
 export default function SupplementView({
   // selectedTab,
   onEdit,
+  onView,
   onCreateProduct,
   products = [],
   onUpdateAvailability,
@@ -150,6 +160,10 @@ export default function SupplementView({
     selectedItems.length === paginatedProducts.length &&
     paginatedProducts.length > 0;
 
+  // Le menu d'actions ne s'ouvre que s'il contient au moins un geste permis.
+  const aDesActions = Boolean(onEdit || onDelete || onDeleteProduct);
+  const colonneActions = aDesActions || Boolean(onView);
+
   const handleMenuOpen = (productId: string, event: React.MouseEvent) => {
     event.stopPropagation();
 
@@ -227,11 +241,13 @@ export default function SupplementView({
                   </div>
                 </th>
                 {/* Colonne Actions - conditionnelle */}
-                <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
-                  <div className="flex items-center justify-center">
-                    Actions
-                  </div>
-                </th>
+                {colonneActions && (
+                  <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
+                    <div className="flex items-center justify-center">
+                      {aDesActions ? "Actions" : "Fiche"}
+                    </div>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -243,13 +259,19 @@ export default function SupplementView({
                 .map((product) => (
                   <tr
                     key={product.id}
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      onView?.(product);
+                    }}
                     className={`border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
                       selectedProduct?.id === product.id ? "bg-gray-50" : ""
                     }`}
                   >
                     {/* Cellule de sélection - conditionnelle */}
-                    <td className="py-4 pl-6">
+                    <td
+                      className="py-4 pl-6"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Checkbox
                         checked={selectedItems.includes(product.id)}
                         onChange={() => toggleItemSelection(product.id)}
@@ -287,65 +309,97 @@ export default function SupplementView({
                     </td>
                     {/* Cellule Disponible - conditionnelle */}
                     <td className="py-4 px-4">
-                      <div className="flex items-center justify-center">
-                        <Toggle
-                          checked={product.available || false}
-                          onChange={(checked) => {
-                            if (onUpdateAvailability) {
-                              onUpdateAvailability(product.id, checked);
+                      <div
+                        className="flex items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {onUpdateAvailability ? (
+                          <Toggle
+                            checked={product.available || false}
+                            onChange={(checked) =>
+                              onUpdateAvailability(product.id, checked)
                             }
-                          }}
-                        />
+                          />
+                        ) : (
+                          <BadgeDisponibilite
+                            disponible={product.available || false}
+                          />
+                        )}
                       </div>
                     </td>
                     {/* Cellule Actions - conditionnelle */}
-                    <td className="text-center">
-                      <button
-                        onClick={(e) => handleMenuOpen(product.id, e)}
-                        className="px-2 py-2 text-[14px] cursor-pointer hover:bg-gray-100  rounded-full transition-colors"
-                      >
-                        <Menu
-                          size={20}
-                          className="text-slate-500 hover:text-slate-600"
-                        />
-                      </button>
-                      {menuOpenId === product.id &&
-                        menuPosition &&
-                        createPortal(
-                          <SupplementActionsMenu
-                            menuPosition={menuPosition}
-                            menuRef={menuRef}
-                            productId={product.id}
-                            onEdit={
-                              onEdit
-                                ? () => {
-                                    setMenuOpenId(null);
-                                    onEdit(product);
-                                  }
-                                : undefined
-                            }
-                            onDelete={
-                              onDeleteProduct || onDelete
-                                ? () => {
-                                    setMenuOpenId(null);
-                                    if (onDeleteProduct) {
-                                      onDeleteProduct(product.id);
-                                    } else if (onDelete) {
-                                      onDelete(product);
-                                    }
-                                  }
-                                : undefined
-                            }
-                          />,
-                          document.body
+                    {colonneActions && (
+                      <td className="text-center">
+                        {aDesActions ? (
+                          <button
+                            onClick={(e) => handleMenuOpen(product.id, e)}
+                            className="px-2 py-2 text-[14px] cursor-pointer hover:bg-gray-100  rounded-full transition-colors"
+                            aria-label="Actions"
+                          >
+                            <Menu
+                              size={20}
+                              className="text-slate-500 hover:text-slate-600"
+                            />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onView?.(product);
+                            }}
+                            className="px-2 py-2 text-[14px] cursor-pointer hover:bg-gray-100  rounded-full transition-colors"
+                            aria-label="Voir la fiche"
+                            title="Voir la fiche"
+                          >
+                            <Eye
+                              size={20}
+                              className="text-slate-500 hover:text-slate-600"
+                            />
+                          </button>
                         )}
-                    </td>
+                        {aDesActions &&
+                          menuOpenId === product.id &&
+                          menuPosition &&
+                          createPortal(
+                            <SupplementActionsMenu
+                              menuPosition={menuPosition}
+                              menuRef={menuRef}
+                              productId={product.id}
+                              onEdit={
+                                onEdit
+                                  ? () => {
+                                      setMenuOpenId(null);
+                                      onEdit(product);
+                                    }
+                                  : undefined
+                              }
+                              onDelete={
+                                onDeleteProduct || onDelete
+                                  ? () => {
+                                      setMenuOpenId(null);
+                                      if (onDeleteProduct) {
+                                        onDeleteProduct(product.id);
+                                      } else if (onDelete) {
+                                        onDelete(product);
+                                      }
+                                    }
+                                  : undefined
+                              }
+                            />,
+                            document.body
+                          )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               {paginatedProducts.length === 0 &&
                 filteredProducts.length === 0 && (
                   <tr key="empty-supplements-row">
-                    <td colSpan={6} className="py-8 text-center">
+                    <td
+                      colSpan={colonneActions ? 7 : 6}
+                      className="py-8 text-center"
+                    >
                       <div className="flex items-center justify-center flex-col gap-4">
                         <span className="text-[14px] text-[#F17922]">
                           Aucun produit trouvé
@@ -376,8 +430,10 @@ export default function SupplementView({
             .map((product) => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl shadow-sm border border-[#ECECEC] p-4 flex items-center gap-4 cursor-pointer hover:bg-[#FFF6E9]/60 transition"
-                onClick={() => onEdit && onEdit(product)}
+                className={`bg-white rounded-xl shadow-sm border border-[#ECECEC] p-4 flex items-center gap-4 transition ${
+                  onEdit || onView ? "cursor-pointer hover:bg-[#FFF6E9]/60" : ""
+                }`}
+                onClick={() => (onEdit ? onEdit(product) : onView?.(product))}
               >
                 <div className="w-14 h-14 rounded-lg bg-[#FFF6E9] flex items-center justify-center overflow-hidden">
                   <Image
@@ -415,26 +471,39 @@ export default function SupplementView({
                     <div className="text-[11px] text-[#F17922] font-medium">
                       {product.available ? "Disponible" : "Non disponible"}
                     </div>
-                    <Toggle
-                      checked={product.available || false}
-                      onChange={(checked) => {
-                        if (onUpdateAvailability) {
-                          onUpdateAvailability(product.id, checked);
-                        }
-                      }}
-                    />
+                    {/* L'interrupteur n'ouvre plus la modification de la
+                        carte : un seul toucher faisait les deux. */}
+                    {onUpdateAvailability && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <Toggle
+                          checked={product.available || false}
+                          onChange={(checked) =>
+                            onUpdateAvailability(product.id, checked)
+                          }
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Menu actions - conditionnel */}
-                <span
-                  className="text-[#71717A] text-lg cursor-pointer select-none px-2"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMenuOpen(product.id, e);
-                  }}
-                >
-                  <Menu size={20} />
-                </span>
+                {aDesActions ? (
+                  <span
+                    className="text-[#71717A] text-lg cursor-pointer select-none px-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMenuOpen(product.id, e);
+                    }}
+                  >
+                    <Menu size={20} />
+                  </span>
+                ) : onView ? (
+                  <span
+                    className="text-[#71717A] text-lg cursor-pointer select-none px-2"
+                    aria-label="Voir la fiche"
+                  >
+                    <Eye size={20} />
+                  </span>
+                ) : null}
               </div>
             ))}
 

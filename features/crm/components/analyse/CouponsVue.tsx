@@ -4,8 +4,12 @@ import { ChoixPublics } from "../commun/ChoixPublics";
 import { FiltrePeriode } from "../commun/FiltrePeriode";
 import { CouponsResume } from "./CouponsResume";
 
-/** Onglet Coupons : cliquer un chiffre ouvre les contacts concernés. Avec plusieurs publics, un tableau par public. */
-export function CouponsVue({ onVoir }: { onVoir: (etat: "ACTIF" | "UTILISE" | "EXPIRE") => void }) {
+/**
+ * Onglet Coupons : cliquer un chiffre ouvre les contacts concernés (sans
+ * `onVoir`, pour qui ne voit pas la liste, les chiffres ne se cliquent pas).
+ * Avec plusieurs publics, un tableau par public.
+ */
+export function CouponsVue({ onVoir }: { onVoir?: (etat: "ACTIF" | "UTILISE" | "EXPIRE") => void }) {
   const [periode, setPeriode] = useState<IPeriode>({});
   return (
     <div className="space-y-4">

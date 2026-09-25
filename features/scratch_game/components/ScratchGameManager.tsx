@@ -17,7 +17,7 @@ import ScratchSettingsPanel from "./ScratchSettingsPanel";
 import ScratchDrawsHistory from "./ScratchDrawsHistory";
 import { CreateScratchLotDto, ScratchLot } from "../types/scratch.types";
 import { useAuthStore } from "../../users/hook/authStore";
-import { UserRole } from "../../users/types/user.types";
+import { Action, Modules } from "../../users/types/auth.type";
 
 type ScratchTab = "lots" | "draws" | "simulator" | "envelope" | "settings";
 
@@ -34,8 +34,19 @@ export default function ScratchGameManager() {
   const [formMode, setFormMode] = useState<null | "create" | "edit">(null);
   const [editing, setEditing] = useState<ScratchLot | null>(null);
 
-  const { user } = useAuthStore();
-  const canManage = user?.role === UserRole.ADMIN;
+  // Mêmes droits que le serveur : lots = FIDELITE (CREATE, UPDATE, DELETE),
+  // Réglages = /settings (SETTINGS READ pour les voir).
+  const peutCreer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.DELETE));
+  const peutVoirReglages = useAuthStore((s) => s.can(Modules.SETTINGS, Action.READ));
+  const onglets = TABS.filter((t) => t.key !== "settings" || peutVoirReglages);
+  // Un onglet devenu interdit (droits relus) retombe sur les lots.
+  const ongletActif: ScratchTab =
+    tab === "settings" && !peutVoirReglages ? "lots" : tab;
+  // Le formulaire n'est ouvert que si le geste correspondant est permis.
+  const formulaireOuvert =
+    formMode === "create" ? peutCreer : formMode === "edit" ? peutModifier : false;
 
   const { data: lots, isLoading } = useScratchLotsQuery();
   const createMut = useCreateScratchLotMutation();
@@ -96,7 +107,7 @@ export default function ScratchGameManager() {
               Lots, calibrage et pilotage de l&apos;enveloppe budgétaire.
             </p>
           </div>
-          {tab === "lots" && !formMode && canManage && (
+          {ongletActif === "lots" && !formulaireOuvert && peutCreer && (
             <motion.button
               onClick={openCreate}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-white rounded-xl"
@@ -109,11 +120,11 @@ export default function ScratchGameManager() {
         </div>
 
         {/* Onglets internes (masqués pendant l'édition d'un lot) */}
-        {!formMode && (
+        {!formulaireOuvert && (
           <div className="flex items-center gap-1.5 border-b border-[#F1F3F5] mb-6 overflow-x-auto">
-            {TABS.map((t) => {
+            {onglets.map((t) => {
               const Icon = t.icon;
-              const active = tab === t.key;
+              const active = ongletActif === t.key;
               return (
                 <button
                   key={t.key}
@@ -133,7 +144,7 @@ export default function ScratchGameManager() {
         )}
 
         <AnimatePresence mode="wait">
-          {formMode ? (
+          {formulaireOuvert ? (
             <motion.div
               key="form"
               initial={{ opacity: 0 }}
@@ -154,7 +165,7 @@ export default function ScratchGameManager() {
                 isPending={createMut.isPending || updateMut.isPending}
               />
             </motion.div>
-          ) : tab === "lots" ? (
+          ) : ongletActif === "lots" ? (
             <motion.div
               key="lots"
               initial={{ opacity: 0 }}
@@ -164,12 +175,13 @@ export default function ScratchGameManager() {
               <ScratchLotsList
                 lots={lots}
                 isLoading={isLoading}
-                onEdit={openEdit}
-                onDelete={handleDelete}
-                onToggleActive={handleToggleActive}
+                onEdit={peutModifier ? openEdit : undefined}
+                onDelete={peutSupprimer ? handleDelete : undefined}
+                onToggleActive={peutModifier ? handleToggleActive : undefined}
+                canCreate={peutCreer}
               />
             </motion.div>
-          ) : tab === "draws" ? (
+          ) : ongletActif === "draws" ? (
             <motion.div
               key="draws"
               initial={{ opacity: 0 }}
@@ -178,7 +190,7 @@ export default function ScratchGameManager() {
             >
               <ScratchDrawsHistory />
             </motion.div>
-          ) : tab === "simulator" ? (
+          ) : ongletActif === "simulator" ? (
             <motion.div
               key="simulator"
               initial={{ opacity: 0 }}
@@ -187,7 +199,7 @@ export default function ScratchGameManager() {
             >
               <ScratchSimulator />
             </motion.div>
-          ) : tab === "envelope" ? (
+          ) : ongletActif === "envelope" ? (
             <motion.div
               key="envelope"
               initial={{ opacity: 0 }}

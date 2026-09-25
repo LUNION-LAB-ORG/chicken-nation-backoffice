@@ -14,6 +14,8 @@ import {
 } from "../types/referral.types";
 import { fcfa, shortDate } from "../utils/format";
 import toast from "react-hot-toast";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 const STATUS_STYLE: Record<ReferralEarningStatus, { label: string; cls: string }> = {
   PENDING: { label: "En attente", cls: "bg-[#FFF6E9] text-[#B45309]" },
@@ -85,6 +87,8 @@ export default function AmbassadorPayoutModal({
   const detailQuery = useAmbassadorDetailQuery(isOpen ? ambassadorId : null);
   const markPayable = useMarkPayableMutation(ambassadorId ?? "");
   const markPaid = useMarkPaidMutation(ambassadorId ?? "");
+  // Passer en payable et marquer payé : FIDELITE UPDATE côté serveur.
+  const peutVerser = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
 
   const detail = detailQuery.data;
   const payable = detail?.payable_amount ?? 0;
@@ -124,7 +128,7 @@ export default function AmbassadorPayoutModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={detail?.fullname ? `Ambassadeur — ${detail.fullname}` : "Ambassadeur"}
+      title={detail?.fullname ? `Ambassadeur : ${detail.fullname}` : "Ambassadeur"}
       size="large"
     >
       <div className="p-5 sm:p-6 space-y-5">
@@ -163,73 +167,75 @@ export default function AmbassadorPayoutModal({
             </div>
 
             {/* Actions versement */}
-            <div className="bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl p-4 space-y-4">
-              <div className="flex items-center justify-between gap-3 flex-wrap">
-                <div className="text-sm font-semibold text-[#18181B]">
-                  Gérer le versement
+            {peutVerser && (
+              <div className="bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl p-4 space-y-4">
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <div className="text-sm font-semibold text-[#18181B]">
+                    Gérer le versement
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => markPayable.mutate()}
+                    disabled={markPayable.isPending || detail.pending_amount <= 0}
+                    className="flex items-center gap-2 text-sm font-medium text-[#0369A1] border border-[#0369A1]/30 bg-white rounded-lg px-3 py-2 hover:bg-[#EAF6FF] disabled:opacity-50 cursor-pointer"
+                    title="Basculer les gains éligibles (en attente) en payable"
+                  >
+                    {markPayable.isPending ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <CheckCircle2 size={16} />
+                    )}
+                    Passer en payable
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => markPayable.mutate()}
-                  disabled={markPayable.isPending || detail.pending_amount <= 0}
-                  className="flex items-center gap-2 text-sm font-medium text-[#0369A1] border border-[#0369A1]/30 bg-white rounded-lg px-3 py-2 hover:bg-[#EAF6FF] disabled:opacity-50 cursor-pointer"
-                  title="Basculer les gains éligibles (en attente) en payable"
-                >
-                  {markPayable.isPending ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <CheckCircle2 size={16} />
-                  )}
-                  Passer en payable
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_auto] gap-3 items-end">
-                <div>
-                  <label className="block text-xs font-medium text-[#71717A] mb-1.5">
-                    Montant versé (FCFA)
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={payable || undefined}
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
-                    placeholder="0"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_auto] gap-3 items-end">
+                  <div>
+                    <label className="block text-xs font-medium text-[#71717A] mb-1.5">
+                      Montant versé (FCFA)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={payable || undefined}
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#71717A] mb-1.5">
+                      Note (réf. mobile money, remarque…)
+                    </label>
+                    <input
+                      type="text"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                      placeholder="Ex. Wave 07xx, réf. 12345"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={doPay}
+                    disabled={markPaid.isPending || payable <= 0}
+                    className="h-11 flex items-center justify-center gap-2 bg-[#1E8E5A] text-white font-semibold px-5 rounded-lg hover:bg-[#177a4c] disabled:opacity-50 cursor-pointer"
+                  >
+                    {markPaid.isPending ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <Wallet size={16} />
+                    )}
+                    Marquer payé
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-[#71717A] mb-1.5">
-                    Note (réf. mobile money, remarque…)
-                  </label>
-                  <input
-                    type="text"
-                    value={note}
-                    onChange={(e) => setNote(e.target.value)}
-                    className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
-                    placeholder="Ex. Wave 07xx — réf 12345"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={doPay}
-                  disabled={markPaid.isPending || payable <= 0}
-                  className="h-11 flex items-center justify-center gap-2 bg-[#1E8E5A] text-white font-semibold px-5 rounded-lg hover:bg-[#177a4c] disabled:opacity-50 cursor-pointer"
-                >
-                  {markPaid.isPending ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Wallet size={16} />
-                  )}
-                  Marquer payé
-                </button>
+                <p className="text-[11px] text-[#9796A1]">
+                  Le versement est effectué hors-système (V1 = marquage manuel). Seuls
+                  les gains « payable » peuvent être soldés.
+                </p>
               </div>
-              <p className="text-[11px] text-[#9796A1]">
-                Le versement est effectué hors-système (V1 = marquage manuel). Seuls
-                les gains « payable » peuvent être soldés.
-              </p>
-            </div>
+            )}
 
             {/* Gains détaillés */}
             <div>

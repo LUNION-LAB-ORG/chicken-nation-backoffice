@@ -89,7 +89,7 @@ function resumerGroupe(groupe: DishOptionGroupPayload): {
   } else if (requis && min < 1) {
     alerte = "Un groupe obligatoire demande au moins un choix";
   } else if (requis && disponibles < min) {
-    alerte = `${disponibles} choix disponible pour un minimum de ${min}`;
+    alerte = `${disponibles} choix disponible${disponibles > 1 ? "s" : ""} pour un minimum de ${min}`;
   } else if (groupe.items.filter((i) => i.is_default).length > max) {
     alerte = "Plus de choix présélectionnés que le maximum autorisé";
   } else if (groupe.items.some((i) => !i.label.trim())) {
@@ -99,11 +99,134 @@ function resumerGroupe(groupe: DishOptionGroupPayload): {
   return { phrase, alerte };
 }
 
+/**
+ * Même configuration, dite en texte : aucun champ, aucun bouton. Sert à la
+ * fiche d'un plat et à tout profil qui consulte sans pouvoir modifier. Des
+ * contrôles simplement grisés laissaient croire qu'on pouvait agir, et la case
+ * « Réponse obligatoire » restait même cliquable.
+ */
+function OptionsEnLecture({
+  groups,
+  supplements,
+}: {
+  groups: DishOptionGroupPayload[];
+  supplements: Array<{ id: string; name: string }>;
+}) {
+  const nomsSupplements = useMemo(
+    () => new Map(supplements.map((s) => [s.id, s.name])),
+    [supplements],
+  );
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-lg font-medium text-[#595959]">Menu composable</h3>
+        <p className="mt-0.5 text-[12px] text-gray-500">
+          Les questions posées au client avant qu'il ajoute ce plat au panier.
+        </p>
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="rounded-2xl border-2 border-dashed border-[#D9D9D9] px-4 py-8 text-center">
+          <p className="text-[13px] font-semibold text-gray-600">
+            Ce plat n'a aucune option
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-[12px] text-gray-500">
+            Le client l'ajoute au panier sans rien avoir à choisir.
+          </p>
+        </div>
+      ) : (
+        groups.map((groupe, indexGroupe) => {
+          const { phrase, alerte } = resumerGroupe(groupe);
+          const requis = groupe.required !== false;
+
+          return (
+            <div
+              key={groupe.id ?? indexGroupe}
+              className="rounded-2xl border-2 border-[#D9D9D9]/50 p-4 space-y-3"
+            >
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[14px] font-semibold text-[#595959]">
+                    {groupe.name || "Groupe sans titre"}
+                  </p>
+                  {groupe.description && (
+                    <p className="mt-0.5 text-[12px] text-gray-500">
+                      {groupe.description}
+                    </p>
+                  )}
+                </div>
+                {requis && (
+                  <span className="shrink-0 rounded-lg bg-[#FFF6E9] px-2 py-1 text-[12px] font-semibold text-[#F17922]">
+                    Réponse obligatoire
+                  </span>
+                )}
+              </div>
+
+              <p className="text-[12px] text-gray-500">{phrase}</p>
+              {alerte && (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600">
+                  {alerte}
+                </p>
+              )}
+
+              <ul className="space-y-1.5">
+                {groupe.items.map((choix, indexChoix) => {
+                  const prix = choix.price_delta ?? 0;
+                  const lie = choix.supplement_id
+                    ? nomsSupplements.get(choix.supplement_id)
+                    : null;
+                  const disponible = choix.available !== false;
+                  return (
+                    <li
+                      key={choix.id ?? indexChoix}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-gray-50 px-3 py-2"
+                    >
+                      <span className="text-[13px] font-semibold text-[#595959]">
+                        {choix.label || "Choix sans libellé"}
+                      </span>
+                      <span className="text-[12px] text-gray-500">
+                        {prix > 0
+                          ? `${prix.toLocaleString("fr-FR")} XOF en plus`
+                          : "Sans supplément de prix"}
+                      </span>
+                      {choix.supplement_id && (
+                        <span className="text-[12px] text-gray-500">
+                          Lié à {lie ?? "un supplément du catalogue"}
+                        </span>
+                      )}
+                      {choix.is_default && (
+                        <span className="rounded-lg bg-[#FFF6E9] px-2 py-0.5 text-[11px] font-semibold text-[#F17922]">
+                          Par défaut
+                        </span>
+                      )}
+                      <span
+                        className={`rounded-lg px-2 py-0.5 text-[11px] font-semibold ${
+                          disponible
+                            ? "bg-green-50 text-green-700"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {disponible ? "Disponible" : "Indisponible"}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 export default function DishOptionsEditor({
   groups,
   onChange,
   supplements = [],
   disabled = false,
+  lectureSeule = false,
 }: {
   groups: DishOptionGroupPayload[];
   onChange: (groups: DishOptionGroupPayload[]) => void;
@@ -114,6 +237,8 @@ export default function DishOptionsEditor({
    */
   supplements?: Array<{ id: string; name: string }>;
   disabled?: boolean;
+  /** Affiche la configuration en texte, sans aucun contrôle d'édition. */
+  lectureSeule?: boolean;
 }) {
   const majGroupe = (index: number, champs: Partial<DishOptionGroupPayload>) => {
     onChange(groups.map((g, i) => (i === index ? { ...g, ...champs } : g)));
@@ -150,6 +275,10 @@ export default function DishOptionsEditor({
     () => groups.map((g) => resumerGroupe(g)),
     [groups],
   );
+
+  if (lectureSeule) {
+    return <OptionsEnLecture groups={groups} supplements={supplements} />;
+  }
 
   return (
     <div className="space-y-4">

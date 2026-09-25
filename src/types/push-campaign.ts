@@ -197,12 +197,18 @@ export interface UpdateScheduledPayload extends Partial<CreateScheduledPayload> 
 
 // ── Users ───────────────────────────────────────────────────────────────────
 
+/**
+ * Abonné push tel que le renvoie GET /push-campaigns/users. Le serveur ne
+ * renvoie plus le jeton Expo ni les identifiants OneSignal (un jeton suffit à
+ * écrire au téléphone par l'API publique d'Expo) : seulement sa présence.
+ */
 export interface PushUser {
   customer_id: string;
   push: boolean;
   promotions: boolean;
   system: boolean;
-  expo_push_token: string | null;
+  /** Un jeton push est enregistré pour ce client. */
+  has_push_token: boolean;
   active: boolean;
   customer: {
     id: string;
@@ -214,12 +220,14 @@ export interface PushUser {
   };
 }
 
+/** Détail d'un abonné (GET /push-campaigns/users/:id), sans jeton non plus. */
 export interface PushUserDetail {
   customer_id: string;
   push: boolean;
   promotions: boolean;
   system: boolean;
-  expo_push_token: string | null;
+  /** Un jeton push est enregistré pour ce client. */
+  has_push_token: boolean;
   active: boolean;
   customer: {
     id: string;

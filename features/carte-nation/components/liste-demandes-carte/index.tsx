@@ -17,6 +17,8 @@ import {
 import { getStatusBadgeRequestCard } from "../../utils/getStatusBadgeRequestCard";
 import { DetailCardModal } from "./DetailCardModal";
 import StatutCardRequestTab from "./StatutCardRequestTab";
+import { useAuthStore } from "../../../users/hook/authStore";
+import { Action, Modules } from "../../../users/types/auth.type";
 
 export function DemandeCarteList() {
   const {
@@ -24,6 +26,9 @@ export function DemandeCarteList() {
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
+  // Le bandeau explique comment approuver : réservé à qui peut le faire
+  // (PATCH .../requests/:id/review, CARD_NATION UPDATE).
+  const peutValider = useAuthStore((s) => s.can(Modules.CARD_NATION, Action.UPDATE));
 
   const { data: requests, isLoading } = useRequestListQuery({
     page: pagination.page,
@@ -43,17 +48,19 @@ export function DemandeCarteList() {
     <div>
       <div className="w-full">
         {/* Bandeau : la carte n'est plus auto-émise — toute demande est validée ici. */}
-        <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-          <div className="text-sm text-amber-800">
-            <span className="font-semibold">Validation requise.</span> Toutes les
-            demandes arrivent <strong>en attente</strong> et doivent être{" "}
-            <strong>approuvées ici</strong> pour générer la carte. À
-            l&apos;approbation, vous choisissez le <strong>type de carte</strong>{" "}
-            (Étudiant / Standard / VIP / VVIP). L&apos;approbation émet la carte et
-            notifie le client («&nbsp;carte prête&nbsp;») ; le refus le notifie aussi.
+        {peutValider && (
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+            <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <div className="text-sm text-amber-800">
+              <span className="font-semibold">Validation requise.</span> Toutes les
+              demandes arrivent <strong>en attente</strong> et doivent être{" "}
+              <strong>approuvées ici</strong> pour générer la carte. À
+              l&apos;approbation, vous choisissez le <strong>type de carte</strong>{" "}
+              (Étudiant / Standard / VIP / VVIP). L&apos;approbation émet la carte et
+              notifie le client («&nbsp;carte prête&nbsp;») ; le refus le notifie aussi.
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Filtrage */}
         <StatutCardRequestTab />

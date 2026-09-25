@@ -41,7 +41,11 @@ export default function EditCategory({
         description: category.description || "",
         image: undefined,
         private: category.private || false,
-        hubrise_sku: category.hubrise_sku || "",
+        // Le type Category du service ne déclare pas hubrise_sku, que le
+        // serveur renvoie pourtant.
+        hubrise_sku:
+          (category as Category & { hubrise_sku?: string | null }).hubrise_sku ||
+          "",
       });
 
       if (category.image) {

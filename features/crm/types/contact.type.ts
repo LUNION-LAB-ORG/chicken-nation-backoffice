@@ -127,10 +127,11 @@ export interface ICapture {
 
 /**
  * Ce que l'utilisateur peut faire de la fiche : tout (gestion), la traiter
- * (sienne, ou prise dans la file commune en agissant), ou seulement la lire
- * (client d'un collègue retrouvé par son numéro).
+ * (sienne, ou prise dans la file commune en agissant), seulement la lire
+ * (client d'un collègue retrouvé par son numéro), ou la consulter (lecteur :
+ * marketing, manager ; tout voir, téléphone compris, aucun geste).
  */
-export type ModeFiche = "gestion" | "sien" | "commune" | "lecture";
+export type ModeFiche = "gestion" | "sien" | "commune" | "lecture" | "consultation";
 
 export interface IContactFiche extends Omit<IContactLigne, "coupon" | "customer"> {
   customer: (IClientContact & { created_at: string; last_login_at: string | null; whatsapp_opt_in: boolean }) | null;

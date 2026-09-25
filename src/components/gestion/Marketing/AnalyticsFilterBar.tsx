@@ -131,7 +131,7 @@ export function AnalyticsFilterBar({ filters, changeFilters }: Props) {
             <CalendarDays className="w-4 h-4" />
             <span>
               {filters.dateFrom && filters.dateTo
-                ? `${new Date(filters.dateFrom).toLocaleDateString()} – ${new Date(
+                ? `Du ${new Date(filters.dateFrom).toLocaleDateString()} au ${new Date(
                     filters.dateTo,
                   ).toLocaleDateString()}`
                 : "Période"}

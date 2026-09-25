@@ -31,18 +31,18 @@ export const marketingTableColumns: MarketingTableColumn[] = [
       info.row.original.targetLabel ? (
         <span className="text-slate-700">{info.row.original.targetLabel}</span>
       ) : (
-        <span className="text-slate-300">—</span>
+        <span className="text-slate-300">Aucune</span>
       ),
   },
   {
     accessorKey: "platform",
     header: "Plateforme",
-    cell: (info) => info.getValue() ?? "—",
+    cell: (info) => info.getValue() ?? "Inconnue",
   },
   {
     accessorKey: "ip",
     header: "Adresse IP",
-    cell: (info) => (info.row.original.ip ?? "").replace("::ffff:", "") || "—",
+    cell: (info) => (info.row.original.ip ?? "").replace("::ffff:", "") || "Inconnue",
   },
   {
     accessorKey: "createdAt",
@@ -51,7 +51,7 @@ export const marketingTableColumns: MarketingTableColumn[] = [
   },
   {
     accessorKey: "userAgent",
-    header: "User Agent",
+    header: "Agent utilisateur",
     cell: (info) => (
       <span className="block max-w-[22rem] truncate text-xs text-slate-400">
         {String(info.getValue() ?? "")}

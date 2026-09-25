@@ -42,6 +42,8 @@ import {
 import { GoogleMap, HeatmapLayerF, MarkerF, InfoWindowF } from "@react-google-maps/api";
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import {
   useClientsDashboardQuery,
   useInactiveClientsQuery,
@@ -138,6 +140,8 @@ const ACQUISITION_COLORS = {
 
 export default function StatsClients() {
   const { selectedRestaurantId, openCrm } = useDashboardStore();
+  // « Rappeler » mène au CRM : seulement pour qui peut l'ouvrir.
+  const voitCrm = useAuthStore((s) => s.can(Modules.CRM, Action.READ));
   const [filters, setFilters] = useState<StatsFilters>({
     ...DEFAULT_STATS_FILTERS,
     restaurantId: selectedRestaurantId ?? undefined,
@@ -1489,7 +1493,7 @@ export default function StatsClients() {
                       {formatNumber(c.totalOrders)}
                     </span>
                   ),
-                  action: (
+                  action: voitCrm ? (
                     <button
                       onClick={() => {
                         openCrm("INACTIF");
@@ -1499,7 +1503,7 @@ export default function StatsClients() {
                       <Phone className="w-2.5 h-2.5" />
                       Rappeler
                     </button>
-                  ),
+                  ) : null,
                 }))}
                 emptyMessage="Aucun client inactif sur cette période"
               />

@@ -7,6 +7,8 @@ import {
 } from "@/hooks/usePushCampaignQuery";
 import type { PushTemplate } from "@/types/push-campaign";
 import { FileText, Edit2, Trash2, Loader2, Bell } from "lucide-react";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   searchQuery: string;
@@ -17,6 +19,11 @@ interface Props {
 export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
   const { data, isLoading, error } = useTemplatesQuery({});
   const { mutate: deleteTemplate, isPending: isDeleting } = useDeleteTemplateMutation();
+  // Mêmes droits que le serveur (push-campaign.controller.ts, module NOTIFICATIONS).
+  const peutCreer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.DELETE));
+  const avecActions = peutModifier || peutSupprimer;
 
   const templates = data?.items ?? [];
 
@@ -48,16 +55,20 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <FileText size={28} className="text-gray-400" />
         </div>
-        <p className="text-gray-500 text-sm">Aucun template</p>
-        <p className="text-gray-400 text-xs mt-1">
-          Créez votre premier template de notification
-        </p>
-        <button
-          onClick={onCreate}
-          className="mt-4 px-5 py-2 bg-[#F17922] text-white text-sm font-semibold rounded-xl hover:bg-[#e06816] cursor-pointer"
-        >
-          Créer un template
-        </button>
+        <p className="text-gray-500 text-sm">Aucun modèle</p>
+        {peutCreer && (
+          <>
+            <p className="text-gray-400 text-xs mt-1">
+              Créez votre premier modèle de notification
+            </p>
+            <button
+              onClick={onCreate}
+              className="mt-4 px-5 py-2 bg-[#F17922] text-white text-sm font-semibold rounded-xl hover:bg-[#e06816] cursor-pointer"
+            >
+              Créer un modèle
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -71,7 +82,7 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
             <th className="pb-3 font-medium">Titre</th>
             <th className="pb-3 font-medium">Contenu</th>
             <th className="pb-3 font-medium">Date</th>
-            <th className="pb-3 font-medium text-right">Actions</th>
+            {avecActions && <th className="pb-3 font-medium text-right">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
@@ -90,7 +101,7 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
               </td>
               <td className="py-3 max-w-[250px]">
                 <p className="text-xs text-gray-500 truncate">
-                  {template.body || "—"}
+                  {template.body || "Sans texte"}
                 </p>
               </td>
               <td className="py-3 text-xs text-gray-500">
@@ -100,29 +111,37 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
                       month: "short",
                       year: "numeric",
                     })
-                  : "—"}
+                  : "Non renseignée"}
               </td>
-              <td className="py-3">
-                <div className="flex items-center justify-end gap-2">
-                  <button
-                    onClick={() => onEdit(template)}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#F17922] cursor-pointer"
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (confirm("Supprimer ce template ?")) {
-                        deleteTemplate(template.id);
-                      }
-                    }}
-                    disabled={isDeleting}
-                    className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </td>
+              {avecActions && (
+                <td className="py-3">
+                  <div className="flex items-center justify-end gap-2">
+                    {peutModifier && (
+                      <button
+                        onClick={() => onEdit(template)}
+                        title="Modifier"
+                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-[#F17922] cursor-pointer"
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                    )}
+                    {peutSupprimer && (
+                      <button
+                        onClick={() => {
+                          if (confirm("Supprimer ce modèle ?")) {
+                            deleteTemplate(template.id);
+                          }
+                        }}
+                        disabled={isDeleting}
+                        title="Supprimer"
+                        className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              )}
             </tr>
           ))}
         </tbody>

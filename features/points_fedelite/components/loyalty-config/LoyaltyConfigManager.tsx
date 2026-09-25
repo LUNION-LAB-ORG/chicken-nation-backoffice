@@ -7,12 +7,13 @@ import { useAddOrUpdateLoyaltyConfigMutation } from "../../queries/loyalty.mutat
 import { LoyaltyConfigDetails } from "./LoyaltyConfigDetails";
 import { LoyaltyConfigForm } from "./LoyaltyConfigForm";
 import { useAuthStore } from "../../../users/hook/authStore";
-import { UserRole } from "../../../users/types/user.types";
+import { Action, Modules } from "../../../users/types/auth.type";
 
 const LoyaltyConfigManager = () => {
   const [showForm, setShowForm] = useState(false);
   const { data: config, isLoading, refetch } = useConfigQuery();
-  const { user } = useAuthStore();
+  // POST /fidelity/loyalty/config exige FIDELITE CREATE, création comme modification.
+  const peutConfigurer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
   const mutation = useAddOrUpdateLoyaltyConfigMutation();
 
   const defaultFormData = {
@@ -55,7 +56,7 @@ const LoyaltyConfigManager = () => {
           <h1 className="text-2xl font-bold text-[#595959]">
             Configuration de Fidélité
           </h1>
-          {user && user.role == UserRole.ADMIN && !showForm && (
+          {peutConfigurer && !showForm && (
             <motion.button
               onClick={() => setShowForm(true)}
               className="px-6 py-2 bg-[#F17922] text-white rounded-xl"
@@ -68,16 +69,18 @@ const LoyaltyConfigManager = () => {
         </div>
 
         <AnimatePresence mode="wait">
-          {!showForm && config ? (
+          {(!showForm || !peutConfigurer) && config ? (
             <LoyaltyConfigDetails config={config} />
-          ) : !showForm && !config ? (
+          ) : (!showForm || !peutConfigurer) && !config ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">🎁</div>
               <h3 className="text-xl font-semibold text-gray-700">
                 Aucune configuration
               </h3>
               <p className="text-gray-500 mb-6">
-                Créez votre première configuration.
+                {peutConfigurer
+                  ? "Créez votre première configuration."
+                  : "Le programme n'a pas encore été configuré."}
               </p>
             </div>
           ) : (

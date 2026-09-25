@@ -7,6 +7,8 @@ import SendGiftManager from "../../../../features/reward_campaign/components/Sen
 import GiftCampaignList from "../../../../features/reward_campaign/components/GiftCampaignList";
 import GiftCampaignDetail from "../../../../features/reward_campaign/components/GiftCampaignDetail";
 import type { RewardCampaign } from "../../../../features/reward_campaign/types/reward-campaign.types";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 type View = { mode: "list" } | { mode: "create" } | { mode: "detail"; campaign: RewardCampaign };
 
@@ -18,6 +20,10 @@ type View = { mode: "list" } | { mode: "create" } | { mode: "detail"; campaign: 
  */
 export default function GiftsModule() {
   const [view, setView] = useState<View>({ mode: "list" });
+  const peutEnvoyer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
+  // Vue d'envoi devenue interdite (droits relus) : retour à la liste plutôt
+  // qu'un écran vide.
+  const mode = view.mode === "create" && !peutEnvoyer ? "list" : view.mode;
 
   return (
     <div className="flex-1 overflow-auto p-4 space-y-4">
@@ -25,14 +31,14 @@ export default function GiftsModule() {
         <DashboardPageHeader mode="list" title="Cadeaux" />
       </div>
 
-      {view.mode === "list" && (
+      {mode === "list" && (
         <GiftCampaignList
           onCreate={() => setView({ mode: "create" })}
           onOpen={(campaign) => setView({ mode: "detail", campaign })}
         />
       )}
 
-      {view.mode === "create" && (
+      {mode === "create" && (
         <div className="space-y-4">
           <button
             type="button"

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { usePointDeVente } from "../../hooks/useDroitsCrm";
 import { useCampagnesQuery } from "../../queries/campagne.query";
 import {
   useAgentsPerfQuery,
@@ -40,6 +41,8 @@ const visePublics = (c: ICampagne, publics: Public[]) =>
  *   jamais mélanger leurs entonnoirs ;
  * - un seul public, ou Glovo + Yango : l'entonnoir emboîté de ce public, et
  *   pour Glovo/Yango le passage sur l'appli.
+ * Un compte de point de vente n'a pas de filtre campagne : les campagnes se
+ * consultent au siège, et le serveur limite les chiffres à son restaurant.
  */
 export function TableauDeBord({
   onOuvrir,
@@ -56,7 +59,8 @@ export function TableauDeBord({
   const detail = modeDetail(publics);
   const comparer = !detail;
 
-  const { data: toutesCampagnes = [] } = useCampagnesQuery();
+  const pointDeVente = usePointDeVente();
+  const { data: toutesCampagnes = [] } = useCampagnesQuery({}, !pointDeVente);
   const campagnes = toutesCampagnes.filter((c) => c.status !== "PLANIFIED" && visePublics(c, publics));
 
   const vue = useVueEnsembleQuery(periode);
@@ -79,14 +83,16 @@ export function TableauDeBord({
         <FiltrePeriode valeur={periode} onChange={setPeriode} />
         <div className="flex flex-wrap items-center gap-2">
           <ChoixPublics valeur={publics} onChange={choisirPublics} />
-          <div className="w-full sm:w-64">
-            <ChampSelect
-              valeur={periode.campaign_id ?? ""}
-              onChange={(v) => setPeriode((p) => ({ ...p, campaign_id: v || undefined }))}
-              vide="Toutes les campagnes"
-              options={campagnes.map((c) => ({ value: c.id, label: c.name }))}
-            />
-          </div>
+          {!pointDeVente && (
+            <div className="w-full sm:w-64">
+              <ChampSelect
+                valeur={periode.campaign_id ?? ""}
+                onChange={(v) => setPeriode((p) => ({ ...p, campaign_id: v || undefined }))}
+                vide="Toutes les campagnes"
+                options={campagnes.map((c) => ({ value: c.id, label: c.name }))}
+              />
+            </div>
+          )}
         </div>
       </div>
 

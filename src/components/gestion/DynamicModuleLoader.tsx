@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useDashboardStore } from "@/store/dashboardStore";
+import { useEffect, useState } from "react";
+import { useGetMenuConfig } from "@/hooks/useMenuConfig";
+import { TabKey, useDashboardStore } from "@/store/dashboardStore";
 import { useAuthStore } from "../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../features/users/types/auth.type";
 
@@ -161,27 +163,110 @@ const modulesMap: Record<string, any> = {
   }),
 };
 
+/**
+ * Onglets sans entrée de menu propre, qui ouvrent l'écran d'une autre entrée :
+ * ils en suivent le droit. Anciennes valeurs encore mémorisées chez certains
+ * (« orders », « historique », « acquisition »…) ou liens internes.
+ */
+const ALIAS_MENU: Record<string, string> = {
+  orders: "operations",
+  historique: "operations",
+  card_requests: "card_nation",
+  // Glovo/Yango vit désormais dans le CRM.
+  acquisition: "crm",
+  // L'ancienne « Rétention clients » aussi.
+  stats_retention_callbacks: "crm",
+};
+
+/**
+ * Écrans chargés ici sans entrée de menu, avec le droit qui les ouvre.
+ * ⚠️ Tout autre écran de `modulesMap` doit avoir son entrée de menu : sinon il
+ * n'est jamais rendu (retour au premier écran permis). Un nouvel écran hors
+ * menu se déclare ici.
+ */
+const HORS_MENU: Record<string, (can: (m: Modules, a: Action) => boolean) => boolean> = {
+  // HubRise se règle dans Paramètres : même droit que Paramètres.
+  hubrise: (can) => can(Modules.SETTINGS, Action.READ),
+};
+
+// Clé d'onglet d'une entrée de menu : la partie après le premier tiret
+// (« base_donnees-reviews » → « reviews »), comme dans la barre latérale.
+const cleOnglet = (id: string) => (id.includes("-") ? id.split("-").slice(1).join("-") : id);
+
+// Propriété propre seulement : une valeur mémorisée comme « constructor » ne
+// doit rien ouvrir.
+const possede = (table: object, cle: string) => Object.prototype.hasOwnProperty.call(table, cle);
+
 export default function DynamicModuleLoader() {
-  const { activeTab, pendingConversationId } = useDashboardStore();
-  const peutCrm = useAuthStore((s) => s.can(Modules.CRM, Action.READ));
+  const { activeTab, pendingConversationId, setActiveTab } = useDashboardStore();
+  const can = useAuthStore((s) => s.can);
+  // Droits connus : sans eux, tout serait refusé et l'onglet mémorisé serait
+  // écrasé à tort (avant la lecture du cookie, ou juste avant la redirection
+  // vers la connexion).
+  const droitsConnus = useAuthStore((s) => !!(s.isAuthenticated && s.user?.permissions?.modules));
+  // Le menu se redessine quand les droits sont relus (GET /auth/permissions).
+  const { navigationItems } = useGetMenuConfig();
+
+  // Le rendu serveur ne connaît ni les droits (cookie) ni l'onglet mémorisé
+  // (localStorage) : on attend le montage pour décider, sans écart d'hydratation.
+  const [monte, setMonte] = useState(false);
+  useEffect(() => {
+    setMonte(true);
+  }, []);
+
+  // Onglets que le menu montre à ce compte, dans l'ordre du menu. Un groupe
+  // refusé masque tous ses sous-menus.
+  const ongletsVisibles: string[] = [];
+  for (const item of navigationItems) {
+    if (item.canAccess && !item.canAccess()) continue;
+    if (item.items && item.items.length > 0) {
+      for (const sub of item.items) {
+        if (!sub.canAccess || sub.canAccess()) ongletsVisibles.push(cleOnglet(sub.id));
+      }
+    } else {
+      ongletsVisibles.push(cleOnglet(item.id));
+    }
+  }
+
+  const demande = (activeTab as string | null) ?? "dashboard";
+  const alias = possede(ALIAS_MENU, demande) ? ALIAS_MENU[demande] : undefined;
+  const ecran = possede(modulesMap, demande) ? demande : alias;
+  const entreeMenu = alias ?? demande;
+  const autorise = !ecran
+    ? false
+    : possede(HORS_MENU, entreeMenu)
+      ? HORS_MENU[entreeMenu](can)
+      : ongletsVisibles.includes(entreeMenu);
+
+  // Repli : le tableau de bord, sinon le premier écran que le menu propose.
+  const repli = ongletsVisibles.includes("dashboard")
+    ? "dashboard"
+    : (ongletsVisibles.find((onglet) => possede(modulesMap, onglet)) ?? null);
+
+  // Un onglet mémorisé (ou ouvert par un lien, une notification) que le compte
+  // ne peut plus ouvrir : on revient sur le repli, pour que le menu suive.
+  const refuse = monte && droitsConnus && !!activeTab && !!ecran && !autorise;
+  useEffect(() => {
+    if (refuse && repli) setActiveTab(repli as TabKey);
+  }, [refuse, repli, setActiveTab]);
+
+  if (!monte || !droitsConnus) return <LoadingSpinner />;
+
+  const cle = autorise ? ecran : repli;
+  if (!cle) {
+    return (
+      <div className="flex items-center justify-center h-64 text-sm text-gray-500">
+        Aucun écran n&apos;est ouvert à votre compte.
+      </div>
+    );
+  }
 
   // Inbox : on transmet la conversation en attente (deep-link, notification).
-  if (activeTab === "inbox") {
+  if (cle === "inbox") {
     const InboxComp = modulesMap["inbox"];
     return <InboxComp initialConversationId={pendingConversationId} />;
   }
 
-  // « acquisition » : onglet retiré (Glovo/Yango vit dans le CRM), encore mémorisé
-  // chez certains. Vers le CRM pour qui y a droit, sinon vers le tableau de bord.
-  const Component =
-    modulesMap[
-      activeTab === "card_requests"
-        ? "card_nation"
-        : (activeTab as string) === "acquisition"
-          ? peutCrm
-            ? "crm"
-            : "dashboard"
-          : activeTab
-    ] ?? modulesMap["dashboard"];
+  const Component = modulesMap[cle];
   return <Component />;
 }

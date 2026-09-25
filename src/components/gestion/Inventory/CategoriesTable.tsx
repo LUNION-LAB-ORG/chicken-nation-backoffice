@@ -82,6 +82,13 @@ export default function CategoriesTable({
     return String(value);
   };
 
+  // Référence HubRise : renvoyée par le serveur, absente du type Category du
+  // service. Affichée ici parce qu'elle n'était visible que dans la fenêtre de
+  // modification, fermée à un profil en lecture seule.
+  const skuHubrise = (category: Category) =>
+    (category as Category & { hubrise_sku?: string | null }).hubrise_sku ||
+    null;
+
   // Fonction pour obtenir l'URL de l'image avec fallback
 
   return (
@@ -147,7 +154,14 @@ export default function CategoriesTable({
                           </p>
                           <p className="text-[12px] text-gray-500">
                             {category.private ? "Privée" : "Publique"}
+                            {category.auto_promotions &&
+                              ", vitrine des promotions"}
                           </p>
+                          {skuHubrise(category) && (
+                            <p className="text-[11px] font-mono text-gray-400">
+                              SKU HubRise : {skuHubrise(category)}
+                            </p>
+                          )}
                         </div>
 
                         {/* Menu d'actions - conditionnel */}
@@ -200,36 +214,40 @@ export default function CategoriesTable({
                               >
                                 Afficher le QR code
                               </button>
-                              <HasPermission
-                                module={Modules.INVENTAIRE}
-                                action={Action.UPDATE}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onEdit(category);
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              {onEdit && (
+                                <HasPermission
+                                  module={Modules.INVENTAIRE}
+                                  action={Action.UPDATE}
                                 >
-                                  Modifier cette catégorie
-                                </button>
-                              </HasPermission>
-                              <HasPermission
-                                module={Modules.INVENTAIRE}
-                                action={Action.DELETE}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onDelete(category);
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onEdit(category);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                                  >
+                                    Modifier cette catégorie
+                                  </button>
+                                </HasPermission>
+                              )}
+                              {onDelete && (
+                                <HasPermission
+                                  module={Modules.INVENTAIRE}
+                                  action={Action.DELETE}
                                 >
-                                  Supprimer
-                                </button>
-                              </HasPermission>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onDelete(category);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </HasPermission>
+                              )}
                             </div>
                           )}
                         </div>
@@ -274,7 +292,7 @@ export default function CategoriesTable({
               <tbody>
                 {categories.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8">
+                    <td colSpan={6} className="text-center py-8">
                       <div className="flex items-center justify-center flex-col gap-4">
                         <span className="text-[14px] text-[#F17922]">
                           Aucune catégorie trouvée
@@ -315,6 +333,11 @@ export default function CategoriesTable({
                         </td>
                         <td className="py-4 text-[13px] text-gray-900">
                           {translateCategory(category.name)}
+                          {skuHubrise(category) && (
+                            <span className="block text-[11px] font-mono text-gray-400">
+                              SKU HubRise : {skuHubrise(category)}
+                            </span>
+                          )}
                         </td>
                         <td className="py-4 text-[13px] text-gray-900">
                           {category.productCount || 0}
@@ -324,6 +347,11 @@ export default function CategoriesTable({
                         </td>
                         <td className="py-4 text-[13px] text-gray-900">
                           {category.private ? "Privée" : "Publique"}
+                          {category.auto_promotions && (
+                            <span className="block text-[11px] text-[#F17922]">
+                              Vitrine des promotions
+                            </span>
+                          )}
                         </td>
                         {/* Cellule Actions - conditionnelle */}
                         <td className="py-4 relative text-center">
@@ -377,36 +405,40 @@ export default function CategoriesTable({
                               >
                                 Afficher le QR code
                               </button>
-                              <HasPermission
-                                module={Modules.INVENTAIRE}
-                                action={Action.UPDATE}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onEdit(category);
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                              {onEdit && (
+                                <HasPermission
+                                  module={Modules.INVENTAIRE}
+                                  action={Action.UPDATE}
                                 >
-                                  Modifier cette catégorie
-                                </button>
-                              </HasPermission>
-                              <HasPermission
-                                module={Modules.INVENTAIRE}
-                                action={Action.DELETE}
-                              >
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    onDelete(category);
-                                    setOpenMenuId(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onEdit(category);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-[13px] text-gray-900 hover:bg-gray-50"
+                                  >
+                                    Modifier cette catégorie
+                                  </button>
+                                </HasPermission>
+                              )}
+                              {onDelete && (
+                                <HasPermission
+                                  module={Modules.INVENTAIRE}
+                                  action={Action.DELETE}
                                 >
-                                  Supprimer
-                                </button>
-                              </HasPermission>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      onDelete(category);
+                                      setOpenMenuId(null);
+                                    }}
+                                    className="w-full px-4 py-2 text-left text-[13px] text-red-600 hover:bg-gray-50"
+                                  >
+                                    Supprimer
+                                  </button>
+                                </HasPermission>
+                              )}
                             </div>
                           )}
                         </td>

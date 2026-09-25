@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CalendarDays, Receipt, Store, Users } from "lucide-react";
 import StatsCard from "@/components/gestion/Statistiques/shared/StatsCard";
 import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartCard";
+import { usePointDeVente } from "../../hooks/useDroitsCrm";
 import { useVentesQuery } from "../../queries/analyse.query";
 import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
 import { IPeriode, IVentes } from "../../types/analyse.type";
@@ -124,9 +125,11 @@ function Dernieres({ v, onOuvrir }: { v: IVentes; onOuvrir: (id: string) => void
  * vente par personne et par passage dans le CRM, espèces comprises ; une
  * commande ne compte qu'une fois, même quand elle concerne deux fiches (deux
  * puces). Les ventes de l'ancienne acquisition Glovo/Yango restent visibles
- * en « historique acquisition », à part des chiffres du CRM.
+ * en « historique acquisition », à part des chiffres du CRM. Un compte de
+ * point de vente ne choisit pas de restaurant : le serveur le limite au sien.
  */
 export function Ventes({ onOuvrir }: { onOuvrir: (id: string) => void }) {
+  const pointDeVente = usePointDeVente();
   const [periode, setPeriode] = useState<IPeriode>({});
   const [restaurantId, setRestaurantId] = useState("");
   const { data: restaurants } = useRestaurantListQuery({ limit: 100 });
@@ -134,7 +137,7 @@ export function Ventes({ onOuvrir }: { onOuvrir: (id: string) => void }) {
     from: periode.from,
     to: periode.to,
     segments: periode.segments,
-    restaurant_id: restaurantId || undefined,
+    restaurant_id: pointDeVente ? undefined : restaurantId || undefined,
   });
   const v = requete.data;
   // Sans Glovo ni Yango dans le filtre, il n'y a pas de captures à montrer.
@@ -148,14 +151,16 @@ export function Ventes({ onOuvrir }: { onOuvrir: (id: string) => void }) {
         <FiltrePeriode valeur={periode} onChange={setPeriode} />
         <div className="flex flex-wrap items-center gap-2">
           <ChoixPublics valeur={periode.segments} onChange={(segments) => setPeriode((p) => ({ ...p, segments }))} />
-          <div className="w-full sm:w-64">
-            <ChampSelect
-              valeur={restaurantId}
-              onChange={setRestaurantId}
-              vide="Tous les restaurants"
-              options={((restaurants?.data ?? []) as { id: string; name: string }[]).map((r) => ({ value: r.id, label: r.name }))}
-            />
-          </div>
+          {!pointDeVente && (
+            <div className="w-full sm:w-64">
+              <ChampSelect
+                valeur={restaurantId}
+                onChange={setRestaurantId}
+                vide="Tous les restaurants"
+                options={((restaurants?.data ?? []) as { id: string; name: string }[]).map((r) => ({ value: r.id, label: r.name }))}
+              />
+            </div>
+          )}
         </div>
       </div>
 

@@ -176,7 +176,7 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
         {/* Image URL */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Image URL (optionnel)
+            Adresse de l'image (facultatif)
           </label>
           <input
             type="url"

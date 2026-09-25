@@ -42,6 +42,8 @@ import {
   usePromoCodeUsagesQuery,
 } from "../../../../features/promo_code/queries/promo-code.queries";
 import { useTogglePromoCodeMutation } from "../../../../features/promo_code/queries/promo-code.mutations";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import type {
   PromoCode,
   PromoCodeAnalyticsDay,
@@ -210,7 +212,8 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 interface PromoCodeDetailProps {
   promo: PromoCode;
   onBack: () => void;
-  onEdit: (promo: PromoCode) => void;
+  /** Absent : le bouton « Modifier » n'est pas affiché. */
+  onEdit?: (promo: PromoCode) => void;
 }
 
 export default function PromoCodeDetail({ promo, onBack, onEdit }: PromoCodeDetailProps) {
@@ -221,6 +224,8 @@ export default function PromoCodeDetail({ promo, onBack, onEdit }: PromoCodeDeta
   const { data: usagesData, isLoading: usagesLoading, isFetching: usagesFetching } =
     usePromoCodeUsagesQuery(promo.id, usagesPage, 10);
   const toggleMutation = useTogglePromoCodeMutation();
+  // Activer ou désactiver : POST /promo-code/:id/toggle exige PROMOTIONS UPDATE.
+  const peutModifier = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.UPDATE));
 
   const code = freshPromo ?? promo;
   const status = getPromoStatus(code);
@@ -290,14 +295,18 @@ export default function PromoCodeDetail({ promo, onBack, onEdit }: PromoCodeDeta
         onBack={onBack}
         title={`Code ${code.code}`}
         subtitle="Performances et utilisations du code promo"
-        actions={[
-          {
-            label: "Modifier",
-            onClick: () => onEdit(code),
-            variant: "secondary" as const,
-            icon: Pencil,
-          },
-        ]}
+        actions={
+          onEdit
+            ? [
+                {
+                  label: "Modifier",
+                  onClick: () => onEdit(code),
+                  variant: "secondary" as const,
+                  icon: Pencil,
+                },
+              ]
+            : []
+        }
       />
 
       {/* ===== Carte d'identité ===== */}
@@ -322,17 +331,19 @@ export default function PromoCodeDetail({ promo, onBack, onEdit }: PromoCodeDeta
                 <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
                 {statusCfg.label}
               </span>
-              <button
-                onClick={() => toggleMutation.mutate(code.id)}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                title={code.is_active ? "Désactiver" : "Activer"}
-              >
-                {code.is_active ? (
-                  <ToggleRight size={20} className="text-green-600" />
-                ) : (
-                  <ToggleLeft size={20} className="text-gray-400" />
-                )}
-              </button>
+              {peutModifier && (
+                <button
+                  onClick={() => toggleMutation.mutate(code.id)}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={code.is_active ? "Désactiver" : "Activer"}
+                >
+                  {code.is_active ? (
+                    <ToggleRight size={20} className="text-green-600" />
+                  ) : (
+                    <ToggleLeft size={20} className="text-gray-400" />
+                  )}
+                </button>
+              )}
             </div>
             {code.description && (
               <p className="mt-2 text-sm text-gray-600">{code.description}</p>
@@ -589,7 +600,7 @@ export default function PromoCodeDetail({ promo, onBack, onEdit }: PromoCodeDeta
           </ChartCard>
 
           {/* Répartition par heure */}
-          <ChartCard title="Heures d'utilisation" subtitle="Répartition sur 24 h — repérez les pics">
+          <ChartCard title="Heures d'utilisation" subtitle="Répartition sur 24 h : repérez les pics">
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={byHour} margin={{ top: 5, right: 5, left: -18, bottom: 0 }}>

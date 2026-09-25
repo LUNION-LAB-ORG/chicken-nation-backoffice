@@ -1100,7 +1100,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
               className="block text-[13px] font-semibold text-[#595959] mb-2"
             >
               Temps de préparation{" "}
-              <span className="font-normal text-[#9796A1]">— en minutes</span>
+              <span className="font-normal text-[#9796A1]">(en minutes)</span>
             </label>
             <motion.div
               className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"

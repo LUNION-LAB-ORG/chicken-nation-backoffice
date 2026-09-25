@@ -4,6 +4,8 @@ import React from "react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { TabKey, useDashboardStore, ViewType } from "@/store/dashboardStore";
 import { exportCardsToExcel } from "../services/carte-nation.service";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 export default function CarteNationHeader() {
   const {
@@ -15,6 +17,8 @@ export default function CarteNationHeader() {
     setSectionView,
     setPagination,
   } = useDashboardStore();
+  // GET /admin/card-nation/cards/export/excel exige CARD_NATION EXPORT.
+  const peutExporter = useAuthStore((s) => s.can(Modules.CARD_NATION, Action.EXPORT));
 
   const handleSearch = (newTab: TabKey, query: string) => {
     setFilter(newTab, "search", query);
@@ -44,10 +48,14 @@ export default function CarteNationHeader() {
               label: "Demandes de carte",
               onClick: () => handleViewChange("card_requests", "list"),
             },
-            {
-              label: "Exporter en excel",
-              onClick: () => exportCardsToExcel(),
-            },
+            ...(peutExporter
+              ? [
+                  {
+                    label: "Exporter en Excel",
+                    onClick: () => exportCardsToExcel(),
+                  },
+                ]
+              : []),
           ]}
         />
       );

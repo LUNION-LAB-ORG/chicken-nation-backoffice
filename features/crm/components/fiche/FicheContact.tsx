@@ -32,10 +32,12 @@ export function FicheContact({
   const moi = useAuthStore((s) => s.user?.id);
   const { data: p, isError, error } = useContactFicheQuery(id, telephone);
 
-  const pilote = !!p?.campagnes.some((m) => !m.released_at && m.campaign.lead_agent_id === moi);
   const converti = p?.status === "CONVERTI";
   // Client d'un collègue, retrouvé par son numéro : on lit, on renvoie son coupon, rien d'autre.
   const lecture = p?.mode === "lecture";
+  // Lecteur (marketing, manager) : tout voir, téléphone compris, sans aucun geste.
+  const consultation = p?.mode === "consultation";
+  const pilote = !consultation && !!p?.campagnes.some((m) => !m.released_at && m.campaign.lead_agent_id === moi);
   const sortie =
     p?.segment === "INACTIF" ? "De retour le" : p?.segment === "JAMAIS_COMMANDE" ? "Première commande le" : "A commandé en direct le";
 
@@ -48,6 +50,15 @@ export function FicheContact({
       ) : (
         <div className="space-y-5">
           <FicheEntete p={p} />
+          {consultation && (
+            <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
+              <Eye className="w-4 h-4 mt-0.5 shrink-0 text-gray-500" />
+              <p>
+                <span className="font-semibold">Consultation seule.</span> Les appels, les coupons et le choix de l&apos;agent
+                restent à l&apos;équipe du CRM.
+              </p>
+            </div>
+          )}
           {lecture && !converti && (
             <div className="flex items-start gap-2 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-800">
               <Eye className="w-4 h-4 mt-0.5 shrink-0" />
@@ -83,6 +94,8 @@ export function FicheContact({
                   </p>
                   <p className="text-xs text-gray-400 mt-2">Il est sorti de la liste : plus aucun appel n&apos;est nécessaire.</p>
                 </div>
+              ) : consultation ? (
+                <PanneauCoupon p={p} consultation />
               ) : lecture ? (
                 <PanneauCoupon p={p} lectureSeule />
               ) : (

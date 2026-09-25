@@ -67,8 +67,8 @@ function CadeauxBloquants({
             {usages.lots.map((l) => (
               <li key={l.id} className="text-[12px] text-amber-800">
                 {l.label}
-                {!l.active && " (inactif)"} — à repointer depuis Jeux &gt; Gratte
-                et Gagne &gt; Lots
+                {!l.active && " (inactif)"}, à repointer depuis Jeux &gt;
+                Gratte et Gagne &gt; Lots
               </li>
             ))}
           </ul>
@@ -237,7 +237,7 @@ const DishOptionsSection = React.forwardRef<
   const hydrateRef = React.useRef<string | null>(null);
   const [cible, setCible] = React.useState("");
 
-  const { data, isLoading } = useDishOptionConfigurationQuery(dishId);
+  const { data, isLoading, isError } = useDishOptionConfigurationQuery(dishId);
 
   React.useEffect(() => {
     if (!dishId || !data || hydrateRef.current === dishId) return;
@@ -281,13 +281,16 @@ const DishOptionsSection = React.forwardRef<
     queryFn: getAllSupplements,
     staleTime: 5 * 60 * 1000,
   });
+  // En lecture, le catalogue sert seulement à nommer le supplément lié à un
+  // choix : on le garde entier, pour qu'un supplément passé en rupture reste
+  // nommé. En édition, seuls les suppléments disponibles sont proposés.
   const supplements = React.useMemo(
     () =>
       Object.values(parCategorie ?? {})
         .flat()
-        .filter((s) => s.available !== false)
+        .filter((s) => lectureSeule || s.available !== false)
         .map((s) => ({ id: s.id, name: s.name })),
-    [parCategorie],
+    [parCategorie, lectureSeule],
   );
 
   const { data: platsResp } = useDishListQuery();
@@ -329,6 +332,16 @@ const DishOptionsSection = React.forwardRef<
     );
   }
 
+  // En lecture, un échec de chargement ne doit pas se lire « Ce plat n'a
+  // aucune option », ni laisser affichées les options du plat consulté avant.
+  if (lectureSeule && dishId && isError) {
+    return (
+      <p className="rounded-xl bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600">
+        Les options de ce plat n&apos;ont pas pu être chargées.
+      </p>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <DishOptionsEditor
@@ -336,6 +349,7 @@ const DishOptionsSection = React.forwardRef<
         onChange={setGroups}
         supplements={supplements}
         disabled={disabled || lectureSeule}
+        lectureSeule={lectureSeule}
       />
 
       {dishId && !lectureSeule && groups.length > 0 && (

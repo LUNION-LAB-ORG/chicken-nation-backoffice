@@ -37,6 +37,8 @@ import type {
 import ProductTargetSelector from "@/components/gestion/Promos/ProductTargetSelector";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import PromoCodeDetail from "./PromoCodeDetail";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { getAllMenus } from "@/services/menuService";
 import { getAllCategories, type Category } from "@/services/categoryService";
 import type { MenuItem } from "@/types";
@@ -610,6 +612,12 @@ export default function CodesPromo() {
   const [deletingPromo, setDeletingPromo] = useState<PromoCode | null>(null);
   const [viewingPromo, setViewingPromo] = useState<PromoCode | null>(null);
 
+  // Mêmes droits que le serveur (/promo-code) : PROMOTIONS CREATE, UPDATE
+  // (modifier, activer, désactiver) et DELETE.
+  const peutCreer = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.DELETE));
+
   // Build query based on filters
   const effectiveQuery = useMemo<PromoCodeQuery>(() => {
     const q: PromoCodeQuery = { ...query };
@@ -677,9 +685,9 @@ export default function CodesPromo() {
         <PromoCodeDetail
           promo={viewingPromo}
           onBack={() => setViewingPromo(null)}
-          onEdit={(p) => setEditingPromo(p)}
+          onEdit={peutModifier ? (p) => setEditingPromo(p) : undefined}
         />
-        {editingPromo && (
+        {peutModifier && editingPromo && (
           <PromoCodeFormModal
             promo={editingPromo}
             onClose={() => setEditingPromo(null)}
@@ -707,14 +715,18 @@ export default function CodesPromo() {
             setQuery((prev) => ({ ...prev, page: 1 }));
           },
         }}
-        actions={[
-          {
-            label: "Nouveau code",
-            onClick: () => setShowCreateModal(true),
-            variant: "primary" as const,
-            icon: Plus,
-          },
-        ]}
+        actions={
+          peutCreer
+            ? [
+                {
+                  label: "Nouveau code",
+                  onClick: () => setShowCreateModal(true),
+                  variant: "primary" as const,
+                  icon: Plus,
+                },
+              ]
+            : []
+        }
       />
 
       {/* Stats rapides */}
@@ -923,40 +935,46 @@ export default function CodesPromo() {
                         >
                           <BarChart3 size={16} className="text-[#F17922]" />
                         </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMutation.mutate(promo.id);
-                          }}
-                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                          title={promo.is_active ? "Désactiver" : "Activer"}
-                        >
-                          {promo.is_active ? (
-                            <ToggleRight size={18} className="text-green-600" />
-                          ) : (
-                            <ToggleLeft size={18} className="text-gray-400" />
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingPromo(promo);
-                          }}
-                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                          title="Modifier"
-                        >
-                          <Pencil size={16} className="text-gray-500" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeletingPromo(promo);
-                          }}
-                          className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Supprimer"
-                        >
-                          <Trash2 size={16} className="text-red-500" />
-                        </button>
+                        {peutModifier && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMutation.mutate(promo.id);
+                            }}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            title={promo.is_active ? "Désactiver" : "Activer"}
+                          >
+                            {promo.is_active ? (
+                              <ToggleRight size={18} className="text-green-600" />
+                            ) : (
+                              <ToggleLeft size={18} className="text-gray-400" />
+                            )}
+                          </button>
+                        )}
+                        {peutModifier && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingPromo(promo);
+                            }}
+                            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Modifier"
+                          >
+                            <Pencil size={16} className="text-gray-500" />
+                          </button>
+                        )}
+                        {peutSupprimer && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingPromo(promo);
+                            }}
+                            className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Supprimer"
+                          >
+                            <Trash2 size={16} className="text-red-500" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1019,7 +1037,7 @@ export default function CodesPromo() {
       </div>
 
       {/* Modals */}
-      {showCreateModal && (
+      {peutCreer && showCreateModal && (
         <PromoCodeFormModal
           promo={null}
           onClose={() => setShowCreateModal(false)}
@@ -1028,7 +1046,7 @@ export default function CodesPromo() {
         />
       )}
 
-      {editingPromo && (
+      {peutModifier && editingPromo && (
         <PromoCodeFormModal
           promo={editingPromo}
           onClose={() => setEditingPromo(null)}
@@ -1037,7 +1055,7 @@ export default function CodesPromo() {
         />
       )}
 
-      {deletingPromo && (
+      {peutSupprimer && deletingPromo && (
         <DeleteConfirmModal
           promo={deletingPromo}
           onConfirm={handleDelete}

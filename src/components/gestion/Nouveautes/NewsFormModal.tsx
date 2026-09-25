@@ -140,7 +140,7 @@ export default function NewsFormModal({ isOpen, onClose, editItem }: Props) {
                 Cliquer pour ajouter une image
               </span>
               <span className="text-[11px] text-gray-400">
-                PNG, JPG — ratio 2.5:1 recommandé
+                PNG ou JPG, format 2,5:1 recommandé
               </span>
             </button>
           )}

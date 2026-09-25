@@ -14,9 +14,12 @@ import {
 interface ScratchLotsListProps {
   lots: ScratchLot[] | undefined;
   isLoading: boolean;
-  onEdit: (lot: ScratchLot) => void;
-  onDelete: (lot: ScratchLot) => void;
-  onToggleActive: (lot: ScratchLot) => void;
+  /** Chaque geste n'est affiché que si son rappel est fourni (droit accordé). */
+  onEdit?: (lot: ScratchLot) => void;
+  onDelete?: (lot: ScratchLot) => void;
+  onToggleActive?: (lot: ScratchLot) => void;
+  /** Invite à ajouter un lot quand la liste est vide (droit de création). */
+  canCreate?: boolean;
 }
 
 const Th: React.FC<{ children: React.ReactNode; className?: string }> = ({
@@ -41,7 +44,10 @@ export default function ScratchLotsList({
   onEdit,
   onDelete,
   onToggleActive,
+  canCreate = false,
 }: ScratchLotsListProps) {
+  const avecActions = !!(onEdit || onDelete || onToggleActive);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -56,7 +62,9 @@ export default function ScratchLotsList({
         <div className="text-5xl mb-3">🎰</div>
         <h3 className="text-lg font-semibold text-gray-700">Aucun lot</h3>
         <p className="text-gray-500">
-          Ajoutez des lots pour alimenter le moteur Gratte &amp; Gagne.
+          {canCreate
+            ? "Ajoutez des lots pour alimenter le moteur Gratte & Gagne."
+            : "Aucun lot n'alimente encore le moteur Gratte & Gagne."}
         </p>
       </div>
     );
@@ -78,7 +86,7 @@ export default function ScratchLotsList({
               <Th className="text-right">Plafond</Th>
               <Th>Niveau</Th>
               <Th>Statut</Th>
-              <Th className="text-right">Actions</Th>
+              {avecActions && <Th className="text-right">Actions</Th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F1F3F5]">
@@ -161,47 +169,55 @@ export default function ScratchLotsList({
                     {lot.active ? "Actif" : "Inactif"}
                   </span>
                 </Td>
-                <Td>
-                  <div className="flex items-center justify-end gap-1.5">
-                    <button
-                      type="button"
-                      title={lot.active ? "Désactiver" : "Activer"}
-                      onClick={() => onToggleActive(lot)}
-                      className="p-1.5 rounded-lg text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
-                    >
-                      {lot.active ? (
-                        <PowerOff size={16} />
-                      ) : (
-                        <Power size={16} />
+                {avecActions && (
+                  <Td>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {onToggleActive && (
+                        <button
+                          type="button"
+                          title={lot.active ? "Désactiver" : "Activer"}
+                          onClick={() => onToggleActive(lot)}
+                          className="p-1.5 rounded-lg text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
+                        >
+                          {lot.active ? (
+                            <PowerOff size={16} />
+                          ) : (
+                            <Power size={16} />
+                          )}
+                        </button>
                       )}
-                    </button>
-                    <button
-                      type="button"
-                      title="Éditer"
-                      onClick={() => onEdit(lot)}
-                      className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      title={
-                        lot.is_floor
-                          ? "Le plancher n'est pas supprimable"
-                          : "Supprimer"
-                      }
-                      disabled={lot.is_floor}
-                      onClick={() => onDelete(lot)}
-                      className={`p-1.5 rounded-lg ${
-                        lot.is_floor
-                          ? "text-[#D9D9D9] cursor-not-allowed"
-                          : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
-                      }`}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </Td>
+                      {onEdit && (
+                        <button
+                          type="button"
+                          title="Éditer"
+                          onClick={() => onEdit(lot)}
+                          className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button
+                          type="button"
+                          title={
+                            lot.is_floor
+                              ? "Le plancher n'est pas supprimable"
+                              : "Supprimer"
+                          }
+                          disabled={lot.is_floor}
+                          onClick={() => onDelete(lot)}
+                          className={`p-1.5 rounded-lg ${
+                            lot.is_floor
+                              ? "text-[#D9D9D9] cursor-not-allowed"
+                              : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                          }`}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </Td>
+                )}
               </tr>
             ))}
           </tbody>

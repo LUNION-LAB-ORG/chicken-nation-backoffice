@@ -21,7 +21,7 @@ interface Props {
 }
 
 function formatDate(date?: string | null) {
-  if (!date) return "—";
+  if (!date) return "Non renseignée";
   return new Date(date).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "long",
@@ -32,7 +32,7 @@ function formatDate(date?: string | null) {
 }
 
 function formatNumber(n?: number) {
-  if (n === undefined || n === null) return "—";
+  if (n === undefined || n === null) return "Non renseigné";
   return n.toLocaleString("fr-FR");
 }
 
@@ -331,7 +331,7 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
                             {campaign.title || "Notification"}
                           </p>
                           <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-3">
-                            {campaign.body || "—"}
+                            {campaign.body || "Sans texte"}
                           </p>
                         </div>
                       </div>

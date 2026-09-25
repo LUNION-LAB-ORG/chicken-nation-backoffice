@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BarChart3, Headset, Megaphone, Receipt, Settings, Ticket, Users } from "lucide-react";
+import { BarChart3, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -9,6 +9,7 @@ import { HasPermission } from "../../../../features/users/components/HasPermissi
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useCrmSocketSync } from "../../../../features/crm/hooks/useCrmSocketSync";
+import { useDroitsCrm } from "../../../../features/crm/hooks/useDroitsCrm";
 import { useCampagnesQuery } from "../../../../features/crm/queries/campagne.query";
 import { useMaFileQuery } from "../../../../features/crm/queries/contact.query";
 import { IContactFiltres, Public } from "../../../../features/crm/types/contact.type";
@@ -29,23 +30,23 @@ type Cle = "tableau" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" 
  * devenus inactifs (l'ancienne « Rétention clients ») et des clients
  * Glovo/Yango relevés en caisse (l'ancienne « Acquisition Glovo/Yango »).
  *
- * Les onglets suivent le rôle (cahier §9) : la direction pilote (tableau de
- * bord, campagnes, réglages), l'agent traite sa file et consulte les
- * tableaux de bord, la lecture seule ne voit que ceux-ci. Le serveur
- * applique les mêmes règles.
+ * Les onglets suivent le rôle (cahier §9, revu le 25/09) : la direction
+ * pilote (tableau de bord, campagnes, réglages), l'agent traite sa file et
+ * consulte les tableaux de bord, le lecteur (marketing, manager) voit tout,
+ * téléphones compris, sans aucun geste ni export. Un compte de point de
+ * vente ne voit que les clients de son restaurant et jamais les campagnes.
+ * Le serveur applique les mêmes règles.
  */
 export default function Crm() {
-  const can = useAuthStore((s) => s.can);
   const moi = useAuthStore((s) => s.user?.id);
-  const estGestionnaire = can(Modules.CRM, Action.CREATE);
-  const peutTraiter = can(Modules.CRM, Action.UPDATE);
-  const peutAnalyser = can(Modules.CRM, Action.REPORT);
-  const peutExporter = can(Modules.CRM, Action.EXPORT);
+  const { estGestionnaire, peutTraiter, peutAnalyser, peutExporter, lecteur, pointDeVente } = useDroitsCrm();
+  const voitContacts = peutTraiter || lecteur;
 
   useCrmSocketSync();
   const { data: file } = useMaFileQuery(peutTraiter && !estGestionnaire);
-  const { data: campagnes = [] } = useCampagnesQuery();
-  const pilote = campagnes.some((c) => c.lead_agent.id === moi && c.status !== "COMPLETED");
+  // Les campagnes se consultent au siège : un point de vente n'en demande aucune.
+  const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente);
+  const pilote = peutTraiter && campagnes.some((c) => c.lead_agent.id === moi && c.status !== "COMPLETED");
 
   const onglets = useMemo(() => {
     const liste: (Onglet<Cle> & { visible: boolean })[] = [
@@ -57,26 +58,27 @@ export default function Crm() {
         visible: peutTraiter,
         badge: file ? file.rappels.length + file.interesses.length : undefined,
       },
-      { cle: "contacts", label: "Contacts", Icone: Users, visible: peutTraiter },
-      { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: true },
+      { cle: "contacts", label: "Contacts", Icone: Users, visible: voitContacts },
+      { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: !pointDeVente },
       { cle: "coupons", label: "Coupons", Icone: Ticket, visible: peutAnalyser },
       { cle: "ventes", label: "Ventes", Icone: Receipt, visible: peutAnalyser },
-      { cle: "reglages", label: "Réglages", Icone: Settings, visible: estGestionnaire },
+      // Réglages du réseau (messages, offres, statuts) : pas pour un point de vente.
+      { cle: "reglages", label: "Réglages", Icone: Settings, visible: estGestionnaire || (lecteur && !pointDeVente) },
     ];
     return liste.filter((o) => o.visible);
-  }, [peutAnalyser, peutTraiter, estGestionnaire, file]);
+  }, [peutAnalyser, peutTraiter, voitContacts, pointDeVente, estGestionnaire, lecteur, file]);
 
-  const [cle, setCle] = useState<Cle>(estGestionnaire || !peutTraiter ? onglets[0]?.cle ?? "campagnes" : "file");
+  const [cle, setCle] = useState<Cle>(estGestionnaire || !peutTraiter ? onglets[0]?.cle ?? "contacts" : "file");
   const [filtresListe, setFiltresListe] = useState<IContactFiltres>(FILTRES_DEFAUT);
   // Le numéro tapé dans « Un client appelle ? » accompagne la fiche : lui seul
   // ouvre en lecture la fiche d'un client suivi par un collègue.
   const [fiche, setFiche] = useState<{ id: string; telephone?: string } | null>(null);
   const setFicheId = (id: string | null) => setFiche(id ? { id } : null);
   const ouvrirParNumero = (id: string, telephone?: string) => setFiche({ id, telephone });
-  const actif: Cle = onglets.some((o) => o.cle === cle) ? cle : (onglets[0]?.cle ?? "campagnes");
+  const actif: Cle | undefined = onglets.some((o) => o.cle === cle) ? cle : onglets[0]?.cle;
 
   // Ouverture demandée depuis un autre écran (ex. « Rappeler » dans les statistiques clients).
-  // Qui peut traiter arrive sur la liste filtrée ; les autres, sur le tableau de
+  // Qui voit les contacts arrive sur la liste filtrée ; les autres, sur le tableau de
   // bord filtré sur ce public (remonté par `demande` pour repartir de ce filtre).
   const publicDemande = useDashboardStore((s) => s.pendingCrmSegment);
   const oublierPublicDemande = useDashboardStore((s) => s.clearPendingCrm);
@@ -84,7 +86,7 @@ export default function Crm() {
   const [demande, setDemande] = useState(0);
   useEffect(() => {
     if (!publicDemande) return;
-    if (peutTraiter) {
+    if (voitContacts) {
       setFiltresListe({ ...FILTRES_DEFAUT, segment: publicDemande });
       setCle("contacts");
     } else {
@@ -93,7 +95,7 @@ export default function Crm() {
       setCle("tableau");
     }
     oublierPublicDemande();
-  }, [publicDemande, oublierPublicDemande, peutTraiter]);
+  }, [publicDemande, oublierPublicDemande, voitContacts]);
 
   return (
     <div className="flex-1 px-4 pt-4 pb-10">
@@ -109,8 +111,18 @@ export default function Crm() {
         fallback={<div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">Vous n&apos;avez pas accès à ce module.</div>}
       >
         <div className="my-4">
-          <Onglets<Cle> onglets={onglets} actif={actif} onChange={(k) => setCle(k)} />
+          <Onglets<Cle> onglets={onglets} actif={actif ?? "contacts"} onChange={(k) => setCle(k)} />
         </div>
+
+        {pointDeVente && actif !== "reglages" && (
+          <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 mb-4 text-sm text-gray-600">
+            <Store className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
+            <p>
+              Clients de votre restaurant : ceux qui y ont commandé ou y ont été relevés sur Glovo/Yango. Les inscrits qui
+              n&apos;ont jamais commandé ne sont rattachés à aucun restaurant.
+            </p>
+          </div>
+        )}
 
         {actif === "tableau" && (
           <TableauDeBord key={demande} publicsInitiaux={publicsTableau} peutExporter={peutExporter} onOuvrir={setFicheId} />
@@ -122,21 +134,27 @@ export default function Crm() {
             filtresInitiaux={filtresListe}
             peutAssigner={estGestionnaire || pilote}
             peutExporter={peutExporter}
-            voitTousLesAgents={estGestionnaire || pilote}
+            voitTousLesAgents={estGestionnaire || pilote || lecteur}
             onOuvrir={setFicheId}
           />
         )}
-        {actif === "campagnes" && <Campagnes estGestionnaire={estGestionnaire} peutExporter={peutExporter} peutAnalyser={peutAnalyser} />}
+        {actif === "campagnes" && !pointDeVente && (
+          <Campagnes estGestionnaire={estGestionnaire} peutTraiter={peutTraiter} peutExporter={peutExporter} peutAnalyser={peutAnalyser} />
+        )}
         {actif === "coupons" && (
           <CouponsVue
-            onVoir={(etat) => {
-              setFiltresListe({ ...FILTRES_DEFAUT, coupon: etat, status: etat === "UTILISE" ? "CONVERTI" : undefined });
-              setCle("contacts");
-            }}
+            onVoir={
+              voitContacts
+                ? (etat) => {
+                    setFiltresListe({ ...FILTRES_DEFAUT, coupon: etat, status: etat === "UTILISE" ? "CONVERTI" : undefined });
+                    setCle("contacts");
+                  }
+                : undefined
+            }
           />
         )}
         {actif === "ventes" && <Ventes onOuvrir={setFicheId} />}
-        {actif === "reglages" && <Reglages />}
+        {actif === "reglages" && <Reglages lectureSeule={!estGestionnaire} />}
       </HasPermission>
 
       <FicheContact id={fiche?.id ?? null} telephone={fiche?.telephone} onFermer={() => setFiche(null)} estGestionnaire={estGestionnaire} />

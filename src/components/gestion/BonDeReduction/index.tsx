@@ -11,6 +11,8 @@ import { Voucher, VoucherStatus, Redemption } from "../../../../features/voucher
 import { useOrderDetailQuery } from "../../../../features/orders/queries/order-detail.query";
 import { mapApiOrderToUiOrder } from "../../../../features/orders/utils/orderMapper";
 import OrderDetailModal from "../../../../features/orders/components/detail-order/OrderDetailModal";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import {
   Ticket,
   Plus,
@@ -236,7 +238,7 @@ const CreateVoucherModal = ({ onClose }: { onClose: () => void }) => {
             {selectedCustomer && (
               <div className="mt-2 flex items-center gap-2 bg-green-50 text-green-700 text-sm px-3 py-1.5 rounded-lg">
                 <User className="w-4 h-4" />
-                {selectedCustomer.first_name ?? ""} {selectedCustomer.last_name ?? ""} — {selectedCustomer.phone}
+                {selectedCustomer.first_name ?? ""} {selectedCustomer.last_name ?? ""} · {selectedCustomer.phone}
               </div>
             )}
           </div>
@@ -295,6 +297,9 @@ const VoucherActions = ({ voucher, onView }: { voucher: Voucher; onView: () => v
   const deleteMutation = useDeleteVoucherMutation();
   const restoreMutation = useRestoreVoucherMutation();
   const buttonRef = useRef<HTMLButtonElement>(null);
+  // Le serveur garde les bons sous FIDELITE : annuler et restaurer = UPDATE, supprimer = DELETE.
+  const peutModifier = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.DELETE));
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -332,7 +337,7 @@ const VoucherActions = ({ voucher, onView }: { voucher: Voucher; onView: () => v
           >
             <Eye className="w-4 h-4" /> Voir détails
           </button>
-          {voucher.status === "ACTIVE" && (
+          {peutModifier && voucher.status === "ACTIVE" && (
             <button
               onClick={() => { cancelMutation.mutate(voucher.code); setOpen(false); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-yellow-700 hover:bg-yellow-50 cursor-pointer"
@@ -341,13 +346,15 @@ const VoucherActions = ({ voucher, onView }: { voucher: Voucher; onView: () => v
             </button>
           )}
           {voucher.entityStatus !== "DELETED" ? (
-            <button
-              onClick={() => { deleteMutation.mutate(voucher.code); setOpen(false); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" /> Supprimer
-            </button>
-          ) : (
+            peutSupprimer && (
+              <button
+                onClick={() => { deleteMutation.mutate(voucher.code); setOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+              >
+                <Trash2 className="w-4 h-4" /> Supprimer
+              </button>
+            )
+          ) : peutModifier && (
             <button
               onClick={() => { restoreMutation.mutate(voucher.code); setOpen(false); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-700 hover:bg-green-50 cursor-pointer"
@@ -545,6 +552,8 @@ const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void 
   const cancelMutation = useCancelVoucherMutation();
   const deleteMutation = useDeleteVoucherMutation();
   const restoreMutation = useRestoreVoucherMutation();
+  const peutModifier = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.DELETE));
 
   if (isLoading) {
     return (
@@ -587,7 +596,7 @@ const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void 
             <p className="text-sm text-gray-500">Créé le {formatDateTime(voucher.createdAt)} par {voucher.createdBy?.fullName ?? "—"}</p>
           </div>
           <div className="flex gap-2">
-            {voucher.status === "ACTIVE" && (
+            {peutModifier && voucher.status === "ACTIVE" && (
               <button
                 onClick={() => cancelMutation.mutate(voucher.code)}
                 disabled={cancelMutation.isPending}
@@ -597,14 +606,16 @@ const VoucherDetailView = ({ code, onBack }: { code: string; onBack: () => void 
               </button>
             )}
             {voucher.entityStatus !== "DELETED" ? (
-              <button
-                onClick={() => deleteMutation.mutate(voucher.code)}
-                disabled={deleteMutation.isPending}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4" /> Supprimer
-              </button>
-            ) : (
+              peutSupprimer && (
+                <button
+                  onClick={() => deleteMutation.mutate(voucher.code)}
+                  disabled={deleteMutation.isPending}
+                  className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 cursor-pointer disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Supprimer
+                </button>
+              )
+            ) : peutModifier && (
               <button
                 onClick={() => restoreMutation.mutate(voucher.code)}
                 disabled={restoreMutation.isPending}
@@ -709,6 +720,7 @@ export default function BonDeReduction() {
   } = useDashboardStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const peutCreer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
   const selectedCode = useDashboardStore((s) => s.voucher.selectedItem as string | undefined);
 
   const {
@@ -781,13 +793,17 @@ export default function BonDeReduction() {
             onSearch: handleSearch,
             realTimeSearch: true,
           }}
-          actions={[
-            {
-              label: "Nouveau bon",
-              icon: Plus,
-              onClick: () => setShowCreateModal(true),
-            },
-          ]}
+          actions={
+            peutCreer
+              ? [
+                  {
+                    label: "Nouveau bon",
+                    icon: Plus,
+                    onClick: () => setShowCreateModal(true),
+                  },
+                ]
+              : []
+          }
         />
       </div>
 
@@ -809,7 +825,7 @@ export default function BonDeReduction() {
         )}
       </div>
 
-      {showCreateModal && <CreateVoucherModal onClose={() => setShowCreateModal(false)} />}
+      {peutCreer && showCreateModal && <CreateVoucherModal onClose={() => setShowCreateModal(false)} />}
     </div>
   );
 }

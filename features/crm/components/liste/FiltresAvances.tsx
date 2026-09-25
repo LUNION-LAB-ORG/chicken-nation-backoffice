@@ -1,4 +1,5 @@
 import React from "react";
+import { usePointDeVente } from "../../hooks/useDroitsCrm";
 import { IContactFiltres } from "../../types/contact.type";
 import { useRaisonsQuery, useStatutsAppelQuery } from "../../queries/reglage.query";
 import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
@@ -38,6 +39,8 @@ export function FiltresAvances({
 }) {
   const { data: raisons = [] } = useRaisonsQuery();
   const { data: statuts = [] } = useStatutsAppelQuery();
+  // Un point de vente ne voit que les clients de son restaurant : pas de choix de restaurant.
+  const pointDeVente = usePointDeVente();
   const { data: restaurants } = useRestaurantListQuery({ limit: 100 });
   const listeRestaurants = ((restaurants?.data ?? []) as { id: string; name: string }[]).map((r) => ({ value: r.id, label: r.name }));
 
@@ -79,13 +82,15 @@ export function FiltresAvances({
         <ChampTexte label="Inscrit du" type="date" valeur={filtres.registered_from ?? ""} onChange={(v) => onChange({ registered_from: v || undefined })} />
         <ChampTexte label="au" type="date" valeur={filtres.registered_to ?? ""} onChange={(v) => onChange({ registered_to: v || undefined })} />
       </div>
-      <ChampSelect
-        label="Capté au restaurant"
-        valeur={filtres.restaurant_id ?? ""}
-        onChange={(v) => onChange({ restaurant_id: v || undefined })}
-        vide="Tous"
-        options={listeRestaurants}
-      />
+      {!pointDeVente && (
+        <ChampSelect
+          label="Capté au restaurant"
+          valeur={filtres.restaurant_id ?? ""}
+          onChange={(v) => onChange({ restaurant_id: v || undefined })}
+          vide="Tous"
+          options={listeRestaurants}
+        />
+      )}
       <div className="grid grid-cols-2 gap-2">
         <ChampTexte label="Capté du" type="date" valeur={filtres.captured_from ?? ""} onChange={(v) => onChange({ captured_from: v || undefined })} />
         <ChampTexte label="au" type="date" valeur={filtres.captured_to ?? ""} onChange={(v) => onChange({ captured_to: v || undefined })} />

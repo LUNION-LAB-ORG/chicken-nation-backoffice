@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Megaphone, Plus, RefreshCw, Send, Users } from 'lucide-react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { HasPermission } from '../../../../../features/users/components/HasPermission';
+import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { Action, Modules } from '../../../../../features/users/types/auth.type';
 import CreationView from './CreationView';
 import {
@@ -51,12 +52,13 @@ const accord = (n: number) =>
  */
 export default function DiffusionsModule() {
   const [creation, setCreation] = useState(false);
+  const peutCreer = useAuthStore((s) => s.can(Modules.DIFFUSIONS, Action.CREATE));
   const { data, isLoading, isError, refetch } = useDiffusionsQuery();
   const diffusions = useMemo(() => data?.data ?? [], [data]);
 
   // ⚠️ Une PAGE, pas une fenêtre : rédiger un message qui partira à des
   // milliers de personnes demande de la place et un retour en arrière.
-  if (creation) return <CreationView onRetour={() => setCreation(false)} />;
+  if (creation && peutCreer) return <CreationView onRetour={() => setCreation(false)} />;
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -69,7 +71,9 @@ export default function DiffusionsModule() {
             Envoyer le même message à une liste de clients.
           </p>
         </div>
-        <HasPermission module={Modules.MARKETING} action={Action.CREATE}>
+        {/* Module DIFFUSIONS, séparé de MARKETING : le menu Marketing peut
+            rester en lecture seule sans retirer les diffusions au marketing. */}
+        <HasPermission module={Modules.DIFFUSIONS} action={Action.CREATE}>
           <button
             type="button"
             onClick={() => setCreation(true)}
@@ -107,9 +111,11 @@ export default function DiffusionsModule() {
               <Megaphone className="text-[#F17922]" size={28} />
             </div>
             <p className="font-semibold text-gray-700">Aucune diffusion</p>
-            <p className="text-[13px] text-gray-400 mt-1">
-              Créez-en une pour annoncer une promotion ou une nouveauté.
-            </p>
+            {peutCreer && (
+              <p className="text-[13px] text-gray-400 mt-1">
+                Créez-en une pour annoncer une promotion ou une nouveauté.
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
@@ -171,7 +177,8 @@ function LigneDiffusion({ diffusion }: { diffusion: IDiffusion }) {
           </div>
         </div>
 
-        <HasPermission module={Modules.MARKETING} action={Action.UPDATE}>
+        {/* Envoyer et reprendre : DIFFUSIONS UPDATE, comme le serveur. */}
+        <HasPermission module={Modules.DIFFUSIONS} action={Action.UPDATE}>
           <div className="shrink-0 flex flex-col gap-2">
             {(diffusion.status === 'draft' || diffusion.status === 'scheduled') && (
               <button

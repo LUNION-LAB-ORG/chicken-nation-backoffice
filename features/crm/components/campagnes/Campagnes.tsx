@@ -18,10 +18,13 @@ const STATUTS: CampagneStatut[] = ["PLANIFIED", "ACTIVE", "SUSPENDED", "COMPLETE
 /** Campagnes de conversion (cahier §6) : liste filtrable, tableau de bord, comparatif. */
 export function Campagnes({
   estGestionnaire,
+  peutTraiter,
   peutExporter,
   peutAnalyser,
 }: {
   estGestionnaire: boolean;
+  /** Droit UPDATE : sans lui, piloter une campagne est refusé par le serveur, même à son pilote. */
+  peutTraiter: boolean;
   peutExporter: boolean;
   peutAnalyser: boolean;
 }) {
@@ -64,7 +67,7 @@ export function Campagnes({
           c={ouverte}
           onRetour={() => setOuverteId(null)}
           estGestionnaire={estGestionnaire}
-          estPilote={ouverte.lead_agent.id === moi}
+          estPilote={peutTraiter && ouverte.lead_agent.id === moi}
           peutExporter={peutExporter}
           onModifier={() => setEdition({ campagne: ouverte })}
           onEquipe={() => setEquipe(ouverte)}

@@ -48,7 +48,7 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Modifier le template">
+    <Modal isOpen={isOpen} onClose={onClose} title="Modifier le modèle">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -94,7 +94,7 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Image URL (optionnel)
+            Adresse de l'image (facultatif)
           </label>
           <input
             type="url"

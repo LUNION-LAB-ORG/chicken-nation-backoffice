@@ -14,6 +14,8 @@ import StatutCardTab from "../../../../features/carte-nation/components/liste-ca
 import { UpdateCardStatusModal } from "../../../../features/carte-nation/components/liste-carte-nation/UpdateCardStatusModal";
 import { DemandeCarteList } from "../../../../features/carte-nation/components/liste-demandes-carte";
 import { useCardListQuery } from "../../../../features/carte-nation/queries/cards.query";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import {
   NationCard,
   NationCardStatus,
@@ -27,6 +29,9 @@ export default function CarteNation() {
     toggleModal,
     setSelectedItem,
   } = useDashboardStore();
+  // Les fenêtres d'écriture ne s'ouvrent qu'avec le droit que le serveur exige.
+  const peutModifier = useAuthStore((s) => s.can(Modules.CARD_NATION, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.CARD_NATION, Action.DELETE));
 
   const handleToggleCardModal = useCallback(
     (carte: NationCard, modalName: string) => {
@@ -80,7 +85,8 @@ export default function CarteNation() {
         <DemandeCarteList />
       )}
       {/* Update Carte Status Modal */}
-      {selectedItem &&
+      {peutModifier &&
+        selectedItem &&
         (modals?.activate || modals?.suspend || modals?.revoke) && (
           <UpdateCardStatusModal
             isOpen={true}
@@ -143,7 +149,7 @@ export default function CarteNation() {
       )}
 
       {/* Régénération du visuel avec un type choisi */}
-      {selectedItem && modals?.regenerate && (
+      {peutModifier && selectedItem && modals?.regenerate && (
         <RegenerateCardModal
           isOpen={true}
           card={selectedItem as NationCard}
@@ -152,7 +158,7 @@ export default function CarteNation() {
       )}
 
       {/* Suppression DÉFINITIVE d'une carte (≠ révoquer) */}
-      {selectedItem && modals?.deleteCard && (
+      {peutSupprimer && selectedItem && modals?.deleteCard && (
         <DeleteCardModal
           isOpen={true}
           card={selectedItem as NationCard}

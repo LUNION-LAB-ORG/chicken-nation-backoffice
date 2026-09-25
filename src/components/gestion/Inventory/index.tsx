@@ -23,6 +23,7 @@ import EditSupplement from "./EditSupplement";
 import SupplementTabs, { TabItem } from "./SupplementTabs";
 import SupplementView from "./SupplementView";
 import ReorderSupplementsModal from "./ReorderSupplementsModal";
+import FicheSupplement from "./FicheSupplement";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -67,7 +68,26 @@ export default function Inventory() {
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showReorderModal, setShowReorderModal] = useState(false);
-  const { can } = useAuthStore();
+  const [produitConsulte, setProduitConsulte] =
+    useState<ProductViewProduct | null>(null);
+
+  /**
+   * Droits lus par sélecteur booléen : l'écran se redessine dès qu'ils sont
+   * relus sur le serveur. Chaque geste d'écriture (créer, modifier, changer la
+   * disponibilité, réordonner, supprimer) n'est transmis aux composants enfants
+   * que s'il est permis : un profil en lecture seule (INVENTAIRE en lecture) ne
+   * voit ni bouton ni interrupteur, seulement les valeurs. Le serveur refuse de
+   * toute façon ces écritures.
+   */
+  const peutCreer = useAuthStore((s) =>
+    s.can(Modules.INVENTAIRE, Action.CREATE),
+  );
+  const peutModifier = useAuthStore((s) =>
+    s.can(Modules.INVENTAIRE, Action.UPDATE),
+  );
+  const peutSupprimer = useAuthStore((s) =>
+    s.can(Modules.INVENTAIRE, Action.DELETE),
+  );
   const queryClient = useQueryClient();
   // État pour la recherche
   const [searchQuery, setSearchQuery] = useState("");
@@ -285,7 +305,7 @@ export default function Inventory() {
           realTimeSearch: true, // ✅ Activer la recherche en temps réel
         }}
         actions={[
-          ...(can(Modules.INVENTAIRE,Action.CREATE)
+          ...(peutCreer
             ? [
                 {
                   label: "Créer une catégorie",
@@ -296,7 +316,7 @@ export default function Inventory() {
                 },
               ]
             : []),
-          ...(can(Modules.INVENTAIRE,Action.CREATE)
+          ...(peutCreer
             ? [
                 {
                   label: "Ajouter un produit",
@@ -361,7 +381,7 @@ export default function Inventory() {
           <div className="flex w-[120px] justify-end">
             {currentView === "products" &&
               selectedTab !== "all" &&
-              can(Modules.INVENTAIRE, Action.UPDATE) && (
+              peutModifier && (
                 <button
                   type="button"
                   onClick={() => setShowReorderModal(true)}
@@ -377,19 +397,23 @@ export default function Inventory() {
 
         {currentView === "categories" ? (
           <CategoriesTable
-            onEdit={handleEditCategory}
-            onDelete={handleDeleteCategory}
-            onCreateCategory={handleCreateCategory}
+            onEdit={peutModifier ? handleEditCategory : undefined}
+            onDelete={peutSupprimer ? handleDeleteCategory : undefined}
+            onCreateCategory={peutCreer ? handleCreateCategory : undefined}
             searchQuery={searchQuery}
           />
         ) : (
           <SupplementView
             products={filteredProducts}
             selectedTab={selectedTab}
-            onEdit={handleEditProduct}
-            onCreateProduct={handleCreateProduct}
-            onDelete={confirmDeleteProduct}
-            onUpdateAvailability={handleUpdateAvailability}
+            onEdit={peutModifier ? handleEditProduct : undefined}
+            // Sans droit de modification, la ligne ouvre la fiche en lecture.
+            onView={peutModifier ? undefined : setProduitConsulte}
+            onCreateProduct={peutCreer ? handleCreateProduct : undefined}
+            onDelete={peutSupprimer ? confirmDeleteProduct : undefined}
+            onUpdateAvailability={
+              peutModifier ? handleUpdateAvailability : undefined
+            }
             searchQuery={searchQuery}
             totalItems={totalItems}
             totalPages={totalPages}
@@ -401,7 +425,7 @@ export default function Inventory() {
       </div>
 
       <Modal
-        isOpen={showAddProductModal}
+        isOpen={showAddProductModal && peutCreer}
         onClose={() => setShowAddProductModal(false)}
         title="Ajouter un produit"
       >
@@ -415,7 +439,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal
-        isOpen={showAddCategoryModal}
+        isOpen={showAddCategoryModal && peutCreer}
         onClose={() => setShowAddCategoryModal(false)}
         title="Ajouter une catégorie"
       >
@@ -429,7 +453,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal
-        isOpen={showEditSupplementModal}
+        isOpen={showEditSupplementModal && peutModifier}
         onClose={() => setShowEditSupplementModal(false)}
         title="Modifier un produit"
       >
@@ -441,7 +465,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal
-        isOpen={showDeleteSupplementModal}
+        isOpen={showDeleteSupplementModal && peutSupprimer}
         onClose={() => setShowDeleteSupplementModal(false)}
         title="Supprimer un produit"
       >
@@ -453,7 +477,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal
-        isOpen={isDeleteCategoryModalOpen}
+        isOpen={isDeleteCategoryModalOpen && peutSupprimer}
         onClose={() => setIsDeleteCategoryModalOpen(false)}
         title="Supprimer une catégorie"
       >
@@ -468,7 +492,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal
-        isOpen={isEditCategoryModalOpen}
+        isOpen={isEditCategoryModalOpen && peutModifier}
         onClose={() => setIsEditCategoryModalOpen(false)}
         title="Modifier une catégorie"
       >
@@ -481,9 +505,22 @@ export default function Inventory() {
         )}
       </Modal>
 
+      <Modal
+        isOpen={produitConsulte !== null}
+        onClose={() => setProduitConsulte(null)}
+        title="Fiche du produit"
+      >
+        {produitConsulte && (
+          <FicheSupplement
+            produit={produitConsulte}
+            onClose={() => setProduitConsulte(null)}
+          />
+        )}
+      </Modal>
+
       {selectedTab !== "all" && (
         <ReorderSupplementsModal
-          isOpen={showReorderModal}
+          isOpen={showReorderModal && peutModifier}
           onClose={() => setShowReorderModal(false)}
           categorie={selectedTab}
         />

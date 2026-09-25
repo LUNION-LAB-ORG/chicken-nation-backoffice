@@ -2,18 +2,21 @@
 
 import React, { useState } from "react";
 import { Pagination } from "@/components/ui/pagination";
-import { Loader2, Search, Users, Wallet } from "lucide-react";
+import { Eye, Loader2, Search, Users, Wallet } from "lucide-react";
 import { useAmbassadorsQuery } from "../queries/referral.queries";
 import { Ambassador } from "../types/referral.types";
 import { fcfa } from "../utils/format";
 import AmbassadorPayoutModal from "./AmbassadorPayoutModal";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 const LIMIT = 10;
 
-const Row: React.FC<{ a: Ambassador; onOpen: (id: string) => void }> = ({
-  a,
-  onOpen,
-}) => (
+const Row: React.FC<{
+  a: Ambassador;
+  onOpen: (id: string) => void;
+  peutVerser: boolean;
+}> = ({ a, onOpen, peutVerser }) => (
   <tr className="border-b border-[#F2F2F4] last:border-0 hover:bg-[#FAFAFA]">
     <td className="py-3 px-3">
       <div className="text-sm font-medium text-[#18181B]">{a.fullname ?? "—"}</div>
@@ -43,7 +46,17 @@ const Row: React.FC<{ a: Ambassador; onOpen: (id: string) => void }> = ({
         onClick={() => onOpen(a.customer_id)}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-[#FFF6E9] cursor-pointer"
       >
-        <Wallet size={15} /> Gérer
+        {/* Sans FIDELITE UPDATE, la fenêtre n'affiche que les soldes et
+            l'historique : « Gérer » promettrait un geste impossible. */}
+        {peutVerser ? (
+          <>
+            <Wallet size={15} /> Gérer
+          </>
+        ) : (
+          <>
+            <Eye size={15} /> Détails
+          </>
+        )}
       </button>
     </td>
   </tr>
@@ -54,6 +67,7 @@ export default function AmbassadorsList() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const peutVerser = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
 
   const { data, isLoading, isError, error, isFetching } = useAmbassadorsQuery({
     page,
@@ -138,7 +152,12 @@ export default function AmbassadorsList() {
                 </tr>
               ) : (
                 items.map((a) => (
-                  <Row key={a.customer_id} a={a} onOpen={setOpenId} />
+                  <Row
+                    key={a.customer_id}
+                    a={a}
+                    onOpen={setOpenId}
+                    peutVerser={peutVerser}
+                  />
                 ))
               )}
             </tbody>

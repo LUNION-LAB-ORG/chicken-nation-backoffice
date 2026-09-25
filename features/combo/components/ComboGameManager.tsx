@@ -14,7 +14,7 @@ import ComboGameForm from "./ComboGameForm";
 import ComboTrackingPanel from "./ComboTrackingPanel";
 import { ComboGame, CreateComboGameDto } from "../types/combo.types";
 import { useAuthStore } from "../../users/hook/authStore";
-import { UserRole } from "../../users/types/user.types";
+import { Action, Modules } from "../../users/types/auth.type";
 
 type ComboMode = null | "create" | "edit" | "track";
 
@@ -22,8 +22,16 @@ export default function ComboGameManager() {
   const [mode, setMode] = useState<ComboMode>(null);
   const [selected, setSelected] = useState<ComboGame | null>(null);
 
-  const { user } = useAuthStore();
-  const canManage = user?.role === UserRole.ADMIN;
+  // Mêmes droits que le serveur (FIDELITE) : créer = CREATE, éditer = UPDATE,
+  // supprimer = DELETE. Le tirage des gagnants, irréversible, reste réservé à
+  // qui peut créer un jeu (la direction), comme avant : le centre d'appel a
+  // UPDATE pour les points de fidélité, pas pour tirer les lots.
+  const peutCreer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.FIDELITE, Action.DELETE));
+  // Le formulaire n'est ouvert que si le geste correspondant est permis.
+  const formulaireOuvert =
+    (mode === "create" && peutCreer) || (mode === "edit" && peutModifier);
 
   const { data: games, isLoading } = useComboGamesQuery();
   const createMut = useCreateComboGameMutation();
@@ -87,7 +95,7 @@ export default function ComboGameManager() {
               tirage au sort du lot.
             </p>
           </div>
-          {!mode && canManage && (
+          {!mode && peutCreer && (
             <motion.button
               onClick={openCreate}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-white rounded-xl"
@@ -100,7 +108,7 @@ export default function ComboGameManager() {
         </div>
 
         <AnimatePresence mode="wait">
-          {mode === "create" || mode === "edit" ? (
+          {formulaireOuvert ? (
             <motion.div
               key="form"
               initial={{ opacity: 0 }}
@@ -124,7 +132,7 @@ export default function ComboGameManager() {
               key="track"
               game={trackedGame}
               onBack={close}
-              canManage={canManage}
+              canManage={peutCreer}
             />
           ) : (
             <motion.div
@@ -136,9 +144,10 @@ export default function ComboGameManager() {
               <ComboGamesList
                 games={games}
                 isLoading={isLoading}
-                onEdit={openEdit}
-                onDelete={handleDelete}
+                onEdit={peutModifier ? openEdit : undefined}
+                onDelete={peutSupprimer ? handleDelete : undefined}
                 onTrack={openTrack}
+                canCreate={peutCreer}
               />
             </motion.div>
           )}

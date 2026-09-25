@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { IContactFiltres, Public } from "../../types/contact.type";
+import { usePointDeVente } from "../../hooks/useDroitsCrm";
 import { useAgentsQuery } from "../../queries/contact.query";
 import { useCampagnesQuery } from "../../queries/campagne.query";
 import { PUBLICS, PUBLIC_META, STATUTS_ORDRE, STATUT_META } from "../../utils/crm-ui";
@@ -12,6 +13,8 @@ const A_TRAVAILLER = "A_APPELER,A_RAPPELER,INTERESSE,COUPON_ENVOYE";
 /**
  * Filtres combinables de la liste (cahier §4.2). La recherche attend que
  * l'agent ait fini de taper : une requête par frappe ralentirait tout le monde.
+ * Un compte de point de vente n'a pas de filtre campagne : les campagnes se
+ * consultent au siège.
  */
 export function FiltresContacts({
   filtres,
@@ -25,7 +28,8 @@ export function FiltresContacts({
   const [texte, setTexte] = useState(filtres.search ?? "");
   const [avances, setAvances] = useState(false);
   const { data: agents = [] } = useAgentsQuery();
-  const { data: campagnes = [] } = useCampagnesQuery();
+  const pointDeVente = usePointDeVente();
+  const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente);
 
   useEffect(() => {
     const minuterie = setTimeout(() => {
@@ -77,12 +81,14 @@ export function FiltresContacts({
             options={[{ value: "none", label: "Sans agent" }, ...agents.map((a) => ({ value: a.id, label: a.fullname }))]}
           />
         )}
-        <ChampSelect
-          valeur={filtres.campaign_id ?? ""}
-          onChange={(v) => maj({ campaign_id: v || undefined })}
-          vide="Toutes les campagnes"
-          options={[{ value: "none", label: "Hors campagne" }, ...campagnes.map((c) => ({ value: c.id, label: c.name }))]}
-        />
+        {!pointDeVente && (
+          <ChampSelect
+            valeur={filtres.campaign_id ?? ""}
+            onChange={(v) => maj({ campaign_id: v || undefined })}
+            vide="Toutes les campagnes"
+            options={[{ value: "none", label: "Hors campagne" }, ...campagnes.map((c) => ({ value: c.id, label: c.name }))]}
+          />
+        )}
         <button
           type="button"
           onClick={() => setAvances((v) => !v)}

@@ -63,6 +63,7 @@ export function ChampTexte({
   requis,
   min,
   max,
+  desactive,
 }: {
   label?: string;
   valeur: string;
@@ -72,6 +73,7 @@ export function ChampTexte({
   requis?: boolean;
   min?: string | number;
   max?: string | number;
+  desactive?: boolean;
 }) {
   return (
     <label className="block">
@@ -83,6 +85,7 @@ export function ChampTexte({
         placeholder={placeholder}
         min={min}
         max={max}
+        disabled={desactive}
         className={classeChamp}
       />
     </label>

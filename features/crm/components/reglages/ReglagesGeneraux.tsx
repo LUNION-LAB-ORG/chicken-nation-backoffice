@@ -10,7 +10,7 @@ import { Bouton, ChampSelect, ChampTexte, Libelle, classeChamp } from "../commun
 const EXEMPLE = { prenom: "Awa", code: "CN-7KQ4MX", expiration: "01/10/2026" };
 
 /** Réglages du module et message du coupon, avec l'aperçu que recevra le client. */
-export function ReglagesGeneraux({ initial }: { initial: IReglages }) {
+export function ReglagesGeneraux({ initial, lectureSeule = false }: { initial: IReglages; lectureSeule?: boolean }) {
   const [r, setR] = useState(initial);
   const { data: offres = [] } = useOffresQuery();
   const enregistrer = useReglagesMutation();
@@ -33,15 +33,15 @@ export function ReglagesGeneraux({ initial }: { initial: IReglages }) {
   return (
     <StatsChartCard title="Réglages généraux" subtitle="Inactivité, tentatives, alertes et message du coupon" icon={Settings2}>
       <div className="grid sm:grid-cols-2 gap-3">
-        <ChampTexte label="Tentatives sans réponse avant « injoignable »" type="number" valeur={String(r.max_attempts)} onChange={(v) => maj({ max_attempts: Number(v) })} min={1} max={20} />
-        <ChampTexte label="Alerte si pas appelé après (heures)" type="number" valeur={String(r.alert_delay_hours)} onChange={(v) => maj({ alert_delay_hours: Number(v) })} min={1} />
-        <ChampTexte label="Client inactif après (jours sans commande)" type="number" valeur={String(r.inactive_days)} onChange={(v) => maj({ inactive_days: Number(v) })} min={7} max={365} />
-        <ChampSelect label="Offre par défaut" valeur={r.default_offer_id} onChange={(v) => maj({ default_offer_id: v })} vide="La première de la liste" options={offres.filter((o) => o.is_active).map((o) => ({ value: o.id, label: o.label }))} />
-        <ChampTexte label="Lien de commande" type="url" valeur={r.app_link} onChange={(v) => maj({ app_link: v })} />
+        <ChampTexte label="Tentatives sans réponse avant « injoignable »" type="number" valeur={String(r.max_attempts)} onChange={(v) => maj({ max_attempts: Number(v) })} min={1} max={20} desactive={lectureSeule} />
+        <ChampTexte label="Alerte si pas appelé après (heures)" type="number" valeur={String(r.alert_delay_hours)} onChange={(v) => maj({ alert_delay_hours: Number(v) })} min={1} desactive={lectureSeule} />
+        <ChampTexte label="Client inactif après (jours sans commande)" type="number" valeur={String(r.inactive_days)} onChange={(v) => maj({ inactive_days: Number(v) })} min={7} max={365} desactive={lectureSeule} />
+        <ChampSelect label="Offre par défaut" valeur={r.default_offer_id} onChange={(v) => maj({ default_offer_id: v })} vide="La première de la liste" options={offres.filter((o) => o.is_active).map((o) => ({ value: o.id, label: o.label }))} desactive={lectureSeule} />
+        <ChampTexte label="Lien de commande" type="url" valeur={r.app_link} onChange={(v) => maj({ app_link: v })} desactive={lectureSeule} />
       </div>
 
       <div className="mt-4 space-y-3">
-        <ChampTexte label="Autre modèle WhatsApp (identifiant Twilio)" valeur={r.whatsapp_template_sid} onChange={(v) => maj({ whatsapp_template_sid: v })} placeholder="Vide : modèle du coupon Glovo/Yango, déjà approuvé" />
+        <ChampTexte label="Autre modèle WhatsApp (identifiant Twilio)" valeur={r.whatsapp_template_sid} onChange={(v) => maj({ whatsapp_template_sid: v })} placeholder="Vide : modèle du coupon Glovo/Yango, déjà approuvé" desactive={lectureSeule} />
         <p className="text-xs text-gray-500 -mt-1">
           Par défaut, le coupon part avec le modèle WhatsApp de l&apos;acquisition Glovo/Yango, déjà approuvé par Meta : prénom, code, validité
           en jours et bouton « Télécharger l&apos;app ». Un autre modèle doit garder ces trois variables dans cet ordre. Si WhatsApp échoue, le
@@ -49,7 +49,7 @@ export function ReglagesGeneraux({ initial }: { initial: IReglages }) {
         </p>
         <label className="block">
           <Libelle>Message SMS (si WhatsApp échoue)</Libelle>
-          <textarea value={r.message_template} onChange={(e) => maj({ message_template: e.target.value })} rows={3} className={`${classeChamp} resize-none`} />
+          <textarea value={r.message_template} onChange={(e) => maj({ message_template: e.target.value })} rows={3} disabled={lectureSeule} className={`${classeChamp} resize-none`} />
         </label>
         <p className="text-xs text-gray-500 -mt-1">Variables : {"{prenom} {offre} {code} {expiration} {lien}"}</p>
         <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-3 text-sm text-gray-800">
@@ -58,11 +58,13 @@ export function ReglagesGeneraux({ initial }: { initial: IReglages }) {
         </div>
       </div>
 
-      <div className="flex justify-end mt-4">
-        <Bouton variante="primaire" onClick={valider} desactive={enregistrer.isPending}>
-          Enregistrer les réglages
-        </Bouton>
-      </div>
+      {!lectureSeule && (
+        <div className="flex justify-end mt-4">
+          <Bouton variante="primaire" onClick={valider} desactive={enregistrer.isPending}>
+            Enregistrer les réglages
+          </Bouton>
+        </div>
+      )}
     </StatsChartCard>
   );
 }

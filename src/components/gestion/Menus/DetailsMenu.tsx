@@ -8,8 +8,101 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import { useState } from "react";
 import MenuComments from "./MenuComments";
 import DishOptionsSection from "../../../../features/menus/components/DishOptionsSection";
+import { useCategoryListQuery } from "../../../../features/menus/queries/category/category-list.query";
 import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
+
+const LIBELLES_EPICE: Record<string, string> = {
+  ALWAYS: "Toujours épicé",
+  OPTIONAL: "Au choix du client",
+  NEVER: "Jamais épicé",
+};
+
+const LIBELLES_MODES: Record<string, string> = {
+  DELIVERY: "Livraison",
+  PICKUP: "À emporter",
+  TABLE: "Sur place",
+};
+
+const LIBELLES_AUDIENCES: Record<string, string> = {
+  ETUDIANT: "Étudiant",
+  STANDARD: "Standard",
+  VIP: "VIP",
+  VVIP: "VVIP",
+};
+
+/** Familles de suppléments, nommées comme dans le formulaire du plat. */
+const FAMILLES_SUPPLEMENTS: [string, string][] = [
+  ["ACCESSORY", "Ingrédients"],
+  ["FOOD", "Accompagnements"],
+  ["DRINK", "Boissons"],
+];
+
+const heure = (valeur?: string | null) => (valeur ? valeur.slice(0, 5) : "");
+
+/**
+ * Réglages du plat, en lecture. Ils n'étaient visibles que dans le formulaire
+ * de modification : un profil qui consulte les menus sans pouvoir les modifier
+ * n'en voyait donc rien.
+ */
+function ReglagesPlat({ menu }: { menu: MenuItemType }) {
+  const { data: categories, isLoading } = useCategoryListQuery();
+  const categorie = categories?.find((c) => c.id === menu.categoryId)?.name;
+
+  const epice =
+    menu.spice_level ?? (menu.is_alway_epice ? "ALWAYS" : undefined);
+  // Vide ou absent : le plat est proposé dans tous les modes.
+  const modes = menu.available_order_types?.length
+    ? menu.available_order_types
+    : ["DELIVERY", "PICKUP", "TABLE"];
+
+  const debut = heure(menu.available_from);
+  const fin = heure(menu.available_until);
+  const creneau =
+    debut && fin
+      ? `De ${debut} à ${fin}`
+      : debut
+        ? `À partir de ${debut}`
+        : fin
+          ? `Jusqu'à ${fin}`
+          : "Toute la journée";
+
+  const audiences = menu.audiences?.length
+    ? menu.audiences.map((a) => LIBELLES_AUDIENCES[a] ?? a).join(", ")
+    : "Tout le monde";
+
+  // Le serveur renvoie les restaurants où le plat est EFFECTIVEMENT servi
+  // (tous, moins les exclusions).
+  const servis = (menu.dish_restaurants ?? [])
+    .map((r) => r?.restaurant?.name)
+    .filter((nom): nom is string => Boolean(nom));
+  const restaurants =
+    (menu.excluded_restaurant_ids?.length ?? 0) === 0
+      ? "Tous les restaurants"
+      : servis.length > 0
+        ? servis.join(", ")
+        : "Aucun restaurant";
+
+  const lignes: [string, string][] = [
+    ["Catégorie", isLoading ? "Chargement" : (categorie ?? "Non renseignée")],
+    ["Niveau épicé", epice ? (LIBELLES_EPICE[epice] ?? epice) : "Non renseigné"],
+    ["Disponible pour", modes.map((m) => LIBELLES_MODES[m] ?? m).join(", ")],
+    ["Créneau horaire", creneau],
+    ["Audience", audiences],
+    ["Restaurants", restaurants],
+  ];
+
+  return (
+    <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 border-t border-gray-100 pt-4 sm:grid-cols-2">
+      {lignes.map(([libelle, valeur]) => (
+        <div key={libelle}>
+          <dt className="text-[12px] font-medium text-gray-400">{libelle}</dt>
+          <dd className="text-sm text-gray-700">{valeur}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 interface DetailsMenuProps {
   menu: MenuItemType;
@@ -43,8 +136,14 @@ export default function DetailsMenu({
     return formatImageUrl(imageUrl);
   };
 
-  //  les ingrédients (catégorie ACCESSORY)
-  const ingredients = getSupplementsByCategory("ACCESSORY");
+  // Suppléments proposés avec le plat, par famille. Seuls les ingrédients
+  // étaient affichés : accompagnements et boissons n'apparaissaient que dans
+  // le formulaire de modification.
+  const familles = FAMILLES_SUPPLEMENTS.map(([categorie, libelle]) => ({
+    categorie,
+    libelle,
+    elements: getSupplementsByCategory(categorie),
+  })).filter((f) => f.elements.length > 0);
 
   return (
     <div className="bg-white w-full h-full overflow-y-auto">
@@ -189,6 +288,7 @@ export default function DetailsMenu({
                   <div className="space-y-1 text-sm sm:text-base lg:text-lg text-gray-600">
                     <p>{menu.description}</p>
                   </div>
+                  <ReglagesPlat menu={menu} />
                 </div>
               )}
 
@@ -230,22 +330,29 @@ export default function DetailsMenu({
                   Suppléments
                 </h3>
               </div>
-              <div className="space-y-2">
-                {ingredients && ingredients.length > 0 ? (
-                  ingredients.map(
-                    (ingredient, index) =>
-                      ingredient.supplement && (
-                        <div
-                          key={ingredient.supplement.id || index}
-                          className="flex items-center gap-2"
-                        >
-                          <div className="w-2 h-2 rounded-full bg-[#F17922]" />
-                          <span className="text-sm text-gray-600">
-                            {ingredient.supplement.name}
-                          </span>
-                        </div>
-                      )
-                  )
+              <div className="space-y-4">
+                {familles.length > 0 ? (
+                  familles.map((famille) => (
+                    <div key={famille.categorie} className="space-y-2">
+                      <p className="text-[12px] font-semibold text-gray-400">
+                        {famille.libelle}
+                      </p>
+                      {famille.elements.map(
+                        (element, index) =>
+                          element.supplement && (
+                            <div
+                              key={element.supplement.id || index}
+                              className="flex items-center gap-2"
+                            >
+                              <div className="w-2 h-2 rounded-full bg-[#F17922]" />
+                              <span className="text-sm text-gray-600">
+                                {element.supplement.name}
+                              </span>
+                            </div>
+                          )
+                      )}
+                    </div>
+                  ))
                 ) : (
                   <span className="text-sm text-gray-500">
                     Aucun supplément

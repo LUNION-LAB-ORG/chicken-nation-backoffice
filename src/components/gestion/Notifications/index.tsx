@@ -16,16 +16,18 @@ import UserList from "./users/UserList";
 import AnalyticsDashboard from "./analytics/AnalyticsDashboard";
 import type { PushTemplate, ScheduledNotification } from "@/types/push-campaign";
 import { Bell, FileText, Users, CalendarClock, Smartphone, BarChart3 } from "lucide-react";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 type NotificationTab = "messages" | "scheduled" | "templates" | "segments" | "users" | "analytics";
 
 const TABS: { id: NotificationTab; label: string; icon: React.ReactNode }[] = [
   { id: "messages", label: "Messages", icon: <Bell size={16} /> },
   { id: "scheduled", label: "Planifiées", icon: <CalendarClock size={16} /> },
-  { id: "templates", label: "Templates", icon: <FileText size={16} /> },
+  { id: "templates", label: "Modèles", icon: <FileText size={16} /> },
   { id: "segments", label: "Segments", icon: <Users size={16} /> },
   { id: "users", label: "Utilisateurs", icon: <Smartphone size={16} /> },
-  { id: "analytics", label: "Analytics", icon: <BarChart3 size={16} /> },
+  { id: "analytics", label: "Statistiques", icon: <BarChart3 size={16} /> },
 ];
 
 export default function Notifications() {
@@ -41,7 +43,14 @@ export default function Notifications() {
   const [scheduledToEdit, setScheduledToEdit] = useState<ScheduledNotification | null>(null);
   const [scheduledToView, setScheduledToView] = useState<ScheduledNotification | null>(null);
 
+  // Module NOTIFICATIONS, comme le serveur (push-campaign.controller.ts) : READ
+  // ouvre toute la page, chaque geste exige CREATE, UPDATE ou DELETE. Sélecteurs
+  // booléens : l'écran se redessine quand les droits sont relus.
+  const peutCreer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.UPDATE));
+
   const getActions = () => {
+    if (!peutCreer) return [];
     switch (activeTab) {
       case "messages":
         return [
@@ -62,7 +71,7 @@ export default function Notifications() {
       case "templates":
         return [
           {
-            label: "Créer un template",
+            label: "Créer un modèle",
             onClick: () => setShowCreateTemplate(true),
             variant: "primary" as const,
           },
@@ -153,28 +162,35 @@ export default function Notifications() {
         {activeTab === "analytics" && <AnalyticsDashboard />}
       </div>
 
-      {/* Modals */}
-      <CreateMessageModal
-        isOpen={showCreateMessage}
-        onClose={() => setShowCreateMessage(false)}
-      />
-      <CreateScheduledModal
-        isOpen={showCreateScheduled || !!scheduledToEdit}
-        onClose={() => {
-          setShowCreateScheduled(false);
-          setScheduledToEdit(null);
-        }}
-        editItem={scheduledToEdit}
-      />
-      <CreateTemplateModal
-        isOpen={showCreateTemplate}
-        onClose={() => setShowCreateTemplate(false)}
-      />
-      <CreateSegmentModal
-        isOpen={showCreateSegment}
-        onClose={() => setShowCreateSegment(false)}
-      />
-      {templateToEdit && (
+      {/* Modals : montées seulement avec le droit d'écriture correspondant */}
+      {peutCreer && (
+        <>
+          <CreateMessageModal
+            isOpen={showCreateMessage}
+            onClose={() => setShowCreateMessage(false)}
+          />
+          <CreateTemplateModal
+            isOpen={showCreateTemplate}
+            onClose={() => setShowCreateTemplate(false)}
+          />
+          <CreateSegmentModal
+            isOpen={showCreateSegment}
+            onClose={() => setShowCreateSegment(false)}
+          />
+        </>
+      )}
+      {/* Création (CREATE) et modification (UPDATE) d'une planification */}
+      {(peutCreer || peutModifier) && (
+        <CreateScheduledModal
+          isOpen={(peutCreer && showCreateScheduled) || (peutModifier && !!scheduledToEdit)}
+          onClose={() => {
+            setShowCreateScheduled(false);
+            setScheduledToEdit(null);
+          }}
+          editItem={peutModifier ? scheduledToEdit : null}
+        />
+      )}
+      {peutModifier && templateToEdit && (
         <EditTemplateModal
           isOpen={!!templateToEdit}
           onClose={() => setTemplateToEdit(null)}

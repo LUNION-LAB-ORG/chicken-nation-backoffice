@@ -46,11 +46,11 @@ export default function CreateTemplateModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Créer un template push">
+    <Modal isOpen={isOpen} onClose={onClose} title="Créer un modèle de notification">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Nom du template
+            Nom du modèle
           </label>
           <input
             type="text"
@@ -95,7 +95,7 @@ export default function CreateTemplateModal({ isOpen, onClose }: Props) {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Image URL (optionnel)
+            Adresse de l'image (facultatif)
           </label>
           <input
             type="url"

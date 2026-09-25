@@ -19,6 +19,8 @@ import {
   Play,
   ArrowRightLeft,
 } from "lucide-react";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   searchQuery: string;
@@ -42,7 +44,7 @@ const CHANNEL_LABELS: Record<string, { label: string; color: string }> = {
 };
 
 function formatDate(date: string | null | undefined) {
-  if (!date) return "—";
+  if (!date) return "Non renseignée";
   return new Intl.DateTimeFormat("fr-FR", {
     dateStyle: "medium",
     timeStyle: "short",
@@ -54,6 +56,10 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
   const toggleMutation = useToggleScheduledMutation();
   const deleteMutation = useDeleteScheduledMutation();
   const migrateMutation = useMigrateScheduledMutation();
+  // Mêmes droits que le serveur (push-campaign.controller.ts, module NOTIFICATIONS).
+  const peutCreer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.DELETE));
 
   const allItems = items ?? [];
 
@@ -78,12 +84,14 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
         <p className="text-gray-500 text-sm mb-4">
           Aucune notification planifiée
         </p>
-        <button
-          onClick={onCreate}
-          className="px-4 py-2 bg-[#F17922] text-white rounded-xl text-sm font-medium hover:bg-[#e06816] transition-all cursor-pointer"
-        >
-          Créer une notification planifiée
-        </button>
+        {peutCreer && (
+          <button
+            onClick={onCreate}
+            className="px-4 py-2 bg-[#F17922] text-white rounded-xl text-sm font-medium hover:bg-[#e06816] transition-all cursor-pointer"
+          >
+            Créer une notification planifiée
+          </button>
+        )}
       </div>
     );
   }
@@ -185,7 +193,7 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
-                {isOneSignal && (
+                {isOneSignal && peutModifier && (
                   <button
                     onClick={(e) => handleMigrate(e, item)}
                     disabled={migrateMutation.isPending}
@@ -195,28 +203,32 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
                     <ArrowRightLeft size={16} />
                   </button>
                 )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleMutation.mutate(item.id);
-                  }}
-                  className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
-                  title={item.active ? "Désactiver" : "Activer"}
-                >
-                  {item.active ? <Pause size={16} /> : <Play size={16} />}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Supprimer "${item.name}" ?`)) {
-                      deleteMutation.mutate(item.id);
-                    }
-                  }}
-                  className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
-                  title="Supprimer"
-                >
-                  <Trash2 size={16} />
-                </button>
+                {peutModifier && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMutation.mutate(item.id);
+                    }}
+                    className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    title={item.active ? "Désactiver" : "Activer"}
+                  >
+                    {item.active ? <Pause size={16} /> : <Play size={16} />}
+                  </button>
+                )}
+                {peutSupprimer && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Supprimer "${item.name}" ?`)) {
+                        deleteMutation.mutate(item.id);
+                      }
+                    }}
+                    className="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer"
+                    title="Supprimer"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
               </div>
             </div>
           </div>

@@ -22,12 +22,21 @@ import {
   Newspaper,
 } from "lucide-react";
 import NewsFormModal from "./NewsFormModal";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 export default function Nouveautes() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<News | null>(null);
+
+  // Sélecteurs booléens : l'écran se redessine quand les droits sont relus.
+  // Le serveur garde les mêmes actions (news-admin.controller.ts).
+  const peutCreer = useAuthStore((s) => s.can(Modules.MARKETING, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.MARKETING, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.MARKETING, Action.DELETE));
+  const peutGerer = peutCreer || peutModifier || peutSupprimer;
 
   const { data, isLoading } = useNewsListQuery({ page, limit: 10, search });
   const { data: stats } = useNewsStatsQuery();
@@ -48,23 +57,31 @@ export default function Nouveautes() {
       <DashboardPageHeader
         mode="list"
         title="Nouveautés"
-        subtitle="Gérez les bannières et actualités affichées dans l'application"
+        subtitle={
+          peutGerer
+            ? "Gérez les bannières et actualités affichées dans l'application"
+            : "Bannières et actualités affichées dans l'application"
+        }
         searchConfig={{
           placeholder: "Rechercher une nouveauté...",
           buttonText: "Chercher",
           onSearch: setSearch,
           realTimeSearch: true,
         }}
-        actions={[
-          {
-            label: "Nouvelle nouveauté",
-            onClick: () => {
-              setEditItem(null);
-              setShowForm(true);
-            },
-            variant: "primary" as const,
-          },
-        ]}
+        actions={
+          peutCreer
+            ? [
+                {
+                  label: "Nouvelle nouveauté",
+                  onClick: () => {
+                    setEditItem(null);
+                    setShowForm(true);
+                  },
+                  variant: "primary" as const,
+                },
+              ]
+            : []
+        }
       />
 
       {/* Stats */}
@@ -101,6 +118,8 @@ export default function Nouveautes() {
                   onToggle={() => toggleMutation.mutate(item.id)}
                   onDelete={() => handleDelete(item)}
                   isToggling={toggleMutation.isPending}
+                  peutModifier={peutModifier}
+                  peutSupprimer={peutSupprimer}
                 />
               ))}
             </div>
@@ -133,15 +152,17 @@ export default function Nouveautes() {
         )}
       </div>
 
-      {/* Form Modal */}
-      <NewsFormModal
-        isOpen={showForm}
-        onClose={() => {
-          setShowForm(false);
-          setEditItem(null);
-        }}
-        editItem={editItem}
-      />
+      {/* Form Modal : ouverte seulement par les boutons Créer et Modifier */}
+      {(peutCreer || peutModifier) && (
+        <NewsFormModal
+          isOpen={showForm}
+          onClose={() => {
+            setShowForm(false);
+            setEditItem(null);
+          }}
+          editItem={editItem}
+        />
+      )}
     </div>
   );
 }
@@ -163,12 +184,18 @@ function NewsCard({
   onToggle,
   onDelete,
   isToggling,
+  peutModifier,
+  peutSupprimer,
 }: {
   item: News;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
   isToggling: boolean;
+  /** MARKETING UPDATE : activer, désactiver et modifier. */
+  peutModifier: boolean;
+  /** MARKETING DELETE : supprimer. */
+  peutSupprimer: boolean;
 }) {
   const imageUrl = item.imageUrl ? formatImageUrl(item.imageUrl) : null;
 
@@ -199,35 +226,43 @@ function NewsCard({
             {item.isActive ? "Active" : "Inactive"}
           </span>
         </div>
-        {/* Actions */}
-        <div className="absolute top-3 right-3 flex gap-1.5">
-          <button
-            onClick={onToggle}
-            disabled={isToggling}
-            className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
-            title={item.isActive ? "Désactiver" : "Activer"}
-          >
-            {item.isActive ? (
-              <EyeOff size={14} className="text-gray-600" />
-            ) : (
-              <Eye size={14} className="text-green-600" />
+        {/* Actions (masquées sans le droit correspondant) */}
+        {(peutModifier || peutSupprimer) && (
+          <div className="absolute top-3 right-3 flex gap-1.5">
+            {peutModifier && (
+              <>
+                <button
+                  onClick={onToggle}
+                  disabled={isToggling}
+                  className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
+                  title={item.isActive ? "Désactiver" : "Activer"}
+                >
+                  {item.isActive ? (
+                    <EyeOff size={14} className="text-gray-600" />
+                  ) : (
+                    <Eye size={14} className="text-green-600" />
+                  )}
+                </button>
+                <button
+                  onClick={onEdit}
+                  className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
+                  title="Modifier"
+                >
+                  <Pencil size={14} className="text-blue-600" />
+                </button>
+              </>
             )}
-          </button>
-          <button
-            onClick={onEdit}
-            className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
-            title="Modifier"
-          >
-            <Pencil size={14} className="text-blue-600" />
-          </button>
-          <button
-            onClick={onDelete}
-            className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
-            title="Supprimer"
-          >
-            <Trash2 size={14} className="text-red-500" />
-          </button>
-        </div>
+            {peutSupprimer && (
+              <button
+                onClick={onDelete}
+                className="w-8 h-8 rounded-lg bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-all cursor-pointer shadow-sm"
+                title="Supprimer"
+              >
+                <Trash2 size={14} className="text-red-500" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}

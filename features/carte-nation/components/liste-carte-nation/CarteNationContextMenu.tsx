@@ -39,27 +39,34 @@ const CarteNationContextMenu: React.FC<CarteNationContextMenuProps> = ({
   return (
     <div className="client-context-menu w-56 bg-white rounded-lg shadow-xl overflow-hidden border border-gray-200">
       <div className="py-1">
+        {/* Consultation : ouvre la fiche client (CLIENTS READ). */}
+        <HasPermission module={Modules.CLIENTS} action={Action.READ}>
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-700 hover:bg-orange-50"
+            onClick={handleViewProfile}
+          >
+            <User size={16} className="text-gray-400" />
+            <span>Profil du détenteur</span>
+          </button>
+        </HasPermission>
         <HasPermission module={Modules.CARD_NATION} action={Action.READ}>
+          <button
+            type="button"
+            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-700 hover:bg-orange-50"
+            onClick={() => {
+              handleToggleCardModal(carteNation, "viewCard");
+              onClose();
+            }}
+          >
+            <CreditCard size={16} className="text-gray-400" />
+            <span>Voir le visuel de la carte</span>
+          </button>
+        </HasPermission>
+        {/* Régénérer, activer, suspendre et révoquer : PATCH côté serveur,
+            gardés par CARD_NATION UPDATE. */}
+        <HasPermission module={Modules.CARD_NATION} action={Action.UPDATE}>
           <>
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-700 hover:bg-orange-50"
-              onClick={handleViewProfile}
-            >
-              <User size={16} className="text-gray-400" />
-              <span>Profil du détenteur</span>
-            </button>
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-gray-700 hover:bg-orange-50"
-              onClick={() => {
-                handleToggleCardModal(carteNation, "viewCard");
-                onClose();
-              }}
-            >
-              <CreditCard size={16} className="text-gray-400" />
-              <span>Voir le visuel de la carte</span>
-            </button>
             {/* Régénère le visuel avec un type choisi (numéro et QR conservés) */}
             <button
               type="button"
@@ -106,7 +113,7 @@ const CarteNationContextMenu: React.FC<CarteNationContextMenuProps> = ({
                   }}
                 >
                   <Trash2 size={16} className="text-red-400" />
-                  <span>Revoquer</span>
+                  <span>Révoquer</span>
                 </button>
               </>
             )}

@@ -32,6 +32,8 @@ import {
   getApiDashboardStats,
   transformApiDataToDashboardStats,
 } from "../../../../features/statistics/services/statistics.service";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 // Interface pour le manager du restaurant
 interface RestaurantManager {
@@ -59,6 +61,15 @@ export default function RestaurantDetail({
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [manager, setManager] = useState<RestaurantManager | null>(null);
+  // Sélecteurs booléens : la fiche se redessine quand les droits sont relus.
+  const peutModifier = useAuthStore((s) =>
+    s.can(Modules.RESTAURANTS, Action.UPDATE)
+  );
+  // GET /restaurants/:id/manager est gardée par PERSONNELS READ : sans ce
+  // droit, on n'appelle pas la route (elle répondrait 403).
+  const peutVoirGerant = useAuthStore((s) =>
+    s.can(Modules.PERSONNELS, Action.READ)
+  );
   // const [isLoadingManager, setIsLoadingManager] = useState(false) // Variable non utilisée
   const [restaurantMenus, setRestaurantMenus] = useState<
     Array<{
@@ -93,7 +104,7 @@ export default function RestaurantDetail({
     revenue: "0 XOF",
     orders: "0",
     customers: "0",
-    rating: "N/A",
+    rating: "Aucune",
   });
   const [isLoadingStats, setIsLoadingStats] = useState(false);
 
@@ -104,8 +115,12 @@ export default function RestaurantDetail({
       const data = await getRestaurantById(restaurantId);
       setRestaurant(data);
 
-      // Charger les informations du manager
-      fetchManagerDetails(restaurantId);
+      // Charger les informations du manager (seulement avec PERSONNELS READ)
+      if (peutVoirGerant) {
+        fetchManagerDetails(restaurantId);
+      } else {
+        setManager(null);
+      }
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
@@ -119,7 +134,7 @@ export default function RestaurantDetail({
     } finally {
       setIsLoading(false);
     }
-  }, [restaurantId]);
+  }, [restaurantId, peutVoirGerant]);
 
   // Fonction pour charger les détails du manager
   const fetchManagerDetails = async (restaurantId: string) => {
@@ -186,7 +201,7 @@ export default function RestaurantDetail({
         revenue,
         orders,
         customers,
-        rating: "N/A", // Pour l'instant, pas de données de notation
+        rating: "Aucune", // Pour l'instant, pas de données de notation
       });
     } catch (error: unknown) {
       console.error(
@@ -198,7 +213,7 @@ export default function RestaurantDetail({
         revenue: "0 XOF",
         orders: "0",
         customers: "0",
-        rating: "N/A",
+        rating: "Aucune",
       });
     } finally {
       setIsLoadingStats(false);
@@ -390,7 +405,9 @@ export default function RestaurantDetail({
         mode="view"
         onBack={onClose}
         actions={
-          restaurant
+          !restaurant
+            ? []
+            : peutModifier
             ? [
                 {
                   label: restaurant.active ? "Actif" : "Inactif",
@@ -409,7 +426,24 @@ export default function RestaurantDetail({
                   className: "bg-[#F17922] text-white hover:bg-[#e06a15]",
                 },
               ]
-            : []
+            : [
+                // Lecture seule : le statut s'affiche, sans pouvoir le changer.
+                {
+                  label: restaurant.active ? "Actif" : "Inactif",
+                  onClick: () => {},
+                  customComponent: (
+                    <span
+                      className={`inline-flex items-center px-3 py-1 text-sm font-light rounded-xl ${
+                        restaurant.active
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-600"
+                      }`}
+                    >
+                      {restaurant.active ? "Actif" : "Inactif"}
+                    </span>
+                  ),
+                },
+              ]
         }
       />
 
@@ -539,62 +573,77 @@ export default function RestaurantDetail({
                   Informations du gérant
                 </h3>
 
-                <div className="flex flex-col items-center mb-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
-                    {manager?.image && manager.image.trim() !== "" ? (
-                      <Image
-                        src={
-                          manager.image.startsWith("http")
-                            ? manager.image
-                            : `${process.env.NEXT_PUBLIC_API_URL || ""}${
-                                manager.image.startsWith("/") ? "" : "/"
-                              }${manager.image}`
-                        }
-                        alt={manager.fullname}
-                        width={64}
-                        height={64}
-                        className="rounded-full object-contain"
-                        onError={(e) => {
-                          console.error(
-                            "Erreur de chargement image manager:",
-                            manager.image
-                          );
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
+                {!peutVoirGerant ? (
+                  // Les coordonnées du gérant relèvent du module Personnel.
+                  <div className="flex flex-col items-center py-4 text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
                       <UserIcon className="h-8 w-8 text-gray-400" />
-                    )}
-                  </div>
-                  <h4 className="text-base font-medium text-gray-600">
-                    {manager?.fullname || "Non disponible"}
-                  </h4>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                    <Mail className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm text-gray-700 flex-1">
-                      {manager?.email || "Non disponible"}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                    <Phone className="h-4 w-4 text-gray-400" />
-                    <p className="text-sm text-gray-700 flex-1">
-                      {manager?.phone || "Non disponible"}
-                    </p>
-                  </div>
-
-                  {manager?.address && (
-                    <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                      <MapPin className="h-4 w-4 text-gray-400" />
-                      <p className="text-sm text-gray-700 flex-1">
-                        {manager.address}
-                      </p>
                     </div>
-                  )}
-                </div>
+                    <p className="text-sm text-gray-500">
+                      Les coordonnées du gérant ne sont pas consultables avec
+                      votre profil.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-col items-center mb-4">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-2">
+                        {manager?.image && manager.image.trim() !== "" ? (
+                          <Image
+                            src={
+                              manager.image.startsWith("http")
+                                ? manager.image
+                                : `${process.env.NEXT_PUBLIC_API_URL || ""}${
+                                    manager.image.startsWith("/") ? "" : "/"
+                                  }${manager.image}`
+                            }
+                            alt={manager.fullname}
+                            width={64}
+                            height={64}
+                            className="rounded-full object-contain"
+                            onError={(e) => {
+                              console.error(
+                                "Erreur de chargement image manager:",
+                                manager.image
+                              );
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <UserIcon className="h-8 w-8 text-gray-400" />
+                        )}
+                      </div>
+                      <h4 className="text-base font-medium text-gray-600">
+                        {manager?.fullname || "Non disponible"}
+                      </h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <Mail className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm text-gray-700 flex-1">
+                          {manager?.email || "Non disponible"}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <Phone className="h-4 w-4 text-gray-400" />
+                        <p className="text-sm text-gray-700 flex-1">
+                          {manager?.phone || "Non disponible"}
+                        </p>
+                      </div>
+
+                      {manager?.address && (
+                        <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                          <MapPin className="h-4 w-4 text-gray-400" />
+                          <p className="text-sm text-gray-700 flex-1">
+                            {manager.address}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Horaires d'ouverture */}

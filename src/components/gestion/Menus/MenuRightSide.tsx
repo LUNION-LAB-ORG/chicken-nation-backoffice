@@ -10,6 +10,8 @@ import { MenuItem as MenuItemType } from '@/types'
 import Select from '@/components/ui/Select'
 import { useSalesTrendQuery } from '../../../../features/statistics/queries/statistics-products.query'
 import type { ProductsStatsQueryParams } from '../../../../features/statistics/types/products-stats.types'
+import { useAuthStore } from '../../../../features/users/hook/authStore'
+import { Action, Modules } from '../../../../features/users/types/auth.type'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
@@ -35,10 +37,15 @@ type Periode = NonNullable<ProductsStatsQueryParams['period']>
 const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu, dishId }: MenuRightSideProps) => {
   const [selectedPeriod, setSelectedPeriod] = useState<Periode>('week')
 
+  // Les ventes relèvent des statistiques (DASHBOARD en lecture, que le serveur
+  // exige). Un profil qui consulte les menus sans y avoir droit, le caissier
+  // par exemple, ne voit pas ce bloc plutôt qu'un refus lu comme une panne.
+  const peutVoirVentes = useAuthStore((s) => s.can(Modules.DASHBOARD, Action.READ))
+
   const { data: tendance, isLoading, isError } = useSalesTrendQuery(
     { dishId, period: selectedPeriod },
     // Inutile d'interroger le serveur tant qu'on ne sait pas de quel plat il s'agit.
-    Boolean(dishId),
+    Boolean(dishId) && peutVoirVentes,
   )
 
   /**
@@ -151,6 +158,7 @@ const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu, dishId }: MenuRig
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {peutVoirVentes && (
       <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm">
         <div className='flex items-center justify-between gap-2 mb-4 xs:mb-2'>
           <div className="flex items-center gap-2 flex-shrink min-w-0 w-2/3">
@@ -209,6 +217,7 @@ const MenuRightSide = ({ similarMenus, onEditMenu, onViewMenu, dishId }: MenuRig
           </p>
         )}
       </div>
+      )}
 
       <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-xl sm:rounded-2xl shadow-sm">
         <div className='flex gap-2 items-center mb-3 sm:mb-4'>

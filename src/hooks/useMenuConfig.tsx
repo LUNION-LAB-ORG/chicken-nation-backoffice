@@ -58,6 +58,9 @@ export const useGetMenuConfig = (): {
   navigationItems: NavigationItem[];
 } => {
   const can = useAuthStore((state) => state.can);
+  // `can` garde la même identité quand les droits sont relus (GET /auth/permissions) :
+  // s'abonner aux permissions redessine le menu avec les droits à jour.
+  useAuthStore((state) => state.user?.permissions);
   const unread = useUnreadCounts();
 
   const navigationItems: NavigationItem[] = [
@@ -91,7 +94,8 @@ export const useGetMenuConfig = (): {
       label: "Base de Données",
       icon: Database,
       // Le CRM aussi : un profil de consultation peut n'avoir que ce module.
-      canAccess: () => can(Modules.CLIENTS, Action.READ) || can(Modules.CRM, Action.READ),
+      canAccess: () =>
+        can(Modules.CLIENTS, Action.READ) || can(Modules.COMMENTAIRES, Action.READ) || can(Modules.CRM, Action.READ),
       items: [
         {
           id: "base_donnees-clients",
@@ -119,7 +123,8 @@ export const useGetMenuConfig = (): {
       id: "fidelisation",
       label: "Fidélisation",
       icon: Tag,
-      canAccess: () => can(Modules.PROMOTIONS, Action.READ),
+      // Pas CARD_NATION : le caissier l'a pour la caisse, sans avoir jamais eu ce menu.
+      canAccess: () => can(Modules.PROMOTIONS, Action.READ) || can(Modules.FIDELITE, Action.READ),
       items: [
         {
           id: "fidelisation-promos",
@@ -131,7 +136,8 @@ export const useGetMenuConfig = (): {
           id: "fidelisation-voucher",
           label: "Bons",
           icon: TicketPercent,
-          canAccess: () => can(Modules.PROMOTIONS, Action.READ),
+          // Même droit que le serveur (voucher.controller : FIDELITE READ).
+          canAccess: () => can(Modules.FIDELITE, Action.READ),
         },
         {
           id: "fidelisation-loyalty",
@@ -181,10 +187,11 @@ export const useGetMenuConfig = (): {
       id: "messages_tickets",
       label: "Messages et tickets",
       icon: MessageSquare,
-      // Visible si l'utilisateur a accès aux messages OU aux appels (ex : un
-      // manager sans MESSAGES doit quand même voir le sous-menu Appel).
+      // Visible si l'utilisateur a accès aux messages, aux appels OU aux
+      // diffusions (ex : un manager sans MESSAGES doit quand même voir le
+      // sous-menu Appel, et le marketing les Diffusions).
       canAccess: () =>
-        can(Modules.MESSAGES, Action.READ) || can(Modules.CALLS, Action.READ),
+        can(Modules.MESSAGES, Action.READ) || can(Modules.CALLS, Action.READ) || can(Modules.DIFFUSIONS, Action.READ),
       badge: unread.total > 0 ? unread.total : undefined,
       items: [
         {
@@ -205,10 +212,10 @@ export const useGetMenuConfig = (): {
           id: "messages_tickets-diffusions",
           label: "Diffusions",
           icon: Megaphone,
-          // ⚠️ MARKETING, et non MESSAGES : les rôles CAISSIER et CALL_CENTER
+          // ⚠️ DIFFUSIONS, et non MESSAGES : les rôles CAISSIER et CALL_CENTER
           // détiennent MESSAGES pour répondre aux clients. Écrire à toute la
           // base est une décision de marketing, pas un geste de caisse.
-          canAccess: () => can(Modules.MARKETING, Action.READ),
+          canAccess: () => can(Modules.DIFFUSIONS, Action.READ),
         },
         {
           id: "messages_tickets-appel",
@@ -280,7 +287,8 @@ export const useGetMenuConfig = (): {
       id: "notifications",
       label: "Notifications",
       icon: Bell,
-      canAccess: () => can(Modules.SETTINGS, Action.READ),
+      // Son propre module : l'ouvrir en lecture n'ouvre pas Paramètres.
+      canAccess: () => can(Modules.NOTIFICATIONS, Action.READ),
     },
     {
       id: "statistiques",
@@ -292,7 +300,8 @@ export const useGetMenuConfig = (): {
           id: "statistiques-stats_products",
           label: "Produits & Catégories",
           icon: BookOpen,
-          canAccess: () => can(Modules.MENUS, Action.READ),
+          // Même droit que le serveur (statistics-products : DASHBOARD READ).
+          canAccess: () => can(Modules.DASHBOARD, Action.READ),
         },
         {
           id: "statistiques-stats_orders",
@@ -316,7 +325,8 @@ export const useGetMenuConfig = (): {
           id: "statistiques-stats_marketing",
           label: "Marketing & Promos",
           icon: Megaphone,
-          canAccess: () => can(Modules.MARKETING, Action.READ),
+          // Même droit que le serveur (statistics-marketing : DASHBOARD READ).
+          canAccess: () => can(Modules.DASHBOARD, Action.READ),
         },
       ],
     },
@@ -350,5 +360,14 @@ export const useGetMenuConfig = (): {
     },
   ];
 
-  return { navigationItems };
+  // Les sous-menus sont filtrés ici, pour la barre latérale comme pour le
+  // tiroir mobile : un groupe n'affiche que ce que le compte peut ouvrir, et
+  // disparaît s'il ne lui reste rien.
+  const visibles = navigationItems
+    .map((item) =>
+      item.items ? { ...item, items: item.items.filter((sub) => !sub.canAccess || sub.canAccess()) } : item,
+    )
+    .filter((item) => !item.items || item.items.length > 0);
+
+  return { navigationItems: visibles };
 };

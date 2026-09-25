@@ -19,7 +19,9 @@ function MenuHeader({
   onCreateMenu,
   onSearch,
 }: MenuHeaderProps) {
-  const { can } = useAuthStore();
+  // Sélecteur booléen : le bouton apparaît ou disparaît dès que les droits
+  // sont relus, sans attendre un autre rendu.
+  const peutCreer = useAuthStore((s) => s.can(Modules.MENUS, Action.CREATE));
   if (currentView === "list") {
     return (
       <DashboardPageHeader
@@ -32,7 +34,7 @@ function MenuHeader({
           realTimeSearch: true, // ✅ Activer la recherche en temps réel
         }}
         actions={
-          can(Modules.MENUS, Action.CREATE)
+          peutCreer && onCreateMenu
             ? [
                 {
                   label: "Créer un plat",

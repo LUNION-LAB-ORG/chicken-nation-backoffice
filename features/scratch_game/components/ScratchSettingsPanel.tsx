@@ -7,9 +7,11 @@ import {
   useSettingsQuery,
 } from "@/hooks/useSettingsQuery";
 import { SCRATCH_SETTING_KEYS } from "../types/scratch.types";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30 disabled:bg-[#FAFAFA] disabled:text-[#71717A]";
 
 const Field: React.FC<{
   label: string;
@@ -28,6 +30,9 @@ const Field: React.FC<{
 export default function ScratchSettingsPanel() {
   const { data: settings, isLoading } = useSettingsQuery("scratch.");
   const mutation = useSettingMutation();
+  // Lecture : SETTINGS READ (l'onglet n'est ouvert qu'avec ce droit).
+  // Écriture : PUT /settings/:key exige SETTINGS UPDATE.
+  const peutModifier = useAuthStore((s) => s.can(Modules.SETTINGS, Action.UPDATE));
 
   const current = useMemo(() => {
     const map: Record<string, string> = {};
@@ -125,26 +130,38 @@ export default function ScratchSettingsPanel() {
                 : "Le jeu est désactivé."}
             </div>
           </div>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={enabled}
-            onClick={() => handleToggle(!enabled)}
-            disabled={mutation.isPending}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors cursor-pointer disabled:opacity-60 ${
-              enabled ? "bg-[#F17922]" : "bg-[#D9D9D9]"
-            }`}
-          >
-            {/* Pastille : piste 48px, pastille 24px, marge 2px de chaque côté
-                → course = 48 − 24 − 2 − 2 = 20px. `left-0.5` fixe l'origine et
-                `translate-x-5` (20px) amène EXACTEMENT au bord droit ; l'ancien
-                combo left-implicite + translate faisait dépasser la pastille. */}
-            <span
-              className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
-                enabled ? "translate-x-5" : "translate-x-0"
+          {peutModifier ? (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={enabled}
+              onClick={() => handleToggle(!enabled)}
+              disabled={mutation.isPending}
+              className={`relative h-7 w-12 shrink-0 rounded-full transition-colors cursor-pointer disabled:opacity-60 ${
+                enabled ? "bg-[#F17922]" : "bg-[#D9D9D9]"
               }`}
-            />
-          </button>
+            >
+              {/* Pastille : piste 48px, pastille 24px, marge 2px de chaque côté
+                  → course = 48 − 24 − 2 − 2 = 20px. `left-0.5` fixe l'origine et
+                  `translate-x-5` (20px) amène EXACTEMENT au bord droit ; l'ancien
+                  combo left-implicite + translate faisait dépasser la pastille. */}
+              <span
+                className={`absolute left-0.5 top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform ${
+                  enabled ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          ) : (
+            <span
+              className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
+                enabled
+                  ? "bg-[#E6F4EC] text-[#1E8E5A]"
+                  : "bg-[#EEF1F4] text-[#6C757D]"
+              }`}
+            >
+              {enabled ? "Activé" : "Désactivé"}
+            </span>
+          )}
         </div>
 
         {/* Numeric settings */}
@@ -158,6 +175,7 @@ export default function ScratchSettingsPanel() {
               min={0}
               step="0.1"
               className={inputCls}
+              disabled={!peutModifier}
               value={envelopePct}
               onChange={(e) => setEnvelopePct(e.target.value)}
               placeholder="Ex. 3"
@@ -168,6 +186,7 @@ export default function ScratchSettingsPanel() {
               type="number"
               min={1}
               className={inputCls}
+              disabled={!peutModifier}
               value={windowDays}
               onChange={(e) => setWindowDays(e.target.value)}
               placeholder="Ex. 30"
@@ -178,6 +197,7 @@ export default function ScratchSettingsPanel() {
               type="number"
               min={0}
               className={inputCls}
+              disabled={!peutModifier}
               value={floorWeight}
               onChange={(e) => setFloorWeight(e.target.value)}
               placeholder="Ex. 100"
@@ -191,6 +211,7 @@ export default function ScratchSettingsPanel() {
               type="number"
               min={0}
               className={inputCls}
+              disabled={!peutModifier}
               value={lotExpiryDays}
               onChange={(e) => setLotExpiryDays(e.target.value)}
               placeholder="Ex. 7"
@@ -204,6 +225,7 @@ export default function ScratchSettingsPanel() {
               type="number"
               min={1}
               className={inputCls}
+              disabled={!peutModifier}
               value={eligibilityWindowDays}
               onChange={(e) => setEligibilityWindowDays(e.target.value)}
               placeholder="Ex. 90"
@@ -211,21 +233,23 @@ export default function ScratchSettingsPanel() {
           </Field>
         </div>
 
-        <div className="flex justify-end mt-6">
-          <button
-            type="button"
-            onClick={handleSaveNumbers}
-            disabled={mutation.isPending}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F17922] text-white font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
-          >
-            {mutation.isPending ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
-            Enregistrer les réglages
-          </button>
-        </div>
+        {peutModifier && (
+          <div className="flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={handleSaveNumbers}
+              disabled={mutation.isPending}
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F17922] text-white font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
+            >
+              {mutation.isPending ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
+              Enregistrer les réglages
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

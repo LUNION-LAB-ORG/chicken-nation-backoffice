@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import MenuHeader from "./MenuHeader";
@@ -30,6 +30,8 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { DishOptionsSectionHandle } from "../../../../features/menus/components/DishOptionsSection";
 import { configurationInvalide } from "../../../../features/menus/components/DishOptionsEditor";
 import { saveDishOptionConfiguration } from "../../../../features/menus/services/dish-option-service";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 interface MenuState {
   view: "list" | "create" | "edit" | "view";
@@ -66,6 +68,27 @@ const Menus = () => {
    */
   const optionsRef = useRef<DishOptionsSectionHandle | null>(null);
 
+  /**
+   * Droits lus par sélecteur booléen : l'écran se redessine dès qu'ils sont
+   * relus sur le serveur. Un profil en consultation (MENUS en lecture seule)
+   * n'atteint ni la création, ni la modification, ni la suppression d'un plat.
+   * Le serveur les refuse de toute façon ; l'écran ne doit simplement pas
+   * proposer un geste qui finirait en refus.
+   */
+  const peutCreer = useAuthStore((s) => s.can(Modules.MENUS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.MENUS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.MENUS, Action.DELETE));
+
+  // Un droit retiré pendant qu'un formulaire est ouvert ramène à la liste.
+  useEffect(() => {
+    if (
+      (menuState.view === "create" && !peutCreer) ||
+      (menuState.view === "edit" && !peutModifier)
+    ) {
+      setMenuState({ view: "list", loadingMenu: false, saving: false });
+    }
+  }, [menuState.view, peutCreer, peutModifier]);
+
   // ✅ Hook pour la recherche côté serveur
   const {
     menus: searchResults,
@@ -90,6 +113,8 @@ const Menus = () => {
     view: "list" | "create" | "edit" | "view",
     menu?: MenuItem
   ) => {
+    if (view === "create" && !peutCreer) return;
+    if (view === "edit" && !peutModifier) return;
     setMenuState({
       view,
       selectedMenu: menu,
@@ -100,6 +125,7 @@ const Menus = () => {
 
   // ✅ FONCTION D'ÉDITION SÉCURISÉE
   const handleEditMenu = (menu: MenuItem) => {
+    if (!peutModifier) return;
     try {
       // ✅ Validation du menu d'entrée
       const validatedMenu = validateMenuItem(menu);
@@ -431,7 +457,7 @@ const Menus = () => {
   };
 
   const handleSaveEdit = async (updatedMenu: MenuItem) => {
-    if (!menuState.selectedMenu) return;
+    if (!menuState.selectedMenu || !peutModifier) return;
 
     // Configuration composable lue AVANT tout appel réseau. `null` signifie
     // qu'elle n'est pas encore connue : on n'y touche pas, plutôt que de
@@ -498,6 +524,7 @@ const Menus = () => {
   // Étape 1 : on valide l'entrée et on ouvre le ConfirmDialog (cf. JSX en bas).
   // Étape 2 : la confirmation lance `performDeleteMenu` qui fait l'appel API.
   const handleDeleteMenu = (menu: MenuItem) => {
+    if (!peutSupprimer) return;
     if (
       !menu.id ||
       typeof menu.id !== "string" ||
@@ -551,7 +578,7 @@ const Menus = () => {
       <MenuHeader
         currentView={menuState.view}
         onBack={() => handleViewChange("list")}
-        onCreateMenu={() => handleViewChange("create")}
+        onCreateMenu={peutCreer ? () => handleViewChange("create") : undefined}
         onSearch={handleSearch}
       />
       {menuState.view === "list" && (
@@ -621,7 +648,7 @@ const Menus = () => {
           )}
         </div>
       )}
-      {menuState.view === "create" && (
+      {menuState.view === "create" && peutCreer && (
         <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
           <div className="w-full min-[1620px]:mr-56">
             <AddMenuForm
@@ -692,7 +719,7 @@ const Menus = () => {
           </div>
         </div>
       )}
-      {menuState.view === "edit" && menuState.selectedMenu && (
+      {menuState.view === "edit" && peutModifier && menuState.selectedMenu && (
         <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
           <div className="w-full min-[1620px]:mr-56">
             {menuState.loadingMenu ? (
@@ -752,7 +779,7 @@ const Menus = () => {
 
       {/* Confirmation de suppression (soft-delete archive le plat côté serveur). */}
       <ConfirmDialog
-        isOpen={menuToDelete !== null}
+        isOpen={menuToDelete !== null && peutSupprimer}
         onClose={() => {
           if (!isDeletingMenu) setMenuToDelete(null);
         }}

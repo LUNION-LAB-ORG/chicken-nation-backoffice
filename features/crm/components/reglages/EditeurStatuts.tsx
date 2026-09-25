@@ -13,9 +13,10 @@ const EFFETS = Object.entries(EFFET_META) as [AppelEffet, (typeof EFFET_META)[Ap
 /**
  * Statuts d'appel (cahier §11 : repris du fichier Excel). Le libellé est
  * libre ; l'effet, lui, décide de ce que devient le contact et de ce que
- * comptent les statistiques.
+ * comptent les statistiques. `lectureSeule` : la liste et l'effet de
+ * chaque statut, sans rien pouvoir changer.
  */
-export function EditeurStatuts() {
+export function EditeurStatuts({ lectureSeule = false }: { lectureSeule?: boolean }) {
   const requete = useStatutsAppelQuery();
   const statuts = requete.data ?? [];
   const liste = useListeMutation("statuts");
@@ -36,45 +37,57 @@ export function EditeurStatuts() {
               onRetirer={() => liste.mutate({ type: "supprimer", id: s.id })}
               premier={i === 0}
               dernier={i === statuts.length - 1}
+              lectureSeule={lectureSeule}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <input
-                  defaultValue={s.label}
-                  onBlur={(e) => e.target.value.trim() !== s.label && liste.mutate({ type: "modifier", id: s.id, dto: { label: e.target.value.trim() } })}
-                  className="flex-1 min-w-[140px] bg-transparent text-sm font-semibold text-gray-800 outline-none border-b border-transparent focus:border-[#F17922]"
-                />
-                <select
-                  value={s.outcome}
-                  onChange={(e) => liste.mutate({ type: "modifier", id: s.id, dto: { outcome: e.target.value as AppelEffet } })}
-                  className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
-                >
-                  {EFFETS.map(([cle, m]) => (
-                    <option key={cle} value={cle}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {lectureSeule ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="flex-1 min-w-[140px] text-sm font-semibold text-gray-800">{s.label}</p>
+                  <span className={`text-xs rounded-lg px-2 py-1 ${EFFET_META[s.outcome]?.className ?? "bg-gray-100 text-gray-600"}`}>
+                    {EFFET_META[s.outcome]?.label ?? s.outcome}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    defaultValue={s.label}
+                    onBlur={(e) => e.target.value.trim() !== s.label && liste.mutate({ type: "modifier", id: s.id, dto: { label: e.target.value.trim() } })}
+                    className="flex-1 min-w-[140px] bg-transparent text-sm font-semibold text-gray-800 outline-none border-b border-transparent focus:border-[#F17922]"
+                  />
+                  <select
+                    value={s.outcome}
+                    onChange={(e) => liste.mutate({ type: "modifier", id: s.id, dto: { outcome: e.target.value as AppelEffet } })}
+                    className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white"
+                  >
+                    {EFFETS.map(([cle, m]) => (
+                      <option key={cle} value={cle}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </LigneOrdonnee>
           ))}
         </ul>
-        <div className="flex flex-wrap gap-2 mt-3">
-          <input value={libelle} onChange={(e) => setLibelle(e.target.value)} placeholder="Nouveau statut" className={`${classeChamp} flex-1 min-w-[160px]`} />
-          <select value={effet} onChange={(e) => setEffet(e.target.value as AppelEffet)} className={`${classeChamp} w-auto`}>
-            {EFFETS.map(([cle, m]) => (
-              <option key={cle} value={cle}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-          <Bouton
-            variante="primaire"
-            desactive={libelle.trim().length < 2 || liste.isPending}
-            onClick={() => liste.mutate({ type: "ajouter", dto: { label: libelle.trim(), outcome: effet } }, { onSuccess: () => setLibelle("") })}
-          >
-            <Plus className="w-4 h-4" /> Ajouter
-          </Bouton>
-        </div>
+        {!lectureSeule && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            <input value={libelle} onChange={(e) => setLibelle(e.target.value)} placeholder="Nouveau statut" className={`${classeChamp} flex-1 min-w-[160px]`} />
+            <select value={effet} onChange={(e) => setEffet(e.target.value as AppelEffet)} className={`${classeChamp} w-auto`}>
+              {EFFETS.map(([cle, m]) => (
+                <option key={cle} value={cle}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            <Bouton
+              variante="primaire"
+              desactive={libelle.trim().length < 2 || liste.isPending}
+              onClick={() => liste.mutate({ type: "ajouter", dto: { label: libelle.trim(), outcome: effet } }, { onSuccess: () => setLibelle("") })}
+            >
+              <Plus className="w-4 h-4" /> Ajouter
+            </Bouton>
+          </div>
+        )}
       </EtatRequete>
     </StatsChartCard>
   );

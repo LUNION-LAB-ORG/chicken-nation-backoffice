@@ -39,6 +39,8 @@ import {
   type MatchConfirmation,
 } from "@/services/hubRiseService";
 import { getAllRestaurants, type Restaurant } from "@/services/restaurantService";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 // ─── Types locaux ──────────────────────────────────────────────────
 
@@ -58,6 +60,10 @@ interface RestaurantHubriseState {
 export default function HubRise() {
   const [restaurants, setRestaurants] = useState<RestaurantHubriseState[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  // Connecter, déconnecter, synchroniser et appliquer les correspondances
+  // écrivent : le serveur exige RESTAURANTS CREATE. La lecture (statut,
+  // prévisualisation des correspondances) reste ouverte avec READ.
+  const peutEcrire = useAuthStore((s) => s.can(Modules.RESTAURANTS, Action.CREATE));
 
   // Charger les restaurants et leurs statuts HubRise
   const fetchAll = useCallback(async () => {
@@ -110,6 +116,7 @@ export default function HubRise() {
   };
 
   const handleDisconnect = async (restaurantId: string) => {
+    if (!window.confirm("Déconnecter ce restaurant de HubRise ? Les commandes et le catalogue ne seront plus synchronisés.")) return;
     updateRestaurant(restaurantId, (r) => ({ ...r, loading: true }));
     try {
       await disconnectRestaurant(restaurantId);
@@ -288,6 +295,7 @@ export default function HubRise() {
             onApplyMatch={handleApplyMatch}
             onToggleExpand={toggleExpand}
             onCloseMatching={handleCloseMatching}
+            peutEcrire={peutEcrire}
           />
         ))}
       </div>
@@ -307,6 +315,8 @@ interface RestaurantCardProps {
   onApplyMatch: (id: string, matches: MatchConfirmation[]) => void;
   onToggleExpand: (id: string) => void;
   onCloseMatching: (id: string) => void;
+  /** RESTAURANTS CREATE : sans ce droit, seules les lectures sont proposées. */
+  peutEcrire: boolean;
 }
 
 function RestaurantCard({
@@ -319,6 +329,7 @@ function RestaurantCard({
   onApplyMatch,
   onToggleExpand,
   onCloseMatching,
+  peutEcrire,
 }: RestaurantCardProps) {
   const { restaurant, status, loading, expanded, syncing, matchPreview, matchLoading, showMatching } = state;
   const id = restaurant.id || "";
@@ -382,16 +393,16 @@ function RestaurantCard({
                 <div className="bg-gray-50 rounded-xl p-3 mb-4">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                     <div>
-                      <span className="text-gray-400">Location ID</span>
-                      <p className="font-mono text-gray-600 mt-0.5">{status.locationId || "—"}</p>
+                      <span className="text-gray-400">Identifiant du point de vente</span>
+                      <p className="font-mono text-gray-600 mt-0.5">{status.locationId || "Non renseigné"}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400">Catalog ID</span>
-                      <p className="font-mono text-gray-600 mt-0.5">{status.catalogId || "—"}</p>
+                      <span className="text-gray-400">Identifiant du catalogue</span>
+                      <p className="font-mono text-gray-600 mt-0.5">{status.catalogId || "Non renseigné"}</p>
                     </div>
                     <div>
-                      <span className="text-gray-400">Customer List ID</span>
-                      <p className="font-mono text-gray-600 mt-0.5">{status.customerListId || "—"}</p>
+                      <span className="text-gray-400">Identifiant de la liste de clients</span>
+                      <p className="font-mono text-gray-600 mt-0.5">{status.customerListId || "Non renseigné"}</p>
                     </div>
                   </div>
                 </div>
@@ -400,44 +411,52 @@ function RestaurantCard({
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
                 {!isConnected ? (
-                  // Non connecté → Bouton connecter
-                  <ActionButton
-                    icon={ExternalLink}
-                    label="Connecter à HubRise"
-                    onClick={() => onConnect(id)}
-                    variant="primary"
-                    disabled={loading}
-                  />
+                  // Non connecté → Bouton connecter (écriture : RESTAURANTS CREATE)
+                  peutEcrire ? (
+                    <ActionButton
+                      icon={ExternalLink}
+                      label="Connecter à HubRise"
+                      onClick={() => onConnect(id)}
+                      variant="primary"
+                      disabled={loading}
+                    />
+                  ) : (
+                    <p className="text-xs text-gray-500">Ce restaurant n&apos;est pas connecté à HubRise.</p>
+                  )
                 ) : (
                   // Connecté → Actions de synchronisation
                   <>
-                    <ActionButton
-                      icon={Download}
-                      label="Importer catalogue"
-                      onClick={() => onSync(id, "pull")}
-                      variant="secondary"
-                      loading={syncing.pull}
-                      disabled={syncing.pull || syncing.push}
-                    />
-                    <ActionButton
-                      icon={Upload}
-                      label="Envoyer catalogue"
-                      onClick={() => onSync(id, "push")}
-                      variant="secondary"
-                      loading={syncing.push}
-                      disabled={syncing.pull || syncing.push}
-                    />
-                    <ActionButton
-                      icon={Users}
-                      label="Importer clients"
-                      onClick={() => onSync(id, "customers")}
-                      variant="secondary"
-                      loading={syncing.customers}
-                      disabled={syncing.customers}
-                    />
+                    {peutEcrire && (
+                      <>
+                        <ActionButton
+                          icon={Download}
+                          label="Importer le catalogue"
+                          onClick={() => onSync(id, "pull")}
+                          variant="secondary"
+                          loading={syncing.pull}
+                          disabled={syncing.pull || syncing.push}
+                        />
+                        <ActionButton
+                          icon={Upload}
+                          label="Envoyer le catalogue"
+                          onClick={() => onSync(id, "push")}
+                          variant="secondary"
+                          loading={syncing.push}
+                          disabled={syncing.pull || syncing.push}
+                        />
+                        <ActionButton
+                          icon={Users}
+                          label="Importer les clients"
+                          onClick={() => onSync(id, "customers")}
+                          variant="secondary"
+                          loading={syncing.customers}
+                          disabled={syncing.customers}
+                        />
+                      </>
+                    )}
                     <ActionButton
                       icon={GitCompareArrows}
-                      label="Auto-matching"
+                      label="Correspondances"
                       onClick={() => onPreviewMatch(id)}
                       variant="accent"
                       loading={matchLoading && !showMatching}
@@ -452,13 +471,15 @@ function RestaurantCard({
                       variant="ghost"
                       loading={loading}
                     />
-                    <ActionButton
-                      icon={Unlink}
-                      label="Déconnecter"
-                      onClick={() => onDisconnect(id)}
-                      variant="danger"
-                      loading={loading}
-                    />
+                    {peutEcrire && (
+                      <ActionButton
+                        icon={Unlink}
+                        label="Déconnecter"
+                        onClick={() => onDisconnect(id)}
+                        variant="danger"
+                        loading={loading}
+                      />
+                    )}
                   </>
                 )}
               </div>
@@ -478,6 +499,7 @@ function RestaurantCard({
                       loading={matchLoading}
                       onApply={(matches) => onApplyMatch(id, matches)}
                       onClose={() => onCloseMatching(id)}
+                      peutAppliquer={peutEcrire}
                     />
                   </motion.div>
                 )}
@@ -540,9 +562,11 @@ interface AutoMatchingSectionProps {
   loading: boolean;
   onApply: (matches: MatchConfirmation[]) => void;
   onClose: () => void;
+  /** RESTAURANTS CREATE : sans ce droit, les correspondances se consultent sans s'appliquer. */
+  peutAppliquer: boolean;
 }
 
-function AutoMatchingSection({ restaurantId, preview, loading, onApply, onClose }: AutoMatchingSectionProps) {
+function AutoMatchingSection({ restaurantId, preview, loading, onApply, onClose, peutAppliquer }: AutoMatchingSectionProps) {
   const [selectedMatches, setSelectedMatches] = useState<MatchConfirmation[]>([]);
 
   // Initialiser les sélections avec les correspondances proposées
@@ -598,7 +622,7 @@ function AutoMatchingSection({ restaurantId, preview, loading, onApply, onClose 
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-[#F17922]" />
-          <h4 className="font-semibold text-gray-800">Auto-Matching du catalogue</h4>
+          <h4 className="font-semibold text-gray-800">Correspondances automatiques du catalogue</h4>
         </div>
         <button onClick={onClose} className="p-1 hover:bg-gray-200 rounded-lg transition-colors">
           <X className="w-4 h-4 text-gray-500" />
@@ -619,6 +643,7 @@ function AutoMatchingSection({ restaurantId, preview, loading, onApply, onClose 
           type="category"
           isSelected={isSelected}
           onToggle={toggleMatch}
+          selectionActive={peutAppliquer}
         />
       )}
 
@@ -630,26 +655,33 @@ function AutoMatchingSection({ restaurantId, preview, loading, onApply, onClose 
           type="dish"
           isSelected={isSelected}
           onToggle={toggleMatch}
+          selectionActive={peutAppliquer}
           isDish
         />
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between mt-4 pt-3 border-t border-orange-100">
-        <p className="text-xs text-gray-500">
-          {selectedMatches.length} correspondance{selectedMatches.length > 1 ? "s" : ""} sélectionnée{selectedMatches.length > 1 ? "s" : ""}
-        </p>
-        <div className="flex gap-2">
-          <ActionButton icon={X} label="Annuler" onClick={onClose} variant="ghost" />
-          <ActionButton
-            icon={Check}
-            label="Appliquer les correspondances"
-            onClick={() => onApply(selectedMatches)}
-            variant="primary"
-            disabled={selectedMatches.length === 0}
-          />
+      {peutAppliquer ? (
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-orange-100">
+          <p className="text-xs text-gray-500">
+            {selectedMatches.length} correspondance{selectedMatches.length > 1 ? "s" : ""} sélectionnée{selectedMatches.length > 1 ? "s" : ""}
+          </p>
+          <div className="flex gap-2">
+            <ActionButton icon={X} label="Annuler" onClick={onClose} variant="ghost" />
+            <ActionButton
+              icon={Check}
+              label="Appliquer les correspondances"
+              onClick={() => onApply(selectedMatches)}
+              variant="primary"
+              disabled={selectedMatches.length === 0}
+            />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-end mt-4 pt-3 border-t border-orange-100">
+          <ActionButton icon={X} label="Fermer" onClick={onClose} variant="ghost" />
+        </div>
+      )}
     </div>
   );
 }
@@ -690,10 +722,12 @@ interface MatchTableProps {
   type: "category" | "dish";
   isSelected: (type: "category" | "dish", ref: string) => boolean;
   onToggle: (type: "category" | "dish", cnId: string, ref: string) => void;
+  /** Faux en lecture seule : pas de case à cocher, rien ne peut être appliqué. */
+  selectionActive: boolean;
   isDish?: boolean;
 }
 
-function MatchTable({ title, matches, type, isSelected, onToggle, isDish }: MatchTableProps) {
+function MatchTable({ title, matches, type, isSelected, onToggle, selectionActive, isDish }: MatchTableProps) {
   return (
     <div className="mb-4">
       <h5 className="text-sm font-medium text-gray-700 mb-2">{title}</h5>
@@ -726,7 +760,7 @@ function MatchTable({ title, matches, type, isSelected, onToggle, isDish }: Matc
                     }`}
                 >
                   <td className="px-3 py-2">
-                    {hasMatch && (
+                    {hasMatch && selectionActive && (
                       <input
                         type="checkbox"
                         checked={isChecked}
@@ -741,10 +775,10 @@ function MatchTable({ title, matches, type, isSelected, onToggle, isDish }: Matc
                   <td className="px-3 py-2 text-gray-300">→</td>
                   <td className="px-3 py-2 text-gray-800">{match.cnName || <span className="text-gray-400 italic">Aucune correspondance</span>}</td>
                   {isDish && (
-                    <td className="px-3 py-2 text-gray-600">{dishMatch?.hubrisePrice != null ? `${dishMatch.hubrisePrice} XOF` : "—"}</td>
+                    <td className="px-3 py-2 text-gray-600">{dishMatch?.hubrisePrice != null ? `${dishMatch.hubrisePrice} XOF` : "Non renseigné"}</td>
                   )}
                   {isDish && (
-                    <td className="px-3 py-2 text-gray-600">{dishMatch?.cnPrice != null ? `${dishMatch.cnPrice} XOF` : "—"}</td>
+                    <td className="px-3 py-2 text-gray-600">{dishMatch?.cnPrice != null ? `${dishMatch.cnPrice} XOF` : "Non renseigné"}</td>
                   )}
                   <td className="px-3 py-2">
                     <ConfidenceBadge score={match.confidence} />

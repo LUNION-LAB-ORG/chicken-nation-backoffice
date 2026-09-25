@@ -126,21 +126,17 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
             </div>
           ) : (
             <>
-              {/* Push Token */}
+              {/* Jeton push : sa présence seulement, jamais sa valeur */}
               <div>
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Token Push
+                  Jeton push
                 </h3>
                 <div className="border border-gray-100 rounded-xl p-3 flex items-center gap-3">
                   <Smartphone size={16} className="text-gray-400" />
                   <div className="flex-1 min-w-0">
-                    {detail?.expo_push_token ? (
-                      <p className="text-xs font-mono text-gray-600 truncate">
-                        {detail.expo_push_token}
-                      </p>
-                    ) : (
-                      <p className="text-xs text-gray-400">Aucun token enregistré</p>
-                    )}
+                    <p className={`text-xs ${detail?.has_push_token ? "text-gray-600" : "text-gray-400"}`}>
+                      Jeton push : {detail?.has_push_token ? "enregistré" : "absent"}
+                    </p>
                   </div>
                   <span
                     className={`inline-block w-2 h-2 rounded-full ${

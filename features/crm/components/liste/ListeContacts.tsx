@@ -13,8 +13,10 @@ import { TableContacts } from "./TableContacts";
 export const FILTRES_DEFAUT: IContactFiltres = { page: 1, limit: 25, sort: "entree_desc" };
 
 /**
- * Liste des contacts (cahier §4). La direction voit tout le monde, un agent
- * son portefeuille, un pilote toute sa campagne : c'est le serveur qui tranche.
+ * Liste des contacts (cahier §4). La direction et le lecteur (marketing,
+ * manager) voient tout le monde, un agent son portefeuille, un pilote toute
+ * sa campagne, un point de vente les clients de son restaurant : c'est le
+ * serveur qui tranche. Le lecteur ne sélectionne ni n'exporte rien.
  */
 export function ListeContacts({
   filtresInitiaux = FILTRES_DEFAUT,

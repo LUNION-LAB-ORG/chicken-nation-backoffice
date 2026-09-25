@@ -9,6 +9,8 @@ import {
 } from "@/hooks/usePushCampaignQuery";
 import type { PushSegment, SegmentFilters } from "@/types/push-campaign";
 import { Loader2, Users, Eye } from "lucide-react";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   isOpen: boolean;
@@ -31,6 +33,9 @@ export default function CreateSegmentModal({
   const createMutation = useCreateSegmentMutation();
   const updateMutation = useUpdateSegmentMutation();
   const previewMutation = usePreviewCustomFiltersMutation();
+  // POST /push-campaigns/segments/preview-filters exige NOTIFICATIONS CREATE,
+  // même quand la modale sert à modifier un segment (UPDATE).
+  const peutPrevisualiser = useAuthStore((s) => s.can(Modules.NOTIFICATIONS, Action.CREATE));
 
   const isEdit = !!editSegment && !editSegment.is_system;
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -428,30 +433,32 @@ export default function CreateSegmentModal({
         </div>
 
         {/* Preview */}
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handlePreview}
-            disabled={!hasAnyFilter || previewMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50 transition-all"
-          >
-            {previewMutation.isPending ? (
-              <Loader2 size={14} className="animate-spin" />
-            ) : (
-              <Eye size={14} />
+        {peutPrevisualiser && (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={handlePreview}
+              disabled={!hasAnyFilter || previewMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer disabled:opacity-50 transition-all"
+            >
+              {previewMutation.isPending ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <Eye size={14} />
+              )}
+              Prévisualiser
+            </button>
+            {previewMutation.data && (
+              <div className="flex items-center gap-2 px-3 py-2 bg-[#FFF3E8] rounded-xl">
+                <Users size={14} className="text-[#F17922]" />
+                <span className="text-sm font-semibold text-[#F17922]">
+                  {previewMutation.data.count.toLocaleString("fr-FR")}{" "}
+                  destinataires
+                </span>
+              </div>
             )}
-            Prévisualiser
-          </button>
-          {previewMutation.data && (
-            <div className="flex items-center gap-2 px-3 py-2 bg-[#FFF3E8] rounded-xl">
-              <Users size={14} className="text-[#F17922]" />
-              <span className="text-sm font-semibold text-[#F17922]">
-                {previewMutation.data.count.toLocaleString("fr-FR")}{" "}
-                destinataires
-              </span>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">

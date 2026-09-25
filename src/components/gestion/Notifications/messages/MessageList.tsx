@@ -19,13 +19,15 @@ import {
 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import MessageDetail from "./MessageDetail";
+import { useAuthStore } from "../../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../../features/users/types/auth.type";
 
 interface Props {
   searchQuery: string;
 }
 
 function formatDate(date?: string | null) {
-  if (!date) return "—";
+  if (!date) return "Non renseignée";
   return new Date(date).toLocaleDateString("fr-FR", {
     day: "2-digit",
     month: "2-digit",
@@ -71,11 +73,14 @@ function ActionsMenu({
   onView,
   onCancel,
   isCancelling,
+  peutAnnuler,
 }: {
   campaign: PushCampaign;
   onView: () => void;
   onCancel: () => void;
   isCancelling: boolean;
+  /** NOTIFICATIONS DELETE : l'annulation passe par DELETE /push-campaigns/:id. */
+  peutAnnuler: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -123,7 +128,7 @@ function ActionsMenu({
             <Copy size={15} className="text-gray-400" />
             Copier l&apos;ID
           </button>
-          {campaign.status === "scheduled" && (
+          {campaign.status === "scheduled" && peutAnnuler && (
             <>
               <div className="border-t border-gray-100 my-1" />
               <button
@@ -161,6 +166,12 @@ export default function MessageList({ searchQuery }: Props) {
   });
   const { mutate: cancelCampaign, isPending: isCancelling } =
     useCancelCampaignMutation();
+  const peutAnnuler = useAuthStore((s) =>
+    s.can(Modules.NOTIFICATIONS, Action.DELETE)
+  );
+  const peutEnvoyer = useAuthStore((s) =>
+    s.can(Modules.NOTIFICATIONS, Action.CREATE)
+  );
 
   const campaigns = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -200,9 +211,11 @@ export default function MessageList({ searchQuery }: Props) {
           <Send size={28} className="text-gray-400" />
         </div>
         <p className="text-gray-500 text-sm">Aucune campagne push</p>
-        <p className="text-gray-400 text-xs mt-1">
-          Envoyez votre première notification push
-        </p>
+        {peutEnvoyer && (
+          <p className="text-gray-400 text-xs mt-1">
+            Envoyez votre première notification push
+          </p>
+        )}
       </div>
     );
   }
@@ -264,6 +277,7 @@ export default function MessageList({ searchQuery }: Props) {
                       onView={() => setSelectedCampaign(campaign)}
                       onCancel={() => cancelCampaign(campaign.id)}
                       isCancelling={isCancelling}
+                      peutAnnuler={peutAnnuler}
                     />
                   </div>
                 </td>

@@ -35,6 +35,8 @@ import {
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 import { toast } from "react-hot-toast";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 const TYPE_LABEL: Record<DeliveryOfferType, string> = {
   FREE_DELIVERY: "Livraison gratuite",
@@ -95,6 +97,14 @@ export default function DeliveryOffers() {
   const deleteM = useDeleteDeliveryOfferMutation();
   const toggleM = useToggleDeliveryOfferMutation();
 
+  // Mêmes droits que le serveur (/delivery-offers) : PROMOTIONS CREATE, UPDATE
+  // (modifier, activer, désactiver) et DELETE.
+  const peutCreer = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.CREATE));
+  const peutModifier = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.UPDATE));
+  const peutSupprimer = useAuthStore((s) => s.can(Modules.PROMOTIONS, Action.DELETE));
+  const avecActions = peutModifier || peutSupprimer;
+  const nbColonnes = avecActions ? 6 : 5;
+
   const offers = data?.data ?? [];
   const meta = data?.meta;
 
@@ -114,14 +124,18 @@ export default function DeliveryOffers() {
             setQuery((p) => ({ ...p, page: 1 }));
           },
         }}
-        actions={[
-          {
-            label: "Nouvelle offre",
-            onClick: () => setShowCreate(true),
-            variant: "primary" as const,
-            icon: Plus,
-          },
-        ]}
+        actions={
+          peutCreer
+            ? [
+                {
+                  label: "Nouvelle offre",
+                  onClick: () => setShowCreate(true),
+                  variant: "primary" as const,
+                  icon: Plus,
+                },
+              ]
+            : []
+        }
       />
 
       {/* Stats rapides */}
@@ -171,13 +185,15 @@ export default function DeliveryOffers() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden md:table-cell">Canal</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider hidden lg:table-cell">Période</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Statut</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                {avecActions && (
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={nbColonnes} className="px-4 py-12 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-500">
                       <RefreshCw size={16} className="animate-spin" />
                       <span>Chargement...</span>
@@ -186,7 +202,7 @@ export default function DeliveryOffers() {
                 </tr>
               ) : offers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
+                  <td colSpan={nbColonnes} className="px-4 py-12 text-center">
                     <div className="flex flex-col items-center gap-2 text-gray-400">
                       <Truck size={32} />
                       <p className="text-sm">Aucune offre de livraison</p>
@@ -225,27 +241,35 @@ export default function DeliveryOffers() {
                         {o.is_active ? "Active" : "Inactive"}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => toggleM.mutate(o.id)}
-                          title={o.is_active ? "Désactiver" : "Activer"}
-                          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          {o.is_active ? (
-                            <ToggleRight size={18} className="text-green-600" />
-                          ) : (
-                            <ToggleLeft size={18} className="text-gray-400" />
+                    {avecActions && (
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {peutModifier && (
+                            <button
+                              onClick={() => toggleM.mutate(o.id)}
+                              title={o.is_active ? "Désactiver" : "Activer"}
+                              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              {o.is_active ? (
+                                <ToggleRight size={18} className="text-green-600" />
+                              ) : (
+                                <ToggleLeft size={18} className="text-gray-400" />
+                              )}
+                            </button>
                           )}
-                        </button>
-                        <button onClick={() => setEditing(o)} title="Modifier" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Pencil size={16} className="text-gray-500" />
-                        </button>
-                        <button onClick={() => setDeleting(o)} title="Supprimer" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
-                          <Trash2 size={16} className="text-red-500" />
-                        </button>
-                      </div>
-                    </td>
+                          {peutModifier && (
+                            <button onClick={() => setEditing(o)} title="Modifier" className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                              <Pencil size={16} className="text-gray-500" />
+                            </button>
+                          )}
+                          {peutSupprimer && (
+                            <button onClick={() => setDeleting(o)} title="Supprimer" className="p-1.5 hover:bg-red-50 rounded-lg transition-colors">
+                              <Trash2 size={16} className="text-red-500" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -298,7 +322,7 @@ export default function DeliveryOffers() {
       </div>
 
       {/* Modals */}
-      {showCreate && (
+      {peutCreer && showCreate && (
         <OfferFormModal
           offer={null}
           isLoading={createM.isPending}
@@ -306,7 +330,7 @@ export default function DeliveryOffers() {
           onSubmit={(dto) => createM.mutate(dto, { onSuccess: () => setShowCreate(false) })}
         />
       )}
-      {editing && (
+      {peutModifier && editing && (
         <OfferFormModal
           offer={editing}
           isLoading={updateM.isPending}
@@ -316,7 +340,7 @@ export default function DeliveryOffers() {
           }
         />
       )}
-      {deleting && (
+      {peutSupprimer && deleting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
             <h3 className="font-semibold text-gray-900 mb-2">Supprimer l&apos;offre</h3>
@@ -809,7 +833,7 @@ function OfferFormModal({
                 <span className="text-xs font-bold uppercase tracking-wide text-gray-400">
                   Conditions avancées
                   <span className="ml-2 normal-case font-normal text-gray-400">
-                    ciblage, jours, créneaux, limites — optionnel
+                    ciblage, jours, créneaux, limites (facultatif)
                   </span>
                 </span>
                 <ChevronDown size={18} className={`text-gray-400 transition-transform ${showAdvanced ? "rotate-180" : ""}`} />

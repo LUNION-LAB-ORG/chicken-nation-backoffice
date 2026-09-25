@@ -17,9 +17,11 @@ export const HasPermission = ({
   children,
   fallback = null,
 }: Props) => {
-  const can = useAuthStore((state) => state.can);
+  // Le sélecteur rend un booléen : le composant se redessine quand les droits
+  // sont relus (GET /auth/permissions), ce que `state.can` seul ne fait pas.
+  const autorise = useAuthStore((state) => state.can(module, action));
 
-  if (!can(module, action)) {
+  if (!autorise) {
     return <>{fallback}</>;
   }
 

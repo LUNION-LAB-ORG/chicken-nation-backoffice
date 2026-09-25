@@ -52,7 +52,7 @@ export function DeeplinkTypeBreakdown({ byType, isLoading }: Props) {
         </div>
       ) : rows.length === 0 ? (
         <p className="text-sm text-slate-400 py-8 text-center">
-          Aucune donnée pour l&apos;instant — les prochains clics seront catégorisés.
+          Aucune donnée pour l&apos;instant. Les prochains clics seront catégorisés.
         </p>
       ) : (
         <div className="space-y-3.5">
