@@ -24,7 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import {
-  getConnectUrl,
+  demanderUrlConnexion,
   getConnectionStatus,
   disconnectRestaurant,
   pullCatalog,
@@ -39,6 +39,7 @@ import {
   type MatchConfirmation,
 } from "@/services/hubRiseService";
 import { getAllRestaurants, type Restaurant } from "@/services/restaurantService";
+import { useDashboardStore } from "@/store/dashboardStore";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -55,6 +56,28 @@ interface RestaurantHubriseState {
   showMatching: boolean;
 }
 
+// ─── Retour de la connexion HubRise ────────────────────────────────
+
+// Le serveur renvoie sur /gestion?hubrise=connecte ou
+// /gestion?hubrise=erreur&motif=<motif>. Liste fermée : on n'affiche jamais la
+// valeur brute du paramètre.
+const MESSAGE_CONNECTE = "Restaurant connecté à HubRise.";
+const MESSAGE_ECHEC = "La connexion à HubRise a échoué. Réessayez.";
+const MESSAGES_MOTIF: Record<string, string> = {
+  lien_invalide: "Lien de connexion HubRise invalide. Relancez la connexion depuis Paramètres, onglet HubRise.",
+  lien_expire: "Lien de connexion HubRise expiré. Relancez la connexion, elle doit aboutir en moins de 10 minutes.",
+  droit_insuffisant: "Vous n'avez pas le droit de connecter un restaurant à HubRise.",
+  deja_relie: "Ce restaurant est déjà relié à un autre compte HubRise. Déconnectez-le d'abord.",
+  refuse: "Connexion annulée sur HubRise.",
+  echec: MESSAGE_ECHEC,
+};
+
+function messageMotif(motif: string | null): string {
+  return motif && Object.prototype.hasOwnProperty.call(MESSAGES_MOTIF, motif)
+    ? MESSAGES_MOTIF[motif]
+    : MESSAGE_ECHEC;
+}
+
 // ─── Composant principal ───────────────────────────────────────────
 
 export default function HubRise() {
@@ -64,6 +87,25 @@ export default function HubRise() {
   // écrivent : le serveur exige RESTAURANTS CREATE. La lecture (statut,
   // prévisualisation des correspondances) reste ouverte avec READ.
   const peutEcrire = useAuthStore((s) => s.can(Modules.RESTAURANTS, Action.CREATE));
+  const setActiveTab = useDashboardStore((s) => s.setActiveTab);
+
+  // Retour de HubRise : message, puis URL nettoyée pour ne pas le rejouer.
+  // L'identifiant de toast évite le doublon du double montage en développement.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const retour = params.get("hubrise");
+    if (!retour) return;
+    if (retour === "connecte") {
+      toast.success(MESSAGE_CONNECTE, { id: "hubrise-retour" });
+    } else {
+      toast.error(messageMotif(params.get("motif")), { id: "hubrise-retour" });
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("hubrise");
+    url.searchParams.delete("motif");
+    url.searchParams.delete("module");
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   // Charger les restaurants et leurs statuts HubRise
   const fetchAll = useCallback(async () => {
@@ -110,9 +152,21 @@ export default function HubRise() {
 
   // ─── Actions ──────────────────────────────────────────────────────
 
-  const handleConnect = (restaurantId: string) => {
-    const url = getConnectUrl(restaurantId);
-    window.open(url, "_blank");
+  // Le serveur signe un lien lié à ce restaurant et à l'utilisateur, puis on
+  // part sur HubRise dans CET onglet (un window.open après un await serait
+  // bloqué par le navigateur). Au retour, le serveur renvoie sur /gestion :
+  // on mémorise l'écran HubRise pour qu'il s'ouvre et affiche le résultat.
+  const handleConnect = async (restaurantId: string) => {
+    updateRestaurant(restaurantId, (r) => ({ ...r, loading: true }));
+    try {
+      const url = await demanderUrlConnexion(restaurantId);
+      setActiveTab("hubrise");
+      window.location.assign(url);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Impossible de préparer la connexion HubRise";
+      toast.error(msg);
+      updateRestaurant(restaurantId, (r) => ({ ...r, loading: false }));
+    }
   };
 
   const handleDisconnect = async (restaurantId: string) => {
@@ -418,7 +472,7 @@ function RestaurantCard({
                       label="Connecter à HubRise"
                       onClick={() => onConnect(id)}
                       variant="primary"
-                      disabled={loading}
+                      loading={loading}
                     />
                   ) : (
                     <p className="text-xs text-gray-500">Ce restaurant n&apos;est pas connecté à HubRise.</p>

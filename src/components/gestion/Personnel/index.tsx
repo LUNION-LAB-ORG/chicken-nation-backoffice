@@ -2,7 +2,6 @@
 
 import {
   getAllRestaurants,
-  getRestaurantUsers,
   Restaurant,
 } from "@/services/restaurantService";
 import { getHumanReadableError } from "@/utils/errorMessages";
@@ -138,12 +137,15 @@ export default function Personnel() {
       try {
         let data: User[] = [];
         if (currentUser?.role === "MANAGER" && currentUser?.restaurant_id) {
-          const allRestaurantUsers = await getRestaurantUsers(
-            currentUser.restaurant_id
+          // GET /users : le serveur limite un compte de restaurant à SON
+          // restaurant, quel que soit le paramètre. La fiche complète
+          // (téléphone, adresse, préférences) y figure : la liste de
+          // GET /restaurants/:id/users ne la portait pas, et la modification
+          // d'un membre effaçait son adresse et ses préférences.
+          const personnelDuRestaurant = await getAllUsers();
+          data = personnelDuRestaurant.filter(
+            (u) => u.id !== currentUser.id && u.entity_status !== "DELETED"
           );
-          data = allRestaurantUsers.filter(
-            (u) => u.id !== currentUser.id
-          ) as User[];
         } else if (selectedTab === "Tous") {
           data = await getAllUsers();
         } else if (selectedTab === "Back Office") {
@@ -195,7 +197,7 @@ export default function Personnel() {
           : member.restaurant?.name || "",
         member.entity_status || "",
         member.entity_status === "ACTIVE" ? "actif" : "",
-        member.entity_status === "INACTIVE" ? "inactif" : "",
+        member.entity_status === "INACTIVE" ? "inactif suspendu" : "",
         member.role === "ADMIN" ? "administrateur" : "",
         member.role === "MANAGER" ? "gestionnaire" : "",
         member.role === "CAISSIER" ? "caissier" : "",

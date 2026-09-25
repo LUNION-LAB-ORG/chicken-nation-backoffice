@@ -5,7 +5,7 @@ import Image from 'next/image'
 import Input from '../../ui/Input'
 import Button from '../../ui/Button'
 import Toggle from '../../ui/Toggle'
-import {updateMember, softDeleteUser, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
+import {updateMember, updateUserPassword, getUserById } from '../../../../features/users/services/user.service'
 import toast from 'react-hot-toast'
 import type { Member } from './MemberView'
 import { useAuthStore } from '../../../../features/users/hook/authStore'
@@ -91,8 +91,6 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
   const [showRoleDropdown, setShowRoleDropdown] = useState(false)
   const roleDropdownRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [showSoftDeleteConfirm, setShowSoftDeleteConfirm] = useState(false)
-  const [showDangerZone, setShowDangerZone] = useState(false)
   
   // États pour les mots de passe
   const [passwordData, setPasswordData] = useState({
@@ -141,10 +139,15 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
   const isStoreRole = STORE_ROLES.includes(role);
   const isAdmin = currentUser?.role === 'ADMIN';
   const needsRestaurantPicker = isStoreRole && isAdmin;
-  const resolvedRestaurantId = isStoreRole
-    ? restaurantId ||
-      (currentUser?.role === 'MANAGER' ? currentUser?.restaurant_id || undefined : undefined)
-    : undefined;
+  // Seul l'ADMIN change le rattachement. Pour les autres, rien n'est envoyé :
+  // le serveur garde le restaurant du membre (et refuse tout autre). Un
+  // assistant ne pouvait pas enregistrer son propre profil : il n'avait pas de
+  // restaurant « choisi ».
+  const resolvedRestaurantId = needsRestaurantPicker ? restaurantId || undefined : undefined;
+  // « Changer le mot de passe » passe par PATCH /users/password, qui change le
+  // mot de passe du compte CONNECTÉ : la section n'a de sens que sur son propre
+  // profil. Pour un autre membre, c'est « Réinitialiser le mot de passe ».
+  const estSonProfil = !!currentUser && currentUser.id === existingMember.id;
 
   useEffect(() => {
     if (roleOptions.length > 0 && !role) {
@@ -221,8 +224,9 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
     
     if (!passwordData.password.trim()) {
       errors.password = 'Le mot de passe est requis'
-    } else if (passwordData.password.length < 6) {
-      errors.password = 'Le mot de passe doit contenir au moins 6 caractères'
+    } else if (passwordData.password.length < 8) {
+      // Même seuil que le serveur et que le champ (« Minimum 8 caractères »).
+      errors.password = 'Le mot de passe doit contenir au moins 8 caractères'
     }
     
     if (!passwordData.confirmPassword.trim()) {
@@ -328,16 +332,12 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         isOwnProfile = true;
       }
 
-      // Permissions : l'ADMIN édite n'importe quel membre ; les autres seulement
-      // leur propre profil. (Le backend revérifie : PATCH /users/:id.)
-      if (!isOwnProfile && !isAdmin) {
-        toast.error('Vous n\'avez pas les droits pour modifier ce membre.');
-        setIsLoading(false);
-        return;
-      }
+      // Droits : l'ADMIN édite n'importe quel membre, un manager le personnel
+      // de rang inférieur de son restaurant, chacun son propre profil. C'est le
+      // serveur qui tranche (PATCH /users/:id) ; son refus s'affiche tel quel.
 
-      // Un rôle point de vente exige un restaurant de rattachement.
-      if (isStoreRole && !resolvedRestaurantId) {
+      // Un rôle point de vente exige un restaurant de rattachement (choix de l'ADMIN).
+      if (needsRestaurantPicker && !resolvedRestaurantId) {
         toast.error('Sélectionnez un restaurant pour ce rôle (point de vente).');
         setIsLoading(false);
         return;
@@ -390,25 +390,6 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
       }
     } catch (err: unknown) {
       const userMessage = getHumanReadableError(err);
-      toast.error(userMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleSoftDelete = async () => {
-    try {
-      setIsLoading(true);
-      toast.loading(getInfoMessage('deleting'));
-      await softDeleteUser(existingMember.id);
-      toast.success(getPersonnelSuccessMessage('delete'));
-      setShowSoftDeleteConfirm(false);
-      if (onSuccess) {
-        // Réactualiser la liste ou fermer le modal
-        onCancel();
-      }
-    } catch (error: unknown) {
-      const userMessage = getHumanReadableError(error);
       toast.error(userMessage);
     } finally {
       setIsLoading(false);
@@ -522,7 +503,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
               </div>
             </div>
 
-            {/* Section mot de passe */}
+            {/* Section mot de passe : son propre profil seulement (PATCH /users/password vise le compte connecté) */}
+            {estSonProfil && (
             <div className="mt-3 border-t border-gray-200 pt-3">
               <button
                 type="button"
@@ -577,39 +559,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                 </div>
               )}
             </div>
-            
-            {/* Zone dangereuse */}
-            <div className="mt-4 border-t border-red-200 pt-3">
-              <button
-                type="button"
-                onClick={() => setShowDangerZone(!showDangerZone)}
-                className="flex items-center justify-between w-full text-left text-red-600 hover:text-red-700 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500">⚠️</span>
-                  <span className="font-medium">Zone dangereuse</span>
-                </div>
-                <span className={`transform transition-transform ${showDangerZone ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
-              </button>
-              
-              {showDangerZone && (
-                <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
-                  <p className="text-sm text-red-700 mb-3">
-                    Cette action supprimera le compte utilisateur. L&apos;action peut être annulée par un administrateur.
-                  </p>
-                  <Button 
-                    type="button" 
-                    onClick={() => setShowSoftDeleteConfirm(true)}
-                    className="w-full bg-red-600 text-white hover:bg-red-700 border-0"
-                    disabled={isLoading}
-                  >
-                    🗑️ Supprimer définitivement ce compte
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
             
             <div className="flex gap-2 mt-3">
               <Button type="button" onClick={onCancel} className="flex-1 bg-[#ECECEC]">Annuler</Button>
@@ -719,7 +669,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
               <Toggle checked={inAppNotif} onChange={setInAppNotif} />
             </div>
 
-            {/* Section mot de passe pour desktop */}
+            {/* Section mot de passe pour desktop : son propre profil seulement (PATCH /users/password vise le compte connecté) */}
+            {estSonProfil && (
             <div className="mt-6 border-t border-gray-200 pt-4">
               <button
                 type="button"
@@ -778,40 +729,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                 </div>
               )}
             </div>
-
-            {/* Zone dangereuse */}
-            <div className="mt-6 mx-12 border-t border-red-200 pt-6">
-              <button
-                type="button"
-                onClick={() => setShowDangerZone(!showDangerZone)}
-                className="flex items-center justify-between w-full text-left text-red-600 hover:text-red-700 transition-colors mb-4"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-red-500">⚠️</span>
-                  <span className="font-medium text-[15px]">Zone dangereuse</span>
-                </div>
-                <span className={`transform transition-transform text-sm ${showDangerZone ? 'rotate-180' : ''}`}>
-                  ▼
-                </span>
-              </button>
-              
-              {showDangerZone && (
-                <div className="p-4 justify-items-center bg-red-50 rounded-lg border border-red-200">
-                  <p className="text-sm text-center text-red-700 mb-4">
-                    ⚠️ <strong>Attention :</strong> Cette action supprimera votre compte et vous ne pourrez plus y accéder sans l&apos;aide d&apos;un administrateur.
-
-                  </p>
-                  <Button 
-                    type="button" 
-                    onClick={() => setShowSoftDeleteConfirm(true)}
-                    className="h-[36px] items-center justify-center cursor-pointer px-6 rounded-[10px] bg-red-600 hover:bg-red-700 text-white text-[13px] font-medium border-0"
-                    disabled={isLoading}
-                  >
-                    🗑️ Supprimer mon compte
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
 
             <div className="flex justify-end gap-3 mt-6 px-12 pb-6">
               <Button type="button" onClick={onCancel}  className="h-[32px] cursor-pointer text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center
@@ -825,55 +743,6 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         </form>
       </div>
       
-      {/* Modal de confirmation pour soft delete */}
-      {showSoftDeleteConfirm && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-              </div>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Supprimer ce compte ?
-              </h3>
-              
-              <div className="text-left bg-red-50 p-4 rounded-lg mb-6 border-l-4 border-red-400">
-                <h4 className="font-medium text-red-800 mb-2">⚠️ Cette action va :</h4>
-                <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
-                  <li>Désactiver l&apos;accès de l&apos;utilisateur</li>
-                  <li>Marquer le compte comme supprimé</li>
-                  <li>Conserver les données pour audit</li>
-                </ul>
-                <p className="text-xs text-red-600 mt-2 font-medium">
-                  💡 Un administrateur peut annuler cette action plus tard
-                </p>
-              </div>
-              
-              <div className="flex gap-3">
-                <Button
-                  type="button"
-                  onClick={() => setShowSoftDeleteConfirm(false)}
-                  className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 border-0"
-                  disabled={isLoading}
-                >
-                  Non, annuler
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleSoftDelete}
-                  className="flex-1 bg-red-600 text-white hover:bg-red-700 border-0"
-                  disabled={isLoading}
-                >
-                  {isLoading ? 'Suppression...' : 'Oui, supprimer'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

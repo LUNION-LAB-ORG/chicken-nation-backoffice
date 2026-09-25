@@ -83,9 +83,33 @@ export interface SyncResult {
 
 // === Auth ===
 
-/** Récupère l'URL de connexion OAuth pour un restaurant */
-export function getConnectUrl(restaurantId: string): string {
-  return `${API_URL}/hubrise/auth/connect/${restaurantId}`;
+/**
+ * Demande au serveur l'URL d'autorisation HubRise d'un restaurant.
+ * Appel authentifié (RESTAURANTS CREATE) : le serveur y signe un lien valable
+ * dix minutes, lié au restaurant et à l'utilisateur connecté. L'ancienne
+ * ouverture directe de la route dans un onglet partait sans jeton (401).
+ */
+export async function demanderUrlConnexion(restaurantId: string): Promise<string> {
+  const response = await fetch(
+    `${API_URL}/hubrise/auth/connect/${encodeURIComponent(restaurantId)}`,
+    {
+      method: 'POST',
+      headers: authHeaders(),
+    },
+  );
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(
+      typeof err.message === 'string' && err.message
+        ? err.message
+        : 'Impossible de préparer la connexion HubRise',
+    );
+  }
+  const data = (await response.json().catch(() => ({}))) as { url?: unknown };
+  if (typeof data.url !== 'string' || !data.url.startsWith('https://')) {
+    throw new Error('Impossible de préparer la connexion HubRise');
+  }
+  return data.url;
 }
 
 /** Vérifie le statut de connexion HubRise d'un restaurant */

@@ -194,16 +194,26 @@ export async function getCustomers(params: CustomerQuery = {}): Promise<Paginate
   }
 }
 
-// ✅ Nouvelle fonction pour récupérer les clients d'un restaurant spécifique
+/**
+ * Clients d'un restaurant, pour la liste déroulante des fenêtres « Nouvelle
+ * conversation » et « Nouveau ticket ».
+ *
+ * La recherche est faite par le serveur (prénom, nom, e-mail, téléphone), qui
+ * renvoie une page de 50 clients actifs (100 au plus), réduits à nom, e-mail,
+ * téléphone et photo. Sans recherche, la liste ne montre donc que les 50
+ * premiers par ordre alphabétique : il faut taper pour trouver les autres.
+ */
 export async function getRestaurantCustomers(restaurantId: string, params: CustomerQuery = {}): Promise<Customer[]> {
   if (!restaurantId) throw new Error('ID restaurant manquant');
 
-  const { search, status = 'ACTIVE' } = params;
+  const { search, page, limit } = params;
 
-  // Construire les paramètres de requête
+  // Construire les paramètres de requête. Le serveur ne renvoie que les
+  // clients actifs : le statut n'est plus envoyé.
   const queryParams = new URLSearchParams();
-  if (status) queryParams.append('status', status);
   if (search) queryParams.append('search', search);
+  if (page) queryParams.append('page', page.toString());
+  if (limit) queryParams.append('limit', limit.toString());
 
   const url = `${API_URL}${API_PREFIX}/restaurants/${restaurantId}/clients${queryParams.toString() ? `?${queryParams}` : ''}`;
 

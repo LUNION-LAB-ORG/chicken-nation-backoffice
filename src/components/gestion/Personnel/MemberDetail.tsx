@@ -9,11 +9,14 @@ import {
   getPersonnelSuccessMessage,
 } from "@/utils/errorMessages";
 import {
-  softDeleteUser,
+  blockUser,
   deleteUser,
   restoreUser,
   setPrincipalManager,
 } from "../../../../features/users/services/user.service";
+import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { HasPermission } from "../../../../features/users/components/HasPermission";
+import { Action, Modules } from "../../../../features/users/types/auth.type";
 import type { Member } from "./MemberView";
 import MemberRemoveModal from "./MemberRemoveModal";
 import ResetPasswordButton from "./ReinitializePassWord";
@@ -80,6 +83,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
 }) => {
   const [confirm, setConfirm] = useState<"suspend" | "delete" | null>(null);
   const [busy, setBusy] = useState(false);
+  const { user: currentUser } = useAuthStore();
 
   const isSuspended =
     member.entity_status === "DELETED" || member.entity_status === "INACTIVE";
@@ -89,7 +93,11 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
       : typeof member.restaurant === "string"
       ? member.restaurant
       : "";
-  const canSetPrincipal = member.role === "MANAGER" && !member.isPrincipal;
+  // Réservé à l'ADMIN : le serveur refuse qu'un manager en désigne un autre.
+  const canSetPrincipal =
+    currentUser?.role === "ADMIN" &&
+    member.role === "MANAGER" &&
+    !member.isPrincipal;
 
   const run = async (
     fn: () => Promise<unknown>,
@@ -164,9 +172,9 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
               <p className="text-[18px] font-medium text-[#F17922] mb-2">
                 Coordonnées
               </p>
-              <Row label="E-mail" value={member.email || "—"} />
-              <Row label="Téléphone" value={member.phone || "—"} />
-              <Row label="Adresse" value={member.address || "—"} />
+              <Row label="E-mail" value={member.email || "Non renseigné"} />
+              <Row label="Téléphone" value={member.phone || "Non renseigné"} />
+              <Row label="Adresse" value={member.address || "Non renseignée"} />
             </div>
           </div>
 
@@ -254,15 +262,18 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={() => setConfirm("delete")}
-                    disabled={busy}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Supprimer définitivement
-                  </button>
+                  {/* Suppression : droit DELETE, que seul l'ADMIN possède. */}
+                  <HasPermission module={Modules.PERSONNELS} action={Action.DELETE}>
+                    <button
+                      type="button"
+                      onClick={() => setConfirm("delete")}
+                      disabled={busy}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Supprimer définitivement
+                    </button>
+                  </HasPermission>
                 </div>
               </div>
             )}
@@ -286,7 +297,8 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
               onBack
             );
           } else if (mode === "suspend") {
-            run(() => softDeleteUser(member.id), "Utilisateur suspendu");
+            // POST /users/inactive/:id ; un refus du serveur s'affiche.
+            run(() => blockUser(member.id), "Utilisateur suspendu");
           }
         }}
       />

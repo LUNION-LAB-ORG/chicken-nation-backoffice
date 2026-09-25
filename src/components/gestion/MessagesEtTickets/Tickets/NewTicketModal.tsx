@@ -230,7 +230,7 @@ function NewTicketModal({
             <div className="mb-6">
               <SearchableDropdown
                 label="Client"
-                placeholder="Rechercher un client"
+                placeholder="Nom, e-mail ou téléphone du client"
                 options={clients}
                 value={selectedClientId}
                 onChange={(value) => setSelectedClientId(Array.isArray(value) ? (value[0] as string) ?? '' : (value as string) ?? '')}

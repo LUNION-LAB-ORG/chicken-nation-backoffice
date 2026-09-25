@@ -259,9 +259,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
         }
 
         setIsLoading(false);
-        if (process.env.NODE_ENV === "development") {
-          console.log("Utilisateur créé:", created);
-        }
+        // Pas de journal de la réponse : elle porte le mot de passe provisoire.
         toast.success(getPersonnelSuccessMessage("create"));
         setCreatedUserCredentials({
           email: created.email,

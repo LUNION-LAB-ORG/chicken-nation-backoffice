@@ -11,7 +11,7 @@ import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import {
-  softDeleteUser,
+  blockUser,
   deleteUser,
   restoreUser,
   setPrincipalManager,
@@ -140,15 +140,16 @@ const MemberView: React.FC<MemberViewProps> = ({
         icon: "●",
         className: "text-green-500 bg-green-50 border-green-200",
       },
+      // POST /users/inactive/:id (bouton « Suspendre ») passe le compte à INACTIVE.
       INACTIVE: {
-        label: "Inactif",
+        label: "Suspendu",
         icon: "⏸",
         className: "text-amber-600 bg-amber-50 border-amber-200",
       },
       DELETED: {
-        label: "Suspendu",
+        label: "Supprimé",
         icon: "⏸",
-        className: "text-amber-600 bg-amber-50 border-amber-200",
+        className: "text-gray-500 bg-gray-50 border-gray-200",
       },
     };
 
@@ -196,9 +197,11 @@ const MemberView: React.FC<MemberViewProps> = ({
     }
   };
 
+  // Suspension : POST /users/inactive/:id. Un refus du serveur (compte d'un
+  // autre restaurant, rang supérieur) s'affiche tel quel.
   const handleSuspendUser = async (userId: string) => {
     try {
-      await softDeleteUser(userId);
+      await blockUser(userId);
       toast.success("Utilisateur suspendu");
       if (onRefresh) {
         onRefresh();
@@ -374,7 +377,7 @@ const MemberView: React.FC<MemberViewProps> = ({
             <div
               key={member.id}
               className={`${cardBg} rounded-xl shadow-sm border border-[#ECECEC] p-4 flex items-center gap-4 cursor-pointer hover:bg-[#FFF6E9]/60 transition`}
-              onClick={() => setModal({ type: "edit", member })}
+              onClick={() => onOpenDetail?.(member)}
             >
               <div
                 className={`w-14 h-14 rounded-full bg-[#FFF6E9] flex items-center justify-center overflow-hidden ${contentOpacity}`}
@@ -478,6 +481,8 @@ const MemberView: React.FC<MemberViewProps> = ({
                 handleRestoreUser(menuOpenId!);
               }}
               onSetPrincipal={
+                // Réservé à l'ADMIN : un manager ne gère pas un autre manager.
+                currentUser?.role === "ADMIN" &&
                 filteredMembers.find((m) => m.id === menuOpenId)?.role ===
                   "MANAGER" &&
                 !filteredMembers.find((m) => m.id === menuOpenId)?.isPrincipal

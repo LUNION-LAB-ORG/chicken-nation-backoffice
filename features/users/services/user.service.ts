@@ -4,6 +4,36 @@ import { CreateUserDto, User } from '../types/user.types';
 
 const USERS_ENDPOINT = '/users';
 
+type ContextePersonnel = 'create' | 'update' | 'delete' | 'block' | 'restore';
+
+/**
+ * Messages de validation automatiques du serveur (class-validator), en anglais
+ * (« phone must be a string ») : jamais montrés tels quels.
+ */
+const MESSAGE_TECHNIQUE = /\b(must|should|property)\b|\(\d{3}\)/i;
+
+/**
+ * Message montré après l'échec d'une action sur le personnel. Le serveur
+ * explique précisément ses refus (« Vous ne pouvez gérer que le personnel de
+ * votre restaurant. », adresse déjà prise, suspension de son propre compte) :
+ * pour les statuts 400, 403 et 409, déjà nettoyés par `apiRequest`, on garde
+ * son texte, sauf un message de validation automatique. Sinon, le message
+ * générique du contexte.
+ */
+function messageEchecPersonnel(error: unknown, contexte: ContextePersonnel): string {
+  const status = (error as { status?: number } | null)?.status;
+  if (
+    error instanceof Error &&
+    error.message &&
+    (status === 400 || status === 403 || status === 409) &&
+    !MESSAGE_TECHNIQUE.test(error.message)
+  ) {
+    return error.message;
+  }
+  // Le bouton s'appelle « Suspendre » : on garde ce mot dans le message.
+  return validatePersonnelError(error, contexte).replace('bloquer', 'suspendre');
+}
+
 /**
  * Récupère tous les utilisateurs
  */
@@ -27,9 +57,9 @@ export const getAllUsers = async (
  */
 export const setPrincipalManager = async (userId: string): Promise<void> => {
   try {
-    return api.patch(`${USERS_ENDPOINT}/${userId}/set-principal-manager`, {}, true);
+    return await api.patch(`${USERS_ENDPOINT}/${userId}/set-principal-manager`, {}, true);
   } catch (error) {
-    throw new Error(getHumanReadableError(error));
+    throw new Error(messageEchecPersonnel(error, 'update'));
   }
 };
 
@@ -72,10 +102,9 @@ export async function createUser(data: {
   if (data.image) formData.append('image', data.image);
 
   try {
-    return api.post<User>(USERS_ENDPOINT, formData, true);
+    return await api.post<User>(USERS_ENDPOINT, formData, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'create');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'create'));
   }
 }
 
@@ -97,10 +126,9 @@ export async function createMember(data: CreateUserDto) {
   if (data.image) formData.append('image', data.image);
 
   try {
-    return api.post<User>(`${USERS_ENDPOINT}/member`, formData, true);
+    return await api.post<User>(`${USERS_ENDPOINT}/member`, formData, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'create');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'create'));
   }
 }
 
@@ -158,7 +186,7 @@ export const updateMember = async (
   try {
     return await api.patch<User>(`${USERS_ENDPOINT}/${id}`, formData, true);
   } catch (error) {
-    throw new Error(validatePersonnelError(error, 'update'));
+    throw new Error(messageEchecPersonnel(error, 'update'));
   }
 };
 
@@ -209,46 +237,36 @@ export const updateUserPassword = async (passwordData: {
   };
 
   try {
-    return api.patch<User>(`${USERS_ENDPOINT}/password`, data, true);
+    // `await` : sans lui, le catch ne s'exécutait jamais. La règle du serveur
+    // (8 caractères, une majuscule, un chiffre, un caractère spécial) s'affiche.
+    return await api.patch<User>(`${USERS_ENDPOINT}/password`, data, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'update');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'update'));
   }
 };
 
 /**
- * Supprime un utilisateur définitivement (delete réel)
+ * Supprime un utilisateur définitivement (delete réel). Réservé à l'ADMIN.
  */
 export const deleteUser = async (id: string): Promise<void> => {
   try {
-    return api.delete<void>(`${USERS_ENDPOINT}/delete/${id}`, true);
+    return await api.delete<void>(`${USERS_ENDPOINT}/delete/${id}`, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'delete');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'delete'));
   }
 };
 
 /**
- * Supprime un utilisateur en soft delete (change le status à DELETED)
- */
-export const softDeleteUser = async (id: string): Promise<void> => {
-  try {
-    return api.post<void>(`${USERS_ENDPOINT}/soft-delete`, { id }, true);
-  } catch (error) {
-    const userMessage = validatePersonnelError(error, 'delete');
-    throw new Error(userMessage);
-  }
-};
-
-/**
- * Bloque un utilisateur (change le status à INACTIVE)
+ * Suspend un utilisateur (statut INACTIVE) : POST /users/inactive/:id.
+ * C'est la route du bouton « Suspendre ». L'ancienne `softDeleteUser` visait
+ * POST /users/soft-delete, qui n'a jamais existé : la suspension échouait
+ * toujours.
  */
 export const blockUser = async (id: string): Promise<void> => {
   try {
-    return api.post<void>(`${USERS_ENDPOINT}/inactive/${id}`, {}, true);
+    return await api.post<void>(`${USERS_ENDPOINT}/inactive/${id}`, {}, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'block');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'block'));
   }
 };
 
@@ -259,10 +277,9 @@ export const restoreUser = async (id: string): Promise<void> => {
   try {
     // L'ID de l'utilisateur est maintenant inclus dans le chemin de l'URL
     // et un corps de requête vide est envoyé, conformément à l'endpoint /api/v1/users/restore/{id}
-    return api.post<void>(`${USERS_ENDPOINT}/restore/${id}`, {}, true);
+    return await api.post<void>(`${USERS_ENDPOINT}/restore/${id}`, {}, true);
   } catch (error) {
-    const userMessage = validatePersonnelError(error, 'restore');
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'restore'));
   }
 };
 
@@ -273,7 +290,6 @@ export const resetUserPassword = async (userId: string): Promise<{ email: string
   try {
     return await api.patch(`${USERS_ENDPOINT}/${userId}/reset-password`, {}, true);
   } catch (error) {
-    const userMessage = getHumanReadableError(error);
-    throw new Error(userMessage);
+    throw new Error(messageEchecPersonnel(error, 'update'));
   }
 };

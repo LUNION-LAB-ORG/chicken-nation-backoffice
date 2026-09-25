@@ -90,7 +90,8 @@ export default function MemberActionsMenu({
             </HasPermission>
           )
         : onSuspend && (
-            <HasPermission module={Modules.PERSONNELS} action={Action.DELETE}>
+            // Même droit que le serveur (POST /users/inactive/:id) : UPDATE.
+            <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
               <button
                 type="button"
                 className={`${itemBase} text-[#F17922] hover:bg-[#FFF6E9]`}

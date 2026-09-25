@@ -122,26 +122,18 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
    * invisibles. Une seule copie, un seul endroit à corriger.
    */
 
-  // Charger les données au montage du composant
+  /**
+   * Clients : un seul chargement, à l'ouverture puis 300 ms après la dernière
+   * frappe. La recherche est faite par le serveur, qui renvoie une page de
+   * clients. Deux effets appelaient auparavant le serveur à chaque frappe,
+   * l'un sans délai, l'autre avec. Pas de chargement pour un administrateur
+   * (pas de restaurant) ni pour une conversation interne.
+   */
   useEffect(() => {
-    if (isOpen) {
-      // Ne charger les clients que si l'utilisateur n'est pas admin
-      if (user?.role !== 'ADMIN') {
-        loadClients();
-      }
-    }
-  }, [isOpen, loadClients, user?.role]);
-
-  // Recherche avec debounce pour les clients
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (clientSearchTerm.trim() && conversationType === 'Avec client' && user?.role !== 'ADMIN') {
-        loadClients();
-      }
-    }, 300);
-
+    if (!isOpen || user?.role === 'ADMIN' || conversationType !== 'Avec client') return;
+    const timeoutId = setTimeout(loadClients, clientSearchTerm.trim() ? 300 : 0);
     return () => clearTimeout(timeoutId);
-  }, [clientSearchTerm, conversationType, loadClients, user?.role]);
+  }, [isOpen, clientSearchTerm, conversationType, loadClients, user?.role]);
 
   // Validation du formulaire
   const validateForm = (): boolean => {
@@ -295,7 +287,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               {/* Client avec recherche */}
               <SearchableDropdown
                 label="Client"
-                placeholder="Rechercher un client..."
+                placeholder="Nom, e-mail ou téléphone du client"
                 options={clients}
                 value={selectedClientId}
                 onChange={(value) => setSelectedClientId(Array.isArray(value) ? (value[0] as string) ?? '' : (value as string) ?? '')}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
+import { getHumanReadableError } from "@/utils/errorMessages";
 import { resetUserPassword } from "../../../../features/users/services/user.service";
 import UserCredentialsModal from "./UserCredentialsModal";
 
@@ -21,32 +23,29 @@ export default function ResetPasswordButton({
     const [showPasswordModal, setShowPasswordModal] = useState(false);
     const [resetUserCredentials, setResetUserCredentials] = useState<{ email: string; password: string } | null>(null);
 
-    // Générer un mot de passe aléatoire
-    const generateRandomPassword = () => {
-        const length = 12;
-        const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
-        let password = "";
-        for (let i = 0; i < length; i++) {
-            password += charset.charAt(Math.floor(Math.random() * charset.length));
-        }
-        return password;
-    };
+    const [enCours, setEnCours] = useState(false);
 
-    // Réinitialiser le mot de passe via l'API
+    // Réinitialiser le mot de passe via l'API. Le nouveau mot de passe n'est
+    // jamais écrit dans la console : il n'apparaît que dans la fenêtre dédiée.
     const handleResetPassword = async () => {
+        setEnCours(true);
         try {
             const response = await resetUserPassword(userId);
-            console.log("Mot de passe réinitialisé avec succès", response);
-            
+
             // Mettre à jour les credentials pour le modal avec les données retournées par l'API
             setResetUserCredentials({
                 email: response.email,
                 password: response.password
             });
-            
+
+            setShowWarningModal(false);
             setShowPasswordModal(true);
         } catch (error) {
-            console.error("Erreur lors de la réinitialisation du mot de passe", error);
+            // Refus du serveur (personnel d'un autre restaurant, rang supérieur) ou panne.
+            setShowWarningModal(false);
+            toast.error(getHumanReadableError(error));
+        } finally {
+            setEnCours(false);
         }
     }
 
@@ -76,8 +75,8 @@ export default function ResetPasswordButton({
                                 Attention
                             </h2>
                             <p className="text-gray-600 mb-6">
-                                Êtes-vous sûr de vouloir réinitialiser votre mot de passe ?
-                                Un nouveau mot de passe sera généré et devra être utilisé pour vos prochaines connexions.
+                                Êtes-vous sûr de vouloir réinitialiser ce mot de passe ?
+                                Un nouveau mot de passe sera généré et remplacera l&apos;ancien dès les prochaines connexions.
                             </p>
 
                             <div className="flex gap-3">
@@ -89,9 +88,10 @@ export default function ResetPasswordButton({
                                 </button>
                                 <button
                                     onClick={handleResetPassword}
-                                    className="flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200"
+                                    disabled={enCours}
+                                    className="flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Continuer
+                                    {enCours ? "Réinitialisation..." : "Continuer"}
                                 </button>
                             </div>
                         </div>
