@@ -9,10 +9,14 @@ import { accord } from "../../utils/crm-ui";
 
 const court = (jour: string) => jour.slice(8, 10) + "/" + jour.slice(5, 7);
 
-/** Rythme quotidien réalisé contre objectif, en cumulé (cahier §6.3). */
+/**
+ * Rythme quotidien réalisé contre objectif, en cumulé (cahier §6.3).
+ * L'objectif de volume compte des contacts JOINTS (lot 3) : la courbe
+ * cumulée suit les joints, les traités restent en barres.
+ */
 export function RythmeCampagne({ rythme }: { rythme: ICampagneStats["rythme"] }) {
-  const sousTitre = rythme.objectif_jour
-    ? `Objectif : ${String(rythme.objectif_jour).replace(".", ",")} ${accord(rythme.objectif_jour, "contact traité", "contacts traités")} par jour`
+  const sousTitre = rythme.objectif_jour != null
+    ? `Objectif : ${String(rythme.objectif_jour).replace(".", ",")} ${accord(rythme.objectif_jour, "contact joint", "contacts joints")} par jour`
     : "Aucun objectif de volume n'a été fixé";
 
   return (
@@ -29,13 +33,14 @@ export function RythmeCampagne({ rythme }: { rythme: ICampagneStats["rythme"] })
               <Tooltip content={<ChartTooltip labelFormatter={court} />} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="traites" name="Traités du jour" fill={CHART_COLORS.primary} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="conversions" name="Conversions du jour" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
-              <Line type="monotone" dataKey="cumul" name="Traités cumulés" stroke={CHART_COLORS.blue} strokeWidth={2} dot={false} />
-              {rythme.objectif_jour && (
+              <Bar dataKey="joints" name="Joints du jour" fill={CHART_COLORS.purple} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="conversions" name="Ventes du jour" fill={CHART_COLORS.success} radius={[4, 4, 0, 0]} />
+              <Line type="monotone" dataKey="cumul" name="Joints cumulés" stroke={CHART_COLORS.blue} strokeWidth={2} dot={false} />
+              {rythme.objectif_jour != null && (
                 <Line
                   type="monotone"
                   dataKey="objectif_cumul"
-                  name="Objectif cumulé"
+                  name="Objectif cumulé de joints"
                   stroke={CHART_COLORS.textMuted}
                   strokeDasharray="5 4"
                   strokeWidth={2}

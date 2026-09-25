@@ -11,7 +11,7 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useCrmSocketSync } from "../../../../features/crm/hooks/useCrmSocketSync";
 import { useCampagnesQuery } from "../../../../features/crm/queries/campagne.query";
 import { useMaFileQuery } from "../../../../features/crm/queries/contact.query";
-import { IContactFiltres } from "../../../../features/crm/types/contact.type";
+import { IContactFiltres, Public } from "../../../../features/crm/types/contact.type";
 import { Onglet, Onglets } from "../../../../features/crm/components/commun/Onglets";
 import { TableauDeBord } from "../../../../features/crm/components/analyse/TableauDeBord";
 import { CouponsVue } from "../../../../features/crm/components/analyse/CouponsVue";
@@ -76,12 +76,22 @@ export default function Crm() {
   const actif: Cle = onglets.some((o) => o.cle === cle) ? cle : (onglets[0]?.cle ?? "campagnes");
 
   // Ouverture demandée depuis un autre écran (ex. « Rappeler » dans les statistiques clients).
+  // Qui peut traiter arrive sur la liste filtrée ; les autres, sur le tableau de
+  // bord filtré sur ce public (remonté par `demande` pour repartir de ce filtre).
   const publicDemande = useDashboardStore((s) => s.pendingCrmSegment);
   const oublierPublicDemande = useDashboardStore((s) => s.clearPendingCrm);
+  const [publicsTableau, setPublicsTableau] = useState<Public[] | undefined>();
+  const [demande, setDemande] = useState(0);
   useEffect(() => {
     if (!publicDemande) return;
-    setFiltresListe({ ...FILTRES_DEFAUT, segment: publicDemande });
-    setCle(peutTraiter ? "contacts" : "tableau");
+    if (peutTraiter) {
+      setFiltresListe({ ...FILTRES_DEFAUT, segment: publicDemande });
+      setCle("contacts");
+    } else {
+      setPublicsTableau([publicDemande]);
+      setDemande((n) => n + 1);
+      setCle("tableau");
+    }
     oublierPublicDemande();
   }, [publicDemande, oublierPublicDemande, peutTraiter]);
 
@@ -102,7 +112,9 @@ export default function Crm() {
           <Onglets<Cle> onglets={onglets} actif={actif} onChange={(k) => setCle(k)} />
         </div>
 
-        {actif === "tableau" && <TableauDeBord onOuvrir={setFicheId} />}
+        {actif === "tableau" && (
+          <TableauDeBord key={demande} publicsInitiaux={publicsTableau} peutExporter={peutExporter} onOuvrir={setFicheId} />
+        )}
         {actif === "file" && <MaFile onOuvrir={ouvrirParNumero} />}
         {actif === "contacts" && (
           <ListeContacts

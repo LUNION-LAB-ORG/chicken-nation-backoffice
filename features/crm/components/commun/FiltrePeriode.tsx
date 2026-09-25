@@ -35,7 +35,8 @@ export function FiltrePeriode({ valeur, onChange }: { valeur: IPeriode; onChange
 
   const choisir = (p: Preset) => {
     setPreset(p);
-    if (p !== "libre") onChange({ ...periodePour(p), campaign_id: valeur.campaign_id });
+    // Seules les dates changent : le public et la campagne choisis restent.
+    if (p !== "libre") onChange({ ...valeur, from: undefined, to: undefined, ...periodePour(p) });
   };
 
   return (

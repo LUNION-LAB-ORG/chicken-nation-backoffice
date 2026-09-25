@@ -9,6 +9,8 @@ import { EtatRequete, Vide } from "../commun/Etats";
 const NATURE: Record<string, string> = {
   CONTACTS: "Liste des contacts",
   RAPPORT_CAMPAGNE: "Rapport de campagne",
+  TABLEAU_PUBLICS: "Tableau de bord par public",
+  COMPARATIF_CAMPAGNES: "Comparatif des campagnes",
 };
 
 /** Qui a sorti quelles données, quand, et avec quels filtres (cahier §4.2 et §10). */

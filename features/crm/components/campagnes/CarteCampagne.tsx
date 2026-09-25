@@ -1,7 +1,8 @@
 import React from "react";
 import { CalendarDays, ChevronRight, UserRound } from "lucide-react";
 import { ICampagne } from "../../types/campagne.type";
-import { accord, fmtDate, fmtNombre } from "../../utils/crm-ui";
+import { Public } from "../../types/contact.type";
+import { PUBLICS, accord, fmtDate, fmtNombre } from "../../utils/crm-ui";
 import { PuceCampagne, PucePublic } from "../commun/Puces";
 
 function Barre({ valeur, total }: { valeur: number; total: number }) {
@@ -13,9 +14,18 @@ function Barre({ valeur, total }: { valeur: number; total: number }) {
   );
 }
 
-/** Une campagne en un coup d'œil : où elle en est, qui la mène, ce qu'elle a converti. */
+/** Publics visés, dans l'ordre du CRM ; repli sur l'ancienne liste `segments`. */
+export const publicsVises = (c: Pick<ICampagne, "publics" | "segments">): Public[] => {
+  const liste = c.publics?.length ? c.publics.map((p) => p.segment) : (c.segments ?? []);
+  return PUBLICS.filter((p) => liste.includes(p));
+};
+
+/** Une campagne en un coup d'œil : où elle en est, qui la mène, ce qu'elle a converti, public par public. */
 export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => void }) {
   const r = c.resume ?? { cibles: 0, traites: 0, conversions: 0, coupons: 0 };
+  const parPublic = [...(r.par_public ?? [])].sort((a, b) => PUBLICS.indexOf(a.segment) - PUBLICS.indexOf(b.segment));
+  const publics = publicsVises(c);
+
   return (
     <button
       type="button"
@@ -27,20 +37,20 @@ export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => v
           <p className="font-semibold text-gray-900 truncate">{c.name}</p>
           <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
             <CalendarDays className="w-3.5 h-3.5" />
-            {fmtDate(c.start_date)} au {c.end_date ? fmtDate(c.end_date) : "sans fin prévue"}
+            {c.end_date ? `${fmtDate(c.start_date)} au ${fmtDate(c.end_date)}` : `depuis le ${fmtDate(c.start_date)}, sans fin prévue`}
           </p>
         </div>
         <PuceCampagne statut={c.status} />
       </div>
       <div className="flex flex-wrap gap-1 mt-2">
-        {(c.segments ?? []).map((s) => (
+        {publics.map((s) => (
           <PucePublic key={s} segment={s} />
         ))}
       </div>
 
       <p className="text-xs text-gray-500 flex items-center gap-1 mt-3">
-        <UserRound className="w-3.5 h-3.5" /> Pilote : {c.lead_agent.fullname} · {c.assigned_agents.length} agent
-        {c.assigned_agents.length > 1 ? "s" : ""}
+        <UserRound className="w-3.5 h-3.5" /> Pilote : {c.lead_agent.fullname} · {c.assigned_agents.length}{" "}
+        {accord(c.assigned_agents.length, "agent")}
       </p>
 
       {c.status === "PLANIFIED" ? (
@@ -51,9 +61,26 @@ export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => v
             <span>
               {fmtNombre(r.traites)} {accord(r.traites, "traité")} sur {fmtNombre(r.cibles)}
             </span>
-            <span className="font-semibold text-emerald-700">{fmtNombre(r.conversions)} {accord(r.conversions, "conversion")}</span>
+            <span className="font-semibold text-emerald-700">
+              {fmtNombre(r.conversions)} {accord(r.conversions, "vente")}
+            </span>
           </div>
           <Barre valeur={r.traites} total={r.cibles} />
+          {parPublic.length > 1 && (
+            <ul className="pt-1 space-y-1">
+              {parPublic.map((p) => (
+                <li key={p.segment} className="flex items-center justify-between gap-2 text-xs text-gray-600">
+                  <PucePublic segment={p.segment} />
+                  <span className="tabular-nums text-right">
+                    {fmtNombre(p.traites)} / {fmtNombre(p.cibles)} {accord(p.traites, "traité")} ·{" "}
+                    <span className="font-semibold text-emerald-700">
+                      {fmtNombre(p.conversions)} {accord(p.conversions, "vente")}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 

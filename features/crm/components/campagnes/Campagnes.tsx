@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { BarChart3, LayoutGrid, Megaphone, Plus } from "lucide-react";
 import { useAuthStore } from "../../../users/hook/authStore";
-import { useCampagnesQuery } from "../../queries/campagne.query";
-import { ICampagne } from "../../types/campagne.type";
-import { Bouton } from "../commun/Champs";
+import { useCampagneQuery, useCampagnesQuery } from "../../queries/campagne.query";
+import { CampagneStatut, ICampagne, ICampagnesFiltres } from "../../types/campagne.type";
+import { Public } from "../../types/contact.type";
+import { CAMPAGNE_META, PUBLICS, PUBLIC_META } from "../../utils/crm-ui";
+import { Bouton, ChampSelect } from "../commun/Champs";
 import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { CarteCampagne } from "./CarteCampagne";
 import { Comparatif } from "./Comparatif";
@@ -11,7 +13,9 @@ import { EquipeCampagne } from "./EquipeCampagne";
 import { FormCampagne } from "./FormCampagne";
 import { TableauCampagne } from "./TableauCampagne";
 
-/** Campagnes de conversion (cahier §6) : liste, tableau de bord, comparatif. */
+const STATUTS: CampagneStatut[] = ["PLANIFIED", "ACTIVE", "SUSPENDED", "COMPLETED"];
+
+/** Campagnes de conversion (cahier §6) : liste filtrable, tableau de bord, comparatif. */
 export function Campagnes({
   estGestionnaire,
   peutExporter,
@@ -22,13 +26,17 @@ export function Campagnes({
   peutAnalyser: boolean;
 }) {
   const moi = useAuthStore((s) => s.user?.id);
-  const { data: campagnes = [], isPending, isError, error } = useCampagnesQuery();
+  const [filtres, setFiltres] = useState<ICampagnesFiltres>({});
+  const { data: campagnes = [], isPending, isError, error } = useCampagnesQuery(filtres);
   const [vue, setVue] = useState<"liste" | "comparatif">("liste");
   const [ouverteId, setOuverteId] = useState<string | null>(null);
   const [edition, setEdition] = useState<{ campagne: ICampagne | null } | null>(null);
   const [equipe, setEquipe] = useState<ICampagne | null>(null);
+  // Le détail garde l'écran ouvert quand un geste (lancer, terminer) sort la campagne du filtre de la liste.
+  const detail = useCampagneQuery(ouverteId);
 
-  const ouverte = campagnes.find((c) => c.id === ouverteId) ?? null;
+  const ouverte = ouverteId ? (detail.data ?? campagnes.find((c) => c.id === ouverteId) ?? null) : null;
+  const filtre = !!(filtres.status || filtres.segment);
 
   const modales = (
     <>
@@ -37,7 +45,19 @@ export function Campagnes({
     </>
   );
 
-  if (ouverte) {
+  if (ouverteId) {
+    if (!ouverte) {
+      return detail.isError ? (
+        <div className="space-y-3">
+          <Bouton variante="discret" onClick={() => setOuverteId(null)}>
+            Toutes les campagnes
+          </Bouton>
+          <Erreur message={(detail.error as Error)?.message} />
+        </div>
+      ) : (
+        <Chargement />
+      );
+    }
     return (
       <>
         <TableauCampagne
@@ -87,18 +107,48 @@ export function Campagnes({
         )}
       </div>
 
+      {vue === "liste" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="w-full sm:w-48">
+            <ChampSelect
+              valeur={filtres.status ?? ""}
+              onChange={(v) => setFiltres((x) => ({ ...x, status: (v || undefined) as CampagneStatut | undefined }))}
+              vide="Tous les statuts"
+              options={STATUTS.map((s) => ({ value: s, label: CAMPAGNE_META[s].label }))}
+            />
+          </div>
+          <div className="w-full sm:w-56">
+            <ChampSelect
+              valeur={filtres.segment ?? ""}
+              onChange={(v) => setFiltres((x) => ({ ...x, segment: (v || undefined) as Public | undefined }))}
+              vide="Tous les publics"
+              options={PUBLICS.map((p) => ({ value: p, label: PUBLIC_META[p].label }))}
+            />
+          </div>
+          {filtre && (
+            <Bouton variante="discret" onClick={() => setFiltres({})}>
+              Effacer les filtres
+            </Bouton>
+          )}
+        </div>
+      )}
+
       {vue === "comparatif" ? (
-        <Comparatif />
+        <Comparatif peutExporter={peutExporter} />
       ) : isError ? (
         <Erreur message={(error as Error)?.message} />
       ) : isPending ? (
         <Chargement />
       ) : campagnes.length === 0 ? (
-        <Vide
-          Icone={Megaphone}
-          titre="Aucune campagne"
-          texte="Une campagne donne un nom, une durée, une équipe et des objectifs à une opération de relance."
-        />
+        filtre ? (
+          <Vide titre="Aucune campagne pour ces filtres" texte="Changez de statut ou de public, ou effacez les filtres." />
+        ) : (
+          <Vide
+            Icone={Megaphone}
+            titre="Aucune campagne"
+            texte="Une campagne donne un nom, une durée, une équipe, des publics et des objectifs à une opération de relance."
+          />
+        )
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {campagnes.map((c) => (

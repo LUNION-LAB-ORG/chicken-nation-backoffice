@@ -4,7 +4,7 @@ import { Libelle } from "../commun/Champs";
 import { EtatRequete } from "../commun/Etats";
 
 const ROLES: Record<string, string> = {
-  CALL_CENTER: "Call center",
+  CALL_CENTER: "Centre d'appel",
   MARKETING: "Marketing",
   ADMIN: "Direction",
 };

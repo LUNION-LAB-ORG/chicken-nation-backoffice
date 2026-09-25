@@ -52,7 +52,7 @@ export interface DashboardState {
   // Ticket à ouvrir (escalade, notification, lien partagé). Même mécanique.
   pendingTicketId: string | null;
   // Public du CRM à afficher à l'ouverture (bouton « Rappeler » des statistiques).
-  pendingCrmSegment: 'INACTIF' | 'JAMAIS_COMMANDE' | null;
+  pendingCrmSegment: 'JAMAIS_COMMANDE' | 'INACTIF' | 'GLOVO' | 'YANGO' | null;
   // Dernière conversation et dernier ticket consultés : conservés pour
   // retrouver son écran en revenant d'un autre module (avant, tout
   // repartait de l'écran vide « Sélectionnez une conversation »).
@@ -106,7 +106,7 @@ export interface DashboardState {
   setActiveTab: (tab: TabKey) => void;
   openTicket: (ticketId: string) => void;
   clearPendingTicket: () => void;
-  openCrm: (segment: 'INACTIF' | 'JAMAIS_COMMANDE') => void;
+  openCrm: (segment: 'INACTIF' | 'JAMAIS_COMMANDE' | 'GLOVO' | 'YANGO') => void;
   clearPendingCrm: () => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;

@@ -4,35 +4,11 @@ import Modal from "@/components/ui/Modal";
 import { useEnregistrerCampagneMutation } from "../../queries/campagne.query";
 import { campagneSchema } from "../../schemas/campagne.schema";
 import { ICampagne, ICampagneDTO } from "../../types/campagne.type";
-import { aujourdhuiISO } from "../../utils/crm-ui";
 import { Bouton } from "../commun/Champs";
-import { ChampsCampagne, EtatForm } from "./ChampsCampagne";
+import { ChampsCampagne } from "./ChampsCampagne";
+import { EtatForm, etatInitial, publicSaisi, versNombre } from "./etat-campagne";
 
-const jour = (v?: string | null) => (v ? v.slice(0, 10) : "");
-const nombre = (v: string) => (v.trim() === "" ? undefined : Number(v));
-
-function etatInitial(c?: ICampagne | null): EtatForm {
-  return {
-    name: c?.name ?? "",
-    description: c?.description ?? "",
-    start_date: jour(c?.start_date) || aujourdhuiISO(),
-    fin: "date",
-    end_date: jour(c?.end_date),
-    duration_days: "15",
-    target_conversion_rate: c?.target_conversion_rate?.toString() ?? "",
-    target_contacts_count: c?.target_contacts_count?.toString() ?? "",
-    lead_agent_id: c?.lead_agent.id ?? "",
-    agent_ids: c?.assigned_agents.map((a) => a.agent.id) ?? [],
-    offer_id: c?.offer?.id ?? "",
-    distribution_mode: c?.distribution_mode ?? "AUTOMATIQUE",
-    segments: c?.segments ?? ["JAMAIS_COMMANDE"],
-    population: c?.registered_from || c?.registered_to ? "periode" : "tous",
-    registered_from: jour(c?.registered_from),
-    registered_to: jour(c?.registered_to),
-  };
-}
-
-/** Création et modification d'une campagne (cahier §6.1). */
+/** Création et modification d'une campagne (cahier §6.1, lot 3 : publics et critères). */
 export function FormCampagne({ ouvert, campagne, onFermer }: { ouvert: boolean; campagne?: ICampagne | null; onFermer: () => void }) {
   const [f, setF] = useState<EtatForm>(() => etatInitial(campagne));
   const enregistrer = useEnregistrerCampagneMutation();
@@ -45,31 +21,52 @@ export function FormCampagne({ ouvert, campagne, onFermer }: { ouvert: boolean; 
       description: f.description.trim() || undefined,
       start_date: f.start_date,
       end_date: f.fin === "date" && f.end_date ? f.end_date : undefined,
-      duration_days: f.fin === "duree" ? nombre(f.duration_days) : undefined,
-      target_conversion_rate: nombre(f.target_conversion_rate),
-      target_contacts_count: nombre(f.target_contacts_count),
+      duration_days: f.fin === "duree" ? versNombre(f.duration_days) : undefined,
+      target_conversion_rate: versNombre(f.target_conversion_rate),
+      target_contacts_count: versNombre(f.target_contacts_count),
       lead_agent_id: f.lead_agent_id,
       agent_ids: f.agent_ids,
       offer_id: f.offer_id || undefined,
       distribution_mode: f.distribution_mode,
-      segments: f.segments,
-      registered_from: f.population === "periode" && f.registered_from ? f.registered_from : undefined,
-      registered_to: f.population === "periode" && f.registered_to ? f.registered_to : undefined,
+      publics: f.publics.map((p) => publicSaisi(p, lancee)),
     };
     const r = campagneSchema.safeParse(brut);
     if (!r.success) return toast.error(r.error.issues[0].message);
+    const v = r.data;
+
+    // En modification, un champ vidé efface la valeur (null) au lieu de la laisser telle quelle.
+    const effacable = <T,>(x: T | null | undefined) => (campagne ? (x ?? null) : (x ?? undefined));
+    // Une offre inchangée ne repart pas : le serveur refuserait une offre désactivée depuis
+    // (« Offre inconnue ou désactivée ») alors que personne n'y a touché.
+    const offreGlobaleInchangee = !!campagne && (v.offer_id ?? null) === (campagne.offer?.id ?? null);
+    const publics = lancee
+      ? brut.publics.map((p) => {
+          const actuel = campagne?.publics?.find((x) => x.segment === p.segment);
+          const inchangee = !!actuel && (p.offer_id ?? null) === (actuel.offer_id ?? actuel.offer?.id ?? null);
+          return inchangee ? { ...p, offer_id: undefined } : p;
+        })
+      : brut.publics;
+    const communs = {
+      name: v.name,
+      end_date: v.end_date,
+      duration_days: v.duration_days,
+      target_conversion_rate: effacable(v.target_conversion_rate),
+      target_contacts_count: effacable(v.target_contacts_count),
+      offer_id: offreGlobaleInchangee ? undefined : effacable(v.offer_id),
+      publics,
+    };
     const dto: Partial<ICampagneDTO> = lancee
-      ? {
-          name: r.data.name,
-          description: r.data.description ?? "",
-          end_date: r.data.end_date,
-          duration_days: r.data.duration_days,
-          target_conversion_rate: r.data.target_conversion_rate,
-          target_contacts_count: r.data.target_contacts_count,
-          offer_id: r.data.offer_id,
-        }
-      : r.data;
-    enregistrer.mutate({ id: campagne?.id, dto: dto as ICampagneDTO }, { onSuccess: onFermer });
+      ? // Campagne lancée : ni début, ni équipe, ni mode de répartition ; des publics, l'offre et les objectifs seulement.
+        { ...communs, description: v.description ?? "" }
+      : {
+          ...communs,
+          description: campagne ? (v.description ?? "") : v.description,
+          start_date: v.start_date,
+          lead_agent_id: v.lead_agent_id,
+          agent_ids: v.agent_ids,
+          distribution_mode: v.distribution_mode,
+        };
+    enregistrer.mutate({ id: campagne?.id, dto }, { onSuccess: onFermer });
   };
 
   return (

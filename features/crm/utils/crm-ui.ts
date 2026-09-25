@@ -16,44 +16,117 @@ export const STATUT_META: Record<ContactStatut, Meta> = {
   CONVERTI: { label: "Converti", className: "bg-emerald-100 text-emerald-700" },
 };
 
-/** Un inactif qui recommande est « reconquis » ; un inscrit, « converti ». */
+/** Un inactif qui recommande est « reconquis » ; un client Glovo/Yango « a commandé en direct » ; un inscrit, « converti ». */
 export function libelleStatut(statut: ContactStatut, segment?: Public): string {
-  return statut === "CONVERTI" && segment === "INACTIF" ? "Reconquis" : STATUT_META[statut].label;
+  if (statut !== "CONVERTI") return STATUT_META[statut].label;
+  if (segment === "INACTIF") return "Reconquis";
+  if (segment === "GLOVO" || segment === "YANGO") return "A commandé en direct";
+  return STATUT_META[statut].label;
 }
 
-export const PUBLIC_META: Record<Public, Meta & { court: string; aide: string }> = {
+/**
+ * Vocabulaire de chaque public : le même chiffre ne se nomme pas pareil pour
+ * un inscrit (première commande), un inactif (reconquête) ou un client
+ * Glovo/Yango (commande en direct).
+ */
+export interface PublicMeta extends Meta {
+  court: string;
+  aide: string;
+  /** Première étape d'un entonnoir, ou colonne « entrées ». */
+  entree: string;
+  /** Ce qu'on appelle une vente pour ce public. */
+  conversion: string;
+  taux: string;
+  /** Libellé de la période de ciblage d'une campagne. */
+  periodeCampagne: string;
+  /** Ce qui regroupe les cohortes. */
+  cohorte: string;
+}
+
+export const PUBLIC_META: Record<Public, PublicMeta> = {
   JAMAIS_COMMANDE: {
     label: "Inscrits sans commande",
     court: "Inscrit",
     className: "bg-sky-50 text-sky-700",
     aide: "Inscrits sur l'application, jamais passés à la commande",
+    entree: "Inscrits",
+    conversion: "Première commande",
+    taux: "Taux de conversion",
+    periodeCampagne: "Inscrits du",
+    cohorte: "par mois d'inscription",
   },
   INACTIF: {
     label: "Clients inactifs",
     court: "Inactif",
     className: "bg-violet-50 text-violet-700",
     aide: "Ont déjà commandé, plus rien depuis le délai réglé",
+    entree: "Devenus inactifs",
+    conversion: "Reconquis",
+    taux: "Taux de reconquête",
+    periodeCampagne: "Devenus inactifs du",
+    cohorte: "par mois de décrochage",
   },
   GLOVO: {
     label: "Clients Glovo",
     court: "Glovo",
     className: "bg-emerald-50 text-emerald-700",
     aide: "Relevés en caisse sur une commande Glovo : à faire commander en direct",
+    entree: "Captés sur Glovo",
+    conversion: "Commande directe",
+    taux: "Taux de passage en direct",
+    periodeCampagne: "Captés du",
+    cohorte: "par mois de capture",
   },
   YANGO: {
     label: "Clients Yango",
     court: "Yango",
     className: "bg-yellow-50 text-yellow-800",
     aide: "Relevés en caisse sur une commande Yango : à faire commander en direct",
+    entree: "Captés sur Yango",
+    conversion: "Commande directe",
+    taux: "Taux de passage en direct",
+    periodeCampagne: "Captés du",
+    cohorte: "par mois de capture",
   },
 };
 
+/** Libellés quand plusieurs publics sont mêlés. */
+export const TOUS_META = { entree: "Entrés dans le CRM", conversion: "Conversions", taux: "Taux de conversion" };
+
+/** Vocabulaire d'une sélection de publics : celui du public s'il est seul (ou Glovo + Yango), sinon le vocabulaire commun. */
+export function vocabulaire(publics?: Public[]): { entree: string; conversion: string; taux: string } {
+  if (!publics || publics.length === 0) return TOUS_META;
+  if (publics.length === 1) return PUBLIC_META[publics[0]];
+  if (publics.every((p) => p === "GLOVO" || p === "YANGO")) return { ...PUBLIC_META.GLOVO, entree: "Captés sur Glovo ou Yango" };
+  return TOUS_META;
+}
+
 export const PUBLICS: Public[] = ["JAMAIS_COMMANDE", "INACTIF", "GLOVO", "YANGO"];
 
-/** Publics qu'une campagne peut cibler : Glovo et Yango passent par la file commune. */
-export const PUBLICS_CAMPAGNE: Public[] = ["JAMAIS_COMMANDE", "INACTIF"];
 
 export const estCapte = (segment: Public) => segment === "GLOVO" || segment === "YANGO";
+
+/** Publics couverts par un filtre, dans l'ordre d'affichage : une liste vide veut dire les quatre. */
+export const publicsCouverts = (publics?: Public[]): Public[] =>
+  publics && publics.length > 0 ? PUBLICS.filter((p) => publics.includes(p)) : PUBLICS;
+
+/** Le filtre couvre-t-il Glovo ou Yango (liste vide comprise) ? */
+export const couvreCaptes = (publics?: Public[]) => publicsCouverts(publics).some(estCapte);
+
+/**
+ * Mode détaillé : un seul public, ou Glovo + Yango (qui partagent leur
+ * vocabulaire). Sinon, les publics se comparent côte à côte, jamais mélangés.
+ */
+export const modeDetail = (publics?: Public[]) =>
+  !!publics && publics.length > 0 && (publics.length === 1 || publics.every(estCapte));
+
+/** Couleur d'un public dans les graphiques, accordée à sa puce. */
+export const COULEUR_PUBLIC: Record<Public, string> = {
+  JAMAIS_COMMANDE: "#0EA5E9",
+  INACTIF: "#8B5CF6",
+  GLOVO: "#10B981",
+  YANGO: "#EAB308",
+};
 
 export const CANAL_ACHAT: Record<"APPLICATION" | "CENTRE_APPEL" | "MIXTE", string> = {
   APPLICATION: "surtout dans l'application",
@@ -109,6 +182,18 @@ export const fmtPct = (n: number | null | undefined) => (n == null ? "" : `${Str
 
 /** Accord à la française : singulier sous 2 (« 0 contact », « 1,5 tentative »). */
 export const accord = (n: number, singulier: string, pluriel = `${singulier}s`) => (Math.abs(n) >= 2 ? pluriel : singulier);
+
+/** « 1 raison », « 12 raisons » : le nombre et son nom accordé. */
+export const compter = (n: number, singulier: string, pluriel?: string) => `${fmtNombre(n)} ${accord(n, singulier, pluriel)}`;
+
+export const virgule = (n: number) => String(n).replace(".", ",");
+
+/** Délai en jours ; vide quand il n'est pas disponible. */
+export const fmtJours = (n: number | null | undefined) => (n == null ? "" : `${virgule(n)} j`);
+
+/** Délai en heures, en jours au-delà de 48 h ; vide quand il n'est pas disponible. */
+export const fmtHeures = (n: number | null | undefined) =>
+  n == null ? "" : n >= 48 ? `${virgule(Math.round(n / 2.4) / 10)} j` : `${virgule(n)} h`;
 
 export function fmtDate(valeur?: string | null): string {
   if (!valeur) return "";
