@@ -29,8 +29,10 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
   const effet = actifs.find((s) => s.id === statutId)?.outcome;
   const raisonRequise = effet === "NON_INTERESSE";
   // La raison se voit dès l'ouverture, à côté du commentaire. Elle n'a pas de
-  // sens quand le client n'a pas été joint (pas de réponse, numéro invalide).
-  const clientJoint = effet !== "NON_JOINT" && effet !== "NUMERO_INVALIDE";
+  // sens quand le client n'a pas été joint (pas de réponse, numéro invalide),
+  // ni quand il est intéressé : elle n'est alors ni affichée ni envoyée, même
+  // choisie avant de changer de statut (le serveur l'ignore aussi).
+  const raisonPossible = effet !== "NON_JOINT" && effet !== "NUMERO_INVALIDE" && effet !== "INTERESSE";
 
   const enregistrer = () =>
     appel.mutate(
@@ -38,7 +40,7 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
         id: contactId,
         dto: {
           call_status_id: statutId,
-          loss_reason_id: clientJoint ? raisonId || undefined : undefined,
+          loss_reason_id: raisonPossible ? raisonId || undefined : undefined,
           comment: commentaire.trim() || undefined,
           callback_at: effet === "A_RAPPELER" && rappel ? new Date(rappel).toISOString() : undefined,
         },
@@ -81,7 +83,7 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
         </label>
         {effet && <p className="text-xs text-gray-500 -mt-1">{EFFET_META[effet].aide}</p>}
 
-        {clientJoint && (
+        {raisonPossible && (
           <div>
             <ChampSelect
               label="Raison de non-commande"
@@ -96,7 +98,9 @@ export function PanneauAppel({ contactId, onEnregistre }: { contactId: string; o
                 ? "Aucune raison n'est configurée : la direction peut en ajouter dans Réglages."
                 : raisonRequise
                   ? "Pourquoi le client ne commande pas : elle alimente le tableau des raisons."
-                  : "Obligatoire si le client n'est pas intéressé, facultative sinon."}
+                  : effet === "A_RAPPELER"
+                    ? "Facultative : ce qui retient le client, s'il l'a dit."
+                    : "Obligatoire si le client n'est pas intéressé, facultative s'il faut le rappeler."}
             </p>
           </div>
         )}
