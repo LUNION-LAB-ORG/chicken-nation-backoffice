@@ -198,7 +198,7 @@ const cleOnglet = (id: string) => (id.includes("-") ? id.split("-").slice(1).joi
 const possede = (table: object, cle: string) => Object.prototype.hasOwnProperty.call(table, cle);
 
 export default function DynamicModuleLoader() {
-  const { activeTab, pendingConversationId, setActiveTab } = useDashboardStore();
+  const { activeTab, pendingConversationId, pendingMessageId, setActiveTab } = useDashboardStore();
   const can = useAuthStore((s) => s.can);
   // Droits connus : sans eux, tout serait refusé et l'onglet mémorisé serait
   // écrasé à tort (avant la lecture du cookie, ou juste avant la redirection
@@ -261,10 +261,16 @@ export default function DynamicModuleLoader() {
     );
   }
 
-  // Inbox : on transmet la conversation en attente (deep-link, notification).
+  // Inbox : on transmet la conversation en attente (deep-link, notification),
+  // et le message à atteindre quand la notification en désigne un.
   if (cle === "inbox") {
     const InboxComp = modulesMap["inbox"];
-    return <InboxComp initialConversationId={pendingConversationId} />;
+    return (
+      <InboxComp
+        initialConversationId={pendingConversationId}
+        initialMessageId={pendingMessageId}
+      />
+    );
   }
 
   const Component = modulesMap[cle];

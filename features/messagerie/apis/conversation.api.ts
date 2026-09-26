@@ -1,5 +1,23 @@
 import { apiRequest } from '../../../src/services/api';
-import type { IConversation, IMessage, IStatsMessages, ICreerConversationDTO } from '../types/conversation.type';
+import type {
+  IConversation,
+  IMessage,
+  IStatsMessages,
+  ICreerConversationDTO,
+  IPositionMessage,
+} from '../types/conversation.type';
+
+/** Ce qu'on envoie avec un message : texte, pièces jointes, réponse, mentions. */
+export interface OptionsEnvoiMessage {
+  body: string;
+  image?: File;
+  audio?: File;
+  audioDurationMs?: number;
+  /** Message auquel on répond (même conversation, vérifié par le serveur). */
+  replyToId?: string;
+  /** Collègues mentionnés. Le serveur ne retient que ceux dont « @Nom » figure dans le texte. */
+  mentionUserIds?: string[];
+}
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -30,14 +48,13 @@ export const conversationAPI = {
    * enregistrement en flux continu n'est pas toujours lisible dans le fichier
    * produit : certains navigateurs annoncent une durée infinie tant que le
    * fichier n'a pas été parcouru en entier.
+   *
+   * `replyToId` et `mentionUserIds` DOIVENT être déclarés côté serveur : le
+   * filtre de validation y supprime en silence tout champ inconnu.
    */
-  envoyerMessage: (
-    conversationId: string,
-    body: string,
-    image?: File,
-    audio?: File,
-    audioDurationMs?: number,
-  ): Promise<IMessage> => {
+  envoyerMessage: (conversationId: string, options: OptionsEnvoiMessage): Promise<IMessage> => {
+    const { body, image, audio, audioDurationMs, replyToId } = options;
+    const mentionUserIds = options.mentionUserIds?.filter(Boolean) ?? [];
     if (image || audio) {
       const formData = new FormData();
       formData.append('body', body);
@@ -46,10 +63,44 @@ export const conversationAPI = {
         formData.append('audio', audio);
         if (audioDurationMs) formData.append('audioDurationMs', String(Math.round(audioDurationMs)));
       }
+      // Champs facultatifs ajoutés SEULEMENT s'ils sont renseignés : une chaîne
+      // vide serait lue comme un identifiant invalide.
+      if (replyToId) formData.append('replyToId', replyToId);
+      // Un champ par identifiant : le serveur reconstitue la liste.
+      for (const id of mentionUserIds) formData.append('mentionUserIds', id);
       return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', formData);
     }
-    return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', { body });
+    return apiRequest<IMessage>(`${BASE}/${conversationId}/messages`, 'POST', {
+      body,
+      ...(replyToId ? { replyToId } : {}),
+      ...(mentionUserIds.length > 0 ? { mentionUserIds } : {}),
+    });
   },
+
+  /**
+   * Une conversation seule, avec ses participants. Sert de repli quand elle
+   * n'est pas dans les pages déjà chargées de la liste (lien profond, cloche).
+   * Le serveur répond vide si elle n'existe pas ou n'est pas accessible.
+   */
+  obtenirConversation: async (conversationId: string): Promise<IConversation | null> => {
+    // Identifiant encodé : il peut venir d'un lien (cloche, courriel), et ne
+    // doit pas pouvoir détourner le chemin de la requête.
+    const conversation = await apiRequest<IConversation | null>(
+      `${BASE}/${encodeURIComponent(conversationId)}`,
+      'GET',
+    );
+    return conversation && typeof conversation === 'object' && 'id' in conversation ? conversation : null;
+  },
+
+  /**
+   * Page du fil (1 = la plus récente) qui contient un message donné, pour
+   * aller jusqu'à un message cité qui n'est pas encore chargé.
+   */
+  positionMessage: (conversationId: string, messageId: string, limit: number): Promise<IPositionMessage> =>
+    apiRequest<IPositionMessage>(
+      `${BASE}/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}/position?limit=${limit}`,
+      'GET',
+    ),
 
   marquerLu: (conversationId: string): Promise<void> =>
     apiRequest(`${BASE}/${conversationId}/messages/read`, 'POST'),

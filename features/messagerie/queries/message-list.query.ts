@@ -2,7 +2,13 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { conversationAPI } from '../apis/conversation.api';
 import { messageKeyQuery } from './index.query';
 
-const PAGE_SIZE = 100;
+/**
+ * Taille d'une page du fil. Partagée avec la recherche d'un message cité : la
+ * route de position calcule la page pour CETTE taille, les deux doivent donc
+ * rester identiques.
+ */
+export const TAILLE_PAGE_MESSAGES = 100;
+const PAGE_SIZE = TAILLE_PAGE_MESSAGES;
 
 export const useMessageListQuery = (conversationId: string | null, enabled = true) => {
   return useInfiniteQuery({

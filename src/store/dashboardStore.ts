@@ -49,6 +49,9 @@ export interface DashboardState {
   // Conversation à ouvrir dans l'inbox (deep-link email / clic notification/toast).
   // Transient : non persisté, consommé par l'InboxModule puis remis à null.
   pendingConversationId: string | null;
+  // Message précis de cette conversation à atteindre (mention, réponse) : le
+  // fil défile jusqu'à lui et le surligne. Même mécanique, transient aussi.
+  pendingMessageId: string | null;
   // Ticket à ouvrir (escalade, notification, lien partagé). Même mécanique.
   pendingTicketId: string | null;
   // Public du CRM à afficher à l'ouverture (bouton « Rappeler » des statistiques).
@@ -110,8 +113,9 @@ export interface DashboardState {
   clearPendingCrm: () => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
-  openInboxConversation: (conversationId: string) => void;
+  openInboxConversation: (conversationId: string, messageId?: string | null) => void;
   clearPendingConversation: () => void;
+  clearPendingMessage: () => void;
   setSelectedRestaurantId: (id: string | null) => void;
   setSelectedPeriod: (period: PeriodFilter) => void;
   setSectionView: (section: TabKey, view: ViewType) => void;
@@ -157,6 +161,7 @@ export const useDashboardStore = create<DashboardState>()(
       // État Initial
       activeTab: null,
       pendingConversationId: null,
+      pendingMessageId: null,
       pendingCrmSegment: null,
       pendingTicketId: null,
       lastConversationId: null,
@@ -208,13 +213,20 @@ export const useDashboardStore = create<DashboardState>()(
       setActiveTab: (tab) => set((state) => {
         state.activeTab = tab
       }),
-      // Ouvre l'inbox sur une conversation précise (deep-link, clic notification/toast).
-      openInboxConversation: (conversationId) => set((state) => {
+      // Ouvre l'inbox sur une conversation précise (deep-link, clic notification/toast),
+      // et, si on le donne, sur un message précis de cette conversation.
+      // Sans message, la cible précédente est oubliée : elle appartenait à un
+      // autre clic.
+      openInboxConversation: (conversationId, messageId) => set((state) => {
         state.activeTab = 'inbox';
         state.pendingConversationId = conversationId;
+        state.pendingMessageId = messageId ?? null;
       }),
       clearPendingConversation: () => set((state) => {
         state.pendingConversationId = null;
+      }),
+      clearPendingMessage: () => set((state) => {
+        state.pendingMessageId = null;
       }),
       // Ouvre le module Tickets sur un ticket précis (escalade, notification).
       openTicket: (ticketId) => set((state) => {

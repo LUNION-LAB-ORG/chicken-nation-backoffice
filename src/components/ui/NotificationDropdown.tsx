@@ -111,6 +111,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       data?: {
         kind?: string;
         conversationId?: string;
+        messageId?: string;
         reference?: string;
         order_id?: string;
         search?: string;
@@ -118,9 +119,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
       };
     }).data;
 
-    // Nouveau message → conversation de l'inbox
+    // Nouveau message → conversation de l'inbox. Mention ou réponse : on va
+    // jusqu'au message lui-même, qui est surligné à l'arrivée.
     if (data?.conversationId) {
-      openInboxConversation(data.conversationId);
+      openInboxConversation(
+        data.conversationId,
+        typeof data.messageId === "string" ? data.messageId : null
+      );
       return;
     }
 

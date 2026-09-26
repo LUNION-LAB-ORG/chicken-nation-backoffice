@@ -1,8 +1,9 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { conversationKeyQuery, messageKeyQuery, statsMessagesKeyQuery, ticketKeyQuery } from '../queries/index.query';
 import { useAuthStore } from '../../users/hook/authStore';
 import { acquireSocket, releaseSocket, shouldPlayOnce } from './sharedSocket';
+import { citationSupprimee } from '../utils/citation-locale';
 
 interface UseMessagerieSocketSyncProps {
   conversationId?: string | null;
@@ -27,6 +28,22 @@ export const useMessagerieSocketSync = ({
 }: UseMessagerieSocketSyncProps = {}) => {
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
+
+  /**
+   * ⚠️ La conversation ouverte et le rappel passent par des REFS.
+   *
+   * Les écouteurs sont posés une fois pour toutes (l'effet ne dépend pas de la
+   * conversation, pour ne pas décrocher et raccrocher le socket à chaque
+   * clic). Lus directement, `conversationId` et `onRetireDuGroupe` restaient
+   * figés sur la PREMIÈRE conversation ouverte : être retiré du groupe affiché
+   * ne fermait pas l'écran dès qu'on avait changé de conversation une fois.
+   */
+  const conversationOuverteRef = useRef(conversationId);
+  const onRetireDuGroupeRef = useRef(onRetireDuGroupe);
+  useEffect(() => {
+    conversationOuverteRef.current = conversationId;
+    onRetireDuGroupeRef.current = onRetireDuGroupe;
+  });
 
   const invalidateConversations = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: conversationKeyQuery() });
@@ -97,8 +114,8 @@ export const useMessagerieSocketSync = ({
      */
     const onRetire = (data: any) => {
       invalidateConversations();
-      if (data?.conversationId && data.conversationId === conversationId) {
-        onRetireDuGroupe?.();
+      if (data?.conversationId && data.conversationId === conversationOuverteRef.current) {
+        onRetireDuGroupeRef.current?.();
       }
     };
 
@@ -147,6 +164,10 @@ export const useMessagerieSocketSync = ({
      * Le serveur envoie le message déjà nettoyé : on le remplace tel quel, sans
      * décider soi-même de ce qu'il faut masquer. L'aperçu de la liste montrant
      * le dernier message, il est invalidé aussi.
+     *
+     * Les RÉPONSES qui le citaient sont retouchées dans la foulée : sans cela,
+     * l'extrait du message retiré resterait lisible dans leurs citations
+     * jusqu'au prochain rechargement.
      */
     const onSupprime = (data: any) => {
       const convId = data?.conversationId;
@@ -155,7 +176,14 @@ export const useMessagerieSocketSync = ({
       retoucherReactions(messageKeyQuery(convId), msg.id, msg.reactions ?? []);
       queryClient.setQueryData(messageKeyQuery(convId), (ancien: any) => {
         if (!ancien || typeof ancien !== 'object') return ancien;
-        const maj = (liste?: any[]) => liste?.map((m) => (m?.id === msg.id ? { ...m, ...msg } : m));
+        const maj = (liste?: any[]) =>
+          liste?.map((m) => {
+            if (m?.id === msg.id) return { ...m, ...msg };
+            if (m?.replyTo?.id === msg.id && !m.replyTo.deleted) {
+              return { ...m, replyTo: citationSupprimee(m.replyTo) };
+            }
+            return m;
+          });
         if (Array.isArray(ancien.pages)) {
           return { ...ancien, pages: ancien.pages.map((p: any) => ({ ...p, data: maj(p?.data) })) };
         }

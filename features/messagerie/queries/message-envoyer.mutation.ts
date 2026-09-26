@@ -1,7 +1,25 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { conversationAPI } from '../apis/conversation.api';
 import { conversationKeyQuery, messageKeyQuery, statsMessagesKeyQuery } from './index.query';
-import type { IMessage } from '../types/conversation.type';
+import type { ICitationMessage, IMentionMessage, IMessage } from '../types/conversation.type';
+
+interface VariablesEnvoi {
+  conversationId: string;
+  body: string;
+  image?: File;
+  previewUrl?: string;
+  audio?: File;
+  audioDurationMs?: number;
+  audioPreviewUrl?: string;
+  /** Message auquel on répond. */
+  replyToId?: string;
+  /** Citation construite localement, affichée sur le message optimiste. */
+  replyTo?: ICitationMessage | null;
+  /** Collègues mentionnés, dont le « @Nom » figure dans le texte. */
+  mentionUserIds?: string[];
+  /** Mêmes mentions avec leur libellé, pour surligner le message optimiste. */
+  mentions?: IMentionMessage[];
+}
 
 export const useEnvoyerMessageMutation = () => {
   const queryClient = useQueryClient();
@@ -13,22 +31,32 @@ export const useEnvoyerMessageMutation = () => {
       image,
       audio,
       audioDurationMs,
-    }: {
-      conversationId: string;
-      body: string;
-      image?: File;
-      previewUrl?: string;
-      audio?: File;
-      audioDurationMs?: number;
-      audioPreviewUrl?: string;
-    }) => conversationAPI.envoyerMessage(conversationId, body, image, audio, audioDurationMs),
+      replyToId,
+      mentionUserIds,
+    }: VariablesEnvoi) =>
+      conversationAPI.envoyerMessage(conversationId, {
+        body,
+        image,
+        audio,
+        audioDurationMs,
+        replyToId,
+        mentionUserIds,
+      }),
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: messageKeyQuery(variables.conversationId) });
       const previous = queryClient.getQueryData(messageKeyQuery(variables.conversationId));
 
+      /**
+       * Identifiant PROPRE à cet envoi. C'est lui, et non le texte, qui permet
+       * de retrouver le message optimiste quand le serveur répond : deux « OK »
+       * envoyés coup sur coup en réponse à deux messages différents se
+       * confondaient quand on comparait les corps.
+       */
+      const tempId = `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
       const optimistic: Partial<IMessage> = {
-        id: `temp-${Date.now()}`,
+        id: tempId,
         body: variables.body,
         createdAt: new Date().toISOString(),
         /**
@@ -54,6 +82,10 @@ export const useEnvoyerMessageMutation = () => {
                   : {}),
               }
             : undefined,
+        // Citation et mentions posées tout de suite : sans elles, la bulle
+        // apparaîtrait nue puis se compléterait au retour du serveur.
+        replyTo: variables.replyTo ?? null,
+        mentions: variables.mentions ?? [],
         authorUser: { id: 'current-user', name: 'Moi', email: '' },
       };
 
@@ -72,23 +104,43 @@ export const useEnvoyerMessageMutation = () => {
         return old;
       });
 
-      return { previous };
+      return { previous, tempId };
     },
 
+    /**
+     * Échec : on retire le SEUL message optimiste, par son identifiant.
+     *
+     * Remettre la photo du cache prise avant l'envoi effaçait aussi tout ce qui
+     * était arrivé entre-temps : pages plus anciennes chargées pour atteindre
+     * un message cité, message retiré en direct, réactions.
+     */
     onError: (_err, variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(messageKeyQuery(variables.conversationId), context.previous);
+      const tempId = context?.tempId;
+      if (!tempId) {
+        if (context?.previous) {
+          queryClient.setQueryData(messageKeyQuery(variables.conversationId), context.previous);
+        }
+        return;
       }
+      queryClient.setQueryData(messageKeyQuery(variables.conversationId), (old: any) => {
+        if (!old?.pages) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            data: page.data?.filter((msg: any) => msg?.id !== tempId) || [],
+          })),
+        };
+      });
     },
 
-    onSuccess: (newMessage, variables) => {
+    onSuccess: (newMessage, variables, context) => {
+      const tempId = context?.tempId;
       queryClient.setQueryData(messageKeyQuery(variables.conversationId), (old: any) => {
         if (old?.pages) {
           const pages = old.pages.map((page: any) => ({
             ...page,
-            data: page.data?.map((msg: any) =>
-              msg.id?.toString?.().startsWith('temp-') && msg.body === variables.body ? newMessage : msg
-            ) || [],
+            data: page.data?.map((msg: any) => (tempId && msg.id === tempId ? newMessage : msg)) || [],
           }));
           return { ...old, pages };
         }

@@ -53,3 +53,37 @@ export type { UnreadCounts } from './hooks/useUnreadCounts';
 // Notes vocales
 export { useEnregistrementVocal, formaterDuree } from './hooks/use-enregistrement-vocal';
 export { default as LecteurVocal } from './components/LecteurVocal';
+
+// Date et heure, réponse à un message, mentions
+export {
+  heureMessage,
+  cleJour,
+  libelleJour,
+  libelleVu,
+  horodatageBulle,
+  dateHeureComplete,
+  dateHeureCourte,
+  dansLaFenetreDeRegroupement,
+  msAvantProchainJour,
+  FUSEAU_MESSAGERIE,
+} from './utils/dates-message';
+export {
+  citationDepuisMessage,
+  nomAuteurCitation,
+  libelleEnReponseA,
+  texteCitation,
+} from './utils/citation-locale';
+export { decouperMentions, mentionsPresentes, prenom } from './utils/mentions-texte';
+export { useConversationDetailQuery } from './queries/conversation-detail.query';
+export { TAILLE_PAGE_MESSAGES } from './queries/message-list.query';
+export { useAllerAuMessage } from './hooks/use-aller-au-message';
+export { useMentionsComposeur, estMentionnable } from './hooks/use-mentions-composeur';
+export type { OptionMention } from './hooks/use-mentions-composeur';
+export type { OptionsEnvoiMessage } from './apis/conversation.api';
+export { default as HeureMessage, ReserveHeure } from './components/HeureMessage';
+export type { VarianteBulle } from './components/HeureMessage';
+export { default as BarreActionsMessage } from './components/BarreActionsMessage';
+export { default as ApercuReponse } from './components/ApercuReponse';
+export { default as CitationMessage } from './components/CitationMessage';
+export { default as ListeMentions } from './components/ListeMentions';
+export { default as TexteAvecMentions } from './components/TexteAvecMentions';

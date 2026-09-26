@@ -22,7 +22,8 @@ export interface CollegueOption {
   image?: string;
 }
 
-const LIBELLE_ROLE: Record<string, string> = {
+/** Rôle lisible, repris en sous-titre dans la liste des mentions. */
+export const LIBELLE_ROLE: Record<string, string> = {
   ADMIN: 'Administrateur',
   MARKETING: 'Agent Marketing',
   COMPTABLE: 'Agent Comptable',

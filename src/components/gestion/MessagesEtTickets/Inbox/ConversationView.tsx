@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2, Mic, Check, CheckCheck, MoreVertical, Info } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, AlertTriangle, ImagePlus, X, Loader2, Mic, Check, CheckCheck, MoreVertical, Info, AtSign } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import InboxRightbar from './InboxRightbar';
 import MobileRightSidebar from './MobileRightSidebar';
@@ -21,17 +21,52 @@ import {
   SupprimerMessage,
   useBasculerReactionMessageMutation,
   useSupprimerMessageMutation,
+  useConversationDetailQuery,
+  useAllerAuMessage,
+  useMentionsComposeur,
+  estMentionnable,
+  citationDepuisMessage,
+  cleJour,
+  libelleJour,
+  libelleVu,
+  dansLaFenetreDeRegroupement,
+  msAvantProchainJour,
+  prenom,
+  HeureMessage,
+  ReserveHeure,
+  BarreActionsMessage,
+  ApercuReponse,
+  CitationMessage,
+  ListeMentions,
+  TexteAvecMentions,
 } from '../../../../../features/messagerie';
-import type { IMessage } from '../../../../../features/messagerie';
-import { format, isToday, isYesterday } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import type {
+  IMessage,
+  ICitationMessage,
+  IConversation,
+  IParticipantConversation,
+  VarianteBulle,
+} from '../../../../../features/messagerie';
 import { formatImageUrl } from '@/utils/imageHelpers';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 
 interface ConversationViewProps {
   conversationId: string | null;
   onBack?: () => void;
+  /**
+   * Message à atteindre dès l'ouverture (clic sur une notification de mention
+   * ou de réponse). Le fil y défile et le surligne au lieu d'aller en bas.
+   */
+  messageCibleId?: string | null;
+  /** Appelé une fois la tentative faite, réussie ou non : la cible est consommée. */
+  onMessageCibleTraite?: () => void;
 }
+
+/** Liste vide partagée : un nouveau tableau à chaque rendu relancerait les calculs. */
+const AUCUN_PARTICIPANT: IParticipantConversation[] = [];
+
+/** Distance au bas du fil sous laquelle un nouveau message y ramène. */
+const SEUIL_BAS_DU_FIL_PX = 150;
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 Mo
 
@@ -58,27 +93,7 @@ const getMessageAudio = (msg: IMessage): string | null => {
 
 const MAX_AUDIO_SIZE = 16 * 1024 * 1024; // 16 Mo, aligné sur la limite du serveur
 
-/** Libellé du séparateur de jour (Aujourd'hui / Hier / date complète). */
-const dayLabel = (dateStr: string): string => {
-  try {
-    const date = new Date(dateStr);
-    if (isToday(date)) return "Aujourd'hui";
-    if (isYesterday(date)) return 'Hier';
-    return format(date, 'EEEE d MMMM yyyy', { locale: fr });
-  } catch {
-    return '';
-  }
-};
-
-const dayKey = (dateStr: string): string => {
-  try {
-    return new Date(dateStr).toDateString();
-  } catch {
-    return '';
-  }
-};
-
-function ConversationView({ conversationId, onBack }: ConversationViewProps) {
+function ConversationView({ conversationId, onBack, messageCibleId = null, onMessageCibleTraite }: ConversationViewProps) {
   /** Sert à reconnaître SES messages parmi ceux des collègues dans un groupe. */
   const utilisateurConnecteId = useAuthStore((etat) => etat.user?.id);
   /** Un administrateur peut retirer le message d'un collègue parti en tournée. */
@@ -108,9 +123,35 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   const [infosOuvertes, setInfosOuvertes] = useState(false);
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
+  /**
+   * Message auquel on répond, résumé comme le serveur le résumera. Il suffit
+   * à l'aperçu au-dessus du champ et à la citation du message optimiste.
+   */
+  const [reponseA, setReponseA] = useState<ICitationMessage | null>(null);
+  /**
+   * « Maintenant », pour écrire « Aujourd'hui » ou « Hier » dans les bulles.
+   * Rafraîchi à minuit (heure d'Abidjan) plutôt que chaque minute : le fil
+   * entier n'a besoin d'être redessiné qu'une fois par jour.
+   */
+  const [maintenant, setMaintenant] = useState(() => new Date());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const refChamp = useRef<HTMLTextAreaElement | null>(null);
+  /** Vrai tant que l'utilisateur lit le bas du fil : un nouveau message l'y garde. */
+  const presDuBasRef = useRef(true);
+  /** Dernier message déjà vu, pour ne défiler qu'à l'arrivée d'un NOUVEAU dernier. */
+  const dernierIdRef = useRef<string | null>(null);
+  /** Conversation affichée, lue après un envoi asynchrone. */
+  const conversationCouranteRef = useRef(conversationId);
+  useEffect(() => {
+    conversationCouranteRef.current = conversationId;
+  }, [conversationId]);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const minuterie = setTimeout(() => setMaintenant(new Date()), msAvantProchainJour(maintenant));
+    return () => clearTimeout(minuterie);
+  }, [maintenant]);
 
   // 🔌 React Query hooks
   const {
@@ -118,24 +159,67 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     isLoading: isLoadingMessages,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage
+    isFetchingNextPage,
+    refetch: relireMessages,
   } = useMessageListQuery(conversationId);
 
   const sendMessageMutation = useEnvoyerMessageMutation();
   const marquerLuMutation = useMarquerLuMutation();
 
-  // Flatten pages and sort chronologically (older -> newer)
+  /**
+   * Toutes les pages chargées, du plus ancien au plus récent, SANS DOUBLON.
+   *
+   * La pagination se fait par décalage : un message arrivé pendant qu'on
+   * charge des pages plus anciennes décale tout d'un cran, et le dernier
+   * message d'une page réapparaît en tête de la suivante. Plus on charge de
+   * pages (remonter l'historique, aller à un message cité), plus c'est
+   * fréquent. Deux lignes de même clé troublent le rendu de React et la
+   * recherche du message par son identifiant. On garde la première copie,
+   * celle de la page la plus récente.
+   */
   const conversationMessages = useMemo(() => {
     const pages = (messagesPagesData?.pages || []) as any[];
-    const all = pages.flatMap((p) => p.data || []) as IMessage[];
-    return all.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    const vus = new Set<string>();
+    const all: IMessage[] = [];
+    for (const m of pages.flatMap((p) => p?.data || []) as IMessage[]) {
+      if (!m?.id || vus.has(m.id)) continue;
+      vus.add(m.id);
+      all.push(m);
+    }
+    // Même ordre que le serveur à heure égale (identifiant en départage).
+    return all.sort(
+      (a, b) =>
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
   }, [messagesPagesData]);
+
+  /**
+   * Le fil découpé PAR JOUR (heure d'Abidjan). Chaque jour a sa section, et son
+   * séparateur ne colle en haut que tant qu'on lit ce jour-là : le suivant le
+   * pousse au lieu de se poser par-dessus. Sans ce découpage, une étiquette
+   * plus large (« Jeudi 24 septembre 2026 ») dépassait derrière une plus
+   * courte (« Hier »).
+   */
+  const joursDuFil = useMemo(() => {
+    const jours: { cle: string; premier: string; indices: number[] }[] = [];
+    conversationMessages.forEach((m, index) => {
+      const cle = cleJour(m.createdAt);
+      const dernier = jours[jours.length - 1];
+      if (!dernier || dernier.cle !== cle) {
+        jours.push({ cle: cle || `jour-${index}`, premier: m.createdAt, indices: [index] });
+      } else {
+        dernier.indices.push(index);
+      }
+    });
+    return jours;
+  }, [conversationMessages]);
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isInitialLoadRef = useRef(true);
 
   /**
-   * La conversation ouverte, prise dans la liste — EN S'Y ABONNANT.
+   * La conversation ouverte, prise dans la liste, EN S'Y ABONNANT.
    *
    * Deux défauts se cumulaient ici. La clé lue était ['conversation','list'],
    * que plus personne ne remplit depuis le passage à la liste infinie : cet
@@ -150,12 +234,33 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
    */
   const { data: listeConversations } = useConversationListInfiniteQuery();
 
-  const currentConversation = useMemo(() => {
+  const conversationDeLaListe = useMemo(() => {
     if (!conversationId) return null;
     const pages = (listeConversations as { pages?: Array<{ data?: any[] }> } | undefined)?.pages ?? [];
     const toutes = pages.flatMap((page) => page?.data ?? []);
     return toutes.find((c: any) => c?.id === conversationId) ?? null;
   }, [conversationId, listeConversations]);
+
+  /**
+   * Repli quand la conversation n'est pas dans les pages déjà chargées de la
+   * liste (lien profond, vieux groupe) : on la lit seule. Sans ce repli,
+   * l'en-tête restait sur « Conversation non trouvée » et personne ne pouvait
+   * être mentionné.
+   */
+  const { data: conversationSeule } = useConversationDetailQuery(
+    conversationId,
+    !!conversationId && !conversationDeLaListe,
+  );
+
+  const currentConversation: IConversation | null =
+    conversationDeLaListe ??
+    (conversationSeule && conversationSeule.id === conversationId ? conversationSeule : null);
+
+  /** Participants de la conversation : source des mentions. */
+  const participants = useMemo(
+    () => (currentConversation?.users?.length ? currentConversation.users : AUCUN_PARTICIPANT),
+    [currentConversation],
+  );
 
   /**
    * Groupe interne : aucun client et plus de deux participants. Le serveur
@@ -228,6 +333,67 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     },
   });
 
+  /**
+   * ALLER À UN MESSAGE : clic sur une citation, lien de la cloche. Suspend le
+   * défilement automatique vers le bas pendant qu'il cherche.
+   */
+  const {
+    allerAuMessage,
+    messageSurligne,
+    rechercheEnCours,
+    rechercheEnCoursRef,
+    annonce,
+  } = useAllerAuMessage({
+    conversationId,
+    conteneurRef: scrollContainerRef,
+    nombrePages: messagesPagesData?.pages?.length ?? 0,
+    hasNextPage: !!hasNextPage,
+    fetchNextPage,
+    rafraichir: relireMessages,
+  });
+
+  /**
+   * MENTIONS, entre collègues seulement : face à un client, « @Nom » partirait
+   * chez lui, et le serveur refuse de toute façon. Le client est reconnu à sa
+   * fiche OU à son identifiant : une conversation dont la fiche client n'a pas
+   * été servie reste une conversation client.
+   */
+  const mentionsActives =
+    getConversationInfo.isInternal &&
+    !!currentConversation &&
+    !currentConversation.customerId;
+  const mentions = useMentionsComposeur({
+    actif: mentionsActives,
+    participants,
+    moiId: utilisateurConnecteId,
+    texte: message,
+    setTexte: setMessage,
+    refChamp,
+  });
+
+  /**
+   * Qui sera prévenu à l'envoi : les personnes mentionnées dont le nom est
+   * encore écrit, et, en interne, l'auteur du message auquel on répond (s'il
+   * peut l'être, et si ce n'est pas soi). Un champ de saisie ne sait pas
+   * surligner : cette ligne rend visible ce que la cloche fera.
+   */
+  const prevenus = useMemo(() => {
+    if (!mentionsActives) return [] as string[];
+    const noms: string[] = [];
+    const vus = new Set<string>();
+    for (const m of mentions.mentionsAEnvoyer(message)) {
+      if (vus.has(m.userId)) continue;
+      vus.add(m.userId);
+      noms.push(m.label);
+    }
+    const auteur = reponseA?.author;
+    if (auteur?.kind === 'user' && auteur.id && auteur.id !== utilisateurConnecteId && !vus.has(auteur.id)) {
+      const participant = participants.find((p) => p.id === auteur.id);
+      if (participant && estMentionnable(participant)) noms.push(participant.fullName);
+    }
+    return noms;
+  }, [mentionsActives, mentions, message, reponseA, utilisateurConnecteId, participants]);
+
   // Marquer comme lu via l'API serveur quand la conversation change
   useEffect(() => {
     if (conversationId) {
@@ -257,6 +423,15 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     setPendingPreview(null);
     setPendingAudio(null);
     vocal.annuler();
+    // La réponse et les mentions en cours appartiennent à l'ancienne
+    // conversation : les garder ferait citer un message d'ailleurs.
+    setReponseA(null);
+    mentions.reinitialiser();
+    // Nouvelle conversation : premier affichage en bas du fil.
+    isInitialLoadRef.current = true;
+    presDuBasRef.current = true;
+    dernierIdRef.current = null;
+    setMaintenant(new Date());
     /**
      * ⚠️ On ne révoque volontairement PAS les aperçus locaux ici.
      *
@@ -278,7 +453,10 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
   // Charger plus d'anciens messages quand on scroll vers le haut
   const handleScroll = useCallback(async () => {
     const el = scrollContainerRef.current;
-    if (!el || !hasNextPage || isFetchingNextPage) return;
+    if (!el) return;
+    presDuBasRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < SEUIL_BAS_DU_FIL_PX;
+    // La recherche d'un message cité charge elle-même ses pages.
+    if (!hasNextPage || isFetchingNextPage || rechercheEnCoursRef.current) return;
     // si on est proche du top (ex: scrollTop < 100px)
     if (el.scrollTop < 120) {
       // Préserver la position actuelle
@@ -294,30 +472,95 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
         }
       });
     }
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, rechercheEnCoursRef]);
 
-  // Scroll au changement de conversation (instant)
+  /**
+   * DÉFILEMENT VERS LE BAS, déclenché par le DERNIER message et lui seul.
+   *
+   * L'ancienne version réagissait au nombre de messages : charger des
+   * messages plus anciens en remontant ramenait aussitôt tout en bas, ce qui
+   * rendait l'historique illisible et aurait annulé tout saut vers un message
+   * cité.
+   *
+   * - Premier affichage d'une conversation : en bas, d'un coup (ou sur le
+   *   message demandé par la cloche, voir plus bas).
+   * - Nouveau dernier message : on descend si on lisait déjà le bas du fil,
+   *   ou si c'est le sien. Quelqu'un qui relit plus haut n'est pas dérangé.
+   * - Pendant la recherche d'un message cité : on ne bouge pas.
+   */
+  const dernierMessage = conversationMessages[conversationMessages.length - 1];
+  const dernierId = dernierMessage?.id ?? null;
+  const dernierEstMoi =
+    !!dernierMessage?.authorUser &&
+    (dernierMessage.authorUser.id === utilisateurConnecteId || dernierMessage.authorUser.id === 'current-user');
+
   useEffect(() => {
-    if (conversationId && conversationMessages.length > 0) {
-      // Sur la première ouverture de conversation on scroll en bas
-      if (isInitialLoadRef.current) {
+    if (!conversationId || !dernierId) return;
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      dernierIdRef.current = dernierId;
+      presDuBasRef.current = true;
+      if (!messageCibleId) scrollToBottom('instant');
+      return;
+    }
+    if (dernierIdRef.current === dernierId) return;
+    dernierIdRef.current = dernierId;
+    if (rechercheEnCoursRef.current) return;
+    if (presDuBasRef.current || dernierEstMoi) {
+      const minuterie = setTimeout(() => scrollToBottom('smooth'), 60);
+      return () => clearTimeout(minuterie);
+    }
+    // `messageCibleId` et `dernierEstMoi` sont lus au moment où le dernier
+    // message change : ils ne doivent pas relancer le défilement à eux seuls.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId, dernierId]);
+
+  /**
+   * LIEN PROFOND jusqu'à un message (clic sur une notification de mention ou
+   * de réponse) : une fois les messages chargés, on y va, puis la cible est
+   * rendue. Si le message reste introuvable, on retombe en bas du fil.
+   */
+  const cibleTraiteeRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!messageCibleId) {
+      cibleTraiteeRef.current = null;
+      return;
+    }
+    if (!conversationId || isLoadingMessages) return;
+    const cle = `${conversationId}:${messageCibleId}`;
+    if (cibleTraiteeRef.current === cle) return;
+    cibleTraiteeRef.current = cle;
+    const lancer = async () => {
+      // Une image pour laisser le fil se dessiner avant de chercher le message.
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      const atteint = await allerAuMessage(messageCibleId, 'lien');
+      // Introuvable : retour en bas du fil, sauf si une autre recherche (clic
+      // sur une citation) est en cours, qu'on ne vient pas contrarier.
+      if (
+        !atteint &&
+        !rechercheEnCoursRef.current &&
+        conversationCouranteRef.current === conversationId
+      ) {
         scrollToBottom('instant');
-        isInitialLoadRef.current = false;
       }
-    }
-  }, [conversationId, conversationMessages.length]);
+      onMessageCibleTraite?.();
+    };
+    void lancer();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messageCibleId, conversationId, isLoadingMessages]);
 
-  // Scroll quand de nouveaux messages arrivent (smooth)
+  /**
+   * Le message auquel on répond vient d'être RETIRÉ (par son auteur, ou par
+   * un administrateur) : l'aperçu ne doit plus montrer son contenu, et le
+   * serveur refuserait de toute façon la réponse. On l'annule et on le dit.
+   */
+  const citeRetire =
+    !!reponseA && conversationMessages.some((m) => m.id === reponseA.id && !!m.deleted);
   useEffect(() => {
-    if (conversationMessages.length > 0) {
-      const timer = setTimeout(() => {
-        // Quand de nouveaux messages arrivent (non paginés), scroll en bas
-        if (!isFetchingNextPage) scrollToBottom('smooth');
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [conversationMessages.length, isFetchingNextPage]); // On écoute le changement de longueur
+    if (!citeRetire) return;
+    setReponseA(null);
+    toast('Le message auquel vous répondiez a été supprimé');
+  }, [citeRetire]);
 
   // Fermer le lightbox avec Échap
   useEffect(() => {
@@ -373,22 +616,32 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     const image = pendingImage;
     const previewUrl = pendingPreview;
     const audio = pendingAudio;
+    const reponse = reponseA;
+    // Seules les mentions dont « @Nom » est encore écrit partent.
+    const mentionsEnvoyees = mentionsActives ? mentions.mentionsAEnvoyer(body) : [];
+    const conversationEnvoi = conversationId;
 
     // Vider immédiatement (optimiste)
     setMessage('');
     setPendingImage(null);
     setPendingPreview(null);
     setPendingAudio(null);
+    setReponseA(null);
+    mentions.reinitialiser();
 
     try {
       await sendMessageMutation.mutateAsync({
-        conversationId,
+        conversationId: conversationEnvoi,
         body,
         image: image ?? undefined,
         previewUrl: previewUrl ?? undefined,
         audio: audio?.fichier,
         audioDurationMs: audio?.dureeMs,
         audioPreviewUrl: audio?.urlLocale,
+        replyToId: reponse?.id,
+        replyTo: reponse,
+        mentionUserIds: mentionsEnvoyees.map((m) => m.userId),
+        mentions: mentionsEnvoyees,
       });
       // Le message serveur (URL de stockage) remplace l'optimiste, on libère
       // les aperçus locaux.
@@ -396,14 +649,56 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
       if (audio) URL.revokeObjectURL(audio.urlLocale);
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
-      toast.error("Échec de l'envoi du message");
-      // Restaurer en cas d'erreur
+      const statut = (error as { status?: number } | null)?.status;
+      const texteServeur = error instanceof Error ? error.message : '';
+      /**
+       * La CITATION est-elle la cause du refus ? Original disparu (404), ou
+       * refus qui parle du message cité (« Impossible de répondre à un
+       * message supprimé »). Un autre refus (mentions, taille…) ne doit pas
+       * coûter la citation à l'agent.
+       */
+      const citationRefusee =
+        !!reponse &&
+        (statut === 404 || (statut === 400 && /cité|supprimé/i.test(texteServeur)));
+      if (reponse && statut === 404) {
+        // L'original a disparu entre-temps : la réponse ne peut plus partir.
+        toast.error("Message d'origine introuvable");
+      } else if (statut === 400 && texteServeur) {
+        // Refus métier écrit pour l'utilisateur.
+        toast.error(texteServeur);
+      } else {
+        toast.error("Échec de l'envoi du message");
+      }
+      // Restaurer en cas d'erreur, et SEULEMENT dans la conversation d'où le
+      // message est parti : l'agent a pu changer de fil pendant l'envoi.
+      if (conversationCouranteRef.current !== conversationEnvoi) return;
       setMessage(body);
       if (image) {
         setPendingImage(image);
         setPendingPreview(previewUrl);
       }
       if (audio) setPendingAudio(audio);
+      // Une citation refusée n'est pas remise, et une réponse choisie entre-temps
+      // (le bouton « Répondre » reste actif pendant l'envoi) n'est pas écrasée.
+      if (reponse && !citationRefusee) setReponseA((actuelle) => actuelle ?? reponse);
+      mentions.restaurer(mentionsEnvoyees);
+    }
+  };
+
+  // --- Réponse à un message ---
+
+  const repondreA = (msg: IMessage) => {
+    setReponseA(citationDepuisMessage(msg, !getConversationInfo.isInternal));
+    // Le focus revient au champ : on peut écrire aussitôt.
+    requestAnimationFrame(() => refChamp.current?.focus());
+  };
+
+  const copierTexte = async (texte: string) => {
+    try {
+      await navigator.clipboard.writeText(texte);
+      toast.success('Texte copié');
+    } catch {
+      toast.error('Impossible de copier le texte');
     }
   };
 
@@ -449,19 +744,29 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  /**
+   * Clavier du champ, par ordre de priorité :
+   * 1. saisie en cours d'une lettre composée (accents sur certains claviers) :
+   *    on n'intercepte rien ;
+   * 2. liste des mentions ouverte : flèches, Entrée, Tab et Échap servent à
+   *    choisir, et Entrée n'envoie PAS le message ;
+   * 3. Échap annule la réponse en cours ;
+   * 4. Entrée envoie, Maj + Entrée va à la ligne.
+   */
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // `keyCode` 229 : Safari signale encore la touche Entrée qui VALIDE une
+    // composition avec `isComposing` à faux. Sans ce second test, choisir un
+    // caractère dans l'éditeur de saisie enverrait le message.
+    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+    if (mentions.gererTouche(e)) return;
+    if (e.key === 'Escape' && reponseA) {
+      e.preventDefault();
+      setReponseA(null);
+      return;
+    }
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
-    }
-  };
-
-  const formatMessageTime = (timestamp: string) => {
-    try {
-      const date = new Date(timestamp);
-      return format(date, 'HH:mm', { locale: fr });
-    } catch {
-      return 'Aucune';
     }
   };
 
@@ -618,6 +923,24 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
         {/* Messages */}
         <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto bg-[#FAFAFA] md:px-6 md:py-4 px-4 py-3">
+          {/*
+            Recherche d'un message cité plus ancien que ce qui est chargé.
+            Hauteur nulle et collé en haut : il flotte sur le fil sans le
+            décaler, ce qui dérouterait la recherche elle-même.
+          */}
+          {rechercheEnCours && (
+            <div className="sticky top-2 z-20 flex h-0 justify-center overflow-visible pointer-events-none">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium text-gray-600 shadow-sm">
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#F17922]" />
+                Recherche du message…
+              </span>
+            </div>
+          )}
+          {/* Annonces pour les lecteurs d'écran : recherche, puis message atteint. */}
+          <div aria-live="polite" className="sr-only">
+            {annonce}
+          </div>
+
           {/* Loading des messages */}
           {isLoadingMessages && (
             <div className="flex justify-center items-center h-32">
@@ -640,7 +963,20 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                 <p className="text-sm mt-2">Envoyez le premier message pour commencer la discussion</p>
               </div>
             ) : (
-              conversationMessages.map((msg, index) => {
+              joursDuFil.map((jour) => (
+                <div key={jour.cle} className="space-y-1.5">
+                  {/*
+                    Séparateur de jour, COLLANT : il reste en haut du fil tant
+                    qu'on lit les messages de ce jour, puis le jour suivant le
+                    pousse. Il ne capte aucun clic.
+                  */}
+                  <div className="sticky top-2 z-10 flex items-center justify-center py-3 pointer-events-none">
+                    <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[11px] font-medium text-gray-500 shadow-sm">
+                      {libelleJour(jour.premier, maintenant)}
+                    </span>
+                  </div>
+                  {jour.indices.map((index) => {
+                const msg = conversationMessages[index];
                 const prev = conversationMessages[index - 1];
                 /**
                  * IDENTITE de l'auteur : « écrit par le personnel ».
@@ -681,16 +1017,33 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                   (msg.authorUser.id === utilisateurConnecteId ||
                     msg.authorUser.id === 'current-user');
                 const aDroite = getConversationInfo.isInternal ? estMoi : isAgent;
-                const newDay = !prev || dayKey(prev.createdAt) !== dayKey(msg.createdAt);
-                // Regroupement : on n'affiche avatar + nom que quand l'auteur change (ou nouveau jour)
+                // Jour calculé à l'heure d'Abidjan, comme tout le reste du fil.
+                const newDay = !prev || cleJour(prev.createdAt) !== cleJour(msg.createdAt);
+                /**
+                 * REGROUPEMENT : avatar et nom ne sont répétés que quand
+                 * l'auteur change, quand le jour change, ou après cinq minutes
+                 * de silence. Chaque bulle porte de toute façon sa propre date
+                 * et heure.
+                 *
+                 * ⚠️ Deux alertes ne se regroupent que si elles sont proches :
+                 * sans auteur ni l'une ni l'autre, l'ancienne comparaison
+                 * (`undefined === undefined`) les réunissait toutes sous un seul
+                 * en-tête « Système » pour la journée.
+                 */
+                const idAuteurPersonnel = (m?: IMessage) =>
+                  m?.authorUser?.id === 'current-user' ? utilisateurConnecteId : m?.authorUser?.id;
                 const prevIsAgent = prev ? !!prev.authorUser : null;
+                const prevEstSysteme = !!prev && !prev.authorUser && !prev.authorCustomer;
                 const sameAuthorAsPrev =
                   !!prev &&
                   !newDay &&
-                  prevIsAgent === isAgent &&
-                  (isAgent
-                    ? prev?.authorUser?.id === msg.authorUser?.id
-                    : prev?.authorCustomer?.id === msg.authorCustomer?.id);
+                  dansLaFenetreDeRegroupement(prev.createdAt, msg.createdAt) &&
+                  (estSysteme
+                    ? prevEstSysteme
+                    : prevIsAgent === isAgent &&
+                      (isAgent
+                        ? idAuteurPersonnel(prev) === idAuteurPersonnel(msg)
+                        : !!msg.authorCustomer && prev?.authorCustomer?.id === msg.authorCustomer?.id));
 
                 const imageUrl = getMessageImage(msg);
                 const audioUrl = getMessageAudio(msg);
@@ -721,20 +1074,52 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                         ? formatImageUrl(currentConversation.customer.image)
                         : '/icons/imageprofile.png');
 
+                /**
+                 * Une bulle qui ME mentionne ressort : liseré orange et fond
+                 * orangé très pâle. On la retrouve d'un coup d'œil en arrivant
+                 * par la cloche.
+                 */
+                const meMentionne =
+                  !aDroite &&
+                  !estSysteme &&
+                  !msg.deleted &&
+                  !!utilisateurConnecteId &&
+                  (msg.mentions ?? []).some((m) => m.userId === utilisateurConnecteId);
+                const variante: VarianteBulle = estSysteme ? 'alerte' : aDroite ? 'orange' : 'blanc';
+                // Le contenu d'un message retiré a disparu : sa citation aussi.
+                const citation = !msg.deleted ? msg.replyTo ?? null : null;
+                const surligne = messageSurligne === msg.id;
+
+                /**
+                 * « Répondre en mentionnant Awa » : en interne, quand l'auteur
+                 * est un collègue qu'on peut mentionner, et pas soi-même.
+                 */
+                const participantAuteur =
+                  mentionsActives && isAgent && !estMoi
+                    ? participants.find((p) => p.id === msg.authorUser?.id)
+                    : undefined;
+                const optionMentionner =
+                  participantAuteur && estMentionnable(participantAuteur)
+                    ? {
+                        prenom: prenom(participantAuteur.fullName),
+                        onChoisir: () => {
+                          repondreA(msg);
+                          mentions.mentionner(participantAuteur);
+                        },
+                      }
+                    : null;
+
                 return (
                   <React.Fragment key={msg.id}>
-                    {/* Séparateur de jour */}
-                    {newDay && (
-                      <div className="flex items-center justify-center py-3">
-                        <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-[11px] font-medium text-gray-500 capitalize shadow-sm">
-                          {dayLabel(msg.createdAt)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* `group` : le bouton d'ajout de réaction ne se montre qu'au survol de CE
-                        message, sinon le fil serait parsemé d'icônes. */}
-                    <div className={`group flex ${aDroite ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}>
+                    {/* `group` : les actions (répondre, réagir, retirer) ne se montrent qu'au
+                        survol de CE message, sinon le fil serait parsemé d'icônes.
+                        `data-message-id` et `tabIndex` permettent d'y revenir depuis une
+                        citation ou une notification, souris ou clavier. */}
+                    <div
+                      data-message-id={msg.id}
+                      tabIndex={-1}
+                      className={`group flex focus:outline-none ${aDroite ? 'justify-end' : 'justify-start'} ${sameAuthorAsPrev ? 'mt-0.5' : 'mt-3'}`}
+                    >
                       <div className={`flex items-end gap-2 md:max-w-[70%] max-w-[85%] ${aDroite ? 'flex-row-reverse' : ''}`}>
                         {/* Avatar (uniquement sur le premier message du groupe) */}
                         <div className="w-8 h-8 shrink-0">
@@ -750,17 +1135,17 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                         </div>
 
                         <div className={`flex flex-col ${aDroite ? 'items-end' : 'items-start'} min-w-0`}>
-                          {/* Nom + heure (premier message du groupe) */}
+                          {/* Nom (premier message du groupe). L'heure est dans la bulle. */}
                           {!sameAuthorAsPrev && (
                             <div className={`flex items-center gap-1.5 mb-1 px-1 ${aDroite ? 'flex-row-reverse' : ''}`}>
                               <span className="text-xs font-semibold text-gray-700">{authorName}</span>
-                              <span className="text-[11px] text-gray-400">{formatMessageTime(msg.createdAt)}</span>
                             </div>
                           )}
 
-                          {/* Bulle */}
+                          {/* Bulle et, à côté, côté intérieur du fil, ses actions. */}
+                          <div className={`flex max-w-full items-center gap-1 ${aDroite ? 'flex-row-reverse' : ''}`}>
                           <div
-                            className={`relative rounded-2xl overflow-hidden ${
+                            className={`relative min-w-0 rounded-2xl overflow-hidden transition-shadow duration-300 ${
                               estSysteme
                                 ? // Une alerte ne ressemble à la bulle de personne : ni la
                                   // couleur du personnel, ni celle du client. Elle se
@@ -768,49 +1153,104 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                                   'bg-[#FDF3E7] text-[#8A4B00] border border-[#F3D5B0] rounded-bl-md'
                                 : aDroite
                                 ? 'bg-[#F17922] text-white rounded-br-md'
+                                : meMentionne
+                                ? 'bg-orange-50/80 text-gray-900 border border-orange-100 border-l-4 border-l-[#F17922] shadow-sm rounded-bl-md'
                                 : 'bg-white text-gray-900 border border-gray-100 shadow-sm rounded-bl-md'
-                            } ${isTemp ? 'opacity-70' : ''}`}
+                            } ${isTemp ? 'opacity-70' : ''} ${
+                              surligne ? 'ring-2 ring-[#F17922]/60 ring-offset-2 ring-offset-[#FAFAFA]' : ''
+                            }`}
                           >
+                            {/* Message cité, en tête de bulle : un clic y ramène. */}
+                            {citation && (
+                              <CitationMessage
+                                citation={citation}
+                                moiId={utilisateurConnecteId}
+                                variante={variante}
+                                onAller={(id) => void allerAuMessage(id)}
+                              />
+                            )}
                             {/* Image jointe */}
                             {imageUrl && (
-                              <button
-                                type="button"
-                                onClick={() => setLightboxUrl(imageUrl)}
-                                className={`block cursor-zoom-in ${hasBody ? '' : ''}`}
-                                title="Agrandir l'image"
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={imageUrl}
-                                  alt="Image jointe"
-                                  className="max-w-[260px] md:max-w-[320px] max-h-[280px] object-cover block"
-                                />
-                              </button>
+                              <div className={`relative ${citation ? 'mt-1.5' : ''}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => setLightboxUrl(imageUrl)}
+                                  className="block cursor-zoom-in"
+                                  title="Agrandir l'image"
+                                >
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={imageUrl}
+                                    alt="Image jointe"
+                                    className="max-w-[260px] md:max-w-[320px] max-h-[280px] object-cover block"
+                                  />
+                                </button>
+                                {/* Photo sans légende : l'heure se pose sur l'image. */}
+                                {!hasBody && (
+                                  <HeureMessage iso={msg.createdAt} maintenant={maintenant} variante={variante} position="pastille" />
+                                )}
+                              </div>
                             )}
                             {audioUrl && (
-                              <LecteurVocal
-                                url={audioUrl}
-                                dureeMs={
-                                  typeof msg.meta?.audioDurationMs === 'number'
-                                    ? (msg.meta.audioDurationMs as number)
-                                    : null
-                                }
-                                sombre={aDroite}
-                              />
+                              <>
+                                <LecteurVocal
+                                  url={audioUrl}
+                                  dureeMs={
+                                    typeof msg.meta?.audioDurationMs === 'number'
+                                      ? (msg.meta.audioDurationMs as number)
+                                      : null
+                                  }
+                                  sombre={aDroite}
+                                />
+                                {!hasBody && (
+                                  <HeureMessage iso={msg.createdAt} maintenant={maintenant} variante={variante} position="ligne" />
+                                )}
+                              </>
                             )}
                             {hasBody && (
-                              <p className="md:text-sm text-xs leading-relaxed whitespace-pre-wrap break-words px-3.5 py-2.5">
-                                {msg.body}
+                              <p
+                                className={`md:text-sm text-xs leading-relaxed whitespace-pre-wrap break-words px-3.5 py-2.5 ${
+                                  msg.deleted ? 'italic opacity-80' : ''
+                                }`}
+                              >
+                                {estSysteme || msg.deleted ? (
+                                  msg.body
+                                ) : (
+                                  <TexteAvecMentions
+                                    texte={msg.body}
+                                    mentions={msg.mentions}
+                                    variante={variante}
+                                    moiId={utilisateurConnecteId}
+                                  />
+                                )}
+                                {/* Place gardée pour la date et l'heure, posées dans le coin. */}
+                                <ReserveHeure iso={msg.createdAt} maintenant={maintenant} />
                               </p>
                             )}
-                            {/* Heure pour les messages groupés (pas d'en-tête) */}
-                            {sameAuthorAsPrev && !imageUrl && !audioUrl && (
-                              <span
-                                className={`absolute bottom-1 ${aDroite ? 'left-1.5' : 'right-1.5'} text-[9px] ${
-                                  aDroite ? 'text-white/60' : 'text-gray-300'
-                                } opacity-0 group-hover:opacity-100`}
-                              />
+                            {hasBody && (
+                              <HeureMessage iso={msg.createdAt} maintenant={maintenant} variante={variante} position="coin" />
                             )}
+                            {/* Ni texte, ni photo, ni vocal : l'heure garde quand même sa place. */}
+                            {!hasBody && !imageUrl && !audioUrl && (
+                              <HeureMessage iso={msg.createdAt} maintenant={maintenant} variante={variante} position="ligne" />
+                            )}
+                          </div>
+
+                          {/*
+                            Répondre, et le menu « Plus ». Proposés aussi sur les
+                            alertes (« je m'en occupe » en citant l'alerte), jamais
+                            sur un message pas encore confirmé ni sur un message
+                            retiré.
+                          */}
+                          {!isTemp && !msg.deleted && (
+                            <BarreActionsMessage
+                              aDroite={aDroite}
+                              onRepondre={() => repondreA(msg)}
+                              mentionner={optionMentionner}
+                              texteACopier={hasBody ? msg.body : null}
+                              onCopier={copierTexte}
+                            />
+                          )}
                           </div>
 
                           {/*
@@ -875,7 +1315,8 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                                 <>
                                   <CheckCheck className="w-3.5 h-3.5 text-[#F17922]" />
                                   <span className="text-[10px] text-gray-400">
-                                    {msg.readAt ? `Vu à ${formatMessageTime(msg.readAt)}` : 'Vu'}
+                                    {/* « Vu hier à 18:26 » : le jour compte quand ce n'est pas aujourd'hui. */}
+                                    {msg.readAt ? libelleVu(msg.readAt, maintenant) : 'Vu'}
                                   </span>
                                 </>
                               ) : (
@@ -891,7 +1332,9 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
                     </div>
                   </React.Fragment>
                 );
-              })
+                  })}
+                </div>
+              ))
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -899,6 +1342,30 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
 
         {/* Zone de saisie */}
         <div className="md:px-6 md:py-3.5 px-4 py-3 bg-white border-t border-slate-200">
+          {/* Réponse en cours : le message cité, en premier, pleine largeur. */}
+          {reponseA && (
+            <ApercuReponse
+              citation={reponseA}
+              moiId={utilisateurConnecteId}
+              desactive={sendMessageMutation.isPending}
+              onAnnuler={() => {
+                setReponseA(null);
+                refChamp.current?.focus();
+              }}
+            />
+          )}
+
+          {/* Qui la cloche préviendra : un champ de saisie ne sait pas surligner. */}
+          {prevenus.length > 0 && (
+            <p className="mb-2 flex items-center gap-1.5 px-1 text-[11px] text-gray-500">
+              <AtSign aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-[#F17922]" />
+              <span className="truncate">
+                {prevenus.length > 1 ? 'Seront prévenus : ' : 'Sera prévenu : '}
+                <span className="font-medium text-gray-700">{prevenus.join(', ')}</span>
+              </span>
+            </p>
+          )}
+
           {/* Aperçu de l'image à envoyer */}
           {pendingPreview && (
             <div className="mb-2.5 inline-flex items-center gap-3 bg-orange-50/60 border border-orange-100 rounded-xl p-2 pr-3">
@@ -967,8 +1434,20 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
             </div>
           )}
 
-          {/* Champ de saisie */}
-          <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent transition-shadow">
+          {/* Champ de saisie. `relative` : la liste des mentions s'ouvre juste au-dessus. */}
+          <div className="relative flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl px-2 py-1.5 focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent transition-shadow">
+            {mentions.ouverte && (
+              <ListeMentions
+                idListe={mentions.idListe}
+                idOption={mentions.idOption}
+                options={mentions.options}
+                indexActif={mentions.indexActif}
+                terme={mentions.terme}
+                onChoisir={(option) => mentions.choisir(option.participant)}
+                onSurvol={mentions.setIndexActif}
+                resoudreImage={formatImageUrl}
+              />
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -995,10 +1474,19 @@ function ConversationView({ conversationId, onBack }: ConversationViewProps) {
               <Mic className={`w-5 h-5 ${vocal.enregistre ? 'text-red-500' : 'text-[#F17922]'}`} />
             </button>
             <textarea
+              ref={refChamp}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Écrire un message..."
+              onChange={(e) => {
+                setMessage(e.target.value);
+                mentions.analyser(e.target.value, e.target.selectionStart);
+              }}
+              // Le curseur a bougé (clic, flèches) : la recherche suit le « @ » le plus proche.
+              onSelect={(e) => mentions.analyser(e.currentTarget.value, e.currentTarget.selectionStart)}
+              onBlur={mentions.masquer}
+              onKeyDown={handleKeyDown}
+              placeholder={mentionsActives ? 'Écrire un message… (@ pour mentionner)' : 'Écrire un message…'}
+              aria-label="Message"
+              {...mentions.attributsChamp}
               className="flex-1 max-h-32 px-1 py-2 text-slate-700 bg-transparent resize-none focus:outline-none md:text-sm text-xs"
               rows={2}
               disabled={sendMessageMutation.isPending}

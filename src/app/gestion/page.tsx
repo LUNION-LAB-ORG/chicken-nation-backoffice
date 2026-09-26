@@ -8,15 +8,17 @@ export default function GestionPage() {
   const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
 
   // Deep-link : un lien d'email (ou de push) du type
-  // /gestion?module=inbox&conversation=<id> ouvre directement la conversation.
+  // /gestion?module=inbox&conversation=<id> ouvre directement la conversation,
+  // et &message=<id> fait défiler jusqu'au message mentionné ou cité.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const conversation = params.get("conversation");
     if (conversation) {
-      openInboxConversation(conversation);
+      openInboxConversation(conversation, params.get("message"));
       // Nettoie l'URL pour ne pas rouvrir la conversation au prochain rendu.
       const url = new URL(window.location.href);
       url.searchParams.delete("conversation");
+      url.searchParams.delete("message");
       url.searchParams.delete("module");
       window.history.replaceState({}, "", url.toString());
     }

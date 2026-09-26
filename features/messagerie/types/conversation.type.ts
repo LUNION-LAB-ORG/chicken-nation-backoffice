@@ -24,8 +24,46 @@ export interface IReaction {
   mine: boolean;
 }
 
+/** Nature du message cité, pour choisir l'icône et le texte de repli. */
+export type TypeCitation = 'text' | 'image' | 'audio' | 'alert';
+
+/** Qui a écrit le message cité. `system` = alerte, `broadcast` = diffusion. */
+export type TypeAuteurCitation = 'user' | 'customer' | 'system' | 'broadcast';
+
+/**
+ * MESSAGE CITÉ, tel que le serveur le résume.
+ *
+ * L'extrait est calculé à chaque lecture à partir de l'original, jamais copié :
+ * si l'original est retiré, `deleted` passe à vrai et l'extrait devient « Ce
+ * message a été supprimé », partout et en direct.
+ */
+export interface ICitationMessage {
+  id: string;
+  deleted: boolean;
+  kind: TypeCitation;
+  /** Texte réduit à 160 caractères, vide pour une photo ou un vocal sans légende. */
+  excerpt: string;
+  author: { kind: TypeAuteurCitation; id: string | null; name: string };
+  createdAt: string;
+}
+
+/**
+ * PERSONNE MENTIONNÉE dans un message.
+ *
+ * `label` est le nom figé par le serveur au moment de l'envoi : c'est lui qu'on
+ * recherche dans le corps (« @Awa Koné ») pour le surligner.
+ */
+export interface IMentionMessage {
+  userId: string;
+  label: string;
+}
+
 export interface IMessage {
   reactions?: IReaction[];
+  /** Message auquel celui-ci répond. Absent ou nul : ce n'est pas une réponse. */
+  replyTo?: ICitationMessage | null;
+  /** Collègues mentionnés et retenus par le serveur. Vide si le message est retiré. */
+  mentions?: IMentionMessage[];
   /** Message retiré : le serveur a déjà remplacé le corps et retiré la pièce jointe. */
   deleted?: boolean;
   deletedAt?: string | null;
@@ -71,6 +109,20 @@ export interface IParticipantConversation {
   fullName: string;
   image?: string | null;
   role: string;
+  /**
+   * Peut être mentionné : compte actif ET rôle qui a accès à la messagerie.
+   * Calculé par le serveur, qui applique la même règle quand il reçoit la
+   * mention. Absent tant que le serveur n'est pas à jour.
+   */
+  mentionnable?: boolean;
+}
+
+/** Réponse de la route de position d'un message dans le fil paginé. */
+export interface IPositionMessage {
+  messageId: string;
+  /** Page (1 = la plus récente) qui contient le message, pour cette taille de page. */
+  page: number;
+  limit: number;
 }
 
 export interface IConversation {

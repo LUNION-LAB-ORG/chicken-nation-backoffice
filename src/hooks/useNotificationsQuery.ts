@@ -1,4 +1,5 @@
-import { acquireSocket, releaseSocket } from '../../features/messagerie/hooks/sharedSocket';
+import { acquireSocket, releaseSocket, shouldPlayOnce } from '../../features/messagerie/hooks/sharedSocket';
+import { CORPS_MESSAGE_SUPPRIME } from '../../features/messagerie/utils/citation-locale';
 import {
   useInfiniteQuery,
   useMutation,
@@ -97,13 +98,35 @@ export const useNotificationsQuery = ({
   );
 
 
-  const handleNewNotification = () => {
+  const handleNewNotification = (notification?: { data?: { kind?: unknown; messageId?: unknown } | null }) => {
     queryClient.invalidateQueries({
       queryKey: ["notifications", userId],
     });
     queryClient.invalidateQueries({
       queryKey: ["notification-stats", userId],
     });
+
+    /**
+     * Mention ou réponse : JAMAIS le son de la cloche.
+     *
+     * Le message lui-même sonne déjà à son arrivée : la personne mentionnée
+     * est membre de la conversation, elle reçoit `new:message`, et l'écouteur
+     * posé sur toute la gestion (`useMessagesSound`) sonne pour chaque message
+     * d'un collègue, sur tous les onglets. Se contenter d'éviter le doublon
+     * avec la clé `msg:<id>` ne suffisait pas : cet écouteur-là ne pose pas la
+     * clé, et, hors de la messagerie, la mention sonnait deux fois.
+     *
+     * La clé est tout de même posée, pour que la messagerie ouverte ne rejoue
+     * pas le son si la notification arrive avant le message.
+     */
+    const donnees = notification?.data;
+    if (
+      (donnees?.kind === "mention" || donnees?.kind === "reponse") &&
+      typeof donnees.messageId === "string"
+    ) {
+      shouldPlayOnce(`msg:${donnees.messageId}`);
+      return;
+    }
 
     // Jouer le son de notification
     if (audioRef.current) {
@@ -112,6 +135,59 @@ export const useNotificationsQuery = ({
         console.error("Erreur de lecture audio", error);
       });
     }
+  };
+
+  /**
+   * Le SERVEUR a marqué des notifications comme lues de lui-même : ouvrir une
+   * conversation interne vaut lecture de ses mentions et réponses. Il l'annonce
+   * par `notification:bulk_read`. Sans cette écoute, la cloche restait
+   * allumée jusqu'au rechargement de la page, pour un message déjà sous les
+   * yeux. On relit la liste et le compteur, sans son.
+   */
+  const handleLectureGroupee = () => {
+    queryClient.invalidateQueries({
+      queryKey: ["notifications", userId],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["notification-stats", userId],
+    });
+  };
+
+  /**
+   * Un message a été RETIRÉ : les notifications de mention ou de réponse qui
+   * en montraient un extrait sont retouchées tout de suite dans la cloche.
+   *
+   * Le serveur remplace aussi leur texte en base, mais sans prévenir la cloche,
+   * et en parallèle de cet évènement : relire la liste pourrait encore rendre
+   * l'ancien texte. On remplace donc localement, seulement pour les
+   * notifications qui portent CE message.
+   */
+  const handleMessageSupprime = (charge?: { message?: { id?: unknown } | null } | null) => {
+    const messageId = charge?.message?.id;
+    if (typeof messageId !== "string" || !messageId) return;
+    queryClient.setQueryData<InfiniteData<NotificationPage>>(
+      ["notifications", userId],
+      (ancien) => {
+        if (!ancien?.pages) return ancien;
+        let change = false;
+        const pages = ancien.pages.map((page) => ({
+          ...page,
+          data: (page.data ?? []).map((n) => {
+            const d = n?.data as { kind?: unknown; messageId?: unknown } | undefined;
+            if (
+              d?.messageId !== messageId ||
+              (d?.kind !== "mention" && d?.kind !== "reponse") ||
+              n.message === CORPS_MESSAGE_SUPPRIME
+            ) {
+              return n;
+            }
+            change = true;
+            return { ...n, message: CORPS_MESSAGE_SUPPRIME };
+          }),
+        }));
+        return change ? { ...ancien, pages } : ancien;
+      }
+    );
   };
 
   // Socket PARTAGÉ du backoffice : l'ancienne version ouvrait une connexion
@@ -123,10 +199,14 @@ export const useNotificationsQuery = ({
     if (socket.connected) setConnected(true);
     socket.on("connect", onConnect);
     socket.on("notification:new", handleNewNotification);
+    socket.on("message:supprime", handleMessageSupprime);
+    socket.on("notification:bulk_read", handleLectureGroupee);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("notification:new", handleNewNotification);
+      socket.off("message:supprime", handleMessageSupprime);
+      socket.off("notification:bulk_read", handleLectureGroupee);
       releaseSocket();
     };
   }, [queryClient, userId]);
