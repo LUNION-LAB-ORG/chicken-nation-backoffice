@@ -298,3 +298,92 @@ export interface IComparatifLigne {
   public: IIndicateursPublic | null;
   duree: IDureeCampagne;
 }
+
+/* ------------------------------------------------------------------ */
+/* Ventes d'une campagne : les clients qui ont commandé                 */
+/* ------------------------------------------------------------------ */
+
+export type StatutCommande =
+  | "PENDING"
+  | "ACCEPTED"
+  | "IN_PROGRESS"
+  | "READY"
+  | "PICKED_UP"
+  | "COLLECTED"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type TypeCommande = "DELIVERY" | "PICKUP" | "TABLE";
+
+/** État d'une autre commande du client : seules les commandes VALIDE entrent dans les totaux. */
+export type EtatCommande = "VALIDE" | "ANNULEE" | "SUPPRIMEE" | "PAIEMENT_EN_ATTENTE";
+
+/** Autre commande passée par le client pendant la campagne (hors commande comptée). */
+export interface IAutreCommande {
+  id: string;
+  reference: string;
+  cree_le: string;
+  montant: number;
+  statut: StatutCommande;
+  type: TypeCommande;
+  restaurant: string | null;
+  etat: EtatCommande;
+}
+
+/** Une vente comptée pour la campagne : une ligne du compteur « conversions ». */
+export interface IVenteCampagne {
+  id: string;
+  vendu_le: string;
+  /** Montant du registre, celui du compteur et du chiffre d'affaires. */
+  montant: number;
+  /** Public au ciblage. */
+  segment: Public;
+  contact: { id: string; nom: string; telephone: string; supprime: boolean };
+  /** null : vente sans agent. */
+  agent: IRef | null;
+  commande: {
+    id: string;
+    reference: string;
+    /** Montant actuel de la commande, qui peut différer de celui du registre. */
+    montant: number;
+    statut: StatutCommande;
+    type: TypeCommande;
+    restaurant: string | null;
+    cree_le: string;
+  } | null;
+  /** Code masqué en consultation. */
+  coupon: { code: string; offre: string; envoye_le: string; hors_campagne: boolean } | null;
+  /** Code promo de la commande sans coupon du CRM ; masqué en consultation. */
+  code_promo: string | null;
+  delai_campagne_jours: number | null;
+  delai_entree_jours: number | null;
+  autres: {
+    nombre: number;
+    /** Commandes valides parmi les autres. */
+    valides: number;
+    /** Montant des autres commandes valides. */
+    montant: number;
+    /** Plus d'autres commandes que celles renvoyées. */
+    tronque: boolean;
+    /** Les plus récentes d'abord. */
+    commandes: IAutreCommande[];
+  };
+}
+
+export interface IVentesCampagne {
+  /** Égal aux indicateurs de la campagne ; par_public couvre toujours tous les publics vendus. */
+  resume: { ventes: number; ca: number; par_public: { segment: Public; ventes: number; ca: number }[] };
+  /** Fenêtre des autres commandes ; fin null : campagne en cours. */
+  fenetre: { debut: string | null; fin: string | null };
+  /** Codes masqués (consultation). */
+  masque: boolean;
+  data: IVenteCampagne[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
+export interface IVentesCampagneFiltres {
+  page?: number;
+  limit?: number;
+  /** Public au ciblage. */
+  segment?: Public;
+}

@@ -7,6 +7,7 @@ import { Public } from "../../types/contact.type";
 import { CAMPAGNE_META, PUBLICS, PUBLIC_META } from "../../utils/crm-ui";
 import { Bouton, ChampSelect } from "../commun/Champs";
 import { Chargement, Erreur, Vide } from "../commun/Etats";
+import { FicheContact } from "../fiche/FicheContact";
 import { CarteCampagne } from "./CarteCampagne";
 import { Comparatif } from "./Comparatif";
 import { EquipeCampagne } from "./EquipeCampagne";
@@ -21,12 +22,18 @@ export function Campagnes({
   peutTraiter,
   peutExporter,
   peutAnalyser,
+  onOuvrirFiche,
 }: {
   estGestionnaire: boolean;
   /** Droit UPDATE : sans lui, piloter une campagne est refusé par le serveur, même à son pilote. */
   peutTraiter: boolean;
   peutExporter: boolean;
   peutAnalyser: boolean;
+  /**
+   * Fiche d'un client des ventes, ouverte par la page CRM. Sans elle,
+   * l'écran des campagnes ouvre la fiche lui-même.
+   */
+  onOuvrirFiche?: (id: string, telephone?: string) => void;
 }) {
   const moi = useAuthStore((s) => s.user?.id);
   const [filtres, setFiltres] = useState<ICampagnesFiltres>({});
@@ -35,6 +42,9 @@ export function Campagnes({
   const [ouverteId, setOuverteId] = useState<string | null>(null);
   const [edition, setEdition] = useState<{ campagne: ICampagne | null } | null>(null);
   const [equipe, setEquipe] = useState<ICampagne | null>(null);
+  // Le téléphone accompagne la fiche : lui seul ouvre en lecture le client d'un collègue.
+  const [fiche, setFiche] = useState<{ id: string; telephone?: string } | null>(null);
+  const ouvrirFiche = onOuvrirFiche ?? ((id: string, telephone?: string) => setFiche({ id, telephone }));
   // Le détail garde l'écran ouvert quand un geste (lancer, terminer) sort la campagne du filtre de la liste.
   const detail = useCampagneQuery(ouverteId);
 
@@ -45,6 +55,9 @@ export function Campagnes({
     <>
       {edition && <FormCampagne key={edition.campagne?.id ?? "nouvelle"} ouvert campagne={edition.campagne} onFermer={() => setEdition(null)} />}
       {equipe && <EquipeCampagne key={equipe.id} c={equipe} ouvert onFermer={() => setEquipe(null)} estGestionnaire={estGestionnaire} />}
+      {!onOuvrirFiche && (
+        <FicheContact id={fiche?.id ?? null} telephone={fiche?.telephone} onFermer={() => setFiche(null)} estGestionnaire={estGestionnaire} />
+      )}
     </>
   );
 
@@ -71,6 +84,7 @@ export function Campagnes({
           peutExporter={peutExporter}
           onModifier={() => setEdition({ campagne: ouverte })}
           onEquipe={() => setEquipe(ouverte)}
+          onOuvrirFiche={ouvrirFiche}
         />
         {modales}
       </>

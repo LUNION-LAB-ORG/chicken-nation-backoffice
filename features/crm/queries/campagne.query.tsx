@@ -2,7 +2,14 @@ import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { campagneAPI } from "../apis/campagne.api";
 import { Public } from "../types/contact.type";
-import { IApercuInput, ICampagneDTO, ICampagnesFiltres, ICloture, ILancement } from "../types/campagne.type";
+import {
+  IApercuInput,
+  ICampagneDTO,
+  ICampagnesFiltres,
+  ICloture,
+  ILancement,
+  IVentesCampagneFiltres,
+} from "../types/campagne.type";
 import { accord, fmtNombre } from "../utils/crm-ui";
 import { crmKeyQuery, useInvalidateCrmQuery } from "./index.query";
 
@@ -35,6 +42,25 @@ export const useCampagneStatsQuery = (id: string | null) =>
     queryFn: () => campagneAPI.stats(id!),
     enabled: !!id,
     refetchInterval: 60_000,
+  });
+
+/**
+ * Ventes comptées pour une campagne. Pas de minuterie propre : l'écran la
+ * relit à chaque rafraîchissement des statistiques (`refetch`), pour que le
+ * total de la liste et le compteur des cartes viennent du même instant. Deux
+ * minuteries indépendantes se décaleraient au premier changement de page.
+ * La page affichée reste visible pendant le chargement de la suivante.
+ * Jamais fraîche (`staleTime` nul) : une page revue depuis le cache est
+ * relue aussitôt, sinon son total pourrait dater d'avant la dernière relecture
+ * des cartes.
+ */
+export const useVentesCampagneQuery = (id: string | null, filtres: IVentesCampagneFiltres) =>
+  useQuery({
+    queryKey: crmKeyQuery("campagnes", "ventes", id, filtres),
+    queryFn: () => campagneAPI.ventes(id!, filtres),
+    enabled: !!id,
+    staleTime: 0,
+    placeholderData: keepPreviousData,
   });
 
 export const useComparatifQuery = (actif: boolean, segment?: Public) =>

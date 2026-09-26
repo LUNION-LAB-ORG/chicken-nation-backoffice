@@ -1,5 +1,5 @@
 import { AppelEffet, CanalCoupon, EtatCoupon, ContactStatut, Public } from "../types/contact.type";
-import { CampagneStatut } from "../types/campagne.type";
+import { CampagneStatut, EtatCommande, StatutCommande, TypeCommande } from "../types/campagne.type";
 
 interface Meta {
   label: string;
@@ -171,6 +171,31 @@ export const CAMPAGNE_META: Record<CampagneStatut, Meta> = {
   ACTIVE: { label: "En cours", className: "bg-emerald-100 text-emerald-700" },
   SUSPENDED: { label: "Suspendue", className: "bg-amber-100 text-amber-800" },
   COMPLETED: { label: "Terminée", className: "bg-gray-200 text-gray-600" },
+};
+
+/** Statut d'une commande, avec les mots de la page Commandes. */
+export const STATUT_COMMANDE: Record<StatutCommande, string> = {
+  PENDING: "En attente",
+  ACCEPTED: "Nouvelle",
+  IN_PROGRESS: "En préparation",
+  READY: "Prête",
+  PICKED_UP: "En livraison",
+  COLLECTED: "Récupérée",
+  COMPLETED: "Terminée",
+  CANCELLED: "Annulée",
+};
+
+export const TYPE_COMMANDE: Record<TypeCommande, string> = {
+  DELIVERY: "À livrer",
+  PICKUP: "À récupérer",
+  TABLE: "À table",
+};
+
+/** Autre commande d'un client : hors VALIDE, elle est signalée et reste hors total. */
+export const ETAT_COMMANDE_META: Record<Exclude<EtatCommande, "VALIDE">, Meta> = {
+  ANNULEE: { label: "annulée", className: "bg-rose-100 text-rose-700" },
+  SUPPRIMEE: { label: "supprimée", className: "bg-gray-200 text-gray-600" },
+  PAIEMENT_EN_ATTENTE: { label: "en attente de paiement", className: "bg-amber-100 text-amber-800" },
 };
 
 const nombre = new Intl.NumberFormat("fr-FR");

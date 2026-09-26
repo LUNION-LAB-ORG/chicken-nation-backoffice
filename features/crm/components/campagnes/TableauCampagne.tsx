@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { ArrowLeft, ListChecks, Lock, MessageSquareWarning } from "lucide-react";
 import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartCard";
 import { useCampagneStatsQuery } from "../../queries/campagne.query";
@@ -16,6 +16,7 @@ import { KpisCampagne } from "./KpisCampagne";
 import { PublicsCampagne } from "./PublicsCampagne";
 import { RythmeCampagne } from "./RythmeCampagne";
 import { useRestaurantsCapture } from "./useRestaurantsCapture";
+import { VentesCampagne } from "./VentesCampagne";
 
 /** Publics visés et leurs critères en clair : ceux du serveur une fois lancée, sinon écrits ici. */
 function PublicsVises({ c, s }: { c: ICampagne; s?: ICampagneStats }) {
@@ -103,6 +104,7 @@ export function TableauCampagne({
   peutExporter,
   onModifier,
   onEquipe,
+  onOuvrirFiche,
 }: {
   c: ICampagne;
   onRetour: () => void;
@@ -111,8 +113,18 @@ export function TableauCampagne({
   peutExporter: boolean;
   onModifier: () => void;
   onEquipe: () => void;
+  /** Le téléphone accompagne la fiche : un agent de l'équipe ouvre en lecture le client d'un collègue. */
+  onOuvrirFiche: (id: string, telephone?: string) => void;
 }) {
-  const { data: s, isError, error } = useCampagneStatsQuery(c.status === "PLANIFIED" ? null : c.id);
+  const { data: s, isError, error, dataUpdatedAt } = useCampagneStatsQuery(c.status === "PLANIFIED" ? null : c.id);
+  const refVentes = useRef<HTMLDivElement>(null);
+  // Le focus suit le défilement : au clavier, la touche Tab repart de la liste des ventes.
+  const voirVentes = () => {
+    const section = refVentes.current;
+    if (!section) return;
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    section.focus({ preventScroll: true });
+  };
   const plusieursPublics = (s?.par_public ?? []).length > 1;
   const montrerPublics = !!s && (plusieursPublics || (s.par_public ?? []).some((p) => p.segment === "GLOVO" || p.segment === "YANGO"));
 
@@ -166,8 +178,17 @@ export function TableauCampagne({
         <Chargement />
       ) : (
         <>
-          <KpisCampagne s={s} />
+          <KpisCampagne s={s} onVoirVentes={voirVentes} />
           {montrerPublics && <PublicsCampagne s={s} />}
+          <div ref={refVentes} tabIndex={-1} className="scroll-mt-4 focus:outline-none">
+            <VentesCampagne
+              key={c.id}
+              campagneId={c.id}
+              publics={(s.campagne.publics ?? []).map((p) => p.segment)}
+              synchro={dataUpdatedAt}
+              onOuvrirFiche={onOuvrirFiche}
+            />
+          </div>
           <RythmeCampagne rythme={s.rythme} />
           <div className="grid gap-4 lg:grid-cols-2">
             <StatsChartCard title="Raisons de non-commande" subtitle="Dernière raison donnée par chaque contact" icon={MessageSquareWarning}>

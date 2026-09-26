@@ -10,6 +10,8 @@ import {
   ICloture,
   IComparatifLigne,
   ILancement,
+  IVentesCampagne,
+  IVentesCampagneFiltres,
 } from "../types/campagne.type";
 import { telecharger, versQuery } from "../utils/requete";
 
@@ -33,6 +35,9 @@ export const campagneAPI = {
   equipe: (id: string, agentIds: string[], piloteId?: string) =>
     api.patch<ICampagne>(`${BASE}/${id}/team`, { agent_ids: agentIds, ...(piloteId && { lead_agent_id: piloteId }) }),
   stats: (id: string) => api.get<ICampagneStats>(`${BASE}/${id}/stats`),
+  /** Ventes comptées pour la campagne, les plus récentes d'abord, avec les autres commandes du client. */
+  ventes: (id: string, filtres: IVentesCampagneFiltres = {}) =>
+    api.get<IVentesCampagne>(`${BASE}/${id}/ventes${versQuery(filtres)}`),
   comparer: (segment?: Public) => api.get<IComparatifLigne[]>(`${BASE}/compare${versQuery({ segment })}`),
   // L'en-tête Content-Disposition n'est pas exposé en CORS : le nom de repli reprend celui du serveur.
   exporterComparatif: (segment?: Public) =>
