@@ -12,6 +12,8 @@ import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
 import OrderDetailModal from "../../../orders/components/detail-order/OrderDetailModal";
 import { OrderTable } from "../../../orders/types/ordersTable.types";
+import { useAuthStore } from "../../../users/hook/authStore";
+import { Action, Modules } from "../../../users/types/auth.type";
 
 interface OverviewTabProps {
   customerData: CustomerMapperData;
@@ -19,6 +21,9 @@ interface OverviewTabProps {
 
 export function OverviewTab({ customerData }: OverviewTabProps) {
   const [selectedOrder, setSelectedOrder] = useState<OrderTable | null>(null);
+  // Le détail d'une commande passe par GET /orders/:id (COMMANDES en lecture).
+  // Sans ce droit (le Marketing), les lignes restent lisibles, sans lien.
+  const peutVoirCommande = useAuthStore((s) => s.can(Modules.COMMANDES, Action.READ));
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
@@ -32,8 +37,10 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
           {customerData.recentOrders.slice(0, 5).map((order) => (
             <div
               key={order.id}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-              onClick={() => setSelectedOrder(order)}
+              className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg${
+                peutVoirCommande ? " hover:bg-gray-100 transition-colors cursor-pointer" : ""
+              }`}
+              onClick={peutVoirCommande ? () => setSelectedOrder(order) : undefined}
             >
               <div className="flex-1">
                 <div className="font-medium text-sm text-gray-900">
@@ -175,7 +182,7 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
       </div>
 
       {/* Order Detail Modal */}
-      {selectedOrder && (
+      {peutVoirCommande && selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}

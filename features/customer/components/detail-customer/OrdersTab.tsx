@@ -4,6 +4,8 @@ import { CustomerMapperData } from "../../types/customer-mapper.types";
 import PaymentBadge from "../../../orders/components/PaymentBadge";
 import OrderDetailModal from "../../../orders/components/detail-order/OrderDetailModal";
 import { OrderTable } from "../../../orders/types/ordersTable.types";
+import { useAuthStore } from "../../../users/hook/authStore";
+import { Action, Modules } from "../../../users/types/auth.type";
 
 interface OrdersTabProps {
   customerData: CustomerMapperData;
@@ -11,6 +13,9 @@ interface OrdersTabProps {
 
 export function OrdersTab({ customerData }: OrdersTabProps) {
   const [selectedOrder, setSelectedOrder] = useState<OrderTable | null>(null);
+  // Le détail d'une commande passe par GET /orders/:id (COMMANDES en lecture).
+  // Sans ce droit (le Marketing), le tableau reste lisible, sans lien.
+  const peutVoirCommande = useAuthStore((s) => s.can(Modules.COMMANDES, Action.READ));
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -45,8 +50,10 @@ export function OrdersTab({ customerData }: OrdersTabProps) {
             {customerData.recentOrders.map((order) => (
               <tr
                 key={order.id}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
-                onClick={() => setSelectedOrder(order)}
+                className={`border-b border-gray-100${
+                  peutVoirCommande ? " hover:bg-gray-50 transition-colors cursor-pointer" : ""
+                }`}
+                onClick={peutVoirCommande ? () => setSelectedOrder(order) : undefined}
               >
                 <td className="py-4 px-4">
                   <div className="font-medium text-sm text-gray-900">
@@ -77,7 +84,7 @@ export function OrdersTab({ customerData }: OrdersTabProps) {
       </div>
 
       {/* Order Detail Modal */}
-      {selectedOrder && (
+      {peutVoirCommande && selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}

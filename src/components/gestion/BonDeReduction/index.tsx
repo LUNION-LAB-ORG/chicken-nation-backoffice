@@ -505,8 +505,15 @@ const RedemptionOrderCell = ({ redemption }: { redemption: Redemption }) => {
   const orderId = redemption.order?.id ?? redemption.orderId;
   const orderRef = redemption.order?.orderNumber;
   const [showModal, setShowModal] = useState(false);
+  // Le détail passe par GET /orders/:id (COMMANDES en lecture). Sans ce droit
+  // (le Marketing), la référence s'affiche seule, sans lien qui mènerait à un refus.
+  const peutVoirCommande = useAuthStore((s) => s.can(Modules.COMMANDES, Action.READ));
 
   if (!orderId) return <span className="text-gray-400">—</span>;
+
+  if (!peutVoirCommande) {
+    return <span className="text-sm font-medium text-gray-700">#{orderRef ?? "Commande"}</span>;
+  }
 
   return (
     <>

@@ -3,6 +3,7 @@
 import { useSupportBadgesSync } from '../../../features/messagerie';
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useAuthStore } from "../../../features/users/hook/authStore";
+import { Action, Modules } from "../../../features/users/types/auth.type";
 import { Notification } from "@/services/notificationService";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -27,6 +28,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
+  // Sans ce droit (le Marketing), la page Commandes renverrait en silence vers
+  // le premier écran permis : on ouvre plutôt le détail de la notification.
+  const peutLireCommandes = useAuthStore((s) => s.can(Modules.COMMANDES, Action.READ));
   // ✅ Plus besoin de restaurantName - le backend gère le filtrage
 
   // ✅ TanStack Query pour les notifications
@@ -137,8 +141,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
     // Commande → liste des commandes filtrée sur la référence (on neutralise
     // les autres filtres pour que la commande soit visible quel que soit
-    // l'état courant de la page).
-    if (data?.kind === "order" || data?.reference || data?.order_id) {
+    // l'état courant de la page). Sans accès aux commandes, on passe au
+    // détail de la notification, plus bas.
+    if (peutLireCommandes && (data?.kind === "order" || data?.reference || data?.order_id)) {
       if (data?.reference) {
         setFilter("orders", "search", data.reference);
         setFilter("orders", "type", "");

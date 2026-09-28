@@ -71,8 +71,8 @@ export default function DiffusionsModule() {
             Envoyer le même message à une liste de clients.
           </p>
         </div>
-        {/* Module DIFFUSIONS, séparé de MARKETING : le menu Marketing peut
-            rester en lecture seule sans retirer les diffusions au marketing. */}
+        {/* Module DIFFUSIONS, séparé de MARKETING. Depuis le 28/09, seul
+            l'administrateur le détient : le rôle Marketing ne le voit plus. */}
         <HasPermission module={Modules.DIFFUSIONS} action={Action.CREATE}>
           <button
             type="button"

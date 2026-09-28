@@ -189,7 +189,7 @@ export const useGetMenuConfig = (): {
       icon: MessageSquare,
       // Visible si l'utilisateur a accès aux messages, aux appels OU aux
       // diffusions (ex : un manager sans MESSAGES doit quand même voir le
-      // sous-menu Appel, et le marketing les Diffusions).
+      // sous-menu Appel). Le marketing n'a plus les Diffusions depuis le 28/09.
       canAccess: () =>
         can(Modules.MESSAGES, Action.READ) || can(Modules.CALLS, Action.READ) || can(Modules.DIFFUSIONS, Action.READ),
       badge: unread.total > 0 ? unread.total : undefined,
