@@ -264,6 +264,18 @@ export function fmtTelephone(phone?: string | null): string {
   return l ? l.replace(/(\d{2})(?=\d)/g, "$1 ") : phone ?? "";
 }
 
+/**
+ * Le numéro tel qu'il s'affiche, mais SANS espaces.
+ *
+ * Les espaces servent à le lire au moment de composer ; collés dans une
+ * recherche, un tableur ou WhatsApp, ils ne servent qu'à faire échouer la
+ * correspondance. On copie donc la même valeur, débarrassée de sa mise en
+ * forme.
+ */
+export function telephoneACopier(phone?: string | null): string {
+  return fmtTelephone(phone).replace(/\s+/g, "");
+}
+
 /** Même règle que le serveur : 10 chiffres prennent l'indicatif 225, un numéro qui a déjà le sien part tel quel. */
 export function lienAppel(phone?: string | null): string {
   const d = chiffres(phone);

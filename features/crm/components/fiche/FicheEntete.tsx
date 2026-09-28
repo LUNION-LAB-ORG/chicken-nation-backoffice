@@ -2,7 +2,8 @@ import React from "react";
 import { CreditCard, Mail, MessageCircle, Phone } from "lucide-react";
 import { usePrendreMutation } from "../../queries/contact.mutation";
 import { IContactFiche } from "../../types/contact.type";
-import { PUBLIC_META, depuis, estCapte, fmtDate, fmtTelephone, lienAppel } from "../../utils/crm-ui";
+import { PUBLIC_META, depuis, estCapte, fmtDate, fmtTelephone, lienAppel, telephoneACopier } from "../../utils/crm-ui";
+import { BoutonCopier } from "../commun/BoutonCopier";
 import { PucePublic, PuceStatut } from "../commun/Puces";
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
@@ -51,6 +52,12 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {/*
+          Le numéro et sa copie restent SOLIDAIRES : groupés dans un même
+          conteneur, ils passent à la ligne ensemble plutôt que de se retrouver
+          séparés par l'e-mail quand la fiche est étroite.
+        */}
+        <div className="flex items-center gap-1.5">
         {consultation ? (
           <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 tabular-nums">
             <Phone className="w-4 h-4 text-gray-400" /> {fmtTelephone(p.telephone)}
@@ -72,6 +79,8 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
             <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
           </a>
         )}
+          <BoutonCopier valeur={telephoneACopier(p.telephone)} titre="Copier le numéro" />
+        </div>
         {c?.email &&
           (consultation ? (
             <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700">
