@@ -8,6 +8,8 @@ import {
   IExportLigne,
   IFileAgent,
   IContactFiche,
+  IIdentiteMaj,
+  IRenommerDTO,
   IContactFiltres,
   IContactLigne,
   IContactPage,
@@ -32,6 +34,10 @@ export const contactAPI = {
 
   /** Prendre un client de la file commune au moment de composer son numéro (409 si un collègue l'a déjà pris). */
   prendre: (id: string) => api.post<IPrise>(`${BASE}/contacts/${id}/prendre`, {}),
+
+  /** Nommer un contact sans nom ; le serveur écrit aussi sur son compte applicatif. */
+  renommer: (id: string, dto: IRenommerDTO) =>
+    api.patch<IIdentiteMaj>(`${BASE}/contacts/${id}/identite`, dto),
 
   assigner: (dto: IAssignerDTO) => api.patch<{ count: number }>(`${BASE}/contacts/assign`, dto),
 

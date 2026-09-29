@@ -266,3 +266,17 @@ export interface IExportLigne {
   created_at: string;
   user: IRef | null;
 }
+
+/** Nommer un contact : prénom et nom séparés, jamais une saisie libre à découper. */
+export interface IRenommerDTO {
+  prenom: string;
+  nom?: string;
+}
+
+export interface IIdentiteMaj {
+  id: string;
+  nom: string;
+  prenom: string;
+  /** Le nom est-il parti aussi sur le compte de l'application ? */
+  sur_le_compte: boolean;
+}

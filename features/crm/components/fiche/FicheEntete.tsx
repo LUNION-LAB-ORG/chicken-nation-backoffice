@@ -4,6 +4,7 @@ import { usePrendreMutation } from "../../queries/contact.mutation";
 import { IContactFiche } from "../../types/contact.type";
 import { PUBLIC_META, depuis, estCapte, fmtDate, fmtTelephone, lienAppel, telephoneACopier } from "../../utils/crm-ui";
 import { BoutonCopier } from "../commun/BoutonCopier";
+import { NommerContact } from "./NommerContact";
 import { PucePublic, PuceStatut } from "../commun/Puces";
 
 function Info({ label, children }: { label: string; children: React.ReactNode }) {
@@ -35,11 +36,24 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
   const aPrendre = p.mode === "commune" && p.status !== "CONVERTI";
   // Consultation (marketing, manager) : le numéro et l'e-mail se lisent, ils ne s'appellent pas.
   const consultation = p.mode === "consultation";
+  /**
+   * Le nom saisi par le client LUI-MÊME dans l'application fait foi : ce n'est
+   * pas au centre d'appels de le corriger. On ne propose donc de nommer que
+   * les fiches dont le compte n'a pas de nom — ce qui laisse aussi la porte
+   * ouverte à la correction d'une faute de frappe de l'agent. Le serveur
+   * applique la même règle, cette condition ne fait que ne pas proposer ce
+   * qui serait refusé.
+   */
+  const nomDuCompte = [c?.first_name, c?.last_name].filter(Boolean).join(" ").trim();
+  const peutNommer = !consultation && !nomDuCompte;
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">{p.nom}</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold text-gray-900">{p.nom}</h2>
+            {peutNommer && <NommerContact id={p.id} />}
+          </div>
           <p className="text-sm text-gray-500">
             {provenance(p)}
             {p.cycle > 1 && ` · redevenu inactif ${p.cycle - 1} fois`}

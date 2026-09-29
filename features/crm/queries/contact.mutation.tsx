@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { contactAPI } from "../apis/contact.api";
-import { IAppelDTO, IAssignerDTO } from "../types/contact.type";
+import { IAppelDTO, IAssignerDTO, IRenommerDTO } from "../types/contact.type";
 import { CANAL_LABEL, STATUT_META } from "../utils/crm-ui";
 import { useInvalidateCrmQuery } from "./index.query";
 
@@ -73,5 +73,21 @@ export const usePrendreMutation = () => {
       toast.error(e.status === 409 ? `${e.message} : passez au suivant` : e.message);
       invalider();
     },
+  });
+};
+
+/**
+ * Nommer un contact.
+ *
+ * Le serveur refuse de renommer un client qui a saisi son nom lui-même dans
+ * l'application : son message est affiché tel quel, il dit exactement
+ * pourquoi et quel nom est déjà en place.
+ */
+export const useRenommerMutation = () => {
+  const invalider = useInvalidateCrmQuery();
+  return useMutation({
+    mutationFn: ({ id, dto }: { id: string; dto: IRenommerDTO }) => contactAPI.renommer(id, dto),
+    onSuccess: () => invalider(),
+    onError: (e: Error) => toast.error(e.message),
   });
 };
