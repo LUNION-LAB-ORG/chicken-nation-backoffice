@@ -36,6 +36,7 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
+import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { BoutonCopierLien } from "@/components/ui/CopierLien";
 import { lienCommande } from "@/utils/deeplinks";
 
@@ -307,12 +308,24 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
         <div className="flex-1 min-w-0 space-y-1.5">
           <p className="text-base font-bold text-gray-900 truncate">{name}</p>
           {ui.clientPhone && (
-            <a
-              href={`tel:${ui.clientPhone}`}
-              className="inline-flex items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
-            >
-              <Phone className="w-3.5 h-3.5" /> {ui.clientPhone}
-            </a>
+            <div className="flex items-center gap-1.5">
+              <a
+                href={`tel:${ui.clientPhone}`}
+                className="inline-flex items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
+              >
+                <Phone className="w-3.5 h-3.5" /> {ui.clientPhone}
+              </a>
+              {/*
+                Copié SANS ESPACES : le numéro sert à rappeler depuis un autre
+                appareil, à chercher dans une liste ou à coller dans WhatsApp,
+                où les espaces ne font qu'empêcher la correspondance.
+              */}
+              <BoutonCopier
+                valeur={ui.clientPhone.replace(/\s+/g, "")}
+                titre="Copier le numéro"
+                className="!px-1.5 !py-1 !text-[11px]"
+              />
+            </div>
           )}
           {ui.clientEmail && (
             <p className="flex items-center gap-1.5 text-xs text-gray-600">

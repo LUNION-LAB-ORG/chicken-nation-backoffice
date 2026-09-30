@@ -3,7 +3,7 @@ import { CreditCard, Mail, MessageCircle, Phone } from "lucide-react";
 import { usePrendreMutation } from "../../queries/contact.mutation";
 import { IContactFiche } from "../../types/contact.type";
 import { PUBLIC_META, depuis, estCapte, fmtDate, fmtTelephone, lienAppel, telephoneACopier } from "../../utils/crm-ui";
-import { BoutonCopier } from "../commun/BoutonCopier";
+import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { NommerContact } from "./NommerContact";
 import { PucePublic, PuceStatut } from "../commun/Puces";
 

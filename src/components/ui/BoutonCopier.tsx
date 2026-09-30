@@ -2,49 +2,33 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { copierDansLePressePapiers } from "@/utils/deeplinks";
 
-/**
- * Repli quand le presse-papiers moderne est refusé.
- *
- * `navigator.clipboard` n'existe qu'en contexte sécurisé et la politique de
- * permissions du navigateur peut le bloquer. `execCommand` est obsolète mais
- * reste accepté partout : un bouton copier qui échoue en silence est pire que
- * pas de bouton du tout, l'agent croit avoir le numéro et colle du vide.
- */
-function copierParRepli(texte: string): boolean {
-  try {
-    const zone = document.createElement("textarea");
-    zone.value = texte;
-    zone.setAttribute("readonly", "");
-    // Hors écran, pas masqué : un champ en `display:none` ne peut pas être
-    // sélectionné, et la copie échouerait sans rien dire.
-    zone.style.position = "fixed";
-    zone.style.top = "-1000px";
-    document.body.appendChild(zone);
-    zone.select();
-    const ok = document.execCommand("copy");
-    document.body.removeChild(zone);
-    return ok;
-  } catch {
-    return false;
-  }
-}
-
-/** Copier une valeur en un geste, avec un accusé de réception visible. */
-export function BoutonCopier({
-  valeur,
-  titre = "Copier",
-  className = "",
-}: {
+interface BoutonCopierProps {
   valeur: string;
   titre?: string;
   className?: string;
-}) {
+}
+
+/**
+ * Copier une valeur courte en un geste : un numéro, un code, une référence.
+ *
+ * Icône seule, pour se poser à côté de la donnée sans la noyer. Pour un lien
+ * de partage, préférer `BoutonCopierLien`, qui porte son libellé et annonce
+ * la copie par une notification.
+ *
+ * Le presse-papiers passe par `copierDansLePressePapiers`, la primitive
+ * partagée : elle sait se replier quand `navigator.clipboard` est refusé,
+ * hors contexte sécurisé ou bloqué par la politique de permissions. Une copie
+ * qui échoue en silence est pire que pas de bouton du tout — on croit avoir
+ * le numéro et on colle du vide.
+ */
+export function BoutonCopier({ valeur, titre = "Copier", className = "" }: BoutonCopierProps) {
   const [copie, setCopie] = useState(false);
   const minuteur = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // La fiche peut se fermer avant la fin du délai : sans ce nettoyage, chaque
-  // copie suivie d'une fermeture rapide laisse un minuteur derrière elle.
+  // Le panneau peut se fermer avant la fin du délai : sans ce nettoyage,
+  // chaque copie suivie d'une fermeture rapide laisse un minuteur derrière.
   useEffect(
     () => () => {
       if (minuteur.current) clearTimeout(minuteur.current);
@@ -55,15 +39,7 @@ export function BoutonCopier({
   const copier = async () => {
     const texte = valeur.trim();
     if (!texte) return;
-
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(texte);
-      ok = true;
-    } catch {
-      ok = copierParRepli(texte);
-    }
-    if (!ok) return;
+    if (!(await copierDansLePressePapiers(texte))) return;
 
     setCopie(true);
     if (minuteur.current) clearTimeout(minuteur.current);
