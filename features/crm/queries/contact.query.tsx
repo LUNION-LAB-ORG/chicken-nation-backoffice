@@ -57,3 +57,17 @@ export const useExportsQuery = (page: number, actif: boolean) =>
     queryFn: () => contactAPI.exports(page),
     enabled: actif,
   });
+
+/**
+ * Décompte par public. Le public et l'état de compte sont retirés de la clé :
+ * la réponse ne dépend pas d'eux (le serveur les ignore), donc changer de
+ * public ne doit pas relancer la requête ni faire clignoter la bande.
+ */
+export const useRepartitionQuery = (filtres: IContactFiltres) => {
+  const { segment: _s, compte: _c, page: _p, limit: _l, ...reste } = filtres;
+  return useQuery({
+    queryKey: crmKeyQuery("repartition", reste),
+    queryFn: () => contactAPI.repartition(reste as IContactFiltres),
+    staleTime: 30_000,
+  });
+};

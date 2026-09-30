@@ -13,6 +13,7 @@ import {
   IContactFiltres,
   IContactLigne,
   IContactPage,
+  IRepartition,
   IPrise,
   ContactStatut,
 } from "../types/contact.type";
@@ -27,6 +28,10 @@ export const contactAPI = {
   /** `telephone` : numéro tapé pour un client qui appelle (lecture de la fiche d'un collègue). */
   obtenirParId: (id: string, telephone?: string) =>
     api.get<IContactFiche>(`${BASE}/contacts/${id}${versQuery({ telephone })}`),
+
+  /** Décompte par public et par état de compte, sur le périmètre filtré. */
+  repartition: (filtres?: IContactFiltres) =>
+    api.get<IRepartition>(`${BASE}/contacts/repartition${versQuery(filtres)}`),
 
   /** Client qui appelle : sa fiche retrouvée par son numéro exact, quel que soit son agent. */
   rechercher: (telephone: string) =>

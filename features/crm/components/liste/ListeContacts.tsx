@@ -8,6 +8,7 @@ import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { BarreSelection } from "./BarreSelection";
 import { ExportContacts } from "./ExportContacts";
 import { FiltresContacts } from "./FiltresContacts";
+import { RepartitionContacts } from "./RepartitionContacts";
 import { TableContacts } from "./TableContacts";
 
 export const FILTRES_DEFAUT: IContactFiltres = { page: 1, limit: 25, sort: "entree_desc" };
@@ -60,6 +61,8 @@ export function ListeContacts({
   return (
     <div className="space-y-3">
       <FiltresContacts filtres={filtres} onChange={changerFiltres} avecAgent={voitTousLesAgents} />
+
+      <RepartitionContacts filtres={filtres} onChange={changerFiltres} />
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-gray-600">

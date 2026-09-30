@@ -289,3 +289,10 @@ export interface IIdentiteMaj {
   /** Le nom est-il parti aussi sur le compte de l'application ? */
   sur_le_compte: boolean;
 }
+
+/** Combien de contacts dans chaque public, et dans chaque état de compte. */
+export interface IRepartition {
+  total: number;
+  publics: { segment: string; nombre: number }[];
+  comptes: { compte: string; nombre: number }[];
+}
