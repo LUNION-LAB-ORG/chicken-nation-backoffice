@@ -28,14 +28,16 @@ import {
 const SEGMENT_TABS: {
   key: CustomerSegment | "all";
   label: string;
+  /** Titre du compteur : il annonce ce que l'onglet compte réellement. */
+  compteur: string;
   icon: React.ReactNode;
 }[] = [
-  { key: "all", label: "Tous", icon: <Users size={16} /> },
-  { key: "app_users", label: "Utilisateurs app", icon: <Smartphone size={16} /> },
-  { key: "no_app", label: "Sans app", icon: <SmartphoneNfc size={16} /> },
-  { key: "has_ordered", label: "Ont commandé", icon: <ShoppingBag size={16} /> },
-  { key: "never_ordered", label: "Jamais commandé", icon: <ShoppingCart size={16} /> },
-  { key: "incomplete_profile", label: "Profil incomplet", icon: <UserX size={16} /> },
+  { key: "all", label: "Tous", compteur: "Nombre de clients", icon: <Users size={16} /> },
+  { key: "app_users", label: "Utilisateurs app", compteur: "Nombre d'utilisateurs app", icon: <Smartphone size={16} /> },
+  { key: "no_app", label: "Sans app", compteur: "Clients sans application", icon: <SmartphoneNfc size={16} /> },
+  { key: "has_ordered", label: "Ont commandé", compteur: "Clients ayant commandé", icon: <ShoppingBag size={16} /> },
+  { key: "never_ordered", label: "Jamais commandé", compteur: "Clients sans commande", icon: <ShoppingCart size={16} /> },
+  { key: "incomplete_profile", label: "Profil incomplet", compteur: "Profils incomplets", icon: <UserX size={16} /> },
 ];
 
 export default function Clients() {
@@ -104,7 +106,11 @@ export default function Clients() {
       <div className="-mt-10">
         <ClientHeader />
         {view === "list" && (
-          <UserCounter count={clientResponse?.meta?.total ?? 0} />
+          <UserCounter
+            count={clientResponse?.meta?.total ?? 0}
+            libelle={SEGMENT_TABS.find((t) => t.key === activeSegment)?.compteur ?? "Nombre de clients"}
+            chargement={isLoading}
+          />
         )}
       </div>
 
