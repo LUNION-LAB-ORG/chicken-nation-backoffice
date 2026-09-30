@@ -98,12 +98,6 @@ export const useGetMenuConfig = (): {
         can(Modules.CLIENTS, Action.READ) || can(Modules.COMMENTAIRES, Action.READ) || can(Modules.CRM, Action.READ),
       items: [
         {
-          id: "base_donnees-clients",
-          label: "Clients",
-          icon: Users,
-          canAccess: () => can(Modules.CLIENTS, Action.READ),
-        },
-        {
           id: "base_donnees-reviews",
           label: "Notes et avis",
           icon: Star,
@@ -115,7 +109,15 @@ export const useGetMenuConfig = (): {
           id: "base_donnees-crm",
           label: "CRM",
           icon: Target,
-          canAccess: () => can(Modules.CRM, Action.READ),
+          /**
+           * La page Clients a fusionné ici : son fichier, sa recherche et la
+           * fiche complète du client vivent désormais dans l'onglet Contacts.
+           * L'entrée s'ouvre donc aussi au droit CLIENTS, sans quoi caissier
+           * et assistant-manager perdraient tout accès au fichier. Le serveur
+           * n'accepte ce droit que sur la liste et la fiche, et ampute la
+           * réponse de tout ce qui relève du centre d'appels.
+           */
+          canAccess: () => can(Modules.CRM, Action.READ) || can(Modules.CLIENTS, Action.READ),
         },
       ],
     },
