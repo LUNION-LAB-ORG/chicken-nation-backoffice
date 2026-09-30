@@ -2,6 +2,10 @@ import React from "react";
 import { Eye, PartyPopper, Store } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useAuthStore } from "../../../users/hook/authStore";
+// Import RELATIF entre modules : `@/` désigne `src/`, et `features/` vit à la
+// racine — `@/features/...` compile mais casse la construction de production.
+import { ClientDetail } from "../../../customer/components/detail-customer";
+import { Action, Modules } from "../../../users/types/auth.type";
 import { useContactFicheQuery } from "../../queries/contact.query";
 import { fmtDate, fmtMontant } from "../../utils/crm-ui";
 import { Chargement, Erreur } from "../commun/Etats";
@@ -32,6 +36,30 @@ export function FicheContact({
   const moi = useAuthStore((s) => s.user?.id);
   const { data: p, isError, error } = useContactFicheQuery(id, telephone);
 
+  /**
+   * FICHE CLIENT DANS LA FICHE CONTACT — « un écran, deux droits ».
+   *
+   * L'ancienne page Clients disparaît, mais son droit reste : le dossier du
+   * client (commandes, adresses, favoris, avis, Carte Nation) s'ouvre derrière
+   * `CLIENTS`, le panneau d'appel derrière `CRM`. Un caissier voit donc le
+   * dossier sans voir le pipeline d'appels, et personne ne gagne ni ne perd
+   * d'accès en supprimant la page.
+   *
+   * Absent quand le contact n'a pas de compte : un numéro relevé en caisse
+   * n'a ni commandes, ni adresses, ni avis — un onglet vide vaudrait moins
+   * que pas d'onglet.
+   */
+  const peutVoirLeDossier = useAuthStore((s) => s.can(Modules.CLIENTS, Action.READ));
+  const compteId = p?.customer?.id ?? null;
+  const dossierPossible = peutVoirLeDossier && !!compteId;
+  const [onglet, setOnglet] = React.useState<"crm" | "client">("crm");
+
+  // Le contact change : on revient au suivi, et on ne garde pas un onglet
+  // « Fiche client » ouvert sur une fiche qui, elle, n'en a pas.
+  React.useEffect(() => {
+    setOnglet("crm");
+  }, [id]);
+
   const converti = p?.status === "CONVERTI";
   // Client d'un collègue, retrouvé par son numéro : on lit, on renvoie son coupon, rien d'autre.
   const lecture = p?.mode === "lecture";
@@ -50,6 +78,34 @@ export function FicheContact({
       ) : (
         <div className="space-y-5">
           <FicheEntete p={p} />
+
+          {dossierPossible && (
+            <div className="flex items-center gap-1 border-b border-gray-100">
+              {([
+                ["crm", "Suivi CRM"],
+                ["client", "Fiche client"],
+              ] as const).map(([cle, libelle]) => (
+                <button
+                  key={cle}
+                  type="button"
+                  onClick={() => setOnglet(cle)}
+                  className={`relative px-4 py-2.5 text-sm font-medium transition-colors cursor-pointer ${
+                    onglet === cle ? "text-[#F17922]" : "text-gray-500 hover:text-gray-900"
+                  }`}
+                >
+                  {libelle}
+                  {onglet === cle && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[3px] rounded-t bg-[#F17922]" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {onglet === "client" && compteId ? (
+            <ClientDetail clientId={compteId} />
+          ) : (
+          <>
           {consultation && (
             <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">
               <Eye className="w-4 h-4 mt-0.5 shrink-0 text-gray-500" />
@@ -113,6 +169,8 @@ export function FicheContact({
               )}
             </div>
           </div>
+          </>
+          )}
         </div>
       )}
     </Modal>
