@@ -60,7 +60,11 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
   //   - Pour les ONLINE dès qu'au moins un paiement existe (consultation historique)
   // Plus de garde `!live.paied` : la tab affiche maintenant l'historique des
   // paiements une fois encaissés, donc pertinente même après clôture.
-  const showPayment =
+  /**
+   * ENCAISSEMENT RÉELLEMENT ATTENDU : c'est ce qui mérite la pastille rouge.
+   * À ne pas confondre avec la simple visibilité de l'onglet, plus large.
+   */
+  const paiementAttendu =
     !!live &&
     ((live.payment_method === PaymentMethod.OFFLINE &&
       ["PICKED_UP", "COLLECTED", "COMPLETED"].includes(live.status)) ||
@@ -71,6 +75,20 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
       (isAdmin &&
         live.payment_method !== PaymentMethod.OFFLINE &&
         live.status === OrderStatus.PENDING));
+
+  /**
+   * L'ADMIN atteint le paiement QUEL QUE SOIT LE STATUT.
+   *
+   * L'onglet n'apparaissait qu'à partir de PICKED_UP : corriger un
+   * encaissement sur une commande en préparation, prête ou annulée était
+   * impossible, alors que rien ne l'interdit côté serveur. Il fallait
+   * attendre que la commande avance, ou passer par un autre écran.
+   *
+   * ⚠️ La PASTILLE rouge, elle, reste sur `paiementAttendu`. Allumée sur
+   * chaque commande, elle ne voudrait plus rien dire, et l'alerte qui crie
+   * toujours finit par ne plus être lue.
+   */
+  const showPayment = !!live && (isAdmin || paiementAttendu);
 
   return (
     <>
@@ -119,7 +137,12 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
             </header>
 
             {/* Tabs nav */}
-            <DrawerTabs value={tab} onChange={setTab} showPayment={showPayment} />
+            <DrawerTabs
+              value={tab}
+              onChange={setTab}
+              showPayment={showPayment}
+              alertePaiement={paiementAttendu}
+            />
 
             {/* Content scrollable */}
             <div className="flex-1 overflow-y-auto">

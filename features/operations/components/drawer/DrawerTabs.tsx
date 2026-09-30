@@ -7,8 +7,13 @@ export type DrawerTabKey = "details" | "historique" | "payment";
 interface Props {
   value: DrawerTabKey;
   onChange: (v: DrawerTabKey) => void;
-  /** Affiche le tab "Paiement" uniquement si applicable (OFFLINE non payée) */
+  /** Affiche le tab « Paiement ». L'admin l'a quel que soit le statut. */
   showPayment: boolean;
+  /**
+   * Un encaissement est réellement attendu : seul cas qui allume la pastille.
+   * Distinct de `showPayment` — une alerte qui s'allume partout ne se lit plus.
+   */
+  alertePaiement?: boolean;
 }
 
 const TABS: { key: DrawerTabKey; label: string }[] = [
@@ -18,7 +23,7 @@ const TABS: { key: DrawerTabKey; label: string }[] = [
 ];
 
 /** Tabs segmentées pour naviguer dans le drawer Opérations. */
-export function DrawerTabs({ value, onChange, showPayment }: Props) {
+export function DrawerTabs({ value, onChange, showPayment, alertePaiement = false }: Props) {
   const visible = TABS.filter((t) => t.key !== "payment" || showPayment);
   return (
     <div className="flex items-center gap-1 px-4 pt-2 bg-white border-b border-gray-100">
@@ -33,7 +38,7 @@ export function DrawerTabs({ value, onChange, showPayment }: Props) {
             }`}
           >
             {t.label}
-            {t.key === "payment" && showPayment && (
+            {t.key === "payment" && alertePaiement && (
               <span className="absolute -top-0.5 -right-1 flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-60 animate-ping" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
