@@ -231,7 +231,7 @@ export interface IFileAgent {
     conversions_jour: number;
     portefeuille: number;
     /** Confiés encore ouverts que personne n'a appelés : le reste à faire. */
-    jamais_appeles: number;
+    jamais_appeles?: number;
   };
 }
 

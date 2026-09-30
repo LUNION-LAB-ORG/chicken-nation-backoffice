@@ -68,7 +68,9 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
         <Indicateur
           label="Dans mon portefeuille"
           valeur={i.portefeuille}
-          detail={`${fmtNombre(i.jamais_appeles)} jamais appelés`}
+          // Replié sur zéro : pendant les quelques minutes où le backoffice est
+          // déployé avant le serveur, le champ n'existe pas encore.
+          detail={`${fmtNombre(i.jamais_appeles ?? 0)} jamais appelés`}
           aide="Contacts qui vous sont confiés et dont le statut est encore ouvert : à appeler, à rappeler, intéressé, coupon envoyé. Il ne baisse qu'à la conversion, au refus ou quand le client est injoignable, et il monte chaque fois que vous prenez une fiche dans la file commune. Le nombre en orange, lui, descend à chaque premier appel."
           large
         />
