@@ -46,6 +46,25 @@ export function FiltresAvances({
 
   return (
     <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 border-t border-gray-100 pt-3">
+      {/*
+        COMPTE CLIENT : les cinq onglets de l'ancienne page Clients, devenus un
+        filtre. Placés ici et non dans la barre du haut, qui sert au tri
+        quotidien du centre d'appels ; un cinquième menu l'aurait fait passer
+        sur deux lignes sur la plupart des écrans.
+      */}
+      <ChampSelect
+        label="Compte client"
+        valeur={filtres.compte ?? ""}
+        onChange={(v) => onChange({ compte: (v || undefined) as IContactFiltres["compte"] })}
+        vide="Peu importe"
+        options={[
+          { value: "avec_app", label: "Application installée" },
+          { value: "sans_app", label: "Sans l'application" },
+          { value: "a_commande", label: "A déjà commandé" },
+          { value: "jamais_commande", label: "N'a jamais commandé" },
+          { value: "profil_incomplet", label: "Profil incomplet" },
+        ]}
+      />
       <ChampSelect
         label="Coupon"
         valeur={filtres.coupon ?? ""}

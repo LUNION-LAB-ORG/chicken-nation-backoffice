@@ -178,6 +178,13 @@ export interface IContactFiltres {
   limit?: number;
   search?: string;
   segment?: Public;
+  /**
+   * État du COMPTE client, repris de l'ancienne page Clients.
+   * ⚠️ Distinct du public : le public dit par où le contact est entré et ne
+   * bouge plus, celui-ci décrit le compte tel qu'il est aujourd'hui.
+   * Ne matche que les contacts rattachés à un compte.
+   */
+  compte?: "avec_app" | "sans_app" | "a_commande" | "jamais_commande" | "profil_incomplet";
   status?: string;
   agent_id?: string;
   campaign_id?: string;
