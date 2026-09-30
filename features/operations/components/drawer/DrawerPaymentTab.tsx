@@ -91,6 +91,20 @@ export function DrawerPaymentTab({ order }: Props) {
   // ADMIN : accès aux contrôles d'édition / suppression de l'historique.
   const isAdmin = useIsAdmin();
 
+  /**
+   * ENCAISSER À LA MAIN UNE COMMANDE EN LIGNE.
+   *
+   * Ce n'est pas le cas courant, mais il arrive : paiement web jamais abouti
+   * (webhook perdu), ou client qui finit par régler le livreur en espèces.
+   * L'argent est là, la commande restait « non payée » et rien à l'écran ne
+   * permettait de le dire — alors que le serveur, lui, accepte parfaitement
+   * l'enregistrement.
+   *
+   * Réservé à l'administrateur : contourner le moyen de paiement déclaré doit
+   * rester un geste de correction, pas la routine d'un poste de caisse.
+   */
+  const enLigne = order.payment_method !== PaymentMethod.OFFLINE;
+
   // Déjà encaissé (paiements réussis existants) → reste réellement dû.
   const successPaiements = useMemo(
     () =>
@@ -223,7 +237,7 @@ export function DrawerPaymentTab({ order }: Props) {
   );
 
   // ── ONLINE : pas d'encaissement manuel, contexte + historique seulement ───
-  if (order.payment_method !== PaymentMethod.OFFLINE) {
+  if (enLigne && !isAdmin) {
     return (
       <div className="p-4 space-y-4">
         {header}
@@ -241,10 +255,26 @@ export function DrawerPaymentTab({ order }: Props) {
     );
   }
 
-  // ── OFFLINE ───────────────────────────────────────────────────────────────
+  // ── OFFLINE, ou EN LIGNE repris par un administrateur ────────────────────
   return (
     <div className="p-4 space-y-4">
       {header}
+
+      {/* Le contournement est nommé : personne ne doit encaisser à la main une
+          commande en ligne en croyant que c'est la marche normale. */}
+      {enLigne && (
+        <p className="flex items-start gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-[11px] leading-relaxed text-amber-900">
+          <CreditCard className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>
+            Commande <strong className="font-semibold">en ligne</strong> : le paiement aurait dû se faire
+            sur l&apos;application. Enregistrez ici ce qui a réellement été perçu, par exemple un
+            règlement au livreur ou un paiement web jamais remonté.
+          </span>
+        </p>
+      )}
+
+      {/* Réconciliation par référence de transaction, quand elle s'applique. */}
+      {enLigne && <ConfirmPaymentAction order={uiOrder} />}
 
       {/* Encaissement livreur déclaré à la livraison — prioritaire, 1 clic. */}
       <PendingCollectionAction order={uiOrder} />
