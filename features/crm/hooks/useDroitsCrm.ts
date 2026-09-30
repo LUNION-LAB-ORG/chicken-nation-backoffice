@@ -25,7 +25,16 @@ export function useDroitsCrm() {
   const peutTraiter = useAuthStore((s) => s.can(Modules.CRM, Action.UPDATE));
   const peutAnalyser = useAuthStore((s) => s.can(Modules.CRM, Action.REPORT));
   const peutExporter = useAuthStore((s) => s.can(Modules.CRM, Action.EXPORT));
+  const peutVoirLeFichier = useAuthStore((s) => s.can(Modules.CLIENTS, Action.READ));
   const pointDeVente = usePointDeVente();
   const lecteur = peutLire && !peutTraiter && !estGestionnaire;
-  return { peutLire, estGestionnaire, peutTraiter, peutAnalyser, peutExporter, lecteur, pointDeVente };
+  /**
+   * ANNUAIRE : le compte tient le fichier client (droit CLIENTS) sans aucun
+   * droit CRM. Caissier et assistant-manager. Depuis la disparition de la
+   * page Clients, ils entrent par le CRM et n'y voient que les contacts et la
+   * fiche client. Le serveur applique la même règle et ampute la réponse : ce
+   * qui suit ne fait que ne pas proposer ce qui serait de toute façon vide.
+   */
+  const annuaire = !peutLire && peutVoirLeFichier;
+  return { peutLire, estGestionnaire, peutTraiter, peutAnalyser, peutExporter, lecteur, annuaire, pointDeVente };
 }

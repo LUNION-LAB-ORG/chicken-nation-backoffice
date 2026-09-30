@@ -4,11 +4,12 @@ import { reglageAPI } from "../apis/reglage.api";
 import { IOffreDTO, IRaisonDTO, IReglages, IStatutAppelDTO } from "../types/reglage.type";
 import { crmKeyQuery, useInvalidateCrmQuery } from "./index.query";
 
-export const useStatutsAppelQuery = () =>
-  useQuery({ queryKey: crmKeyQuery("statuts"), queryFn: reglageAPI.statuts.obtenirTous, staleTime: 5 * 60_000 });
+/** `actif` à faux pour un profil sans droit CRM : ces réglages lui sont refusés. */
+export const useStatutsAppelQuery = (actif = true) =>
+  useQuery({ queryKey: crmKeyQuery("statuts"), queryFn: reglageAPI.statuts.obtenirTous, staleTime: 5 * 60_000, enabled: actif });
 
-export const useRaisonsQuery = () =>
-  useQuery({ queryKey: crmKeyQuery("raisons"), queryFn: reglageAPI.raisons.obtenirTous, staleTime: 5 * 60_000 });
+export const useRaisonsQuery = (actif = true) =>
+  useQuery({ queryKey: crmKeyQuery("raisons"), queryFn: reglageAPI.raisons.obtenirTous, staleTime: 5 * 60_000, enabled: actif });
 
 export const useOffresQuery = () =>
   useQuery({ queryKey: crmKeyQuery("offres"), queryFn: reglageAPI.offres.obtenirTous, staleTime: 5 * 60_000 });

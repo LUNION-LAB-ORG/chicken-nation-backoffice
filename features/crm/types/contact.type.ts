@@ -131,7 +131,7 @@ export interface ICapture {
  * (client d'un collègue retrouvé par son numéro), ou la consulter (lecteur :
  * marketing, manager ; tout voir, téléphone compris, aucun geste).
  */
-export type ModeFiche = "gestion" | "sien" | "commune" | "lecture" | "consultation";
+export type ModeFiche = "gestion" | "sien" | "commune" | "lecture" | "consultation" | "annuaire";
 
 export interface IContactFiche extends Omit<IContactLigne, "coupon" | "customer"> {
   customer: (IClientContact & { created_at: string; last_login_at: string | null; whatsapp_opt_in: boolean }) | null;

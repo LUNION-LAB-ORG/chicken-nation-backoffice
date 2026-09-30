@@ -51,6 +51,12 @@ export function FicheContact({
    */
   const peutVoirLeDossier = useAuthStore((s) => s.can(Modules.CLIENTS, Action.READ));
   const compteId = p?.customer?.id ?? null;
+  /**
+   * ANNUAIRE : le serveur a déjà vidé la fiche de tout ce qui touche au
+   * centre d'appels. Il n'y a donc pas deux vues à proposer, il n'y en a
+   * qu'une — le dossier client. Pas d'onglets, pas de panneau d'appel.
+   */
+  const annuaire = p?.mode === "annuaire";
   const dossierPossible = peutVoirLeDossier && !!compteId;
   const [onglet, setOnglet] = React.useState<"crm" | "client">("crm");
 
@@ -79,7 +85,7 @@ export function FicheContact({
         <div className="space-y-5">
           <FicheEntete p={p} />
 
-          {dossierPossible && (
+          {dossierPossible && !annuaire && (
             <div className="flex items-center gap-1 border-b border-gray-100">
               {([
                 ["crm", "Suivi CRM"],
@@ -102,7 +108,12 @@ export function FicheContact({
             </div>
           )}
 
-          {onglet === "client" && compteId ? (
+          {annuaire && !compteId ? (
+            <p className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+              Ce contact n&apos;a pas de compte sur l&apos;application : il n&apos;y a pas de dossier client à
+              afficher. Son numéro a été relevé en caisse sur une commande Glovo ou Yango.
+            </p>
+          ) : (annuaire || onglet === "client") && compteId ? (
             <ClientDetail clientId={compteId} />
           ) : (
           <>

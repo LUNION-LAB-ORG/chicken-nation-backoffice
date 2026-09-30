@@ -1,5 +1,5 @@
 import React from "react";
-import { usePointDeVente } from "../../hooks/useDroitsCrm";
+import { useDroitsCrm, usePointDeVente } from "../../hooks/useDroitsCrm";
 import { IContactFiltres } from "../../types/contact.type";
 import { useRaisonsQuery, useStatutsAppelQuery } from "../../queries/reglage.query";
 import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
@@ -37,8 +37,11 @@ export function FiltresAvances({
   filtres: IContactFiltres;
   onChange: (partiel: Partial<IContactFiltres>) => void;
 }) {
-  const { data: raisons = [] } = useRaisonsQuery();
-  const { data: statuts = [] } = useStatutsAppelQuery();
+  // Mêmes raisons que dans la barre : l'annuaire n'a pas accès aux réglages
+  // du CRM, et « raison de non-commande » ne lui dit rien.
+  const { annuaire } = useDroitsCrm();
+  const { data: raisons = [] } = useRaisonsQuery(!annuaire);
+  const { data: statuts = [] } = useStatutsAppelQuery(!annuaire);
   // Un point de vente ne voit que les clients de son restaurant : pas de choix de restaurant.
   const pointDeVente = usePointDeVente();
   const { data: restaurants } = useRestaurantListQuery({ limit: 100 });

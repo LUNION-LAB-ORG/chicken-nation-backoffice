@@ -5,7 +5,6 @@ import { BarChart3, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users 
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
-import { HasPermission } from "../../../../features/users/components/HasPermission";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { useCrmSocketSync } from "../../../../features/crm/hooks/useCrmSocketSync";
@@ -39,8 +38,8 @@ type Cle = "tableau" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" 
  */
 export default function Crm() {
   const moi = useAuthStore((s) => s.user?.id);
-  const { estGestionnaire, peutTraiter, peutAnalyser, peutExporter, lecteur, pointDeVente } = useDroitsCrm();
-  const voitContacts = peutTraiter || lecteur;
+  const { peutLire, estGestionnaire, peutTraiter, peutAnalyser, peutExporter, lecteur, annuaire, pointDeVente } = useDroitsCrm();
+  const voitContacts = peutTraiter || lecteur || annuaire;
 
   useCrmSocketSync();
   const { data: file } = useMaFileQuery(peutTraiter && !estGestionnaire);
@@ -59,14 +58,14 @@ export default function Crm() {
         badge: file ? file.rappels.length + file.interesses.length : undefined,
       },
       { cle: "contacts", label: "Contacts", Icone: Users, visible: voitContacts },
-      { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: !pointDeVente },
+      { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: !pointDeVente && !annuaire },
       { cle: "coupons", label: "Coupons", Icone: Ticket, visible: peutAnalyser },
       { cle: "ventes", label: "Ventes", Icone: Receipt, visible: peutAnalyser },
       // Réglages du réseau (messages, offres, statuts) : pas pour un point de vente.
       { cle: "reglages", label: "Réglages", Icone: Settings, visible: estGestionnaire || (lecteur && !pointDeVente) },
     ];
     return liste.filter((o) => o.visible);
-  }, [peutAnalyser, peutTraiter, voitContacts, pointDeVente, estGestionnaire, lecteur, file]);
+  }, [peutAnalyser, peutTraiter, voitContacts, pointDeVente, estGestionnaire, lecteur, annuaire, file]);
 
   const [cle, setCle] = useState<Cle>(estGestionnaire || !peutTraiter ? onglets[0]?.cle ?? "contacts" : "file");
   const [filtresListe, setFiltresListe] = useState<IContactFiltres>(FILTRES_DEFAUT);
@@ -105,11 +104,17 @@ export default function Crm() {
         subtitle="Inscrits sans commande, clients inactifs et clients Glovo/Yango : relance, coupons et campagnes"
       />
 
-      <HasPermission
-        module={Modules.CRM}
-        action={Action.READ}
-        fallback={<div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">Vous n&apos;avez pas accès à ce module.</div>}
-      >
+      {/*
+        La porte s'ouvre au droit CRM, ou au seul droit CLIENTS depuis que la
+        page Clients a fusionné ici. Le serveur tranche pour de bon : il
+        n'accepte CLIENTS que sur la liste et la fiche, et ampute la réponse.
+      */}
+      {!peutLire && !annuaire ? (
+        <div className="text-sm text-gray-500 bg-white border border-gray-200 rounded-xl p-6 mt-4">
+          Vous n&apos;avez pas accès à ce module.
+        </div>
+      ) : (
+      <>
         <div className="my-4">
           <Onglets<Cle> onglets={onglets} actif={actif ?? "contacts"} onChange={(k) => setCle(k)} />
         </div>
@@ -155,7 +160,8 @@ export default function Crm() {
         )}
         {actif === "ventes" && <Ventes onOuvrir={setFicheId} />}
         {actif === "reglages" && <Reglages lectureSeule={!estGestionnaire} />}
-      </HasPermission>
+      </>
+      )}
 
       <FicheContact id={fiche?.id ?? null} telephone={fiche?.telephone} onFermer={() => setFiche(null)} estGestionnaire={estGestionnaire} />
     </div>

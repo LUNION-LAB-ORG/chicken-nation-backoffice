@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { IContactFiltres, Public } from "../../types/contact.type";
-import { usePointDeVente } from "../../hooks/useDroitsCrm";
+import { useDroitsCrm, usePointDeVente } from "../../hooks/useDroitsCrm";
 import { useAgentsQuery } from "../../queries/contact.query";
 import { useCampagnesQuery } from "../../queries/campagne.query";
 import { PUBLICS, PUBLIC_META, STATUTS_ORDRE, STATUT_META } from "../../utils/crm-ui";
@@ -27,9 +27,15 @@ export function FiltresContacts({
 }) {
   const [texte, setTexte] = useState(filtres.search ?? "");
   const [avances, setAvances] = useState(false);
-  const { data: agents = [] } = useAgentsQuery();
+  /**
+   * ANNUAIRE : ni agents, ni campagnes. Ces routes lui répondraient 403, et
+   * ces notions ne lui parlent pas — il tient le fichier client, pas le
+   * pipeline d'appels.
+   */
+  const { annuaire } = useDroitsCrm();
+  const { data: agents = [] } = useAgentsQuery(!annuaire);
   const pointDeVente = usePointDeVente();
-  const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente);
+  const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente && !annuaire);
 
   useEffect(() => {
     const minuterie = setTimeout(() => {
@@ -73,7 +79,7 @@ export function FiltresContacts({
             ...STATUTS_ORDRE.map((s) => ({ value: s, label: s === "CONVERTI" ? "Convertis ou reconquis" : STATUT_META[s].label })),
           ]}
         />
-        {avecAgent && (
+        {avecAgent && !annuaire && (
           <ChampSelect
             valeur={filtres.agent_id ?? ""}
             onChange={(v) => maj({ agent_id: v || undefined })}
@@ -81,7 +87,7 @@ export function FiltresContacts({
             options={[{ value: "none", label: "Sans agent" }, ...agents.map((a) => ({ value: a.id, label: a.fullname }))]}
           />
         )}
-        {!pointDeVente && (
+        {!pointDeVente && !annuaire && (
           <ChampSelect
             valeur={filtres.campaign_id ?? ""}
             onChange={(v) => maj({ campaign_id: v || undefined })}

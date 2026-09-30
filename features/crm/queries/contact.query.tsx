@@ -42,11 +42,13 @@ export const useMaFileQuery = (actif = true) =>
     enabled: actif,
   });
 
-export const useAgentsQuery = () =>
+/** `actif` à faux pour un profil sans droit CRM : la route lui répondrait 403. */
+export const useAgentsQuery = (actif = true) =>
   useQuery({
     queryKey: crmKeyQuery("agents"),
     queryFn: () => contactAPI.agents(),
     staleTime: 60_000,
+    enabled: actif,
   });
 
 export const useExportsQuery = (page: number, actif: boolean) =>
