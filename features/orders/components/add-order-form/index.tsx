@@ -6,7 +6,7 @@ import { ClipboardList, Loader2, Store } from "lucide-react";
 
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { useOrderForm } from "../../hooks/useOrderForm";
-import { OrderType } from "../../types/order.types";
+import { OrderStatus, OrderType } from "../../types/order.types";
 import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import CouponSection, { CouponLectureSeule } from "./CouponSection";
@@ -14,6 +14,7 @@ import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
+import OrigineSelector from "./OrigineSelector";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
@@ -117,6 +118,24 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
             )}
           </div>
         </div>
+
+        {/*
+          ORIGINE : en modification seulement. Une commande saisie ici est par
+          définition une commande du personnel ; proposer la bascule à la
+          création permettrait de fabriquer de fausses commandes « application »
+          et de fausser durablement le suivi de l'acquisition.
+        */}
+        {editOrder && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <OrigineSelector
+              auto={!!formData.auto}
+              // `status` est un libellé d'affichage (« EN ATTENTE ») ; `rawStatus`
+              // est l'enum du serveur, seule source de vérité pour une règle.
+              enAttente={editOrder.rawStatus === OrderStatus.PENDING}
+              onChange={(auto) => setFormData({ ...formData, auto })}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── 2. Client | Livraison ────────────────────────────────────────── */}
