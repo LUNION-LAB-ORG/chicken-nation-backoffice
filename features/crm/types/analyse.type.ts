@@ -471,6 +471,16 @@ export interface IRapport {
   serie: { jour: string; entrees: number; appels: number; joints: number; coupons: number; conversions: number }[];
   population: Record<string, number>;
   entonnoirs: { segment: string; libelle: string; ventes: number; taux_conversion: number | null }[];
+  /** Une ligne par public : appels, joints, ventes, et les appels d'avant. */
+  par_public: {
+    segment: string;
+    libelle: string;
+    appels: number;
+    appels_precedent: number;
+    joints: number;
+    ventes: number;
+    taux_conversion: number | null;
+  }[];
   conversion: { delai_median_j: number | null; delai_moyen_j: number | null; panier_moyen: number };
   qualite: {
     resolution_premier_appel: { traites: number; resolus: number; taux: number };

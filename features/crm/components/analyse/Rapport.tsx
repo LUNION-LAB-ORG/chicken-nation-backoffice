@@ -148,16 +148,24 @@ export function Rapport() {
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <StatsChartCard title="Par public" subtitle="Ventes et taux de conversion sur la période">
-              {r.entonnoirs.length === 0 ? (
+            <StatsChartCard title="Par public" subtitle="Appels passés, clients joints et ventes">
+              {r.par_public.length === 0 ? (
                 <p className="py-6 text-center text-sm text-gray-400">Aucun public sur la période.</p>
               ) : (
-                r.entonnoirs.map((e) => (
-                  <Ligne
-                    key={e.segment}
-                    cle={e.libelle}
-                    valeur={`${fmtNombre(e.ventes)} vente${e.ventes > 1 ? "s" : ""} · ${fmtPct(e.taux_conversion ?? 0)}`}
-                  />
+                r.par_public.map((e) => (
+                  <div key={e.segment} className="border-b border-gray-100 py-2 last:border-0">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-sm font-semibold text-gray-800">{e.libelle}</span>
+                      <span className="text-sm font-semibold tabular-nums text-emerald-700">
+                        {fmtNombre(e.ventes)} vente{e.ventes > 1 ? "s" : ""} · {fmtPct(e.taux_conversion ?? 0)}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] tabular-nums text-gray-500">
+                      {fmtNombre(e.appels)} appel{e.appels > 1 ? "s" : ""}
+                      {e.appels_precedent > 0 && ` (${fmtNombre(e.appels_precedent)} avant)`} ·{" "}
+                      {fmtNombre(e.joints)} joint{e.joints > 1 ? "s" : ""}
+                    </p>
+                  </div>
                 ))
               )}
             </StatsChartCard>
