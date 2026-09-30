@@ -446,3 +446,36 @@ export interface IVentes {
   captures_total: { captures: number; personnes: number; ventes: number };
   dernieres: IVente[];
 }
+
+/** Un chiffre clé du rapport, avec ce qu'il valait sur la période précédente. */
+export interface IChiffreCle {
+  cle: string;
+  libelle: string;
+  valeur: number;
+  precedent: number;
+  /** `null` : la période précédente était à zéro, aucune variation calculable. */
+  variation: number | null;
+  monnaie?: boolean;
+}
+
+export interface ITauxCompare {
+  valeur: number;
+  precedent: number;
+}
+
+export interface IRapport {
+  periode: { debut: string; fin: string; jours: number };
+  precedente: { debut: string; fin: string };
+  cles: IChiffreCle[];
+  taux: { contact: ITauxCompare; conversion: ITauxCompare; coupon_utilise: ITauxCompare };
+  serie: { jour: string; entrees: number; appels: number; joints: number; coupons: number; conversions: number }[];
+  population: Record<string, number>;
+  entonnoirs: { segment: string; libelle: string; ventes: number; taux_conversion: number | null }[];
+  conversion: { delai_median_j: number | null; delai_moyen_j: number | null; panier_moyen: number };
+  qualite: {
+    resolution_premier_appel: { traites: number; resolus: number; taux: number };
+    traitement: { tentatives_moyennes: number; appels_par_contact: number };
+  };
+  agents: { lignes: { id: string; fullname: string; traites: number; joints: number; coupons: number; conversions: number; ca: number }[] };
+  raisons: { raisons: { id: string; raison: string; nombre: number }[] };
+}

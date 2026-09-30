@@ -8,6 +8,7 @@ import {
   IPareto,
   IPeriode,
   IQualite,
+  IRapport,
   ITendance,
   IVentes,
   IVentesFiltres,
@@ -20,6 +21,13 @@ import { telecharger, versQuery } from "../utils/requete";
 const BASE = "/crm/analytics";
 
 export const analyseAPI = {
+  /** Rapport d'activité : la période comparée à la précédente. */
+  rapport: (filtres?: IPeriode) => api.get<IRapport>(`${BASE}/rapport${versQuery(filtres)}`),
+
+  /** Le même rapport en PDF, avec les filtres de l'écran. */
+  rapportPdf: (filtres?: IPeriode) =>
+    telecharger(`${BASE}/rapport/pdf`, filtres ?? {}, "rapport-crm.pdf"),
+
   publics: (p: IPeriode) => api.get<IComparatifPublics>(`${BASE}/publics${versQuery(p)}`),
   vueEnsemble: (p: IPeriode) => api.get<IVueEnsemble>(`${BASE}/overview${versQuery(p)}`),
   raisons: (p: IPeriode) => api.get<IPareto>(`${BASE}/reasons${versQuery(p)}`),

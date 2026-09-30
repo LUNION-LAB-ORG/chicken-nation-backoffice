@@ -39,3 +39,11 @@ export const useVerbatimsQuery = (p: IVerbatimsFiltres) =>
 
 export const useVentesQuery = (p: IVentesFiltres) =>
   useQuery({ queryKey: crmKeyQuery("analyse", "ventes", p), queryFn: () => analyseAPI.ventes(p), ...options });
+
+/** Rapport d'activité : la période comparée à la précédente. */
+export const useRapportQuery = (filtres: IPeriode) =>
+  useQuery({
+    queryKey: crmKeyQuery("rapport", filtres),
+    queryFn: () => analyseAPI.rapport(filtres),
+    staleTime: 60_000,
+  });

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BarChart3, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users } from "lucide-react";
+import { BarChart3, FileText, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -19,10 +19,11 @@ import { Ventes } from "../../../../features/crm/components/analyse/Ventes";
 import { FILTRES_DEFAUT, ListeContacts } from "../../../../features/crm/components/liste/ListeContacts";
 import { MaFile } from "../../../../features/crm/components/file/MaFile";
 import { Campagnes } from "../../../../features/crm/components/campagnes/Campagnes";
+import { Rapport } from "../../../../features/crm/components/analyse/Rapport";
 import { Reglages } from "../../../../features/crm/components/reglages/Reglages";
 import { FicheContact } from "../../../../features/crm/components/fiche/FicheContact";
 
-type Cle = "tableau" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" | "reglages";
+type Cle = "tableau" | "rapport" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" | "reglages";
 
 /**
  * CRM : relance des inscrits qui n'ont jamais commandé, des anciens clients
@@ -50,6 +51,7 @@ export default function Crm() {
   const onglets = useMemo(() => {
     const liste: (Onglet<Cle> & { visible: boolean })[] = [
       { cle: "tableau", label: "Tableau de bord", Icone: BarChart3, visible: peutAnalyser },
+      { cle: "rapport", label: "Rapport", Icone: FileText, visible: peutAnalyser },
       {
         cle: "file",
         label: "Ma file",
@@ -133,6 +135,8 @@ export default function Crm() {
           <TableauDeBord key={demande} publicsInitiaux={publicsTableau} peutExporter={peutExporter} onOuvrir={setFicheId} />
         )}
         {actif === "file" && <MaFile onOuvrir={ouvrirParNumero} />}
+        {actif === "rapport" && <Rapport />}
+
         {actif === "contacts" && (
           <ListeContacts
             key={JSON.stringify(filtresListe)}
