@@ -10,8 +10,10 @@ import { useComparatifQuery } from "../../queries/campagne.query";
 import { IComparatifLigne, IIndicateursCampagne } from "../../types/campagne.type";
 import { Public } from "../../types/contact.type";
 import { PUBLICS, PUBLIC_META, TOUS_META, fmtDate, fmtMontant, fmtNombre, fmtPct } from "../../utils/crm-ui";
+import { Definition, definitionsComparatif } from "../../utils/definitions-campagne";
 import { Bouton } from "../commun/Champs";
 import { Chargement, Erreur, Vide } from "../commun/Etats";
+import { InfoBulle } from "../commun/InfoBulle";
 import { PuceCampagne, PucePublic } from "../commun/Puces";
 import { ONGLET_PUBLIC } from "./etat-campagne";
 
@@ -54,6 +56,7 @@ export function Comparatif({ peutExporter = false }: { peutExporter?: boolean })
   const { data = [], isPending, isError, error, isFetching } = useComparatifQuery(true, segment);
 
   const mots = segment ? PUBLIC_META[segment] : TOUS_META;
+  const defs = definitionsComparatif(segment);
   const lignes = [...data].sort(chronologique);
   const indicateurs = (c: IComparatifLigne): IIndicateursCampagne | null =>
     segment ? (c.public ?? c.par_public?.find((p) => p.segment === segment) ?? null) : c.indicateurs;
@@ -68,7 +71,10 @@ export function Comparatif({ peutExporter = false }: { peutExporter?: boolean })
 
   const entete = (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <ChoixPublicComparatif valeur={segment} onChange={setSegment} />
+      <div className="flex items-center gap-2">
+        <ChoixPublicComparatif valeur={segment} onChange={setSegment} />
+        <InfoBulle libelle="Comparatif des campagnes" texte={defs.perimetre} />
+      </div>
       {peutExporter && (
         <Bouton onClick={exporter} desactive={export_ || isPending || lignes.length === 0}>
           <FileSpreadsheet className="w-4 h-4" /> {export_ ? "Export…" : "Exporter en Excel"}
@@ -110,7 +116,18 @@ export function Comparatif({ peutExporter = false }: { peutExporter?: boolean })
     const i = indicateurs(c);
     return { id: c.id, conversion: i?.taux_conversion ?? null, couverture: i?.couverture ?? null };
   });
-  const colonnes = ["Campagne", "Publics", "Ciblés", "Couverture", "Taux de contact", "Joints", "Coupons utilisés / envoyés", mots.conversion, "CA", "Durée"];
+  const colonnes: { titre: string; definition?: Definition }[] = [
+    { titre: "Campagne" },
+    { titre: "Publics" },
+    { titre: "Ciblés", definition: defs.cibles },
+    { titre: "Couverture", definition: defs.couverture },
+    { titre: "Taux de contact", definition: defs.tauxContact },
+    { titre: "Joints", definition: defs.joints },
+    { titre: "Coupons utilisés / envoyés", definition: defs.coupons },
+    { titre: mots.conversion, definition: defs.ventes },
+    { titre: "CA", definition: defs.ca },
+    { titre: "Durée", definition: defs.duree },
+  ];
 
   return (
     <div className={`space-y-4 ${isFetching ? "opacity-70 transition-opacity" : ""}`}>
@@ -120,6 +137,7 @@ export function Comparatif({ peutExporter = false }: { peutExporter?: boolean })
         title={`${mots.taux} et couverture par campagne`}
         subtitle={segment ? `Chiffres du public « ${PUBLIC_META[segment].label} » seul` : "Dans l'ordre des lancements"}
         icon={BarChart3}
+        rightContent={<InfoBulle libelle={`${mots.taux} et couverture par campagne`} texte={defs.graphe} />}
       >
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
@@ -143,8 +161,15 @@ export function Comparatif({ peutExporter = false }: { peutExporter?: boolean })
           <thead>
             <tr className="bg-gray-50 text-gray-500 text-xs uppercase">
               {colonnes.map((c, i) => (
-                <th key={c} className={`font-semibold px-4 py-3 whitespace-nowrap ${i <= 1 ? "text-left" : "text-right"}`}>
-                  {c}
+                <th key={c.titre} className={`font-semibold px-4 py-3 whitespace-nowrap ${i <= 1 ? "text-left" : "text-right"}`}>
+                  {c.definition ? (
+                    <span className="inline-flex items-center gap-1">
+                      {c.titre}
+                      <InfoBulle libelle={c.titre} texte={c.definition} />
+                    </span>
+                  ) : (
+                    c.titre
+                  )}
                 </th>
               ))}
             </tr>

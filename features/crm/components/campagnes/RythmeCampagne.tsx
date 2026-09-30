@@ -6,6 +6,8 @@ import ChartTooltip from "@/components/gestion/Statistiques/shared/ChartTooltip"
 import { AXIS_STYLE, CHART_COLORS, GRID_STYLE } from "../../../statistics/utils/chart-config";
 import { ICampagneStats } from "../../types/campagne.type";
 import { accord } from "../../utils/crm-ui";
+import { definitionRythme } from "../../utils/definitions-campagne";
+import { InfoBulle } from "../commun/InfoBulle";
 
 const court = (jour: string) => jour.slice(8, 10) + "/" + jour.slice(5, 7);
 
@@ -20,7 +22,12 @@ export function RythmeCampagne({ rythme }: { rythme: ICampagneStats["rythme"] })
     : "Aucun objectif de volume n'a été fixé";
 
   return (
-    <StatsChartCard title="Rythme quotidien" subtitle={sousTitre} icon={Activity}>
+    <StatsChartCard
+      title="Rythme quotidien"
+      subtitle={sousTitre}
+      icon={Activity}
+      rightContent={<InfoBulle libelle="Rythme quotidien" texte={definitionRythme(rythme.objectif_jour != null)} />}
+    >
       {rythme.serie.length === 0 ? (
         <p className="text-sm text-gray-400 py-10 text-center">La campagne n&apos;a pas encore commencé.</p>
       ) : (

@@ -20,14 +20,23 @@ import {
   fmtTelephone,
   virgule,
 } from "../../utils/crm-ui";
+import { DEF_VENTES, Definition } from "../../utils/definitions-campagne";
 import { Bouton } from "../commun/Champs";
 import { Chargement, Erreur } from "../commun/Etats";
+import { InfoBulle } from "../commun/InfoBulle";
 import { Puce, PucePublic } from "../commun/Puces";
 import { DetailCommande } from "./DetailCommande";
 import { ONGLET_PUBLIC } from "./etat-campagne";
 
 const LIMITE = 20;
 const COLONNES = ["Client", "Public", "Agent", "Vente le", "Commande", "Restaurant", "Montant", "Coupon", "Délai"];
+/** Colonnes qui portent une définition. */
+const DEFINITION_COLONNE: Partial<Record<string, Definition>> = {
+  Agent: DEF_VENTES.agent,
+  Montant: DEF_VENTES.montant,
+  Coupon: DEF_VENTES.coupon,
+  Délai: DEF_VENTES.delai,
+};
 const sous = "block text-xs text-gray-500 font-normal";
 
 /**
@@ -382,7 +391,12 @@ export function VentesCampagne({
         title="Clients qui ont commandé"
         subtitle="Chaque vente comptée pour la campagne, de la plus récente à la plus ancienne"
         icon={ShoppingBag}
-        rightContent={entete && <span className="text-sm font-semibold text-emerald-700 whitespace-nowrap">{entete}</span>}
+        rightContent={
+          <span className="flex items-center gap-2">
+            {entete && <span className="text-sm font-semibold text-emerald-700 whitespace-nowrap">{entete}</span>}
+            <InfoBulle libelle="Clients qui ont commandé" texte={DEF_VENTES.liste} />
+          </span>
+        }
       >
         {choix.length > 1 && (
           <div className="flex flex-wrap gap-1 mb-3" role="group" aria-label="Filtrer par public">
@@ -442,11 +456,21 @@ export function VentesCampagne({
                 <caption className="sr-only">Clients qui ont commandé pendant la campagne, une ligne par vente</caption>
                 <thead>
                   <tr className="text-gray-500 text-xs uppercase">
-                    {COLONNES.map((c) => (
-                      <th key={c} scope="col" className={`font-semibold px-4 py-2 whitespace-nowrap ${c === "Montant" ? "text-right" : "text-left"}`}>
-                        {c}
-                      </th>
-                    ))}
+                    {COLONNES.map((c) => {
+                      const definition = DEFINITION_COLONNE[c];
+                      return (
+                        <th key={c} scope="col" className={`font-semibold px-4 py-2 whitespace-nowrap ${c === "Montant" ? "text-right" : "text-left"}`}>
+                          {definition ? (
+                            <span className="inline-flex items-center gap-1">
+                              {c}
+                              <InfoBulle libelle={c} texte={definition} />
+                            </span>
+                          ) : (
+                            c
+                          )}
+                        </th>
+                      );
+                    })}
                   </tr>
                 </thead>
                 {data.data.map((v) => (

@@ -5,8 +5,10 @@ import { useCampagneStatsQuery } from "../../queries/campagne.query";
 import { ICampagne, ICampagnePublic, ICampagneStats } from "../../types/campagne.type";
 import { Public } from "../../types/contact.type";
 import { PUBLICS, PUBLIC_META, accord, estCapte, fmtDate, fmtNombre, fmtPct, libelleStatut } from "../../utils/crm-ui";
+import { DEF_PUBLICS_VISES, DEF_RAISONS, DEF_STATUT, definitionStatuts } from "../../utils/definitions-campagne";
 import { BarresRepartition } from "../commun/BarresRepartition";
 import { Chargement, Erreur } from "../commun/Etats";
+import { InfoBulle } from "../commun/InfoBulle";
 import { PuceCampagne, PucePublic } from "../commun/Puces";
 import { ActionsCampagne } from "./ActionsCampagne";
 import { AgentsCampagne } from "./AgentsCampagne";
@@ -26,31 +28,34 @@ function PublicsVises({ c, s }: { c: ICampagne; s?: ICampagneStats }) {
   if (publics.length === 0) return null;
 
   return (
-    <ul className="space-y-1.5">
-      {publics.map((p) => {
-        const criteres = p.criteres || criteresEnClair(p, noms);
-        const objectifs = [
-          p.target_contacts_count != null ? `${fmtNombre(p.target_contacts_count)} à joindre` : null,
-          p.target_conversion_rate != null ? `${PUBLIC_META[p.segment].taux.toLowerCase()} visé ${fmtPct(p.target_conversion_rate)}` : null,
-        ].filter(Boolean);
-        return (
-          <li key={p.segment} className="flex flex-wrap items-start gap-x-2 gap-y-0.5 text-sm">
-            <PucePublic segment={p.segment} />
-            <span className="text-gray-600 min-w-0 flex-1">
-              {criteres}
-              {p.offer && <span className="text-gray-500"> · offre : {p.offer.label}</span>}
-              {objectifs.length > 0 && <span className="text-gray-500"> · objectif : {objectifs.join(", ")}</span>}
-              {c.status !== "PLANIFIED" && (
-                <span className="text-gray-400">
-                  {" "}
-                  · {fmtNombre(p.targeted_count)} {accord(p.targeted_count, "ciblé")} au lancement
-                </span>
-              )}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="flex items-start gap-2">
+      <ul className="space-y-1.5 flex-1 min-w-0">
+        {publics.map((p) => {
+          const criteres = p.criteres || criteresEnClair(p, noms);
+          const objectifs = [
+            p.target_contacts_count != null ? `${fmtNombre(p.target_contacts_count)} à joindre` : null,
+            p.target_conversion_rate != null ? `${PUBLIC_META[p.segment].taux.toLowerCase()} visé ${fmtPct(p.target_conversion_rate)}` : null,
+          ].filter(Boolean);
+          return (
+            <li key={p.segment} className="flex flex-wrap items-start gap-x-2 gap-y-0.5 text-sm">
+              <PucePublic segment={p.segment} />
+              <span className="text-gray-600 min-w-0 flex-1">
+                {criteres}
+                {p.offer && <span className="text-gray-500"> · offre : {p.offer.label}</span>}
+                {objectifs.length > 0 && <span className="text-gray-500"> · objectif : {objectifs.join(", ")}</span>}
+                {c.status !== "PLANIFIED" && (
+                  <span className="text-gray-400">
+                    {" "}
+                    · {fmtNombre(p.targeted_count)} {accord(p.targeted_count, "ciblé")} au lancement
+                  </span>
+                )}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <InfoBulle libelle="Publics visés" texte={DEF_PUBLICS_VISES} className="mt-0" />
+    </div>
   );
 }
 
@@ -66,10 +71,21 @@ function StatutsCampagne({ s }: { s: ICampagneStats }) {
     : publics.length > 0 && (publics.length === 1 || publics.every(estCapte))
       ? publics[0]
       : undefined;
-  const sousTitre = s.chiffres_figes ? "Chiffres figés à la clôture" : "Statut actuel des ciblés";
+  // Le statut est celui de la fiche : il garde ce qui s'était passé avant le lancement (file commune, ancienne acquisition).
+  const sousTitre = s.chiffres_figes ? "Chiffres figés à la clôture" : "Statut actuel des ciblés, avec ce qui avait été fait avant la campagne";
 
   return (
-    <StatsChartCard title="Où en sont les contacts" subtitle={sousTitre} icon={s.chiffres_figes ? Lock : ListChecks}>
+    <StatsChartCard
+      title="Où en sont les contacts"
+      subtitle={sousTitre}
+      icon={s.chiffres_figes ? Lock : ListChecks}
+      rightContent={
+        <InfoBulle
+          libelle="Où en sont les contacts"
+          texte={definitionStatuts(!!s.chiffres_figes, s.campagne.status === "COMPLETED")}
+        />
+      }
+    >
       {publics.length > 1 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {(["TOUS", ...publics] as const).map((p) => (
@@ -88,7 +104,7 @@ function StatutsCampagne({ s }: { s: ICampagneStats }) {
       )}
       <BarresRepartition
         couleur="#3B82F6"
-        lignes={(statuts ?? []).map((x) => ({ label: libelleStatut(x.statut, segment), nombre: x.nombre }))}
+        lignes={(statuts ?? []).map((x) => ({ label: libelleStatut(x.statut, segment), nombre: x.nombre, aide: DEF_STATUT[x.statut] }))}
         vide="Aucun contact pour ce public."
       />
     </StatsChartCard>
@@ -191,7 +207,12 @@ export function TableauCampagne({
           </div>
           <RythmeCampagne rythme={s.rythme} />
           <div className="grid gap-4 lg:grid-cols-2">
-            <StatsChartCard title="Raisons de non-commande" subtitle="Dernière raison donnée par chaque contact" icon={MessageSquareWarning}>
+            <StatsChartCard
+              title="Raisons de non-commande"
+              subtitle="Raison du dernier refus de chaque contact dans la campagne"
+              icon={MessageSquareWarning}
+              rightContent={<InfoBulle libelle="Raisons de non-commande" texte={DEF_RAISONS} />}
+            >
               <BarresRepartition
                 lignes={s.raisons.map((r) => ({ label: r.raison, nombre: r.nombre, part: r.part }))}
                 vide="Aucun refus motivé pour l'instant."

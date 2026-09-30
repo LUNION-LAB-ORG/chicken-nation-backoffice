@@ -3,8 +3,19 @@ import { Trophy } from "lucide-react";
 import StatsChartCard from "@/components/gestion/Statistiques/shared/StatsChartCard";
 import { IAgentCampagne, ICampagneStats } from "../../types/campagne.type";
 import { PUBLICS, PUBLIC_META, accord, fmtMontant, fmtNombre, fmtPct } from "../../utils/crm-ui";
+import { DEF_AGENT, Definition, definitionAgents } from "../../utils/definitions-campagne";
+import { InfoBulle } from "../commun/InfoBulle";
 
-const COLONNES = ["Agent", "Confiés", "Traités", "Joints", "Coupons", "Ventes", "Taux", "CA"];
+const COLONNES: { titre: string; definition?: Definition }[] = [
+  { titre: "Agent" },
+  { titre: "Confiés", definition: DEF_AGENT.confies },
+  { titre: "Traités", definition: DEF_AGENT.traites },
+  { titre: "Joints", definition: DEF_AGENT.joints },
+  { titre: "Coupons", definition: DEF_AGENT.coupons },
+  { titre: "Ventes", definition: DEF_AGENT.ventes },
+  { titre: "Taux", definition: DEF_AGENT.taux },
+  { titre: "CA", definition: DEF_AGENT.ca },
+];
 
 /** Performance comparée par agent (cahier §6.3), avec ses ventes par public quand la campagne en vise plusieurs. */
 export function AgentsCampagne({
@@ -19,7 +30,12 @@ export function AgentsCampagne({
   const sansAgent = ventesSansAgent && ventesSansAgent.conversions > 0 ? ventesSansAgent : null;
 
   return (
-    <StatsChartCard title="Performance par agent" subtitle="Classée par ventes" icon={Trophy}>
+    <StatsChartCard
+      title="Performance par agent"
+      subtitle="Classée par ventes"
+      icon={Trophy}
+      rightContent={<InfoBulle libelle="Performance par agent" texte={definitionAgents(plusieursPublics)} />}
+    >
       {agents.length === 0 ? (
         <p className="text-sm text-gray-400 py-6 text-center">Aucun agent n&apos;a encore travaillé sur cette campagne.</p>
       ) : (
@@ -28,8 +44,15 @@ export function AgentsCampagne({
             <thead>
               <tr className="text-gray-500 text-xs uppercase">
                 {COLONNES.map((c, i) => (
-                  <th key={c} className={`font-semibold px-5 py-2 whitespace-nowrap ${i === 0 ? "text-left" : "text-right"}`}>
-                    {c}
+                  <th key={c.titre} className={`font-semibold px-5 py-2 whitespace-nowrap ${i === 0 ? "text-left" : "text-right"}`}>
+                    {c.definition ? (
+                      <span className="inline-flex items-center gap-1">
+                        {c.titre}
+                        <InfoBulle libelle={c.titre} texte={c.definition} />
+                      </span>
+                    ) : (
+                      c.titre
+                    )}
                   </th>
                 ))}
               </tr>
@@ -79,7 +102,8 @@ export function AgentsCampagne({
       {sansAgent && (
         <p className="text-xs text-gray-500 mt-3">
           Ventes sans agent : {fmtNombre(sansAgent.conversions)} {accord(sansAgent.conversions, "vente")} pour {fmtMontant(sansAgent.ca)} (contacts
-          de la campagne qui ont commandé sans vente attribuée à un agent).
+          de la campagne qui ont commandé sans vente attribuée à un agent).{" "}
+          <InfoBulle libelle="Ventes sans agent" texte={DEF_AGENT.sansAgent} className="align-middle" />
         </p>
       )}
     </StatsChartCard>

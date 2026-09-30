@@ -1,16 +1,19 @@
 import React from "react";
 import { fmtNombre, fmtPct } from "../../utils/crm-ui";
+import { Definition } from "../../utils/definitions-campagne";
+import { InfoBulle } from "./InfoBulle";
 
 /**
  * Barres horizontales simples (raisons, statuts, offres) : plus lisibles
- * qu'un camembert quand les libellés sont longs.
+ * qu'un camembert quand les libellés sont longs. Une ligne peut porter sa
+ * définition (`aide`), ouverte depuis l'icône à côté du libellé.
  */
 export function BarresRepartition({
   lignes,
   vide = "Rien à afficher pour l'instant.",
   couleur = "#F17922",
 }: {
-  lignes: { label: string; nombre: number; part?: number; accent?: boolean }[];
+  lignes: { label: string; nombre: number; part?: number; accent?: boolean; aide?: Definition }[];
   vide?: string;
   couleur?: string;
 }) {
@@ -22,7 +25,14 @@ export function BarresRepartition({
       {lignes.map((l) => (
         <li key={l.label}>
           <div className="flex items-baseline justify-between gap-3 text-sm">
-            <span className={`truncate ${l.accent ? "font-semibold text-gray-900" : "text-gray-700"}`}>{l.label}</span>
+            {l.aide ? (
+              <span className="flex min-w-0 items-center gap-1.5">
+                <span className={`truncate ${l.accent ? "font-semibold text-gray-900" : "text-gray-700"}`}>{l.label}</span>
+                <InfoBulle libelle={l.label} texte={l.aide} />
+              </span>
+            ) : (
+              <span className={`truncate ${l.accent ? "font-semibold text-gray-900" : "text-gray-700"}`}>{l.label}</span>
+            )}
             <span className="tabular-nums text-gray-600 whitespace-nowrap">
               {fmtNombre(l.nombre)}
               {l.part != null && <span className="text-xs text-gray-400"> · {fmtPct(l.part)}</span>}
