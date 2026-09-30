@@ -230,6 +230,8 @@ export interface IFileAgent {
     coupons_jour: number;
     conversions_jour: number;
     portefeuille: number;
+    /** Confiés encore ouverts que personne n'a appelés : le reste à faire. */
+    jamais_appeles: number;
   };
 }
 

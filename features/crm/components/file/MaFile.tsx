@@ -6,11 +6,27 @@ import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { RechercheNumero } from "./RechercheNumero";
 import { SectionFile } from "./SectionFile";
 
-function Indicateur({ label, valeur, large }: { label: string; valeur: number; large?: boolean }) {
+function Indicateur({
+  label,
+  valeur,
+  detail,
+  aide,
+  large,
+}: {
+  label: string;
+  valeur: number;
+  detail?: string;
+  aide?: string;
+  large?: boolean;
+}) {
   return (
-    <div className={`bg-white border border-gray-200 rounded-xl px-4 py-3 ${large ? "col-span-2 sm:col-span-1" : ""}`}>
+    <div
+      title={aide}
+      className={`bg-white border border-gray-200 rounded-xl px-4 py-3 ${large ? "col-span-2 sm:col-span-1" : ""}`}
+    >
       <p className="text-2xl font-bold text-gray-900 tabular-nums">{fmtNombre(valeur)}</p>
       <p className="text-xs text-gray-500">{label}</p>
+      {detail && <p className="text-[11px] text-[#F17922] font-semibold mt-0.5">{detail}</p>}
     </div>
   );
 }
@@ -42,7 +58,20 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
         <Indicateur label="Joints aujourd'hui" valeur={i.joints_jour} />
         <Indicateur label="Coupons aujourd'hui" valeur={i.coupons_jour} />
         <Indicateur label="Conversions aujourd'hui" valeur={i.conversions_jour} />
-        <Indicateur label="Dans mon portefeuille" valeur={i.portefeuille} large />
+        {/*
+          LE PORTEFEUILLE MONTE QUAND ON TRAVAILLE, et c'est normal : il compte
+          un stock. « Coupon envoyé » et « Intéressé » restent des statuts
+          ouverts, et prendre une fiche dans la file commune en ajoute une.
+          Seul le second nombre descend à mesure qu'on appelle — c'est celui
+          qu'un agent cherche des yeux en fin de journée.
+        */}
+        <Indicateur
+          label="Dans mon portefeuille"
+          valeur={i.portefeuille}
+          detail={`${fmtNombre(i.jamais_appeles)} jamais appelés`}
+          aide="Contacts qui vous sont confiés et dont le statut est encore ouvert : à appeler, à rappeler, intéressé, coupon envoyé. Il ne baisse qu'à la conversion, au refus ou quand le client est injoignable, et il monte chaque fois que vous prenez une fiche dans la file commune. Le nombre en orange, lui, descend à chaque premier appel."
+          large
+        />
       </div>
 
       {vide ? (
