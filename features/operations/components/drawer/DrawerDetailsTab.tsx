@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
+import { numeroACopier } from "@/utils/telephone";
 import { BoutonCopierLien } from "@/components/ui/CopierLien";
 import { lienCommande } from "@/utils/deeplinks";
 
@@ -316,12 +317,13 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
                 <Phone className="w-3.5 h-3.5" /> {ui.clientPhone}
               </a>
               {/*
-                Copié SANS ESPACES : le numéro sert à rappeler depuis un autre
-                appareil, à chercher dans une liste ou à coller dans WhatsApp,
-                où les espaces ne font qu'empêcher la correspondance.
+                Copié sans espaces NI indicatif ivoirien : le numéro sert à
+                chercher dans une liste ou un tableur, où il est stocké en dix
+                chiffres. Un numéro étranger, lui, garde son indicatif, sans
+                quoi il serait incomposable.
               */}
               <BoutonCopier
-                valeur={ui.clientPhone.replace(/\s+/g, "")}
+                valeur={numeroACopier(ui.clientPhone)}
                 titre="Copier le numéro"
                 className="!px-1.5 !py-1 !text-[11px]"
               />

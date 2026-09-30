@@ -1,5 +1,6 @@
 import { AppelEffet, CanalCoupon, EtatCoupon, ContactStatut, Public } from "../types/contact.type";
 import { CampagneStatut, EtatCommande, StatutCommande, TypeCommande } from "../types/campagne.type";
+import { numeroACopier } from "@/utils/telephone";
 
 interface Meta {
   label: string;
@@ -273,7 +274,7 @@ export function fmtTelephone(phone?: string | null): string {
  * forme.
  */
 export function telephoneACopier(phone?: string | null): string {
-  return fmtTelephone(phone).replace(/\s+/g, "");
+  return numeroACopier(phone);
 }
 
 /** Même règle que le serveur : 10 chiffres prennent l'indicatif 225, un numéro qui a déjà le sien part tel quel. */
