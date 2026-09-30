@@ -71,6 +71,22 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({ auto, onChange, enAtt
           );
         })}
       </div>
+
+      {/*
+        Dire ce que le clic déclenche AVANT le clic. La bascule vers le call
+        center n'est pas qu'une étiquette : elle aligne la commande sur les
+        règles de la saisie au backoffice, et le total change sous les yeux de
+        l'agent. Découvrir ça après coup, sur une commande qu'on vient de
+        confirmer au client au téléphone, est le meilleur moyen de ne plus
+        faire confiance à l'écran.
+      */}
+      {auto && (
+        <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+          Passer au call center met la <strong className="font-semibold">taxe à zéro</strong>, comme pour
+          toute commande saisie au backoffice, et recalcule le total.
+          {enAttente && " La commande, encore en attente, passera aussi en « acceptée »."}
+        </p>
+      )}
     </div>
   );
 };
