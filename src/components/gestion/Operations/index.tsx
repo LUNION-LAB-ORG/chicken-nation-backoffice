@@ -213,6 +213,7 @@ export default function Operations() {
                 ? [
                     {
                       label: "Capturer un client Glovo/Yango",
+                      shortLabel: "Glovo/Yango",
                       onClick: openCapture,
                       variant: "secondary" as const,
                       icon: UserPlus,
@@ -228,6 +229,7 @@ export default function Operations() {
                       onClick: handleRefresh,
                       variant: "secondary" as const,
                       icon: RotateCw,
+                      iconOnlyWhenCompact: true,
                       className:
                         "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
                     },
@@ -237,6 +239,7 @@ export default function Operations() {
                 ? [
                     {
                       label: "Créer une commande",
+                      shortLabel: "Commande",
                       onClick: () => {
                         setActiveTab("historique");
                         setSectionView("orders", "create");

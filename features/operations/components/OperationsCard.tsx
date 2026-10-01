@@ -114,9 +114,23 @@ export const OperationsCard: React.FC<Props> = ({
   const isBackoffice = useAuthStore((s) => s.user?.type) === UserType.BACKOFFICE;
 
   return (
-    <button
+    /*
+     * Bloc cliquable et non <button> : la carte contient le bouton « Faire le
+     * paiement », et un bouton dans un bouton est du HTML invalide (React le
+     * signale et le navigateur peut réordonner l'arbre). Clavier : Entrée ou
+     * Espace sur la carte elle-même, jamais quand la touche vient du bouton
+     * intérieur.
+     */
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className={`group w-full bg-white rounded-2xl border text-left p-3 transition-all hover:shadow-md ${
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== "Enter" && e.key !== " ")) return;
+        e.preventDefault();
+        onClick();
+      }}
+      className={`group w-full bg-white rounded-2xl border text-left p-3 transition-all hover:shadow-md cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922] ${
         urgency === "danger"
           ? "border-red-300 shadow-red-100"
           : urgency === "warn"
@@ -167,7 +181,7 @@ export const OperationsCard: React.FC<Props> = ({
                   }`}
                   title={
                     plusTard
-                      ? `À traiter plus tard — préparation à partir de ${format(ouverture, "HH'h'mm")}`
+                      ? `À traiter plus tard : préparation à partir de ${format(ouverture, "HH'h'mm")}`
                       : "La préparation peut commencer"
                   }
                 >
@@ -180,7 +194,7 @@ export const OperationsCard: React.FC<Props> = ({
           })()}
 
           {/* Ligne 2 — rangée unique de badges : statut · type · source · warning */}
-          <div className="flex items-center gap-1.5 flex-wrap mb-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {/* Statut (border-2, en évidence) — couleurs alignées sur la page Commandes */}
             <span
               className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-lg border-2 ${statusBadgeCls}`}
@@ -213,42 +227,50 @@ export const OperationsCard: React.FC<Props> = ({
               </span>
             )}
           </div>
-
-          {/* Ligne restaurant — comptes BACKOFFICE uniquement (multi-restaurants). */}
-          {isBackoffice && order.restaurant?.name && (
-            <div className="flex items-center gap-1.5 text-xs mb-0.5">
-              <Store className="w-3 h-3 shrink-0 text-[#F17922]" />
-              <span className="truncate font-semibold text-gray-800">
-                {order.restaurant.name}
-              </span>
-            </div>
-          )}
-
-          {/* Ligne 3 : client */}
-          <div className="flex items-center gap-1.5 text-xs text-gray-700 mb-0.5">
-            <User className="w-3 h-3 shrink-0 text-gray-400" />
-            <span className="truncate font-medium">{getClientName(order)}</span>
-            {order.phone && (
-              <span className="flex items-center gap-0.5 text-[10px] text-gray-400 shrink-0">
-                <Phone className="w-2.5 h-2.5" />
-                {order.phone}
-              </span>
-            )}
-          </div>
-
-          {/* Ligne 4 : adresse (delivery) */}
-          {order.type === OrderType.DELIVERY && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <MapPin className="w-3 h-3 shrink-0" />
-              <span className="truncate">{getAddressShort(order)}</span>
-            </div>
-          )}
-
-          {/* Footer : bouton "Faire le paiement" ou label "Paiement en attente" si !paied */}
-          <PaymentAction order={order} onPay={onPayClick} />
         </div>
       </div>
-    </button>
+
+      {/*
+        Infos en PLEINE LARGEUR, sous le minuteur : la colonne de droite
+        laissait un vide sous l'anneau et coupait le nom du client, le
+        téléphone et l'adresse. Le minuteur reste à côté de ce qui décide
+        (référence, montant, statut), le reste prend toute la carte.
+      */}
+      <div className="mt-2">
+        {/* Ligne restaurant — comptes BACKOFFICE uniquement (multi-restaurants). */}
+        {isBackoffice && order.restaurant?.name && (
+          <div className="flex items-center gap-1.5 text-xs mb-0.5">
+            <Store className="w-3 h-3 shrink-0 text-[#F17922]" />
+            <span className="truncate font-semibold text-gray-800">
+              {order.restaurant.name}
+            </span>
+          </div>
+        )}
+
+        {/* Ligne 3 : client */}
+        <div className="flex items-center gap-1.5 text-xs text-gray-700 mb-0.5">
+          <User className="w-3 h-3 shrink-0 text-gray-400" />
+          <span className="truncate font-medium">{getClientName(order)}</span>
+          {order.phone && (
+            <span className="flex items-center gap-0.5 text-[10px] text-gray-400 shrink-0">
+              <Phone className="w-2.5 h-2.5" />
+              {order.phone}
+            </span>
+          )}
+        </div>
+
+        {/* Ligne 4 : adresse (delivery) */}
+        {order.type === OrderType.DELIVERY && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+            <MapPin className="w-3 h-3 shrink-0" />
+            <span className="truncate">{getAddressShort(order)}</span>
+          </div>
+        )}
+
+        {/* Footer : bouton "Faire le paiement" ou label "Paiement en attente" si !paied */}
+        <PaymentAction order={order} onPay={onPayClick} />
+      </div>
+    </div>
   );
 };
 

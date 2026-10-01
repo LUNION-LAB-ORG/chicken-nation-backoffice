@@ -22,6 +22,13 @@ interface ActionButton {
   customComponent?: React.ReactNode;
   /** Masquer cette action sur mobile (rare ; par défaut toutes sont affichées en icônes). */
   hideOnMobile?: boolean;
+  /**
+   * Libellé court, affiché quand l'en-tête manque de place (petit écran
+   * d'ordinateur, menu latéral ouvert). Le libellé complet reste en info-bulle.
+   */
+  shortLabel?: string;
+  /** Même cas, mais l'icône seule suffit (ex. « Actualiser »). Exige `icon`. */
+  iconOnlyWhenCompact?: boolean;
 }
 
 interface DashboardPageHeaderProps {
@@ -121,14 +128,31 @@ const DashboardPageHeader = ({
       );
     }
     const Icon = action.icon;
+    /**
+     * Libellé selon la place RÉELLE de l'en-tête (requête de conteneur, pas
+     * de largeur d'écran) : le menu latéral ouvert ou fermé change tout. Sous
+     * 72rem, le libellé court ou l'icône seule ; jamais de libellé sur deux
+     * lignes, qui doublait la hauteur des boutons.
+     */
+    const compact = action.shortLabel !== undefined || (action.iconOnlyWhenCompact && Icon);
+    const libelle = compact ? (
+      <>
+        {!action.iconOnlyWhenCompact && <span className="@6xl:hidden">{action.shortLabel}</span>}
+        <span className="hidden @6xl:inline">{action.label}</span>
+      </>
+    ) : (
+      action.label
+    );
     return (
       <motion.button
         key={index}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={action.onClick}
+        title={compact ? action.label : undefined}
+        aria-label={compact ? action.label : undefined}
         className={`
-          px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2
+          px-3 py-1 sm:py-1 cursor-pointer text-sm  font-light rounded-xl transition-colors flex items-center justify-center gap-2 whitespace-nowrap shrink-0
           ${
             action.className ||
             (action.variant === "secondary"
@@ -138,8 +162,8 @@ const DashboardPageHeader = ({
           ${mode === "list" ? "w-full sm:w-auto" : ""}
         `}
       >
-        {Icon && <Icon size={18} />}
-        {action.label}
+        {Icon && <Icon size={18} className="shrink-0" />}
+        {libelle}
       </motion.button>
     );
   };
@@ -151,8 +175,8 @@ const DashboardPageHeader = ({
 
     return (
       <>
-        {/* Desktop (≥ sm) : rangée complète, inchangée */}
-        <div className="hidden sm:flex mt-4 flex-row gap-2 w-auto">
+        {/* Desktop (≥ sm) : rangée complète ; elle passe à la ligne plutôt que de déborder */}
+        <div className="hidden sm:flex mt-4 flex-row flex-wrap items-center justify-end gap-2 w-auto">
           {actions.map(renderDesktopButton)}
         </div>
 
@@ -199,7 +223,7 @@ const DashboardPageHeader = ({
       initial="hidden"
       animate="visible"
       className={`
-        flex flex-col sm:flex-row items-start sm:items-center justify-between
+        @container flex flex-col sm:flex-row items-start sm:items-center justify-between
         w-full px-3 sm:px-4 py-2 sm:py-3 bg-white mb-4 sm:mb-6
          sm:-mt-6 border border-slate-200
         rounded-b-2xl sm:rounded-3xl ${className}
