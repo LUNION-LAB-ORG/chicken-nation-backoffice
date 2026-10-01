@@ -9,6 +9,30 @@ interface OrigineSelectorProps {
   onChange: (auto: boolean) => void;
   /** Le passage vers « Application » est refusé tant que la commande attend. */
   enAttente?: boolean;
+  /**
+   * Origine ENREGISTRÉE de la commande, et non celle du formulaire :
+   * l'avertissement de bascule doit rester lisible après le clic sur « Call
+   * center », c'est-à-dire juste avant d'enregistrer.
+   */
+  etaitAuto?: boolean;
+  /**
+   * Pourquoi la bascule ne touche ni à la taxe ni au total, décidé par le
+   * serveur selon les mêmes règles (`OrderService.update`) :
+   *  - `payee` : le client a déjà réglé, taxe comprise ;
+   *  - `livraison` : la course est partie avec ce montant à encaisser ;
+   *  - `null` : la taxe tombe à zéro et le total est recalculé.
+   */
+  montantFige?: "payee" | "livraison" | null;
+  /**
+   * Ce que la bascule fait du paiement, mêmes règles :
+   *  - `caisse` : payable dans l'application et pas soldée, la caisse
+   *    encaisse ce qui reste à payer ;
+   *  - `livreur` : un encaissement du livreur attend sa confirmation, le
+   *    paiement ne change pas ;
+   *  - `inchange` : déjà payée, ou déjà payable au restaurant (espèces
+   *    choisies dans l'appli).
+   */
+  paiementApresBascule?: "caisse" | "livreur" | "inchange";
 }
 
 const ORIGINES: { auto: boolean; label: string; desc: string; icon: LucideIcon }[] = [
@@ -29,7 +53,14 @@ const ORIGINES: { auto: boolean; label: string; desc: string; icon: LucideIcon }
  * permettrait de fabriquer de fausses commandes « application » et de gonfler
  * un chiffre que personne ne pourrait plus démêler.
  */
-const OrigineSelector: React.FC<OrigineSelectorProps> = ({ auto, onChange, enAttente = false }) => {
+const OrigineSelector: React.FC<OrigineSelectorProps> = ({
+  auto,
+  onChange,
+  enAttente = false,
+  etaitAuto = auto,
+  montantFige = null,
+  paiementApresBascule = "inchange",
+}) => {
   return (
     <div>
       <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
@@ -79,11 +110,35 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({ auto, onChange, enAtt
         l'agent. Découvrir ça après coup, sur une commande qu'on vient de
         confirmer au client au téléphone, est le meilleur moyen de ne plus
         faire confiance à l'écran.
+
+        Le paiement surtout : une commande reprise et encore à régler n'est
+        plus payée dans l'application, c'est la caisse qui l'encaisse. L'agent
+        doit pouvoir le dire au client au téléphone.
       */}
-      {auto && (
+      {etaitAuto && (
         <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
-          Passer au call center met la <strong className="font-semibold">taxe à zéro</strong>, comme pour
-          toute commande saisie au backoffice, et recalcule le total.
+          {montantFige === null ? (
+            <>
+              Passer au call center met la <strong className="font-semibold">taxe à zéro</strong>, comme pour
+              toute commande saisie au backoffice, et recalcule le total.
+            </>
+          ) : (
+            <>
+              Passer au call center ne change <strong className="font-semibold">ni la taxe ni le total</strong> :{" "}
+              {montantFige === "payee"
+                ? "la commande est déjà payée."
+                : "la livraison est déjà lancée avec ce montant à encaisser."}
+            </>
+          )}
+          {paiementApresBascule === "caisse" && (
+            <>
+              {" "}Le client ne paiera plus dans l&apos;application :{" "}
+              <strong className="font-semibold">la caisse encaissera ce qui reste à payer</strong>, au
+              restaurant ou à la livraison.
+            </>
+          )}
+          {paiementApresBascule === "livreur" &&
+            " L'encaissement déclaré par le livreur reste à confirmer dans l'onglet Paiement."}
           {enAttente && " La commande, encore en attente, passera aussi en « acceptée »."}
         </p>
       )}

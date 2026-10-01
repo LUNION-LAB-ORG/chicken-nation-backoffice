@@ -9,6 +9,7 @@ import { useOrderForm } from "../../hooks/useOrderForm";
 import { OrderStatus, OrderType } from "../../types/order.types";
 import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderTable } from "../../types/ordersTable.types";
+import { PaiementStatus } from "../../types/paiement.types";
 import CouponSection, { CouponLectureSeule } from "./CouponSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
@@ -18,6 +19,42 @@ import OrigineSelector from "./OrigineSelector";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
+}
+
+/**
+ * Ce que deviendra la commande si elle passe au call center. Miroir des règles
+ * du serveur (`OrderService.update`, reprise par le personnel).
+ *
+ * Le MONTANT reste tel quel quand il est déjà engagé : commande payée, ou
+ * commande à livrer prête ou plus loin (la course est partie avec ce montant
+ * à encaisser).
+ *
+ * Le PAIEMENT passe à la caisse quand la commande était payable dans
+ * l'application, qu'il reste à payer, et qu'aucun encaissement de livreur
+ * n'attend sa confirmation. Un paiement en ligne partiel ne l'empêche pas :
+ * la caisse encaisse le reste. `paymentChannel` vaut « Appli » pour une
+ * commande de l'application payable en ligne.
+ */
+function apresBascule(commande: OrderTable): {
+  montantFige: "payee" | "livraison" | null;
+  paiement: "caisse" | "livreur" | "inchange";
+} {
+  const livraisonLancee =
+    commande.orderType === "À livrer" &&
+    commande.rawStatus !== OrderStatus.PENDING &&
+    commande.rawStatus !== OrderStatus.ACCEPTED &&
+    commande.rawStatus !== OrderStatus.IN_PROGRESS;
+  const montantFige = commande.paied ? "payee" : livraisonLancee ? "livraison" : null;
+
+  const paiements = commande.paiements ?? [];
+  const dejaPercu = paiements
+    .filter((p) => p.status === PaiementStatus.SUCCESS)
+    .reduce((somme, p) => somme + (p.total ?? p.amount ?? 0), 0);
+  let paiement: "caisse" | "livreur" | "inchange" = "inchange";
+  if (commande.paymentChannel === "Appli" && !commande.paied && commande.amount - dejaPercu > 50) {
+    paiement = paiements.some((p) => p.status === PaiementStatus.PENDING) ? "livreur" : "caisse";
+  }
+  return { montantFige, paiement };
 }
 
 /** Carte blanche standard des sections du formulaire. */
@@ -132,6 +169,9 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
               // `status` est un libellé d'affichage (« EN ATTENTE ») ; `rawStatus`
               // est l'enum du serveur, seule source de vérité pour une règle.
               enAttente={editOrder.rawStatus === OrderStatus.PENDING}
+              etaitAuto={editOrder.auto}
+              montantFige={apresBascule(editOrder).montantFige}
+              paiementApresBascule={apresBascule(editOrder).paiement}
               onChange={(auto) => setFormData({ ...formData, auto })}
             />
           </div>
