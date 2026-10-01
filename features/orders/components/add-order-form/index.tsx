@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ClipboardList, Loader2, Store } from "lucide-react";
+import { Ban, ClipboardList, Loader2, Store } from "lucide-react";
 
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -66,11 +66,19 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // fermeture du formulaire pour ne pas resservir à une autre modification.
   const repriseTelephoneId = useDashboardStore((s) => s.repriseTelephoneId);
   const setRepriseTelephone = useDashboardStore((s) => s.setRepriseTelephone);
-  const [repriseTelephone] = useState(() => !!editOrder && repriseTelephoneId === editOrder.id);
+  // Jamais sur une commande annulée : la reprise bascule l'origine (voir plus bas).
+  const [repriseTelephone] = useState(
+    () =>
+      !!editOrder &&
+      repriseTelephoneId === editOrder.id &&
+      editOrder.rawStatus !== OrderStatus.CANCELLED,
+  );
   useEffect(() => {
     if (!repriseTelephone) return;
     return () => setRepriseTelephone(null);
   }, [repriseTelephone, setRepriseTelephone]);
+
+  const annulee = editOrder?.rawStatus === OrderStatus.CANCELLED;
 
   const {
     formData,
@@ -173,7 +181,28 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           création permettrait de fabriquer de fausses commandes « application »
           et de fausser durablement le suivi de l'acquisition.
         */}
-        {editOrder && (
+        {/*
+          COMMANDE ANNULÉE (ADMIN, ou CALL_CENTER depuis le 01/10) : les
+          corrections s'enregistrent mais la commande RESTE annulée. Le
+          formulaire n'envoie jamais de statut (voir prepareOrderData).
+        */}
+        {annulee && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
+            <Ban className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <p className="text-xs text-red-800">
+              Cette commande est annulée. Vos modifications seront enregistrées,
+              mais la commande restera annulée.
+            </p>
+          </div>
+        )}
+
+        {/*
+          Pas de bascule d'origine sur une commande annulée : la bascule
+          transmet la commande au restaurant et met le paiement à la caisse,
+          ce qui n'a aucun sens pour une commande qui ne sera pas préparée.
+          L'origine enregistrée est renvoyée telle quelle.
+        */}
+        {editOrder && !annulee && (
           <div className="mt-4 border-t border-gray-100 pt-4">
             <OrigineSelector
               auto={!!formData.auto}

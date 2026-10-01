@@ -9,9 +9,11 @@ import { useDashboardStore } from "@/store/dashboardStore";
 interface DeleteOrderModalProps {
   isOpen: boolean;
   order: OrderTable;
+  /** Après une suppression réussie (ex. fermer le tiroir qui affichait la commande). */
+  onDeleted?: (orderId: string) => void;
 }
 
-export function DeleteOrderModal({ isOpen, order }: DeleteOrderModalProps) {
+export function DeleteOrderModal({ isOpen, order, onDeleted }: DeleteOrderModalProps) {
   const { handleToggleOrderModal } = useOrderActions();
   const { mutateAsync: deleteOrder, isPending } = useOrderDeleteMutation();
   const { setSectionView } = useDashboardStore();
@@ -25,6 +27,7 @@ export function DeleteOrderModal({ isOpen, order }: DeleteOrderModalProps) {
       await deleteOrder(order.id);
       handleToggleOrderModal(order, "to_delete");
       setSectionView("orders", "list");
+      onDeleted?.(order.id);
     } catch (e: any) {
       setError(e.message || "Erreur lors de la suppression");
     }

@@ -79,14 +79,21 @@ export const useOrderActions = () => {
         if (status === OrderStatus.IN_PROGRESS) {
           printOrder(order);
         }
-        if (status === OrderStatus.CANCELLED) {
+        // Ferme le modal d'annulation S'IL EST OUVERT. Un simple basculement
+        // l'OUVRAIT après une annulation lancée depuis le pied du tiroir (qui
+        // n'utilise pas ce modal) : il surgissait ensuite sur une commande
+        // périmée, et le modal est désormais monté sur tous les onglets.
+        if (
+          status === OrderStatus.CANCELLED &&
+          useDashboardStore.getState().orders.modals?.to_cancel
+        ) {
           toggleModal("orders", "to_cancel")
         }
       } catch (error) {
         console.error("Erreur lors de la mise à jour du statut :", error);
       }
     },
-    [updateOrderStatus, printOrder]
+    [updateOrderStatus, printOrder, toggleModal]
   );
 
   // handle pour imprimer la commande

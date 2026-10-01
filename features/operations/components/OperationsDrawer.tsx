@@ -11,7 +11,9 @@ import { useOrderActions } from "../../orders/hooks/useOrderActions";
 import { useIsAdmin } from "../../users/hook/useIsAdmin";
 import { Printer } from "lucide-react";
 import { TYPE_LABEL } from "../utils/status-colors";
+import type { OrderTable } from "../../orders/types/ordersTable.types";
 import { DrawerActionsChickenNation } from "./drawer/DrawerActionsChickenNation";
+import { DrawerActionsMenu } from "./drawer/DrawerActionsMenu";
 import { DrawerActionsClient } from "./drawer/DrawerActionsClient";
 import { DrawerActionsTurbo } from "./drawer/DrawerActionsTurbo";
 import { DrawerDetailsTab } from "./drawer/DrawerDetailsTab";
@@ -24,6 +26,11 @@ interface Props {
   onClose: () => void;
   /** Tab à ouvrir par défaut à l'ouverture du drawer (ex. 'payment' après clic « Faire le paiement ») */
   initialTab?: DrawerTabKey;
+  /**
+   * « Modifier » du menu ⋮ : la page ferme le tiroir et ouvre « Modifier la
+   * commande ». Absent : l'action n'est pas proposée.
+   */
+  onEditOrder?: (commande: OrderTable) => void;
 }
 
 /**
@@ -37,7 +44,7 @@ interface Props {
  * `useOperationsSocketSync` (page parente) invalide `['order']` sur chaque event
  * socket → ce hook refetche → UI à jour sans fermer/rouvrir le drawer.
  */
-export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }) => {
+export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, onEditOrder }) => {
   const isOpen = order !== null;
   const [tab, setTab] = useState<DrawerTabKey>(initialTab ?? "details");
   const { handlePrintOrder, isLoading } = useOrderActions();
@@ -107,7 +114,8 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
           <>
             {/* Header sticky — pas de badge de service livraison ici
                 (l'info reste dans le tab Détails : hero chip + champ « Service livraison ») */}
-            <header className="px-4 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] border-b border-gray-100 bg-white">
+            {/* relative z-20 : le menu ⋮ passe au-dessus du contenu défilant (dont les pastilles z-10 de la progression) */}
+            <header className="relative z-20 px-4 pb-3 pt-[calc(1rem+env(safe-area-inset-top))] border-b border-gray-100 bg-white">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base font-bold text-gray-900 truncate">{live.reference}</h3>
@@ -126,8 +134,10 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab }
                     <Printer className="w-4 h-4" />
                     <span className="hidden sm:inline">Imprimer</span>
                   </button>
+                  <DrawerActionsMenu order={live} onEdit={onEditOrder} />
                   <button
                     onClick={onClose}
+                    aria-label="Fermer"
                     className="p-2 hover:bg-gray-100 rounded-lg transition"
                   >
                     <X className="w-5 h-5 text-gray-500" />

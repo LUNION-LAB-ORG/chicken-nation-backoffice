@@ -5,6 +5,7 @@ import { AlertTriangle, X } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
+import { STATUTS_ANNULABLES_EN_BAS_DU_TIROIR } from "../../../orders/utils/order-actions-rules";
 
 interface Props {
   order: Order;
@@ -15,18 +16,15 @@ interface Props {
  * Utilisé dans DrawerActionsChickenNation et DrawerActionsTurbo.
  *
  * Statuts annulables : ACCEPTED, IN_PROGRESS, READY (avant récupération).
+ * La liste vit dans le module de règles partagé : le menu ⋮ du tiroir la lit
+ * aussi pour ne pas proposer une seconde fois « Annuler la commande ».
  */
-const CANCELLABLE = new Set<OrderStatus>([
-  OrderStatus.ACCEPTED,
-  OrderStatus.IN_PROGRESS,
-  OrderStatus.READY,
-]);
 
 export const DrawerCancelAction: React.FC<Props> = ({ order }) => {
   const [confirming, setConfirming] = useState(false);
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
 
-  if (!CANCELLABLE.has(order.status)) return null;
+  if (!STATUTS_ANNULABLES_EN_BAS_DU_TIROIR.has(order.status)) return null;
 
   if (confirming) {
     return (

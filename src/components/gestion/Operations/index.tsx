@@ -222,6 +222,19 @@ export default function Operations() {
     setSectionView("orders", "edit");
   };
 
+  /**
+   * « Modifier » du menu ⋮ du tiroir : même chemin que ci-dessus, sans la
+   * reprise au téléphone (l'origine de la commande reste celle enregistrée).
+   * Marche depuis « En cours » comme depuis « Commandes ».
+   */
+  const modifierDepuisTiroir = (commande: OrderTable) => {
+    handleCloseDrawer();
+    setActiveTab("historique");
+    setRepriseTelephone(null);
+    setSelectedItem("orders", commande);
+    setSectionView("orders", "edit");
+  };
+
   // ── Données "Commandes" ──────────────────────────────────────────────────────
   const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useOrderListQuery({
     restaurantId: selectedRestaurantId,
@@ -446,13 +459,6 @@ export default function Operations() {
                 onViewDetails={handleTableRowClick}
               />
 
-              {/* Modales depuis le menu contextuel */}
-              {modals?.to_delete && ordersSelectedItem && (
-                <DeleteOrderModal isOpen={true} order={ordersSelectedItem} />
-              )}
-              {modals?.to_cancel && ordersSelectedItem && (
-                <CancelOrderModal isOpen={true} order={ordersSelectedItem} />
-              )}
             </>
           )}
 
@@ -479,7 +485,31 @@ export default function Operations() {
         order={drawerOrder}
         initialTab={initialDrawerTab}
         onClose={handleCloseDrawer}
+        onEditOrder={modifierDepuisTiroir}
       />
+
+      {/* ── Modales Supprimer / Annuler ──────────────────────────────────────
+          Ouvertes par le menu de ligne de la liste OU par le menu ⋮ du tiroir,
+          donc montées sur tous les onglets, et APRÈS le tiroir dans un calque
+          plus haut (z-[60]) pour passer au-dessus de lui. Pas pendant la
+          création ou la modification d'une commande. */}
+      {!isEditing && ordersSelectedItem && (modals?.to_delete || modals?.to_cancel) && (
+        <div className="relative z-[60]">
+          {modals?.to_delete && (
+            <DeleteOrderModal
+              isOpen={true}
+              order={ordersSelectedItem}
+              // La commande n'existe plus : le tiroir qui l'affichait se ferme.
+              onDeleted={(id) => {
+                if (drawerOrder?.id === id) handleCloseDrawer();
+              }}
+            />
+          )}
+          {modals?.to_cancel && (
+            <CancelOrderModal isOpen={true} order={ordersSelectedItem} />
+          )}
+        </div>
+      )}
 
     </div>
   );

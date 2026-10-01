@@ -1,13 +1,10 @@
-import { CheckCircle2, Edit2, Eye, Printer, Trash2, X } from "lucide-react";
-import Image from "next/image";
 import React from "react";
 import { useOrderActions } from "../../hooks/useOrderActions";
 import { OrderStatus } from "../../types/order.types";
 import { OrderTable } from "../../types/ordersTable.types";
-import { Action, Modules } from "../../../users/types/auth.type";
-import { HasPermission } from "../../../users/components/HasPermission";
-import { useIsAdmin } from "../../../users/hook/useIsAdmin";
-import { canEditOrder } from "../../utils/orderMapper";
+import { useDroitsCommande } from "../../hooks/useDroitsCommande";
+import { actionsCommande, type ActionCommande } from "../../utils/order-actions-rules";
+import { OrderActionItems } from "../actions/OrderActionItems";
 
 interface OrderContextMenuProps {
   order: OrderTable;
@@ -46,23 +43,12 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
     handleToggleOrderModal,
   } = useOrderActions();
 
-  const isAccepted = order.status !== "NOUVELLE";
-  const apiStatus = STATUS_REVERSE_MAP[order.status];
-  const isAdmin = useIsAdmin();
-  // L'ADMIN peut modifier la commande QUEL QUE SOIT le statut (override total :
-  // CANCELLED / COMPLETED / COLLECTED inclus). Pour les autres rôles, on garde
-  // la règle métier `canEditOrder()` qui bloque les statuts terminaux.
-  const isEditable = isAdmin || (apiStatus ? canEditOrder(apiStatus) : false);
-
-  const handleAccept = () => {
-    handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS);
-    onClose();
-  };
-
-  const handleReject = () => {
-    handleToggleOrderModal(order, "to_cancel");
-    onClose();
-  };
+  // Statut brut du serveur ; repli sur le libellé pour compatibilité.
+  const apiStatus = order.rawStatus ?? STATUS_REVERSE_MAP[order.status];
+  // Droits : module de règles partagé avec le menu ⋮ du tiroir
+  // (features/orders/utils/order-actions-rules.ts). Rien n'est recalculé ici.
+  const droits = useDroitsCommande();
+  const actions = actionsCommande(apiStatus, droits, "liste");
 
   const handleViewDetails = () => {
     if (onViewDetails) {
@@ -72,6 +58,35 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
     }
     if (!isLoading) {
       onClose();
+    }
+  };
+
+  const handleAction = (action: ActionCommande) => {
+    switch (action) {
+      case "accepter":
+        handleOrderUpdateStatus(order.id, OrderStatus.IN_PROGRESS);
+        onClose();
+        return;
+      case "refuser":
+      case "annuler":
+        // Même modal d'annulation (message de remboursement si payée).
+        handleToggleOrderModal(order, "to_cancel");
+        onClose();
+        return;
+      case "imprimer":
+        handlePrintOrder(order.id);
+        return;
+      case "voir":
+        handleViewDetails();
+        return;
+      case "modifier":
+        handleEditOrder(order);
+        onClose();
+        return;
+      case "supprimer":
+        handleDeleteOrder(order);
+        onClose();
+        return;
     }
   };
 
@@ -97,135 +112,11 @@ const OrderContextMenu: React.FC<OrderContextMenuProps> = ({
   if (!isOpen) return null;
 
   return (
-    <>
-      <div className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
-        <div className="py-1">
-          {!isAccepted ? (
-            <>
-              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE}>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#F17922] hover:bg-gray-50 cursor-pointer"
-                  onClick={handleAccept}
-                >
-                  <CheckCircle2 size={16} />
-                  <span>Accepter la commande</span>
-                </button>
-              </HasPermission>
-              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE}>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center font-semibold  gap-2 text-red-600 hover:bg-gray-50 cursor-pointer"
-                  onClick={handleReject}
-                >
-                  <X size={16} />
-                  <span>Refuser</span>
-                </button>
-              </HasPermission>
-               <HasPermission module={Modules.COMMANDES} action={Action.READ}>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
-                  onClick={handleViewDetails}
-                >
-                  <Eye size={16} />
-                  <span>Voir les détails</span>
-                </button>
-              </HasPermission>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => handlePrintOrder(order.id)}
-                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
-              >
-                <Printer size={16} />
-                <span>Imprimer</span>
-              </button>
-              <HasPermission module={Modules.COMMANDES} action={Action.READ}>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
-                  onClick={handleViewDetails}
-                >
-                  <Eye size={16} />
-                  <span>Voir les détails</span>
-                </button>
-              </HasPermission>
-            </>
-          )}
-
-          {/* Modifier : ADMIN bypass total (n'importe quel statut, sans permission
-              UPDATE_FULL). Pour les autres rôles, gating habituel par permission. */}
-          {isEditable && (
-            isAdmin ? (
-              <button
-                type="button"
-                className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
-                onClick={() => {
-                  handleEditOrder(order);
-                  onClose();
-                }}
-              >
-                <Edit2 size={16} />
-                <span>Modifier</span>
-              </button>
-            ) : (
-              <HasPermission module={Modules.COMMANDES} action={Action.UPDATE_FULL}>
-                <button
-                  type="button"
-                  className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
-                  onClick={() => {
-                    handleEditOrder(order);
-                    onClose();
-                  }}
-                >
-                  <Edit2 size={16} />
-                  <span>Modifier</span>
-                </button>
-              </HasPermission>
-            )
-          )}
-
-          {/* Annuler la commande — ADMIN, QUEL QUE SOIT le statut (sauf déjà
-              annulée). Réutilise le modal d'annulation (gère le message de
-              remboursement si payé). Le backend passe la commande en CANCELLED,
-              renseigne cancelled_at / cancelled_by / cancelled_reason et
-              décrémente l'usage promo, et autorise l'annulation depuis n'importe
-              quel statut pour un ADMIN (allowCancelFromAnyStatus). Non affiché
-              pour les NOUVELLE : « Refuser » couvre déjà ce cas. */}
-          {isAdmin && isAccepted && apiStatus !== OrderStatus.CANCELLED && (
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-red-50 cursor-pointer"
-              onClick={() => {
-                handleToggleOrderModal(order, "to_cancel");
-                onClose();
-              }}
-            >
-              <X size={16} />
-              <span>Annuler la commande</span>
-            </button>
-          )}
-
-          {/* Supprimer — ADMIN uniquement (via DELETE permission) */}
-          <HasPermission module={Modules.COMMANDES} action={Action.DELETE}>
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-red-600 hover:bg-red-50 cursor-pointer"
-              onClick={() => {
-                handleDeleteOrder(order);
-                onClose();
-              }}
-            >
-              <Trash2 size={16} />
-              <span>Supprimer</span>
-            </button>
-          </HasPermission>
-        </div>
+    <div className="order-context-menu w-56 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+      <div className="py-1">
+        <OrderActionItems actions={actions} onAction={handleAction} />
       </div>
-    </>
+    </div>
   );
 };
 
