@@ -37,7 +37,9 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
   const droits = useDroitsCommande();
   const { handleDeleteOrder, handleToggleOrderModal } = useOrderActions();
 
-  const actions = actionsCommande(order.status, droits, "tiroir").filter(
+  const actions = actionsCommande(order.status, droits, "tiroir", {
+    dejaSupprimee: order.entity_status === "DELETED",
+  }).filter(
     (action) => action !== "modifier" || !!onEdit,
   );
 

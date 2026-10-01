@@ -18,7 +18,10 @@ import { UserRole } from "../../users/types/user.types";
  *    serveur la refuse.
  *  - Le CENTRE D'APPELS modifie AUSSI une commande annulée. Elle RESTE
  *    annulée : la modification ne la réactive jamais. Ni terminée, ni
- *    récupérée, ni en livraison.
+ *    récupérée, ni en livraison. Seule exception, décidée par le serveur
+ *    et hors de cette règle de statut : le panier de l'application annulé
+ *    par son client, repris au téléphone depuis « À relancer » (origine
+ *    « Call center ») est réactivé, accepté, paiement à la caisse.
  *  - L'ADMINISTRATEUR modifie une commande quel que soit son statut.
  */
 

@@ -100,7 +100,14 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
       try {
         const commande = await getOrderById(g.tete.id);
         onReprendre(mapApiOrderToUiOrder(commande));
-        toast("Prévenez le client : il ne doit plus payer dans l'application.", { icon: "📞", duration: 8000 });
+        // Panier annulé par le client : il ne peut plus payer dans
+        // l'application, c'est l'enregistrement qui le réactive.
+        toast(
+          g.tete.annulee_par_client
+            ? "Commande annulée par le client : l'enregistrer la réactive, paiement à la caisse."
+            : "Prévenez le client : il ne doit plus payer dans l'application.",
+          { icon: "📞", duration: 8000 },
+        );
       } catch (e) {
         toast.error((e as Error)?.message || "Impossible d'ouvrir la commande.");
       }

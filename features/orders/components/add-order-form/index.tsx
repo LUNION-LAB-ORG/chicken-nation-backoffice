@@ -58,6 +58,20 @@ function apresBascule(commande: OrderTable): {
   return { montantFige, paiement };
 }
 
+/**
+ * Panier de l'application annulé par son client sans avoir payé : le seul
+ * cas où une commande annulée se reprend au téléphone. Le serveur reste juge
+ * (409 si le panier n'est plus relançable).
+ */
+function panierAnnuleParLeClient(commande: OrderTable): boolean {
+  return (
+    commande.rawStatus === OrderStatus.CANCELLED &&
+    commande.auto &&
+    commande.paymentChannel === "Appli" &&
+    !commande.paied
+  );
+}
+
 /** Carte blanche standard des sections du formulaire. */
 const CARD_CLASS = "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6";
 
@@ -66,12 +80,14 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // fermeture du formulaire pour ne pas resservir à une autre modification.
   const repriseTelephoneId = useDashboardStore((s) => s.repriseTelephoneId);
   const setRepriseTelephone = useDashboardStore((s) => s.setRepriseTelephone);
-  // Jamais sur une commande annulée : la reprise bascule l'origine (voir plus bas).
+  // Jamais sur une commande annulée (la reprise bascule l'origine, voir plus
+  // bas), SAUF le panier annulé par le client : « Reprendre au téléphone »
+  // n'existe que dans « À relancer », qui ne montre d'annulées que celles-là.
   const [repriseTelephone] = useState(
     () =>
       !!editOrder &&
       repriseTelephoneId === editOrder.id &&
-      editOrder.rawStatus !== OrderStatus.CANCELLED,
+      (editOrder.rawStatus !== OrderStatus.CANCELLED || panierAnnuleParLeClient(editOrder)),
   );
   useEffect(() => {
     if (!repriseTelephone) return;
@@ -79,6 +95,16 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   }, [repriseTelephone, setRepriseTelephone]);
 
   const annulee = editOrder?.rawStatus === OrderStatus.CANCELLED;
+  // Panier annulé par le client repris au téléphone : l'enregistrement sur
+  // « Call center » le RÉACTIVE (serveur, `OrderService.update`). Toute autre
+  // modification d'une annulée la laisse annulée.
+  const reactivation = repriseTelephone && annulee;
+  // Après réactivation, la commande part comme un panier en attente repris :
+  // taxe à zéro, total refait, paiement à la caisse. Le calcul se fait donc
+  // sur le statut d'avant l'annulation, jamais sur « annulée ».
+  const bascule = editOrder
+    ? apresBascule(reactivation ? { ...editOrder, rawStatus: OrderStatus.PENDING } : editOrder)
+    : null;
 
   const {
     formData,
@@ -186,7 +212,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           corrections s'enregistrent mais la commande RESTE annulée. Le
           formulaire n'envoie jamais de statut (voir prepareOrderData).
         */}
-        {annulee && (
+        {annulee && !reactivation && (
           <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
             <Ban className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <p className="text-xs text-red-800">
@@ -200,9 +226,11 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
           Pas de bascule d'origine sur une commande annulée : la bascule
           transmet la commande au restaurant et met le paiement à la caisse,
           ce qui n'a aucun sens pour une commande qui ne sera pas préparée.
-          L'origine enregistrée est renvoyée telle quelle.
+          L'origine enregistrée est renvoyée telle quelle. Exception : le
+          panier annulé par le client repris au téléphone (`reactivation`),
+          que l'enregistrement sur « Call center » réactive.
         */}
-        {editOrder && !annulee && (
+        {editOrder && bascule && (!annulee || reactivation) && (
           <div className="mt-4 border-t border-gray-100 pt-4">
             <OrigineSelector
               auto={!!formData.auto}
@@ -210,8 +238,9 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
               // est l'enum du serveur, seule source de vérité pour une règle.
               enAttente={editOrder.rawStatus === OrderStatus.PENDING}
               etaitAuto={editOrder.auto}
-              montantFige={apresBascule(editOrder).montantFige}
-              paiementApresBascule={apresBascule(editOrder).paiement}
+              montantFige={bascule.montantFige}
+              paiementApresBascule={bascule.paiement}
+              annuleeParClient={reactivation}
               // Panier de l'application payable en ligne, non payé : même
               // prédicat que le serveur (auto, ONLINE, PENDING, non payé).
               // « Appli » suppose déjà auto et le paiement en ligne.

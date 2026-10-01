@@ -71,11 +71,18 @@ export const statutPermetModification = (
  *        propose déjà « Commencer la préparation » et « Annuler la commande » ;
  *      · « Annuler la commande » quand le pied la propose déjà
  *        (STATUTS_ANNULABLES_EN_BAS_DU_TIROIR).
+ *
+ * `contexte.dejaSupprimee` : la commande est déjà retirée des listes
+ * (`entity_status` DELETED). Seul cas qu'un écran puisse ouvrir : le panier
+ * annulé par le client, rendu par GET /orders/:id aux rôles ADMIN et
+ * CALL_CENTER depuis « À relancer ». « Supprimer » n'y est pas proposé :
+ * DELETE /orders/:id ne trouve plus une commande supprimée et répondrait 404.
  */
 export const actionsCommande = (
   status: OrderStatus | undefined,
   droits: DroitsCommande,
   ou: "liste" | "tiroir" = "liste",
+  contexte: { dejaSupprimee?: boolean } = {},
 ): ActionCommande[] => {
   const isAdmin = droits.role === UserRole.ADMIN;
   // « NOUVELLE » à l'écran = ACCEPTED côté serveur (libellé historique).
@@ -102,7 +109,7 @@ export const actionsCommande = (
     actions.push("annuler");
   }
 
-  if (droits.peutSupprimer) actions.push("supprimer");
+  if (droits.peutSupprimer && !contexte.dejaSupprimee) actions.push("supprimer");
 
   if (ou === "liste") return actions;
 

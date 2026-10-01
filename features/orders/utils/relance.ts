@@ -56,6 +56,22 @@ export function reste(iso: string, maintenant: number): string {
 }
 
 /**
+ * Heure d'un instant récent, lue par l'agent au téléphone : « à 14 h 32 »
+ * le jour même, « hier à 21 h 05 », sinon « le 29/09 à 9 h 40 ».
+ */
+export function aLHeure(iso: string, maintenant: number): string {
+  const t = new Date(iso);
+  if (!Number.isFinite(t.getTime())) return "";
+  const heure = `${t.getHours()} h ${String(t.getMinutes()).padStart(2, "0")}`;
+  const jour = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const ecart = Math.round((jour(new Date(maintenant)) - jour(t)) / 86_400_000);
+  if (ecart <= 0) return `à ${heure}`;
+  if (ecart === 1) return `hier à ${heure}`;
+  const date = `${String(t.getDate()).padStart(2, "0")}/${String(t.getMonth() + 1).padStart(2, "0")}`;
+  return `le ${date} à ${heure}`;
+}
+
+/**
  * Clé d'une alerte d'un groupe : sa tête ET l'instant de l'alerte. Une prise
  * expirée réalerte la même tête avec un nouvel `alerte_le` : la clé change et
  * l'alerte sonne de nouveau, au lieu d'être prise pour un doublon.
@@ -69,13 +85,21 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   if (n === 0) return "";
 
   const refuses = aRelancer.filter((g) => g.signaux.paiement_refuse).length;
-  const suffixe = refuses
-    ? `, dont ${refuses} ${accord(refuses, "paiement refusé", "paiements refusés")}`
-    : "";
+  // Serveur plus ancien : signal absent, lu comme « non annulée ».
+  const annulees = aRelancer.filter((g) => !!g.signaux.annulee_par_client).length;
+  const parts = [
+    refuses ? `${refuses} ${accord(refuses, "paiement refusé", "paiements refusés")}` : "",
+    annulees ? `${annulees} ${accord(annulees, "annulée", "annulées")} par le client` : "",
+  ].filter(Boolean);
+  const suffixe = parts.length ? `, dont ${parts.join(" et ")}` : "";
 
   if (n === 1) {
-    const { tete } = aRelancer[0];
-    return `1 commande à relancer : ${tete.client_nom}, ${fmtMontant(tete.amount)}, ${depuis(tete.created_at, maintenant)}${suffixe}`;
+    const { tete, signaux } = aRelancer[0];
+    const motif = [
+      signaux.annulee_par_client ? "annulée par le client" : "",
+      signaux.paiement_refuse ? "paiement refusé" : "",
+    ].filter(Boolean);
+    return `1 commande à relancer : ${tete.client_nom}, ${fmtMontant(tete.amount)}, ${depuis(tete.created_at, maintenant)}${motif.length ? `, ${motif.join(", ")}` : ""}`;
   }
   const plusAncienne = aRelancer.reduce((a, g) => (Date.parse(g.tete.created_at) < Date.parse(a) ? g.tete.created_at : a), aRelancer[0].tete.created_at);
   return `${n} commandes à relancer, la plus ancienne ${depuis(plusAncienne, maintenant)}${suffixe}`;

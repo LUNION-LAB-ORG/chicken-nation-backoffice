@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, ChevronDown, ChevronUp, Loader2, Phone, PhoneForwarded } from "lucide-react";
+import { AlertTriangle, Ban, ChevronDown, ChevronUp, Loader2, Phone, PhoneForwarded } from "lucide-react";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { numeroACopier } from "@/utils/telephone";
 import { fmtMontant, lienAppel } from "../../../crm/utils/crm-ui";
@@ -9,7 +9,7 @@ import { LIBELLE_TYPE } from "../../constantes/relance.constante";
 import { demanderPermissionNotifications } from "../../hooks/useSonRelances";
 import { useLibererRelance, usePrendreRelance } from "../../queries/relance.mutation";
 import { BrouillonLigne, GroupeRelance } from "../../types/relance.types";
-import { depuis, ilYa, reste } from "../../utils/relance";
+import { aLHeure, depuis, ilYa, reste } from "../../utils/relance";
 
 interface Props {
   groupe: GroupeRelance;
@@ -78,6 +78,8 @@ export function LigneRelance({ groupe, maintenant, estAdmin, onOuvrir, onIgnorer
   const parAutre = etat === "PRIS" && !!prise && !prise.par_moi;
   const occupe = prendre.isPending || liberer.isPending || !!repriseEnCours;
   const partiel = signaux.paiement_partiel;
+  // Serveur plus ancien : champ absent, lu comme « non annulée ».
+  const annulee = signaux.annulee_par_client ?? null;
 
   return (
     <article
@@ -115,7 +117,8 @@ export function LigneRelance({ groupe, maintenant, estAdmin, onOuvrir, onIgnorer
           {autres.map((b) => (
             <li key={b.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
               <Commande b={b} />
-              <span className="text-xs text-gray-500 whitespace-nowrap">
+              <span className="flex items-center gap-1.5 text-xs text-gray-500 whitespace-nowrap">
+                {b.annulee_par_client && <Pastille ton="gris">Annulée</Pastille>}
                 {fmtMontant(b.amount)}, {depuis(b.created_at, maintenant)}
               </span>
             </li>
@@ -142,8 +145,14 @@ export function LigneRelance({ groupe, maintenant, estAdmin, onOuvrir, onIgnorer
       </div>
 
       {/* Signaux */}
-      {(signaux.paiement_refuse || partiel || signaux.commande_recente || groupe.crm) && (
+      {(annulee || signaux.paiement_refuse || partiel || signaux.commande_recente || groupe.crm) && (
         <div className="mt-3 flex flex-wrap gap-1.5">
+          {annulee && (
+            <Pastille ton="ambre">
+              <Ban className="w-3 h-3" />
+              Annulée par le client {aLHeure(annulee.le, maintenant)}
+            </Pastille>
+          )}
           {signaux.paiement_refuse && (
             <Pastille ton="rouge">
               <AlertTriangle className="w-3 h-3" />

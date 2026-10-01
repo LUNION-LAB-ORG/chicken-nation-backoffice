@@ -47,6 +47,12 @@ export interface BrouillonLigne {
   type: "DELIVERY" | "PICKUP" | "TABLE";
   amount: number;
   paiement_refuse: boolean;
+  /**
+   * Panier annulé par le client dans l'application, sans avoir payé. Il reste
+   * relançable : le reprendre au téléphone le réactive (acceptée, paiement à
+   * la caisse). Absent d'un serveur plus ancien : lu comme `false`.
+   */
+  annulee_par_client: boolean;
 }
 
 export interface PriseRelance {
@@ -63,6 +69,11 @@ export interface SignauxRelance {
   paiement_partiel?: { recu: number; montant: number } | null;
   /** Commande payée juste avant le panier : doublon probable, à vérifier avant d'appeler. */
   commande_recente: { reference: string; created_at: string } | null;
+  /**
+   * Le client a annulé lui-même : date d'annulation de la tête, ou du panier
+   * annulé le plus récent du groupe. Absent d'un serveur plus ancien.
+   */
+  annulee_par_client: { le: string } | null;
 }
 
 /** Les paniers d'un même client (même compte ou même numéro) : une alerte, un appel. */

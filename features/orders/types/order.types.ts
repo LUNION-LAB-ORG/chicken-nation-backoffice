@@ -132,6 +132,13 @@ export interface Order {
     user?: OrderStaffUser | null;
     updated_by?: string | null;
     updated_by_user?: OrderStaffUser | null;
+    /**
+     * Réponse de `PATCH /orders/:id` seulement : réactivation d'un panier
+     * annulé par le client dont le bon ou le code promo ne pouvait plus être
+     * consommé. La commande est reprise SANS la remise ; le texte, en
+     * français, est à montrer à l'agent tel quel.
+     */
+    avertissement_reprise?: string | null;
 }
 
 /** Membre du staff (créateur / dernier modificateur d'une commande). */

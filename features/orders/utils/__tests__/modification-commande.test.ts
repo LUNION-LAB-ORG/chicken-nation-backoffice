@@ -44,4 +44,11 @@ describe('modification d’une commande : écran et serveur alignés', () => {
     expect(actionsCommande(OrderStatus.CANCELLED, droits, 'tiroir')).toContain('modifier');
     expect(actionsCommande(OrderStatus.READY, droits, 'liste')).toContain('modifier');
   });
+
+  test('« Supprimer » absent du tiroir d’une commande déjà supprimée (panier annulé par le client)', () => {
+    const droits = { role: UserRole.ADMIN, peutLire: true, peutChangerStatut: true, peutModifier: true, peutSupprimer: true };
+    expect(actionsCommande(OrderStatus.CANCELLED, droits, 'tiroir')).toContain('supprimer');
+    expect(actionsCommande(OrderStatus.CANCELLED, droits, 'tiroir', { dejaSupprimee: true })).not.toContain('supprimer');
+    expect(actionsCommande(OrderStatus.CANCELLED, droits, 'tiroir', { dejaSupprimee: true })).toContain('modifier');
+  });
 });

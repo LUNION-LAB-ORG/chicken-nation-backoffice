@@ -40,6 +40,13 @@ interface OrigineSelectorProps {
    * « Application », rien n'est repris : on le dit avant l'enregistrement.
    */
   brouillon?: boolean;
+  /**
+   * Panier annulé par le client, repris au téléphone depuis « À relancer ».
+   * L'enregistrer sur « Call center » le RÉACTIVE côté serveur (acceptée,
+   * paiement à la caisse). Rester sur « Application » n'aurait aucun effet :
+   * la commande resterait annulée, d'où le choix bloqué.
+   */
+  annuleeParClient?: boolean;
 }
 
 const ORIGINES: { auto: boolean; label: string; desc: string; icon: LucideIcon }[] = [
@@ -68,6 +75,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
   montantFige = null,
   paiementApresBascule = "inchange",
   brouillon = false,
+  annuleeParClient = false,
 }) => {
   return (
     <div>
@@ -79,7 +87,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
           const selected = auto === o.auto;
           // Le serveur refuse ce passage sur une commande en attente : ne pas
           // le proposer vaut mieux que de le faire échouer après le clic.
-          const bloque = o.auto && enAttente && !selected;
+          const bloque = o.auto && (enAttente || annuleeParClient) && !selected;
           const Icon = o.icon;
           return (
             <button
@@ -89,9 +97,11 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
               onClick={() => onChange(o.auto)}
               aria-pressed={selected}
               title={
-                bloque
-                  ? "Commande encore en attente : confirmez-la d'abord, sinon elle disparaîtrait de la liste."
-                  : undefined
+                !bloque
+                  ? undefined
+                  : annuleeParClient
+                    ? "Commande annulée par le client : seule la reprise au call center la réactive."
+                    : "Commande encore en attente : confirmez-la d'abord, sinon elle disparaîtrait de la liste."
               }
               className={`flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition disabled:opacity-50 disabled:cursor-not-allowed ${
                 selected
@@ -151,6 +161,12 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
         </p>
       )}
 
+      {annuleeParClient && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+          <strong className="font-semibold">Commande annulée par le client</strong> : la reprendre la réactive,
+          acceptée, paiement à la caisse.
+        </p>
+      )}
       {brouillon && !auto && (
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
           Commande reprise au téléphone : le client paiera au restaurant ou à la livraison.{" "}
