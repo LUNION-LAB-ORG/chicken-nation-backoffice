@@ -447,45 +447,109 @@ export interface IVentes {
   dernieres: IVente[];
 }
 
-/** Un chiffre clé du rapport, avec ce qu'il valait sur la période précédente. */
-export interface IChiffreCle {
-  cle: string;
-  libelle: string;
+// ---------------------------------------------------------------------------
+// Rapport « Où en sommes-nous » (GET /crm/analytics/rapport, /rapport/pdf)
+// ---------------------------------------------------------------------------
+
+/**
+ * Un chiffre de la période et ce qu'il valait sur la période précédente de
+ * même durée. `variation` en % à une décimale ; `comparable` à faux (et
+ * `variation` à null) quand la base est trop petite pour qu'un pourcentage
+ * veuille dire quelque chose : décompte précédent sous 10, précédent à zéro,
+ * ou variation au-delà de 1 000 %. `monnaie` : un montant en francs.
+ */
+export interface Compare {
   valeur: number;
   precedent: number;
-  /** `null` : la période précédente était à zéro, aucune variation calculable. */
+  ecart: number;
   variation: number | null;
+  comparable: boolean;
   monnaie?: boolean;
 }
 
-export interface ITauxCompare {
+/** Un taux en % à une décimale, et son écart en points avec la période précédente. */
+export interface Taux {
   valeur: number;
   precedent: number;
+  ecart_points: number;
+}
+
+/**
+ * Un levier de croissance lu comme un entonnoir : entrés (captés pour
+ * Glovo/Yango, entrés en inactivité pour les inactifs), appelés, joints,
+ * coupons envoyés, ventes. `taux_conversion` = ventes sur entrés.
+ */
+export interface Levier {
+  entres: Compare;
+  appeles: Compare;
+  joints: Compare;
+  coupons: Compare;
+  ventes: Compare;
+  ca: Compare;
+  taux_contact: Taux;
+  taux_conversion: Taux;
+}
+
+export interface IRapportAgent {
+  id: string;
+  nom: string;
+  appels: number;
+  joints: number;
+  coupons: number;
+  ventes: number;
+  ca: number;
 }
 
 export interface IRapport {
   periode: { debut: string; fin: string; jours: number };
   precedente: { debut: string; fin: string };
-  cles: IChiffreCle[];
-  taux: { contact: ITauxCompare; conversion: ITauxCompare; coupon_utilise: ITauxCompare };
-  serie: { jour: string; entrees: number; appels: number; joints: number; coupons: number; conversions: number }[];
-  population: Record<string, number>;
-  entonnoirs: { segment: string; libelle: string; ventes: number; taux_conversion: number | null }[];
-  /** Une ligne par public : appels, joints, ventes, et les appels d'avant. */
-  par_public: {
-    segment: string;
-    libelle: string;
-    appels: number;
-    appels_precedent: number;
-    joints: number;
-    ventes: number;
-    taux_conversion: number | null;
-  }[];
-  conversion: { delai_median_j: number | null; delai_moyen_j: number | null; panier_moyen: number };
-  qualite: {
-    resolution_premier_appel: { traites: number; resolus: number; taux: number };
-    traitement: { tentatives_moyennes: number; appels_par_contact: number };
+  edite_le: string;
+  filtres: {
+    publics: string[];
+    campagne: { id: string; nom: string } | null;
+    restaurant: { id: string; nom: string } | null;
   };
-  agents: { lignes: { id: string; fullname: string; traites: number; joints: number; coupons: number; conversions: number; ca: number }[] };
-  raisons: { raisons: { id: string; raison: string; nombre: number }[] };
+  /** Deux à quatre phrases calculées par le serveur. */
+  a_retenir: string[];
+  inscriptions: {
+    /**
+     * Section exclue par le filtre (public « inscrits » non choisi, ou une
+     * campagne filtrée) : le serveur rend des zéros, l'écran la grise.
+     */
+    hors_filtre: boolean;
+    /** Compte de point de vente : les inscrits sont ceux de tout le réseau. */
+    hors_restaurant: boolean;
+    inscrits: Compare;
+    ont_commande: Compare;
+    sous_7_jours: Compare;
+    taux_commande: Taux;
+    delai_median_j: number | null;
+    ca: Compare;
+    sans_commande: number;
+    /** Par jour jusqu'à 45 jours, par semaine au-delà. */
+    pas: "jour" | "semaine";
+    serie: { date: string; inscrits: number; premieres_commandes: number }[];
+  };
+  captes: {
+    /** Ni Glovo ni Yango dans le filtre. */
+    hors_filtre: boolean;
+    total: Levier;
+    /** `libelle` est celui du serveur : « Clients Glovo », « Clients Yango ». */
+    par_public: ({ segment: "GLOVO" | "YANGO"; libelle: string; hors_filtre: boolean } & Levier)[];
+  };
+  inactifs: Levier & { hors_filtre: boolean; delai_median_j: number | null };
+  equipe: {
+    appels: Compare;
+    joints: Compare;
+    coupons: Compare;
+    taux_contact: Taux;
+    agents: IRapportAgent[];
+  };
+  resultat: {
+    ventes: Compare;
+    ca: Compare;
+    panier_moyen: Compare;
+    par_public: { segment: string; libelle: string; ventes: number; ca: number }[];
+  };
+  raisons: { raison: string; nombre: number; part: number }[];
 }

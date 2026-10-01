@@ -40,10 +40,10 @@ export const useVerbatimsQuery = (p: IVerbatimsFiltres) =>
 export const useVentesQuery = (p: IVentesFiltres) =>
   useQuery({ queryKey: crmKeyQuery("analyse", "ventes", p), queryFn: () => analyseAPI.ventes(p), ...options });
 
-/** Rapport d'activité : la période comparée à la précédente. */
+/**
+ * Rapport « Où en sommes-nous » : la période lue selon les trois leviers,
+ * comparée à la précédente. L'ancien rapport reste affiché le temps qu'un
+ * changement de filtre revienne, comme les autres vues d'analyse.
+ */
 export const useRapportQuery = (filtres: IPeriode) =>
-  useQuery({
-    queryKey: crmKeyQuery("rapport", filtres),
-    queryFn: () => analyseAPI.rapport(filtres),
-    staleTime: 60_000,
-  });
+  useQuery({ queryKey: crmKeyQuery("rapport", filtres), queryFn: () => analyseAPI.rapport(filtres), ...options });
