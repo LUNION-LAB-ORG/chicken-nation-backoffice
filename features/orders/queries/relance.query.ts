@@ -25,9 +25,9 @@ export const usePeutVoirLesBrouillons = () => peutVoirLesBrouillons(useAuthStore
  * Liste des relances.
  *
  * `pilote` : seul le guetteur global (useRelancesWatcher) relit à intervalle
- * et au retour sur la fenêtre. Les lecteurs (compteur, badge, bandeau,
- * onglet) partagent le même cache sans minuterie à eux : chaque abonné à
- * intervalle relirait la liste pour son compte.
+ * et au retour sur la fenêtre. Les lecteurs (compteur, badge, onglet)
+ * partagent le même cache sans minuterie à eux : chaque abonné à intervalle
+ * relirait la liste pour son compte.
  */
 export const useRelancesQuery = (options: { pilote?: boolean } = {}) => {
   const habilite = usePeutVoirLesBrouillons();

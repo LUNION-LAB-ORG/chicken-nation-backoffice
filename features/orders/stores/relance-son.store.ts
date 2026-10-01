@@ -41,7 +41,7 @@ interface RelanceSonState {
 
 /**
  * « Couper le son des relances », par NAVIGATEUR et non par compte : couper
- * le son sur le poste du bureau ne le coupe pas sur le téléphone. Le bandeau
+ * le son sur le poste du bureau ne le coupe pas sur le téléphone. Le compteur
  * et les pastilles restent actifs son coupé.
  */
 export const useRelanceSonStore = create<RelanceSonState>()(

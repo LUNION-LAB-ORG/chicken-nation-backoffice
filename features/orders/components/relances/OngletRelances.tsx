@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { EyeOff, Loader2, Volume2 } from "lucide-react";
 import { toast } from "react-hot-toast";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
@@ -57,7 +57,6 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const restaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const estAdmin = String(useAuthStore((s) => s.user?.role)) === "ADMIN";
   const sonBloque = useRelanceUiStore((s) => s.sonBloque);
-  const setOngletVisible = useRelanceUiStore((s) => s.setOngletVisible);
   const maintenant = useHorlogeRelances();
 
   const [voirIgnorees, setVoirIgnorees] = useState(false);
@@ -65,12 +64,6 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const [aReprendre, setAReprendre] = useState<GroupeRelance | null>(null);
   const [repriseCle, setRepriseCle] = useState<string | null>(null);
   const prendre = usePrendreRelance();
-
-  // L'onglet à l'écran rend le bandeau global inutile.
-  useEffect(() => {
-    setOngletVisible(true);
-    return () => setOngletVisible(false);
-  }, [setOngletVisible]);
 
   const regles = reglesDe(data);
   const groupes = useMemo(
