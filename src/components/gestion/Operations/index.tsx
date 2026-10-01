@@ -41,6 +41,7 @@ import { useMobileNavStore } from "@/store/mobileNavStore";
 
 // ── Onglet "À relancer" ────────────────────────────────────────────────────────
 import { CompteurRelances } from "../../../../features/orders/components/relances/CompteurRelances";
+import BandeauRelances from "../../../../features/orders/components/relances/BandeauRelances";
 import { OngletRelances } from "../../../../features/orders/components/relances/OngletRelances";
 import { useRelancesQuery } from "../../../../features/orders/queries/relance.query";
 import { demanderPermissionNotifications } from "../../../../features/orders/hooks/useSonRelances";
@@ -342,6 +343,13 @@ export default function Operations() {
           />
         )}
       </div>
+
+      {/* ── Paniers à relancer : sur cette page seulement, sous l'en-tête ────── */}
+      {!isEditing && (
+        <div className="px-4">
+          <BandeauRelances />
+        </div>
+      )}
 
       {/* ── Sélecteur d'onglets — segmented control plein-largeur sur mobile ──── */}
       {!isEditing && (

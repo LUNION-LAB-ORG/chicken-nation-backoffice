@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import DynamicModuleLoader from "@/components/gestion/DynamicModuleLoader";
 import { useDashboardStore } from "@/store/dashboardStore";
-import BandeauRelances from "../../../features/orders/components/relances/BandeauRelances";
 
 export default function GestionPage() {
   const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
@@ -37,9 +36,6 @@ export default function GestionPage() {
         "pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0"
       }
     >
-      {/* Paniers non payés à relancer (ADMIN, centre d'appels), sur toutes les
-          pages : dans le flux, pour que sa hauteur soit réservée. */}
-      <BandeauRelances />
       <DynamicModuleLoader />
     </main>
   );

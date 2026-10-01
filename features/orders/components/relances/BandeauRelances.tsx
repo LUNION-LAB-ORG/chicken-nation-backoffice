@@ -12,15 +12,14 @@ import { texteBandeau } from "../../utils/relance";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
 
 /**
- * Bandeau global « N commandes à relancer », sur toutes les pages de
- * `/gestion` pour l'ADMIN et le centre d'appels.
+ * Bandeau « N commandes à relancer », pour l'ADMIN et le centre d'appels,
+ * sur la page Commandes SEULEMENT (demande du 01/10), entre l'en-tête et les
+ * onglets. Une carte dans le flux de la page : il ne recouvre ni l'en-tête
+ * ni ses boutons. Ailleurs, le badge du menu « Commandes » et le son
+ * continuent de prévenir.
  *
  * Absent quand rien n'est à relancer ou quand l'onglet « À relancer » est
- * déjà à l'écran. Rendu DANS le flux, en tête du contenu (src/app/gestion/
- * page.tsx) et collé sous l'en-tête au défilement : sa hauteur est réservée,
- * il ne recouvre ni l'en-tête des pages ni la fin du contenu. Toujours sous
- * le tiroir de commande (z-50) et le panneau d'appel (z-190). La marge du
- * bas absorbe le `sm:-mt-6` de DashboardPageHeader.
+ * déjà à l'écran.
  *
  * Le parent ne lit que des stores : l'horloge (une minuterie de 10 s) ne
  * tourne que quand le bandeau s'affiche, jamais pour un rôle non habilité.
@@ -44,12 +43,8 @@ function ContenuBandeau({ groupes }: { groupes: GroupeRelance[] }) {
   if (!texte) return null;
 
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="sticky z-20 top-[calc(3.5rem+env(safe-area-inset-top))] md:top-14 bg-gray-50 px-3 py-2 sm:mb-2 md:p-0"
-    >
-      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 rounded-2xl md:rounded-none border border-orange-200 md:border-x-0 md:border-t-0 bg-orange-50 px-3 py-2 shadow-sm">
+    <div role="status" aria-live="polite">
+      <div className="flex flex-wrap md:flex-nowrap items-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-3 py-2">
         <PhoneCall className="w-4 h-4 shrink-0 text-[#F17922]" />
         <p className="flex-1 min-w-0 text-[13px] font-medium text-gray-800 md:truncate">{texte}</p>
         <div className="flex items-center gap-2 ml-auto">
