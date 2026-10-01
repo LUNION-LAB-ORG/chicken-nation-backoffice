@@ -40,7 +40,6 @@ import { UserType } from "../../../../features/users/types/user.types";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 
 // ── Onglet "À relancer" ────────────────────────────────────────────────────────
-import { CompteurRelances } from "../../../../features/orders/components/relances/CompteurRelances";
 import { OngletRelances } from "../../../../features/orders/components/relances/OngletRelances";
 import { useRelancesQuery } from "../../../../features/orders/queries/relance.query";
 import { demanderPermissionNotifications } from "../../../../features/orders/hooks/useSonRelances";
@@ -278,15 +277,6 @@ export default function Operations() {
               realTimeSearch: true,
             }}
             actions={[
-              ...(voitRelances
-                ? [
-                    {
-                      label: "À relancer",
-                      onClick: () => setActiveTab("relances"),
-                      customComponent: <CompteurRelances />,
-                    },
-                  ]
-                : []),
               ...(can(Modules.BASE_DONNEES, Action.CREATE)
                 ? [
                     {
