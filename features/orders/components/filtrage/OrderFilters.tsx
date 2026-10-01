@@ -5,6 +5,7 @@ import { OrderStatus, OrderType } from "../../types/order.types";
 import { dateRangeToLocalString } from "../../../../utils/date/format-date";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import { useAuthStore } from "../../../users/hook/authStore";
+import { peutVoirLesBrouillons } from "../../utils/brouillons";
 
 export function OrderFilters() {
   const {
@@ -14,10 +15,8 @@ export function OrderFilters() {
   } = useDashboardStore();
   const { user } = useAuthStore();
   // ADMIN **et CALL_CENTER** peuvent filtrer les commandes PENDING (suivi client).
-  // Aligné sur le backend : order.service.ts → `adminWantsPending` autorise déjà
-  // ces deux rôles ; seul ce filtre restait bloqué sur ADMIN.
-  const role = String(user?.role);
-  const canFilterPending = role === "ADMIN" || role === "CALL_CENTER";
+  // Même règle que le serveur (`peutVoirLesBrouillons`, jumelle des deux côtés).
+  const canFilterPending = peutVoirLesBrouillons(user);
 
   const [showTypeDropdown, setShowTypeDropdown] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);

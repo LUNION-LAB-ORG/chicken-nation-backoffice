@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ClipboardList, Loader2, Store } from "lucide-react";
 
 import SimpleSelect from "@/components/ui/SimpleSelect";
+import { useDashboardStore } from "@/store/dashboardStore";
 import { useOrderForm } from "../../hooks/useOrderForm";
 import { OrderStatus, OrderType } from "../../types/order.types";
 import { ReductionAffichee } from "../../types/coupon.types";
@@ -61,6 +62,16 @@ function apresBascule(commande: OrderTable): {
 const CARD_CLASS = "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6";
 
 const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
+  // « Reprendre au téléphone » : lu une fois à l'ouverture, puis effacé à la
+  // fermeture du formulaire pour ne pas resservir à une autre modification.
+  const repriseTelephoneId = useDashboardStore((s) => s.repriseTelephoneId);
+  const setRepriseTelephone = useDashboardStore((s) => s.setRepriseTelephone);
+  const [repriseTelephone] = useState(() => !!editOrder && repriseTelephoneId === editOrder.id);
+  useEffect(() => {
+    if (!repriseTelephone) return;
+    return () => setRepriseTelephone(null);
+  }, [repriseTelephone, setRepriseTelephone]);
+
   const {
     formData,
     setFormData,
@@ -71,7 +82,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     handleCancel,
     handleCustomerChange,
     coupon,
-  } = useOrderForm(editOrder);
+  } = useOrderForm(editOrder, { repriseTelephone });
 
   // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
   // des frais pour appliquer les offres de livraison à montant minimum (aperçu backoffice).
@@ -172,6 +183,14 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
               etaitAuto={editOrder.auto}
               montantFige={apresBascule(editOrder).montantFige}
               paiementApresBascule={apresBascule(editOrder).paiement}
+              // Panier de l'application payable en ligne, non payé : même
+              // prédicat que le serveur (auto, ONLINE, PENDING, non payé).
+              // « Appli » suppose déjà auto et le paiement en ligne.
+              brouillon={
+                editOrder.paymentChannel === "Appli" &&
+                editOrder.rawStatus === OrderStatus.PENDING &&
+                !editOrder.paied
+              }
               onChange={(auto) => setFormData({ ...formData, auto })}
             />
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { Activity, AlertCircle, Archive, Plus, RotateCw, UserPlus } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Activity, AlertCircle, Archive, PhoneCall, Plus, RotateCw, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -39,22 +39,33 @@ import { OrderTable } from "../../../../features/orders/types/ordersTable.types"
 import { UserType } from "../../../../features/users/types/user.types";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 
+// ── Onglet "À relancer" ────────────────────────────────────────────────────────
+import { CompteurRelances } from "../../../../features/orders/components/relances/CompteurRelances";
+import { OngletRelances } from "../../../../features/orders/components/relances/OngletRelances";
+import { useRelancesQuery } from "../../../../features/orders/queries/relance.query";
+import { demanderPermissionNotifications } from "../../../../features/orders/hooks/useSonRelances";
+import { peutVoirLesBrouillons } from "../../../../features/orders/utils/brouillons";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type CommandesTab = "temps_reel" | "historique";
+type CommandesTab = "temps_reel" | "historique" | "relances";
 
 const TABS: { key: CommandesTab; label: string; Icon: React.FC<{ className?: string }> }[] = [
   { key: "temps_reel", label: "En cours",   Icon: ({ className }) => <Activity className={className} /> },
   { key: "historique", label: "Commandes",  Icon: ({ className }) => <Archive className={className} /> },
+  // Paniers de l'application non payés : ADMIN et centre d'appels seulement.
+  { key: "relances",   label: "À relancer", Icon: ({ className }) => <PhoneCall className={className} /> },
 ];
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 /**
- * Page "Commandes" unifiée — deux onglets :
+ * Page "Commandes" unifiée, trois onglets :
  *
  *  • **En cours**  : suivi temps réel (KPI + cards + code retrait livreur)
  *  • **Commandes** : table paginée avec filtres, création, modification
+ *  • **À relancer** : paniers de l'application restés sans paiement (ADMIN,
+ *    centre d'appels), avec leur compteur dans l'en-tête
  *
  * Header partagé en haut (titre, recherche, actualiser, créer, exporter).
  * Sélecteur d'onglets juste en dessous du header.
@@ -66,12 +77,49 @@ export default function Operations() {
   const [activeTab, setActiveTab] = useState<CommandesTab>("temps_reel");
 
   // ── Store ────────────────────────────────────────────────────────────────────
-  const { selectedRestaurantId, orders, setFilter, setPagination, setSectionView } =
-    useDashboardStore();
+  const {
+    selectedRestaurantId,
+    orders,
+    setFilter,
+    setPagination,
+    setSectionView,
+    setSelectedItem,
+    setRepriseTelephone,
+    pendingOrdersView,
+    clearPendingOrdersView,
+  } = useDashboardStore();
   const { filters, pagination, modals, selectedItem: ordersSelectedItem, view: ordersView } =
     orders;
   const { user: currentUser, can } = useAuthStore();
   const queryClient = useQueryClient();
+
+  // ── Relances (paniers non payés) ─────────────────────────────────────────────
+  // Aucune lecture pour un autre rôle : la requête est désactivée à la source.
+  const voitRelances = peutVoirLesBrouillons(currentUser);
+  const { data: relances } = useRelancesQuery();
+  const nbRelancesOnglet = useMemo(
+    () =>
+      (relances?.groupes ?? []).filter(
+        (g) =>
+          g.etat === "A_RELANCER" &&
+          (!selectedRestaurantId || g.tete.restaurant?.id === selectedRestaurantId),
+      ).length,
+    [relances?.groupes, selectedRestaurantId],
+  );
+  const onglets = TABS.filter((t) => t.key !== "relances" || voitRelances);
+
+  // Ouverture demandée d'ailleurs (bandeau, compteur, notification) : on
+  // passe sur l'onglet puis on efface la demande, qui n'est jamais persistée.
+  useEffect(() => {
+    if (pendingOrdersView !== "relances") return;
+    if (voitRelances) setActiveTab("relances");
+    clearPendingOrdersView();
+  }, [pendingOrdersView, voitRelances, clearPendingOrdersView]);
+
+  // Droits relus en cours de route : l'onglet disparaît, on revient à « En cours ».
+  useEffect(() => {
+    if (activeTab === "relances" && !voitRelances) setActiveTab("temps_reel");
+  }, [activeTab, voitRelances]);
 
   // ── Header partagé ───────────────────────────────────────────────────────────
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -154,6 +202,27 @@ export default function Operations() {
     setSelectedHistoriqueOrderId(null);
   };
 
+  // « Ouvrir » d'une relance : même tiroir qu'un clic dans le tableau.
+  const handleOuvrirRelance = (orderId: string) => {
+    setInitialDrawerTab("details");
+    setSelectedOrder(null);
+    setSelectedHistoriqueOrderId(orderId);
+  };
+
+  /**
+   * « Reprendre au téléphone » : « Modifier la commande » n'existe que sur
+   * l'onglet « Commandes ». Le formulaire s'ouvre sur l'origine « Call
+   * center » : c'est la bascule, à l'enregistrement, qui transmet la commande
+   * au restaurant et la sort des relances.
+   */
+  const reprendreAuTelephone = (commande: OrderTable) => {
+    handleCloseDrawer();
+    setActiveTab("historique");
+    setRepriseTelephone(commande.id);
+    setSelectedItem("orders", commande);
+    setSectionView("orders", "edit");
+  };
+
   // ── Données "Commandes" ──────────────────────────────────────────────────────
   const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useOrderListQuery({
     restaurantId: selectedRestaurantId,
@@ -209,6 +278,15 @@ export default function Operations() {
               realTimeSearch: true,
             }}
             actions={[
+              ...(voitRelances
+                ? [
+                    {
+                      label: "À relancer",
+                      onClick: () => setActiveTab("relances"),
+                      customComponent: <CompteurRelances />,
+                    },
+                  ]
+                : []),
               ...(can(Modules.BASE_DONNEES, Action.CREATE)
                 ? [
                     {
@@ -269,19 +347,33 @@ export default function Operations() {
       {!isEditing && (
         <div className="px-4 pt-3 pb-0">
           <div className="flex items-center bg-[#f4f4f5] rounded-[14px] p-1 gap-1 w-full sm:w-fit">
-            {TABS.map((tab) => {
+            {onglets.map((tab) => {
               const isActive = activeTab === tab.key;
+              const pastille = tab.key === "relances" ? nbRelancesOnglet : 0;
               return (
                 <button
                   key={tab.key}
                   type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 sm:flex-none transition-all font-bold cursor-pointer text-[13px] px-5 rounded-[11px] focus:outline-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[30px]
+                  onClick={() => {
+                    // Geste de l'agent : la permission des notifications des relances se demande ici.
+                    if (tab.key === "relances") demanderPermissionNotifications();
+                    setActiveTab(tab.key);
+                  }}
+                  className={`flex-1 sm:flex-none transition-all font-bold cursor-pointer text-[13px] ${onglets.length > 2 ? "px-2" : "px-5"} sm:px-5 rounded-[11px] focus:outline-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[30px]
                     ${isActive ? "bg-[#F17922] text-white shadow-sm" : "bg-transparent text-[#71717A] font-normal active:bg-black/5"}
                   `}
                 >
-                  <tab.Icon className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                  <tab.Icon className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${onglets.length > 2 ? "hidden min-[400px]:block" : ""}`} />
                   {tab.label}
+                  {pastille > 0 && (
+                    <span
+                      className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-none inline-flex items-center justify-center ${
+                        isActive ? "bg-white text-[#F17922]" : "bg-[#F17922] text-white"
+                      }`}
+                    >
+                      {pastille > 99 ? "99+" : pastille}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -384,7 +476,15 @@ export default function Operations() {
         </div>
       )}
 
-      {/* ── Drawer partagé (En cours + Commandes) ───────────────────────────── */}
+      {/* ── Onglet : À relancer ──────────────────────────────────────────────── */}
+      {activeTab === "relances" && voitRelances && (
+        <div className="p-4 space-y-4">
+          <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
+          <OngletRelances onOuvrir={handleOuvrirRelance} onReprendre={reprendreAuTelephone} />
+        </div>
+      )}
+
+      {/* ── Drawer partagé (En cours + Commandes + À relancer) ──────────────── */}
       <OperationsDrawer
         order={drawerOrder}
         initialTab={initialDrawerTab}

@@ -16,6 +16,7 @@ import { useMobileNavStore } from "@/store/mobileNavStore";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useUnreadCounts } from "../../../../features/messagerie";
+import { useNombreARelancer } from "../../../../features/orders/queries/relance.query";
 
 type NavItem = {
   key: string;
@@ -23,7 +24,7 @@ type NavItem = {
   Icon: LucideIcon;
   onClick: () => void;
   active?: boolean;
-  /** Nombre de non-lus affiché en pastille sur l'icône. */
+  /** Nombre affiché en pastille sur l'icône (non-lus, commandes à relancer). */
   badge?: number;
 };
 
@@ -39,11 +40,12 @@ export default function MobileBottomNav() {
   const can = useAuthStore((s) => s.can);
   const openMobileMenu = useMobileNavStore((s) => s.openMobileMenu);
   const unread = useUnreadCounts();
+  // Paniers non payés à relancer (ADMIN, centre d'appels ; zéro sinon).
+  const aRelancer = useNombreARelancer();
 
-  const isOrders =
-    activeTab === "operations" ||
-    activeTab === "orders" ||
-    activeTab === "historique";
+  // « historique » n'est pas un module mais un onglet interne de la page
+  // Commandes : il ne peut pas être l'onglet actif, la comparaison est retirée.
+  const isOrders = activeTab === "operations" || activeTab === "orders";
 
   // Destinations possibles, par ordre de priorité, filtrées par permission.
   const destinations: NavItem[] = [];
@@ -63,6 +65,7 @@ export default function MobileBottomNav() {
       label: "Commandes",
       Icon: ClipboardList,
       active: isOrders,
+      badge: aRelancer > 0 ? aRelancer : undefined,
       onClick: () => setActiveTab("operations" as TabKey),
     });
   }

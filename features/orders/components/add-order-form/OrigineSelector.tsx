@@ -33,6 +33,13 @@ interface OrigineSelectorProps {
    *    choisies dans l'appli).
    */
   paiementApresBascule?: "caisse" | "livreur" | "inchange";
+  /**
+   * Panier de l'application encore en attente de paiement (relance). Sur
+   * « Call center », le client peut toujours payer dans l'application
+   * pendant la reprise : on le rappelle à l'agent, qui doit le prévenir. Sur
+   * « Application », rien n'est repris : on le dit avant l'enregistrement.
+   */
+  brouillon?: boolean;
 }
 
 const ORIGINES: { auto: boolean; label: string; desc: string; icon: LucideIcon }[] = [
@@ -60,6 +67,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
   etaitAuto = auto,
   montantFige = null,
   paiementApresBascule = "inchange",
+  brouillon = false,
 }) => {
   return (
     <div>
@@ -140,6 +148,19 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
           {paiementApresBascule === "livreur" &&
             " L'encaissement déclaré par le livreur reste à confirmer dans l'onglet Paiement."}
           {enAttente && " La commande, encore en attente, passera aussi en « acceptée »."}
+        </p>
+      )}
+
+      {brouillon && !auto && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+          Commande reprise au téléphone : le client paiera au restaurant ou à la livraison.{" "}
+          <strong className="font-semibold">S&apos;il paie aussi dans l&apos;application, il paiera deux fois.</strong>
+        </p>
+      )}
+      {brouillon && auto && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+          Pour reprendre la commande au téléphone, choisissez Call center. Sinon, elle reste un panier non payé
+          que le restaurant ne voit pas.
         </p>
       )}
     </div>

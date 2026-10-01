@@ -148,6 +148,7 @@ export default function SidebarNavigation({
             }
             label={item.label}
             active={activeTab === item.id}
+            badge={item.badge}
             onClick={() => onNavigationChange(item.id)}
           />
         );

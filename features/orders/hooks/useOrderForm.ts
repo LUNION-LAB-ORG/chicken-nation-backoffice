@@ -70,17 +70,26 @@ const formulaireVide = (userId: string): OrderFormData => ({
     delivery_fee: 0,
 });
 
-export const useOrderForm = (editOrder?: OrderTable) => {
+/**
+ * `repriseTelephone` : modification ouverte par « Reprendre au téléphone ».
+ * L'origine part sur « Call center », car c'est cette bascule, à
+ * l'enregistrement, qui reprend la commande côté serveur. Laissée sur
+ * « Application », la commande resterait un panier non payé que le
+ * restaurant ne voit pas.
+ */
+export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone?: boolean } = {}) => {
     const { user, can } = useAuthStore();
     const { setSectionView } = useDashboardStore();
     const isEditMode = !!editOrder;
+    const { repriseTelephone = false } = options;
 
     const initialFormData = useMemo(() => {
         if (editOrder) {
-            return buildFormDataFromOrder(editOrder, user.id);
+            const depart = buildFormDataFromOrder(editOrder, user.id);
+            return repriseTelephone ? { ...depart, auto: false } : depart;
         }
         return formulaireVide(user.id);
-    }, [editOrder, user.id]);
+    }, [editOrder, user.id, repriseTelephone]);
 
     const [formData, setFormData] = useState<OrderFormData>(initialFormData);
     const [isSubmitting, setIsSubmitting] = useState(false);

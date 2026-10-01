@@ -42,6 +42,7 @@ import {
 import { useAuthStore } from "../../features/users/hook/authStore";
 import { Modules, Action } from "../../features/users/types/auth.type";
 import { useUnreadCounts } from "../../features/messagerie/hooks/useUnreadCounts";
+import { useNombreARelancer } from "../../features/orders/queries/relance.query";
 
 export type CanAccessFn = () => boolean;
 
@@ -62,6 +63,9 @@ export const useGetMenuConfig = (): {
   // s'abonner aux permissions redessine le menu avec les droits à jour.
   useAuthStore((state) => state.user?.permissions);
   const unread = useUnreadCounts();
+  // Paniers non payés à relancer : lecture du cache de la relance, sans
+  // requête de plus ; toujours zéro pour un rôle non habilité (requête coupée).
+  const aRelancer = useNombreARelancer();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -81,6 +85,7 @@ export const useGetMenuConfig = (): {
       label: "Commandes",
       icon: ClipboardList,
       canAccess: () => can(Modules.COMMANDES, Action.READ),
+      badge: aRelancer > 0 ? aRelancer : undefined,
     },
     {
       id: "courses",

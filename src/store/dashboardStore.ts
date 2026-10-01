@@ -56,6 +56,14 @@ export interface DashboardState {
   pendingTicketId: string | null;
   // Public du CRM à afficher à l'ouverture (bouton « Rappeler » des statistiques).
   pendingCrmSegment: 'JAMAIS_COMMANDE' | 'INACTIF' | 'GLOVO' | 'YANGO' | null;
+  // Vue de la page Commandes à ouvrir (bandeau, compteur, notification des
+  // relances). Transient : jamais persisté (absent de `partialize`), consommé
+  // par la page Commandes puis remis à null.
+  pendingOrdersView: 'relances' | null;
+  // Commande ouverte en modification par « Reprendre au téléphone » : le
+  // formulaire s'ouvre sur l'origine « Call center ». Transient, comme
+  // pendingOrdersView ; effacé à la fermeture du formulaire.
+  repriseTelephoneId: string | null;
   // Dernière conversation et dernier ticket consultés : conservés pour
   // retrouver son écran en revenant d'un autre module (avant, tout
   // repartait de l'écran vide « Sélectionnez une conversation »).
@@ -111,6 +119,9 @@ export interface DashboardState {
   clearPendingTicket: () => void;
   openCrm: (segment: 'INACTIF' | 'JAMAIS_COMMANDE' | 'GLOVO' | 'YANGO') => void;
   clearPendingCrm: () => void;
+  openRelances: () => void;
+  clearPendingOrdersView: () => void;
+  setRepriseTelephone: (orderId: string | null) => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string, messageId?: string | null) => void;
@@ -163,6 +174,8 @@ export const useDashboardStore = create<DashboardState>()(
       pendingConversationId: null,
       pendingMessageId: null,
       pendingCrmSegment: null,
+      pendingOrdersView: null,
+      repriseTelephoneId: null,
       pendingTicketId: null,
       lastConversationId: null,
       lastTicketId: null,
@@ -243,6 +256,17 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       clearPendingCrm: () => set((state) => {
         state.pendingCrmSegment = null;
+      }),
+      // Ouvre la page Commandes sur l'onglet « À relancer ».
+      openRelances: () => set((state) => {
+        state.activeTab = 'operations';
+        state.pendingOrdersView = 'relances';
+      }),
+      clearPendingOrdersView: () => set((state) => {
+        state.pendingOrdersView = null;
+      }),
+      setRepriseTelephone: (orderId) => set((state) => {
+        state.repriseTelephoneId = orderId;
       }),
       setLastConversation: (id) => set((state) => {
         state.lastConversationId = id;
