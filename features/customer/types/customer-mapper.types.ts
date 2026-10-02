@@ -4,7 +4,7 @@ import { CardRequest, NationCard } from "../../carte-nation/types/carte-nation.t
 import { LoyaltyLevel, LoyaltyPointType } from "../../points_fedelite/types/loyalty.types"
 
 export type CustomerMapperStatus = "Nouveau" | "Active" | "Inactif" | "Supprimé"
-export type LoyaltyPointTypeMapper = "Gagné" | "Utilisé" | "Expiré" | "Bonus"
+export type LoyaltyPointTypeMapper = "Gagné" | "Utilisé" | "Expiré" | "Bonus" | "Rendus"
 
 export interface CustomerMapperData {
     id: string;
@@ -68,4 +68,14 @@ export const CUSTOMER_LOYALTY_POINT_TYPE_MAP: Record<LoyaltyPointType, LoyaltyPo
     "REDEEMED": "Utilisé",
     "EXPIRED": "Expiré",
     "BONUS": "Bonus",
+    "REFUNDED": "Rendus",
 }
+
+/**
+ * Lignes de l'historique qui AJOUTENT des points au solde : affichées en vert,
+ * avec un « + ». Les points rendus d'une commande annulée en font partie.
+ */
+export const HISTORIQUE_POINTS_CREDIT: readonly LoyaltyPointTypeMapper[] = ["Gagné", "Bonus", "Rendus"]
+
+export const estCreditHistorique = (type: LoyaltyPointTypeMapper): boolean =>
+    HISTORIQUE_POINTS_CREDIT.includes(type)

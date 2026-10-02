@@ -6,10 +6,11 @@ import {
   ShoppingBag,
   Star,
   TrendingUp,
+  Undo2,
 } from "lucide-react";
 import Image from "next/image";
 import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
-import { CustomerMapperData } from "../../types/customer-mapper.types";
+import { CustomerMapperData, estCreditHistorique } from "../../types/customer-mapper.types";
 import OrderDetailModal from "../../../orders/components/detail-order/OrderDetailModal";
 import { OrderTable } from "../../../orders/types/ordersTable.types";
 import { useAuthStore } from "../../../users/hook/authStore";
@@ -74,14 +75,18 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
               <div className="flex items-center gap-3">
                 <div
                   className={`p-2 rounded-lg ${
-                    item.type === "Gagné" || item.type === "Bonus"
+                    estCreditHistorique(item.type)
                       ? "bg-emerald-100"
                       : item.type === "Utilisé"
                       ? "bg-rose-100"
                       : "bg-gray-100"
                   }`}
                 >
-                  {item.type === "Gagné" || item.type === "Bonus" ? (
+                  {/* Points rendus (commande annulée) : flèche de retour, pour
+                      les distinguer d'un gain. */}
+                  {item.type === "Rendus" ? (
+                    <Undo2 className="w-4 h-4 text-emerald-600" />
+                  ) : estCreditHistorique(item.type) ? (
                     <TrendingUp className="w-4 h-4 text-emerald-600" />
                   ) : (
                     <Star className="w-4 h-4 text-rose-600" />
@@ -96,12 +101,12 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
               </div>
               <div
                 className={`font-semibold text-sm ${
-                  item.type === "Gagné" || item.type === "Bonus"
+                  estCreditHistorique(item.type)
                     ? "text-emerald-600"
                     : "text-rose-600"
                 }`}
               >
-                {item.type === "Gagné" || item.type === "Bonus" ? "+" : "-"}
+                {estCreditHistorique(item.type) ? "+" : "-"}
                 {item.points} pts
               </div>
             </div>

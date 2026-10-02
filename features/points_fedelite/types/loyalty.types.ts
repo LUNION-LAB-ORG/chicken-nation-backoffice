@@ -1,7 +1,10 @@
 import { Customer } from "../../customer/types/customer.types";
 import { Order } from "../../orders/types/order.types";
 
-export type LoyaltyPointType = "EARNED" | "REDEEMED" | "EXPIRED" | "BONUS";
+// REFUNDED (03/10) : points rendus au client quand une commande payée avec
+// des points est annulée. Ligne de +points rattachée à la commande ; la ligne
+// REDEEMED de la commande reste telle quelle.
+export type LoyaltyPointType = "EARNED" | "REDEEMED" | "EXPIRED" | "BONUS" | "REFUNDED";
 export type LoyaltyLevel = "STANDARD" | "VIP" | "VVIP";
 
 export interface LoyaltyPoint {

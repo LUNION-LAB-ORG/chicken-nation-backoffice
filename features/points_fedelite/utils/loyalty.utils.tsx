@@ -1,3 +1,4 @@
+import { Undo2 } from "lucide-react";
 import { LoyaltyLevel, LoyaltyPointType } from "../types/loyalty.types";
 
 // Badge pour le type de point
@@ -21,6 +22,14 @@ export const getPointTypeBadge = (type: LoyaltyPointType) => {
     BONUS: (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
         Bonus
+      </span>
+    ),
+    // Points d'une commande annulée rendus au client : un crédit, en vert,
+    // distinct des points gagnés.
+    REFUNDED: (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-100 text-teal-800">
+        <Undo2 className="w-3 h-3" aria-hidden="true" />
+        Rendus
       </span>
     ),
   };

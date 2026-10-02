@@ -28,6 +28,7 @@ const LoyaltyFilterTab: React.FC = () => {
     { key: "REDEEMED", label: "Utilisés" },
     { key: "EXPIRED", label: "Expirés" },
     { key: "BONUS", label: "Bonus" },
+    { key: "REFUNDED", label: "Rendus" },
   ];
 
   const usageStatus: {
