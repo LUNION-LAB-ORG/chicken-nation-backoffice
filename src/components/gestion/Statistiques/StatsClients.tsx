@@ -16,6 +16,7 @@ import {
   ShoppingBasket,
   Smartphone,
   Phone,
+  Globe,
   UserCheck,
   UserX,
   AlertCircle,
@@ -133,8 +134,10 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 const ACQUISITION_COLORS = {
   newApp: CHART_COLORS.primary,
+  newWeb: CHART_COLORS.teal,
   newCallCenter: CHART_COLORS.blue,
   recurringApp: "rgba(241, 121, 34, 0.35)",
+  recurringWeb: "rgba(20, 184, 166, 0.35)",
   recurringCallCenter: "rgba(59, 130, 246, 0.35)",
 } as const;
 
@@ -181,6 +184,12 @@ export default function StatsClients() {
     refetch: dashboard.refetch,
   };
   const acquisition = { data: dashData?.acquisition };
+  // Courbes du site web à 0 quand le serveur ne les renvoie pas encore
+  const acquisitionTrend = (acquisition.data?.dailyTrend ?? []).map((p) => ({
+    ...p,
+    newViaWeb: p.newViaWeb ?? 0,
+    recurringViaWeb: p.recurringViaWeb ?? 0,
+  }));
   const retention = { data: dashData?.retention };
   const topClients = { data: dashData?.topClients };
   const byZone = { data: dashData?.byZone };
@@ -482,7 +491,7 @@ export default function StatsClients() {
                 <div style={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
-                      data={acquisition.data.dailyTrend}
+                      data={acquisitionTrend}
                       margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                     >
                       <defs>
@@ -501,6 +510,24 @@ export default function StatsClients() {
                           <stop
                             offset="95%"
                             stopColor={ACQUISITION_COLORS.newApp}
+                            stopOpacity={0.02}
+                          />
+                        </linearGradient>
+                        <linearGradient
+                          id="gradNewWeb"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor={ACQUISITION_COLORS.newWeb}
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor={ACQUISITION_COLORS.newWeb}
                             stopOpacity={0.02}
                           />
                         </linearGradient>
@@ -557,6 +584,16 @@ export default function StatsClients() {
                       />
                       <Area
                         type="monotone"
+                        dataKey="newViaWeb"
+                        name="Nouveaux Site web"
+                        stroke={ACQUISITION_COLORS.newWeb}
+                        fill="url(#gradNewWeb)"
+                        strokeWidth={2}
+                        dot={false}
+                        stackId="new"
+                      />
+                      <Area
+                        type="monotone"
                         dataKey="newViaCallCenter"
                         name="Nouveaux Call Center"
                         stroke={ACQUISITION_COLORS.newCallCenter}
@@ -570,6 +607,16 @@ export default function StatsClients() {
                         dataKey="recurringViaApp"
                         name="Récurrents App"
                         stroke={ACQUISITION_COLORS.recurringApp}
+                        fill="transparent"
+                        strokeWidth={1.5}
+                        strokeDasharray="4 4"
+                        dot={false}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="recurringViaWeb"
+                        name="Récurrents Site web"
+                        stroke={ACQUISITION_COLORS.recurringWeb}
                         fill="transparent"
                         strokeWidth={1.5}
                         strokeDasharray="4 4"
@@ -603,6 +650,15 @@ export default function StatsClients() {
                     <span
                       className="w-3 h-0.5 rounded"
                       style={{
+                        backgroundColor: ACQUISITION_COLORS.newWeb,
+                      }}
+                    />
+                    Nouveaux Site web
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <span
+                      className="w-3 h-0.5 rounded"
+                      style={{
                         backgroundColor: ACQUISITION_COLORS.newCallCenter,
                       }}
                     />
@@ -616,6 +672,15 @@ export default function StatsClients() {
                       }}
                     />
                     Récurrents App
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <span
+                      className="w-3 h-0.5 rounded border border-dashed"
+                      style={{
+                        borderColor: ACQUISITION_COLORS.recurringWeb,
+                      }}
+                    />
+                    Récurrents Site web
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
                     <span
@@ -724,8 +789,8 @@ export default function StatsClients() {
                       </div>
                     </div>
                     {/* Canal acquisition */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <div className="bg-gray-50 rounded-lg p-1.5 text-center">
                         <div className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
                           <Smartphone className="w-3 h-3" />
                           App
@@ -734,7 +799,16 @@ export default function StatsClients() {
                           {formatNumber(overview.data?.appClients ?? 0)}
                         </div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-2 text-center">
+                      <div className="bg-gray-50 rounded-lg p-1.5 text-center">
+                        <div className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          Site web
+                        </div>
+                        <div className="text-sm font-bold text-gray-800">
+                          {formatNumber(overview.data?.webClients ?? 0)}
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-1.5 text-center">
                         <div className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
                           <Phone className="w-3 h-3" />
                           Call Center
@@ -1321,6 +1395,8 @@ export default function StatsClients() {
                     className={`text-xs px-2 py-0.5 rounded-full ${
                       c.preferredChannel === "APP"
                         ? "bg-orange-50 text-[#F17922]"
+                        : c.preferredChannel === "WEB"
+                        ? "bg-teal-50 text-teal-700"
                         : c.preferredChannel === "CALL_CENTER"
                         ? "bg-blue-50 text-blue-700"
                         : "bg-purple-50 text-purple-700"

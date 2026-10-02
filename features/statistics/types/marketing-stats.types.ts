@@ -2,6 +2,8 @@
 // TYPES - Statistiques Marketing
 // =========================================
 
+import type { CanalPrefere } from './clients-stats.types';
+
 export interface MarketingQueryParams {
   restaurantId?: string;
   startDate?: string;
@@ -91,7 +93,7 @@ export interface ChurnExportItem {
   daysSinceLastOrder: number;
   totalOrders: number;
   totalSpent: number;
-  preferredChannel: 'APP' | 'CALL_CENTER' | 'MIXED';
+  preferredChannel: CanalPrefere;
 }
 
 export interface ChurnExportResponse {

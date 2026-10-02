@@ -26,6 +26,7 @@ export interface ProductsComparisonQueryParams {
 // ----- Répartition par source -----
 export interface SourceBreakdown {
   app: number;
+  web?: number;
   callCenter: number;
   hubrise: number;
 }
@@ -136,9 +137,13 @@ export interface SalesTrendResponse {
 export interface ChannelBreakdownResponse {
   appSold: number;
   appRevenue: number;
+  // Site web : optionnels, absents des réponses antérieures au 02/10/2026
+  webSold?: number;
+  webRevenue?: number;
   callCenterSold: number;
   callCenterRevenue: number;
   appPercentage: number;
+  webPercentage?: number;
   callCenterPercentage: number;
   totalSold: number;
 }

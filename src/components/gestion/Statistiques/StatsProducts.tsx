@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Smartphone,
   Phone,
+  Globe,
   Tag,
   ShoppingBasket,
 } from "lucide-react";
@@ -134,6 +135,12 @@ export default function StatsProducts() {
           percentage: channelData.appPercentage,
         },
         {
+          name: "Site web",
+          value: channelData.webSold ?? 0,
+          fill: CHANNEL_COLORS.web,
+          percentage: channelData.webPercentage ?? 0,
+        },
+        {
           name: "Call Center",
           value: channelData.callCenterSold,
           fill: CHART_COLORS.blue,
@@ -152,6 +159,7 @@ export default function StatsProducts() {
       revenue: item.revenue,
       percentage: item.percentage,
       app: item.sourceBreakdown?.app ?? item.totalSold,
+      web: item.sourceBreakdown?.web ?? 0,
       callCenter: item.sourceBreakdown?.callCenter ?? 0,
       hubrise: item.sourceBreakdown?.hubrise ?? 0,
     }));
@@ -410,6 +418,14 @@ export default function StatsProducts() {
                       name="App"
                       stackId="source"
                       fill={CHANNEL_COLORS.app}
+                      barSize={24}
+                    />
+                    {/* Barre empilée : Site web (sarcelle) */}
+                    <Bar
+                      dataKey="web"
+                      name="Site web"
+                      stackId="source"
+                      fill={CHANNEL_COLORS.web}
                       barSize={24}
                     />
                     {/* Barre empilée : Call Center (bleu) */}
@@ -695,7 +711,7 @@ export default function StatsProducts() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex flex-col justify-center space-y-3">
+                  <div className="flex flex-col justify-center space-y-2">
                     {/* App */}
                     <div className="bg-orange-50 rounded-xl p-3">
                       <div className="flex items-center justify-between mb-1">
@@ -718,6 +734,32 @@ export default function StatsProducts() {
                           <span>CA</span>
                           <span className="font-medium">
                             {formatCurrencyXOF(channelData.appRevenue)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Site web */}
+                    <div className="bg-teal-50 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold text-teal-700 flex items-center gap-1">
+                          <Globe className="w-3 h-3" />
+                          Site web
+                        </span>
+                        <span className="text-sm font-bold text-teal-700">
+                          {formatPercentage(channelData.webPercentage ?? 0)}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5 text-[10px] text-gray-500">
+                        <div className="flex justify-between">
+                          <span>Plats vendus</span>
+                          <span className="font-medium">
+                            {formatNumber(channelData.webSold ?? 0)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>CA</span>
+                          <span className="font-medium">
+                            {formatCurrencyXOF(channelData.webRevenue ?? 0)}
                           </span>
                         </div>
                       </div>

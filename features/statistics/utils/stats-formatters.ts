@@ -3,6 +3,8 @@
  * Utilisés dans les composants UI pour afficher les données de manière cohérente.
  */
 
+import type { CanalPrefere } from '../types/clients-stats.types';
+
 /**
  * Formater un montant en FCFA avec séparateur de milliers.
  * Ex: 1500000 → "1 500 000 XOF"
@@ -42,10 +44,12 @@ export function formatNumber(value: number): string {
 /**
  * Obtenir la couleur CSS selon le canal préféré.
  */
-export function getChannelColor(channel: 'APP' | 'CALL_CENTER' | 'MIXED'): string {
+export function getChannelColor(channel: CanalPrefere): string {
   switch (channel) {
     case 'APP':
       return '#F17922'; // Orange principal Chicken Nation
+    case 'WEB':
+      return '#14B8A6'; // Sarcelle
     case 'CALL_CENTER':
       return '#3B82F6'; // Bleu
     case 'MIXED':
@@ -58,14 +62,16 @@ export function getChannelColor(channel: 'APP' | 'CALL_CENTER' | 'MIXED'): strin
 /**
  * Obtenir le label FR du canal.
  */
-export function getChannelLabel(channel: 'APP' | 'CALL_CENTER' | 'MIXED'): string {
+export function getChannelLabel(channel: CanalPrefere): string {
   switch (channel) {
     case 'APP':
       return 'App Mobile';
+    case 'WEB':
+      return 'Site web';
     case 'CALL_CENTER':
       return 'Call Center';
     case 'MIXED':
-      return 'Les deux';
+      return 'Plusieurs';
     default:
       return 'Inconnu';
   }

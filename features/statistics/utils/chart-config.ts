@@ -51,6 +51,7 @@ export const ORDER_TYPE_LABELS: Record<string, string> = {
 // === Couleurs par canal ===
 export const CHANNEL_COLORS = {
   app: CHART_COLORS.primary,
+  web: CHART_COLORS.teal,
   callCenter: CHART_COLORS.blue,
   hubrise: CHART_COLORS.purple,
 } as const;
@@ -58,6 +59,8 @@ export const CHANNEL_COLORS = {
 export const CHANNEL_LABELS: Record<string, string> = {
   app: 'Application',
   App: 'App',
+  web: 'Site web',
+  'Site web': 'Site web',
   callCenter: 'Call Center',
   'Call Center': 'Call Center',
   hubrise: 'HubRise',

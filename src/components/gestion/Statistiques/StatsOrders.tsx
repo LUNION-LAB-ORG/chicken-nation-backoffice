@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Smartphone,
   Phone,
+  Globe,
   Clock,
   Target,
   Store,
@@ -279,15 +280,30 @@ export default function StatsOrders() {
   // Ponctualite livraison
   const onTimeRate = lateOrders.data ? 100 - (lateOrders.data.lateRate ?? 0) : 0;
 
-  // Canaux
-  const totalChannelOrders =
-    (byChannel.data?.app?.totalOrders ?? 0) +
-    (byChannel.data?.callCenter?.totalOrders ?? 0);
-  const appRate =
-    totalChannelOrders > 0
-      ? Math.round(((byChannel.data?.app?.totalOrders ?? 0) / totalChannelOrders) * 100)
-      : 0;
-  const callRate = totalChannelOrders > 0 ? 100 - appRate : 0;
+  // Canaux (le site web est compte a part, plus dans App)
+  const appOrders = byChannel.data?.app?.totalOrders ?? 0;
+  const webOrders = byChannel.data?.web?.totalOrders ?? 0;
+  const callOrders = byChannel.data?.callCenter?.totalOrders ?? 0;
+  const totalChannelOrders = appOrders + webOrders + callOrders;
+  // Parts entieres dont la somme fait 100 (plus forts restes), comme avant
+  // l'ajout du site ou le Call Center valait 100 - App
+  const [appRate, webRate, callRate] = (() => {
+    const valeurs = [appOrders, webOrders, callOrders];
+    if (totalChannelOrders === 0) return valeurs.map(() => 0);
+    const brutes = valeurs.map((n) => (n / totalChannelOrders) * 100);
+    const parts = brutes.map((b) => Math.floor(b));
+    let reste = 100 - parts.reduce((s, p) => s + p, 0);
+    brutes
+      .map((b, i) => ({ i, r: b - Math.floor(b) }))
+      .sort((a, b) => b.r - a.r)
+      .forEach(({ i }) => {
+        if (reste > 0) {
+          parts[i] += 1;
+          reste -= 1;
+        }
+      });
+    return parts;
+  })();
 
   // PieChart - Type de commande
   const typeChartData = (overview.data?.byType ?? []).map((t) => ({
@@ -301,13 +317,19 @@ export default function StatsOrders() {
   const channelChartData = [
     {
       name: CHANNEL_LABELS.app,
-      value: byChannel.data?.app?.totalOrders ?? 0,
+      value: appOrders,
       fill: CHANNEL_COLORS.app,
       percentage: appRate,
     },
     {
+      name: CHANNEL_LABELS.web,
+      value: webOrders,
+      fill: CHANNEL_COLORS.web,
+      percentage: webRate,
+    },
+    {
       name: CHANNEL_LABELS.callCenter,
-      value: byChannel.data?.callCenter?.totalOrders ?? 0,
+      value: callOrders,
       fill: CHANNEL_COLORS.callCenter,
       percentage: callRate,
     },
@@ -336,6 +358,7 @@ export default function StatsOrders() {
       name: truncateName(r.restaurantName, 25),
       fullName: r.restaurantName,
       App: r.app,
+      "Site web": r.web ?? 0,
       "Call Center": r.callCenter,
       total: r.total,
     }));
@@ -584,7 +607,7 @@ export default function StatsOrders() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
-                  <div className="flex flex-col justify-center space-y-3">
+                  <div className="flex flex-col justify-center space-y-2">
                     <div className="bg-orange-50 rounded-xl p-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <span className="text-xs font-semibold text-[#F17922] flex items-center gap-1"><Smartphone className="w-3 h-3" />App</span>
@@ -594,6 +617,17 @@ export default function StatsOrders() {
                         <div className="flex justify-between"><span className="text-gray-500">CA</span><span className="font-medium">{formatCurrencyXOF(byChannel.data.app?.revenue ?? 0)}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Nouveaux</span><span className="font-medium">{formatNumber(byChannel.data.app?.newClientsOrders ?? 0)}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500">Recurrents</span><span className="font-medium">{formatNumber(byChannel.data.app?.recurringClientsOrders ?? 0)}</span></div>
+                      </div>
+                    </div>
+                    <div className="bg-teal-50 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-semibold text-teal-700 flex items-center gap-1"><Globe className="w-3 h-3" />Site web</span>
+                        <span className="text-sm font-bold text-teal-700">{formatPercentage(webRate)}</span>
+                      </div>
+                      <div className="space-y-0.5 text-xs">
+                        <div className="flex justify-between"><span className="text-gray-500">CA</span><span className="font-medium">{formatCurrencyXOF(byChannel.data.web?.revenue ?? 0)}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Nouveaux</span><span className="font-medium">{formatNumber(byChannel.data.web?.newClientsOrders ?? 0)}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500">Recurrents</span><span className="font-medium">{formatNumber(byChannel.data.web?.recurringClientsOrders ?? 0)}</span></div>
                       </div>
                     </div>
                     <div className="bg-blue-50 rounded-xl p-3">
@@ -661,7 +695,7 @@ export default function StatsOrders() {
             {byRestaurantAndSource.data && sourceRestaurantData.length > 0 && (
               <StatsChartCard
                 title="Restaurants par Source"
-                subtitle={`Top ${sourceRestaurantData.length} restaurants (App vs Call Center)`}
+                subtitle={`Top ${sourceRestaurantData.length} restaurants (App, Site web, Call Center)`}
                 icon={Smartphone}
               >
                 <div className="h-87">
@@ -678,16 +712,18 @@ export default function StatsOrders() {
                           />
                         }
                       />
-                      <Bar dataKey="App" stackId="source" fill={CHART_COLORS.primary} radius={[0, 0, 0, 0]} barSize={20} />
-                      <Bar dataKey="Call Center" stackId="source" fill={CHART_COLORS.blue} radius={[0, 4, 4, 0]} barSize={20}>
+                      <Bar dataKey="App" stackId="source" fill={CHANNEL_COLORS.app} radius={[0, 0, 0, 0]} barSize={20} />
+                      <Bar dataKey="Site web" stackId="source" fill={CHANNEL_COLORS.web} radius={[0, 0, 0, 0]} barSize={20} />
+                      <Bar dataKey="Call Center" stackId="source" fill={CHANNEL_COLORS.callCenter} radius={[0, 4, 4, 0]} barSize={20}>
                         <LabelList dataKey="total" position="right" style={{ fontSize: 10, fill: CHART_COLORS.textSecondary, fontWeight: 600 }} />
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <StackedBarLegend items={[
-                  { label: "App", color: CHART_COLORS.primary },
-                  { label: "Call Center", color: CHART_COLORS.blue },
+                  { label: "App", color: CHANNEL_COLORS.app },
+                  { label: "Site web", color: CHANNEL_COLORS.web },
+                  { label: "Call Center", color: CHANNEL_COLORS.callCenter },
                 ]} />
               </StatsChartCard>
             )}

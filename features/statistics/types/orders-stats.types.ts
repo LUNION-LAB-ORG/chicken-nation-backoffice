@@ -59,11 +59,17 @@ export interface ChannelDailyTrendPoint {
   newViaCallCenter: number;
   recurringViaApp: number;
   recurringViaCallCenter: number;
+  // Site web : optionnels, absents des réponses antérieures au 02/10/2026
+  newViaWeb?: number;
+  recurringViaWeb?: number;
   total: number;
 }
 
 export interface OrdersByChannelResponse {
+  /** Application mobile (hors commandes du site) */
   app: ChannelStatsData;
+  /** Site web (commandes en ligne du site) */
+  web?: ChannelStatsData;
   callCenter: ChannelStatsData;
   dailyTrend: ChannelDailyTrendPoint[];
 }
@@ -146,11 +152,12 @@ export interface OrdersByRestaurantAndTypeResponse {
   items: RestaurantTypeItem[];
 }
 
-// ----- Par Restaurant et Source (App / Call Center) -----
+// ----- Par Restaurant et Source (App / Site web / Call Center) -----
 export interface RestaurantSourceItem {
   restaurantId: string;
   restaurantName: string;
   app: number;
+  web?: number;
   callCenter: number;
   total: number;
 }

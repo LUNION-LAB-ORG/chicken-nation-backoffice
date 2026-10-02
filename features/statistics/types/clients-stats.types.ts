@@ -2,6 +2,9 @@
 // TYPES - Statistiques Clients
 // =========================================
 
+/** Canal où le client commande le plus ; MIXED en cas d'égalité en tête */
+export type CanalPrefere = 'APP' | 'WEB' | 'CALL_CENTER' | 'MIXED';
+
 export interface ClientsStatsQueryParams {
   restaurantId?: string;
   startDate?: string;
@@ -28,6 +31,8 @@ export interface ClientsOverviewResponse {
   averageBasketFormatted: string;
   averageOrderFrequency: number; // Commandes/mois
   appClients: number;
+  /** Clients ayant commandé sur le site web (optionnel : absent avant le 02/10/2026) */
+  webClients?: number;
   callCenterClients: number;
   totalAllCustomers: number;
   noAppClients: number;
@@ -44,6 +49,8 @@ export interface ClientAcquisitionDailyPoint {
   newViaCallCenter: number;
   recurringViaApp: number;
   recurringViaCallCenter: number;
+  newViaWeb?: number;
+  recurringViaWeb?: number;
 }
 
 export interface ClientsAcquisitionResponse {
@@ -77,7 +84,7 @@ export interface TopClientItem {
   totalSpentFormatted: string;
   averageBasket: number;
   lastOrderDate: string;
-  preferredChannel: 'APP' | 'CALL_CENTER' | 'MIXED';
+  preferredChannel: CanalPrefere;
   loyaltyLevel: string;
 }
 
@@ -96,7 +103,7 @@ export interface InactiveClientItem {
   daysSinceLastOrder: number;
   totalOrders: number;
   totalSpent: number;
-  preferredChannel: 'APP' | 'CALL_CENTER' | 'MIXED';
+  preferredChannel: CanalPrefere;
 }
 
 export interface InactiveClientsResponse {
@@ -131,7 +138,7 @@ export interface ClientAnalyticsProfileResponse {
   fullname: string;
   phone: string;
   image: string;
-  preferredChannel: 'APP' | 'CALL_CENTER' | 'MIXED';
+  preferredChannel: CanalPrefere;
   orderFrequencyPerMonth: number;
   ltv: number;
   ltvFormatted: string;
