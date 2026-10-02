@@ -7,6 +7,7 @@ import { LIBELLE_RAISON } from "../../constantes/relance.constante";
 import { useRelancesIgnoreesQuery } from "../../queries/relance.query";
 import { useRetablirRelance } from "../../queries/relance.mutation";
 import { IgnoreeLigne } from "../../types/relance.types";
+import { estDuSite } from "../../utils/canal-commande";
 import { ilYa } from "../../utils/relance";
 
 /** « Client injoignable », ou le texte libre de « Autre ». */
@@ -25,6 +26,11 @@ function LigneIgnoree({ ligne, maintenant }: { ligne: IgnoreeLigne; maintenant: 
           <span className="font-semibold text-gray-900 break-words">{ligne.client_nom}</span>
           <span className="font-mono text-xs text-gray-600">{ligne.reference}</span>
           <span className="text-xs font-semibold text-gray-700">{fmtMontant(ligne.amount)}</span>
+          {estDuSite(ligne) && (
+            <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[11px] font-semibold text-teal-800">
+              Site web
+            </span>
+          )}
           {ligne.annulee_par_client && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
               Annulée par le client

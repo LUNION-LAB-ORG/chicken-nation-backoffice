@@ -8,6 +8,7 @@ import { LoyaltyPoint } from "../../points_fedelite/types/loyalty.types";
 import { Promotion, PromotionUsage } from "../../promotion/types/promotion.types";
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Paiement } from "./paiement.types";
+import type { CanalCommande } from "../utils/canal-commande";
 
 // ✅ ENUMS
 export enum OrderStatus {
@@ -89,6 +90,12 @@ export interface Order {
     email: string | null;
     note: string | null;
     auto: boolean;
+    /**
+     * D'où vient la commande (02/10). Vide pour une commande antérieure au
+     * canal ou HubRise, absent d'un serveur plus ancien : l'affichage retombe
+     * alors sur `auto` (`utils/canal-commande.ts`).
+     */
+    channel?: CanalCommande | null;
     payment_method: 'ONLINE' | 'OFFLINE' | null;
     status: OrderStatus;
     restaurant_id: string;

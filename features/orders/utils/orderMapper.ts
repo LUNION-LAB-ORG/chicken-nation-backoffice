@@ -336,6 +336,8 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
 
     // Métadonnées
     auto: order.auto,
+    // Origine (utils/canal-commande) : le canal d'abord, `auto` sans canal.
+    channel: order.channel ?? null,
   };
 };
 

@@ -5,6 +5,7 @@ import PaymentBadge from "../PaymentBadge";
 import { OrderTable } from "../../types/ordersTable.types";
 import { useOrderWorkFlow } from "../../hooks/useOrderWorkFlow";
 import TurboCancellationBanner from "./TurboCancellationBanner";
+import { COULEURS_CANAL, libelleCanal, mentionCanal } from "../../utils/canal-commande";
 
 interface OrderInfoSectionProps {
   order: OrderTable;
@@ -16,6 +17,9 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
   } = useOrderWorkFlow({
     order,
   });
+  // Origine : le canal, comme la colonne « Source » des exports.
+  const canal = libelleCanal(order);
+  const canalMention = mentionCanal(order);
   return (
     <div className="mb-4 md:mb-6">
       <TurboCancellationBanner order={order} className="mb-3" />
@@ -114,13 +118,14 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
           <p className="lg:text-sm text-xs font-medium text-[#71717A]">
             Source
           </p>
-          <span
-            className={`font-medium text-sm ${
-              !order.auto ? "bg-amber-100" : "bg-green-100"
-            } px-2 py-1 rounded-full`}
-          >
-            {order.auto ? "Auto" : "Manuel"}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className={`font-medium text-sm ${COULEURS_CANAL[canal]} px-2 py-1 rounded-full`}
+            >
+              {canal}
+            </span>
+            {canalMention && <span className="text-xs text-[#71717A]">{canalMention}</span>}
+          </div>
         </div>
 
         {order.note && (

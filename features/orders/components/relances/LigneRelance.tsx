@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, Ban, ChevronDown, ChevronUp, Loader2, Phone, PhoneForwarded } from "lucide-react";
+import { AlertTriangle, Ban, ChevronDown, ChevronUp, Globe, Loader2, Phone, PhoneForwarded } from "lucide-react";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { numeroACopier } from "@/utils/telephone";
 import { fmtMontant, lienAppel } from "../../../crm/utils/crm-ui";
@@ -9,6 +9,7 @@ import { LIBELLE_TYPE } from "../../constantes/relance.constante";
 import { demanderPermissionNotifications } from "../../hooks/useSonRelances";
 import { useLibererRelance, usePrendreRelance } from "../../queries/relance.mutation";
 import { BrouillonLigne, GroupeRelance } from "../../types/relance.types";
+import { estDuSite } from "../../utils/canal-commande";
 import { aLHeure, depuis, ilYa, reste } from "../../utils/relance";
 
 interface Props {
@@ -28,7 +29,13 @@ const bouton =
 const principal = `${bouton} bg-[#F17922] text-white hover:bg-[#e06816]`;
 const secondaire = `${bouton} border border-gray-200 bg-white text-gray-700 hover:bg-gray-50`;
 
-const Pastille = ({ children, ton }: { children: React.ReactNode; ton: "rouge" | "ambre" | "gris" | "bleu" }) => (
+const Pastille = ({
+  children,
+  ton,
+}: {
+  children: React.ReactNode;
+  ton: "rouge" | "ambre" | "gris" | "bleu" | "sarcelle";
+}) => (
   <span
     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
       {
@@ -36,6 +43,8 @@ const Pastille = ({ children, ton }: { children: React.ReactNode; ton: "rouge" |
         ambre: "bg-amber-100 text-amber-800",
         gris: "bg-gray-100 text-gray-600",
         bleu: "bg-sky-100 text-sky-700",
+        // Panier du site : sarcelle, comme partout ailleurs (utils/canal-commande).
+        sarcelle: "bg-teal-100 text-teal-800",
       }[ton]
     }`}
   >
@@ -43,10 +52,20 @@ const Pastille = ({ children, ton }: { children: React.ReactNode; ton: "rouge" |
   </span>
 );
 
-/** Référence, mode et restaurant d'un panier, sur une ligne qui passe à la suivante si besoin. */
+/**
+ * Référence, mode et restaurant d'un panier, sur une ligne qui passe à la
+ * suivante si besoin. Un panier du site le dit : l'agent ne parle pas de
+ * l'application à un client qui a commandé sur le site.
+ */
 const Commande = ({ b }: { b: BrouillonLigne }) => (
   <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-gray-500">
     <span className="font-mono text-gray-700">{b.reference}</span>
+    {estDuSite(b) && (
+      <Pastille ton="sarcelle">
+        <Globe className="w-3 h-3" />
+        Site web
+      </Pastille>
+    )}
     <span>{LIBELLE_TYPE[b.type] ?? b.type}</span>
     <span className="truncate">{b.restaurant?.name}</span>
   </span>

@@ -14,6 +14,7 @@ import { getOrderById } from "../../services/order-service";
 import { useRelanceUiStore } from "../../stores/relance-ui.store";
 import { GroupeRelance } from "../../types/relance.types";
 import { OrderTable } from "../../types/ordersTable.types";
+import { estDuSite } from "../../utils/canal-commande";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import { reglesDe } from "../../utils/relance";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
@@ -100,12 +101,13 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
       try {
         const commande = await getOrderById(g.tete.id);
         onReprendre(mapApiOrderToUiOrder(commande));
-        // Panier annulé par le client : il ne peut plus payer dans
-        // l'application, c'est l'enregistrement qui le réactive.
+        // Panier annulé par le client : il ne peut plus payer en ligne,
+        // c'est l'enregistrement qui le réactive. Panier du site : le client
+        // paierait sur le site, pas dans l'application.
         toast(
           g.tete.annulee_par_client
             ? "Commande annulée par le client : l'enregistrer la réactive, paiement à la caisse."
-            : "Prévenez le client : il ne doit plus payer dans l'application.",
+            : `Prévenez le client : il ne doit plus payer ${estDuSite(commande) ? "sur le site" : "dans l'application"}.`,
           { icon: "📞", duration: 8000 },
         );
       } catch (e) {

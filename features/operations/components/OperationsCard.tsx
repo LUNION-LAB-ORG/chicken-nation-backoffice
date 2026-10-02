@@ -5,13 +5,14 @@ import {
   AlertCircle,
   ArrowRight,
   Clock,
+  Globe,
   MapPin,
   Phone,
-  Sparkles,
   Store,
   User,
   Wallet,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 
 import { format } from "date-fns";
@@ -34,6 +35,20 @@ import {
   URGENCY_COLORS,
 } from "../utils/card-urgency";
 import { getStatusBadgeClasses, getTypeMeta } from "../utils/status-colors";
+import {
+  COULEURS_CANAL,
+  libelleCanal,
+  mentionCanal,
+  type LibelleCanal,
+} from "../../orders/utils/canal-commande";
+
+/** Icône de la pastille d'origine, une par canal. */
+const ICONE_CANAL: Record<LibelleCanal, LucideIcon> = {
+  "Site web": Globe,
+  Appli: Zap,
+  Téléphone: Phone,
+  Restaurant: Store,
+};
 
 interface Props {
   order: Order;
@@ -107,6 +122,9 @@ export const OperationsCard: React.FC<Props> = ({
   const colors = URGENCY_COLORS[urgency];
   const typeMeta = getTypeMeta(order.type);
   const statusBadgeCls = getStatusBadgeClasses(order.status);
+  const canal = libelleCanal(order);
+  const canalMention = mentionCanal(order);
+  const IconeCanal = ICONE_CANAL[canal];
   // Un compte BACKOFFICE (admin, call center) voit les commandes de TOUS les
   // restaurants sur le même tableau : sans le nom du restaurant sur la carte,
   // impossible de savoir d'où vient chacune. Un compte RESTAURANT n'en a pas
@@ -208,16 +226,13 @@ export const OperationsCard: React.FC<Props> = ({
               <typeMeta.Icon className="w-3 h-3" />
               {typeMeta.label}
             </span>
-            {/* Source */}
+            {/* Source : le canal (Site web, Appli, Téléphone, Restaurant) */}
             <span
-              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${
-                order.auto
-                  ? "bg-slate-50 text-slate-700 border-slate-200"
-                  : "bg-yellow-50 text-yellow-800 border-yellow-200"
-              }`}
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${COULEURS_CANAL[canal]}`}
             >
-              {order.auto ? <Zap className="w-3 h-3" /> : <Sparkles className="w-3 h-3" />}
-              {order.auto ? "Auto" : "Manuel"}
+              <IconeCanal className="w-3 h-3" />
+              {canal}
+              {canalMention && <span className="font-normal">· {canalMention}</span>}
             </span>
             {/* Warning (rare — ex. "En retard") */}
             {showWarningBadge && (

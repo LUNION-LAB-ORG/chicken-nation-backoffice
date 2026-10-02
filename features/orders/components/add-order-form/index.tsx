@@ -17,6 +17,7 @@ import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
 import OrigineSelector from "./OrigineSelector";
+import { estDuSite } from "../../utils/canal-commande";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
@@ -241,6 +242,8 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
               montantFige={bascule.montantFige}
               paiementApresBascule={bascule.paiement}
               annuleeParClient={reactivation}
+              // Commande du site : libellés et avertissements parlent du site.
+              duSite={estDuSite(editOrder)}
               // Panier de l'application payable en ligne, non payé : même
               // prédicat que le serveur (auto, ONLINE, PENDING, non payé).
               // « Appli » suppose déjà auto et le paiement en ligne.

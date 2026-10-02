@@ -23,6 +23,7 @@ import { usePaiementUpdateMutation } from "../../../orders/queries/paiement-upda
 import { type Order, PaymentMethod } from "../../../orders/types/order.types";
 import { PaiementMode, PaiementStatus, type Paiement } from "../../../orders/types/paiement.types";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
+import { estDuSite } from "../../../orders/utils/canal-commande";
 import { useIsAdmin } from "../../../users/hook/useIsAdmin";
 import ConfirmPaymentAction from "../../../orders/components/detail-order/ConfirmPaymentAction";
 import PendingCollectionAction from "../../../orders/components/detail-order/PendingCollectionAction";
@@ -243,7 +244,7 @@ export function DrawerPaymentTab({ order }: Props) {
         {header}
         <p className="text-xs text-gray-400 flex items-center gap-1.5 px-1">
           <CreditCard className="w-3.5 h-3.5" />
-          Paiement en ligne — pas d&apos;encaissement manuel.
+          Paiement en ligne : pas d&apos;encaissement manuel.
         </p>
         {/* Encaissement livreur (Turbo) déclaré à la livraison — à confirmer. */}
         <PendingCollectionAction order={uiOrder} />
@@ -267,7 +268,8 @@ export function DrawerPaymentTab({ order }: Props) {
           <CreditCard className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
             Commande <strong className="font-semibold">en ligne</strong> : le paiement aurait dû se faire
-            sur l&apos;application. Enregistrez ici ce qui a réellement été perçu, par exemple un
+            {/* Commande du site : le client payait sur le site, pas dans l'application. */}
+            {estDuSite(order) ? " sur le site" : " sur l'application"}. Enregistrez ici ce qui a réellement été perçu, par exemple un
             règlement au livreur ou un paiement web jamais remonté.
           </span>
         </p>

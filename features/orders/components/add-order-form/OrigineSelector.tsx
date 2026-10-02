@@ -1,13 +1,13 @@
 "use client";
 
 import React from "react";
-import { Headset, Smartphone, type LucideIcon } from "lucide-react";
+import { Globe, Headset, Smartphone, type LucideIcon } from "lucide-react";
 
 interface OrigineSelectorProps {
-  /** `true` = commande de l'application, `false` = saisie par le personnel. */
+  /** `true` = passée par le client (application ou site), `false` = saisie par le personnel. */
   auto: boolean;
   onChange: (auto: boolean) => void;
-  /** Le passage vers « Application » est refusé tant que la commande attend. */
+  /** Le passage vers « Application » (ou « Site web ») est refusé tant que la commande attend. */
   enAttente?: boolean;
   /**
    * Origine ENREGISTRÉE de la commande, et non celle du formulaire :
@@ -47,12 +47,21 @@ interface OrigineSelectorProps {
    * la commande resterait annulée, d'où le choix bloqué.
    */
   annuleeParClient?: boolean;
+  /**
+   * Commande passée sur le SITE (`channel = WEB`). Le choix « client » se
+   * libelle alors « Site web », et les avertissements de paiement parlent du
+   * site : dire « l'application » à un client qui a commandé sur le site, au
+   * moment où on lui demande de ne pas payer deux fois, l'induirait en
+   * erreur. Le canal lui-même ne change jamais, quel que soit le choix.
+   */
+  duSite?: boolean;
 }
 
-const ORIGINES: { auto: boolean; label: string; desc: string; icon: LucideIcon }[] = [
-  { auto: false, label: "Call center", desc: "Saisie par le personnel", icon: Headset },
-  { auto: true, label: "Application", desc: "Passée par le client", icon: Smartphone },
-];
+type Origine = { auto: boolean; label: string; desc: string; icon: LucideIcon };
+
+const CALL_CENTER: Origine = { auto: false, label: "Call center", desc: "Saisie par le personnel", icon: Headset };
+const APPLICATION: Origine = { auto: true, label: "Application", desc: "Passée par le client", icon: Smartphone };
+const SITE_WEB: Origine = { auto: true, label: "Site web", desc: "Passée par le client", icon: Globe };
 
 /**
  * ORIGINE d'une commande, en modification seulement.
@@ -76,14 +85,18 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
   paiementApresBascule = "inchange",
   brouillon = false,
   annuleeParClient = false,
+  duSite = false,
 }) => {
+  const origines = [CALL_CENTER, duSite ? SITE_WEB : APPLICATION];
+  // Où le client paierait en ligne : repris dans les avertissements.
+  const enLigne = duSite ? "sur le site" : "dans l'application";
   return (
     <div>
       <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
         Origine de la commande
       </label>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-        {ORIGINES.map((o) => {
+        {origines.map((o) => {
           const selected = auto === o.auto;
           // Le serveur refuse ce passage sur une commande en attente : ne pas
           // le proposer vaut mieux que de le faire échouer après le clic.
@@ -130,8 +143,8 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
         faire confiance à l'écran.
 
         Le paiement surtout : une commande reprise et encore à régler n'est
-        plus payée dans l'application, c'est la caisse qui l'encaisse. L'agent
-        doit pouvoir le dire au client au téléphone.
+        plus payée en ligne (application ou site), c'est la caisse qui
+        l'encaisse. L'agent doit pouvoir le dire au client au téléphone.
       */}
       {etaitAuto && (
         <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
@@ -150,7 +163,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
           )}
           {paiementApresBascule === "caisse" && (
             <>
-              {" "}Le client ne paiera plus dans l&apos;application :{" "}
+              {" "}Le client ne paiera plus {enLigne} :{" "}
               <strong className="font-semibold">la caisse encaissera ce qui reste à payer</strong>, au
               restaurant ou à la livraison.
             </>
@@ -170,7 +183,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
       {brouillon && !auto && (
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
           Commande reprise au téléphone : le client paiera au restaurant ou à la livraison.{" "}
-          <strong className="font-semibold">S&apos;il paie aussi dans l&apos;application, il paiera deux fois.</strong>
+          <strong className="font-semibold">S&apos;il paie aussi {enLigne}, il paiera deux fois.</strong>
         </p>
       )}
       {brouillon && auto && (

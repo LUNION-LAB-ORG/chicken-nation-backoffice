@@ -15,6 +15,7 @@ import type {
 } from "../../../features/orders/types/order.types";
 import type { Paiement, PaiementMode } from "../../../features/orders/types/paiement.types";
 import type { Supplement } from "../../../features/menus/types/supplement.types";
+import { libelleCanal, mentionCanal } from "../../../features/orders/utils/canal-commande";
 
 export interface InfosBoutique {
   /** Nom du restaurant (gros titre haut de ticket). */
@@ -188,8 +189,11 @@ export function genererTicketEscPos(
   if (contexte.caissier) {
     b.ligne(ligneFlex("Caissier :", trim(contexte.caissier, COLS - 11)));
   }
-  if (order.auto !== undefined) {
-    b.ligne(ligneFlex("Source :", order.auto ? "Application" : "Manuel"));
+  // Origine : le canal, comme la colonne « Source » des exports (Site web,
+  // Appli, Telephone, Restaurant). Au plus 39 caracteres avec la mention.
+  if (order.auto !== undefined || order.channel) {
+    const mention = mentionCanal(order);
+    b.ligne(ligneFlex("Source :", mention ? `${libelleCanal(order)} (${mention})` : libelleCanal(order)));
   }
 
   b.ligne(sep);

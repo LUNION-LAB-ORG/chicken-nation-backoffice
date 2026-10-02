@@ -7,6 +7,8 @@
  * serveur, jamais par l'écran : le front se contente de l'afficher.
  */
 
+import type { CanalCommande } from "../utils/canal-commande";
+
 export type EtatRelance = "A_RELANCER" | "PRIS" | "EN_COURS";
 
 export type RaisonIgnorer =
@@ -53,6 +55,11 @@ export interface BrouillonLigne {
    * la caisse). Absent d'un serveur plus ancien : lu comme `false`.
    */
   annulee_par_client: boolean;
+  /**
+   * Canal du panier (`Order.channel`) : WEB pour un panier du site. Vide pour
+   * une commande antérieure au canal, absent d'un serveur plus ancien.
+   */
+  channel?: CanalCommande | string | null;
 }
 
 export interface PriseRelance {

@@ -1,5 +1,6 @@
 import { OrderStatus, TypeTable } from "./order.types";
 import { Paiement } from "./paiement.types";
+import type { CanalCommande } from "../utils/canal-commande";
 
 /**
  * Représente un item d'une commande dans le tableau
@@ -161,4 +162,12 @@ export interface OrderTable {
 
   // ========== MÉTADONNÉES ==========
   auto: boolean;
+  /**
+   * Canal brut de la commande. Le libellé (« Site web », « Appli »...) se
+   * calcule à l'affichage avec `libelleCanal(order)`, jamais stocké ici : la
+   * commande sélectionnée est mémorisée dans le navigateur
+   * (`dashboardStore`), et une copie d'avant ce champ doit retomber sur
+   * `auto` au lieu d'afficher un libellé vide.
+   */
+  channel?: CanalCommande | null;
 }

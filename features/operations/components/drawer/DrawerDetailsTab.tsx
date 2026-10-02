@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  Globe,
   Hash,
   Loader2,
   Mail,
@@ -54,6 +55,7 @@ import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import TurboCancellationBanner from "../../../orders/components/detail-order/TurboCancellationBanner";
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
 import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
+import { estDuSite, libelleCanal, mentionCanal } from "../../../orders/utils/canal-commande";
 
 interface Props {
   order: Order;
@@ -138,7 +140,7 @@ function SectionTitle({
   );
 }
 
-type ChipTone = "warm" | "blue" | "green" | "amber" | "yellow" | "gray";
+type ChipTone = "warm" | "blue" | "green" | "amber" | "yellow" | "gray" | "teal";
 
 function Chip({ children, tone }: { children: React.ReactNode; tone: ChipTone }) {
   const cls: Record<ChipTone, string> = {
@@ -148,6 +150,8 @@ function Chip({ children, tone }: { children: React.ReactNode; tone: ChipTone })
     amber: "bg-amber-50 text-amber-700 border-amber-200",
     yellow: "bg-yellow-50 text-yellow-800 border-yellow-200",
     gray: "bg-gray-100 text-gray-700 border-gray-200",
+    // Commande du site : sarcelle, comme partout ailleurs (utils/canal-commande).
+    teal: "bg-teal-50 text-teal-700 border-teal-200",
   };
   return (
     <span
@@ -163,6 +167,8 @@ function Chip({ children, tone }: { children: React.ReactNode; tone: ChipTone })
 function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const statusCls = getStatusBadgeClasses(source.status);
   const typeMeta = getTypeMeta(source.type);
+  const canal = libelleCanal(ui);
+  const canalMention = mentionCanal(ui);
   return (
     <Card className="overflow-hidden">
       <div className="relative bg-gradient-to-br from-[#FFF0E4] via-white to-amber-50/40 p-6 md:p-7">
@@ -272,10 +278,22 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
               </>
             )}
           </Chip>
-          {!ui.auto && (
-            <Chip tone="yellow">
-              <Sparkles className="w-3 h-3" /> Commande manuelle
+          {/*
+            Origine, sauf le cas courant (l'application) : le site, le
+            téléphone ou le comptoir. Une commande du site reprise au
+            téléphone reste « Site web », avec la mention.
+          */}
+          {canal === "Site web" ? (
+            <Chip tone="teal">
+              <Globe className="w-3 h-3" /> Site web
+              {canalMention && <span className="font-normal">· {canalMention}</span>}
             </Chip>
+          ) : (
+            canal !== "Appli" && (
+              <Chip tone="yellow">
+                {canal === "Restaurant" ? <Store className="w-3 h-3" /> : <Phone className="w-3 h-3" />} {canal}
+              </Chip>
+            )
           )}
         </div>
       </div>
@@ -729,9 +747,15 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const role = useAuthStore((s) => s.user?.role);
   const isAdmin = role === UserRole.ADMIN;
 
+  const canal = libelleCanal(ui);
+  const canalMention = mentionCanal(ui);
+  // Sans auteur du personnel, c'est le client qui a commandé : sur le site
+  // ou dans l'application, selon le canal.
   const creatorName = source.user
     ? source.user.fullname || source.user.email || "Staff"
-    : "Client (application)";
+    : estDuSite(ui)
+      ? "Client (site web)"
+      : "Client (application)";
   const modifierName = source.updated_by_user
     ? source.updated_by_user.fullname || source.updated_by_user.email || "Staff"
     : null;
@@ -767,7 +791,7 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
         <Field
           icon={<Sparkles className="w-3.5 h-3.5" />}
           label="Source"
-          value={ui.auto ? "Application" : "Manuel"}
+          value={canalMention ? `${canal} · ${canalMention}` : canal}
         />
 
         {/* Audit staff — ADMIN uniquement */}
