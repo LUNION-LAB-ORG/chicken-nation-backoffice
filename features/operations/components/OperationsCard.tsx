@@ -8,6 +8,7 @@ import {
   Globe,
   MapPin,
   Phone,
+  Sparkles,
   Store,
   User,
   Wallet,
@@ -46,8 +47,7 @@ import {
 const ICONE_CANAL: Record<LibelleCanal, LucideIcon> = {
   "Site web": Globe,
   Appli: Zap,
-  Téléphone: Phone,
-  Restaurant: Store,
+  Manuel: Sparkles,
 };
 
 interface Props {
@@ -226,7 +226,7 @@ export const OperationsCard: React.FC<Props> = ({
               <typeMeta.Icon className="w-3 h-3" />
               {typeMeta.label}
             </span>
-            {/* Source : le canal (Site web, Appli, Téléphone, Restaurant) */}
+            {/* Source : le canal (Site web, Appli, Manuel) */}
             <span
               className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${COULEURS_CANAL[canal]}`}
             >

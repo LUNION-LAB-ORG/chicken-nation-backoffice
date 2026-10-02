@@ -17,6 +17,7 @@ import { type Order } from "../../../orders/types/order.types";
 import { getAllOrders } from "../../../orders/services/order-service";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import type { OrderTable } from "../../../orders/types/ordersTable.types";
+import { libellePaiement } from "../../../orders/utils/libelle-paiement";
 
 interface Props {
   order: Order;
@@ -249,7 +250,7 @@ function HistoriqueRow({
             {order.discount > 0 && (
               <Mini label="Remise" value={`− ${formatPrice(order.discount)}`} tone="red" />
             )}
-            <Mini label="Canal" value={order.paymentChannel} />
+            <Mini label="Canal" value={libellePaiement(order.paymentChannel)} />
           </div>
         </div>
       )}

@@ -222,7 +222,7 @@ const LABEL_MODE_PAIEMENT: Record<string, string> = {
   CASH: "Espèces",
 };
 const LABEL_PAYMENT_METHOD: Record<string, string> = {
-  ONLINE: "Application",
+  ONLINE: "En ligne",
   OFFLINE: "Restaurant",
 };
 

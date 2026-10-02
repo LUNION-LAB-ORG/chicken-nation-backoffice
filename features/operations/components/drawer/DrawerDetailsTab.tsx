@@ -56,6 +56,7 @@ import TurboCancellationBanner from "../../../orders/components/detail-order/Tur
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
 import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
 import { estDuSite, libelleCanal, mentionCanal } from "../../../orders/utils/canal-commande";
+import { libellePaiement } from "../../../orders/utils/libelle-paiement";
 
 interface Props {
   order: Order;
@@ -279,9 +280,10 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
             )}
           </Chip>
           {/*
-            Origine, sauf le cas courant (l'application) : le site, le
-            téléphone ou le comptoir. Une commande du site reprise au
-            téléphone reste « Site web », avec la mention.
+            Origine, sauf le cas courant (l'application) : le site, ou
+            « Manuel » pour une saisie du personnel (centre d'appels,
+            comptoir). Une commande du site reprise au téléphone reste
+            « Site web », avec la mention.
           */}
           {canal === "Site web" ? (
             <Chip tone="teal">
@@ -291,7 +293,7 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
           ) : (
             canal !== "Appli" && (
               <Chip tone="yellow">
-                {canal === "Restaurant" ? <Store className="w-3 h-3" /> : <Phone className="w-3 h-3" />} {canal}
+                <Sparkles className="w-3 h-3" /> {canal}
               </Chip>
             )
           )}
@@ -779,7 +781,7 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
         <Field
           icon={<Banknote className="w-3.5 h-3.5" />}
           label="Canal paiement"
-          value={ui.paymentChannel}
+          value={libellePaiement(ui.paymentChannel)}
         />
         {ui.paymentMode && ui.paymentMode !== "Non renseigné" && (
           <Field

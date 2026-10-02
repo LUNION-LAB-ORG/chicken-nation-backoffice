@@ -1,7 +1,9 @@
 /**
- * CANAL D'UNE COMMANDE : d'où elle vient (application, site, téléphone,
- * comptoir). Remplace l'ancien « Auto / Manuel », qui rangeait les commandes
- * du site avec celles de l'application.
+ * CANAL D'UNE COMMANDE : application, site, ou saisie par le personnel
+ * (« Manuel » : centre d'appels, comptoir, HubRise). Remplace l'ancien
+ * « Auto / Manuel », qui rangeait les commandes du site avec celles de
+ * l'application. « Manuel » est gardé, choix de l'équipe du 02/10 : une
+ * commande saisie à la main n'est pas forcément un appel.
  *
  * Jumeau EXACT de `libelleSource` côté serveur
  * (backend/src/modules/order/helpers/canal-commande.rules.ts), qui écrit la
@@ -25,7 +27,7 @@
 /** Valeurs de `Order.channel` (enum `OrderChannel` du serveur). */
 export type CanalCommande = "APP" | "WEB" | "CALL_CENTER" | "RESTAURANT";
 
-export type LibelleCanal = "Site web" | "Restaurant" | "Appli" | "Téléphone";
+export type LibelleCanal = "Site web" | "Appli" | "Manuel";
 
 /**
  * Ce qu'on lit d'une commande. Tout est optionnel : un serveur plus ancien
@@ -38,8 +40,9 @@ export interface AvecCanal {
 
 export function libelleCanal(commande: AvecCanal): LibelleCanal {
   if (commande.channel === "WEB") return "Site web";
-  if (commande.channel === "RESTAURANT") return "Restaurant";
-  return commande.auto ? "Appli" : "Téléphone";
+  // Le comptoir est aussi une saisie du personnel.
+  if (commande.channel === "RESTAURANT") return "Manuel";
+  return commande.auto ? "Appli" : "Manuel";
 }
 
 /** Commande passée sur le site, reprise au téléphone ou non. */
@@ -60,12 +63,10 @@ export function mentionCanal(commande: AvecCanal): string | null {
  * Couleurs de la pastille, fond, texte et bordure (la bordure ne s'affiche
  * que là où l'écran pose `border`). Sarcelle pour le site, comme
  * `CHANNEL_COLORS.web` des statistiques. L'application, le cas courant, reste
- * neutre pour que le site ressorte ; téléphone et comptoir, saisis par le
- * personnel, gardent l'ambre de l'ancien « Manuel ».
+ * neutre pour que le site ressorte ; « Manuel » garde son ambre d'avant.
  */
 export const COULEURS_CANAL: Record<LibelleCanal, string> = {
   "Site web": "bg-teal-100 text-teal-800 border-teal-200",
   Appli: "bg-slate-100 text-slate-700 border-slate-200",
-  Téléphone: "bg-amber-100 text-amber-800 border-amber-200",
-  Restaurant: "bg-amber-100 text-amber-800 border-amber-200",
+  Manuel: "bg-amber-100 text-amber-800 border-amber-200",
 };

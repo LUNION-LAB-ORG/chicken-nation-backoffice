@@ -12,6 +12,7 @@ import PaymentBadge from "../PaymentBadge";
 import { useOrderActions } from "../../hooks/useOrderActions";
 import { PaiementStatus } from "../../types/paiement.types";
 import { COULEURS_CANAL, libelleCanal, mentionCanal } from "../../utils/canal-commande";
+import { libellePaiement } from "../../utils/libelle-paiement";
 
 interface OrderRowProps {
   order: OrderTable;
@@ -154,7 +155,7 @@ export function OrderRow({
                     ? 'bg-blue-100 text-blue-700'
                     : 'bg-orange-100 text-orange-700'
                 }`}>
-                  {order.paymentChannel}
+                  {libellePaiement(order.paymentChannel)}
                 </span>
                 <PaymentBadge status={order.paymentStatus} />
               </div>
@@ -238,7 +239,7 @@ export function OrderRow({
           </span>
         </span>
       </td>
-      {/* SOURCE : le canal (Site web, Appli, Téléphone, Restaurant), placé AVANT Paiement */}
+      {/* SOURCE : le canal (Site web, Appli, Manuel), placé AVANT Paiement */}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
         <span
           className={`font-medium text-sm ${COULEURS_CANAL[canal]} px-2 py-1 rounded-full`}
@@ -261,7 +262,7 @@ export function OrderRow({
               ? 'bg-blue-100 text-blue-700'
               : 'bg-orange-100 text-orange-700'
           }`}>
-            {order.paymentChannel}
+            {libellePaiement(order.paymentChannel)}
           </span>
           <PaymentBadge status={order.paymentStatus} />
         </div>

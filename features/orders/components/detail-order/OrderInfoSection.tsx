@@ -6,6 +6,7 @@ import { OrderTable } from "../../types/ordersTable.types";
 import { useOrderWorkFlow } from "../../hooks/useOrderWorkFlow";
 import TurboCancellationBanner from "./TurboCancellationBanner";
 import { COULEURS_CANAL, libelleCanal, mentionCanal } from "../../utils/canal-commande";
+import { libellePaiement } from "../../utils/libelle-paiement";
 
 interface OrderInfoSectionProps {
   order: OrderTable;
@@ -84,7 +85,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
                   : "bg-orange-100 text-orange-700"
               }`}
             >
-              {order.paymentChannel}
+              {libellePaiement(order.paymentChannel)}
             </span>
           </div>
         </div>

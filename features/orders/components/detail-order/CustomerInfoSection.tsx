@@ -10,6 +10,7 @@ import SafeImage from "@/components/ui/SafeImage";
 import { format } from "date-fns";
 import { useGoogleMaps } from "@/contexts/GoogleMapsContext";
 import { clientHouseMarkerIcon } from "../../../maps/components/marker-icons";
+import { libellePaiement } from "../../utils/libelle-paiement";
 
 /**
  * Extrait les coordonnées GPS de l'adresse brute (JSON) de la commande.
@@ -357,7 +358,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
                         )}
                         <div className="flex justify-between text-gray-500">
                           <span>Paiement</span>
-                          <span>{o.paymentChannel}</span>
+                          <span>{libellePaiement(o.paymentChannel)}</span>
                         </div>
                       </div>
                     </div>

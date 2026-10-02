@@ -26,21 +26,21 @@ describe('canal d’une commande : écran et exports alignés', () => {
 
   test('les quatre libellés', () => {
     expect(libelleCanal({ channel: 'WEB', auto: true })).toBe('Site web');
-    expect(libelleCanal({ channel: 'RESTAURANT', auto: false })).toBe('Restaurant');
+    expect(libelleCanal({ channel: 'RESTAURANT', auto: false })).toBe('Manuel');
     expect(libelleCanal({ channel: 'APP', auto: true })).toBe('Appli');
-    expect(libelleCanal({ channel: 'CALL_CENTER', auto: false })).toBe('Téléphone');
+    expect(libelleCanal({ channel: 'CALL_CENTER', auto: false })).toBe('Manuel');
   });
 
   test('serveur plus ancien ou commande HubRise : sans canal, retour à `auto`', () => {
     expect(libelleCanal({ auto: true })).toBe('Appli');
-    expect(libelleCanal({ auto: false })).toBe('Téléphone');
-    expect(libelleCanal({ channel: null, auto: false })).toBe('Téléphone');
-    expect(libelleCanal({})).toBe('Téléphone');
+    expect(libelleCanal({ auto: false })).toBe('Manuel');
+    expect(libelleCanal({ channel: null, auto: false })).toBe('Manuel');
+    expect(libelleCanal({})).toBe('Manuel');
   });
 
-  test('commande de l’application reprise au téléphone : « Téléphone », sans mention', () => {
+  test('commande de l’application reprise au téléphone : « Manuel », sans mention', () => {
     const reprise = { channel: 'APP', auto: false };
-    expect(libelleCanal(reprise)).toBe('Téléphone');
+    expect(libelleCanal(reprise)).toBe('Manuel');
     expect(mentionCanal(reprise)).toBeNull();
   });
 });
@@ -155,16 +155,16 @@ describe('affichages : liste, détail, tiroir et ticket', () => {
   test('commande mémorisée dans le navigateur avant le canal : libellé tiré de `auto`, jamais vide', () => {
     const { channel, ...ancienne } = mapApiOrderToUiOrder(commandeApi({ channel: 'WEB', auto: false }));
     expect(channel).toBe('WEB');
-    expect(libelleCanal(ancienne)).toBe('Téléphone');
+    expect(libelleCanal(ancienne)).toBe('Manuel');
     expect(COULEURS_CANAL[libelleCanal(ancienne)]).toBeTruthy();
   });
 
   test('ticket imprimé : « Source : » porte le canal, et tient sur 42 colonnes', () => {
     expect(ligneSource(commandeApi({ channel: 'WEB', auto: true }))).toBe('Source : Site web');
     expect(ligneSource(commandeApi({ channel: 'WEB', auto: false }))).toBe('Source : Site web (reprise au téléphone)');
-    expect(ligneSource(commandeApi({ channel: 'RESTAURANT', auto: false }))).toBe('Source : Restaurant');
+    expect(ligneSource(commandeApi({ channel: 'RESTAURANT', auto: false }))).toBe('Source : Manuel');
     expect(ligneSource(commandeApi({ channel: 'APP', auto: true }))).toBe('Source : Appli');
-    expect(ligneSource(commandeApi({ auto: false }))).toBe('Source : Téléphone');
+    expect(ligneSource(commandeApi({ auto: false }))).toBe('Source : Manuel');
     expect('Source : Site web (reprise au téléphone)'.length).toBeLessThanOrEqual(42);
   });
 });

@@ -53,7 +53,7 @@ const LABELS_MODE_PAIEMENT: Record<PaiementMode | string, string> = {
 };
 
 const LABELS_PAYMENT_METHOD: Record<PaymentMethod, string> = {
-  ONLINE: "Application",
+  ONLINE: "En ligne",
   OFFLINE: "Restaurant",
 };
 
@@ -190,7 +190,7 @@ export function genererTicketEscPos(
     b.ligne(ligneFlex("Caissier :", trim(contexte.caissier, COLS - 11)));
   }
   // Origine : le canal, comme la colonne « Source » des exports (Site web,
-  // Appli, Telephone, Restaurant). Au plus 39 caracteres avec la mention.
+  // Appli, Manuel). Au plus 39 caracteres avec la mention.
   if (order.auto !== undefined || order.channel) {
     const mention = mentionCanal(order);
     b.ligne(ligneFlex("Source :", mention ? `${libelleCanal(order)} (${mention})` : libelleCanal(order)));
