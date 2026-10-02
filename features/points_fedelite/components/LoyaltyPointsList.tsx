@@ -126,7 +126,10 @@ export function LoyaltyPointsList({
                 </td>
                 <td className="py-4 px-6">{getPointTypeBadge(point.type)}</td>
                 <td className="py-4 px-6">
-                  {getIsUsedBadge(point.points, point.points_used)}
+                  {/* Pas de statut pour une sortie de points (REDEEMED, EXPIRED). */}
+                  {getIsUsedBadge(point) ?? (
+                    <span className="text-xs text-gray-400">---</span>
+                  )}
                 </td>
                 <td className="py-4 px-6">
                   <div className="text-sm text-gray-900 max-w-xs truncate">

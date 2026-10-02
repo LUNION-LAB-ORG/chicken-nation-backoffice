@@ -1,5 +1,9 @@
 import { Undo2 } from "lucide-react";
-import { LoyaltyLevel, LoyaltyPointType } from "../types/loyalty.types";
+import {
+  LoyaltyLevel,
+  LoyaltyPoint,
+  LoyaltyPointType,
+} from "../types/loyalty.types";
 
 // Badge pour le type de point
 export const getPointTypeBadge = (type: LoyaltyPointType) => {
@@ -36,19 +40,50 @@ export const getPointTypeBadge = (type: LoyaltyPointType) => {
   return badges[type] || null;
 };
 
-// Badge pour le statut d'utilisation
-export const getIsUsedBadge = (points: number, points_used: number) => {
-  const isUsed = points === points_used;
-  const isPartial = points > points_used;
+// Lignes qui CRÉDITENT des points que le client peut dépenser : le pendant de
+// TYPES_POINTS_DEPENSABLES côté serveur (helpers/points-commande.rules.ts).
+// Seules ces lignes se consomment ; les autres (REDEEMED, EXPIRED) sont des
+// sorties de points, déjà closes, sans disponibilité à montrer.
+export const TYPES_POINTS_CREDITES: readonly LoyaltyPointType[] = [
+  "EARNED",
+  "BONUS",
+  "REFUNDED",
+];
 
-  if (isUsed) {
+export type StatutDisponibilite = "DISPONIBLE" | "PARTIEL" | "UTILISE";
+
+type LigneStatut = Pick<LoyaltyPoint, "type" | "points" | "points_used" | "is_used">;
+
+// Où en est la consommation d'une ligne de crédit ; null pour une sortie de
+// points. On lit l'état tenu par le serveur (is_used), celui des filtres de la
+// liste : il ferme seul certaines lignes sans toucher à points_used (points
+// rendus arrivés à expiration). Les nombres le complètent quand la réponse ne
+// le porte pas : rien de consommé, la ligne est disponible ; une part, elle
+// est partielle ; tout, elle est utilisée.
+export const statutDisponibilite = (
+  point: LigneStatut,
+): StatutDisponibilite | null => {
+  if (!TYPES_POINTS_CREDITES.includes(point.type)) return null;
+
+  const utilises = point.points_used || 0;
+  if (point.is_used === "YES" || utilises >= point.points) return "UTILISE";
+  if (point.is_used === "PARTIAL" || utilises > 0) return "PARTIEL";
+  return "DISPONIBLE";
+};
+
+// Badge pour le statut d'utilisation (null pour une sortie de points)
+export const getIsUsedBadge = (point: LigneStatut) => {
+  const statut = statutDisponibilite(point);
+
+  if (statut === null) return null;
+  if (statut === "UTILISE") {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
         Utilisé
       </span>
     );
   }
-  if (isPartial) {
+  if (statut === "PARTIEL") {
     return (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
         Partiel

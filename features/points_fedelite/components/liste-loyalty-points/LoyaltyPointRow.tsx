@@ -39,6 +39,9 @@ export function LoyaltyPointRow({
   }`.trim();
   const displayName = fullName || point.customer?.phone || "Client inconnu";
 
+  // null pour une sortie de points (REDEEMED, EXPIRED)
+  const statutBadge = getIsUsedBadge(point);
+
   if (isMobile) {
     return (
       <div
@@ -88,10 +91,14 @@ export function LoyaltyPointRow({
             {getPointTypeBadge(point.type)}
           </div>
 
-          <div className="flex justify-between items-center">
-            <span className="text-xs text-gray-500">Statut:</span>
-            {getIsUsedBadge(point.points, point.points_used)}
-          </div>
+          {/* Pas de statut pour une sortie de points (REDEEMED, EXPIRED) :
+              son type suffit, la ligne n'a rien à consommer. */}
+          {statutBadge && (
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">Statut:</span>
+              {statutBadge}
+            </div>
+          )}
 
           <div className="flex justify-between items-center">
             <span className="text-xs text-gray-500">Raison:</span>
@@ -161,7 +168,7 @@ export function LoyaltyPointRow({
       </td>
       <td className="py-4 px-6">{getPointTypeBadge(point.type)}</td>
       <td className="py-4 px-6">
-        {getIsUsedBadge(point.points, point.points_used)}
+        {statutBadge ?? <span className="text-xs text-gray-400">---</span>}
       </td>
       <td className="py-4 px-6">
         <div className="text-sm text-gray-900 max-w-xs truncate">

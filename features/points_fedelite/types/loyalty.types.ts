@@ -6,10 +6,16 @@ import { Order } from "../../orders/types/order.types";
 // REDEEMED de la commande reste telle quelle.
 export type LoyaltyPointType = "EARNED" | "REDEEMED" | "EXPIRED" | "BONUS" | "REFUNDED";
 export type LoyaltyLevel = "STANDARD" | "VIP" | "VVIP";
+// État d'une ligne tenu par le serveur (enum LoyaltyPointIsUsed) : c'est lui
+// que lisent les filtres Disponibles / Partiels / Utilisés de la liste.
+export type LoyaltyPointIsUsed = "YES" | "NO" | "PARTIAL";
 
 export interface LoyaltyPoint {
     id: string;
     customer_id: string;
+    // Renvoyé par la liste des points (toutes les colonnes de la ligne) ;
+    // facultatif car d'autres réponses peuvent ne pas le porter.
+    is_used?: LoyaltyPointIsUsed;
     points_used: number;
     points: number;
     type: LoyaltyPointType;
