@@ -39,7 +39,6 @@ import { getStatusBadgeClasses, getTypeMeta } from "../utils/status-colors";
 import {
   COULEURS_CANAL,
   libelleCanal,
-  mentionCanal,
   type LibelleCanal,
 } from "../../orders/utils/canal-commande";
 
@@ -123,7 +122,6 @@ export const OperationsCard: React.FC<Props> = ({
   const typeMeta = getTypeMeta(order.type);
   const statusBadgeCls = getStatusBadgeClasses(order.status);
   const canal = libelleCanal(order);
-  const canalMention = mentionCanal(order);
   const IconeCanal = ICONE_CANAL[canal];
   // Un compte BACKOFFICE (admin, call center) voit les commandes de TOUS les
   // restaurants sur le même tableau : sans le nom du restaurant sur la carte,
@@ -232,7 +230,6 @@ export const OperationsCard: React.FC<Props> = ({
             >
               <IconeCanal className="w-3 h-3" />
               {canal}
-              {canalMention && <span className="font-normal">· {canalMention}</span>}
             </span>
             {/* Warning (rare — ex. "En retard") */}
             {showWarningBadge && (

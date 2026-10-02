@@ -11,7 +11,7 @@ import OrderContextMenu from "./OrderContextMenu";
 import PaymentBadge from "../PaymentBadge";
 import { useOrderActions } from "../../hooks/useOrderActions";
 import { PaiementStatus } from "../../types/paiement.types";
-import { COULEURS_CANAL, libelleCanal, mentionCanal } from "../../utils/canal-commande";
+import { COULEURS_CANAL, libelleCanal } from "../../utils/canal-commande";
 import { libellePaiement } from "../../utils/libelle-paiement";
 
 interface OrderRowProps {
@@ -35,7 +35,6 @@ export function OrderRow({
   const { handleViewOrderDetails } = useOrderActions();
   // Origine : le canal, comme la colonne « Source » des exports.
   const canal = libelleCanal(order);
-  const canalMention = mentionCanal(order);
 
   // Montant réellement payé = Σ des paiements SUCCESS (cohérent drawer/export).
   const paidAmount = (order.paiements || [])
@@ -145,9 +144,6 @@ export function OrderRow({
             >
               {canal}
             </span>
-            {canalMention && (
-              <span className="ml-1.5 text-xs text-gray-500">{canalMention}</span>
-            )}
             <div className="flex justify-between items-center my-2">
               <div className="flex items-center gap-1.5">
                 <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
@@ -246,9 +242,6 @@ export function OrderRow({
         >
           {canal}
         </span>
-        {canalMention && (
-          <span className="block mt-1 text-[11px] text-gray-500">{canalMention}</span>
-        )}
       </td>
       {/* STATUT — déplacé AVANT Paiement */}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">

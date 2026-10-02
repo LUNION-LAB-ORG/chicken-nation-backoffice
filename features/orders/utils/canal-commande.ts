@@ -15,10 +15,12 @@
  * commandes HubRise (créées sans canal, `auto` faux) et commande de
  * l'application reprise au téléphone (`auto` repassé à faux).
  *
- * Une commande du site reprise au téléphone garde `channel = WEB` : la
- * modification ne touche jamais au canal. Elle reste donc « Site web », comme
- * dans les exports et les statistiques, avec la mention « reprise au
- * téléphone » pour l'agent.
+ * Une commande du site reprise au téléphone garde `channel = WEB` (la
+ * modification ne touche jamais au canal), mais `auto` repasse à faux : elle
+ * s'affiche alors « Manuel », comme toute commande passée par le personnel
+ * (choix de l'équipe du 03/10, pas de mention « reprise au téléphone »).
+ * `estDuSite` garde l'origine, pour les textes qui en ont besoin (« il ne
+ * doit plus payer sur le site »).
  *
  * ⚠️ Sans rapport avec `paymentChannel` (« Appli » / « Restaurant ») : lui dit
  * où se règle la commande, et des règles s'en servent. Ne pas les mélanger.
@@ -39,25 +41,18 @@ export interface AvecCanal {
 }
 
 export function libelleCanal(commande: AvecCanal): LibelleCanal {
-  if (commande.channel === "WEB") return "Site web";
+  // Reprise au téléphone (`auto` faux) : « Manuel », plus « Site web ».
+  if (commande.channel === "WEB" && commande.auto !== false) return "Site web";
   // Le comptoir est aussi une saisie du personnel.
   if (commande.channel === "RESTAURANT") return "Manuel";
   return commande.auto ? "Appli" : "Manuel";
 }
 
-/** Commande passée sur le site, reprise au téléphone ou non. */
+/** Commande PASSÉE sur le site (origine), reprise au téléphone ou non. */
 export function estDuSite(commande: AvecCanal | null | undefined): boolean {
   return commande?.channel === "WEB";
 }
 
-/**
- * Mention secondaire, à côté du libellé : seule la commande du site passée au
- * call center en a une. `auto` doit valoir `false` explicitement : absent, on
- * ne sait pas, et on ne dit rien.
- */
-export function mentionCanal(commande: AvecCanal): string | null {
-  return estDuSite(commande) && commande.auto === false ? "reprise au téléphone" : null;
-}
 
 /**
  * Couleurs de la pastille, fond, texte et bordure (la bordure ne s'affiche

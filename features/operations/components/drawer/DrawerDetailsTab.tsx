@@ -55,7 +55,7 @@ import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
 import TurboCancellationBanner from "../../../orders/components/detail-order/TurboCancellationBanner";
 import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTable.types";
 import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
-import { estDuSite, libelleCanal, mentionCanal } from "../../../orders/utils/canal-commande";
+import { estDuSite, libelleCanal } from "../../../orders/utils/canal-commande";
 import { libellePaiement } from "../../../orders/utils/libelle-paiement";
 
 interface Props {
@@ -169,7 +169,6 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const statusCls = getStatusBadgeClasses(source.status);
   const typeMeta = getTypeMeta(source.type);
   const canal = libelleCanal(ui);
-  const canalMention = mentionCanal(ui);
   return (
     <Card className="overflow-hidden">
       <div className="relative bg-gradient-to-br from-[#FFF0E4] via-white to-amber-50/40 p-6 md:p-7">
@@ -282,13 +281,12 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
           {/*
             Origine, sauf le cas courant (l'application) : le site, ou
             « Manuel » pour une saisie du personnel (centre d'appels,
-            comptoir). Une commande du site reprise au téléphone reste
-            « Site web », avec la mention.
+            comptoir). Une commande du site reprise au téléphone devient
+            « Manuel ».
           */}
           {canal === "Site web" ? (
             <Chip tone="teal">
               <Globe className="w-3 h-3" /> Site web
-              {canalMention && <span className="font-normal">· {canalMention}</span>}
             </Chip>
           ) : (
             canal !== "Appli" && (
@@ -750,7 +748,6 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const isAdmin = role === UserRole.ADMIN;
 
   const canal = libelleCanal(ui);
-  const canalMention = mentionCanal(ui);
   // Sans auteur du personnel, c'est le client qui a commandé : sur le site
   // ou dans l'application, selon le canal.
   const creatorName = source.user
@@ -793,7 +790,7 @@ function InfoBlock({ ui, source }: { ui: OrderTable; source: Order }) {
         <Field
           icon={<Sparkles className="w-3.5 h-3.5" />}
           label="Source"
-          value={canalMention ? `${canal} · ${canalMention}` : canal}
+          value={canal}
         />
 
         {/* Audit staff — ADMIN uniquement */}

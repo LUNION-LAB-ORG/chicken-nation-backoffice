@@ -1,6 +1,6 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
-import { COULEURS_CANAL, estDuSite, libelleCanal, mentionCanal } from '../canal-commande';
+import { COULEURS_CANAL, estDuSite, libelleCanal } from '../canal-commande';
 import { CHANNEL_COLORS } from '../../../statistics/utils/chart-config';
 import { mapApiOrderToUiOrder } from '../orderMapper';
 import { genererTicketEscPos } from '../../../../src/lib/escpos/ticket';
@@ -38,31 +38,22 @@ describe('canal d’une commande : écran et exports alignés', () => {
     expect(libelleCanal({})).toBe('Manuel');
   });
 
-  test('commande de l’application reprise au téléphone : « Manuel », sans mention', () => {
-    const reprise = { channel: 'APP', auto: false };
-    expect(libelleCanal(reprise)).toBe('Manuel');
-    expect(mentionCanal(reprise)).toBeNull();
+  test('commande de l’application reprise au téléphone : « Manuel »', () => {
+    expect(libelleCanal({ channel: 'APP', auto: false })).toBe('Manuel');
   });
 });
 
 describe('commande du site reprise au téléphone', () => {
-  test('reste « Site web », avec la mention « reprise au téléphone »', () => {
+  test('devient « Manuel », sans mention ; l’origine reste connue (estDuSite)', () => {
     const reprise = { channel: 'WEB', auto: false };
-    expect(libelleCanal(reprise)).toBe('Site web');
+    expect(libelleCanal(reprise)).toBe('Manuel');
     expect(estDuSite(reprise)).toBe(true);
-    expect(mentionCanal(reprise)).toBe('reprise au téléphone');
   });
 
-  test('pas de mention tant qu’elle n’est pas reprise, ni quand `auto` est inconnu', () => {
-    expect(mentionCanal({ channel: 'WEB', auto: true })).toBeNull();
-    expect(mentionCanal({ channel: 'WEB' })).toBeNull();
-    expect(mentionCanal({ channel: 'WEB', auto: null })).toBeNull();
-  });
-
-  test('aucune autre commande n’a de mention', () => {
-    for (const channel of CANAUX.filter((c) => c !== 'WEB')) {
-      for (const auto of AUTOS) expect(mentionCanal({ channel, auto })).toBeNull();
-    }
+  test('reste « Site web » tant qu’elle n’est pas reprise, ou si `auto` est inconnu', () => {
+    expect(libelleCanal({ channel: 'WEB', auto: true })).toBe('Site web');
+    expect(libelleCanal({ channel: 'WEB' })).toBe('Site web');
+    expect(libelleCanal({ channel: 'WEB', auto: null })).toBe('Site web');
   });
 
   test('estDuSite : seul le canal WEB, commande absente comprise', () => {
@@ -142,8 +133,7 @@ describe('affichages : liste, détail, tiroir et ticket', () => {
   test('le mapper garde le canal brut ; le libellé se calcule à l’affichage', () => {
     const ui = mapApiOrderToUiOrder(commandeApi({ channel: 'WEB', auto: false }));
     expect(ui.channel).toBe('WEB');
-    expect(libelleCanal(ui)).toBe('Site web');
-    expect(mentionCanal(ui)).toBe('reprise au téléphone');
+    expect(libelleCanal(ui)).toBe('Manuel');
   });
 
   test('serveur plus ancien (pas de canal) : `null`, et retour à `auto`', () => {
@@ -159,12 +149,11 @@ describe('affichages : liste, détail, tiroir et ticket', () => {
     expect(COULEURS_CANAL[libelleCanal(ancienne)]).toBeTruthy();
   });
 
-  test('ticket imprimé : « Source : » porte le canal, et tient sur 42 colonnes', () => {
+  test('ticket imprimé : « Source : » porte le canal', () => {
     expect(ligneSource(commandeApi({ channel: 'WEB', auto: true }))).toBe('Source : Site web');
-    expect(ligneSource(commandeApi({ channel: 'WEB', auto: false }))).toBe('Source : Site web (reprise au téléphone)');
+    expect(ligneSource(commandeApi({ channel: 'WEB', auto: false }))).toBe('Source : Manuel');
     expect(ligneSource(commandeApi({ channel: 'RESTAURANT', auto: false }))).toBe('Source : Manuel');
     expect(ligneSource(commandeApi({ channel: 'APP', auto: true }))).toBe('Source : Appli');
     expect(ligneSource(commandeApi({ auto: false }))).toBe('Source : Manuel');
-    expect('Source : Site web (reprise au téléphone)'.length).toBeLessThanOrEqual(42);
   });
 });

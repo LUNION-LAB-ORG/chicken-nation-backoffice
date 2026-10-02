@@ -5,7 +5,7 @@ import PaymentBadge from "../PaymentBadge";
 import { OrderTable } from "../../types/ordersTable.types";
 import { useOrderWorkFlow } from "../../hooks/useOrderWorkFlow";
 import TurboCancellationBanner from "./TurboCancellationBanner";
-import { COULEURS_CANAL, libelleCanal, mentionCanal } from "../../utils/canal-commande";
+import { COULEURS_CANAL, libelleCanal } from "../../utils/canal-commande";
 import { libellePaiement } from "../../utils/libelle-paiement";
 
 interface OrderInfoSectionProps {
@@ -20,7 +20,6 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
   });
   // Origine : le canal, comme la colonne « Source » des exports.
   const canal = libelleCanal(order);
-  const canalMention = mentionCanal(order);
   return (
     <div className="mb-4 md:mb-6">
       <TurboCancellationBanner order={order} className="mb-3" />
@@ -125,7 +124,6 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
             >
               {canal}
             </span>
-            {canalMention && <span className="text-xs text-[#71717A]">{canalMention}</span>}
           </div>
         </div>
 
