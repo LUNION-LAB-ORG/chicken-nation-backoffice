@@ -11,13 +11,14 @@ import { OrderStatus, OrderType } from "../../types/order.types";
 import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import { PaiementStatus } from "../../types/paiement.types";
-import CouponSection, { CouponLectureSeule } from "./CouponSection";
+import CouponSection, { CouponIndisponible, CouponLectureSeule } from "./CouponSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
 import OrigineSelector from "./OrigineSelector";
 import { estDuSite } from "../../utils/canal-commande";
+import { MESSAGE_COMMANDE_PAYEE } from "../../utils/modification-coupon";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
@@ -117,6 +118,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     handleCancel,
     handleCustomerChange,
     coupon,
+    couponModif,
   } = useOrderForm(editOrder, { repriseTelephone });
 
   // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
@@ -128,14 +130,15 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const deliveryFee =
     formData.type === OrderType.DELIVERY ? formData.delivery_fee || 0 : 0;
 
-  // Réduction : en création, celle du dernier aperçu réussi du serveur ; en
-  // modification, la remise figée à la création (le serveur la reconduit).
-  const remiseFigee = editOrder && editOrder.discount > 0 ? editOrder.discount : 0;
-  const reduction: ReductionAffichee | undefined = editOrder
-    ? remiseFigee > 0
-      ? { libelle: editOrder.codePromo || undefined, montant: remiseFigee }
-      : undefined
-    : coupon.reduction;
+  // Réduction : en modification, la remise en place (le serveur la reconduit),
+  // sauf si son retrait est demandé ; sinon celle du dernier aperçu réussi du
+  // serveur (création, ou coupon appliqué en modification).
+  const retraitDemande = !!couponModif?.retraitDemande;
+  const remiseFigee = editOrder && !retraitDemande && editOrder.discount > 0 ? editOrder.discount : 0;
+  const reduction: ReductionAffichee | undefined =
+    remiseFigee > 0
+      ? { libelle: editOrder?.codePromo || undefined, montant: remiseFigee }
+      : coupon.reduction;
   const remise = reduction?.montant ?? 0;
   // Modification : le serveur reconduit aussi la taxe figée (commandes de
   // l'app ; zéro pour celles du personnel). Sans elle, le total affiché
@@ -292,16 +295,58 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
       </div>
 
       {/* ── 4. Réduction : code promo ou bon ─────────────────────────────── */}
-      {editOrder ? (
-        (remiseFigee > 0 || editOrder.codePromo) && (
+      {/*
+        MODIFICATION (rôles qui créent une commande) : le coupon en place se
+        retire, et un coupon s'applique sur une commande qui n'en a pas (ou
+        dont le retrait est demandé : remplacement en une seule requête). Le
+        serveur refuse tout changement sur une commande payée. Les autres rôles
+        voient la réduction en lecture seule.
+      */}
+      {editOrder && couponModif ? (
+        retraitDemande ? (
+          <div className={CARD_CLASS}>
+            <CouponSection
+              coupon={coupon}
+              totalApresRemise={grandTotal}
+              verrouille={isSubmitting}
+              retraitPrevu={{
+                code: editOrder.codePromo,
+                remise: editOrder.discount,
+                annuler: couponModif.annulerRetrait,
+              }}
+            />
+          </div>
+        ) : editOrder.discount > 0 || editOrder.codePromo ? (
           <div className={CARD_CLASS}>
             <CouponLectureSeule
               code={editOrder.codePromo}
-              remise={remiseFigee}
+              remise={editOrder.discount}
               // 0 pendant le chargement du catalogue : pas d'alerte à tort.
               sousTotal={formData.items.length > 0 && subtotal > 0 ? subtotal : undefined}
+              motif={couponModif.droit ? couponModif.motifFige : null}
+              onRetirer={
+                couponModif.peutChanger && couponModif.aUnCoupon
+                  ? couponModif.demanderRetrait
+                  : undefined
+              }
+              verrouille={isSubmitting}
             />
           </div>
+        ) : coupon.actif ? (
+          <div className={CARD_CLASS}>
+            <CouponSection
+              coupon={coupon}
+              totalApresRemise={grandTotal}
+              verrouille={isSubmitting}
+            />
+          </div>
+        ) : (
+          couponModif.droit &&
+          couponModif.motifFige === MESSAGE_COMMANDE_PAYEE && (
+            <div className={CARD_CLASS}>
+              <CouponIndisponible motif={couponModif.motifFige} />
+            </div>
+          )
         )
       ) : (
         coupon.actif && (

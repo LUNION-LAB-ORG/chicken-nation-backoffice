@@ -24,6 +24,12 @@ export interface ApercuCouponDTO {
     restaurant_id: string;
     type: OrderType;
     items: ArticleCommandeDTO[];
+    /**
+     * Commande en cours de modification dont le coupon va être retiré : ses
+     * usages ne comptent pas dans la limite par client, pour que le même code
+     * puisse être réappliqué (remplacement). Absent à la création.
+     */
+    commande_id?: string;
 }
 
 interface ApercuCouponCommun {

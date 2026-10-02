@@ -1,14 +1,15 @@
 import { useAuthStore } from '../../users/hook/authStore';
 import { Action, Modules } from '../../users/types/auth.type';
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import { mapToValueLabel } from "../../../utils/list/mapToValueLabel";
 import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
 import { useOrderAddMutation } from "../queries/order-add.mutation";
 import { useOrderUpdateMutation } from "../queries/order-update.mutation";
 import { OrderFormData } from "../types/order-form.types";
-import { OrderType } from "../types/order.types";
+import { OrderStatus, OrderType } from "../types/order.types";
 import { OrderTable, OrderTableType } from "../types/ordersTable.types";
+import { couponModification } from "../utils/modification-coupon";
 import { validateOrderForm } from "../utils/orderFormValidation";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useCouponCommande } from "./useCouponCommande";
@@ -118,13 +119,42 @@ export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone
         }
     };
 
-    // Réduction (code promo ou bon) : création seulement, rôles qui créent une
-    // commande (ADMIN, CALL_CENTER, CAISSIER). En modification, lecture seule.
+    // Réduction (code promo ou bon) : rôles qui créent une commande (ADMIN,
+    // CALL_CENTER, CAISSIER), à la création comme en modification.
+    const droitCoupon = can(Modules.COMMANDES, Action.CREATE);
+    // Panier annulé par le client repris au téléphone : l'enregistrement le
+    // réactive, et le serveur refuse tout changement de coupon dans la même
+    // requête (« Reprenez d'abord la commande, puis changez son coupon. »).
+    const reactivation = repriseTelephone && editOrder?.rawStatus === OrderStatus.CANCELLED;
+    const modification = useMemo(
+        () => (editOrder ? couponModification(editOrder, reactivation) : null),
+        [editOrder, reactivation],
+    );
+    // Modification : l'agent a demandé le retrait du coupon en place. Rien ne
+    // part au serveur avant l'enregistrement (`retirer_coupon: true`).
+    const [retraitDemande, setRetraitDemande] = useState(false);
+    const peutChangerCoupon = droitCoupon && !!modification && modification.motifFige === null;
+    const demanderRetrait = useCallback(() => {
+        if (peutChangerCoupon && modification?.aUnCoupon) setRetraitDemande(true);
+    }, [peutChangerCoupon, modification]);
+
     const coupon = useCouponCommande({
         formData,
         customerNeedsSave,
-        actif: !isEditMode && can(Modules.COMMANDES, Action.CREATE),
+        // Modification : saisie possible seulement sur une commande sans coupon,
+        // ou dont le coupon sera retiré (remplacement en une seule requête).
+        actif: isEditMode
+            ? peutChangerCoupon && (!modification.aUnCoupon || retraitDemande)
+            : droitCoupon,
+        // Remplacement : l'aperçu ignore les usages du coupon que la commande
+        // va rendre, sinon la limite par client refuserait le même code.
+        commandeId: isEditMode && retraitDemande ? editOrder.id : undefined,
     });
+    const annulerRetrait = useCallback(() => {
+        setRetraitDemande(false);
+        // Un code vérifié pour remplacer l'ancien coupon ne doit pas partir seul.
+        coupon.retirer();
+    }, [coupon.retirer]);
 
     // Mutations
     const { mutateAsync: addOrder } = useOrderAddMutation();
@@ -189,11 +219,26 @@ export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone
             }
 
             if (isEditMode && editOrder) {
-                // Mode édition : mise à jour de la commande existante
-                await updateOrderMutation({
-                    id: editOrder.id,
-                    data: donnees,
-                });
+                // Mode édition : mise à jour de la commande existante. Le code
+                // ne vient que du dernier aperçu réussi ; le retrait n'est
+                // envoyé que s'il a été demandé (la clé reste absente sinon).
+                try {
+                    await updateOrderMutation({
+                        id: editOrder.id,
+                        data: {
+                            ...donnees,
+                            code_promo: envoiCoupon.code_promo,
+                            retirer_coupon: retraitDemande || undefined,
+                        },
+                    });
+                } catch (error) {
+                    // Formulaire conservé (le toast vient de la mutation) ; la
+                    // carte redemande l'aperçu pour afficher le motif exact.
+                    if (envoiCoupon.code_promo) coupon.apresEchecCreation(envoiCoupon.code_promo);
+                    throw error;
+                }
+                // Bon débité ou rendu : la liste des bons du client a changé.
+                if (envoiCoupon.code_promo || retraitDemande) coupon.reinitialiser();
                 // Retour à la liste après mise à jour
                 setSectionView("orders", "list");
             } else {
@@ -248,5 +293,16 @@ export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone
         handleCancel,
         handleCustomerChange,
         coupon,
+        /** Modification seulement ; `null` à la création. */
+        couponModif: modification
+            ? {
+                  ...modification,
+                  droit: droitCoupon,
+                  peutChanger: peutChangerCoupon,
+                  retraitDemande,
+                  demanderRetrait,
+                  annulerRetrait,
+              }
+            : null,
     };
 };

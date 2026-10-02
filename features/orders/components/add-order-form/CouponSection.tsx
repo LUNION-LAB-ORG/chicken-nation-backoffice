@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
-import { BadgeCheck, CircleAlert, Info, Loader2, Lock, TicketPercent, Wallet, X } from "lucide-react";
+import React, { useState } from "react";
+import { BadgeCheck, CircleAlert, Info, Loader2, Lock, TicketPercent, Undo2, Wallet, X } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { CouponCommande, LONGUEUR_MAX_CODE } from "../../hooks/useCouponCommande";
 import { formaterEcheance, formaterFrancs, phraseReduction } from "../../utils/couponFormat";
 
@@ -29,13 +30,23 @@ interface CouponSectionProps {
    * l'enlèverait plus de la commande, il ne ferait que le cacher à l'écran.
    */
   verrouille?: boolean;
+  /**
+   * Modification : le coupon en place sera rendu au client à l'enregistrement.
+   * La carte le rappelle au-dessus de la saisie d'un éventuel remplaçant.
+   */
+  retraitPrevu?: { code: string | null; remise: number; annuler: () => void };
 }
 
 /**
  * Carte « Réduction » : un code promo OU un bon d'achat par commande. Tout
  * montant affiché ici vient du serveur ; l'écran ne calcule aucune remise.
  */
-const CouponSection: React.FC<CouponSectionProps> = ({ coupon, totalApresRemise, verrouille = false }) => {
+const CouponSection: React.FC<CouponSectionProps> = ({
+  coupon,
+  totalApresRemise,
+  verrouille = false,
+  retraitPrevu,
+}) => {
   const { saisie, changerSaisie, etat, aide, contexteValide, aJour, bons, verifier, retirer } = coupon;
 
   const enVerification = etat.statut === "verification";
@@ -56,7 +67,36 @@ const CouponSection: React.FC<CouponSectionProps> = ({ coupon, totalApresRemise,
 
   return (
     <div className="space-y-4">
-      <EnTete sousTitre="Code promo ou bon d'achat dicté par le client, vérifié par le serveur." />
+      <EnTete
+        sousTitre={
+          retraitPrevu
+            ? "Le coupon sera retiré à l'enregistrement. Vous pouvez en appliquer un autre."
+            : "Code promo ou bon d'achat dicté par le client, vérifié par le serveur."
+        }
+      />
+
+      {retraitPrevu && (
+        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
+          <Undo2 className="mt-0.5 w-4 h-4 shrink-0 text-amber-500" />
+          <div className="flex-1 space-y-0.5">
+            <p className="text-[13px] font-semibold text-amber-800">
+              Retrait prévu :{" "}
+              {retraitPrevu.code ? `code ${retraitPrevu.code}, ` : ""}−{formaterFrancs(retraitPrevu.remise)}
+            </p>
+            <p className="text-xs text-amber-700">
+              Le bon ou le code sera rendu au client à l'enregistrement.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={retraitPrevu.annuler}
+            disabled={verrouille}
+            className={`${BOUTON_RETIRER} border-amber-300 text-amber-700 hover:bg-amber-100`}
+          >
+            Annuler le retrait
+          </button>
+        </div>
+      )}
 
       {apercuBandeau ? (
         aJour ? (
@@ -210,27 +250,53 @@ interface CouponLectureSeuleProps {
   remise: number;
   /** Sous-total actuel des articles : sous la réduction, le serveur refuse la mise à jour. */
   sousTotal?: number;
+  /**
+   * Pourquoi la réduction ne peut pas changer (commande payée, points...).
+   * Affiché aux rôles qui pourraient autrement appliquer un coupon.
+   */
+  motif?: string | null;
+  /** Retrait possible : ouvre une courte confirmation, puis prévient le parent. */
+  onRetirer?: () => void;
+  /** Enregistrement en cours : plus de changement. */
+  verrouille?: boolean;
 }
 
 /**
- * Modification d'une commande : la réduction reste celle de la création. Les
- * deux refus du serveur (409) sont annoncés ici, avant l'envoi.
+ * Modification d'une commande : la réduction en place. Retirable quand le
+ * parent le permet (`onRetirer`), figée sinon. Les refus du serveur (409)
+ * connus d'avance sont annoncés ici, avant l'envoi.
  */
-export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({ code, remise, sousTotal }) => {
+export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({
+  code,
+  remise,
+  sousTotal,
+  motif,
+  onRetirer,
+  verrouille = false,
+}) => {
+  const [confirmation, setConfirmation] = useState(false);
   const panierTropBas = remise > 0 && sousTotal !== undefined && sousTotal < remise;
+  const retirable = !!onRetirer;
   return (
     <div className="space-y-4">
-      <EnTete sousTitre="Fixée à la création de la commande." />
+      <EnTete
+        sousTitre={
+          retirable
+            ? "Appliquée à la création. Vous pouvez la retirer avant d'enregistrer."
+            : "Fixée à la création de la commande."
+        }
+      />
       <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3">
         <Lock className="mt-0.5 w-4 h-4 shrink-0 text-gray-400" />
-        <div className="space-y-0.5">
+        <div className="flex-1 space-y-0.5">
           <p className="text-[13px] text-gray-600">
             Réduction appliquée à la création :{" "}
             <span className="font-semibold text-gray-800">
               {code ? `Code ${code}, ` : ""}−{formaterFrancs(remise)}
-            </span>{" "}
-            (non modifiable)
+            </span>
+            {!retirable && " (non modifiable)"}
           </p>
+          {motif && <p className="text-xs font-medium text-gray-600">{motif}</p>}
           {code && (
             <p className="text-xs text-gray-500">
               Le client de cette commande ne peut pas être changé. Pour un autre client, annulez la
@@ -238,7 +304,30 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({ code, re
             </p>
           )}
         </div>
+        {retirable && (
+          <button
+            type="button"
+            onClick={() => setConfirmation(true)}
+            disabled={verrouille}
+            className="shrink-0 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Retirer le coupon
+          </button>
+        )}
       </div>
+      {retirable && (
+        <ConfirmDialog
+          isOpen={confirmation}
+          onClose={() => setConfirmation(false)}
+          onConfirm={() => {
+            setConfirmation(false);
+            onRetirer();
+          }}
+          title="Retirer le coupon ?"
+          description="Le bon ou le code sera rendu au client à l'enregistrement."
+          confirmLabel="Retirer"
+        />
+      )}
       {panierTropBas && (
         <p role="alert" className="flex items-start gap-1.5 text-xs font-medium text-red-600">
           <CircleAlert className="mt-px w-3.5 h-3.5 shrink-0" />
@@ -249,5 +338,19 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({ code, re
     </div>
   );
 };
+
+/**
+ * Modification d'une commande sans réduction sur laquelle on ne peut plus en
+ * appliquer (commande payée) : la carte reste visible et dit pourquoi.
+ */
+export const CouponIndisponible: React.FC<{ motif: string }> = ({ motif }) => (
+  <div className="space-y-4">
+    <EnTete sousTitre="Aucune réduction sur cette commande." />
+    <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3">
+      <Lock className="mt-0.5 w-4 h-4 shrink-0 text-gray-400" />
+      <p className="text-[13px] text-gray-600">{motif}</p>
+    </div>
+  </div>
+);
 
 export default CouponSection;

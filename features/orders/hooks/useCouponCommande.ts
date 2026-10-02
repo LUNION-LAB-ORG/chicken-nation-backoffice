@@ -24,8 +24,18 @@ const estMontant = (valeur: unknown): valeur is number =>
 interface Params {
     formData: OrderFormData;
     customerNeedsSave: boolean;
-    /** Création par un rôle qui peut créer une commande. Toujours faux en modification. */
+    /**
+     * Carte utilisable : rôle qui peut créer une commande (ADMIN, CALL_CENTER,
+     * CAISSIER). En modification, seulement si la commande n'a pas de coupon
+     * (ou si son retrait est demandé), n'est pas payée et ne cumule ni points
+     * ni promotion (voir `useOrderForm`).
+     */
     actif: boolean;
+    /**
+     * Modification avec retrait du coupon en place : identifiant de la commande,
+     * pour que l'aperçu ignore ses usages (le même code peut être réappliqué).
+     */
+    commandeId?: string;
 }
 
 /**
@@ -33,7 +43,7 @@ interface Params {
  * le code ne part au serveur que depuis un aperçu réussi, pour la commande
  * exacte qui a été vérifiée (même client, type, restaurant et panier).
  */
-export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params) => {
+export const useCouponCommande = ({ formData, customerNeedsSave, actif, commandeId }: Params) => {
     const [saisie, setSaisie] = useState("");
     const [etat, setEtat] = useState<EtatCoupon>({ statut: "vide" });
     const { mutateAsync: demanderApercu } = useApercuCouponMutation();
@@ -61,9 +71,11 @@ export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params
     // `customer_id` (qui désigne encore le précédent) : la réduction vérifiée
     // pour l'ancien client ne doit plus compter.
     const client = customerNeedsSave ? "(nouveau client)" : formData.customer_id ?? "";
+    // `commandeId` fait partie de l'empreinte : un retrait annulé (ou demandé)
+    // après un aperçu change ce que le serveur a vérifié.
     const empreinte = useMemo(
-        () => JSON.stringify([client, formData.type, formData.restaurant_id ?? "", articles]),
-        [client, formData.type, formData.restaurant_id, articles],
+        () => JSON.stringify([client, formData.type, formData.restaurant_id ?? "", articles, commandeId ?? ""]),
+        [client, formData.type, formData.restaurant_id, articles, commandeId],
     );
 
     const lancer = useCallback(
@@ -78,6 +90,7 @@ export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params
                     restaurant_id: formData.restaurant_id ?? "",
                     type: formData.type,
                     items: articles,
+                    commande_id: commandeId,
                 });
                 if (numero !== derniereDemande.current) return;
                 setEtat({ statut: "applique", apercu, empreinte: empreinteDemandee });
@@ -90,7 +103,7 @@ export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params
                 setEtat({ statut: "erreur", code, message });
             }
         },
-        [empreinte, demanderApercu, formData.customer_id, formData.restaurant_id, formData.type, articles],
+        [empreinte, demanderApercu, formData.customer_id, formData.restaurant_id, formData.type, articles, commandeId],
     );
 
     // Revérification automatique : panier, client, type ou restaurant changés après un succès.
@@ -120,7 +133,7 @@ export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params
         setSaisie("");
     }, []);
 
-    /** Après une création réussie ou une annulation du formulaire. */
+    /** Après une création ou une modification réussie, ou une annulation du formulaire. */
     const reinitialiser = useCallback(() => {
         retirer();
         void invaliderBons();
@@ -146,7 +159,7 @@ export const useCouponCommande = ({ formData, customerNeedsSave, actif }: Params
     };
 
     /**
-     * Le serveur a refusé la création alors qu'un code était envoyé (bon
+     * Le serveur a refusé l'enregistrement alors qu'un code était envoyé (bon
      * consommé entre-temps, par exemple) : on redemande l'aperçu, la carte
      * affiche alors le motif exact ou garde la réduction si elle tient.
      */

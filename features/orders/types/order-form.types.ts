@@ -38,10 +38,18 @@ export interface OrderFormData {
     /** Override admin : force FREE (Chicken Nation) ou TURBO (sous-traitant). Si absent, auto-détection backend. */
     delivery_service?: DeliveryService;
     /**
-     * Code promo ou bon, à la création seulement. Jamais gardé dans l'état du
-     * formulaire : l'envoi le pose depuis le dernier aperçu réussi du serveur.
+     * Code promo ou bon, à la création et en modification (commande sans
+     * coupon, ou coupon retiré dans la même requête). Jamais gardé dans
+     * l'état du formulaire : l'envoi le pose depuis le dernier aperçu réussi
+     * du serveur.
      */
     code_promo?: string;
+    /**
+     * Modification seulement : rend au client le bon ou le code de la
+     * commande (`PATCH /orders/:id`). Avec `code_promo`, le serveur remplace
+     * l'ancien coupon par le nouveau dans une seule transaction.
+     */
+    retirer_coupon?: boolean;
 }
 
 // ✅ TYPES POUR LES OPTIONS

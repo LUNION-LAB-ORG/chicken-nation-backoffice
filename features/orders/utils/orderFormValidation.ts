@@ -95,9 +95,12 @@ export const prepareOrderData = (formData: OrderFormData | Partial<OrderFormData
     email: formData.email?.trim() || undefined,
     note: formData.note?.trim() || undefined,
     items: preparerArticles(formData.items),
-    // Rempli seulement par l'envoi d'une création, depuis un aperçu réussi
-    // (useCouponCommande.pourEnvoi), jamais depuis la saisie brute.
+    // Rempli seulement par l'envoi (création ou modification), depuis un
+    // aperçu réussi (useCouponCommande.pourEnvoi), jamais depuis la saisie brute.
     code_promo: normaliserCode(formData.code_promo) || undefined,
+    // Modification : retrait du coupon de la commande. Absent plutôt que
+    // `false`, la clé ne part que si l'agent l'a demandé.
+    retirer_coupon: formData.retirer_coupon || undefined,
     customer_id: formData.customer_id || undefined,
     restaurant_id: formData.restaurant_id,
     auto: formData.auto,
