@@ -67,7 +67,14 @@ export function DemandeCarteList() {
         {/* Requests List */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            {/*
+              Largeur minimale : 8 colonnes ne tiennent pas sur un écran
+              d'ordinateur étroit. Sans elle, `w-full` compressait le tableau
+              dans le conteneur au lieu de le faire défiler : le badge de
+              statut et le bouton d'action passaient à la ligne et se
+              déformaient. Même idiome que la liste des cartes.
+            */}
+            <table className="w-full min-w-[1200px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
@@ -88,10 +95,10 @@ export function DemandeCarteList() {
                   <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
                     Date
                   </th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
                     Statut
                   </th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase">
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -193,12 +200,12 @@ export function DemandeCarteList() {
                             {dateToLocalString(new Date(request.created_at))}
                           </div>
                         </td>
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-6 whitespace-nowrap">
                           {getStatusBadgeRequestCard(request.status)}
                         </td>
                         {/* Une seule action : tout se passe dans la modale Détail
                             (approuver / rejeter / supprimer y sont intégrés). */}
-                        <td className="py-4 px-6">
+                        <td className="py-4 px-6 whitespace-nowrap">
                           <button
                             onClick={() =>
                               handleToggleOrderModal(request, "detail")

@@ -37,9 +37,7 @@ export function CardVisualPicker({
       <div>
         <p className="mb-2 text-sm font-semibold text-gray-900">
           Niveau{" "}
-          <span className="font-normal text-gray-500">
-            (dominante couleur de la carte)
-          </span>
+          <span className="font-normal text-gray-500">(couleur de la carte)</span>
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
           {LEVEL_OPTIONS.map((opt) => {
@@ -93,10 +91,10 @@ export function CardVisualPicker({
         />
         <span className="min-w-0">
           <span className="block text-sm font-semibold text-gray-900">
-            Marqueur étudiant
+            Étudiant
           </span>
           <span className="block text-[11px] text-gray-500">
-            Badge jaune posé par-dessus le niveau — indépendant (ex. Étudiant + VIP)
+            Liseré jaune, en plus du niveau
           </span>
         </span>
       </label>

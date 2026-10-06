@@ -17,9 +17,9 @@ export const LEVEL_OPTIONS: {
   hint: string;
   dot: string;
 }[] = [
-  { value: "STANDARD", label: "Standard", hint: "Orange — niveau de base", dot: "#F17922" },
-  { value: "VIP", label: "VIP", hint: "Or — sur éligibilité", dot: "#D4AF37" },
-  { value: "VVIP", label: "VVIP", hint: "Rouge — le sommet", dot: "#C0392B" },
+  { value: "STANDARD", label: "Standard", hint: "Carte orange", dot: "#F17922" },
+  { value: "VIP", label: "VIP", hint: "Carte or", dot: "#D4AF37" },
+  { value: "VVIP", label: "VVIP", hint: "Carte rouge", dot: "#C0392B" },
 ];
 
 /** Couleur du marqueur étudiant (badge + liseré). */

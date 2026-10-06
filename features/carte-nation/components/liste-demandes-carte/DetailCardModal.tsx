@@ -264,9 +264,9 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                 />
 
                 <p className="mt-3 text-xs text-emerald-800">
-                  La carte sera générée avec ce visuel (la photo du client sert
-                  uniquement à la vérification, elle n'est pas imprimée) et le
-                  client sera notifié («&nbsp;carte prête&nbsp;»).
+                  Le client est prévenu dès que sa carte est prête. Sa photo
+                  sert à vérifier son identité, elle n&apos;est pas imprimée
+                  sur la carte.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <button
@@ -313,8 +313,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   className="w-full resize-none rounded-xl border border-red-200 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-red-400 disabled:opacity-50"
                 />
                 <p className="mt-2 text-xs text-red-800">
-                  Le client sera notifié du refus et pourra soumettre une nouvelle
-                  demande.
+                  Le client est prévenu du refus. Il peut refaire une demande.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <button
@@ -349,12 +348,12 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                   <div className="text-sm text-red-800">
                     <p className="font-semibold">
-                      Suppression définitive : action irréversible.
+                      Suppression définitive.
                     </p>
                     <p>
                       {hasCard
-                        ? "La carte déjà générée pour cette demande sera SUPPRIMÉE elle aussi (image comprise)."
-                        : "La demande et sa photo seront définitivement effacées."}
+                        ? "La demande, sa photo et la carte déjà générée seront effacées."
+                        : "La demande et sa photo seront effacées."}
                     </p>
                   </div>
                 </div>
