@@ -158,7 +158,7 @@ export function DemandeCarteList() {
                             <span className="text-sm text-gray-900">
                               {getProfileTypeLabel(
                                 request.profile_type ??
-                                  (student ? "STUDENT" : null)
+                                  (student ? "ETUDIANT" : null)
                               )}
                             </span>
                             {request.institution && (

@@ -57,7 +57,7 @@ export const isStudentProfile = (
   if (!entity) return false;
   if (typeof entity.is_student === "boolean") return entity.is_student;
   const asRequest = entity as CardRequest;
-  if (asRequest.profile_type) return asRequest.profile_type === "STUDENT";
+  if (asRequest.profile_type) return asRequest.profile_type === "ETUDIANT";
   return false;
 };
 
@@ -152,9 +152,9 @@ export const getProfileTypeLabel = (
   profile?: CardRequest["profile_type"]
 ): string => {
   switch (profile) {
-    case "STUDENT":
+    case "ETUDIANT":
       return "Étudiant";
-    case "PROFESSIONAL":
+    case "PROFESSIONNEL":
       return "Professionnel";
     default:
       return "—";

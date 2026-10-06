@@ -10,7 +10,15 @@ export type NationCardStatus = "ACTIVE" | "SUSPENDED" | "REVOKED"
  * Profil DECLARATIF choisi par le client à la demande (Phase 3).
  * Indépendant du niveau (un ETUDIANT peut être VIP/VVIP).
  */
-export type CardProfileType = "STUDENT" | "PROFESSIONAL"
+/**
+ * Profil déclaratif, AUX VALEURS DU BACKEND (enum Prisma `ProfileType`).
+ *
+ * ⚠️ En français. Le type a longtemps dit « STUDENT » / « PROFESSIONAL » :
+ * aucune comparaison ne tombait juste, la demande d'un étudiant s'affichait
+ * « Non », et surtout la case « Étudiant » de l'approbation se pré-remplissait
+ * à faux — les cartes partaient sans le marqueur.
+ */
+export type CardProfileType = "ETUDIANT" | "PROFESSIONNEL"
 
 /** Niveau de la carte, piloté par status_points (Standard / VIP / VVIP). */
 export type CardLevel = LoyaltyLevel
