@@ -28,6 +28,9 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
   const classeAppel =
     "flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60";
 
+  // Absent quand le numéro est masqué : le rôle qui lit sans rappeler n'a pas de lien d'appel.
+  const appel = lienAppel(p.telephone);
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center gap-3">
       <button type="button" onClick={onOuvrir} className="flex-1 min-w-0 text-left">
@@ -76,7 +79,7 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
             onClick={() =>
               prendre.mutate(p.id, {
                 onSuccess: () => {
-                  window.location.href = lienAppel(p.telephone);
+                  if (appel) window.location.href = appel;
                 },
               })
             }
@@ -85,10 +88,15 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
           >
             <Phone className="w-4 h-4" /> {prendre.isPending ? "Un instant…" : `Prendre et appeler ${fmtTelephone(p.telephone)}`}
           </button>
-        ) : (
-          <a href={lienAppel(p.telephone)} className={classeAppel}>
+        ) : appel ? (
+          <a href={appel} className={classeAppel}>
             <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
           </a>
+        ) : (
+          /* Numéro masqué : on l'affiche, sans en faire un lien qui composerait un faux numéro. */
+          <span className={`${classeAppel} cursor-default opacity-70`}>
+            <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
+          </span>
         )}
         <button
           type="button"

@@ -31,6 +31,9 @@ function provenance(p: IContactFiche): string {
 export function FicheEntete({ p }: { p: IContactFiche }) {
   const c = p.customer;
   const prendre = usePrendreMutation();
+
+  // Absent quand le numéro est masqué : le rôle qui lit sans rappeler n'a pas de lien d'appel.
+  const appel = lienAppel(p.telephone);
   // Client de la file commune : composer le numéro le prend d'abord, sinon un
   // collègue pourrait l'appeler en même temps.
   const aPrendre = p.mode === "commune" && p.status !== "CONVERTI";
@@ -80,18 +83,23 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
           <button
             type="button"
             disabled={prendre.isPending}
-            onClick={() => prendre.mutate(p.id, { onSuccess: () => { window.location.href = lienAppel(p.telephone); } })}
+            onClick={() => prendre.mutate(p.id, { onSuccess: () => { if (appel) window.location.href = appel; } })}
             className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60"
           >
             <Phone className="w-4 h-4" /> {prendre.isPending ? "Un instant…" : `Prendre et appeler ${fmtTelephone(p.telephone)}`}
           </button>
-        ) : (
+        ) : appel ? (
           <a
-            href={lienAppel(p.telephone)}
+            href={appel}
             className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15]"
           >
             <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
           </a>
+        ) : (
+          /* Numéro masqué : on l'affiche sans lien, « tel:+22592 » composerait un faux numéro. */
+          <span className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-800 tabular-nums">
+            <Phone className="w-4 h-4 text-gray-400" /> {fmtTelephone(p.telephone)}
+          </span>
         )}
           <BoutonCopier valeur={telephoneACopier(p.telephone)} titre="Copier le numéro" />
         </div>

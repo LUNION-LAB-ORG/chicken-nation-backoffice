@@ -277,9 +277,20 @@ export function telephoneACopier(phone?: string | null): string {
   return numeroACopier(phone);
 }
 
-/** Même règle que le serveur : 10 chiffres prennent l'indicatif 225, un numéro qui a déjà le sien part tel quel. */
-export function lienAppel(phone?: string | null): string {
+/**
+ * Le lien d'appel, ou RIEN quand le numéro n'est pas composable.
+ *
+ * Même règle que le serveur : 10 chiffres prennent l'indicatif 225, un numéro
+ * qui a déjà le sien part tel quel.
+ *
+ * ⚠️ Rend `undefined` sur un numéro masqué (le serveur masque les coordonnées
+ * pour les rôles qui n'ont pas à rappeler) ou trop court. Sans ce garde-fou,
+ * « +225••••••••92 » donnait « tel:+22592 » : un bouton d'apparence normale
+ * qui compose un faux numéro. Mieux vaut pas de lien qu'un mauvais appel.
+ */
+export function lienAppel(phone?: string | null): string | undefined {
   const d = chiffres(phone);
+  if (d.length < 8) return undefined;
   return `tel:+${d.length === 10 ? `225${d}` : d}`;
 }
 
