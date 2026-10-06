@@ -14,12 +14,11 @@ import { CardLevel } from "../types/carte-nation.types";
 export const LEVEL_OPTIONS: {
   value: CardLevel;
   label: string;
-  hint: string;
   dot: string;
 }[] = [
-  { value: "STANDARD", label: "Standard", hint: "Carte orange", dot: "#F17922" },
-  { value: "VIP", label: "VIP", hint: "Carte or", dot: "#D4AF37" },
-  { value: "VVIP", label: "VVIP", hint: "Carte rouge", dot: "#C0392B" },
+  { value: "STANDARD", label: "Standard", dot: "#F17922" },
+  { value: "VIP", label: "VIP", dot: "#D4AF37" },
+  { value: "VVIP", label: "VVIP", dot: "#C0392B" },
 ];
 
 /** Couleur du marqueur étudiant (badge + liseré). */

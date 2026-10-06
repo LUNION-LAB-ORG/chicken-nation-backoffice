@@ -9,15 +9,18 @@ interface CardVisualPickerProps {
   onLevelChange: (level: CardLevel) => void;
   onStudentChange: (isStudent: boolean) => void;
   disabled?: boolean;
-  /** Couleur d'accent de la sélection selon le contexte (approbation vs régénération). */
+  /** Couleur d'accent de la sélection selon le contexte (approbation ou régénération). */
   accent?: "emerald" | "orange";
 }
 
 /**
- * Sélecteur du visuel de carte — DEUX AXES INDÉPENDANTS (cahier §4.5) :
- *  - le NIVEAU donne la dominante couleur (Orange / Or / Rouge) ;
- *  - le MARQUEUR étudiant (jaune) se pose PAR-DESSUS, sans toucher au niveau
- *    → « Étudiant + VIP » est exprimable, ce qu'un choix unique parmi 4 interdisait.
+ * Choix du visuel de carte : un niveau parmi trois, et le marqueur étudiant
+ * par-dessus. Les deux axes sont indépendants, « Étudiant + VIP » est donc
+ * exprimable, ce qu'un choix unique parmi quatre interdisait.
+ *
+ * Volontairement SANS légende sous chaque option : la pastille montre déjà la
+ * couleur, et le libellé donne le niveau. Un sous-titre par bouton n'ajoutait
+ * rien et alourdissait un panneau qui s'ouvre au-dessus d'une liste.
  */
 export function CardVisualPicker({
   level,
@@ -27,55 +30,41 @@ export function CardVisualPicker({
   disabled,
   accent = "emerald",
 }: CardVisualPickerProps) {
-  const activeRing =
+  const choisi =
     accent === "emerald"
-      ? "border-emerald-500 ring-2 ring-emerald-200"
-      : "border-[#F17922] ring-2 ring-[#F17922]/20";
+      ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+      : "border-[#F17922] bg-[#F17922]/10 text-[#F17922]";
+  const neutre = "border-gray-200 bg-white text-gray-700 hover:border-gray-300";
+  const base =
+    "flex items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50";
 
   return (
-    <div className="space-y-3">
-      <div>
-        <p className="mb-2 text-sm font-semibold text-gray-900">
-          Niveau{" "}
-          <span className="font-normal text-gray-500">(couleur de la carte)</span>
-        </p>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {LEVEL_OPTIONS.map((opt) => {
-            const active = level === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onLevelChange(opt.value)}
-                disabled={disabled}
-                className={`flex items-center gap-2 rounded-xl border-2 bg-white px-3 py-2.5 text-left transition-colors disabled:opacity-50 ${
-                  active ? activeRing : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <span
-                  className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white"
-                  style={{ backgroundColor: opt.dot }}
-                />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-gray-900">
-                    {opt.label}
-                  </span>
-                  <span className="block truncate text-[11px] text-gray-500">
-                    {opt.hint}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
+    <div className="space-y-2">
+      <div role="group" aria-label="Niveau de la carte" className="grid grid-cols-3 gap-2">
+        {LEVEL_OPTIONS.map((opt) => {
+          const actif = level === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onLevelChange(opt.value)}
+              disabled={disabled}
+              aria-pressed={actif}
+              className={`${base} ${actif ? choisi : neutre}`}
+            >
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: opt.dot }}
+              />
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Axe 2 : marqueur étudiant, indépendant du niveau */}
       <label
-        className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 bg-white px-3 py-2.5 transition-colors ${
-          isStudent
-            ? "border-[#FFD24C] ring-2 ring-[#FFD24C]/40"
-            : "border-gray-200 hover:border-gray-300"
+        className={`${base} cursor-pointer justify-start gap-2.5 ${
+          isStudent ? "border-[#E0A800] bg-[#FFD24C]/15 text-gray-900" : neutre
         } ${disabled ? "cursor-not-allowed opacity-50" : ""}`}
       >
         <input
@@ -86,17 +75,10 @@ export function CardVisualPicker({
           className="h-4 w-4 accent-[#F17922]"
         />
         <span
-          className="h-3 w-3 shrink-0 rounded-full ring-2 ring-white"
+          className="h-2.5 w-2.5 shrink-0 rounded-full"
           style={{ backgroundColor: STUDENT_MARKER_DOT }}
         />
-        <span className="min-w-0">
-          <span className="block text-sm font-semibold text-gray-900">
-            Étudiant
-          </span>
-          <span className="block text-[11px] text-gray-500">
-            Liseré jaune, en plus du niveau
-          </span>
-        </span>
+        Étudiant
       </label>
     </div>
   );

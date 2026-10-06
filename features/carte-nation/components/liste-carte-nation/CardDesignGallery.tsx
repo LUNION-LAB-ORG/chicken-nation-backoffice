@@ -15,7 +15,6 @@ const VARIANTS: {
   level: CardLevel;
   is_student: boolean;
   label: string;
-  hint: string;
   dot: string;
 }[] = LEVEL_OPTIONS.flatMap((lvl) => [
   {
@@ -23,7 +22,6 @@ const VARIANTS: {
     level: lvl.value,
     is_student: false,
     label: lvl.label,
-    hint: lvl.hint,
     dot: lvl.dot,
   },
   {
@@ -31,7 +29,6 @@ const VARIANTS: {
     level: lvl.value,
     is_student: true,
     label: `${lvl.label} + Étudiant`,
-    hint: "Marqueur jaune par-dessus le niveau",
     dot: STUDENT_MARKER_DOT,
   },
 ]);
@@ -184,9 +181,6 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
                     />
                     <span className="text-sm font-semibold text-gray-900">
                       {meta.label}
-                    </span>
-                    <span className="text-[11px] text-gray-500">
-                      {meta.hint}
                     </span>
                   </div>
                   <div className="flex min-h-[180px] items-center justify-center bg-gray-50 p-3">

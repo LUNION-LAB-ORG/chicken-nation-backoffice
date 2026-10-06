@@ -250,7 +250,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
 
             {/* Approbation : choix du type de carte + confirmation */}
             {mode === "approve" && peutTrancher && (
-              <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50/60 p-4">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
                 <p className="mb-3 text-sm font-semibold text-emerald-900">
                   Carte à émettre
                 </p>
@@ -264,9 +264,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                 />
 
                 <p className="mt-3 text-xs text-emerald-800">
-                  Le client est prévenu dès que sa carte est prête. Sa photo
-                  sert à vérifier son identité, elle n&apos;est pas imprimée
-                  sur la carte.
+                  Le client est prévenu. Sa photo n&apos;est pas imprimée sur la carte.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <button
