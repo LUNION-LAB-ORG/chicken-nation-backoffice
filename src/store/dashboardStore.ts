@@ -56,6 +56,13 @@ export interface DashboardState {
   pendingTicketId: string | null;
   // Public du CRM à afficher à l'ouverture (bouton « Rappeler » des statistiques).
   pendingCrmSegment: 'JAMAIS_COMMANDE' | 'INACTIF' | 'GLOVO' | 'YANGO' | null;
+  /**
+   * Personne à retrouver dans le CRM, par son numéro ou son nom. Sert aux
+   * écrans qui pointaient vers la fiche client de l'ancienne page Clients,
+   * absorbée par le CRM : ils ouvrent maintenant la liste des contacts
+   * filtrée sur cette personne.
+   */
+  pendingCrmRecherche: string | null;
   // Vue de la page Commandes à ouvrir (bandeau, compteur, notification des
   // relances). Transient : jamais persisté (absent de `partialize`), consommé
   // par la page Commandes puis remis à null.
@@ -119,6 +126,8 @@ export interface DashboardState {
   clearPendingTicket: () => void;
   openCrm: (segment: 'INACTIF' | 'JAMAIS_COMMANDE' | 'GLOVO' | 'YANGO') => void;
   clearPendingCrm: () => void;
+  /** Ouvre le CRM sur la liste des contacts, filtrée sur une personne. */
+  openCrmRecherche: (recherche: string) => void;
   openRelances: () => void;
   clearPendingOrdersView: () => void;
   setRepriseTelephone: (orderId: string | null) => void;
@@ -174,6 +183,7 @@ export const useDashboardStore = create<DashboardState>()(
       pendingConversationId: null,
       pendingMessageId: null,
       pendingCrmSegment: null,
+      pendingCrmRecherche: null,
       pendingOrdersView: null,
       repriseTelephoneId: null,
       pendingTicketId: null,
@@ -254,8 +264,13 @@ export const useDashboardStore = create<DashboardState>()(
         state.activeTab = 'crm';
         state.pendingCrmSegment = segment;
       }),
+      openCrmRecherche: (recherche) => set((state) => {
+        state.activeTab = 'crm';
+        state.pendingCrmRecherche = recherche;
+      }),
       clearPendingCrm: () => set((state) => {
         state.pendingCrmSegment = null;
+        state.pendingCrmRecherche = null;
       }),
       // Ouvre la page Commandes sur l'onglet « À relancer ».
       openRelances: () => set((state) => {

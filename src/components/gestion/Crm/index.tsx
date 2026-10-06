@@ -82,9 +82,25 @@ export default function Crm() {
   // Qui voit les contacts arrive sur la liste filtrée ; les autres, sur le tableau de
   // bord filtré sur ce public (remonté par `demande` pour repartir de ce filtre).
   const publicDemande = useDashboardStore((s) => s.pendingCrmSegment);
+  /** Personne à retrouver, demandée depuis un autre écran (carte de la nation). */
+  const rechercheDemandee = useDashboardStore((s) => s.pendingCrmRecherche);
   const oublierPublicDemande = useDashboardStore((s) => s.clearPendingCrm);
   const [publicsTableau, setPublicsTableau] = useState<Public[] | undefined>();
   const [demande, setDemande] = useState(0);
+  /**
+   * Quelqu'un à retrouver : on ouvre la liste filtrée sur son numéro. Les
+   * comptes qui ne voient pas les contacts n'ont nulle part où aller, on
+   * oublie simplement la demande.
+   */
+  useEffect(() => {
+    if (!rechercheDemandee) return;
+    if (voitContacts) {
+      setFiltresListe({ ...FILTRES_DEFAUT, search: rechercheDemandee });
+      setCle("contacts");
+    }
+    oublierPublicDemande();
+  }, [rechercheDemandee]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!publicDemande) return;
     if (voitContacts) {
