@@ -116,8 +116,14 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
     bouton au caissier, qui en a besoin à chaque commande.
   */
   const peutImprimer = useAuthStore((e) => e.can(Modules.COMMANDES, Action.PRINT));
-  // L'onglet Paiement LIT avec `COMMANDES.REPORT` et ÉCRIT avec `UPDATE_FULL`.
-  const peutVoirPaiements = useAuthStore((e) => e.can(Modules.COMMANDES, Action.REPORT));
+  /*
+    ⚠️ `UPDATE_FULL`, et surtout PAS `REPORT`. L'onglet ne LIT rien par l'API :
+    les paiements arrivent avec la commande. Ce qu'il fait, c'est ENCAISSER,
+    et `POST /paiements/add` exige `UPDATE_FULL`. Le caissier ne possède pas
+    `REPORT` : garder là-dessus lui aurait fait disparaître l'onglet, c'est-à-dire
+    son geste du quotidien.
+  */
+  const peutVoirPaiements = droits.peutModifier;
 
   const showPayment = !!live && peutVoirPaiements && (isAdmin || paiementAttendu);
 
