@@ -6,6 +6,7 @@ import { Info } from "lucide-react";
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
+import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
 
 interface Props {
   order: Order;
@@ -21,6 +22,7 @@ interface Props {
  * collectée, on saute directement à COMPLETED.
  */
 export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
+  const { peutChangerStatut } = useDroitsCommande();
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
 
   const isPickedUpAndPaid =
@@ -50,6 +52,19 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
   const disableNext =
     isLoading ||
     (order.status === OrderStatus.COLLECTED && !order.paied);
+
+  /*
+    Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
+    tout le pied de page, mais la garde vit aussi ICI : un composant d'action
+    doit refuser d'agir où qu'on le monte, sinon le trou revient au prochain
+    écran qui le réutilise.
+
+    ⚠️ APRÈS tous les hooks, jamais avant. Les droits arrivent après
+    l'hydratation du magasin : un retour anticipé placé plus haut sauterait les
+    hooks suivants au premier rendu puis les appellerait au second, et React
+    casse sur « plus de hooks qu'au rendu précédent ».
+  */
+  if (!peutChangerStatut) return null;
 
   return (
     <div className="space-y-3">

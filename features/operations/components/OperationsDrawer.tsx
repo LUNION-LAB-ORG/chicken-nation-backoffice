@@ -20,6 +20,9 @@ import { DrawerDetailsTab } from "./drawer/DrawerDetailsTab";
 import { DrawerHistoriqueTab } from "./drawer/DrawerHistoriqueTab";
 import { DrawerPaymentTab } from "./drawer/DrawerPaymentTab";
 import { DrawerTabs, type DrawerTabKey } from "./drawer/DrawerTabs";
+import { useDroitsCommande } from "../../orders/hooks/useDroitsCommande";
+import { useAuthStore } from "../../users/hook/authStore";
+import { Action, Modules } from "../../users/types/auth.type";
 
 interface Props {
   order: Order | null;
@@ -95,7 +98,22 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
    * chaque commande, elle ne voudrait plus rien dire, et l'alerte qui crie
    * toujours finit par ne plus être lue.
    */
-  const showPayment = !!live && (isAdmin || paiementAttendu);
+  /*
+    DROITS. Un rôle de consultation (LIVRAISON_OPS) ouvrait le tiroir et y
+    trouvait « Marquer comme prête », « Annuler la commande », « Imprimer » et
+    l'onglet Paiement : le serveur refusait chaque appel, mais proposer un
+    bouton qui finit en 403 fait passer l'écran pour cassé.
+
+    Le menu ⋮ se gardait déjà seul (`DrawerActionsMenu` → `actionsCommande`).
+    Ce qui manquait, c'est le pied de page, l'impression et l'onglet Paiement.
+  */
+  const droits = useDroitsCommande();
+  // Le reçu PDF : `COMMANDES.EXPORT` côté serveur.
+  const peutImprimer = useAuthStore((e) => e.can(Modules.COMMANDES, Action.EXPORT));
+  // L'onglet Paiement LIT avec `COMMANDES.REPORT` et ÉCRIT avec `UPDATE_FULL`.
+  const peutVoirPaiements = useAuthStore((e) => e.can(Modules.COMMANDES, Action.REPORT));
+
+  const showPayment = !!live && peutVoirPaiements && (isAdmin || paiementAttendu);
 
   return (
     <>
@@ -125,6 +143,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  {peutImprimer && (
                   <button
                     onClick={() => handlePrintOrder(live.id)}
                     disabled={isLoading}
@@ -134,6 +153,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
                     <Printer className="w-4 h-4" />
                     <span className="hidden sm:inline">Imprimer</span>
                   </button>
+                  )}
                   <DrawerActionsMenu order={live} onEdit={onEditOrder} />
                   <button
                     onClick={onClose}
@@ -166,15 +186,17 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
                  - PICKUP / TABLE → DrawerActionsClient (séquence sans PICKED_UP)
                  - DELIVERY via CHICKEN_NATION → DrawerActionsChickenNation (module course interne)
                  - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel) */}
-            <footer className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50/80">
-              {live.type !== OrderType.DELIVERY ? (
-                <DrawerActionsClient order={live} />
-              ) : live.delivery_service === DeliveryService.CHICKEN_NATION ? (
-                <DrawerActionsChickenNation order={live} />
-              ) : (
-                <DrawerActionsTurbo order={live} />
-              )}
-            </footer>
+            {droits.peutChangerStatut && (
+              <footer className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50/80">
+                {live.type !== OrderType.DELIVERY ? (
+                  <DrawerActionsClient order={live} />
+                ) : live.delivery_service === DeliveryService.CHICKEN_NATION ? (
+                  <DrawerActionsChickenNation order={live} />
+                ) : (
+                  <DrawerActionsTurbo order={live} />
+                )}
+              </footer>
+            )}
           </>
         )}
       </aside>

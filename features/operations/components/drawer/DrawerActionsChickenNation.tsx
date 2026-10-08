@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { AVANCE_PREPARATION_MS, momentSouhaite } from "../../../orders/utils/momentSouhaite";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
+import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
 
 interface Props {
   order: Order;
@@ -22,7 +23,22 @@ interface Props {
  * + des infos d'état pour les autres statuts.
  */
 export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
+  const { peutChangerStatut } = useDroitsCommande();
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
+
+  /*
+    Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
+    tout le pied de page, mais la garde vit aussi ICI : un composant d'action
+    doit refuser d'agir où qu'on le monte, sinon le trou revient au prochain
+    écran qui le réutilise.
+
+    ⚠️ APRÈS tous les hooks, jamais avant. Les droits arrivent après
+    l'hydratation du magasin : un retour anticipé placé plus haut sauterait les
+    hooks suivants au premier rendu puis les appellerait au second, et React
+    casse sur « plus de hooks qu'au rendu précédent ».
+  */
+  if (!peutChangerStatut) return null;
+
   const pickup = (order as unknown as { delivery?: { course?: { pickup_code: string } } }).delivery?.course?.pickup_code;
   /**
    * La préparation ne s'ouvre qu'une heure avant l'heure souhaitée.
