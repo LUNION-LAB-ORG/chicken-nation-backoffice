@@ -108,8 +108,14 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
     Ce qui manquait, c'est le pied de page, l'impression et l'onglet Paiement.
   */
   const droits = useDroitsCommande();
-  // Le reçu PDF : `COMMANDES.EXPORT` côté serveur.
-  const peutImprimer = useAuthStore((e) => e.can(Modules.COMMANDES, Action.EXPORT));
+  /*
+    ⚠️ `Action.PRINT`, et surtout PAS `EXPORT`. Ce bouton n'appelle aucune route :
+    il recompose le ticket et le sort sur l'imprimante (`imprimerTicket`), le
+    serveur ne voit qu'une lecture de la commande. `EXPORT` garde le reçu PDF
+    de `/orders/:id/pdf`, qui est autre chose, et s'en servir ici a retiré le
+    bouton au caissier, qui en a besoin à chaque commande.
+  */
+  const peutImprimer = useAuthStore((e) => e.can(Modules.COMMANDES, Action.PRINT));
   // L'onglet Paiement LIT avec `COMMANDES.REPORT` et ÉCRIT avec `UPDATE_FULL`.
   const peutVoirPaiements = useAuthStore((e) => e.can(Modules.COMMANDES, Action.REPORT));
 
