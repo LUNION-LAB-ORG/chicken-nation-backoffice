@@ -205,6 +205,7 @@ export default function Personnel() {
         member.role === "CUISINE" ? "cuisine" : "",
         member.role === "MARKETING" ? "marketing" : "",
         member.role === "COMPTABLE" ? "comptable" : "",
+        member.role === "LIVRAISON_OPS" ? "suivi livraisons" : "",
       ];
       return searchableFields.some((field) =>
         field.toLowerCase().includes(lowerQuery)

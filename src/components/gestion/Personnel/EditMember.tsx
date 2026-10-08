@@ -107,6 +107,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         { value: 'MARKETING', label: 'MARKETING' },
         { value: 'COMPTABLE', label: 'COMPTABLE' },
         { value: 'CALL_CENTER', label: 'CALL CENTER' },
+        { value: 'LIVRAISON_OPS', label: 'SUIVI LIVRAISONS' },
         { value: 'MANAGER', label: 'MANAGER' },
         { value: 'ASSISTANT_MANAGER', label: 'ASSISTANT MANAGER' },
         { value: 'CAISSIER', label: 'CAISSIER' },

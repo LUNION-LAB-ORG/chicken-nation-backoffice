@@ -42,6 +42,7 @@ const ROLE_LABELS: Record<string, string> = {
   CALL_CENTER: "Centre d'appel",
   MARKETING: "Marketing",
   COMPTABLE: "Comptable",
+  LIVRAISON_OPS: "Suivi livraisons",
 };
 
 function getAvatarUrl(member: Member) {

@@ -8,7 +8,8 @@ export const UserRoleSchema = z.enum([
   'COMPTABLE',
   'CAISSIER',
   'CALL_CENTER',
-  'CUISINE'
+  'CUISINE',
+  'LIVRAISON_OPS'
 ], {
   errorMap: () => ({ message: 'Rôle utilisateur invalide' })
 });
@@ -104,7 +105,7 @@ export const validateLogin = (data: unknown): LoginData => {
 
 // Validation des rôles et permissions
 export const isBackOfficeRole = (role: UserRole): boolean => {
-  return ['ADMIN', 'MANAGER', 'MARKETING', 'COMPTABLE'].includes(role);
+  return ['ADMIN', 'MANAGER', 'MARKETING', 'COMPTABLE', 'LIVRAISON_OPS'].includes(role);
 };
 
 export const isRestaurantRole = (role: UserRole): boolean => {

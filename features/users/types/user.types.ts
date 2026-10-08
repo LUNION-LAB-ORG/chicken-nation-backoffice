@@ -14,7 +14,9 @@ export enum UserRole {
     CAISSIER = 'CAISSIER',
     CALL_CENTER = 'CALL_CENTER',
     CUISINE = 'CUISINE',
-    ASSISTANT_MANAGER = 'ASSISTANT_MANAGER'
+    ASSISTANT_MANAGER = 'ASSISTANT_MANAGER',
+    /** Suivi des livraisons, en consultation seule (08/10). */
+    LIVRAISON_OPS = 'LIVRAISON_OPS'
 };
 
 export interface User {
