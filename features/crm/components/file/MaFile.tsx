@@ -1,6 +1,9 @@
-import React from "react";
-import { BellRing, CalendarClock, Inbox, PhoneForwarded, Send, Sparkles, Store, Ticket } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { BellRing, Inbox } from "lucide-react";
 import { useMaFileQuery } from "../../queries/contact.query";
+import { dossiersDeLaFile } from "../../utils/dossiers-file";
+import { CarteDossier } from "./CarteDossier";
+import { DossierFile } from "./DossierFile";
 import { fmtNombre } from "../../utils/crm-ui";
 import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { RechercheNumero } from "./RechercheNumero";
@@ -40,14 +43,18 @@ function Indicateur({
  */
 export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string) => void }) {
   const { data, isError, error } = useMaFileQuery();
+  const [ouvert, setOuvert] = useState<string | null>(null);
+
+  const dossiers = useMemo(() => (data ? dossiersDeLaFile(data) : []), [data]);
 
   if (isError) return <Erreur message={(error as Error)?.message} />;
   if (!data) return <Chargement texte="Chargement de votre file…" />;
 
   const i = data.indicateurs;
-  const vide = ["rappels", "interesses", "commune", "nouveaux", "relances", "coupons"].every(
-    (cle) => ((data[cle as keyof typeof data] as unknown[] | undefined) ?? []).length === 0,
-  );
+  const dossier = dossiers.find((d) => d.cle === ouvert) ?? null;
+  const aFaire = dossiers.reduce((n, d) => n + d.jamais_appeles + d.a_relancer, 0);
+  const rappelsDus = data.rappels ?? [];
+  const vide = dossiers.length === 0 && rappelsDus.length === 0;
 
   return (
     <div className="space-y-6">
@@ -76,7 +83,9 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
         />
       </div>
 
-      {vide ? (
+      {dossier ? (
+        <DossierFile dossier={dossier} onRetour={() => setOuvert(null)} onOuvrir={onOuvrir} />
+      ) : vide ? (
         <Vide
           Icone={Inbox}
           titre="Votre file est vide"
@@ -84,30 +93,34 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
         />
       ) : (
         <>
-          <SectionFile titre="Rappels à faire" aide="Ils ont demandé à être rappelés : c'est l'heure." Icone={BellRing} lignes={data.rappels} onOuvrir={onOuvrir} />
-          <SectionFile titre="Intéressés" aide="Envoyez-leur le coupon pendant qu'ils y pensent." Icone={Sparkles} lignes={data.interesses} onOuvrir={onOuvrir} />
+          {/*
+            LES RAPPELS DUS RESTENT HORS DES DOSSIERS, à dessein. Un client à
+            qui on a promis un appel à 14 h ne doit pas dépendre du dossier que
+            l'agent ouvre ce jour-là : il le verrait le lendemain, ou jamais.
+          */}
           <SectionFile
-            titre="File commune Glovo/Yango"
-            aide="Relevés en caisse la veille ou avant, les plus anciens d'abord. Le premier agent qui appelle prend le client."
-            Icone={Store}
-            lignes={data.commune ?? []}
+            titre="À faire maintenant"
+            aide="Ils ont demandé à être rappelés : c'est l'heure. Toutes campagnes confondues."
+            Icone={BellRing}
+            lignes={rappelsDus}
             onOuvrir={onOuvrir}
-            commune
           />
-          <SectionFile titre="Jamais appelés" aide="Les entrées les plus récentes d'abord : un inscrit se souvient de l'application, un ancien client de son dernier repas." Icone={PhoneForwarded} lignes={data.nouveaux} onOuvrir={onOuvrir} />
-          <SectionFile titre="À relancer" aide="Pas de réponse la dernière fois, les plus anciennes tentatives d'abord." Icone={Send} lignes={data.relances} onOuvrir={onOuvrir} />
-          <SectionFile titre="Coupons envoyés" aide="Pas encore de commande : un rappel peut les décider." Icone={Ticket} lignes={data.coupons} onOuvrir={onOuvrir} replieeParDefaut />
+
+          <section>
+            <p className="text-sm font-semibold text-gray-900">
+              Mes dossiers <span className="text-gray-400">({dossiers.length})</span>
+            </p>
+            <p className="text-xs text-gray-500 mb-3 tabular-nums">
+              {fmtNombre(aFaire)} contacts à appeler en tout. Ouvrez un dossier pour le traiter.
+            </p>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {dossiers.map((d) => (
+                <CarteDossier key={d.cle} dossier={d} onOuvrir={() => setOuvert(d.cle)} />
+              ))}
+            </div>
+          </section>
         </>
       )}
-
-      <SectionFile
-        titre="Rappels planifiés"
-        aide="À faire plus tard, ils reviendront en tête de file à l'heure dite."
-        Icone={CalendarClock}
-        lignes={data.rappels_planifies}
-        onOuvrir={onOuvrir}
-        replieeParDefaut
-      />
     </div>
   );
 }
