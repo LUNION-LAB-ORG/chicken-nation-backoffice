@@ -22,6 +22,8 @@ const TITRE_COMMANDE: Record<IContactFiche["segment"], string> = {
   INACTIF: "Commande de retour",
   GLOVO: "Commande en direct",
   YANGO: "Commande en direct",
+  // Annuaire : il commande déjà, la « commande qui l'a fait sortir » n'existe pas.
+  CLIENT: "Dernière commande",
 };
 
 const DEPUIS_ENTREE: Record<IContactFiche["segment"], string> = {
@@ -29,6 +31,7 @@ const DEPUIS_ENTREE: Record<IContactFiche["segment"], string> = {
   INACTIF: "être devenu inactif",
   GLOVO: "la capture",
   YANGO: "la capture",
+  CLIENT: "sa dernière commande",
 };
 
 /** Achats, conversion, campagnes et commandes Glovo/Yango relevées en caisse. */

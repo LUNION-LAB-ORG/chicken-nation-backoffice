@@ -219,6 +219,8 @@ export const DEF_STATUT: Record<ContactStatut, string> = {
   NON_INTERESSE: "Contacts joints qui ont dit ne pas vouloir commander.",
   INJOIGNABLE: "Numéro faux, ou trop d'appels restés sans réponse, en comptant ceux d'avant la campagne.",
   CONVERTI: "Ciblés qui ont commandé. Ils sortent de la liste d'appel, même si la commande est annulée ensuite.",
+  NON_DEMARCHE:
+    "Clients actifs de l'annuaire : ils commandent déjà, le call center ne les travaille pas. Ils n'entrent dans la file d'aucun agent.",
 };
 
 // Performance par agent

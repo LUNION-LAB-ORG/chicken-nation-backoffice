@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
-import { IContactFiltres, Public } from "../../types/contact.type";
+import { IContactFiltres, Public, PublicContact } from "../../types/contact.type";
 import { useDroitsCrm, usePointDeVente } from "../../hooks/useDroitsCrm";
 import { useAgentsQuery } from "../../queries/contact.query";
 import { useCampagnesQuery } from "../../queries/campagne.query";
-import { PUBLICS, PUBLIC_META, STATUTS_ORDRE, STATUT_META } from "../../utils/crm-ui";
+import { PUBLICS_LISTE, PUBLIC_META, STATUTS_ORDRE, STATUT_META } from "../../utils/crm-ui";
 import { ChampSelect, classeChamp } from "../commun/Champs";
 import { FiltresAvances } from "./FiltresAvances";
 
@@ -66,9 +66,9 @@ export function FiltresContacts({
         </label>
         <ChampSelect
           valeur={filtres.segment ?? ""}
-          onChange={(v) => maj({ segment: (v || undefined) as Public | undefined })}
+          onChange={(v) => maj({ segment: (v || undefined) as PublicContact | undefined })}
           vide="Tous les publics"
-          options={PUBLICS.map((p) => ({ value: p, label: PUBLIC_META[p].label }))}
+          options={PUBLICS_LISTE.map((p) => ({ value: p, label: PUBLIC_META[p].label }))}
         />
         <ChampSelect
           valeur={filtres.status ?? ""}

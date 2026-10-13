@@ -1,4 +1,4 @@
-import { AppelEffet, CanalCoupon, EtatCoupon, ContactStatut, Public } from "../types/contact.type";
+import { AppelEffet, CanalCoupon, EtatCoupon, ContactStatut, Public, PublicContact } from "../types/contact.type";
 import { CampagneStatut, EtatCommande, StatutCommande, TypeCommande } from "../types/campagne.type";
 import { numeroACopier } from "@/utils/telephone";
 
@@ -15,10 +15,13 @@ export const STATUT_META: Record<ContactStatut, Meta> = {
   NON_INTERESSE: { label: "Pas intéressé", className: "bg-rose-100 text-rose-700" },
   INJOIGNABLE: { label: "Injoignable", className: "bg-gray-200 text-gray-600" },
   CONVERTI: { label: "Converti", className: "bg-emerald-100 text-emerald-700" },
+  // Annuaire : jamais travaillé par le call center. Volontairement discret,
+  // c'est l'état de la majorité de la base et il n'appelle aucune action.
+  NON_DEMARCHE: { label: "Non démarché", className: "bg-gray-100 text-gray-500" },
 };
 
 /** Un inactif qui recommande est « reconquis » ; un client Glovo/Yango « a commandé en direct » ; un inscrit, « converti ». */
-export function libelleStatut(statut: ContactStatut, segment?: Public): string {
+export function libelleStatut(statut: ContactStatut, segment?: PublicContact): string {
   if (statut !== "CONVERTI") return STATUT_META[statut].label;
   if (segment === "INACTIF") return "Reconquis";
   if (segment === "GLOVO" || segment === "YANGO") return "A commandé en direct";
@@ -44,7 +47,7 @@ export interface PublicMeta extends Meta {
   cohorte: string;
 }
 
-export const PUBLIC_META: Record<Public, PublicMeta> = {
+export const PUBLIC_META: Record<PublicContact, PublicMeta> = {
   JAMAIS_COMMANDE: {
     label: "Inscrits sans commande",
     court: "Inscrit",
@@ -89,6 +92,22 @@ export const PUBLIC_META: Record<Public, PublicMeta> = {
     periodeCampagne: "Captés du",
     cohorte: "par mois de capture",
   },
+  /*
+    L'ANNUAIRE, pas un public de campagne. Les libellés de campagne ci-dessous
+    n'ont pas de sens pour lui et ne s'affichent jamais : il n'est pas ciblable
+    (voir le type `Public`).
+  */
+  CLIENT: {
+    label: "Clients actifs",
+    court: "Client",
+    className: "bg-emerald-50 text-emerald-700",
+    aide: "Ils ont commandé récemment : présents pour l'annuaire, pas à démarcher",
+    entree: "Clients actifs",
+    conversion: "Commande",
+    taux: "Taux",
+    periodeCampagne: "Clients du",
+    cohorte: "par mois de dernière commande",
+  },
 };
 
 /** Libellés quand plusieurs publics sont mêlés. */
@@ -102,10 +121,14 @@ export function vocabulaire(publics?: Public[]): { entree: string; conversion: s
   return TOUS_META;
 }
 
+/** Publics CIBLABLES par une campagne. On ne démarche pas un client actif. */
 export const PUBLICS: Public[] = ["JAMAIS_COMMANDE", "INACTIF", "GLOVO", "YANGO"];
 
+/** Publics qu'on peut FILTRER dans les listes : les quatre, plus l'annuaire. */
+export const PUBLICS_LISTE: PublicContact[] = [...PUBLICS, "CLIENT"];
 
-export const estCapte = (segment: Public) => segment === "GLOVO" || segment === "YANGO";
+
+export const estCapte = (segment: PublicContact) => segment === "GLOVO" || segment === "YANGO";
 
 /** Publics couverts par un filtre, dans l'ordre d'affichage : une liste vide veut dire les quatre. */
 export const publicsCouverts = (publics?: Public[]): Public[] =>
@@ -122,11 +145,12 @@ export const modeDetail = (publics?: Public[]) =>
   !!publics && publics.length > 0 && (publics.length === 1 || publics.every(estCapte));
 
 /** Couleur d'un public dans les graphiques, accordée à sa puce. */
-export const COULEUR_PUBLIC: Record<Public, string> = {
+export const COULEUR_PUBLIC: Record<PublicContact, string> = {
   JAMAIS_COMMANDE: "#0EA5E9",
   INACTIF: "#8B5CF6",
   GLOVO: "#10B981",
   YANGO: "#EAB308",
+  CLIENT: "#10B981",
 };
 
 export const CANAL_ACHAT: Record<"APPLICATION" | "CENTRE_APPEL" | "MIXTE", string> = {
@@ -298,7 +322,7 @@ export const aujourdhuiISO = () => new Date().toISOString().slice(0, 10);
 
 /** D'où vient le contact, en quelques mots : « inscrit il y a 3 j », « capté sur Glovo il y a 5 j ». */
 export function origine(p: {
-  segment: Public;
+  segment: PublicContact;
   segment_since: string;
   registered_at: string | null;
   last_order_at: string | null;

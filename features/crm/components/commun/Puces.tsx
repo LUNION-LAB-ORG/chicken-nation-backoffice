@@ -1,5 +1,5 @@
 import React from "react";
-import { EtatCoupon, ContactStatut, Public } from "../../types/contact.type";
+import { ContactStatut, EtatCoupon, Public, PublicContact } from "../../types/contact.type";
 import { CampagneStatut } from "../../types/campagne.type";
 import { CAMPAGNE_META, ETAT_COUPON_META, PUBLIC_META, STATUT_META, libelleStatut } from "../../utils/crm-ui";
 
@@ -11,11 +11,11 @@ export function Puce({ label, className }: { label: string; className: string })
   );
 }
 
-export const PuceStatut = ({ statut, segment }: { statut: ContactStatut; segment?: Public }) => (
+export const PuceStatut = ({ statut, segment }: { statut: ContactStatut; segment?: PublicContact }) => (
   <Puce label={libelleStatut(statut, segment)} className={STATUT_META[statut].className} />
 );
 
-export const PucePublic = ({ segment }: { segment: Public }) => (
+export const PucePublic = ({ segment }: { segment: PublicContact }) => (
   <Puce label={PUBLIC_META[segment].court} className={PUBLIC_META[segment].className} />
 );
 

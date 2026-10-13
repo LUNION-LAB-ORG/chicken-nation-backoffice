@@ -7,14 +7,31 @@ export type ContactStatut =
   | "COUPON_ENVOYE"
   | "NON_INTERESSE"
   | "INJOIGNABLE"
-  | "CONVERTI";
+  | "CONVERTI"
+  /**
+   * Jamais travaillé par le call center : un client actif, présent pour que
+   * l'onglet Contacts soit l'annuaire de toute la base. Il ne compte dans aucun
+   * portefeuille et n'entre dans la file d'aucun agent.
+   */
+  | "NON_DEMARCHE";
 
 export type AppelEffet = "NON_JOINT" | "A_RAPPELER" | "INTERESSE" | "NON_INTERESSE" | "NUMERO_INVALIDE";
 
 export type EtatCoupon = "ACTIF" | "UTILISE" | "EXPIRE";
 
-/** Public du CRM : d'où vient le contact et ce qu'on attend de lui. */
+/**
+ * Public du CRM : d'où vient le contact et ce qu'on attend de lui.
+ *
+ * ⚠️ Ces quatre-là, et eux seuls, sont CIBLABLES par une campagne. On ne
+ * démarche pas un client qui commande déjà.
+ */
 export type Public = "JAMAIS_COMMANDE" | "INACTIF" | "GLOVO" | "YANGO";
+
+/**
+ * Public tel qu'il s'AFFICHE et se FILTRE dans les listes : les quatre publics
+ * du CRM, plus les clients actifs de l'annuaire.
+ */
+export type PublicContact = Public | "CLIENT";
 
 /** INCONNU : coupon repris de l'ancienne acquisition, canal non noté à l'époque. */
 export type CanalCoupon = "WHATSAPP" | "SMS" | "AUCUN" | "INCONNU";
@@ -53,7 +70,7 @@ export interface IContactLigne {
   phone: string | null;
   name: string | null;
   status: ContactStatut;
-  segment: Public;
+  segment: PublicContact;
   /** Entrée dans le public : l'inscription, ou le jour où il est devenu inactif. */
   segment_since: string;
   cycle: number;
@@ -177,7 +194,8 @@ export interface IContactFiltres {
   page?: number;
   limit?: number;
   search?: string;
-  segment?: Public;
+  /** Filtre de LISTE : les quatre publics du CRM, plus l'annuaire. */
+  segment?: PublicContact;
   /**
    * État du COMPTE client, repris de l'ancienne page Clients.
    * ⚠️ Distinct du public : le public dit par où le contact est entré et ne
