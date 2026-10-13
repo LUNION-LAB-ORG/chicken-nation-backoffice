@@ -1,6 +1,5 @@
-import { Award, Calendar, Mail, Phone, Receipt, ShoppingBag, Wallet } from "lucide-react";
+import { Award, Calendar, Mail, Phone } from "lucide-react";
 import Image from "next/image";
-import { StatCard } from "./StatCard";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { numeroACopier } from "@/utils/telephone";
@@ -15,18 +14,6 @@ const STATUT = {
   Supprimé: "bg-rose-50 text-rose-700 border-rose-200",
 } as const;
 
-const fmtMontant = (n: number) => `${n.toLocaleString("fr-FR")} F`;
-
-/** « il y a 3 j », « il y a 2 mois ». Rien pour aujourd'hui, le mot ne dirait rien. */
-function depuis(iso: string | null): string | undefined {
-  if (!iso) return undefined;
-  const jours = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (jours <= 0) return "aujourd'hui";
-  if (jours === 1) return "hier";
-  if (jours < 31) return `il y a ${jours} j`;
-  const mois = Math.round(jours / 30);
-  return `il y a ${mois} mois`;
-}
 
 /**
  * Identité du client, puis ses quatre chiffres.
@@ -45,7 +32,6 @@ function depuis(iso: string | null): string | undefined {
  * questions qu'on se pose vraiment : combien dépense-t-il, et est-il encore là.
  */
 export function ClientHeader({ customerData }: ClientHeaderProps) {
-  const { stats } = customerData;
   const initiales = customerData.fullName
     .split(" ")
     .map((n) => n[0])
@@ -54,7 +40,7 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
     .slice(0, 2);
 
   return (
-    <div className="space-y-3">
+    <div>
       <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-gray-100">
@@ -90,7 +76,7 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
                 <Award className="h-3.5 w-3.5" />
                 {customerData.loyaltyLevel}
                 <span className="font-normal text-[#A9683A]">
-                  · {stats.loyaltyPoints} pts
+                  · {customerData.stats.loyaltyPoints} pts
                 </span>
               </span>
             </div>
@@ -121,34 +107,6 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard
-          icon={<ShoppingBag className="h-4 w-4" />}
-          label="Commandes"
-          value={stats.totalOrders}
-          detail="terminées"
-        />
-        <StatCard
-          icon={<Wallet className="h-4 w-4" />}
-          label="Total dépensé"
-          value={fmtMontant(stats.totalSpent)}
-        />
-        <StatCard
-          icon={<Receipt className="h-4 w-4" />}
-          label="Panier moyen"
-          value={stats.totalOrders > 0 ? fmtMontant(stats.panierMoyen) : "—"}
-        />
-        <StatCard
-          icon={<Calendar className="h-4 w-4" />}
-          label="Dernière commande"
-          value={
-            stats.derniereCommande
-              ? new Date(stats.derniereCommande).toLocaleDateString("fr-FR")
-              : "—"
-          }
-          detail={depuis(stats.derniereCommande)}
-        />
-      </div>
     </div>
   );
 }

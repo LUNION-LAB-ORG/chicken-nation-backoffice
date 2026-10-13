@@ -4,7 +4,7 @@ import Modal from "@/components/ui/Modal";
 import { useAuthStore } from "../../../users/hook/authStore";
 // Import RELATIF entre modules : `@/` désigne `src/`, et `features/` vit à la
 // racine — `@/features/...` compile mais casse la construction de production.
-import { ClientDetail } from "../../../customer/components/detail-customer";
+import { DossierClient, type OngletClient } from "../../../customer/components/detail-customer/DossierClient";
 import { Action, Modules } from "../../../users/types/auth.type";
 import { useContactFicheQuery } from "../../queries/contact.query";
 import { fmtDate, fmtMontant } from "../../utils/crm-ui";
@@ -22,6 +22,22 @@ import { PanneauCoupon } from "./PanneauCoupon";
  * ce qu'on peut faire pour lui. Même disposition que les fiches Livreur et
  * Personnel du backoffice.
  */
+type OngletFiche = "crm" | OngletClient;
+
+/**
+ * Les onglets de la fiche, dans l'ordre où on les consulte : le suivi du
+ * centre d'appels d'abord, puis le dossier du client.
+ */
+const ONGLETS: readonly (readonly [OngletFiche, string])[] = [
+  ["crm", "Suivi CRM"],
+  ["overview", "Vue d'ensemble"],
+  ["orders", "Commandes"],
+  ["favorites", "Favoris"],
+  ["reviews", "Avis"],
+  ["addresses", "Adresses"],
+  ["card", "Carte Nation"],
+] as const;
+
 export function FicheContact({
   id,
   telephone,
@@ -59,13 +75,22 @@ export function FicheContact({
    */
   const annuaire = p?.mode === "annuaire";
   const dossierPossible = peutVoirLeDossier && !!compteId;
-  const [onglet, setOnglet] = React.useState<"crm" | "client">("crm");
+  /*
+    UNE SEULE BARRE D'ONGLETS, à plat.
+
+    Il y en avait deux empilées : « Suivi CRM / Fiche client », puis celle du
+    dossier client juste en dessous. C'est ce qui donnait la sensation d'une
+    fiche entière encastrée dans une autre, avec le nom, le téléphone, le
+    bouton copier et l'ancienneté affichés deux fois.
+  */
+  const [onglet, setOnglet] = React.useState<OngletFiche>("crm");
 
   // Le contact change : on revient au suivi, et on ne garde pas un onglet
   // « Fiche client » ouvert sur une fiche qui, elle, n'en a pas.
   React.useEffect(() => {
-    setOnglet("crm");
-  }, [id]);
+    // L'annuaire n'a pas de suivi CRM : il arrive sur la vue d'ensemble.
+    setOnglet(annuaire ? "overview" : "crm");
+  }, [id, annuaire]);
 
   const converti = p?.status === "CONVERTI";
   // Client de l'annuaire : sa fiche se consulte, elle ne se travaille pas.
@@ -88,12 +113,17 @@ export function FicheContact({
         <div className="space-y-5">
           <FicheEntete p={p} />
 
-          {dossierPossible && !annuaire && (
+          {/*
+            L'ANNUAIRE garde ses onglets, sans « Suivi CRM ».
+
+            Le serveur a déjà vidé la fiche de tout ce qui touche au centre
+            d'appels : il n'y a pas de suivi à montrer. Mais le dossier, lui,
+            se parcourt — sans cette barre, la caisse resterait bloquée sur la
+            vue d'ensemble, sans accès aux commandes ni aux adresses.
+          */}
+          {dossierPossible && (
             <div className="flex items-center gap-1 border-b border-gray-100">
-              {([
-                ["crm", "Suivi CRM"],
-                ["client", "Fiche client"],
-              ] as const).map(([cle, libelle]) => (
+              {ONGLETS.filter(([cle]) => !annuaire || cle !== "crm").map(([cle, libelle]) => (
                 <button
                   key={cle}
                   type="button"
@@ -116,8 +146,8 @@ export function FicheContact({
               Ce contact n&apos;a pas de compte sur l&apos;application : il n&apos;y a pas de dossier client à
               afficher. Son numéro a été relevé en caisse sur une commande Glovo ou Yango.
             </p>
-          ) : (annuaire || onglet === "client") && compteId ? (
-            <ClientDetail clientId={compteId} />
+          ) : (annuaire || onglet !== "crm") && compteId ? (
+            <DossierClient clientId={compteId} onglet={onglet === "crm" ? "overview" : onglet} />
           ) : (
           <>
           {consultation && (
