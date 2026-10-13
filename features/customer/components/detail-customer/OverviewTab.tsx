@@ -34,6 +34,12 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
           <ShoppingBag className="w-5 h-5 text-[#F17922]" />
           Commandes récentes
         </h3>
+        {customerData.recentOrders.length === 0 && (
+          <p className="text-sm text-gray-500">
+            Aucune commande. C&apos;est un inscrit qui n&apos;a pas encore
+            franchi le pas.
+          </p>
+        )}
         <div className="space-y-3">
           {customerData.recentOrders.slice(0, 5).map((order) => (
             <div
@@ -66,6 +72,9 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
           <Award className="w-5 h-5 text-[#F17922]" />
           Historique des points
         </h3>
+        {customerData.loyaltyHistory.length === 0 && (
+          <p className="text-sm text-gray-500">Aucun point gagné pour l&apos;instant.</p>
+        )}
         <div className="space-y-3">
           {customerData.loyaltyHistory.map((item) => (
             <div
@@ -114,7 +123,16 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
         </div>
       </div>
 
-      {/* Favorite Dishes */}
+      {/*
+        FAVORIS ET AVIS : rendus SEULEMENT s'il y en a.
+
+        Ils se dessinaient toujours, et sur la plupart des fiches on lisait deux
+        grands cadres vides côte à côte, titrés et sans une ligne dedans. Un
+        cadre vide n'informe de rien : il occupe la moitié de l'écran pour dire
+        qu'il n'a rien à dire. Les onglets Favoris et Avis restent là pour qui
+        veut vérifier.
+      */}
+      {customerData.favoriteDishes.length > 0 && (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <Heart className="w-5 h-5 text-[#F17922]" />
@@ -149,7 +167,9 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
         </div>
       </div>
 
-      {/* Recent Reviews */}
+      )}
+
+      {customerData.reviews.length > 0 && (
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-[#F17922]" />
@@ -186,7 +206,8 @@ export function OverviewTab({ customerData }: OverviewTabProps) {
         </div>
       </div>
 
-      {/* Order Detail Modal */}
+      )}
+
       {peutVoirCommande && selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}

@@ -20,6 +20,10 @@ export interface CustomerMapperData {
         totalSpent: number;
         loyaltyPoints: number;
         favorites: number;
+        /** Total dépensé divisé par le nombre de commandes terminées. */
+        panierMoyen: number;
+        /** Date ISO de la dernière commande terminée, `null` s'il n'en a aucune. */
+        derniereCommande: string | null;
     };
     recentOrders: Array<OrderTable>;
     loyaltyHistory: Array<{

@@ -4,44 +4,30 @@ interface StatCardProps {
   icon: ReactNode;
   value: string | number;
   label: string;
-  gradient: "blue" | "emerald" | "amber" | "rose";
+  /** Seconde ligne : ce que le chiffre veut dire, quand il ne se suffit pas. */
+  detail?: string;
 }
 
-const gradientStyles = {
-  blue: {
-    bg: "bg-gradient-to-br from-blue-50 to-blue-100",
-    border: "border-blue-200",
-    iconBg: "bg-blue-500",
-  },
-  emerald: {
-    bg: "bg-gradient-to-br from-emerald-50 to-emerald-100",
-    border: "border-emerald-200",
-    iconBg: "bg-emerald-500",
-  },
-  amber: {
-    bg: "bg-gradient-to-br from-amber-50 to-amber-100",
-    border: "border-amber-200",
-    iconBg: "bg-amber-500",
-  },
-  rose: {
-    bg: "bg-gradient-to-br from-rose-50 to-rose-100",
-    border: "border-rose-200",
-    iconBg: "bg-rose-500",
-  },
-};
-
-export function StatCard({ icon, value, label, gradient }: StatCardProps) {
-  const styles = gradientStyles[gradient];
-
+/**
+ * Un chiffre de la fiche client.
+ *
+ * ⚠️ VOLONTAIREMENT SOBRE. Ces cartes étaient bleue, verte, jaune et rose en
+ * dégradé : quatre couleurs qui n'existent nulle part ailleurs dans le
+ * backoffice, et qui donnaient le même poids visuel à « 52 500 F dépensés » et
+ * à « 0 favori ». La couleur doit dire quelque chose ; ici, elle ne disait rien.
+ *
+ * Le chiffre porte seul, en chiffres tabulaires pour que quatre cartes côte à
+ * côte s'alignent.
+ */
+export function StatCard({ icon, value, label, detail }: StatCardProps) {
   return (
-    <div className={`${styles.bg} rounded-xl p-4 border ${styles.border}`}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2 ${styles.iconBg} rounded-lg`}>{icon}</div>
-        <div>
-          <div className="text-2xl font-bold text-gray-900">{value}</div>
-          <div className="text-xs text-gray-600">{label}</div>
-        </div>
+    <div className="rounded-xl border border-gray-200 bg-white px-4 py-3">
+      <div className="flex items-center gap-2 text-gray-400">
+        {icon}
+        <span className="text-[11px] font-semibold uppercase tracking-wide">{label}</span>
       </div>
+      <p className="mt-1.5 text-2xl font-bold tabular-nums text-gray-900">{value}</p>
+      {detail && <p className="text-[11px] text-gray-500">{detail}</p>}
     </div>
   );
 }

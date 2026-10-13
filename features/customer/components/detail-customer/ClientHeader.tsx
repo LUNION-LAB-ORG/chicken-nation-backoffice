@@ -1,147 +1,153 @@
-import {
-  Award,
-  Calendar,
-  Heart,
-  Mail,
-  Phone,
-  ShoppingBag,
-  Star,
-  TrendingUp,
-} from "lucide-react";
+import { Award, Calendar, Mail, Phone, Receipt, ShoppingBag, Wallet } from "lucide-react";
 import Image from "next/image";
 import { StatCard } from "./StatCard";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
+import { BoutonCopier } from "@/components/ui/BoutonCopier";
+import { numeroACopier } from "@/utils/telephone";
 
 interface ClientHeaderProps {
   customerData: CustomerMapperData;
 }
 
+const STATUT = {
+  Active: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Nouveau: "bg-sky-50 text-sky-700 border-sky-200",
+  Supprimé: "bg-rose-50 text-rose-700 border-rose-200",
+} as const;
+
+const fmtMontant = (n: number) => `${n.toLocaleString("fr-FR")} F`;
+
+/** « il y a 3 j », « il y a 2 mois ». Rien pour aujourd'hui, le mot ne dirait rien. */
+function depuis(iso: string | null): string | undefined {
+  if (!iso) return undefined;
+  const jours = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (jours <= 0) return "aujourd'hui";
+  if (jours === 1) return "hier";
+  if (jours < 31) return `il y a ${jours} j`;
+  const mois = Math.round(jours / 30);
+  return `il y a ${mois} mois`;
+}
+
+/**
+ * Identité du client, puis ses quatre chiffres.
+ *
+ * ⚠️ PLUS DE BANNIÈRE. L'ancienne version empilait une bande orange de 128 px
+ * et un avatar de 128 px qui débordait dessus, soit un tiers de la fenêtre
+ * avant la première information utile — dans une MODALE, qui plus est. Pire :
+ * le nom et les coordonnées étaient en `text-white`, donc l'email et le
+ * téléphone passaient en blanc sur blanc dès qu'ils tombaient sous la bande.
+ * Ils étaient invisibles.
+ *
+ * ⚠️ Les chiffres ont changé. « Points fidélité » et « Favoris » étaient deux
+ * des quatre titres, alors que les points sont déjà dans la pastille de niveau
+ * et que les favoris ont leur onglet — on lisait « 0 Favoris » en gros. À leur
+ * place, le PANIER MOYEN et la DERNIÈRE COMMANDE, qui répondent aux deux
+ * questions qu'on se pose vraiment : combien dépense-t-il, et est-il encore là.
+ */
 export function ClientHeader({ customerData }: ClientHeaderProps) {
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-emerald-100 text-emerald-700";
-      case "Nouveau":
-        return "bg-blue-100 text-blue-700";
-      case "Supprimé":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
-  };
+  const { stats } = customerData;
+  const initiales = customerData.fullName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      {/* Banner Background */}
-      <div className="h-32 bg-gradient-to-r from-[#F17922] to-[#ff9f5a]" />
+    <div className="space-y-3">
+      <div className="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+          <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full bg-gray-100">
+            {customerData.image ? (
+              <Image
+                src={customerData.image}
+                alt={customerData.fullName}
+                width={64}
+                height={64}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[#F17922] text-lg font-bold text-white">
+                {initiales}
+              </div>
+            )}
+          </div>
 
-      <div className="px-6 md:px-8 pb-6">
-        {/* Profile Section */}
-        <div className="flex flex-col md:flex-row gap-6 -mt-16 mb-6">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            <div className="w-32 h-32 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden">
-              {customerData.image ? (
-                <Image
-                  src={customerData.image || "/placeholder.svg"}
-                  alt={customerData.fullName}
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-[#F17922] to-[#ff9f5a] flex items-center justify-center text-white text-3xl font-bold">
-                  {customerData.fullName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2)}
-                </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-xl font-bold text-gray-900">
+                {customerData.fullName}
+              </h2>
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                  STATUT[customerData.status as keyof typeof STATUT] ??
+                  "border-gray-200 bg-gray-50 text-gray-600"
+                }`}
+              >
+                {customerData.status}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F17922]/30 bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-[#8A4B00]">
+                <Award className="h-3.5 w-3.5" />
+                {customerData.loyaltyLevel}
+                <span className="font-normal text-[#A9683A]">
+                  · {stats.loyaltyPoints} pts
+                </span>
+              </span>
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-gray-600">
+              {customerData.phone && (
+                <span className="inline-flex items-center gap-1.5 tabular-nums">
+                  <Phone className="h-4 w-4 text-gray-400" />
+                  {customerData.phone}
+                  <BoutonCopier
+                    valeur={numeroACopier(customerData.phone)}
+                    titre="Copier le numéro"
+                  />
+                </span>
               )}
-            </div>
-          </div>
-
-          {/* Info */}
-          <div className="flex-1 mt-16 md:-mt-2">
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white">
-                    {customerData.fullName}
-                  </h1>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusStyle(
-                      customerData.status
-                    )}`}
-                  >
-                    {customerData.status}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm text-white">
-                  {customerData.email && (
-                    <div className="flex items-center gap-1.5">
-                      <Mail className="w-4 h-4" />
-                      <span>{customerData.email}</span>
-                    </div>
-                  )}
-                  {customerData.phone && (
-                    <div className="flex items-center gap-1.5">
-                      <Phone className="w-4 h-4" />
-                      <span>{customerData.phone}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    <span>Membre depuis {customerData.memberSince}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Loyalty Badge */}
-              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
-                <Award className="w-5 h-5 text-[#F17922]" />
-                <div>
-                  <div className="text-xs font-medium text-gray-600">
-                    Niveau de fidélité
-                  </div>
-                  <div className="text-sm font-bold text-[#F17922] uppercase">
-                    {customerData.loyaltyLevel}
-                  </div>
-                </div>
-              </div>
+              {customerData.email && (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <Mail className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="truncate">{customerData.email}</span>
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5 text-gray-500">
+                <Calendar className="h-4 w-4 text-gray-400" />
+                Client depuis {customerData.memberSince}
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard
-            icon={<ShoppingBag className="w-5 h-5 text-white" />}
-            value={customerData.stats.totalOrders}
-            label="Commandes"
-            gradient="blue"
-          />
-          <StatCard
-            icon={<TrendingUp className="w-5 h-5 text-white" />}
-            value={`${customerData.stats.totalSpent.toLocaleString()} F`}
-            label="Total dépensé"
-            gradient="emerald"
-          />
-          <StatCard
-            icon={<Star className="w-5 h-5 text-white" />}
-            value={customerData.stats.loyaltyPoints}
-            label="Points fidélité"
-            gradient="amber"
-          />
-          <StatCard
-            icon={<Heart className="w-5 h-5 text-white" />}
-            value={customerData.stats.favorites}
-            label="Favoris"
-            gradient="rose"
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          icon={<ShoppingBag className="h-4 w-4" />}
+          label="Commandes"
+          value={stats.totalOrders}
+          detail="terminées"
+        />
+        <StatCard
+          icon={<Wallet className="h-4 w-4" />}
+          label="Total dépensé"
+          value={fmtMontant(stats.totalSpent)}
+        />
+        <StatCard
+          icon={<Receipt className="h-4 w-4" />}
+          label="Panier moyen"
+          value={stats.totalOrders > 0 ? fmtMontant(stats.panierMoyen) : "—"}
+        />
+        <StatCard
+          icon={<Calendar className="h-4 w-4" />}
+          label="Dernière commande"
+          value={
+            stats.derniereCommande
+              ? new Date(stats.derniereCommande).toLocaleDateString("fr-FR")
+              : "—"
+          }
+          detail={depuis(stats.derniereCommande)}
+        />
       </div>
     </div>
   );

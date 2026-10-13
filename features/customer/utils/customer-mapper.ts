@@ -48,11 +48,25 @@ const calculateStats = (customer: Customer) => {
     const totalOrders = orders.length
     const totalSpent = orders.reduce((sum, order) => sum + order.amount, 0)
 
+    /*
+      Deux chiffres AJOUTÉS parce qu'ils répondent à une question qu'on se pose
+      vraiment devant une fiche : combien dépense-t-il à chaque fois, et
+      est-ce qu'il est encore là. Un total seul ne dit ni l'un ni l'autre.
+    */
+    const panierMoyen = totalOrders > 0 ? Math.round(totalSpent / totalOrders) : 0
+    const derniereCommande = orders
+        .map((o) => o.created_at)
+        .filter(Boolean)
+        .sort()
+        .at(-1) ?? null
+
     return {
         totalOrders,
         totalSpent,
         loyaltyPoints,
         favorites: favorites.length,
+        panierMoyen,
+        derniereCommande,
     }
 }
 
