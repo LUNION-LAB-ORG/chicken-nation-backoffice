@@ -77,6 +77,25 @@ export const usePrendreMutation = () => {
 };
 
 /**
+ * PRENDRE EN CHARGE un client de l'annuaire.
+ *
+ * Il commande déjà : le call center ne le travaille pas, et sa fiche ne
+ * propose aucun geste. Ce bouton est la décision de s'en occuper — il passe
+ * « à appeler » et entre dans la file de l'agent.
+ */
+export const usePrendreEnChargeMutation = () => {
+  const invalider = useInvalidateCrmQuery();
+  return useMutation({
+    mutationFn: (id: string) => contactAPI.prendreEnCharge(id),
+    onSuccess: () => {
+      toast.success("Client pris en charge : il est dans votre file.");
+      invalider();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+/**
  * Nommer un contact.
  *
  * Le serveur refuse de renommer un client qui a saisi son nom lui-même dans

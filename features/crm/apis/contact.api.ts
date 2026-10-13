@@ -39,6 +39,9 @@ export const contactAPI = {
 
   /** Prendre un client de la file commune au moment de composer son numéro (409 si un collègue l'a déjà pris). */
   prendre: (id: string) => api.post<IPrise>(`${BASE}/contacts/${id}/prendre`, {}),
+  /** Annuaire : décider de travailler un client qui commande déjà. */
+  prendreEnCharge: (id: string) =>
+    api.post<{ success: boolean }>(`${BASE}/contacts/${id}/prendre-en-charge`, {}),
 
   /** Nommer un contact sans nom ; le serveur écrit aussi sur son compte applicatif. */
   renommer: (id: string, dto: IRenommerDTO) =>

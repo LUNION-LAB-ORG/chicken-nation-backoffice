@@ -13,6 +13,7 @@ import { FicheContexte } from "./FicheContexte";
 import { FicheEntete } from "./FicheEntete";
 import { FicheHistorique } from "./FicheHistorique";
 import { PanneauAgent } from "./PanneauAgent";
+import { PanneauAnnuaire } from "./PanneauAnnuaire";
 import { PanneauAppel } from "./PanneauAppel";
 import { PanneauCoupon } from "./PanneauCoupon";
 
@@ -67,6 +68,8 @@ export function FicheContact({
   }, [id]);
 
   const converti = p?.status === "CONVERTI";
+  // Client de l'annuaire : sa fiche se consulte, elle ne se travaille pas.
+  const nonDemarche = p?.status === "NON_DEMARCHE";
   // Client d'un collègue, retrouvé par son numéro : on lit, on renvoie son coupon, rien d'autre.
   const lecture = p?.mode === "lecture";
   // Lecteur (marketing, manager) : tout voir, téléphone compris, sans aucun geste.
@@ -161,6 +164,13 @@ export function FicheContact({
                   </p>
                   <p className="text-xs text-gray-400 mt-2">Il est sorti de la liste : plus aucun appel n&apos;est nécessaire.</p>
                 </div>
+              ) : nonDemarche ? (
+                /*
+                  ANNUAIRE : il commande déjà, personne ne le travaille. Aucun
+                  geste tant qu'un agent n'a pas décidé de s'en occuper, sinon
+                  on appellerait des clients au hasard.
+                */
+                <PanneauAnnuaire contactId={p.id} />
               ) : consultation ? (
                 <PanneauCoupon p={p} consultation />
               ) : lecture ? (
