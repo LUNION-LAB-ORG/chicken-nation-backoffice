@@ -104,7 +104,7 @@ export function FicheContact({
     p?.segment === "INACTIF" ? "De retour le" : p?.segment === "JAMAIS_COMMANDE" ? "Première commande le" : "A commandé en direct le";
 
   return (
-    <Modal isOpen={!!id} onClose={onFermer} title="Fiche contact" size="large">
+    <Modal isOpen={!!id} onClose={onFermer} title="Fiche contact" size="xlarge">
       {isError ? (
         <Erreur message={(error as Error)?.message} />
       ) : !p ? (

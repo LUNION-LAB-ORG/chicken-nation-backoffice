@@ -9,7 +9,7 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: "default" | "large" | "full";
+  size?: "default" | "large" | "xlarge" | "full";
 }
 
 /**
@@ -24,12 +24,22 @@ export default function Modal({
   children,
   size = "default",
 }: ModalProps) {
+  /*
+    « xlarge » AJOUTÉ plutôt qu'élargir « large » : sept autres modales s'en
+    servent, et les élargir toutes pour une seule aurait changé des écrans que
+    personne n'a demandé à revoir.
+
+    1280 px plutôt que « full » (95 % de l'écran) : une fiche se lit en deux
+    colonnes, pas sur 2 400 px où l'œil perd la ligne.
+  */
   const widthCls =
     size === "large"
       ? "md:max-w-5xl"
-      : size === "full"
-        ? "md:max-w-[95%]"
-        : "md:max-w-3xl";
+      : size === "xlarge"
+        ? "md:max-w-7xl"
+        : size === "full"
+          ? "md:max-w-[95%]"
+          : "md:max-w-3xl";
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} className={widthCls}>
