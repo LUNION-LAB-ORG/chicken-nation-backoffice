@@ -110,7 +110,16 @@ export function FicheContact({
       ) : !p ? (
         <Chargement />
       ) : (
-        <div className="space-y-5">
+        /*
+          HAUTEUR STABLE. Sans ce plancher, la modale changeait de taille à
+          chaque onglet : haute sur « Vue d'ensemble », réduite à une bande sur
+          « Favoris » quand le client n'en a aucun. Elle sautait sous le
+          curseur, et le bouton qu'on visait se déplaçait.
+
+          Un plancher, pas une hauteur fixe : le plafond de la modale (88 % de
+          la fenêtre) et son défilement interne restent maîtres au-delà.
+        */
+        <div className="space-y-5 md:min-h-[58vh]">
           <FicheEntete p={p} />
 
           {/*

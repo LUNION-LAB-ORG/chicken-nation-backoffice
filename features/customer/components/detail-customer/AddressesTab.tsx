@@ -1,11 +1,16 @@
 import { MapPin } from "lucide-react";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
+import { DossierVide } from "./DossierVide";
 
 interface AddressesTabProps {
   customerData: CustomerMapperData;
 }
 
 export function AddressesTab({ customerData }: AddressesTabProps) {
+  if (customerData.addresses.length === 0) {
+    return <DossierVide Icone={MapPin} texte="Aucune adresse enregistrée." />;
+  }
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {customerData.addresses.map((address) => (

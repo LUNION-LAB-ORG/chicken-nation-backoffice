@@ -1,12 +1,17 @@
 import { Heart } from "lucide-react";
 import Image from "next/image";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
+import { DossierVide } from "./DossierVide";
 
 interface FavoritesTabProps {
   customerData: CustomerMapperData;
 }
 
 export function FavoritesTab({ customerData }: FavoritesTabProps) {
+  if (customerData.favoriteDishes.length === 0) {
+    return <DossierVide Icone={Heart} texte="Aucun plat en favori." />;
+  }
+
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
       {customerData.favoriteDishes.map((dish) => (

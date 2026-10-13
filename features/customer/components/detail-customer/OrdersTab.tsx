@@ -1,3 +1,4 @@
+import { ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { OrderStatusBadge } from "../../../orders/components/OrderStatusBadge";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
@@ -6,12 +7,17 @@ import OrderDetailModal from "../../../orders/components/detail-order/OrderDetai
 import { OrderTable } from "../../../orders/types/ordersTable.types";
 import { useAuthStore } from "../../../users/hook/authStore";
 import { Action, Modules } from "../../../users/types/auth.type";
+import { DossierVide } from "./DossierVide";
 
 interface OrdersTabProps {
   customerData: CustomerMapperData;
 }
 
 export function OrdersTab({ customerData }: OrdersTabProps) {
+  if (customerData.recentOrders.length === 0) {
+    return <DossierVide Icone={ShoppingBag} texte="Aucune commande." />;
+  }
+
   const [selectedOrder, setSelectedOrder] = useState<OrderTable | null>(null);
   // Le détail d'une commande passe par GET /orders/:id (COMMANDES en lecture).
   // Sans ce droit (le Marketing), le tableau reste lisible, sans lien.
