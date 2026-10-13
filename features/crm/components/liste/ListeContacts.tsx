@@ -99,7 +99,7 @@ export function ListeContacts({
         <Vide
           Icone={Users}
           titre="Aucun contact ne correspond"
-          texte="Élargissez les filtres. Un client qui commande sort de cette liste."
+          texte="Élargissez les filtres, ou vérifiez le numéro."
         />
       ) : (
         <TableContacts

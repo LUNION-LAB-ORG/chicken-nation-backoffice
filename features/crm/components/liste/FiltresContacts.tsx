@@ -9,6 +9,12 @@ import { ChampSelect, classeChamp } from "../commun/Champs";
 import { FiltresAvances } from "./FiltresAvances";
 
 const A_TRAVAILLER = "A_APPELER,A_RAPPELER,INTERESSE,COUPON_ENVOYE";
+/**
+ * Tout sauf les convertis : c'était le comportement par défaut, c'est devenu un
+ * choix. Contacts réunit désormais TOUS les clients du système, et un client
+ * qui a commandé ne doit plus disparaître d'une recherche par numéro.
+ */
+const HORS_CONVERTIS = "A_APPELER,A_RAPPELER,INTERESSE,COUPON_ENVOYE,NON_INTERESSE,INJOIGNABLE,NON_DEMARCHE";
 
 /**
  * Filtres combinables de la liste (cahier §4.2). La recherche attend que
@@ -73,9 +79,10 @@ export function FiltresContacts({
         <ChampSelect
           valeur={filtres.status ?? ""}
           onChange={(v) => maj({ status: v || undefined })}
-          vide="Tous, hors convertis"
+          vide="Tous les statuts"
           options={[
             { value: A_TRAVAILLER, label: "À travailler" },
+            { value: HORS_CONVERTIS, label: "Hors convertis" },
             ...STATUTS_ORDRE.map((s) => ({ value: s, label: s === "CONVERTI" ? "Convertis ou reconquis" : STATUT_META[s].label })),
           ]}
         />
