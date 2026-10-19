@@ -1,6 +1,6 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
-import { texteBandeau } from '../relance';
+import { avertissementRepriseEnLigne, pastilleAnnulation, texteBandeau, textePaiementEnLigne } from '../relance';
 import { actionsRelance, repriseALaLivraison } from '../relance-actions';
 
 /** Commande du site à payer à la livraison : textes et boutons de « À relancer ». */
@@ -134,6 +134,79 @@ describe('relance : reprise d’une commande à payer à la livraison', () => {
   test('panier en ligne, ou serveur plus ancien : la question du débit reste', () => {
     expect(repriseALaLivraison(groupe({ aConfirmer: false }))).toBe(false);
     expect(repriseALaLivraison(ancien(groupe()))).toBe(false);
+  });
+});
+
+/**
+ * Revue du 19/10 : « Modifier ma commande », puis une nouvelle commande à
+ * confirmer. Le serveur signale l'annulation de l'ancienne sur le groupe :
+ * l'écran disait « Annulée par le client » en ambre à côté de « appeler pour
+ * confirmer », et l'agent pouvait croire que le client avait renoncé.
+ */
+describe('relance : commande à confirmer après « Modifier ma commande »', () => {
+  const annuleeA = new Date(2026, 9, 19, 14, 5).toISOString();
+  const modifiee = (o = {}) => {
+    const g = groupe(o);
+    g.signaux.annulee_par_client = { le: annuleeA };
+    return g;
+  };
+  const lisible = (t) => t.replace(/[\u00a0\u202f]/g, ' ');
+
+  test('pastille : « Commande précédente annulée par le client », en gris', () => {
+    expect(pastilleAnnulation(modifiee(), maintenant)).toEqual({
+      texte: 'Commande précédente annulée par le client à 14 h 05',
+      ton: 'gris',
+    });
+  });
+
+  test('panier en ligne annulé par le client : pastille d’avant, en ambre', () => {
+    expect(pastilleAnnulation(modifiee({ aConfirmer: false }), maintenant)).toEqual({
+      texte: 'Annulée par le client à 14 h 05',
+      ton: 'ambre',
+    });
+    expect(pastilleAnnulation(groupe(), maintenant)).toBeNull();
+  });
+
+  test('notification : la commande à confirmer n’est pas dite « annulée par le client »', () => {
+    const un = lisible(texteBandeau([modifiee()], maintenant));
+    expect(un).toContain('paiement à la livraison, appeler pour confirmer');
+    expect(un).not.toContain('annulée');
+    const plusieurs = lisible(texteBandeau([modifiee(), modifiee({ aConfirmer: false })], maintenant));
+    expect(plusieurs).toContain('dont 1 à confirmer et 1 annulée par le client');
+  });
+});
+
+/**
+ * Revue du 19/10 : le client valide « Payer à la livraison », puis paie en
+ * ligne un autre panier. Le serveur le signale sur la commande à confirmer
+ * (`paiement_en_ligne_en_cours`) : l'écran le dit avant toute transmission.
+ */
+describe('relance : paiement en ligne en cours sur un autre panier du client', () => {
+  const lisible = (t) => (t ?? '').replace(/[\u00a0\u202f]/g, ' ');
+  const enLigne = (jusqua: number, o = {}) => {
+    const g = groupe(o);
+    g.signaux.paiement_en_ligne_en_cours = { reference: 'CN-o2', jusqua: new Date(jusqua).toISOString() };
+    return g;
+  };
+
+  test('pastille, notification et boîte de reprise le disent tant que le délai court', () => {
+    const g = enLigne(maintenant + 120_000);
+    expect(lisible(textePaiementEnLigne(g, maintenant))).toBe(
+      'Paiement en ligne en cours sur CN-o2 : vérifiez avec le client avant de transmettre',
+    );
+    expect(lisible(texteBandeau([g], maintenant))).toContain('appeler pour confirmer, paiement en ligne en cours');
+    expect(lisible(avertissementRepriseEnLigne(g, maintenant))).toBe(
+      'Un paiement en ligne est en cours sur CN-o2. Si le client le termine, ne transmettez pas cette commande : ' +
+        'annulez-la avec la raison « Doublon ».',
+    );
+  });
+
+  test('délai passé, panier en ligne, ou serveur plus ancien : rien', () => {
+    expect(textePaiementEnLigne(enLigne(maintenant - 1), maintenant)).toBeNull();
+    expect(avertissementRepriseEnLigne(enLigne(maintenant - 1), maintenant)).toBeNull();
+    expect(textePaiementEnLigne(enLigne(maintenant + 120_000, { aConfirmer: false }), maintenant)).toBeNull();
+    expect(textePaiementEnLigne(groupe(), maintenant)).toBeNull();
+    expect(textePaiementEnLigne(ancien(groupe()), maintenant)).toBeNull();
   });
 });
 

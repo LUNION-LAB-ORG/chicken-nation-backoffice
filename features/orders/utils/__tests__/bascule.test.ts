@@ -1,6 +1,6 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
-import { apresBascule, estAConfirmer, panierAnnuleParLeClient } from '../bascule';
+import { apresBascule, estAConfirmer, fraisLivraisonRetenus, panierAnnuleParLeClient } from '../bascule';
 
 /**
  * Bascule vers le call center : ce que la modification fera de la taxe, du
@@ -89,5 +89,32 @@ describe('panierAnnuleParLeClient : reprise d’une commande annulée', () => {
     expect(panierAnnuleParLeClient(annulee({ paied: true }))).toBe(false);
     expect(panierAnnuleParLeClient(annulee({ auto: false }))).toBe(false);
     expect(panierAnnuleParLeClient(commande())).toBe(false);
+  });
+});
+
+/**
+ * Revue du 19/10 : à la reprise d'une commande du site à payer à la
+ * livraison, l'aperçu des frais (qui ne connaît pas le client) remplaçait les
+ * frais acceptés sur le site, et le formulaire enregistrait d'autres frais.
+ */
+describe('fraisLivraisonRetenus : frais de la commande du site gardés', () => {
+  const ADRESSE = '{"title":"Maison","latitude":5.39,"longitude":-3.98}';
+  const livraison = (o = {}) => ({ type: 'DELIVERY', address: ADRESSE, restaurant_id: 'r1', ...o });
+  const figes = { ...livraison(), delivery_fee: 1000 };
+
+  test('livraison inchangée : les frais de la commande, pas ceux de l’aperçu', () => {
+    expect(fraisLivraisonRetenus(livraison(), 1500, figes)).toBe(1000);
+    expect(fraisLivraisonRetenus(livraison({ address: ` ${ADRESSE} ` }), 1500, figes)).toBe(1000);
+  });
+
+  test('adresse, restaurant ou type changés par l’agent : les frais de l’aperçu', () => {
+    expect(fraisLivraisonRetenus(livraison({ address: '{"title":"Bureau"}' }), 1500, figes)).toBe(1500);
+    expect(fraisLivraisonRetenus(livraison({ restaurant_id: 'r2' }), 1500, figes)).toBe(1500);
+    expect(fraisLivraisonRetenus(livraison({ type: 'PICKUP' }), 1500, figes)).toBe(1500);
+  });
+
+  test('toute autre commande : l’aperçu, comme avant', () => {
+    expect(fraisLivraisonRetenus(livraison(), 1500, null)).toBe(1500);
+    expect(fraisLivraisonRetenus(livraison(), 1500, undefined)).toBe(1500);
   });
 });

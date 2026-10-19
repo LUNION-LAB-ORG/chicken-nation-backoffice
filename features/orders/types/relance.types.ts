@@ -101,6 +101,14 @@ export interface SignauxRelance {
    * serveur plus ancien.
    */
   commande_suivante?: { reference: string; created_at: string } | null;
+  /**
+   * Seulement si la tête est à confirmer : un autre panier du groupe, payable
+   * en ligne, vient d'être créé ou d'avoir un paiement lancé. Le client paie
+   * peut-être en ligne en ce moment : transmettre la commande à confirmer en
+   * ferait deux. `jusqua` : fin du délai, la liste se relit alors. Absent d'un
+   * serveur plus ancien.
+   */
+  paiement_en_ligne_en_cours?: { reference: string; jusqua: string } | null;
 }
 
 /** Les paniers d'un même client (même compte ou même numéro) : une alerte, un appel. */

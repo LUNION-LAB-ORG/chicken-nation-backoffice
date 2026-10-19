@@ -19,6 +19,7 @@ import {
 } from "../../../../utils/date/format-date";
 import AddressSearchInput from "./AddressSearchInput";
 import { getParsedAddress } from "../../utils/getParsedAddress";
+import { fraisLivraisonRetenus, LivraisonFormulaire } from "../../utils/bascule";
 import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
 import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
 import { useDirectionsQuery } from "../../../maps/queries/directions.query";
@@ -33,6 +34,12 @@ interface DeliveryInfoSectionProps {
   onFormDataChange: (data: Partial<OrderFormData>) => void;
   /** Sous-total du panier → applique les offres de livraison à montant minimum dans l'aperçu. */
   orderAmount?: number;
+  /**
+   * Reprise d'une commande du site à payer à la livraison : sa livraison et
+   * ses frais, gardés tant que l'agent ne change ni l'adresse, ni le
+   * restaurant, ni le type (`fraisLivraisonRetenus`).
+   */
+  fraisFiges?: (LivraisonFormulaire & { delivery_fee: number }) | null;
 }
 
 const INPUT_CLASS =
@@ -67,6 +74,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   formData,
   onFormDataChange,
   orderAmount,
+  fraisFiges,
 }) => {
   const isDelivery = formData.type === OrderType.DELIVERY;
 
@@ -100,12 +108,13 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   );
 
   // Auto-mettre à jour les frais de livraison quand la query retourne un nouveau résultat
-  // (changement d'adresse ou de restaurant)
+  // (changement d'adresse ou de restaurant). Commande du site reprise : ses
+  // frais restent tant que sa livraison ne change pas.
   useEffect(() => {
     if (isDelivery && deliveryFee?.montant !== undefined) {
-      onFormDataChange({ delivery_fee: deliveryFee.montant });
+      onFormDataChange({ delivery_fee: fraisLivraisonRetenus(formData, deliveryFee.montant, fraisFiges) });
     }
-  }, [deliveryFee?.montant, isDelivery]);
+  }, [deliveryFee?.montant, isDelivery, formData.address, formData.restaurant_id, formData.type]);
 
   const handleAddressChange = (addressData: unknown) => {
     if (addressData) {

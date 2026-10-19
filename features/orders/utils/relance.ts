@@ -79,9 +79,65 @@ export function aLHeure(iso: string, maintenant: number): string {
 export const cleAlerte = (g: Pick<GroupeRelance, "tete" | "alerte_le">) => `${g.tete.id}@${g.alerte_le ?? ""}`;
 
 /**
+ * Pastille « annulée par le client » d'un groupe, ou null.
+ *
+ * Sur une commande à confirmer, l'annulation signalée par le serveur est
+ * celle d'une commande PRÉCÉDENTE du même client : il a fait « Modifier ma
+ * commande », puis validé celle-ci, qui reste à confirmer. Dite en ambre
+ * « Annulée par le client », elle faisait croire que le client avait renoncé,
+ * et l'agent risquait de ne pas appeler, ou d'annuler une commande valide.
+ */
+export function pastilleAnnulation(
+  g: Pick<GroupeRelance, "a_confirmer" | "signaux">,
+  maintenant: number,
+): { texte: string; ton: "ambre" | "gris" } | null {
+  // Serveur plus ancien : signal absent, lu comme « non annulée ».
+  const annulee = g.signaux.annulee_par_client ?? null;
+  if (!annulee) return null;
+  return g.a_confirmer
+    ? { texte: `Commande précédente annulée par le client ${aLHeure(annulee.le, maintenant)}`, ton: "gris" }
+    : { texte: `Annulée par le client ${aLHeure(annulee.le, maintenant)}`, ton: "ambre" };
+}
+
+/**
+ * Commande à confirmer dont un autre panier du même client se paie peut-être
+ * en ligne en ce moment (signal du serveur, jusqu'à la fin du délai) : texte
+ * de la pastille, ou null. Transmettre la commande à confirmer pendant ce
+ * paiement ferait deux commandes préparées et deux encaissements.
+ */
+export function textePaiementEnLigne(
+  g: Pick<GroupeRelance, "a_confirmer" | "signaux">,
+  maintenant: number,
+): string | null {
+  // Serveur plus ancien : signal absent.
+  const s = g.signaux.paiement_en_ligne_en_cours ?? null;
+  if (!s || !g.a_confirmer || !(Date.parse(s.jusqua) > maintenant)) return null;
+  return `Paiement en ligne en cours sur ${s.reference} : vérifiez avec le client avant de transmettre`;
+}
+
+/**
+ * Boîte « Le client confirme sa commande ? » d'une commande à confirmer dont
+ * un autre panier se paie peut-être en ligne : ce qu'il faut demander avant
+ * de la transmettre. Null sans ce signal.
+ */
+export function avertissementRepriseEnLigne(
+  g: Pick<GroupeRelance, "a_confirmer" | "signaux">,
+  maintenant: number,
+): string | null {
+  if (!textePaiementEnLigne(g, maintenant)) return null;
+  const reference = g.signaux.paiement_en_ligne_en_cours!.reference;
+  return (
+    `Un paiement en ligne est en cours sur ${reference}. Si le client le termine, ne transmettez pas cette ` +
+    `commande : annulez-la avec la raison « Doublon ».`
+  );
+}
+
+/**
  * « 1 commande à relancer : Anne Marie Aka, 5 050 F, depuis 4 min » ou le
  * résumé de plusieurs. Une commande du site à payer à la livraison le dit :
- * l'agent appelle pour la confirmer, pas pour un paiement.
+ * l'agent appelle pour la confirmer, pas pour un paiement. L'annulation d'une
+ * commande précédente du même client (« Modifier ma commande ») n'y est pas
+ * dite : la commande à confirmer, elle, est valide.
  */
 export function texteBandeau(groupes: GroupeRelance[], maintenant: number): string {
   const aRelancer = groupes.filter((g) => g.etat === "A_RELANCER");
@@ -91,8 +147,9 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   // Serveur plus ancien : champ absent, lu comme « pas à confirmer ».
   const aConfirmer = aRelancer.filter((g) => !!g.a_confirmer).length;
   const refuses = aRelancer.filter((g) => g.signaux.paiement_refuse).length;
-  // Serveur plus ancien : signal absent, lu comme « non annulée ».
-  const annulees = aRelancer.filter((g) => !!g.signaux.annulee_par_client).length;
+  // Serveur plus ancien : signal absent, lu comme « non annulée ». Groupe à
+  // confirmer : c'est une commande précédente qui est annulée, pas celle-ci.
+  const annulees = aRelancer.filter((g) => !g.a_confirmer && !!g.signaux.annulee_par_client).length;
   const parts = [
     aConfirmer ? `${aConfirmer} à confirmer` : "",
     refuses ? `${refuses} ${accord(refuses, "paiement refusé", "paiements refusés")}` : "",
@@ -101,10 +158,11 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   const suffixe = parts.length ? `, dont ${parts.join(" et ")}` : "";
 
   if (n === 1) {
-    const { tete, signaux } = aRelancer[0];
+    const { tete, signaux, a_confirmer } = aRelancer[0];
     const motif = [
-      aRelancer[0].a_confirmer ? "paiement à la livraison, appeler pour confirmer" : "",
-      signaux.annulee_par_client ? "annulée par le client" : "",
+      a_confirmer ? "paiement à la livraison, appeler pour confirmer" : "",
+      textePaiementEnLigne(aRelancer[0], maintenant) ? "paiement en ligne en cours" : "",
+      !a_confirmer && signaux.annulee_par_client ? "annulée par le client" : "",
       signaux.paiement_refuse ? "paiement refusé" : "",
     ].filter(Boolean);
     return `1 commande à relancer : ${tete.client_nom}, ${fmtMontant(tete.amount)}, ${depuis(tete.created_at, maintenant)}${motif.length ? `, ${motif.join(", ")}` : ""}`;

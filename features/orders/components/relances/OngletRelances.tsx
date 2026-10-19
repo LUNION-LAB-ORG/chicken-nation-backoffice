@@ -16,7 +16,7 @@ import { GroupeRelance } from "../../types/relance.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import { estDuSite } from "../../utils/canal-commande";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
-import { reglesDe } from "../../utils/relance";
+import { avertissementRepriseEnLigne, reglesDe } from "../../utils/relance";
 import { repriseALaLivraison } from "../../utils/relance-actions";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
 import { LigneRelance } from "./LigneRelance";
@@ -147,6 +147,8 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const nbIgnorees = data?.compteurs?.ignorees ?? 0;
   // Commande du site à payer à la livraison : on confirme la commande, pas l'absence de débit.
   const aLaLivraison = !!aReprendre && repriseALaLivraison(aReprendre);
+  // Un autre panier du client se paie peut-être en ligne : le demander avant de transmettre.
+  const paiementEnLigne = aReprendre ? avertissementRepriseEnLigne(aReprendre, maintenant) : null;
 
   return (
     <div className="space-y-4">
@@ -225,10 +227,13 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
         title={aLaLivraison ? "Le client confirme sa commande ?" : "Le client confirme ne pas avoir été débité ?"}
         description={
           aLaLivraison ? (
-            <p>
-              Vérifiez l&apos;adresse, le repère et le moyen de paiement : espèces ou Mobile Money au livreur.
-              L&apos;enregistrement sur Call center transmet la commande au restaurant.
-            </p>
+            <>
+              <p>
+                Vérifiez l&apos;adresse, le repère et le moyen de paiement : espèces ou Mobile Money au livreur.
+                L&apos;enregistrement sur Call center transmet la commande au restaurant.
+              </p>
+              {paiementEnLigne && <p className="mt-2 font-semibold text-amber-800">{paiementEnLigne}</p>}
+            </>
           ) : (
             <>
               <p>

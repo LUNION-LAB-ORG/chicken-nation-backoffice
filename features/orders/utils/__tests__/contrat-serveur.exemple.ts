@@ -13,8 +13,9 @@ import type { BrouillonLigne, RelancesReponse } from "../../types/relance.types"
  * envoie, sans champ en trop ni en moins. Lu par `contrat-serveur.test.ts`.
  *
  * Trois clients : Yao (commande à confirmer de 4 h, puis une commande
- * confirmée : doublon possible), Awa (panier de l'application, puis commande
- * à confirmer : elle devient la tête), Blé (panier de l'application seul).
+ * confirmée : doublon possible), Awa (panier de l'application de 2 min, puis
+ * commande à confirmer : elle devient la tête, et le panier peut-être en
+ * train d'être payé est signalé), Blé (panier de l'application seul).
  */
 
 const ligne = (
@@ -47,12 +48,13 @@ const SIGNAUX_VIDES = {
   commande_recente: null,
   annulee_par_client: null,
   commande_suivante: null,
+  paiement_en_ligne_en_cours: null,
 };
 
 export const REPONSE_RELANCES = {
   maintenant: "2026-10-19T12:00:00.000Z",
   regles: { delai_minutes: 3, fenetre_heures: 3, duree_prise_minutes: 10, rappel_minutes: 5 },
-  prochaine_echeance: null,
+  prochaine_echeance: "2026-10-19T12:01:00.000Z",
   compteurs: { a_relancer: 3, pris: 0, pris_par_moi: 0, en_cours: 0, ignorees: 0, a_confirmer: 2 },
   groupes: [
     {
@@ -96,7 +98,7 @@ export const REPONSE_RELANCES = {
         ligne(
           "a0000000-0000-4000-8000-000000000001",
           "ORD-261019-00001",
-          "2026-10-19T11:50:00.000Z",
+          "2026-10-19T11:58:00.000Z",
           "Awa Koné",
           "0700000001",
           5050,
@@ -106,7 +108,10 @@ export const REPONSE_RELANCES = {
       ],
       alerte_le: null,
       prise: null,
-      signaux: SIGNAUX_VIDES,
+      signaux: {
+        ...SIGNAUX_VIDES,
+        paiement_en_ligne_en_cours: { reference: "ORD-261019-00001", jusqua: "2026-10-19T12:01:00.000Z" },
+      },
       crm: null,
     },
     {

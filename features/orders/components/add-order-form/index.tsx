@@ -73,6 +73,20 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     couponModif,
   } = useOrderForm(editOrder, { repriseTelephone });
 
+  // Livraison et frais à l'ouverture du formulaire. Commande du site à payer à
+  // la livraison reprise : ces frais restent tant que la livraison ne change
+  // pas (le serveur applique la même règle).
+  const [depart] = useState(() => formData);
+  const fraisFiges =
+    bascule?.montantFige === "site"
+      ? {
+          type: depart.type,
+          address: depart.address,
+          restaurant_id: depart.restaurant_id,
+          delivery_fee: depart.delivery_fee || 0,
+        }
+      : null;
+
   // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
   // des frais pour appliquer les offres de livraison à montant minimum (aperçu backoffice).
   const [subtotal, setSubtotal] = useState(0);
@@ -233,6 +247,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
             orderAmount={subtotal}
+            fraisFiges={fraisFiges}
           />
         </div>
       </div>

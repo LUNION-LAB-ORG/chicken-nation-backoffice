@@ -25,7 +25,7 @@ mock.module('@/services/api', () => ({
 
 const { REPONSE_RELANCES } = await import('./contrat-serveur.exemple');
 const { actionsRelance, repriseALaLivraison } = await import('../relance-actions');
-const { texteBandeau } = await import('../relance');
+const { texteBandeau, textePaiementEnLigne } = await import('../relance');
 const { relanceAPI } = await import('../../apis/relance.api');
 const { ignorerRelanceSchema } = await import('../../schemas/ignorer-relance.schema');
 
@@ -65,6 +65,17 @@ describe('contrat serveur : GET /orders/relances', () => {
       created_at: '2026-10-19T11:30:00.000Z',
     });
     expect(awa.signaux.commande_suivante).toBeNull();
+  });
+
+  test('paiement en ligne en cours : le panier de l’application d’Awa, jusqu’à la fin du délai', () => {
+    expect(awa.signaux.paiement_en_ligne_en_cours).toEqual({
+      reference: 'ORD-261019-00001',
+      jusqua: '2026-10-19T12:01:00.000Z',
+    });
+    expect(textePaiementEnLigne(awa, maintenant)).toContain('ORD-261019-00001');
+    expect([yao, ble].map((g) => g.signaux.paiement_en_ligne_en_cours)).toEqual([null, null]);
+    // La liste se relit à la fin du délai pour retirer le signal.
+    expect(REPONSE_RELANCES.prochaine_echeance).toBe('2026-10-19T12:01:00.000Z');
   });
 
   test('notification du système : « dont 2 à confirmer »', () => {

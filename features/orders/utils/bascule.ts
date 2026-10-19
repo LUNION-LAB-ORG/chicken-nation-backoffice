@@ -96,3 +96,37 @@ export function panierAnnuleParLeClient(
     !commande.paied
   );
 }
+
+/** Livraison telle que le formulaire la porte : ce qui décide des frais. */
+export interface LivraisonFormulaire {
+  type: string;
+  address: string;
+  restaurant_id?: string;
+}
+
+/**
+ * Frais de livraison à garder dans le formulaire, à chaque réponse de
+ * l'aperçu (`GET /orders/frais-livraison`).
+ *
+ * `fraisFiges` : reprise d'une commande du site à payer à la livraison
+ * (`apresBascule` donne `site`), avec la livraison et les frais de la
+ * commande. Le client a accepté ces frais sur le site : tant que l'adresse,
+ * le restaurant et le type restent ceux de la commande, ils restent, comme
+ * le serveur les garde (`OrderService.update`). L'aperçu ne connaît pas le
+ * client : une offre de livraison réservée à son niveau, ou limitée par
+ * client, y est sautée, et l'écran aurait affiché d'autres frais que ceux
+ * enregistrés. Livraison changée par l'agent, ou toute autre commande : les
+ * frais de l'aperçu.
+ */
+export function fraisLivraisonRetenus(
+  livraison: LivraisonFormulaire,
+  apercu: number,
+  fraisFiges?: (LivraisonFormulaire & { delivery_fee: number }) | null,
+): number {
+  if (!fraisFiges) return apercu;
+  const memeLivraison =
+    livraison.type === fraisFiges.type &&
+    (livraison.restaurant_id ?? "") === (fraisFiges.restaurant_id ?? "") &&
+    livraison.address.trim() === fraisFiges.address.trim();
+  return memeLivraison ? fraisFiges.delivery_fee : apercu;
+}
