@@ -20,9 +20,11 @@ interface OrigineSelectorProps {
    * serveur selon les mêmes règles (`OrderService.update`) :
    *  - `payee` : le client a déjà réglé, taxe comprise ;
    *  - `livraison` : la course est partie avec ce montant à encaisser ;
+   *  - `site` : commande du site à payer à la livraison, le client a accepté
+   *    ce total sur le site, frais de service compris ;
    *  - `null` : la taxe tombe à zéro et le total est recalculé.
    */
-  montantFige?: "payee" | "livraison" | null;
+  montantFige?: "payee" | "livraison" | "site" | null;
   /**
    * Ce que la bascule fait du paiement, mêmes règles :
    *  - `caisse` : payable dans l'application et pas soldée, la caisse
@@ -55,6 +57,12 @@ interface OrigineSelectorProps {
    * erreur. Le canal lui-même ne change jamais, quel que soit le choix.
    */
   duSite?: boolean;
+  /**
+   * Commande du site à payer à la livraison, encore à confirmer. Restée sur
+   * « Site web », elle n'arrive jamais au restaurant : seule la bascule au
+   * call center la lui transmet.
+   */
+  aConfirmer?: boolean;
 }
 
 type Origine = { auto: boolean; label: string; desc: string; icon: LucideIcon };
@@ -86,6 +94,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
   brouillon = false,
   annuleeParClient = false,
   duSite = false,
+  aConfirmer = false,
 }) => {
   const origines = [CALL_CENTER, duSite ? SITE_WEB : APPLICATION];
   // Où le client paierait en ligne : repris dans les avertissements.
@@ -158,7 +167,9 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
               Passer au call center ne change <strong className="font-semibold">ni la taxe ni le total</strong> :{" "}
               {montantFige === "payee"
                 ? "la commande est déjà payée."
-                : "la livraison est déjà lancée avec ce montant à encaisser."}
+                : montantFige === "site"
+                  ? "le client les a acceptés sur le site."
+                  : "la livraison est déjà lancée avec ce montant à encaisser."}
             </>
           )}
           {paiementApresBascule === "caisse" && (
@@ -190,6 +201,11 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
         <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
           Pour reprendre la commande au téléphone, choisissez Call center. Sinon, elle reste un panier non payé
           que le restaurant ne voit pas.
+        </p>
+      )}
+      {aConfirmer && auto && (
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] leading-relaxed text-amber-900">
+          Pour transmettre la commande au restaurant, choisissez Call center.
         </p>
       )}
     </div>

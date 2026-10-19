@@ -1,5 +1,6 @@
 import { api } from "@/services/api";
 import {
+  AnnulerRelanceDTO,
   GroupeRelance,
   IgnoreesReponse,
   IgnorerRelanceDTO,
@@ -43,4 +44,12 @@ export const relanceAPI = {
 
   retablir: (orderId: string) =>
     avecIntrouvable(api.post<{ ok: true; hors_fenetre: boolean }>(chemin(orderId, "retablir"), {})),
+
+  /**
+   * « Annuler la commande » : seulement une commande du site à payer à la
+   * livraison, encore à confirmer. 409 si elle ne l'est plus (un collègue
+   * vient de la reprendre) ou si un collègue s'en occupe.
+   */
+  annuler: (orderId: string, dto: AnnulerRelanceDTO) =>
+    avecIntrouvable(api.post<{ ok: true }>(chemin(orderId, "annuler"), dto)),
 };

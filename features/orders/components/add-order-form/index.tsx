@@ -10,68 +10,18 @@ import { useOrderForm } from "../../hooks/useOrderForm";
 import { OrderStatus, OrderType } from "../../types/order.types";
 import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderTable } from "../../types/ordersTable.types";
-import { PaiementStatus } from "../../types/paiement.types";
 import CouponSection, { CouponIndisponible, CouponLectureSeule } from "./CouponSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
 import OrigineSelector from "./OrigineSelector";
+import { apresBascule, estAConfirmer, panierAnnuleParLeClient } from "../../utils/bascule";
 import { estDuSite } from "../../utils/canal-commande";
 import { MESSAGE_COMMANDE_PAYEE } from "../../utils/modification-coupon";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
-}
-
-/**
- * Ce que deviendra la commande si elle passe au call center. Miroir des règles
- * du serveur (`OrderService.update`, reprise par le personnel).
- *
- * Le MONTANT reste tel quel quand il est déjà engagé : commande payée, ou
- * commande à livrer prête ou plus loin (la course est partie avec ce montant
- * à encaisser).
- *
- * Le PAIEMENT passe à la caisse quand la commande était payable dans
- * l'application, qu'il reste à payer, et qu'aucun encaissement de livreur
- * n'attend sa confirmation. Un paiement en ligne partiel ne l'empêche pas :
- * la caisse encaisse le reste. `paymentChannel` vaut « Appli » pour une
- * commande de l'application payable en ligne.
- */
-function apresBascule(commande: OrderTable): {
-  montantFige: "payee" | "livraison" | null;
-  paiement: "caisse" | "livreur" | "inchange";
-} {
-  const livraisonLancee =
-    commande.orderType === "À livrer" &&
-    commande.rawStatus !== OrderStatus.PENDING &&
-    commande.rawStatus !== OrderStatus.ACCEPTED &&
-    commande.rawStatus !== OrderStatus.IN_PROGRESS;
-  const montantFige = commande.paied ? "payee" : livraisonLancee ? "livraison" : null;
-
-  const paiements = commande.paiements ?? [];
-  const dejaPercu = paiements
-    .filter((p) => p.status === PaiementStatus.SUCCESS)
-    .reduce((somme, p) => somme + (p.total ?? p.amount ?? 0), 0);
-  let paiement: "caisse" | "livreur" | "inchange" = "inchange";
-  if (commande.paymentChannel === "Appli" && !commande.paied && commande.amount - dejaPercu > 50) {
-    paiement = paiements.some((p) => p.status === PaiementStatus.PENDING) ? "livreur" : "caisse";
-  }
-  return { montantFige, paiement };
-}
-
-/**
- * Panier de l'application annulé par son client sans avoir payé : le seul
- * cas où une commande annulée se reprend au téléphone. Le serveur reste juge
- * (409 si le panier n'est plus relançable).
- */
-function panierAnnuleParLeClient(commande: OrderTable): boolean {
-  return (
-    commande.rawStatus === OrderStatus.CANCELLED &&
-    commande.auto &&
-    commande.paymentChannel === "Appli" &&
-    !commande.paied
-  );
 }
 
 /** Carte blanche standard des sections du formulaire. */
@@ -83,8 +33,9 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const repriseTelephoneId = useDashboardStore((s) => s.repriseTelephoneId);
   const setRepriseTelephone = useDashboardStore((s) => s.setRepriseTelephone);
   // Jamais sur une commande annulée (la reprise bascule l'origine, voir plus
-  // bas), SAUF le panier annulé par le client : « Reprendre au téléphone »
-  // n'existe que dans « À relancer », qui ne montre d'annulées que celles-là.
+  // bas), SAUF le panier annulé par le client (application, ou site à payer
+  // à la livraison) : « Reprendre au téléphone » n'existe que dans « À
+  // relancer », qui ne montre d'annulées que celles-là.
   const [repriseTelephone] = useState(
     () =>
       !!editOrder &&
@@ -102,7 +53,8 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // modification d'une annulée la laisse annulée.
   const reactivation = repriseTelephone && annulee;
   // Après réactivation, la commande part comme un panier en attente repris :
-  // taxe à zéro, total refait, paiement à la caisse. Le calcul se fait donc
+  // taxe à zéro, total refait, paiement à la caisse ; une commande du site à
+  // payer à la livraison garde sa taxe et son total. Le calcul se fait donc
   // sur le statut d'avant l'annulation, jamais sur « annulée ».
   const bascule = editOrder
     ? apresBascule(reactivation ? { ...editOrder, rawStatus: OrderStatus.PENDING } : editOrder)
@@ -255,6 +207,9 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
                 editOrder.rawStatus === OrderStatus.PENDING &&
                 !editOrder.paied
               }
+              // Commande du site à payer à la livraison, encore à confirmer :
+              // seule la bascule au call center la transmet au restaurant.
+              aConfirmer={estAConfirmer(editOrder)}
               onChange={(auto) => setFormData({ ...formData, auto })}
             />
           </div>

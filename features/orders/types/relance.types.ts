@@ -1,5 +1,7 @@
 /**
- * Relance des paniers de l'application restés en attente de paiement.
+ * Relance des paniers de l'application restés en attente de paiement, et des
+ * commandes du site à payer à la livraison que le centre d'appels doit
+ * confirmer.
  *
  * Miroir du contrat du serveur (`GET /orders/relances` et ses actions,
  * backend/src/modules/order/controllers/order-relance.controller.ts). L'état
@@ -35,9 +37,14 @@ export interface CompteursRelance {
   en_cours: number;
   ignorees: number;
   sorties?: number;
+  /**
+   * Groupes à relancer ou pris dont la tête est une commande du site à payer
+   * à la livraison, à confirmer. Absent d'un serveur plus ancien.
+   */
+  a_confirmer?: number;
 }
 
-/** Un panier non payé (brouillon) de l'application. */
+/** Un panier non payé (brouillon) de l'application, ou une commande du site à confirmer. */
 export interface BrouillonLigne {
   id: string;
   reference: string;
@@ -60,6 +67,12 @@ export interface BrouillonLigne {
    * une commande antérieure au canal, absent d'un serveur plus ancien.
    */
   channel?: CanalCommande | string | null;
+  /**
+   * Commande du site à payer à la livraison (WEB, OFFLINE), confirmée ou non,
+   * annulée par le client ou non. Absent d'un serveur plus ancien : lu comme
+   * `false`.
+   */
+  paiement_a_la_livraison?: boolean;
 }
 
 export interface PriseRelance {
@@ -81,11 +94,21 @@ export interface SignauxRelance {
    * annulé le plus récent du groupe. Absent d'un serveur plus ancien.
    */
   annulee_par_client: { le: string } | null;
+  /**
+   * Seulement si la tête est à confirmer : première commande effective, non
+   * annulée, du même client, passée APRÈS elle. Doublon probable (panier payé
+   * en ligne entre-temps, ou seconde commande déjà confirmée). Absent d'un
+   * serveur plus ancien.
+   */
+  commande_suivante?: { reference: string; created_at: string } | null;
 }
 
 /** Les paniers d'un même client (même compte ou même numéro) : une alerte, un appel. */
 export interface GroupeRelance {
-  /** Identifiant de la tête (panier le plus récent non ignoré). */
+  /**
+   * Identifiant de la tête : la commande à confirmer s'il y en a une, sinon le
+   * panier le plus récent non ignoré.
+   */
   cle: string;
   etat: EtatRelance;
   tete: BrouillonLigne;
@@ -94,6 +117,12 @@ export interface GroupeRelance {
   prise: PriseRelance | null;
   signaux: SignauxRelance;
   crm: { contact_id: string; statut: string; agent: string | null } | null;
+  /**
+   * La tête est une commande du site à payer à la livraison, que personne n'a
+   * encore confirmée : jamais « Paiement en cours », jamais ignorable, placée
+   * en tête des groupes à relancer. Absent d'un serveur plus ancien.
+   */
+  a_confirmer?: boolean;
 }
 
 export interface RelancesReponse {
@@ -103,7 +132,10 @@ export interface RelancesReponse {
   /** Prochain passage d'un paiement en cours au délai, ou prochaine fin de prise. */
   prochaine_echeance: string | null;
   compteurs: CompteursRelance;
-  /** Triés par le serveur : pris par moi, à relancer (plus ancien d'abord), pris par d'autres, en cours. */
+  /**
+   * Triés par le serveur : pris par moi, à confirmer, à relancer (plus ancien
+   * d'abord), pris par d'autres, en cours.
+   */
   groupes: GroupeRelance[];
 }
 
@@ -126,6 +158,9 @@ export interface IgnorerRelanceDTO {
   raison_texte?: string;
 }
 
+/** « Annuler la commande » (commande à confirmer) : mêmes raisons qu'« Ignorer ». */
+export type AnnulerRelanceDTO = IgnorerRelanceDTO;
+
 /** Charge de l'événement `relance:changed` : aucune donnée personnelle. */
 export interface RelanceChangeeEvenement {
   motif:
@@ -137,7 +172,8 @@ export interface RelanceChangeeEvenement {
     | "liberation"
     | "ignore"
     | "retablissement"
-    | "reprise";
+    | "reprise"
+    | "annulation";
   ids: string[];
   /** Seulement pour `alerte` : têtes de groupe qui viennent de passer le délai. */
   nouvelles?: string[];

@@ -78,16 +78,23 @@ export function aLHeure(iso: string, maintenant: number): string {
  */
 export const cleAlerte = (g: Pick<GroupeRelance, "tete" | "alerte_le">) => `${g.tete.id}@${g.alerte_le ?? ""}`;
 
-/** « 1 commande à relancer : Anne Marie Aka, 5 050 F, depuis 4 min » ou le résumé de plusieurs. */
+/**
+ * « 1 commande à relancer : Anne Marie Aka, 5 050 F, depuis 4 min » ou le
+ * résumé de plusieurs. Une commande du site à payer à la livraison le dit :
+ * l'agent appelle pour la confirmer, pas pour un paiement.
+ */
 export function texteBandeau(groupes: GroupeRelance[], maintenant: number): string {
   const aRelancer = groupes.filter((g) => g.etat === "A_RELANCER");
   const n = aRelancer.length;
   if (n === 0) return "";
 
+  // Serveur plus ancien : champ absent, lu comme « pas à confirmer ».
+  const aConfirmer = aRelancer.filter((g) => !!g.a_confirmer).length;
   const refuses = aRelancer.filter((g) => g.signaux.paiement_refuse).length;
   // Serveur plus ancien : signal absent, lu comme « non annulée ».
   const annulees = aRelancer.filter((g) => !!g.signaux.annulee_par_client).length;
   const parts = [
+    aConfirmer ? `${aConfirmer} à confirmer` : "",
     refuses ? `${refuses} ${accord(refuses, "paiement refusé", "paiements refusés")}` : "",
     annulees ? `${annulees} ${accord(annulees, "annulée", "annulées")} par le client` : "",
   ].filter(Boolean);
@@ -96,6 +103,7 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   if (n === 1) {
     const { tete, signaux } = aRelancer[0];
     const motif = [
+      aRelancer[0].a_confirmer ? "paiement à la livraison, appeler pour confirmer" : "",
       signaux.annulee_par_client ? "annulée par le client" : "",
       signaux.paiement_refuse ? "paiement refusé" : "",
     ].filter(Boolean);

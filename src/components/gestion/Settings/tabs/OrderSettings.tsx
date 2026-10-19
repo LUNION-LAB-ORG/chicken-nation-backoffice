@@ -4,7 +4,19 @@ import React, { useState, useEffect } from "react";
 import { useSettingsQuery, useSettingMutation } from "@/hooks/useSettingsQuery";
 import { CheckCircle } from "lucide-react";
 
-const ORDER_KEYS = [
+interface IOrderField {
+  key: string;
+  label: string;
+  /** Pour un `<select>` : la valeur du serveur quand la clé est absente en base. */
+  placeholder: string;
+  type?: string;
+  step?: string;
+  hint?: string;
+  /** Si fourni : rendu en `<select>`, sur le modèle de DeliverySettings. */
+  options?: { value: string; label: string }[];
+}
+
+const ORDER_KEYS: IOrderField[] = [
   {
     key: "order_tax_rate",
     label: "Taux de taxe (%)",
@@ -20,6 +32,18 @@ const ORDER_KEYS = [
     type: "number",
     step: "100",
     hint: "Montant minimum de frais de livraison",
+  },
+  {
+    // Lu par le serveur (création sur le site et `GET /orders/conditions-commande`) :
+    // absent = proposé, « 0 » = paiement en ligne seulement.
+    key: "order_paiement_livraison_site",
+    label: "Paiement à la livraison sur le site",
+    placeholder: "1",
+    hint: "Oui : pour une commande livrée, le client peut payer au livreur. La commande arrive dans « À relancer » et le centre d'appels l'appelle pour la confirmer. Choisissez Non si personne ne peut appeler.",
+    options: [
+      { value: "0", label: "Non : paiement en ligne seulement" },
+      { value: "1", label: "Oui : proposé pour les livraisons" },
+    ],
   },
 ];
 
@@ -79,14 +103,26 @@ const OrderSettings: React.FC = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               {field.label}
             </label>
-            <input
-              type={field.type}
-              step={field.step}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-              placeholder={field.placeholder}
-              value={values[field.key] ?? ""}
-              onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-            />
+            {field.options ? (
+              <select
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white"
+                value={values[field.key] ?? field.placeholder}
+                onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+              >
+                {field.options.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type}
+                step={field.step}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                placeholder={field.placeholder}
+                value={values[field.key] ?? ""}
+                onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+              />
+            )}
             {field.hint && (
               <p className="text-xs text-gray-400 mt-1">{field.hint}</p>
             )}

@@ -31,6 +31,11 @@ function LigneIgnoree({ ligne, maintenant }: { ligne: IgnoreeLigne; maintenant: 
               Site web
             </span>
           )}
+          {ligne.paiement_a_la_livraison && (
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+              À la livraison
+            </span>
+          )}
           {ligne.annulee_par_client && (
             <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
               Annulée par le client

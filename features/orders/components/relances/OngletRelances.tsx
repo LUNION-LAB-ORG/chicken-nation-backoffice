@@ -17,6 +17,7 @@ import { OrderTable } from "../../types/ordersTable.types";
 import { estDuSite } from "../../utils/canal-commande";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import { reglesDe } from "../../utils/relance";
+import { repriseALaLivraison } from "../../utils/relance-actions";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
 import { LigneRelance } from "./LigneRelance";
 import { ListeIgnorees } from "./ListeIgnorees";
@@ -49,9 +50,12 @@ const Section = ({
 
 /**
  * Onglet « À relancer » de la page Commandes (ADMIN, centre d'appels) : les
- * paniers de l'application restés sans paiement, regroupés par client.
+ * paniers de l'application restés sans paiement, et les commandes du site à
+ * payer à la livraison que l'équipe doit confirmer, regroupés par client.
  * L'état de chaque groupe vient du serveur ; l'écran ne filtre que par
  * restaurant (une seule lecture « tous restaurants » pour toute l'interface).
+ * Pas de section à part pour les commandes à confirmer : le serveur les range
+ * en tête de « À relancer ».
  */
 export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const { data, isLoading, isError, refetch } = useRelancesQuery();
@@ -61,7 +65,8 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const maintenant = useHorlogeRelances();
 
   const [voirIgnorees, setVoirIgnorees] = useState(false);
-  const [aIgnorer, setAIgnorer] = useState<GroupeRelance | null>(null);
+  // « Ignorer » ou « Annuler la commande » : la même fenêtre, avec ses raisons.
+  const [aEcarter, setAEcarter] = useState<{ groupe: GroupeRelance; mode: "ignorer" | "annuler" } | null>(null);
   const [aReprendre, setAReprendre] = useState<GroupeRelance | null>(null);
   const [repriseCle, setRepriseCle] = useState<string | null>(null);
   const prendre = usePrendreRelance();
@@ -88,6 +93,10 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
    * Limite connue : un paiement accepté par l'opérateur mais jamais signalé
    * (ni webhook ni retour de l'application) est invisible ici. Seul le
    * client peut dire s'il a été débité, d'où la confirmation.
+   *
+   * Commande du site à payer à la livraison : personne n'a payé en ligne. La
+   * confirmation porte sur la commande elle-même, et c'est l'enregistrement
+   * sur « Call center » qui la transmet au restaurant.
    */
   const reprendre = async (g: GroupeRelance) => {
     setAReprendre(null);
@@ -101,13 +110,16 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
       try {
         const commande = await getOrderById(g.tete.id);
         onReprendre(mapApiOrderToUiOrder(commande));
-        // Panier annulé par le client : il ne peut plus payer en ligne,
-        // c'est l'enregistrement qui le réactive. Panier du site : le client
-        // paierait sur le site, pas dans l'application.
+        // Paiement à la livraison : rien à payer en ligne, l'enregistrement
+        // transmet la commande. Panier annulé par le client : il ne peut plus
+        // payer en ligne, c'est l'enregistrement qui le réactive. Panier du
+        // site : le client paierait sur le site, pas dans l'application.
         toast(
-          g.tete.annulee_par_client
-            ? "Commande annulée par le client : l'enregistrer la réactive, paiement à la caisse."
-            : `Prévenez le client : il ne doit plus payer ${estDuSite(commande) ? "sur le site" : "dans l'application"}.`,
+          repriseALaLivraison(g)
+            ? "Enregistrez sur Call center pour transmettre la commande au restaurant."
+            : g.tete.annulee_par_client
+              ? "Commande annulée par le client : l'enregistrer la réactive, paiement à la caisse."
+              : `Prévenez le client : il ne doit plus payer ${estDuSite(commande) ? "sur le site" : "dans l'application"}.`,
           { icon: "📞", duration: 8000 },
         );
       } catch (e) {
@@ -125,13 +137,16 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
       maintenant={maintenant}
       estAdmin={estAdmin}
       onOuvrir={onOuvrir}
-      onIgnorer={setAIgnorer}
+      onIgnorer={(groupe) => setAEcarter({ groupe, mode: "ignorer" })}
+      onAnnuler={(groupe) => setAEcarter({ groupe, mode: "annuler" })}
       onReprendre={setAReprendre}
       repriseEnCours={repriseCle === g.cle}
     />
   );
 
   const nbIgnorees = data?.compteurs?.ignorees ?? 0;
+  // Commande du site à payer à la livraison : on confirme la commande, pas l'absence de débit.
+  const aLaLivraison = !!aReprendre && repriseALaLivraison(aReprendre);
 
   return (
     <div className="space-y-4">
@@ -182,7 +197,8 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
         </div>
       ) : groupes.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-          Aucune commande à relancer. Les paniers non payés apparaissent ici {regles.delai_minutes} min après leur création.
+          Aucune commande à relancer. Les paniers non payés apparaissent ici {regles.delai_minutes} min après leur
+          création, les commandes à payer à la livraison tout de suite.
         </p>
       ) : (
         <div className="space-y-6">
@@ -200,26 +216,33 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
         </div>
       )}
 
-      <ModaleIgnorerRelance groupe={aIgnorer} onClose={() => setAIgnorer(null)} />
+      <ModaleIgnorerRelance groupe={aEcarter?.groupe ?? null} mode={aEcarter?.mode} onClose={() => setAEcarter(null)} />
 
       <ConfirmDialog
         isOpen={!!aReprendre}
         onClose={() => setAReprendre(null)}
         onConfirm={() => aReprendre && void reprendre(aReprendre)}
-        title="Le client confirme ne pas avoir été débité ?"
+        title={aLaLivraison ? "Le client confirme sa commande ?" : "Le client confirme ne pas avoir été débité ?"}
         description={
-          <>
+          aLaLivraison ? (
             <p>
-              Demandez-lui de vérifier qu&apos;aucun débit n&apos;apparaît sur son téléphone pour{" "}
-              {aReprendre?.tete.reference}.
+              Vérifiez l&apos;adresse, le repère et le moyen de paiement : espèces ou Mobile Money au livreur.
+              L&apos;enregistrement sur Call center transmet la commande au restaurant.
             </p>
-            <p className="mt-2">
-              Un paiement accepté par l&apos;opérateur mais jamais signalé à l&apos;application ne se voit pas ici :
-              s&apos;il a été débité, ne reprenez pas la commande et prévenez un administrateur.
-            </p>
-          </>
+          ) : (
+            <>
+              <p>
+                Demandez-lui de vérifier qu&apos;aucun débit n&apos;apparaît sur son téléphone pour{" "}
+                {aReprendre?.tete.reference}.
+              </p>
+              <p className="mt-2">
+                Un paiement accepté par l&apos;opérateur mais jamais signalé à l&apos;application ne se voit pas ici :
+                s&apos;il a été débité, ne reprenez pas la commande et prévenez un administrateur.
+              </p>
+            </>
+          )
         }
-        confirmLabel="Oui, reprendre la commande"
+        confirmLabel={aLaLivraison ? "Oui, la transmettre" : "Oui, reprendre la commande"}
         cancelLabel="Annuler"
       />
     </div>

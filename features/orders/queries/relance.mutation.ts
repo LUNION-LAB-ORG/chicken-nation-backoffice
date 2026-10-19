@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { relanceAPI } from "../apis/relance.api";
-import { IgnorerRelanceDTO, RelancesReponse } from "../types/relance.types";
+import { AnnulerRelanceDTO, IgnorerRelanceDTO, RelancesReponse } from "../types/relance.types";
 import { reglesDe, sansPointFinal } from "../utils/relance";
+import { orderKeyQuery } from "./index.query";
 import { RELANCES_CLE, useInvalidateRelances } from "./relance.query";
 
 type ErreurApi = Error & { status?: number };
@@ -54,6 +55,28 @@ export const useIgnorerRelance = () => {
     onSuccess: () => {
       void invalider();
       toast.success("Commande ignorée pour toute l'équipe");
+    },
+    onError: (e: ErreurApi) => {
+      toast.error(e.message);
+      void invalider();
+    },
+  });
+};
+
+/**
+ * « Annuler la commande » : commande du site à payer à la livraison que le
+ * client ne confirme pas. Toutes les listes de commandes sont relues (la
+ * relance en fait partie). Un 409 (reprise par un collègue, prise d'un
+ * collègue) affiche le message du serveur.
+ */
+export const useAnnulerRelance = () => {
+  const queryClient = useQueryClient();
+  const invalider = () => queryClient.invalidateQueries({ queryKey: orderKeyQuery(), exact: false });
+  return useMutation({
+    mutationFn: ({ orderId, dto }: { orderId: string; dto: AnnulerRelanceDTO }) => relanceAPI.annuler(orderId, dto),
+    onSuccess: () => {
+      void invalider();
+      toast.success("Commande annulée.");
     },
     onError: (e: ErreurApi) => {
       toast.error(e.message);
