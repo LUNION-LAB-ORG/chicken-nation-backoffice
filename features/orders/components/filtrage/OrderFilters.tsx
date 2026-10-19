@@ -6,6 +6,7 @@ import { dateRangeToLocalString } from "../../../../utils/date/format-date";
 import DateRangePicker from "@/components/ui/DateRangePicker";
 import { useAuthStore } from "../../../users/hook/authStore";
 import { peutVoirLesBrouillons } from "../../utils/brouillons";
+import { OPTIONS_SOURCE } from "../../utils/filtre-source";
 
 export function OrderFilters() {
   const {
@@ -44,11 +45,8 @@ export function OrderFilters() {
     { id: OrderStatus.CANCELLED, label: "Annulées", icon: "❌" },
   ];
 
-  const filtragesSource = [
-    { id: "", label: "Toutes les sources", icon: "🌐" },
-    { id: "auto", label: "Par application", icon: "📱" },
-    { id: "mannuel", label: "Par téléphone", icon: "☎️" },
-  ];
+  // Options et paramètres envoyés au serveur : utils/filtre-source.ts.
+  const filtragesSource = OPTIONS_SOURCE;
 
   const handleFilterTypeChange = useCallback(
     (filter: string) => {

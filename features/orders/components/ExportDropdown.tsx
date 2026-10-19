@@ -13,6 +13,7 @@ import {
   exportMarketingReportPdf,
 } from "../services/order-service";
 import { OrderStatus, OrderType } from "../types/order.types";
+import { parametresSource } from "../utils/filtre-source";
 
 interface ExportDropdownProps {
   className?: string;
@@ -72,11 +73,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         endDate: endDate.toISOString(),
         type: filters?.type ? (filters?.type as OrderType) : undefined,
         status: filters?.status ? (filters?.status as OrderStatus) : undefined,
-        auto: filters?.source
-          ? filters?.source === "auto"
-            ? true
-            : false
-          : undefined,
+        ...parametresSource(filters?.source),
       });
       toast.success("Export Excel - À implémenter");
     } catch (error) {
@@ -110,11 +107,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         endDate: endDate.toISOString(),
         type: filters?.type ? (filters?.type as OrderType) : undefined,
         status: filters?.status ? (filters?.status as OrderStatus) : undefined,
-        auto: filters?.source
-          ? filters?.source === "auto"
-            ? true
-            : false
-          : undefined,
+        ...parametresSource(filters?.source),
       });
       toast.success("Rapport livraisons par restaurant exporté avec succès");
     } catch (error) {
@@ -149,11 +142,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         endDate: endDate.toISOString(),
         type: filters?.type ? (filters?.type as OrderType) : undefined,
         status: filters?.status ? (filters?.status as OrderStatus) : undefined,
-        auto: filters?.source
-          ? filters?.source === "auto"
-            ? true
-            : false
-          : undefined,
+        ...parametresSource(filters?.source),
       });
       toast.success("Export livraisons (Turbo) téléchargé avec succès");
     } catch (error) {
@@ -187,11 +176,7 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
         endDate: endDate.toISOString(),
         type: filters?.type ? (filters?.type as OrderType) : undefined,
         status: filters?.status ? (filters?.status as OrderStatus) : undefined,
-        auto: filters?.source
-          ? filters?.source === "auto"
-            ? true
-            : false
-          : undefined,
+        ...parametresSource(filters?.source),
       });
       toast.success("Rapport marketing PDF téléchargé avec succès");
     } catch (error) {

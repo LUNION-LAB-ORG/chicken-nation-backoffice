@@ -9,6 +9,7 @@ import { Promotion, PromotionUsage } from "../../promotion/types/promotion.types
 import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Paiement } from "./paiement.types";
 import type { CanalCommande } from "../utils/canal-commande";
+import type { SourceServeur } from "../utils/filtre-source";
 
 // ✅ ENUMS
 export enum OrderStatus {
@@ -205,6 +206,8 @@ export interface OrderQuery {
     status?: OrderStatus;
     type?: OrderType;
     auto?: boolean;
+    /** Filtre « source » : site, appli ou telephone ; prime sur `auto` (utils/filtre-source.ts). */
+    source?: SourceServeur;
     customerId?: string;
     restaurantId?: string;
     startDate?: string;

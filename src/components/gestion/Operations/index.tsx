@@ -44,6 +44,7 @@ import { OngletRelances } from "../../../../features/orders/components/relances/
 import { useRelancesQuery } from "../../../../features/orders/queries/relance.query";
 import { demanderPermissionNotifications } from "../../../../features/orders/hooks/useSonRelances";
 import { peutVoirLesBrouillons } from "../../../../features/orders/utils/brouillons";
+import { parametresSource } from "../../../../features/orders/utils/filtre-source";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -252,7 +253,8 @@ export default function Operations() {
       : undefined,
     type:   filters?.type   ? (filters.type   as OT)          : undefined,
     status: filters?.status ? (filters.status  as OrderStatus) : undefined,
-    auto:   filters?.source ? filters.source === "auto"        : undefined,
+    // « Source » : `source` (et `auto` pour un serveur plus ancien).
+    ...parametresSource(filters?.source),
   });
 
   return (
