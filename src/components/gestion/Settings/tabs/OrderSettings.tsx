@@ -106,7 +106,8 @@ const OrderSettings: React.FC = () => {
             {field.options ? (
               <select
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white"
-                value={values[field.key] ?? field.placeholder}
+                // Absente ou vide, la clé vaut ce que le serveur applique alors (`placeholder`).
+                value={values[field.key] || field.placeholder}
                 onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
               >
                 {field.options.map((o) => (
