@@ -100,6 +100,23 @@ export function pastilleAnnulation(
 }
 
 /**
+ * Pastille « commande récente » : le même client a passé une commande peu
+ * avant, doublon probable. Elle ne parle de paiement que si cette commande
+ * est payée (recette du 20/10 : « A déjà payé » pour une commande du site
+ * confirmée, à payer au livreur). Serveur plus ancien, sans `payee` : on ne
+ * dit pas « payé ».
+ */
+export function texteCommandeRecente(
+  g: Pick<GroupeRelance, "signaux">,
+  maintenant: number,
+): string | null {
+  const s = g.signaux.commande_recente ?? null;
+  if (!s) return null;
+  const verbe = s.payee === true ? "A déjà payé" : "A déjà commandé";
+  return `${verbe} ${s.reference} ${ilYa(s.created_at, maintenant)} : vérifiez avant d'appeler`;
+}
+
+/**
  * Commande à confirmer dont un autre panier du même client se paie peut-être
  * en ligne en ce moment (signal du serveur, jusqu'à la fin du délai) : texte
  * de la pastille, ou null. Transmettre la commande à confirmer pendant ce

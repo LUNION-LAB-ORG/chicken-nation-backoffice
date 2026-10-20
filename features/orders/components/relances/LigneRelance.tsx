@@ -10,7 +10,7 @@ import { demanderPermissionNotifications } from "../../hooks/useSonRelances";
 import { useLibererRelance, usePrendreRelance } from "../../queries/relance.mutation";
 import { BrouillonLigne, GroupeRelance } from "../../types/relance.types";
 import { estDuSite } from "../../utils/canal-commande";
-import { aLHeure, depuis, ilYa, pastilleAnnulation, reste, textePaiementEnLigne } from "../../utils/relance";
+import { aLHeure, depuis, pastilleAnnulation, reste, texteCommandeRecente, textePaiementEnLigne } from "../../utils/relance";
 import { actionsRelance } from "../../utils/relance-actions";
 
 interface Props {
@@ -125,6 +125,8 @@ export function LigneRelance({
   const enLigne = textePaiementEnLigne(groupe, maintenant);
   // Seulement sur une commande à confirmer ; absent d'un serveur plus ancien.
   const suivante = signaux.commande_suivante ?? null;
+  // « A déjà payé » seulement si cette commande est payée.
+  const recente = texteCommandeRecente(groupe, maintenant);
   const actions = actionsRelance(groupe, { estAdmin });
 
   return (
@@ -191,7 +193,7 @@ export function LigneRelance({
       </div>
 
       {/* Signaux */}
-      {(annulee || enLigne || signaux.paiement_refuse || partiel || signaux.commande_recente || suivante || groupe.crm) && (
+      {(annulee || enLigne || signaux.paiement_refuse || partiel || recente || suivante || groupe.crm) && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {enLigne && (
             <Pastille ton="ambre">
@@ -216,12 +218,7 @@ export function LigneRelance({
               Paiement partiel : {fmtMontant(partiel.recu)} reçus sur {fmtMontant(partiel.montant)}
             </Pastille>
           )}
-          {signaux.commande_recente && (
-            <Pastille ton="ambre">
-              A déjà payé {signaux.commande_recente.reference}{" "}
-              {ilYa(signaux.commande_recente.created_at, maintenant)} : vérifiez avant d&apos;appeler
-            </Pastille>
-          )}
+          {recente && <Pastille ton="ambre">{recente}</Pastille>}
           {suivante && (
             <Pastille ton="ambre">
               Autre commande {suivante.reference} {aLHeure(suivante.created_at, maintenant)} : doublon possible,

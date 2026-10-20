@@ -2,6 +2,7 @@ import { Order, OrderStatus, OrderType } from "../types/order.types";
 import { OrderTable, OrderTableItem, OrderTableStatus, OrderTableType, PaymentStatus } from "../types/ordersTable.types";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { Paiement } from "../types/paiement.types";
+import { adresseBrute, libelleAdresse } from "./adresse-commande";
 
 
 // ========================================
@@ -56,29 +57,6 @@ const extractClientName = (order: Order): string => {
   }
 
   return fullname || "Client inconnu";
-};
-
-const extractAddress = (addressString: string | null): string => {
-  if (!addressString) return "Adresse non disponible";
-
-  try {
-    const parsed = JSON.parse(addressString);
-
-    // Si formattedAddress existe, l'utiliser directement
-    if (parsed.formattedAddress) return parsed.formattedAddress;
-
-    // Sinon construire l'adresse
-    const parts = [
-      parsed.title,
-      parsed.address || parsed.road,
-      parsed.city,
-      parsed.postalCode
-    ].filter(Boolean);
-
-    return parts.length > 0 ? parts.join(", ") : "Adresse non disponible";
-  } catch {
-    return addressString;
-  }
 };
 
 const extractPaymentMethod = (paiements?: Paiement[]): string => {
@@ -292,8 +270,10 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     discount: order.discount,
 
     // Livraison/Table
-    address: extractAddress(order.address),
-    rawAddress: order.address,
+    // Toujours du texte, même si le serveur renvoie l'adresse en objet
+    // (colonne JSON) : un objet rendu dans la page fait planter la liste.
+    address: libelleAdresse(order.address),
+    rawAddress: adresseBrute(order.address),
     deliveryService: DELIVERY_SERVICE_MAP[order.delivery_service] || order.delivery_service,
     estimatedDeliveryTime: order.estimated_delivery_time,
     estimatedPreparationTime: order.estimated_preparation_time,

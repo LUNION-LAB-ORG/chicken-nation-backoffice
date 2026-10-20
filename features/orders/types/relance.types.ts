@@ -87,8 +87,12 @@ export interface SignauxRelance {
   paiement_refuse: boolean;
   /** Paiements réussis qui ne couvrent pas le montant : le client a payé une partie. */
   paiement_partiel?: { recu: number; montant: number } | null;
-  /** Commande payée juste avant le panier : doublon probable, à vérifier avant d'appeler. */
-  commande_recente: { reference: string; created_at: string } | null;
+  /**
+   * Commande du même client juste avant le panier : doublon probable, à
+   * vérifier avant d'appeler. `payee` : elle est payée (sinon : espèces, ou
+   * à payer à la livraison). Absent d'un serveur plus ancien.
+   */
+  commande_recente: { reference: string; created_at: string; payee?: boolean } | null;
   /**
    * Le client a annulé lui-même : date d'annulation de la tête, ou du panier
    * annulé le plus récent du groupe. Absent d'un serveur plus ancien.

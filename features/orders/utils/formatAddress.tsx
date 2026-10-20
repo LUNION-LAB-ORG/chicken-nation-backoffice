@@ -1,36 +1,23 @@
-export const formatAddress = (addressString: string) => {
-  try {
-    const addressObj = JSON.parse(addressString);
-    // Pour l'affichage court, on ne prend que la ville
-    const shortDisplay = addressObj.city || "Ville non disponible";
+import { libelleAdresse, objetAdresse } from "./adresse-commande";
 
-    // Pour le tooltip, on garde l'adresse complète
-    const fullParts = [];
-    if (addressObj.formattedAddress) {
-      return {
-        short: shortDisplay,
-        full: addressObj.formattedAddress,
-      };
-    }
-
-    if (addressObj.title) fullParts.push(addressObj.title);
-    if (addressObj.address || addressObj.road)
-      fullParts.push(addressObj.address || addressObj.road);
-    if (addressObj.city) fullParts.push(addressObj.city);
-    if (addressObj.postalCode) fullParts.push(addressObj.postalCode);
-
+/**
+ * Adresse courte (la ville) et complète (infobulle) pour la liste des
+ * commandes. Rend toujours du texte, même si l'adresse reçue est un objet
+ * (recette du 20/10 : une adresse `{}` faisait planter la liste).
+ */
+export const formatAddress = (adresse: unknown): { short: string; full: string } => {
+  const objet = objetAdresse(adresse);
+  if (objet) {
+    const ville = typeof objet.city === "string" && objet.city.trim() ? objet.city.trim() : "Ville non disponible";
+    return { short: ville, full: libelleAdresse(objet) };
+  }
+  if (typeof adresse === "string" && adresse.trim()) {
+    // Adresse en texte libre : tronquée pour la colonne, entière dans l'infobulle.
     return {
-      short: shortDisplay,
-      full: fullParts.join(", ") || "Adresse non disponible",
-    };
-  } catch {
-    // Si l'adresse n'est pas un JSON valide, retourner l'adresse brute
-    return {
-      short:
-        addressString.length > 20
-          ? addressString.substring(0, 20) + "..."
-          : addressString,
-      full: addressString,
+      short: adresse.length > 20 ? adresse.substring(0, 20) + "..." : adresse,
+      full: adresse,
     };
   }
+  const vide = libelleAdresse(null);
+  return { short: vide, full: vide };
 };
