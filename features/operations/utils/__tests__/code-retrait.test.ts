@@ -1,7 +1,12 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 
-import { estCompteDeRestaurant, restaurantPourCodeRetrait, restaurantPourValidation } from '../code-retrait';
+import {
+  estCompteDeRestaurant,
+  peutValiderCodeRetrait,
+  restaurantPourCodeRetrait,
+  restaurantPourValidation,
+} from '../code-retrait';
 
 /**
  * Incident du 22/10 : le même code de retrait existait dans un autre
@@ -216,5 +221,20 @@ describe('les autres appels du module, inchangés', () => {
 
     reponse = { status: 404, corps: { statusCode: 404, message: 'Commande introuvable' } };
     expect((await markOrderPaidCash('cmd-1').catch((e) => e)).message).toBe('Commande introuvable');
+  });
+});
+
+describe('champ « Code retrait » : les rôles admis par le serveur', () => {
+  test('admin, manager, adjoint et caissière le voient', () => {
+    for (const role of ['ADMIN', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER']) {
+      expect(peutValiderCodeRetrait({ role })).toBe(true);
+    }
+  });
+
+  test('les rôles refusés (403) ne le voient pas', () => {
+    for (const role of ['CALL_CENTER', 'CUISINE', 'LIVRAISON_OPS', 'MARKETING', 'COMPTABLE', undefined]) {
+      expect(peutValiderCodeRetrait({ role })).toBe(false);
+    }
+    expect(peutValiderCodeRetrait(null)).toBe(false);
   });
 });

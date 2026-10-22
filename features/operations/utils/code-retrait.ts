@@ -27,6 +27,13 @@
  */
 const ROLES_DE_RESTAURANT = ['MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'CUISINE'];
 
+/**
+ * Rôles admis par le serveur sur `courses/operations` (backend
+ * `course-operations.controller.ts`). Les autres (centre d'appels, cuisine,
+ * livraison, marketing…) recevaient 403 : le champ leur est caché.
+ */
+const ROLES_REMISE_AU_LIVREUR = ['ADMIN', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER'];
+
 interface Membre {
   type?: string | null;
   role?: string | null;
@@ -42,6 +49,11 @@ interface Membre {
 export function estCompteDeRestaurant(membre: Membre | null | undefined): boolean {
   if (!membre) return false;
   return membre.type === 'RESTAURANT' || ROLES_DE_RESTAURANT.includes(membre.role ?? '');
+}
+
+/** Vrai si le membre peut chercher et valider un code de retrait. */
+export function peutValiderCodeRetrait(membre: Membre | null | undefined): boolean {
+  return ROLES_REMISE_AU_LIVREUR.includes(membre?.role ?? '');
 }
 
 /**

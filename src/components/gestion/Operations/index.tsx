@@ -20,6 +20,7 @@ import type { DrawerTabKey } from "../../../../features/operations/components/dr
 import { useOperationsSocketSync } from "../../../../features/operations/hooks/useOperationsSocketSync";
 import { useCourseByPickupCodeQuery } from "../../../../features/operations/queries/course-by-pickup-code.query";
 import { useOperationsActiveQuery } from "../../../../features/operations/queries/operations-active.query";
+import { peutValiderCodeRetrait } from "../../../../features/operations/utils/code-retrait";
 import { groupOrdersForOperations } from "../../../../features/operations/utils/group-orders";
 import { OrderType, type Order } from "../../../../features/orders/types/order.types";
 import { useOrderDetailQuery } from "../../../../features/orders/queries/order-detail.query";
@@ -398,28 +399,30 @@ export default function Operations() {
               reste pilote par le backend via le JWT. */}
           <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
 
-          {/* Code retrait livreur */}
-          <div className="max-w-md">
-            <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading || pickupFetching} />
-            {/* Le texte du serveur : code inconnu ici aujourd'hui, ou présent
-                dans plusieurs restaurants (choisir le restaurant au-dessus). */}
-            {pickupIsError && submittedCode && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>
-                  {pickupError?.message ||
-                    "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
-                </span>
-                <button
-                  onClick={() => pickupRefetch()}
-                  disabled={pickupFetching}
-                  className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
-                >
-                  Réessayer
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Code retrait livreur : seulement pour les rôles admis par le serveur */}
+          {peutValiderCodeRetrait(currentUser) && (
+            <div className="max-w-md">
+              <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading || pickupFetching} />
+              {/* Le texte du serveur : code inconnu ici aujourd'hui, ou présent
+                  dans plusieurs restaurants (choisir le restaurant au-dessus). */}
+              {pickupIsError && submittedCode && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>
+                    {pickupError?.message ||
+                      "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
+                  </span>
+                  <button
+                    onClick={() => pickupRefetch()}
+                    disabled={pickupFetching}
+                    className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {course && submittedCode && (
             <PickupValidationModal
