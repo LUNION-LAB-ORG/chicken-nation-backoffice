@@ -16,7 +16,7 @@ import { PickupValidationModal } from "./PickupValidationModal";
  */
 export const OperationsHeader: React.FC = () => {
   const [submittedCode, setSubmittedCode] = useState<string | null>(null);
-  const { data: course, isLoading, isError, refetch } = useCourseByPickupCodeQuery(
+  const { data: course, error, isLoading, isFetching, isError, refetch } = useCourseByPickupCodeQuery(
     submittedCode ?? "",
     submittedCode !== null,
   );
@@ -36,14 +36,13 @@ export const OperationsHeader: React.FC = () => {
           <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>
-              Aucune course trouvée pour le code <strong>{submittedCode}</strong>.
+              {error?.message ||
+                "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
             </span>
             <button
-              onClick={() => {
-                setSubmittedCode(null);
-                refetch();
-              }}
-              className="ml-auto text-[#F17922] underline"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
             >
               Réessayer
             </button>

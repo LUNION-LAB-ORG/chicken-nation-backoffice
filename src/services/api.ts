@@ -182,6 +182,7 @@ export async function apiRequest<T>(
 
     // ✅ SÉCURITÉ: Messages d'erreur sécurisés selon le statut
     let errorMessage: string;
+    let messageServeur: string | undefined;
 
     // Pour debug: récupérer le message d'erreur du serveur pour les 400
     if (response.status === 400) {
@@ -207,6 +208,18 @@ export async function apiRequest<T>(
         errorMessage = parDefaut;
       }
     } else {
+      // Le refus du serveur (« Aucune course en cours avec ce code… » sur un
+      // 404) est gardé À CÔTÉ du texte par défaut, dans `messageServeur` :
+      // seul un écran qui sait le lire l'affiche (module Opérations), les
+      // autres gardent le texte par défaut ci-dessous.
+      try {
+        const errorData = JSON.parse(await response.text());
+        if (typeof errorData?.message === 'string' && errorData.message.trim()) {
+          messageServeur = errorData.message;
+        }
+      } catch {
+        // Corps vide ou non JSON (page d'erreur du proxy) : rien à garder.
+      }
       switch (response.status) {
         case 401:
           errorMessage = 'Session expirée. Veuillez vous reconnecter.';
@@ -231,7 +244,10 @@ export async function apiRequest<T>(
     }
 
     // Le statut accompagne le message : un écran peut réagir à un conflit (409) sans lire le texte.
-    throw Object.assign(new Error(errorMessage), { status: response.status });
+    throw Object.assign(
+      new Error(errorMessage),
+      messageServeur ? { status: response.status, messageServeur } : { status: response.status },
+    );
   } catch (error) {
     // Gérer les erreurs de réseau ou autres
     if (error instanceof Error) {

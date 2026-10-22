@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Check, X } from "lucide-react";
+import { AlertCircle, Check, X } from "lucide-react";
 
 import type { Course, Delivery } from "../../courses/types/course.types";
-import type { OrderStatus } from "../../orders/types/order.types";
+import { DeliveryService, type OrderStatus } from "../../orders/types/order.types";
 import { useValidatePickupMutation } from "../queries/validate-pickup.mutation";
 import { ServiceBadge } from "./ServiceBadge";
 
@@ -33,15 +33,19 @@ interface Props {
  * Modal affichée quand la caissière a saisi un pickup_code valide.
  * Liste toutes les commandes de la course + leur statut.
  * "Valider la récupération" est désactivé tant que toutes ne sont pas READY.
+ *
+ * Le restaurant de la course est affiché : le même code peut exister dans un
+ * autre restaurant (incident du 22/10). Un refus du serveur s'affiche ici
+ * avec SON texte, en plus du toast.
  */
 export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
-  const { mutate: validate, isPending } = useValidatePickupMutation();
+  const { mutate: validate, isPending, error } = useValidatePickupMutation();
 
   const notReady = course.deliveries.filter((d) => d.order.status !== "READY");
   const canValidate = notReady.length === 0;
 
   const handleValidate = () => {
-    validate(course.pickup_code, {
+    validate(course, {
       onSuccess: () => onClose(),
     });
   };
@@ -52,10 +56,12 @@ export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div>
             <h3 className="text-base font-bold text-gray-900">
-              Récupération — code <span className="font-mono text-[#F17922]">{course.pickup_code}</span>
+              Récupération · code <span className="font-mono text-[#F17922]">{course.pickup_code}</span>
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Course {course.reference} · {course.deliveries.length} commande(s)
+              Course {course.reference}
+              {course.restaurant?.name ? ` · ${course.restaurant.name}` : ""} ·{" "}
+              {course.deliveries.length} commande(s)
             </p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -67,6 +73,12 @@ export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
           {course.deliveries.map((d) => (
             <DeliveryStatusRow key={d.id} delivery={d} />
           ))}
+          {error && (
+            <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
+              <span>{error.message}</span>
+            </div>
+          )}
         </div>
 
         <div className="px-5 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3">
@@ -112,7 +124,7 @@ function DeliveryStatusRow({ delivery }: { delivery: Delivery }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-gray-900">{delivery.order.reference}</span>
-          <ServiceBadge service="CHICKEN_NATION" size="sm" />
+          <ServiceBadge service={DeliveryService.CHICKEN_NATION} size="sm" />
         </div>
         <div className="text-xs text-gray-600 mt-0.5">
           {delivery.order.fullname ?? "Client"} ·{" "}

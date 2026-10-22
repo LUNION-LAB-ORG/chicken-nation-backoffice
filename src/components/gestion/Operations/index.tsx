@@ -150,10 +150,13 @@ export default function Operations() {
   };
 
   // ── Pickup code (onglet "En cours") ─────────────────────────────────────────
+  // Cherché dans le restaurant du membre, ou celui choisi ci-dessous (22/10).
   const [submittedCode, setSubmittedCode] = useState<string | null>(null);
   const {
     data: course,
+    error: pickupError,
     isLoading: pickupLoading,
+    isFetching: pickupFetching,
     isError: pickupIsError,
     refetch: pickupRefetch,
   } = useCourseByPickupCodeQuery(submittedCode ?? "", submittedCode !== null);
@@ -397,20 +400,20 @@ export default function Operations() {
 
           {/* Code retrait livreur */}
           <div className="max-w-md">
-            <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading} />
+            <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading || pickupFetching} />
+            {/* Le texte du serveur : code inconnu ici aujourd'hui, ou présent
+                dans plusieurs restaurants (choisir le restaurant au-dessus). */}
             {pickupIsError && submittedCode && (
               <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>
-                  Aucune course trouvée pour le code{" "}
-                  <strong>{submittedCode}</strong>.
+                  {pickupError?.message ||
+                    "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
                 </span>
                 <button
-                  onClick={() => {
-                    setSubmittedCode(null);
-                    pickupRefetch();
-                  }}
-                  className="ml-auto text-[#F17922] underline"
+                  onClick={() => pickupRefetch()}
+                  disabled={pickupFetching}
+                  className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
                 >
                   Réessayer
                 </button>
