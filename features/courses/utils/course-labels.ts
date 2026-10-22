@@ -53,6 +53,7 @@ export const OFFER_STATUS_LABELS: Record<CourseOfferStatus, string> = {
   ACCEPTED: 'Acceptée',
   REFUSED: 'Refusée',
   EXPIRED: 'Expirée',
+  CANCELLED: 'Retirée',
 };
 
 export const OFFER_STATUS_CLASSES: Record<CourseOfferStatus, string> = {
@@ -60,6 +61,7 @@ export const OFFER_STATUS_CLASSES: Record<CourseOfferStatus, string> = {
   ACCEPTED: 'bg-green-100 text-green-800',
   REFUSED: 'bg-red-100 text-red-800',
   EXPIRED: 'bg-gray-200 text-gray-700',
+  CANCELLED: 'bg-slate-100 text-slate-600',
 };
 
 export const formatDelivererName = (d?: { first_name?: string | null; last_name?: string | null; phone?: string | null } | null): string => {

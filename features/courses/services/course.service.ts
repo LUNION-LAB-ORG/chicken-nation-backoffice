@@ -1,6 +1,8 @@
 import { api } from '@/services/api';
 import { getHumanReadableError } from '@/utils/errorMessages';
 
+import { messageErreurOperations } from '../../operations/utils/message-erreur';
+
 import type {
   CancelCoursePayload,
   Course,
@@ -36,6 +38,23 @@ const safeCall = async <T>(fn: () => Promise<T>): Promise<T> => {
   }
 };
 
+/**
+ * Actions sur une course : le refus du serveur est montré tel quel (« Ce
+ * livreur est en pause jusqu'à 14 h 32. », « Cette course ne cherche plus de
+ * livreur. »). `getHumanReadableError`, écrit pour les promotions, en faisait
+ * « Une promotion avec ces caractéristiques existe déjà » (409). Le statut
+ * reste sur l'erreur : la fenêtre « Forcer l'affectation » relit l'état des
+ * livreurs après un refus.
+ */
+const actionAvecRefusServeur = async <T>(fn: () => Promise<T>): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    const status = error && typeof error === 'object' ? (error as { status?: unknown }).status : undefined;
+    throw Object.assign(new Error(messageErreurOperations(error)), typeof status === 'number' ? { status } : {});
+  }
+};
+
 // ============================================================
 // LECTURE
 // ============================================================
@@ -62,29 +81,29 @@ export const getCourseStats = (filters: ICourseStatsFilters = {}) => {
 
 /** Force l'affectation d'un livreur précis (override admin) */
 export const forceAssignCourse = (id: string, payload: ForceAssignPayload) =>
-  safeCall(() =>
+  actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/force-assign`, payload, true),
   );
 
 /** Annulation d'une course par l'admin */
 export const cancelCourseAdmin = (id: string, payload: CancelCoursePayload) =>
-  safeCall(() => api.patch<Course>(`${ENDPOINT}/${id}/cancel`, payload, true));
+  actionAvecRefusServeur(() => api.patch<Course>(`${ENDPOINT}/${id}/cancel`, payload, true));
 
 /** Relance une course EXPIRED : reset tentatives + recherche nouveau livreur */
 export const retryExpiredCourse = (id: string) =>
-  safeCall(() =>
+  actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/retry`, {}, true),
   );
 
 /** Confie la course à la flotte externe Turbo, sans attendre le délai automatique. */
 export const basculerCourseVersTurbo = (id: string) =>
-  safeCall(() =>
+  actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/turbo`, {}, true),
   );
 
 /** Reprend une course confiée à Turbo pour la reproposer aux livreurs internes. */
 export const reprendreCourseEnInterne = (id: string) =>
-  safeCall(() =>
+  actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/interne`, {}, true),
   );
 
@@ -95,7 +114,7 @@ export const reprendreCourseEnInterne = (id: string) =>
  * encore actives, et relance l'affectation selon la flotte.
  */
 export const relancerCourseAnnulee = (id: string) =>
-  safeCall(() =>
+  actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string; newCourseId?: string }>(
       `${ENDPOINT}/${id}/relancer`,
       {},

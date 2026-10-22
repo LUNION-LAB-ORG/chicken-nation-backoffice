@@ -5,6 +5,7 @@ export type CourseTimelineEventKind =
   | 'offer_sent'
   | 'offer_refused'
   | 'offer_expired'
+  | 'offer_cancelled'
   | 'offer_accepted'
   | 'at_restaurant'
   | 'picked_up'
@@ -66,6 +67,13 @@ export function buildCourseTimeline(course: CourseWithAttempts): ICourseTimeline
           at: att.responded_at,
           title: `Offre expirée (${delivererName(att.deliverer)})`,
           subtitle: 'Pas de réponse dans le délai imparti',
+        });
+      } else if (att.status === 'CANCELLED') {
+        events.push({
+          kind: 'offer_cancelled',
+          at: att.responded_at,
+          title: `Offre retirée (${delivererName(att.deliverer)})`,
+          subtitle: 'Livreur en pause ou course modifiée, sans pénalité pour le livreur',
         });
       } else if (att.status === 'ACCEPTED') {
         events.push({

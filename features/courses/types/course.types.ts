@@ -28,7 +28,12 @@ export type DeliveryFailureReason =
   | 'WRONG_ORDER'
   | 'OTHER';
 
-export type CourseOfferStatus = 'PENDING' | 'ACCEPTED' | 'REFUSED' | 'EXPIRED';
+/**
+ * `CANCELLED` (lot 1 du 22/10) : offre retirée par le serveur, sans pénalité
+ * pour le livreur (il s'est mis en pause ou déconnecté, la course a été
+ * fusionnée, confiée à Turbo, annulée ou ne cherchait plus de livreur).
+ */
+export type CourseOfferStatus = 'PENDING' | 'ACCEPTED' | 'REFUSED' | 'EXPIRED' | 'CANCELLED';
 
 // ============================================================
 // SOUS-STRUCTURES

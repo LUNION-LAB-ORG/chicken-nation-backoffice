@@ -110,7 +110,8 @@ export function CourseDetailSidebar({ course }: Props) {
       <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-5">
         <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Actions</h3>
         <div className="space-y-2">
-          {course.statut === "PENDING_ASSIGNMENT" && (
+          {/* Course chez Turbo : le serveur refuse l'affectation forcée, il faut d'abord la reprendre en interne. */}
+          {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
             <button
               onClick={() => toggleModal("courses", "force_assign")}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F17922] text-white text-sm font-semibold hover:opacity-90 transition"

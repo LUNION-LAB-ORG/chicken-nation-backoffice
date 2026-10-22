@@ -30,12 +30,18 @@ export const livreursKeys = {
 // Queries
 // ============================================================
 
-export const useLivreursList = (filters: LivreursQueryFilters = {}, enabled = true) =>
+export const useLivreursList = (
+  filters: LivreursQueryFilters = {},
+  enabled = true,
+  // Fenêtre « Forcer l'affectation » : état des livreurs relu à l'ouverture et tant qu'elle reste ouverte.
+  options: { staleTime?: number; refetchInterval?: number } = {},
+) =>
   useQuery({
     queryKey: livreursKeys.list(filters),
     queryFn: () => getAllLivreurs(filters),
     enabled,
-    staleTime: 30 * 1000, // 30s — liste admin, on préfère des données fraîches
+    staleTime: options.staleTime ?? 30 * 1000, // 30s — liste admin, on préfère des données fraîches
+    refetchInterval: options.refetchInterval,
     gcTime: 5 * 60 * 1000,
   });
 
