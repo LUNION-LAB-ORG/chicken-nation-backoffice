@@ -14,6 +14,11 @@ import { useInvalidateOperationsQuery } from './index.query';
  * Reçoit la course de l'aperçu : son code part avec le restaurant de la
  * recherche, ou celui de la course sur « Tous les restaurants »
  * (`restaurantPourValidation`).
+ *
+ * Refus du serveur : l'aperçu était en retard sur lui (commande repassée en
+ * préparation entre l'aperçu et le clic). Il est rechargé, sinon la fenêtre
+ * affiche « Toutes les commandes sont prêtes » à côté du refus « La commande
+ * ORD-… est encore « En préparation » ».
  */
 export const useValidatePickupMutation = () => {
   const invalidate = useInvalidateOperationsQuery();
@@ -26,6 +31,9 @@ export const useValidatePickupMutation = () => {
       await invalidate();
       toast.success('Course validée : le livreur peut partir en livraison');
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      toast.error(e.message);
+      void invalidate();
+    },
   });
 };
