@@ -16,6 +16,7 @@ import {
 
 import { useDelivererScoringInfoQuery } from "../../queries/deliverer-scoring.query";
 import type { IDelivererScoringInfo } from "../../types/deliverer-scoring.type";
+import { estPauseSansFin } from "../../utils/disponibilite";
 
 interface ScoringQueueSectionProps {
   livreurId: string;
@@ -329,7 +330,7 @@ const PauseCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
           {pauses.isAutoPaused && pauses.autoPauseUntil && (
             <PauseLine
               icon={<AlertTriangle className="w-3.5 h-3.5" />}
-              label="Auto-pause active"
+              label="Pause automatique"
               detail={`Termine ${formatDistanceToNowStrict(new Date(pauses.autoPauseUntil), { addSuffix: true, locale: fr })}`}
               tone="auto"
             />
@@ -338,7 +339,12 @@ const PauseCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
             <PauseLine
               icon={<Pause className="w-3.5 h-3.5" />}
               label="Pause manuelle"
-              detail={`Termine ${formatDistanceToNowStrict(new Date(pauses.pauseUntil), { addSuffix: true, locale: fr })}`}
+              detail={
+                // Pause sans durée ou déconnexion : fin au 31/12/2099, pas « dans 73 ans ».
+                estPauseSansFin(pauses.pauseUntil)
+                  ? "Jusqu'à ce qu'il touche Reprendre dans l'appli"
+                  : `Termine ${formatDistanceToNowStrict(new Date(pauses.pauseUntil), { addSuffix: true, locale: fr })}`
+              }
               tone="manual"
             />
           )}
@@ -346,7 +352,7 @@ const PauseCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
             <PauseLine
               icon={<TrendingDown className="w-3.5 h-3.5" />}
               label={`Pénalité +${queuePenalty.positions} positions`}
-              detail={`Reset ${formatDistanceToNowStrict(new Date(queuePenalty.until), { addSuffix: true, locale: fr })}`}
+              detail={`Fin ${formatDistanceToNowStrict(new Date(queuePenalty.until), { addSuffix: true, locale: fr })}`}
               tone="penalty"
             />
           )}

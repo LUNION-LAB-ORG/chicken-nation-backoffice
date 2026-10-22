@@ -9,7 +9,8 @@ import LivreurContextMenu from "./LivreurContextMenu";
 import StatutBadge from "./StatutBadge";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import type { Livreur } from "../../../../features/livreurs/types/livreur.types";
-import type { IDelivererLive, IDelivererAvailability } from "../../../../features/livreurs/types/deliverer-live.type";
+import type { IDelivererLive } from "../../../../features/livreurs/types/deliverer-live.type";
+import { COULEURS_ETAT, etatLivreurAffiche } from "../../../../features/livreurs/utils/disponibilite";
 
 interface LivreurRowProps {
   livreur: Livreur;
@@ -21,20 +22,6 @@ const vehiculeLabel: Record<string, string> = {
   MOTO: "Moto",
   VELO: "Vélo",
   VOITURE: "Voiture",
-};
-
-interface AvailabilityConfig {
-  label: string;
-  color: string;
-  bg: string;
-}
-
-const availabilityConfig: Record<IDelivererAvailability, AvailabilityConfig> = {
-  available: { label: "Disponible", color: "#17C964", bg: "rgba(23,201,100,0.15)" },
-  in_course: { label: "En course", color: "#007AFF", bg: "rgba(0,122,255,0.15)" },
-  paused: { label: "Pause", color: "#F5A524", bg: "rgba(245,165,36,0.15)" },
-  auto_paused: { label: "Auto-pause", color: "#EF4444", bg: "rgba(239,68,68,0.15)" },
-  offline: { label: "Hors-ligne", color: "#9CA3AF", bg: "rgba(156,163,175,0.15)" },
 };
 
 function formatGpsAge(locationAt: string): string {
@@ -85,20 +72,31 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
     `${livreur.first_name ?? ""} ${livreur.last_name ?? ""}`.trim() || "—";
 
   /* ── Colonne Dispo ── */
+  // État par la règle unique du serveur : « En pause jusqu'à 14 h 32 »,
+  // « Hors service »… La carte (relue toutes les 15 s) passe avant la liste.
   const renderDispo = () => {
-    if (!live) {
+    const affiche = etatLivreurAffiche(
+      {
+        disponibilite: live?.disponibilite ?? livreur.disponibilite,
+        availability: live?.availability,
+        pause_until: live?.pause_until,
+        auto_pause_until: live?.auto_pause_until,
+      },
+      new Date(),
+    );
+    if (!affiche || affiche.etat === "INACTIF") {
       return <StatutBadge status={livreur.status} isOperational={livreur.is_operational} />;
     }
-    const cfg = availabilityConfig[live.availability];
+    const couleurs = COULEURS_ETAT[affiche.etat];
     return (
-      <div className="flex flex-col gap-0.5">
+      <div className="flex flex-col gap-0.5" title={affiche.raison ?? undefined}>
         <span
           className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold w-fit"
-          style={{ color: cfg.color, backgroundColor: cfg.bg }}
+          style={{ color: couleurs.texte, backgroundColor: couleurs.fond }}
         >
-          {cfg.label}
+          {affiche.libelle}
         </span>
-        {live.availability === "in_course" && live.active_course?.reference && (
+        {affiche.etat === "EN_COURSE" && live?.active_course?.reference && (
           <span className="text-[10px] text-[#007AFF] pl-0.5 font-mono">
             {live.active_course.reference}
           </span>

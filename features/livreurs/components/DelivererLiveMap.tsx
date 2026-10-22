@@ -5,6 +5,7 @@ import { GoogleMap, InfoWindowF } from "@react-google-maps/api";
 import {
   AlertOctagon,
   Award,
+  BellRing,
   Bike,
   Car,
   EyeOff,
@@ -23,10 +24,20 @@ import { useDelivererScoringInfoQuery } from "../queries/deliverer-scoring.query
 import { useRestaurantListQuery } from "../../restaurants/queries/restaurant-list.query";
 import { AnimatedDelivererMarker } from "../../maps/components/AnimatedDelivererMarker";
 import { useDelivererLiveSync } from "../../maps/hooks/use-deliverer-live-socket";
-import type {
-  IDelivererAvailability,
-  IDelivererLive,
-} from "../types/deliverer-live.type";
+import { useMaintenant } from "../hook/use-maintenant";
+import {
+  COULEURS_ETAT,
+  FILTRES_CARTE,
+  NOM_ETAT,
+  ORDRE_ETATS,
+  correspondAuFiltre,
+  etatLivreurAffiche,
+  rangEtat,
+  type EtatAffiche,
+  type FiltreCarte,
+} from "../utils/disponibilite";
+import type { IDelivererLive } from "../types/deliverer-live.type";
+import type { EtatDisponibilite } from "../types/livreur.types";
 
 const ABIDJAN_CENTER = { lat: 5.348, lng: -4.027 };
 
@@ -48,29 +59,36 @@ function safeLocation(loc: unknown): { lat: number; lng: number } | null {
 
 // ─── Metadata disponibilité ──────────────────────────────────────────────────
 
-interface IAvailabilityMeta {
-  label: string;
-  color: string;
-  bgColor: string;
-  textColor: string;
-  Icon: React.ComponentType<{ className?: string }>;
-}
-
-const AVAILABILITY_META: Record<IDelivererAvailability, IAvailabilityMeta> = {
-  available:   { label: "Disponible",  color: "#17C964", bgColor: "#DCFCE7", textColor: "#166534", Icon: Zap },
-  in_course:   { label: "En course",   color: "#007AFF", bgColor: "#DBEAFE", textColor: "#1e40af", Icon: Truck },
-  paused:      { label: "En pause",    color: "#F5A524", bgColor: "#FEF3C7", textColor: "#92400E", Icon: Pause },
-  auto_paused: { label: "Auto-pause",  color: "#EF4444", bgColor: "#FEE2E2", textColor: "#991B1B", Icon: AlertOctagon },
-  offline:     { label: "Hors-ligne",  color: "#9CA3AF", bgColor: "#F3F4F6", textColor: "#4B5563", Icon: Power },
+// État par la règle unique du serveur (`disponibilite`, lot 1 du 22/10) :
+// « En pause jusqu'à 14 h 32 » et « Hors service » visibles, même sans
+// position récente. Libellés et couleurs : `../utils/disponibilite`.
+const ICONE_ETAT: Record<EtatDisponibilite, React.ComponentType<{ className?: string }>> = {
+  DISPONIBLE: Zap,
+  OFFRE_EN_ATTENTE: BellRing,
+  EN_COURSE: Truck,
+  EN_PAUSE: Pause,
+  PAUSE_AUTO: AlertOctagon,
+  HORS_SERVICE: Power,
+  INACTIF: Power,
 };
 
-const ASIDE_FILTERS: { key: IDelivererAvailability | "all"; label: string }[] = [
-  { key: "all",         label: "Tous" },
-  { key: "available",  label: "Disponible" },
-  { key: "in_course",  label: "En course" },
-  { key: "paused",     label: "En pause" },
-  { key: "offline",    label: "Hors-ligne" },
-];
+/** Livreur de la carte avec son état à l'instant et sa présence sur la carte. */
+type LivreurCarte = IDelivererLive & { affiche: EtatAffiche; surCarte: boolean };
+
+const ETAT_INCONNU: EtatAffiche = {
+  etat: "HORS_SERVICE",
+  libelle: "Hors service",
+  peutRecevoirOffre: false,
+  raison: null,
+};
+
+/** Détails sous le nom : l'heure de fin d'une pause, l'absence de position récente. */
+function detailsLivreur(l: LivreurCarte): string {
+  const details: string[] = [];
+  if (l.affiche.libelle !== NOM_ETAT[l.affiche.etat]) details.push(l.affiche.libelle);
+  if (!l.surCarte) details.push(l.location ? "position ancienne" : "sans position");
+  return details.join(" · ");
+}
 
 const VEHICULE_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   MOTO: Bike, VELO: Bike, VOITURE: Car,
@@ -130,22 +148,22 @@ function DelivererAvatar({
 // ─── Icônes de markers ───────────────────────────────────────────────────────
 
 function buildMarkerIcon(
-  availability: IDelivererAvailability,
+  etat: EtatDisponibilite,
   initials: string,
   selected: boolean,
 ): google.maps.Icon {
-  const meta = AVAILABILITY_META[availability];
+  const couleur = COULEURS_ETAT[etat].couleur;
   const size = selected ? 48 : 36;
   const r    = selected ? 20 : 14;
   const cx   = size / 2;
 
   const svg = selected
     ? `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${meta.color}" stroke="white" stroke-width="3.5"/>
+        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${couleur}" stroke="white" stroke-width="3.5"/>
         <text x="${cx}" y="${cx + 5}" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="13" font-weight="bold">${initials}</text>
        </svg>`
     : `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
-        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${meta.color}" stroke="white" stroke-width="2.5"/>
+        <circle cx="${cx}" cy="${cx}" r="${r}" fill="${couleur}" stroke="white" stroke-width="2.5"/>
         <circle cx="${cx}" cy="${cx}" r="4" fill="white"/>
        </svg>`;
 
@@ -167,8 +185,11 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   // reste actif, mais en simple réconciliation (nouveaux livreurs / dispo).
   useDelivererLiveSync();
 
+  // Positions anciennes sur la carte. La liste montre toujours tout le monde :
+  // un livreur en pause ou hors service n'envoie souvent plus sa position.
   const [includeOffline, setIncludeOffline]   = useState(false);
-  const [asideFilter, setAsideFilter]         = useState<IDelivererAvailability | "all">("all");
+  const [asideFilter, setAsideFilter]         = useState<FiltreCarte>("TOUS");
+  const maintenant = useMaintenant(30 * 1000);
   const [selectedId, setSelectedId]           = useState<string | null>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
 
@@ -181,22 +202,27 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   }, [restaurantId]);
 
   const { data: restaurantData } = useRestaurantListQuery({ limit: 100 });
-  const restaurants = restaurantData?.items ?? [];
+  const restaurants = restaurantData?.data ?? [];
 
   // Utilise le filtre local s'il est défini, sinon le prop parent
   const effectiveRestaurantId = localRestaurantId || restaurantId || undefined;
 
   const { data: livreurs, isLoading, isError } = useDelivererLiveLocationsQuery({
     restaurantId: effectiveRestaurantId,
-    includeOffline,
+    includeOffline: true,
   });
 
-  const normalized = useMemo(() => (livreurs ?? []).map((l) => ({
-    ...l,
-    location: safeLocation(l.location),
-  })), [livreurs]);
+  const normalized = useMemo<LivreurCarte[]>(() => (livreurs ?? []).map((l) => {
+    const location = safeLocation(l.location);
+    return {
+      ...l,
+      location,
+      affiche: etatLivreurAffiche(l, maintenant) ?? ETAT_INCONNU,
+      surCarte: location !== null && (l.location_fresh || includeOffline),
+    };
+  }), [livreurs, maintenant, includeOffline]);
 
-  const visible = useMemo(() => normalized.filter((l) => l.location !== null), [normalized]);
+  const visible = useMemo(() => normalized.filter((l) => l.surCarte), [normalized]);
 
   // Centre INITIAL figé : on cadre sur le barycentre de la flotte au premier
   // chargement, puis on n'y touche plus. Sans ça, comme les positions bougent
@@ -216,7 +242,13 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
   const center = initialCenterRef.current ?? ABIDJAN_CENTER;
 
   const asideList = useMemo(() =>
-    normalized.filter((l) => asideFilter === "all" || l.availability === asideFilter),
+    normalized
+      .filter((l) => correspondAuFiltre(l.affiche.etat, asideFilter))
+      .sort((a, b) =>
+        rangEtat(a.affiche.etat) - rangEtat(b.affiche.etat) ||
+        Number(b.surCarte) - Number(a.surCarte) ||
+        `${a.first_name ?? ""} ${a.last_name ?? ""}`.localeCompare(`${b.first_name ?? ""} ${b.last_name ?? ""}`, "fr"),
+      ),
     [normalized, asideFilter],
   );
 
@@ -226,7 +258,7 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
     mapRef.current = map;
   }, []);
 
-  const handleSelectDeliverer = (l: IDelivererLive) => {
+  const handleSelectDeliverer = (l: LivreurCarte) => {
     setSelectedId(l.id);
     if (l.location) {
       mapRef.current?.panTo(l.location);
@@ -234,7 +266,7 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
     }
   };
 
-  const hiddenInvalid = normalized.length - visible.length;
+  const sansPosition = normalized.length - visible.length;
 
   if (!isScriptLoaded) {
     return (
@@ -263,16 +295,16 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
             <div>
               <h3 className="text-sm font-bold text-gray-900">Livreurs live</h3>
               <p className="text-[11px] text-gray-400 mt-0.5">
-                {isLoading ? "Chargement…" : `${visible.length} géolocalisé${visible.length > 1 ? "s" : ""}`}
-                {hiddenInvalid > 0 && (
-                  <span className="text-amber-500"> · {hiddenInvalid} masqué{hiddenInvalid > 1 ? "s" : ""}</span>
+                {isLoading ? "Chargement…" : `${visible.length} sur la carte`}
+                {!isLoading && sansPosition > 0 && (
+                  <span className="text-amber-500"> · {sansPosition} sans position récente</span>
                 )}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setIncludeOffline((v) => !v)}
-              title={includeOffline ? "Exclure les hors-ligne" : "Inclure les hors-ligne"}
+              title={includeOffline ? "Masquer les positions anciennes" : "Afficher les positions anciennes"}
               className={`p-1.5 rounded-lg text-xs transition-colors ${
                 includeOffline ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
               }`}
@@ -283,16 +315,18 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
 
           {/* Compteurs par statut */}
           <div className="flex gap-1.5 flex-wrap mt-2">
-            {Object.entries(AVAILABILITY_META).map(([key, meta]) => {
-              const c = normalized.filter((l) => l.availability === key).length;
+            {ORDRE_ETATS.map((etat) => {
+              const c = normalized.filter((l) => l.affiche.etat === etat).length;
               if (c === 0) return null;
+              const Icone = ICONE_ETAT[etat];
               return (
                 <span
-                  key={key}
+                  key={etat}
+                  title={NOM_ETAT[etat]}
                   className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                  style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                  style={{ backgroundColor: COULEURS_ETAT[etat].fond, color: COULEURS_ETAT[etat].texte }}
                 >
-                  <meta.Icon className="w-2.5 h-2.5" />{c}
+                  <Icone className="w-2.5 h-2.5" />{c}
                 </span>
               );
             })}
@@ -315,20 +349,20 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
 
         {/* Filtres disponibilité */}
         <div className="px-3 py-2 border-b border-gray-100 bg-white flex gap-1 flex-wrap">
-          {ASIDE_FILTERS.map((f) => {
-            const isActive = asideFilter === f.key;
+          {FILTRES_CARTE.map((f) => {
+            const isActive = asideFilter === f.cle;
             return (
               <button
-                key={f.key}
+                key={f.cle}
                 type="button"
-                onClick={() => setAsideFilter(f.key)}
+                onClick={() => setAsideFilter(f.cle)}
                 className={`text-[11px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
                   isActive
                     ? "bg-[#F17922] text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {f.label}
+                {f.libelle}
               </button>
             );
           })}
@@ -340,31 +374,32 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
             <p className="text-center text-xs text-gray-400 mt-8">Aucun livreur</p>
           ) : (
             asideList.map((l) => {
-              const meta     = AVAILABILITY_META[l.availability];
+              const couleurs = COULEURS_ETAT[l.affiche.etat];
               const initials = getInitials(l.first_name, l.last_name);
               const fullName = [l.first_name, l.last_name].filter(Boolean).join(" ") || "Livreur";
               const isActive = selectedId === l.id;
-              const hasLoc   = l.location !== null;
+              const details  = detailsLivreur(l);
 
               return (
                 <button
                   key={l.id}
                   type="button"
-                  onClick={() => hasLoc && handleSelectDeliverer(l)}
-                  disabled={!hasLoc}
+                  onClick={() => l.surCarte && handleSelectDeliverer(l)}
+                  disabled={!l.surCarte}
+                  title={l.affiche.raison ?? undefined}
                   className={`w-full text-left px-3 py-2.5 flex items-center gap-3 transition-colors border-b border-gray-50 last:border-0 ${
                     isActive
                       ? "bg-orange-50"
-                      : hasLoc
+                      : l.surCarte
                       ? "hover:bg-gray-100 cursor-pointer"
-                      : "opacity-50 cursor-default"
+                      : "opacity-75 cursor-default"
                   }`}
                 >
                   {/* Avatar : photo si dispo, sinon initiales */}
                   <DelivererAvatar
                     image={l.image}
                     initials={initials}
-                    color={meta.color}
+                    color={couleurs.couleur}
                     size={36}
                     ring
                   />
@@ -380,14 +415,19 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
                         {l.restaurant.name}
                       </p>
                     )}
+                    {details && (
+                      <p className="text-[10px] truncate mt-0.5" style={{ color: couleurs.texte }}>
+                        {details}
+                      </p>
+                    )}
                   </div>
 
                   {/* Badge statut */}
                   <span
                     className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: meta.bgColor, color: meta.color }}
+                    style={{ backgroundColor: couleurs.fond, color: couleurs.texte }}
                   >
-                    {meta.label}
+                    {NOM_ETAT[l.affiche.etat]}
                   </span>
                 </button>
               );
@@ -400,11 +440,11 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
       <div className="flex-1 relative">
         {/* Légende en surimpression */}
         <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-100 px-3 py-1.5 flex gap-2 flex-wrap text-[11px]">
-          {Object.entries(AVAILABILITY_META).map(([key, meta]) => (
-            <span key={key} className="inline-flex items-center gap-1 font-semibold"
-              style={{ color: meta.color }}>
-              <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: meta.color }} />
-              {meta.label}
+          {ORDRE_ETATS.filter((etat) => etat !== "INACTIF").map((etat) => (
+            <span key={etat} className="inline-flex items-center gap-1 font-semibold"
+              style={{ color: COULEURS_ETAT[etat].texte }}>
+              <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: COULEURS_ETAT[etat].couleur }} />
+              {NOM_ETAT[etat]}
             </span>
           ))}
           <span className="text-gray-400">· temps réel</span>
@@ -429,12 +469,12 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
               key={l.id}
               position={l.location!}
               onClick={() => handleSelectDeliverer(l)}
-              icon={buildMarkerIcon(l.availability, getInitials(l.first_name, l.last_name), selectedId === l.id)}
+              icon={buildMarkerIcon(l.affiche.etat, getInitials(l.first_name, l.last_name), selectedId === l.id)}
               durationMs={5000}
               zIndex={selectedId === l.id ? 10 : 1}
             />
           ))}
-          {selected?.location && selectedId && (
+          {selected?.location && selected.surCarte && (
             <InfoWindowF
               position={selected.location}
               onCloseClick={() => setSelectedId(null)}
@@ -450,8 +490,10 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
 
 // ─── InfoWindow détaillée ─────────────────────────────────────────────────────
 
-function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
-  const meta      = AVAILABILITY_META[livreur.availability];
+function LivreurInfoCard({ livreur }: { livreur: LivreurCarte }) {
+  const etat      = livreur.affiche.etat;
+  const couleurs  = COULEURS_ETAT[etat];
+  const Icone     = ICONE_ETAT[etat];
   const VehicleIcon = livreur.type_vehicule ? VEHICULE_ICON[livreur.type_vehicule] : null;
   const fullName  = [livreur.first_name, livreur.last_name].filter(Boolean).join(" ") || "Livreur";
   const initials  = getInitials(livreur.first_name, livreur.last_name);
@@ -464,7 +506,7 @@ function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
         <DelivererAvatar
           image={livreur.image}
           initials={initials}
-          color={meta.color}
+          color={couleurs.couleur}
           size={36}
         />
         <div className="flex-1 min-w-0">
@@ -477,9 +519,9 @@ function LivreurInfoCard({ livreur }: { livreur: IDelivererLive }) {
         </div>
         <span
           className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-          style={{ backgroundColor: meta.bgColor, color: meta.color }}
+          style={{ backgroundColor: couleurs.fond, color: couleurs.texte }}
         >
-          <meta.Icon className="w-2.5 h-2.5" />{meta.label}
+          <Icone className="w-2.5 h-2.5" />{livreur.affiche.libelle}
         </span>
       </div>
 

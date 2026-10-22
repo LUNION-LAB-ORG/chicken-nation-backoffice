@@ -1,4 +1,4 @@
-import type { VehiculeType } from "./livreur.types";
+import type { DisponibiliteLivreur, VehiculeType } from "./livreur.types";
 
 export type CourseStatut =
   | "PENDING_ASSIGNMENT"
@@ -61,5 +61,10 @@ export interface IDelivererLive {
   queue_rank: number | null;
   pause_until: string | null;
   auto_pause_until: string | null;
+  /**
+   * État par la règle unique du serveur (lot 1 du 22/10) : c'est lui qu'on
+   * affiche. `availability` ne sert plus que si le serveur est plus ancien.
+   */
+  disponibilite?: DisponibiliteLivreur;
   active_course: IDelivererLiveCourse | null;
 }
