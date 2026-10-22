@@ -54,11 +54,20 @@ const TECHNIQUES = [
   /^\s*[{[<]/,
 ];
 
+/**
+ * Longueur maximale d'un texte montré. Le refus « commandes pas prêtes »
+ * nomme chaque commande et son statut : il dépasse 300 caractères dès six
+ * commandes, et une course peut en compter dix (réglage « Nombre max de
+ * commandes par course »). Au-delà de 600, ce n'est plus un message écrit
+ * pour la caissière.
+ */
+const LONGUEUR_MAX = 600;
+
 /** Vrai si le texte peut être montré tel quel à une caissière. */
 export function estMessageLisible(texte: unknown): texte is string {
   if (typeof texte !== 'string') return false;
   const propre = texte.trim();
-  if (propre.length < 5 || propre.length > 300) return false;
+  if (propre.length < 5 || propre.length > LONGUEUR_MAX) return false;
   if (RESEAU.test(propre)) return false;
   return !TECHNIQUES.some((motif) => motif.test(propre));
 }

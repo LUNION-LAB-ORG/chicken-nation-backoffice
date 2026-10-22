@@ -33,6 +33,15 @@ describe("message d'erreur Opérations : le texte du serveur", () => {
     expect(messageErreurOperations(erreurApi(400, texte))).toBe(texte);
   });
 
+  test('course de dix commandes pas prêtes (plafond du réglage) : le refus du serveur en entier', () => {
+    // Texte du serveur (`messageCommandesPasPretes`) : 318 caractères dès six
+    // commandes. Un plafond à 300 le remplaçait par « La demande a été refusée ».
+    const commandes = Array.from({ length: 10 }, (_, i) => `ORD-261022-1234${i} (« En préparation »)`);
+    const texte = `Les commandes ${commandes.slice(0, -1).join(', ')} et ${commandes[9]} ne sont pas encore prêtes : marquez-les prêtes avant de les remettre.`;
+    expect(texte.length).toBeGreaterThan(300);
+    expect(messageErreurOperations(erreurApi(400, texte))).toBe(texte);
+  });
+
   test('404 : le refus du serveur gardé à côté (`messageServeur`), pas « Ressource non trouvée. »', () => {
     const texte =
       "Aucune course en cours avec ce code dans ce restaurant aujourd'hui. Vérifiez le code dicté par le livreur.";
@@ -121,7 +130,8 @@ describe("message d'erreur Opérations : repli lisible", () => {
   test('lisible : ni trop court, ni trop long, pas technique', () => {
     expect(estMessageLisible('Code inconnu.')).toBe(true);
     expect(estMessageLisible('Non')).toBe(false);
-    expect(estMessageLisible('x'.repeat(301))).toBe(false);
+    expect(estMessageLisible('x'.repeat(600))).toBe(true);
+    expect(estMessageLisible('x'.repeat(601))).toBe(false);
     expect(estMessageLisible('TypeError: x is undefined')).toBe(false);
     expect(estMessageLisible(['Le code retrait doit comporter exactement 3 chiffres'])).toBe(false);
   });
