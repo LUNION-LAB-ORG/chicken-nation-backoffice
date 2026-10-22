@@ -207,7 +207,7 @@ export function CourseDetailSidebar({ course }: Props) {
           )}
           {terminal && !course.cancelled_reason && (
             <p className="text-xs text-gray-400 text-center py-2">
-              Course terminée — aucune action disponible
+              Course terminée : aucune action disponible
             </p>
           )}
         </div>
