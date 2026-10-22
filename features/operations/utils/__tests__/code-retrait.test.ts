@@ -1,7 +1,7 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 
-import { restaurantPourCodeRetrait, restaurantPourValidation } from '../code-retrait';
+import { estCompteDeRestaurant, restaurantPourCodeRetrait, restaurantPourValidation } from '../code-retrait';
 
 /**
  * Incident du 22/10 : le même code de retrait existait dans un autre
@@ -51,21 +51,51 @@ beforeEach(() => {
 });
 
 describe('restaurant où chercher le code', () => {
-  test('caissière ou manager rattaché : son restaurant, même si un autre est resté choisi', () => {
-    expect(restaurantPourCodeRetrait({ restaurant_id: RESTO_A }, null)).toBe(RESTO_A);
-    expect(restaurantPourCodeRetrait({ restaurant_id: RESTO_A }, RESTO_B)).toBe(RESTO_A);
+  const caissiere = { type: 'RESTAURANT', role: 'CAISSIER', restaurant_id: RESTO_A };
+  const manager = { type: 'RESTAURANT', role: 'MANAGER', restaurant_id: RESTO_A };
+
+  test('caissière ou manager : son restaurant, même si un autre est resté choisi', () => {
+    expect(restaurantPourCodeRetrait(caissiere, null)).toBe(RESTO_A);
+    expect(restaurantPourCodeRetrait(caissiere, RESTO_B)).toBe(RESTO_A);
+    expect(restaurantPourCodeRetrait(manager, RESTO_B)).toBe(RESTO_A);
+  });
+
+  test('rôle de point de vente : compte de restaurant même avec un type incohérent, comme le serveur', () => {
+    expect(restaurantPourCodeRetrait({ type: 'BACKOFFICE', role: 'CUISINE', restaurant_id: RESTO_A }, RESTO_B)).toBe(
+      RESTO_A,
+    );
+    expect(estCompteDeRestaurant({ type: 'BACKOFFICE', role: 'ASSISTANT_MANAGER' })).toBe(true);
+    expect(estCompteDeRestaurant({ type: 'RESTAURANT', role: 'ADMIN' })).toBe(true);
   });
 
   test('ADMIN ou centre d’appels sans restaurant : celui choisi dans Opérations', () => {
-    expect(restaurantPourCodeRetrait({ restaurant_id: null }, RESTO_B)).toBe(RESTO_B);
-    expect(restaurantPourCodeRetrait({ restaurant_id: '' }, RESTO_B)).toBe(RESTO_B);
+    expect(restaurantPourCodeRetrait({ type: 'BACKOFFICE', role: 'ADMIN', restaurant_id: null }, RESTO_B)).toBe(
+      RESTO_B,
+    );
+    expect(restaurantPourCodeRetrait({ type: 'BACKOFFICE', role: 'CALL_CENTER', restaurant_id: '' }, RESTO_B)).toBe(
+      RESTO_B,
+    );
     expect(restaurantPourCodeRetrait({}, RESTO_B)).toBe(RESTO_B);
   });
 
+  test('compte du siège qui garde un restaurant dans sa fiche : le choix d’Opérations, que le serveur suit', () => {
+    const admin = { type: 'BACKOFFICE', role: 'ADMIN', restaurant_id: RESTO_A };
+    expect(estCompteDeRestaurant(admin)).toBe(false);
+    expect(restaurantPourCodeRetrait(admin, RESTO_B)).toBe(RESTO_B);
+    expect(restaurantPourCodeRetrait(admin, null)).toBeUndefined();
+  });
+
+  test('compte de restaurant sans restaurant (fiche incomplète) : le choix, que le serveur refusera', () => {
+    expect(restaurantPourCodeRetrait({ type: 'RESTAURANT', role: 'CAISSIER', restaurant_id: null }, RESTO_B)).toBe(
+      RESTO_B,
+    );
+  });
+
   test('« Tous les restaurants » ou utilisateur pas encore chargé : rien', () => {
-    expect(restaurantPourCodeRetrait({ restaurant_id: null }, null)).toBeUndefined();
+    expect(restaurantPourCodeRetrait({ type: 'BACKOFFICE', role: 'ADMIN', restaurant_id: null }, null)).toBeUndefined();
     expect(restaurantPourCodeRetrait(null, null)).toBeUndefined();
     expect(restaurantPourCodeRetrait(undefined, undefined)).toBeUndefined();
+    expect(estCompteDeRestaurant(null)).toBe(false);
   });
 
   test('validation : le restaurant de la recherche, sinon celui de la course affichée', () => {

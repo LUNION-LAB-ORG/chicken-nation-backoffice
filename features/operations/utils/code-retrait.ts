@@ -9,10 +9,10 @@
  *
  * Le serveur cherche donc le code dans un restaurant (contrat du 22/10,
  * backend `course-operations.controller.ts`) :
- *  - membre rattaché à un restaurant (caissière, manager) : le sien, toujours,
- *    et un autre `restaurant_id` est refusé (403) ;
- *  - sinon (ADMIN, centre d'appels) : le `restaurant_id` envoyé, en paramètre
- *    pour l'aperçu, dans le corps pour la validation ;
+ *  - compte de restaurant (caissière, manager) : le sien, toujours, et un
+ *    autre `restaurant_id` est refusé (403) ;
+ *  - compte du siège (ADMIN, centre d'appels) : le `restaurant_id` envoyé, en
+ *    paramètre pour l'aperçu, dans le corps pour la validation ;
  *  - aucun : tous les restaurants de la journée, et « Ce code existe dans
  *    plusieurs restaurants : choisissez le restaurant. » (409) s'il y en a
  *    plusieurs.
@@ -21,21 +21,43 @@
  * rattachement de la caissière.
  */
 
-interface UtilisateurRattache {
+/**
+ * Rôles d'un point de vente, les mêmes que le serveur (`STORE_ROLES`,
+ * backend `users/helpers/staff-type.helper.ts`).
+ */
+const ROLES_DE_RESTAURANT = ['MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'CUISINE'];
+
+interface Membre {
+  type?: string | null;
+  role?: string | null;
   restaurant_id?: string | null;
 }
 
 /**
- * Restaurant où chercher un code : celui du membre s'il est rattaché à un
- * restaurant (même si un autre est resté choisi dans le navigateur : le
- * serveur le refuserait), sinon celui choisi dans Opérations. `undefined` sur
- * « Tous les restaurants » : rien n'est envoyé.
+ * Compte de restaurant, avec la règle du serveur (`estCompteDeRestaurant`,
+ * backend `users/helpers/personnel-scope.helper.ts`) : type RESTAURANT ou
+ * rôle d'un point de vente. Un compte du siège qui garde un restaurant dans
+ * sa fiche n'en est pas un : le serveur suit pour lui le restaurant choisi.
+ */
+export function estCompteDeRestaurant(membre: Membre | null | undefined): boolean {
+  if (!membre) return false;
+  return membre.type === 'RESTAURANT' || ROLES_DE_RESTAURANT.includes(membre.role ?? '');
+}
+
+/**
+ * Restaurant où chercher un code :
+ *  - compte de restaurant : le sien, même si un autre est resté choisi dans
+ *    le navigateur (le serveur le refuserait) ;
+ *  - compte du siège : celui choisi dans Opérations, même si sa fiche porte
+ *    un restaurant (c'est le choix que le serveur suit) ;
+ *  - `undefined` sur « Tous les restaurants » : rien n'est envoyé.
  */
 export function restaurantPourCodeRetrait(
-  utilisateur: UtilisateurRattache | null | undefined,
+  membre: Membre | null | undefined,
   restaurantChoisi: string | null | undefined,
 ): string | undefined {
-  return utilisateur?.restaurant_id || restaurantChoisi || undefined;
+  if (estCompteDeRestaurant(membre) && membre?.restaurant_id) return membre.restaurant_id;
+  return restaurantChoisi || undefined;
 }
 
 /**
