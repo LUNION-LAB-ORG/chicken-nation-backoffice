@@ -398,6 +398,28 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         min: 1,
         max: 120,
       },
+      // Seconde relecture du 23/10 : lus par le serveur (planification.rules.ts), absents de l'écran.
+      {
+        cle: 'deliverer.eta_par_defaut_min',
+        libelle: "Temps supposé jusqu'au restaurant d'un livreur sans position récente",
+        unite: minutes,
+        type: 'nombre',
+        defaut: '8',
+        lecture: 'planificateur',
+        min: 1,
+        max: 120,
+      },
+      {
+        cle: 'course.trajet_sans_coordonnees_min',
+        libelle: "Trajet supposé vers une adresse sans position",
+        unite: minutes,
+        aide: "Sert à l'urgence de la commande et au retour estimé de son livreur.",
+        type: 'nombre',
+        defaut: '12',
+        lecture: 'planificateur',
+        min: 1,
+        max: 120,
+      },
       {
         cle: 'deliverer.travel_time_ranking',
         libelle: 'Classer les livreurs par temps de trajet réel',
@@ -471,6 +493,17 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         lecture: 'planificateur',
         min: 0,
         max: 240,
+      },
+      {
+        cle: 'course.turbo_attente_retour_max_min',
+        libelle: 'Avant Turbo, attendre un livreur qui revient au restaurant, au plus',
+        unite: minutes,
+        aide: "Seulement si les clients sont encore livrés à temps avec lui. 0 : Turbo n'attend jamais.",
+        type: 'nombre',
+        defaut: '4',
+        lecture: 'planificateur',
+        min: 0,
+        max: 30,
       },
       // Réglages déjà lus par le serveur, absents de l'écran jusqu'ici
       // (conception 6.1, relecture du 23/10). Lecture historique du module

@@ -57,6 +57,9 @@ describe('les réglages de la conception 6.1, avec leur défaut', () => {
     'course.vitesse_moyenne_kmh': '22',
     'course.vitesse_pointe_kmh': '16',
     'course.turbo_fallback_after_min_v2': '6',
+    'course.turbo_attente_retour_max_min': '4',
+    'course.trajet_sans_coordonnees_min': '12',
+    'deliverer.eta_par_defaut_min': '8',
     'course.planificateur_tache_s': '10',
     'deliverer.hors_service_sans_signal_min': '20',
     'deliverer.au_restaurant_rayon_m': '200',
@@ -369,5 +372,58 @@ describe.skipIf(!existsSync(maps))('aide du plafond Google, fidèle au serveur',
     expect(aide).toBe(TEXTE_PLAFOND_GOOGLE);
     expect(/frais de livraison/.test(aide)).toBe(itinerairePlafonne);
     expect(aide).not.toMatch(/le regroupement continue sans Google/);
+  });
+});
+
+/**
+ * Seconde relecture du 23/10 : le serveur avait deux réglages neufs
+ * (`course.turbo_attente_retour_max_min`, `course.trajet_sans_coordonnees_min`)
+ * et un ancien (`deliverer.eta_par_defaut_min`) que l'écran ne montrait pas.
+ * Chaque réglage chiffré du planificateur, lu dans ses sources quand elles
+ * sont là, doit être à l'écran avec ses bornes, son défaut et 0 accepté ou
+ * refusé comme au serveur.
+ */
+const planification = join(import.meta.dir, '../../../../../backend/src/modules/course/helpers/planification.rules.ts');
+describe.skipIf(!existsSync(planification))('réglages du planificateur, fidèles au serveur', () => {
+  const source = existsSync(planification) ? readFileSync(planification, 'utf8') : '';
+  const bornes = [...source.matchAll(/(\w+): \{ cle: '([^']+)', min: (\d+), max: (\d+), zero: (true|false)/g)].map((m) => ({
+    nom: m[1],
+    cle: m[2],
+    min: Number(m[3]),
+    max: Number(m[4]),
+    zero: m[5] === 'true',
+  }));
+  const blocDefauts = source.match(/REGLAGES_PLANIFICATION_DEFAUT[^=]*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1] ?? '';
+  const defautServeur = (nom) => blocDefauts.match(new RegExp(`\\b${nom}: ([\\d.]+),`))?.[1];
+  // Montré dans un autre onglet de Paramètres > Livraison.
+  const ailleurs = ['deliverer.gps_expiration_minutes'];
+
+  test('les bornes sont bien lues dans les sources du serveur', () => {
+    expect(bornes.length).toBeGreaterThanOrEqual(18);
+    expect(bornes.map((b) => b.cle)).toContain('course.turbo_attente_retour_max_min');
+  });
+
+  test('chaque réglage chiffré du serveur est à l’écran, mêmes bornes, même défaut', () => {
+    for (const b of bornes.filter((x) => !ailleurs.includes(x.cle))) {
+      const d = def(b.cle);
+      expect({ cle: b.cle, min: d.min, max: d.max, defaut: d.defaut }).toEqual({
+        cle: b.cle,
+        min: b.min,
+        max: b.max,
+        defaut: defautServeur(b.nom),
+      });
+      expect({ cle: b.cle, zero: verifierSaisie(d, '0').ok }).toEqual({ cle: b.cle, zero: b.zero && b.min === 0 });
+    }
+  });
+
+  test('Turbo attend un livreur qui revient : 0 accepté (jamais), 31 refusé ; trajet sans position : 0 refusé', () => {
+    expect(verifierSaisie(def('course.turbo_attente_retour_max_min'), '0')).toEqual({ ok: true, valeur: '0' });
+    expect(verifierSaisie(def('course.turbo_attente_retour_max_min'), '31')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 30' });
+    expect(verifierSaisie(def('course.trajet_sans_coordonnees_min'), '0')).toEqual({ ok: false, message: 'Valeur attendue entre 1 et 120' });
+    expect(valeurAppliquee(def('course.trajet_sans_coordonnees_min'), '0')).toEqual({
+      valeur: '12',
+      refusee: true,
+      message: 'Valeur enregistrée « 0 » refusée : le serveur applique 12.',
+    });
   });
 });
