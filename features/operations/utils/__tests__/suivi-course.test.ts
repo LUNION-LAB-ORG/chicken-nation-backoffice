@@ -249,6 +249,12 @@ describe('état de la course et de son livreur', () => {
     expect(etatCourse(course({ ...sans, offre_en_cours: { prenom: null, expires_at: ISO('12:31') } }), { maintenant }).libelle).toBe(
       'Proposée à un livreur, réponse avant 12 h 31',
     );
+    // Offre expirée ou refusée : le serveur dit `offre_en_cours: null` et garde l'échéance de la
+    // course. L'heure de l'écran n'avance que toutes les 15 s : jamais « Proposée à un livreur ».
+    expect(etatCourse(course({ ...sans, offre_en_cours: null, offer_expires_at: ISO('12:31') }), { maintenant })).toMatchObject({
+      etat: 'RECHERCHE',
+      libelle: "Recherche d'un livreur",
+    });
     // Fenêtre de 60 s réglée au serveur : à 12 h 30, le livreur récupéré à 12 h 28 est parti.
     const retire = { statut: 'IN_DELIVERY', picked_up_at: ISO('12:28'), fenetre_ajout_ferme_a: ISO('12:29') };
     expect(etatCourse(course(retire), { maintenant }).libelle).toBe('Parti');

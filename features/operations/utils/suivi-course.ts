@@ -430,7 +430,12 @@ export function etatCourse(
 
   if (statut === 'PENDING_ASSIGNMENT' || !course.deliverer_id) {
     const offre = course.offre_en_cours ?? null;
-    const echeance = instant(offre?.expires_at ?? course.offer_expires_at);
+    // Serveur du 23/10 : `offre_en_cours` dit seul s'il reste une offre (null :
+    // aucune, expirée ou refusée). L'échéance de la course, que le serveur ne
+    // remet pas à zéro, ne sert qu'aux réponses qui n'ont pas ce champ ; sinon
+    // l'écran, dont l'heure n'avance que toutes les 15 s, affichait encore
+    // « Proposée à un livreur » après l'expiration (banc du 23/10).
+    const echeance = instant(offre ? offre.expires_at : "offre_en_cours" in course ? null : course.offer_expires_at);
     if (echeance !== null && echeance > t) {
       const prenom = offre?.prenom?.trim();
       return {
