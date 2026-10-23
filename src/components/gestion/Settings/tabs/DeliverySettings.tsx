@@ -110,8 +110,8 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "0",
         hint: "Oui : les clients de l'app ne peuvent plus commander en livraison (ils gardent « À emporter »). Le call center continue normalement.",
         options: [
-          { value: "0", label: "Non — livraison active" },
-          { value: "1", label: "Oui — livraison coupée (app)" },
+          { value: "0", label: "Non : livraison active" },
+          { value: "1", label: "Oui : livraison coupée (appli)" },
         ],
       },
       {
@@ -163,8 +163,8 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "1",
         hint: "Oui : les zones Turbo sont prioritaires (la grille sert de secours si Turbo est indisponible). Non : seule la grille distance→prix ci-dessous est utilisée.",
         options: [
-          { value: "1", label: "Oui — zones Turbo prioritaires" },
-          { value: "0", label: "Non — grille distance uniquement" },
+          { value: "1", label: "Oui : zones Turbo prioritaires" },
+          { value: "0", label: "Non : grille par distance seulement" },
         ],
       },
     ],
@@ -189,11 +189,11 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "5",
         step: "1",
         min: 1,
-        hint: "Au-delà, la course passe en EXPIRED au lieu de continuer à chercher un livreur.",
+        hint: "Au-delà, la course passe en « Aucun livreur trouvé » au lieu de continuer à chercher un livreur.",
       },
       {
         key: "course.auto_cancel_accepted_after_min",
-        label: "Annulation auto — Course ACCEPTED (minutes)",
+        label: "Annulation automatique d'une course acceptée, livreur pas arrivé (minutes)",
         placeholder: "60",
         step: "1",
         min: 5,
@@ -201,7 +201,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "course.auto_cancel_at_restaurant_after_min",
-        label: "Annulation auto — Course AT_RESTAURANT (minutes)",
+        label: "Annulation automatique d'une course au restaurant, code pas validé (minutes)",
         placeholder: "30",
         step: "1",
         min: 5,
@@ -217,22 +217,22 @@ const SECTIONS: ISettingSection[] = [
 
   // ── Section 3 : Scoring d'assignation ─────────────────────────────────
   {
-    title: "Pondération du scoring livreur",
+    title: "Pondération du classement des livreurs",
     description:
       "Poids relatifs des critères utilisés pour choisir le meilleur livreur à qui envoyer une offre (la somme n'a pas besoin d'être 1, c'est relatif).",
     fields: [
       {
         key: "deliverer.score_weight_queue",
-        label: "Poids — Position dans la file d'attente",
+        label: "Poids : place dans la file d'attente",
         placeholder: "0.5",
         step: "0.05",
         min: 0,
         max: 2,
-        hint: "Plus ce poids est élevé, plus l'ordre FIFO domine (équité). Baisse-le pour privilégier l'efficacité.",
+        hint: "Plus ce poids est élevé, plus l'ordre d'arrivée compte (équité). Baissez-le pour privilégier l'efficacité.",
       },
       {
         key: "deliverer.score_weight_distance",
-        label: "Poids — Distance au restaurant",
+        label: "Poids : distance au restaurant",
         placeholder: "0.3",
         step: "0.05",
         min: 0,
@@ -241,7 +241,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "deliverer.score_weight_chain",
-        label: "Poids — Chaînage fin de course",
+        label: "Poids : enchaînement en fin de course",
         placeholder: "0.15",
         step: "0.05",
         min: 0,
@@ -250,7 +250,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "deliverer.score_weight_vehicle",
-        label: "Poids — Véhicule adapté",
+        label: "Poids : véhicule adapté",
         placeholder: "0.05",
         step: "0.05",
         min: 0,
@@ -259,12 +259,12 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "deliverer.scoring_shadow_mode",
-        label: "Shadow mode (0 = off, 1 = on)",
+        label: "Mode d'observation (0 : non, 1 : oui)",
         placeholder: "0",
         step: "1",
         min: 0,
         max: 1,
-        hint: "Si actif (1), le scoring est calculé et loggé mais n'est PAS appliqué — l'algorithme historique (last_login_at DESC) est utilisé pour la décision réelle. Idéal pour valider le comportement en prod avant bascule.",
+        hint: "Oui (1) : le classement est calculé et noté au journal, mais pas appliqué ; l'ordre historique (dernière connexion) décide. Pour valider le classement avant de l'appliquer.",
       },
     ],
   },
@@ -273,11 +273,11 @@ const SECTIONS: ISettingSection[] = [
   {
     title: "File d'attente & pénalités de refus",
     description:
-      "Règles de gestion de la queue FIFO et sanctions appliquées lors de refus répétés.",
+      "Règles de la file d'attente (ordre d'arrivée) et sanctions appliquées lors de refus répétés.",
     fields: [
       {
         key: "deliverer.refuse_penalty_positions",
-        label: "Recul dans la queue après refus (positions)",
+        label: "Recul dans la file après un refus (places)",
         placeholder: "3",
         step: "1",
         min: 0,
@@ -293,11 +293,11 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "deliverer.auto_pause_refusals_threshold",
-        label: "Seuil refus déclenchant auto-pause",
+        label: "Refus avant la pause automatique",
         placeholder: "3",
         step: "1",
         min: 1,
-        hint: "Nombre de refus/expirations consécutifs qui déclenchent une mise en pause forcée du livreur.",
+        hint: "Refus et offres laissées expirer, comptés sur la fenêtre ci-dessous, avant une mise en pause forcée du livreur.",
       },
       {
         key: "deliverer.auto_pause_refusals_window_min",
@@ -309,11 +309,11 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "deliverer.auto_pause_duration_min",
-        label: "Durée de l'auto-pause (minutes)",
+        label: "Durée de la pause automatique (minutes)",
         placeholder: "30",
         step: "1",
         min: 5,
-        hint: "Durée pendant laquelle un livreur auto-pause ne reçoit plus d'offres (il peut la lever manuellement avant).",
+        hint: "Durée pendant laquelle un livreur en pause automatique ne reçoit plus d'offres.",
       },
     ],
   },
@@ -364,7 +364,7 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "5",
         step: "1",
         min: 1,
-        hint: "Au-delà, la position GPS est considérée trop ancienne et ignorée dans le scoring (fallback queue pure).",
+        hint: "Au-delà, la position GPS est jugée trop ancienne et ignorée pour classer les livreurs (seule la file d'attente compte).",
       },
       {
         key: "deliverer.gps_max_speed_kmh",
@@ -385,7 +385,7 @@ const SECTIONS: ISettingSection[] = [
 
   // A. Période & rotation
   {
-    title: "Planning — Période & rotation",
+    title: "Planning : période et rotation",
     Icon: Calendar,
     description:
       "Durée d'un plan de créneaux et cycle de rotation des jours de repos entre livreurs.",
@@ -411,7 +411,7 @@ const SECTIONS: ISettingSection[] = [
 
   // B. Repos
   {
-    title: "Planning — Jours de repos",
+    title: "Planning : jours de repos",
     Icon: Moon,
     description:
       "Quotas de repos par livreur, autorisation weekend, et droit de modification par les livreurs.",
@@ -422,7 +422,7 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "1",
         step: "1",
         min: 0,
-        hint: "Nombre de jours OFF entre lundi et vendredi par livreur sur la période.",
+        hint: "Nombre de jours de repos entre lundi et vendredi par livreur sur la période.",
       },
       {
         key: "schedule.weekend_rest_allowed",
@@ -447,7 +447,7 @@ const SECTIONS: ISettingSection[] = [
           { value: "saturday", label: "Samedi" },
           { value: "sunday", label: "Dimanche" },
         ],
-        hint: "Si un seul livreur dans le restaurant, jour OFF imposé chaque semaine.",
+        hint: "Si le restaurant n'a qu'un livreur, jour de repos imposé chaque semaine.",
       },
       {
         key: "schedule.allow_rest_day_override",
@@ -456,14 +456,14 @@ const SECTIONS: ISettingSection[] = [
         step: "1",
         min: 0,
         max: 1,
-        hint: "1 = oui (toggle dans l'app), 0 = non (seuls les admins gèrent les repos).",
+        hint: "1 = oui (interrupteur dans l'appli), 0 = non (seuls les administrateurs gèrent les repos).",
       },
     ],
   },
 
   // C. Créneaux
   {
-    title: "Planning — Créneaux (shifts)",
+    title: "Planning : créneaux",
     Icon: Clock,
     description:
       "Plages horaires des shifts matin/soir et nombre de slots de base avant volume.",
@@ -473,7 +473,7 @@ const SECTIONS: ISettingSection[] = [
         label: "Shift du matin (HH:mm-HH:mm)",
         placeholder: "09:00-15:00",
         type: "text",
-        hint: "Format strict 'HH:mm-HH:mm'. Snapshoté dans le plan au moment de la génération.",
+        hint: "Format strict 'HH:mm-HH:mm'. Recopié dans le plan au moment de sa création.",
       },
       {
         key: "schedule.shift_evening",
@@ -484,7 +484,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "schedule.default_slots_morning",
-        label: "Slots de base — Matin",
+        label: "Places de base : matin",
         placeholder: "3",
         step: "1",
         min: 1,
@@ -492,7 +492,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "schedule.default_slots_evening",
-        label: "Slots de base — Soir",
+        label: "Places de base : soir",
         placeholder: "3",
         step: "1",
         min: 1,
@@ -505,21 +505,21 @@ const SECTIONS: ISettingSection[] = [
         step: "1",
         min: 0,
         max: 1,
-        hint: "1 = refuser les acceptations au-delà de max_slots, 0 = autoriser dépassement (souple).",
+        hint: "1 = refuser les acceptations au-delà des places prévues, 0 = autoriser le dépassement (souple).",
       },
     ],
   },
 
   // D. Volume
   {
-    title: "Planning — Volume estimé",
+    title: "Planning : volume estimé",
     Icon: BarChart3,
     description:
       "Multiplicateurs appliqués aux slots selon le jour (semaine vs weekend).",
     fields: [
       {
         key: "schedule.weekday_volume_multiplier",
-        label: "Multiplicateur volume — Semaine",
+        label: "Multiplicateur de volume : semaine",
         placeholder: "1.0",
         step: "0.1",
         min: 0.1,
@@ -527,7 +527,7 @@ const SECTIONS: ISettingSection[] = [
       },
       {
         key: "schedule.weekend_volume_multiplier",
-        label: "Multiplicateur volume — Weekend",
+        label: "Multiplicateur de volume : fin de semaine",
         placeholder: "1.5",
         step: "0.1",
         min: 0.1,
@@ -538,7 +538,7 @@ const SECTIONS: ISettingSection[] = [
 
   // E. Workflow envoi
   {
-    title: "Planning — Workflow d'envoi",
+    title: "Planning : envoi",
     Icon: Send,
     description:
       "Quand le planning est envoyé aux livreurs et combien de temps ils ont pour répondre.",
@@ -549,7 +549,7 @@ const SECTIONS: ISettingSection[] = [
         placeholder: "48",
         step: "1",
         min: 1,
-        hint: "Au-delà, les ASSIGNED restants passent CONFIRMED auto et le plan est figé.",
+        hint: "Au-delà, les créneaux sans réponse sont confirmés d'office et le plan est figé.",
       },
       {
         key: "schedule.auto_send_day_of_week",
@@ -567,14 +567,14 @@ const SECTIONS: ISettingSection[] = [
         step: "1",
         min: 0,
         max: 23,
-        hint: "Heure de la journée (0-23) à laquelle le cron auto-send se déclenche.",
+        hint: "Heure de la journée (0-23) de l'envoi automatique.",
       },
     ],
   },
 
   // F. Check-in matin
   {
-    title: "Planning — Check-in matinal",
+    title: "Planning : présence du matin",
     Icon: Sunrise,
     description:
       "Push quotidien envoyé aux livreurs pour confirmer leur présence du jour.",
@@ -586,7 +586,7 @@ const SECTIONS: ISettingSection[] = [
         step: "1",
         min: 0,
         max: 23,
-        hint: "Heure du matin où le push 'Tu es opérationnel aujourd'hui ?' est envoyé. Sans réponse en 4 h, auto-CONFIRMED PRESENT.",
+        hint: "Heure du matin où la notification « Tu es opérationnel aujourd'hui ? » est envoyée. Sans réponse en 4 h, le livreur est noté présent.",
       },
     ],
   },
