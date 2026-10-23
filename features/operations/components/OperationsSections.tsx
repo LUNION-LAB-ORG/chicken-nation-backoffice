@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AlertTriangle, PackageCheck, Store, Truck } from "lucide-react";
+import { AlertTriangle, Hourglass, PackageCheck, Store, Truck } from "lucide-react";
 
-import { type Order, OrderStatus } from "../../orders/types/order.types";
+import { type Order, OrderStatus, OrderType } from "../../orders/types/order.types";
+import { useMaintenant } from "../hooks/use-maintenant";
 import type { IOperationsBuckets } from "../types/operations.types";
 import { isOrderLate } from "../utils/group-orders";
+import { attentesParCommande, courseDeCommande, type CommandeOperations } from "../utils/suivi-course";
 import { OperationsCard } from "./OperationsCard";
 import { OrdersGroupCard } from "./OrdersGroupCard";
+import { EtatCourseLivreur } from "./course/EtatCourseLivreur";
 
 /**
  * Priorité d'affichage des commandes "Au restaurant" :
@@ -64,6 +67,20 @@ export const OperationsSections: React.FC<Props> = ({
     [pretesGroupes],
   );
 
+  // Planificateur v2 : retenues qui échoient, livreur réputé parti, offres
+  // expirées. L'heure est relue toutes les 15 s, en plus des événements.
+  const maintenant = useMaintenant(15_000);
+  const toutes = useMemo<Order[]>(
+    () => [...aPreparer, ...pretesOrders, ...recuperees],
+    [aPreparer, pretesOrders, recuperees],
+  );
+  const commandesSuivi = toutes as unknown as CommandeOperations[];
+  // Commande en cuisine attendue par une course retenue au comptoir.
+  const attentes = useMemo(
+    () => attentesParCommande(commandesSuivi, maintenant),
+    [commandesSuivi, maintenant],
+  );
+
   // Tri des commandes "À préparer" : nouvelles (PENDING/ACCEPTED) en premier,
   // puis en préparation (IN_PROGRESS). Tie-break par ancienneté (les plus
   // anciennes d'abord, pour traiter dans l'ordre d'arrivée).
@@ -118,22 +135,35 @@ export const OperationsSections: React.FC<Props> = ({
           // préparation" (IN_PROGRESS), puis les groupes "Prêtes" (READY)
           // — chaque card porte son badge de statut, ce qui suffit à se repérer.
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
-            {sortedAPreparer.map((o) => (
-              <OperationsCard
-                key={o.id}
-                order={o}
-                onClick={() => onCardClick(o)}
-                onPayClick={() => onPayClick(o)}
-                showWarningBadge={isOrderLate(o)}
-                warningLabel="En retard"
-              />
-            ))}
+            {sortedAPreparer.map((o) => {
+              const attente = attentes.get(o.id);
+              return (
+                <OperationsCard
+                  key={o.id}
+                  order={o}
+                  onClick={() => onCardClick(o)}
+                  onPayClick={() => onPayClick(o)}
+                  showWarningBadge={isOrderLate(o)}
+                  warningLabel="En retard"
+                  extra={
+                    attente ? (
+                      <span className="inline-flex max-w-full items-start gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900">
+                        <Hourglass className="mt-px h-3 w-3 shrink-0" aria-hidden />
+                        <span>{attente.texte}</span>
+                      </span>
+                    ) : undefined
+                  }
+                />
+              );
+            })}
             {pretesGroupes.map((g) => (
               <OrdersGroupCard
                 key={g.key}
                 group={g}
                 onCardClick={onCardClick}
                 onPayClick={onPayClick}
+                commandes={toutes}
+                maintenant={maintenant}
               />
             ))}
           </div>
@@ -152,16 +182,34 @@ export const OperationsSections: React.FC<Props> = ({
           <EmptyState message="Aucune commande hors restaurant" />
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
-            {recuperees.map((o) => (
-              <OperationsCard
-                key={o.id}
-                order={o}
-                onClick={() => onCardClick(o)}
-                onPayClick={() => onPayClick(o)}
-                showWarningBadge={isOrderLate(o)}
-                warningLabel="En retard"
-              />
-            ))}
+            {recuperees.map((o) => {
+              // Livreur de la course et son état (au comptoir, parti à 12 h 45…).
+              const course =
+                o.type === OrderType.DELIVERY && o.status === OrderStatus.PICKED_UP
+                  ? courseDeCommande(o as unknown as CommandeOperations)
+                  : null;
+              return (
+                <OperationsCard
+                  key={o.id}
+                  order={o}
+                  onClick={() => onCardClick(o)}
+                  onPayClick={() => onPayClick(o)}
+                  showWarningBadge={isOrderLate(o)}
+                  warningLabel="En retard"
+                  extra={
+                    course ? (
+                      <EtatCourseLivreur
+                        course={course}
+                        commandes={commandesSuivi}
+                        service={o.delivery_service}
+                        maintenant={maintenant}
+                        compact
+                      />
+                    ) : undefined
+                  }
+                />
+              );
+            })}
           </div>
         )}
       </KanbanColumn>

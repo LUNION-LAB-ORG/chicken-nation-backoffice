@@ -1,27 +1,32 @@
 "use client";
 
 import React from "react";
-import { Package } from "lucide-react";
 
 import type { Order } from "../../orders/types/order.types";
 import type { IOrderGroup } from "../types/operations.types";
+import type { CommandeOperations } from "../utils/suivi-course";
 import { OperationsCard } from "./OperationsCard";
+import { BandeauCourse } from "./course/BandeauCourse";
 
 interface Props {
   group: IOrderGroup;
   onCardClick: (order: Order) => void;
   onPayClick?: (order: Order) => void;
+  /** Toutes les commandes affichées (état du livreur, livraisons commencées). */
+  commandes?: readonly Order[];
+  /** Heure courante, relue régulièrement par la page (retenues, départ). */
+  maintenant?: Date;
 }
 
 /**
- * Container d'un regroupement de commandes d'une même course CHICKEN_NATION.
- * Code retrait XXL bien visible pour la caissière, cards internes sans ring d'urgence
- * (le groupe mutualise l'état).
+ * Commandes prêtes d'une même course. Planificateur v2 : la course naît dès
+ * qu'une commande est prête, souvent avec une seule commande. Toute course a
+ * donc son en-tête (code de retrait en grand, livreur et son état, retenue,
+ * ajouts, fusion), quel que soit son nombre de commandes. Une commande sans
+ * course reste une carte seule, comme avant.
  */
-export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClick }) => {
-  const isGrouped = group.courseId !== null && group.orders.length > 1;
-
-  if (!isGrouped) {
+export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClick, commandes, maintenant }) => {
+  if (group.courseId === null) {
     return (
       <>
         {group.orders.map((o) => (
@@ -36,38 +41,16 @@ export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClic
     );
   }
 
+  const plusieurs = group.orders.length > 1;
+
   return (
     <div className="rounded-3xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50/40 p-3 space-y-2 shadow-sm">
-      {/* Hero : badge course + code retrait XXL */}
-      <div className="flex items-center justify-between gap-3 px-2 py-2">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="w-9 h-9 rounded-full bg-[#F17922] flex items-center justify-center shrink-0">
-            <Package className="w-4 h-4 text-white" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-wider font-bold text-[#F17922]">
-              Course groupée
-            </div>
-            <div className="text-sm font-bold text-gray-900 truncate">{group.courseReference}</div>
-            <div className="text-[11px] text-gray-600">
-              {group.orders.length} commandes à récupérer
-            </div>
-          </div>
-        </div>
+      <BandeauCourse
+        group={group}
+        commandes={(commandes ?? group.orders) as unknown as CommandeOperations[]}
+        maintenant={maintenant ?? new Date()}
+      />
 
-        {group.pickupCode && (
-          <div className="bg-white border-2 border-[#F17922] rounded-xl px-3 py-1.5 shadow-md text-center shrink-0">
-            <div className="text-[9px] uppercase font-semibold text-gray-500 tracking-wider">
-              Code
-            </div>
-            <div className="font-mono text-2xl font-bold text-[#F17922] leading-none">
-              {group.pickupCode}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Cards des commandes du groupe */}
       <div className="space-y-2">
         {group.orders.map((o) => (
           <OperationsCard
@@ -75,7 +58,8 @@ export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClic
             order={o}
             onClick={() => onCardClick(o)}
             onPayClick={onPayClick ? () => onPayClick(o) : undefined}
-            hideUrgencyRing
+            // Plusieurs commandes : le groupe porte l'état ; une seule, elle garde son minuteur.
+            hideUrgencyRing={plusieurs}
           />
         ))}
       </div>

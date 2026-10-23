@@ -58,6 +58,11 @@ interface Props {
   warningLabel?: string;
   /** Cache le ring d'urgence pour les cards groupées dans une course */
   hideUrgencyRing?: boolean;
+  /**
+   * Ligne de suivi sous les badges : course qui attend cette commande en
+   * cuisine, livreur et son état pour une commande récupérée.
+   */
+  extra?: React.ReactNode;
 }
 
 const PAYABLE_STATUSES: OrderStatus[] = [
@@ -112,6 +117,7 @@ export const OperationsCard: React.FC<Props> = ({
   showWarningBadge,
   warningLabel,
   hideUrgencyRing = false,
+  extra,
 }) => {
   const urgency = getUrgencyLevel(order);
   const progress = getUrgencyProgress(order);
@@ -239,6 +245,7 @@ export const OperationsCard: React.FC<Props> = ({
               </span>
             )}
           </div>
+          {extra && <div className="mt-2 min-w-0">{extra}</div>}
         </div>
       </div>
 

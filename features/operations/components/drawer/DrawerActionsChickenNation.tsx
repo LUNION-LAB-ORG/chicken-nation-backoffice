@@ -10,6 +10,17 @@ import { AVANCE_PREPARATION_MS, momentSouhaite } from "../../../orders/utils/mom
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
+import { useCommandeEnCours } from "../../hooks/use-commande-en-cours";
+import { useMaintenant } from "../../hooks/use-maintenant";
+import {
+  courseDeCommande,
+  estAjouteeARemettre,
+  texteAjout,
+  texteRetenue,
+  texteToutEstPret,
+  type CommandeOperations,
+} from "../../utils/suivi-course";
+import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 
 interface Props {
   order: Order;
@@ -25,6 +36,10 @@ interface Props {
 export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   const { peutChangerStatut } = useDroitsCommande();
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
+  // Course complète (code, livreur, retenue, ajouts) : celle de la liste des
+  // Opérations, le détail de la commande n'en porte qu'une partie.
+  const enCours = useCommandeEnCours(order.id);
+  const maintenant = useMaintenant(15_000);
 
   /*
     Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
@@ -39,7 +54,11 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   */
   if (!peutChangerStatut) return null;
 
-  const pickup = (order as unknown as { delivery?: { course?: { pickup_code: string } } }).delivery?.course?.pickup_code;
+  const suivie = (enCours ?? order) as unknown as CommandeOperations;
+  const course = courseDeCommande(suivie) ?? courseDeCommande(order as unknown as CommandeOperations);
+  const pickup =
+    course?.pickup_code ??
+    (order as unknown as { delivery?: { course?: { pickup_code: string } } }).delivery?.course?.pickup_code;
   /**
    * La préparation ne s'ouvre qu'une heure avant l'heure souhaitée.
    *
@@ -95,6 +114,45 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     );
   }
 
+  if (order.status === OrderStatus.READY && course) {
+    // Planificateur v2 : livreur et son état, retenue, ajout, avec le code.
+    const retenue = texteRetenue(course, maintenant);
+    const toutPret = retenue ? null : texteToutEstPret(course);
+    const ajout = estAjouteeARemettre(suivie) ? texteAjout(course, []) : null;
+    return (
+      <div className="space-y-2">
+        <EtatCourseLivreur
+          course={course}
+          commandes={[suivie]}
+          service={order.delivery_service}
+          maintenant={maintenant}
+        />
+        {ajout && (
+          <p className="rounded-xl border border-green-300 bg-green-50 px-3 py-2 text-xs font-bold text-green-900">
+            {ajout}
+          </p>
+        )}
+        {retenue && (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+            {retenue}
+          </p>
+        )}
+        {toutPret && (
+          <p className="rounded-xl border border-green-300 bg-green-50 px-3 py-2 text-xs font-semibold text-green-900">
+            {toutPret}
+          </p>
+        )}
+        {pickup && !ajout && (
+          <p className="text-xs text-gray-600">
+            Code retrait :{" "}
+            <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
+          </p>
+        )}
+        <DrawerCancelAction order={order} />
+      </div>
+    );
+  }
+
   if (order.status === OrderStatus.READY) {
     return (
       <div className="space-y-2">
@@ -120,11 +178,22 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
 
   if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.COLLECTED) {
     return (
-      <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
-        <Info className="w-4 h-4 text-blue-600 shrink-0" />
-        <p className="text-xs text-blue-800">
-          Commande récupérée par le livreur — suivi via le module Courses.
-        </p>
+      <div className="space-y-2">
+        {order.status === OrderStatus.PICKED_UP && course && (
+          <EtatCourseLivreur
+            course={course}
+            commandes={[suivie]}
+            service={order.delivery_service}
+            maintenant={maintenant}
+            compact
+          />
+        )}
+        <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
+          <Info className="w-4 h-4 text-blue-600 shrink-0" />
+          <p className="text-xs text-blue-800">
+            Commande récupérée par le livreur : suivi dans le module Courses.
+          </p>
+        </div>
       </div>
     );
   }
@@ -135,7 +204,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
         <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
         <p className="text-xs text-green-800">
           Commande terminée
-          {order.paied ? " — paiement enregistré ✓" : ""}
+          {order.paied ? ", paiement enregistré ✓" : ""}
         </p>
       </div>
     );
