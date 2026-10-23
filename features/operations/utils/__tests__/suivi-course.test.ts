@@ -325,9 +325,12 @@ describe('ajout à une course', () => {
     );
   });
 
-  test('à remettre : prête, ajoutée, course avec livreur pas encore partie', () => {
+  test('à remettre : prête, ajoutée après l\'acceptation, course avec livreur pas encore partie', () => {
     const ajoutee = { ajoutee_at: ISO('12:40') };
-    expect(estAjouteeARemettre(commande('C', 'READY', { statut: 'AT_RESTAURANT' }, ajoutee))).toBe(true);
+    expect(estAjouteeARemettre(commande('C', 'READY', { statut: 'AT_RESTAURANT', assigned_at: ISO('12:30') }, ajoutee))).toBe(true);
+    // Ajoutée (ou fusionnée) pendant la recherche : le livreur l'a acceptée avec la course.
+    expect(estAjouteeARemettre(commande('C', 'READY', { statut: 'AT_RESTAURANT', assigned_at: ISO('12:41') }, ajoutee))).toBe(false);
+    expect(estAjouteeARemettre(commande('C', 'READY', { statut: 'AT_RESTAURANT' }, ajoutee))).toBe(false);
     expect(
       estAjouteeARemettre(commande('C', 'READY', { statut: 'IN_DELIVERY' }, { ajoutee_at: ISO('12:40'), ajoutee_apres_retrait: true })),
     ).toBe(true);

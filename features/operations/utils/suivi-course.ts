@@ -565,13 +565,20 @@ export function attentesParCommande(commandes: readonly CommandeOperations[], ma
 /** Statuts où une commande ajoutée doit être remise au livreur de la course. */
 const STATUTS_AVEC_LIVREUR = new Set(['ACCEPTED', 'AT_RESTAURANT', 'IN_DELIVERY']);
 
-/** La commande a été ajoutée à une course qui avait déjà un livreur, et attend d'être remise. */
+/**
+ * La commande a été ajoutée à une course qui avait DÉJÀ un livreur, et attend
+ * d'être remise. Ajoutée avant l'acceptation (ajout ou fusion pendant la
+ * recherche), elle fait partie de ce que le livreur a accepté : rien à dire.
+ */
 export function estAjouteeARemettre(commande: CommandeOperations): boolean {
   const livraison = livraisonDeCommande(commande);
   const course = livraison?.course;
   if (!livraison || !course || commande.status !== 'READY') return false;
-  if (!livraison.ajoutee_at && !livraison.ajoutee_apres_retrait) return false;
-  return !!course.deliverer_id && STATUTS_AVEC_LIVREUR.has(course.statut) && !course.parti_at;
+  if (!course.deliverer_id || !STATUTS_AVEC_LIVREUR.has(course.statut) || course.parti_at) return false;
+  if (livraison.ajoutee_apres_retrait) return true;
+  const ajoutee = instant(livraison.ajoutee_at);
+  const acceptee = instant(course.assigned_at);
+  return ajoutee !== null && acceptee !== null && ajoutee > acceptee;
 }
 
 /**
