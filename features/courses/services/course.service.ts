@@ -10,6 +10,7 @@ import type {
   CoursesQueryFilters,
   CourseWithAttempts,
   ForceAssignPayload,
+  ForceAssignReponse,
   ICourseStats,
   ICourseStatsFilters,
 } from '../types/course.types';
@@ -82,7 +83,7 @@ export const getCourseStats = (filters: ICourseStatsFilters = {}) => {
 /** Force l'affectation d'un livreur précis (override admin) */
 export const forceAssignCourse = (id: string, payload: ForceAssignPayload) =>
   actionAvecRefusServeur(() =>
-    api.patch<{ success: boolean; message: string }>(`${ENDPOINT}/${id}/force-assign`, payload, true),
+    api.patch<ForceAssignReponse>(`${ENDPOINT}/${id}/force-assign`, payload, true),
   );
 
 /** Annulation d'une course par l'admin */

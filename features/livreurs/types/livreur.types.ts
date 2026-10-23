@@ -87,6 +87,12 @@ export interface Livreur {
 
   /** État pour une offre de course (liste admin), absent sur un ancien serveur. */
   disponibilite?: DisponibiliteLivreur;
+  /**
+   * L'appli du livreur a-t-elle une connexion temps réel ouverte avec le
+   * serveur ? `false` : une offre ne lui arrive que par notification. `null` :
+   * le serveur n'a pas pu le savoir. Absent sur un ancien serveur.
+   */
+  appli_connectee?: boolean | null;
 
   // Sessions / dates
   last_login_at?: string | null;

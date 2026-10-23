@@ -14,6 +14,10 @@ import { useInvalidateCourseQuery } from './index.query';
  * course, avec une offre en attente ou hors service, et une course qui ne
  * cherche plus de livreur. Son refus est affiché tel quel dans la fenêtre
  * (`error.message`), et l'état des livreurs et de la course est relu.
+ *
+ * Offre partie vers un livreur dont l'appli n'est pas connectée en temps réel
+ * (`appli_connectee` à false) : avertissement au lieu d'un succès, le livreur
+ * ne la verra que par notification.
  */
 export const useCourseForceAssignMutation = () => {
   const invalidate = useInvalidateCourseQuery();
@@ -31,6 +35,10 @@ export const useCourseForceAssignMutation = () => {
     onSuccess: async (reponse) => {
       relireLivreurs();
       await invalidate();
+      if (reponse?.appli_connectee === false) {
+        toast(reponse.message, { icon: '⚠️', duration: 10000 });
+        return;
+      }
       // « Offre envoyée au livreur. » ou « Offre renvoyée au livreur. »
       toast.success(reponse?.message || 'Offre envoyée au livreur.');
     },

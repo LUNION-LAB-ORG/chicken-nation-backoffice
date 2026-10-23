@@ -28,8 +28,10 @@ import { useMaintenant } from "../hook/use-maintenant";
 import {
   COULEURS_ETAT,
   FILTRES_CARTE,
+  LIBELLE_APPLI_NON_CONNECTEE,
   NOM_ETAT,
   ORDRE_ETATS,
+  appliNonConnectee,
   correspondAuFiltre,
   etatLivreurAffiche,
   rangEtat,
@@ -82,11 +84,16 @@ const ETAT_INCONNU: EtatAffiche = {
   raison: null,
 };
 
-/** Détails sous le nom : l'heure de fin d'une pause, l'absence de position récente. */
+/**
+ * Détails sous le nom : l'heure de fin d'une pause, l'absence de position
+ * récente, l'appli sans connexion temps réel (les offres ne lui arrivent
+ * alors que par notification).
+ */
 function detailsLivreur(l: LivreurCarte): string {
   const details: string[] = [];
   if (l.affiche.libelle !== NOM_ETAT[l.affiche.etat]) details.push(l.affiche.libelle);
   if (!l.surCarte) details.push(l.location ? "position ancienne" : "sans position");
+  if (appliNonConnectee(l.appli_connectee, l.affiche.etat)) details.push(LIBELLE_APPLI_NON_CONNECTEE.toLowerCase());
   return details.join(" · ");
 }
 

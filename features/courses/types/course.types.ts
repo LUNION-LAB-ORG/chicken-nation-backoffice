@@ -220,6 +220,19 @@ export interface ForceAssignPayload {
   deliverer_id: string;
 }
 
+/** Réponse de `PATCH /courses/:id/force-assign`. */
+export interface ForceAssignReponse {
+  success: boolean;
+  /** « Offre envoyée au livreur. », ou l'avertissement « par notification seulement ». */
+  message: string;
+  /**
+   * L'appli du livreur était-elle connectée en temps réel ? `false` : l'offre
+   * ne lui arrive que par notification. `null` : inconnu. Absent sur un
+   * serveur plus ancien.
+   */
+  appli_connectee?: boolean | null;
+}
+
 export interface CancelCoursePayload {
   reason?: string;
 }

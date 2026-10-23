@@ -66,5 +66,7 @@ export interface IDelivererLive {
    * affiche. `availability` ne sert plus que si le serveur est plus ancien.
    */
   disponibilite?: DisponibiliteLivreur;
+  /** Connexion temps réel de l'appli (voir `Livreur.appli_connectee`). */
+  appli_connectee?: boolean | null;
   active_course: IDelivererLiveCourse | null;
 }

@@ -299,6 +299,40 @@ export function choixAffectation(
   return { etat: e.etat, libelle: e.libelle, selectionnable: e.peutRecevoirOffre, raison: e.raison, renvoi: false };
 }
 
+// ============================================================
+// CONNEXION TEMPS RÉEL DE L'APPLI
+// ============================================================
+
+/**
+ * « Disponible » et une position récente viennent des requêtes de l'appli,
+ * pas de sa connexion temps réel : un livreur peut les avoir et ne recevoir
+ * aucune offre à l'écran. Le serveur dit s'il voit cette connexion
+ * (`appli_connectee`) ; sans elle, l'offre ne lui arrive que par notification.
+ */
+export const LIBELLE_APPLI_NON_CONNECTEE = 'Appli non connectée';
+export const RAISON_APPLI_NON_CONNECTEE =
+  "L'appli du livreur n'est pas connectée en temps réel : une offre ne lui arrive que par notification. " +
+  "Demandez-lui de rouvrir l'appli.";
+
+/** États où l'appli doit être connectée : il peut recevoir une offre, ou il livre. */
+const ETATS_APPLI_ATTENDUE: ReadonlySet<EtatDisponibilite> = new Set<EtatDisponibilite>([
+  'DISPONIBLE',
+  'OFFRE_EN_ATTENTE',
+  'EN_COURSE',
+]);
+
+/**
+ * À signaler seulement si le serveur affirme qu'il n'y a pas de connexion
+ * (`false`) et que le livreur est en service. Inconnu (`null`), serveur
+ * ancien (absent), en pause ou hors service : rien.
+ */
+export function appliNonConnectee(
+  appliConnectee: boolean | null | undefined,
+  etat: EtatDisponibilite | null | undefined,
+): boolean {
+  return appliConnectee === false && !!etat && ETATS_APPLI_ATTENDUE.has(etat);
+}
+
 /** Tri de la fenêtre : les livreurs qu'on peut choisir d'abord, puis par état, puis par nom. */
 export function comparerPourAffectation(
   a: { choix: ChoixAffectation; nom: string },
