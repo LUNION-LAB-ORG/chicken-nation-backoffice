@@ -11,15 +11,28 @@ import { libelleSource } from '../../../../../backend/src/modules/order/helpers/
 const CANAUX = ['APP', 'WEB', 'CALL_CENTER', 'RESTAURANT', null, undefined, 'INCONNU'];
 const AUTOS = [true, false, null, undefined];
 
-describe('canal d’une commande : écran et exports alignés', () => {
-  test('même libellé que la colonne « Source » des exports, pour chaque canal et chaque `auto`', () => {
+describe('canal d’une commande : écran et exports', () => {
+  // Demande du 03/10 : la colonne « Source » des exports reprend « Appli » ou
+  // « Téléphone » (serveur 7b0be2d), l'écran garde « Site web », « Appli » ou
+  // « Manuel ». Ils s'accordent sur l'origine : passée par le client, ou
+  // saisie par le personnel.
+  test('même origine que la colonne « Source » des exports, pour chaque commande réelle', () => {
+    const origine = (libelle) => (libelle === 'Manuel' || libelle === 'Téléphone' ? 'personnel' : 'client');
+    // Couples enregistrés par le serveur : site (repris au téléphone ou non),
+    // appli, centre d'appels, comptoir, commande antérieure au canal.
+    const reelles = [
+      ['WEB', true], ['WEB', false], ['APP', true], ['CALL_CENTER', false], ['RESTAURANT', false],
+      [null, true], [null, false], [undefined, true], [undefined, false],
+    ];
+    for (const [channel, auto] of reelles) {
+      const ecran = libelleCanal({ channel, auto });
+      const exports = libelleSource({ channel, auto });
+      expect({ channel, auto, ecran: origine(ecran) }).toEqual({ channel, auto, ecran: origine(exports) });
+    }
     for (const channel of CANAUX) {
       for (const auto of AUTOS) {
-        expect({ channel, auto, ecran: libelleCanal({ channel, auto }) }).toEqual({
-          channel,
-          auto,
-          ecran: libelleSource({ channel, auto }),
-        });
+        expect(['Site web', 'Appli', 'Manuel']).toContain(libelleCanal({ channel, auto }));
+        expect(['Appli', 'Téléphone']).toContain(libelleSource({ channel, auto }));
       }
     }
   });

@@ -11,9 +11,9 @@ const STATUTS = Object.values(OrderStatus);
 const ROLES = Object.values(UserRole);
 
 describe('modification d’une commande : écran et serveur alignés', () => {
-  test('8 statuts et 8 rôles couverts', () => {
+  test('8 statuts et 9 rôles couverts (LIVRAISON_OPS depuis le 08/10)', () => {
     expect(STATUTS).toHaveLength(8);
-    expect(ROLES).toHaveLength(8);
+    expect(ROLES).toHaveLength(9);
   });
 
   test('même réponse que le serveur pour chaque rôle et chaque statut', () => {
