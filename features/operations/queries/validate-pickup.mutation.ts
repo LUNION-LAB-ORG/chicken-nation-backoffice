@@ -5,6 +5,7 @@ import type { Course } from '../../courses/types/course.types';
 import { useRestaurantCodeRetrait } from '../hooks/use-restaurant-code-retrait';
 import { validatePickup } from '../services/operations-service';
 import { restaurantPourValidation } from '../utils/code-retrait';
+import { texteRemiseValidee } from '../utils/remise-par-code';
 import { useInvalidateOperationsQuery } from './index.query';
 
 /**
@@ -25,11 +26,12 @@ export const useValidatePickupMutation = () => {
   const restaurantRecherche = useRestaurantCodeRetrait();
 
   return useMutation({
-    mutationFn: (course: Pick<Course, 'pickup_code' | 'restaurant_id'>) =>
+    mutationFn: (course: Pick<Course, 'pickup_code' | 'restaurant_id'> & Partial<Pick<Course, 'statut'>>) =>
       validatePickup(course.pickup_code, restaurantPourValidation(restaurantRecherche, course)),
-    onSuccess: async () => {
+    onSuccess: async (_reponse, course) => {
       await invalidate();
-      toast.success('Course validée : le livreur peut partir en livraison');
+      // Retrait complémentaire (course déjà récupérée) : la commande ajoutée est remise.
+      toast.success(texteRemiseValidee(course));
     },
     onError: (e: Error) => {
       toast.error(e.message);
