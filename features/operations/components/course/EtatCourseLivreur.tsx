@@ -17,6 +17,7 @@ import {
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDelivererLivePosition } from "../../../maps/hooks/use-deliverer-live-socket";
 import {
+  commandeARemettre,
   etatCourse,
   livraisonsCommencees,
   plusRecente,
@@ -85,6 +86,7 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
     position,
     restaurant,
     livraisonsCommencees: livraisonsCommencees(course.id, commandes),
+    resteARemettre: commandeARemettre(course.id, commandes),
     service,
   });
   const ton = TONS[etat.ton];

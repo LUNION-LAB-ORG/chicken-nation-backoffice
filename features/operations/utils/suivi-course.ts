@@ -392,6 +392,18 @@ export function livraisonsCommencees(courseId: string, commandes: readonly Comma
 }
 
 /**
+ * Une commande de la course est encore prête au comptoir, pas remise au
+ * livreur (vue sur les commandes affichées). La caisse remet commande par
+ * commande : tant qu'il en reste une, le livreur n'est pas « Parti ».
+ */
+export function commandeARemettre(courseId: string, commandes: readonly CommandeOperations[]): boolean {
+  return commandes.some((c) => {
+    const l = livraisonDeCommande(c);
+    return l?.course?.id === courseId && c.status === 'READY' && l.statut !== 'CANCELLED';
+  });
+}
+
+/**
  * État de la course vu du comptoir, avec le livreur :
  *  - sans livreur : « Recherche d'un livreur », « Proposée à un livreur,
  *    réponse avant 12 h 36 », « Confiée à Turbo » ;
@@ -400,7 +412,11 @@ export function livraisonsCommencees(courseId: string, commandes: readonly Comma
  *  - au restaurant : « Au comptoir » ;
  *  - retrait validé : « Au comptoir » tant que le serveur n'a pas noté son
  *    départ et qu'aucune livraison n'a commencé (4 min au plus), puis
- *    « Parti à 12 h 45 », « Parti » ou « En livraison ».
+ *    « Parti à 12 h 45 », « Parti » ou « En livraison ». Jamais « Parti »
+ *    tant qu'une commande de la course reste à remettre (`resteARemettre`,
+ *    même règle que la caisse, relecture du 23/10) : un départ posé dès la
+ *    première remise (ancienne méthode, ancienne appli) le disait devant la
+ *    caissière qui tend le second sac.
  */
 export function etatCourse(
   course: CourseOperations,
@@ -412,6 +428,8 @@ export function etatCourse(
     restaurant?: PositionGps | null;
     /** Une livraison de la course a commencé. */
     livraisonsCommencees?: boolean;
+    /** Une commande de la course est encore prête au comptoir. */
+    resteARemettre?: boolean;
     /** Service de livraison de la commande (TURBO d'origine). */
     service?: string | null;
   },
@@ -467,6 +485,7 @@ export function etatCourse(
   if (statut === 'AT_RESTAURANT') return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
 
   if (statut === 'IN_DELIVERY') {
+    if (ctx.resteARemettre) return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
     const parti = instant(course.parti_at);
     if (parti !== null) return { etat: 'PARTI', libelle: `Parti à ${heureCourte(new Date(parti))}`, livreur, ton: 'gris' };
     if (ctx.livraisonsCommencees) return { etat: 'EN_LIVRAISON', libelle: 'En livraison', livreur, ton: 'gris' };

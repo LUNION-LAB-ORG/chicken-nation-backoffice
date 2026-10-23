@@ -6,6 +6,7 @@ import {
   attentesParCommande,
   avisDeCourse,
   avisEncoreValides,
+  commandeARemettre,
   courseDeCommande,
   enumerer,
   estAjouteeARemettre,
@@ -265,6 +266,23 @@ describe('état de la course et de son livreur', () => {
     expect(etatCourse(course({ statut: 'COMPLETED' }), { maintenant }).libelle).toBe('Course terminée');
     expect(etatCourse(course({ statut: 'CANCELLED' }), { maintenant }).libelle).toBe('Course annulée');
     expect(etatCourse(course({ statut: 'EXPIRED', deliverer_id: null }), { maintenant }).libelle).toBe('Aucun livreur trouvé');
+  });
+
+  test("jamais « Parti » tant qu'une commande de la course reste au comptoir (comme la caisse)", () => {
+    const parti = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:28'), parti_at: ISO('12:28') });
+    expect(etatCourse(parti, { maintenant }).libelle).toBe('Parti à 12 h 28');
+    expect(etatCourse(parti, { maintenant, resteARemettre: true })).toMatchObject({
+      etat: 'AU_COMPTOIR',
+      libelle: 'Au comptoir',
+    });
+    const commandes = [
+      commande('1', 'PICKED_UP', { statut: 'IN_DELIVERY' }),
+      commande('2', 'READY', { statut: 'IN_DELIVERY' }),
+      commande('3', 'READY', { id: 'k2' }, { statut: 'CANCELLED' }),
+    ];
+    expect(commandeARemettre('k1', commandes)).toBe(true);
+    expect(commandeARemettre('k1', commandes.slice(0, 1))).toBe(false);
+    expect(commandeARemettre('k2', commandes)).toBe(false);
   });
 
   test('livraisons commencées, vues sur les commandes affichées', () => {
