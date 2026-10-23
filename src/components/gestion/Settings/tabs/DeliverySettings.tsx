@@ -17,6 +17,7 @@ import {
 
 import { useSettingMutation, useSettingsQuery } from "@/hooks/useSettingsQuery";
 import ServiceByRestaurantSection from "./ServiceByRestaurantSection";
+import RegroupementSettings from "../../../../../features/courses/components/reglages/RegroupementSettings";
 
 interface ISettingField {
   key: string;
@@ -179,84 +180,10 @@ const SECTIONS: ISettingSection[] = [
     ],
   },
 
-  // ── Section 2 : Regroupement intelligent ──────────────────────────────
-  {
-    title: "Regroupement intelligent des commandes",
-    description:
-      "Fenêtre d'attente pour regrouper plusieurs commandes prêtes en une seule course (mutualisation des livraisons).",
-    fields: [
-      {
-        key: "course.batch_window_seconds",
-        label: "Fenêtre MAX de regroupement (secondes)",
-        placeholder: "180",
-        step: "1",
-        min: 30,
-        max: 600,
-        hint: "Délai max d'attente avant flush forcé d'un batch. 180s = 3 min.",
-      },
-      {
-        key: "course.batch_min_wait_seconds",
-        label: "Attente MIN avant flush (secondes)",
-        placeholder: "120",
-        step: "1",
-        min: 0,
-        max: 600,
-        hint: "Délai minimum garanti avant qu'un batch soit flushé, même s'il atteint le plafond. Évite la précipitation et laisse le temps à d'autres commandes d'arriver. 120s = 2 min.",
-      },
-      {
-        key: "course.max_orders_per_course",
-        label: "Nombre max de commandes par course",
-        placeholder: "3",
-        step: "1",
-        min: 1,
-        max: 10,
-        hint: "Plafond de livraisons qu'un livreur transporte en une seule course.",
-      },
-      {
-        key: "course.lookahead_in_progress",
-        label: "Anticipation IN_PROGRESS (0/1)",
-        placeholder: "1",
-        step: "1",
-        min: 0,
-        max: 1,
-        hint: "Si activé (1), quand une commande crée un nouveau batch, on regarde s'il y a des commandes encore en préparation compatibles. S'il n'y en a aucune, le batch part avec un TTL court (= min_wait) au lieu d'attendre la fenêtre max pour rien.",
-      },
-      {
-        key: "course.rebalance_enabled",
-        label: "Re-balance des courses (0/1)",
-        placeholder: "1",
-        step: "1",
-        min: 0,
-        max: 1,
-        hint: "Si activé (1), un cron parcourt périodiquement les courses non encore récupérées et tente de les fusionner ou de transférer des livraisons entre elles pour optimiser après-coup. Les livreurs déjà acceptés sont notifiés.",
-      },
-      {
-        key: "course.rebalance_interval_seconds",
-        label: "Fréquence re-balance (secondes)",
-        placeholder: "30",
-        step: "5",
-        min: 10,
-        max: 300,
-        hint: "Cron qui relance la phase de re-balance.",
-      },
-      {
-        key: "course.max_detour_meters",
-        label: "Distance max entre destinations (mètres)",
-        placeholder: "1500",
-        step: "100",
-        min: 100,
-        hint: "Distance maximale acceptable entre 2 points de livraison pour les regrouper dans la même course.",
-      },
-      {
-        key: "course.max_route_duration_min",
-        label: "Durée max totale du trajet (minutes)",
-        placeholder: "25",
-        step: "1",
-        min: 5,
-        hint: "Durée plafond du trajet complet restaurant → dernier client (via Google Directions).",
-      },
-    ],
-  },
+  // ── Section 2 : Regroupement des commandes ────────────────────────────
+  // Section à part (`RegroupementSettings`), affichée juste après celle-ci :
+  // méthode nouvelle ou ancienne, limites du planificateur, réglages des lots
+  // rangés sous « Ancienne méthode », valeurs refusées signalées.
 
   // ── Section 3 : Scoring d'assignation ─────────────────────────────────
   {
@@ -888,6 +815,8 @@ const DeliverySettings: React.FC = () => {
         {section.title === "Service de livraison par défaut" && (
           <ServiceByRestaurantSection />
         )}
+        {/* Regroupement des commandes (planificateur), son propre bouton d'enregistrement. */}
+        {section.title === "Offre de course & refus" && <RegroupementSettings />}
         </React.Fragment>
       ))}
 
