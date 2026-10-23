@@ -1,5 +1,7 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   CLE_METHODE,
@@ -7,6 +9,7 @@ import {
   GROUPE_ANCIENNE_METHODE,
   GROUPES_NOUVELLE_METHODE,
   METHODES,
+  TEXTE_PLAFOND_GOOGLE,
   TOUS_LES_REGLAGES,
   ecrireRestaurants,
   libelleAvecUnite,
@@ -345,5 +348,26 @@ describe('enregistrement', () => {
     expect(planEnregistrement({ ...base, enregistrees: { [CLE_RESTAURANTS]: '[cassé' } }).changements).toEqual([
       { cle: CLE_RESTAURANTS, action: 'effacer' },
     ]);
+  });
+});
+
+/**
+ * Relecture du 23/10 (constat « le plafond Google du planificateur coupe
+ * aussi les frais de livraison et le choix du restaurant ») : l'aide disait
+ * « Au-delà, le regroupement continue sans Google ». Elle doit dire ce que le
+ * serveur coupe vraiment, lu dans ses sources quand elles sont là.
+ */
+const maps = join(import.meta.dir, '../../../../../backend/src/modules/maps');
+describe.skipIf(!existsSync(maps))('aide du plafond Google, fidèle au serveur', () => {
+  test("l'aide nomme les frais de livraison tant que l'itinéraire du serveur est plafonné", () => {
+    const compteur = readFileSync(join(maps, 'compteur-appels-google.service.ts'), 'utf8');
+    const service = readFileSync(join(maps, 'maps.service.ts'), 'utf8');
+    const plafonnees = compteur.match(/FONCTIONS_PLAFONNEES[^=]*=\s*new Set<[^>]*>\(\[([^\]]*)\]/)?.[1] ?? '';
+    const itinerairePlafonne =
+      /'itineraire'/.test(plafonnees) && /reserver\('itineraire'\)/.test(service) && /distanceRoutiereMetres/.test(service);
+    const aide = def('maps.plafond_appels_jour').aide;
+    expect(aide).toBe(TEXTE_PLAFOND_GOOGLE);
+    expect(/frais de livraison/.test(aide)).toBe(itinerairePlafonne);
+    expect(aide).not.toMatch(/le regroupement continue sans Google/);
   });
 });

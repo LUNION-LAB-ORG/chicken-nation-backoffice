@@ -51,6 +51,15 @@ export interface GroupeReglages {
 // MÉTHODE ET RESTAURANTS
 // ============================================================
 
+/**
+ * Aide du plafond Google (`maps.plafond_appels_jour`) : ce qu'il coupe
+ * vraiment au serveur. Testé contre les sources du serveur
+ * (`reglages-regroupement.test.ts`) : si les frais de livraison sortent du
+ * plafond, la phrase doit changer.
+ */
+export const TEXTE_PLAFOND_GOOGLE =
+  "Trajets, détours et temps de trajet, y compris pour les frais de livraison et le choix du restaurant. Au-delà, jusqu'à minuit, ils se calculent à vol d'oiseau. 0 : aucun de ces appels.";
+
 export const CLE_METHODE = 'course.planificateur';
 export const CLE_RESTAURANTS = 'course.planificateur_restaurants';
 
@@ -447,7 +456,11 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         cle: 'maps.plafond_appels_jour',
         libelle: "Plafond d'appels Google par jour",
         unite: 'appels',
-        aide: 'Au-delà, le regroupement continue sans Google. 0 : aucun appel.',
+        // Relecture du 23/10 : le plafond du serveur (`FONCTIONS_PLAFONNEES`)
+        // couvre aussi l'itinéraire des frais de livraison et du choix du
+        // restaurant. Dire seulement « le regroupement » faisait croire qu'un
+        // plafond bas n'économisait que le planificateur.
+        aide: TEXTE_PLAFOND_GOOGLE,
         type: 'nombre',
         defaut: '2000',
         lecture: 'plafond',
