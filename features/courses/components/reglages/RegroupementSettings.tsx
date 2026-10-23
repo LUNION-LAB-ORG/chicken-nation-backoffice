@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { AlertTriangle, CheckCircle, ChevronDown, GitMerge, Store } from "lucide-react";
@@ -15,6 +15,8 @@ import {
   GROUPE_ANCIENNE_METHODE,
   GROUPES_NOUVELLE_METHODE,
   METHODES,
+  TEXTE_ANCIENNE_METHODE_CHOISIE,
+  TEXTE_AUSSI_ANCIENNE,
   TOUS_LES_REGLAGES,
   libelleAvecUnite,
   libelleOuiNon,
@@ -23,10 +25,41 @@ import {
   planEnregistrement,
   resumeRestaurants,
   valeurAppliquee,
+  type Changement,
   type DefinitionReglage,
   type GroupeReglages,
   type Methode,
 } from "../../utils/reglages-regroupement";
+import {
+  garderSiModifie,
+  memeListe,
+  rehydrater,
+  type EtatRegroupement,
+} from "../../utils/enregistrement-livraison";
+
+/**
+ * Ce que la page « Paramètres > Livraison » peut demander à la section : son
+ * bouton « Enregistrer » du bas enregistre aussi le regroupement.
+ */
+export interface PoigneeRegroupement {
+  /** Modifications et saisies refusées en cours. */
+  etat(): EtatRegroupement;
+  /**
+   * Écrit les modifications, sans message ni relecture (la page s'en
+   * charge). Rend le nombre d'écritures ; une écriture refusée lève l'erreur.
+   */
+  enregistrer(): Promise<number>;
+}
+
+/** Écrit ou efface chaque réglage du plan. */
+async function executerPlan(changements: Changement[]): Promise<number> {
+  await Promise.all(
+    changements.map((c) =>
+      c.action === "effacer" ? deleteSetting(c.cle) : updateSetting(c.cle, c.valeur, c.description),
+    ),
+  );
+  return changements.length;
+}
 
 /**
  * Paramètres > Livraison, section « Regroupement des commandes »
@@ -38,9 +71,15 @@ import {
  *
  * Bouton d'enregistrement propre à la section (comme « Service par
  * restaurant ») : un seul message au lieu d'un par réglage, et rien n'est
- * écrit tant qu'une saisie est refusée.
+ * écrit tant qu'une saisie est refusée. Le bouton « Enregistrer » du bas de
+ * la page enregistre aussi la section (`PoigneeRegroupement`), et une
+ * relecture des réglages (après l'un ou l'autre bouton) ne remplace que les
+ * champs que l'écran n'a pas modifiés (relecture du 23/10).
  */
-export default function RegroupementSettings() {
+function SectionRegroupement(
+  { surEtat }: { surEtat?: (etat: EtatRegroupement) => void },
+  ref: React.ForwardedRef<PoigneeRegroupement>,
+) {
   const queryClient = useQueryClient();
   const course = useSettingsQuery("course.");
   const livreur = useSettingsQuery("deliverer.");
@@ -66,7 +105,12 @@ export default function RegroupementSettings() {
   const [enCours, setEnCours] = useState(false);
   const [enregistre, setEnregistre] = useState(false);
 
-  // Hydratation depuis la base (et après chaque enregistrement).
+  // Ce que la dernière lecture a mis à l'écran : une relecture ne remplace
+  // que les champs restés tels quels depuis.
+  const hydrateesRef = useRef<{ saisies: Record<string, string>; methode: Methode; choisis: string[] } | null>(null);
+
+  // Hydratation depuis la base (et après chaque enregistrement, de la section
+  // ou de la page).
   useEffect(() => {
     const initiales: Record<string, string> = {};
     for (const def of TOUS_LES_REGLAGES) {
@@ -80,9 +124,18 @@ export default function RegroupementSettings() {
       // valeur refusée reste affichée telle quelle, avec son alerte.
       initiales[def.cle] = def.type === "oui_non" && !lue.refusee ? lue.valeur : brut;
     }
-    setSaisies(initiales);
-    setMethode(lireMethode(enregistrees[CLE_METHODE]).methode);
-    setChoisis(lireRestaurants(enregistrees[CLE_RESTAURANTS]).ids);
+    const lues = {
+      saisies: initiales,
+      methode: lireMethode(enregistrees[CLE_METHODE]).methode,
+      choisis: lireRestaurants(enregistrees[CLE_RESTAURANTS]).ids,
+    };
+    const avant = hydrateesRef.current;
+    hydrateesRef.current = lues;
+    setSaisies((locales) => rehydrater({ locales, hydratees: avant?.saisies ?? null, serveur: lues.saisies }));
+    setMethode((locale) => (avant ? garderSiModifie({ locale, hydratee: avant.methode, serveur: lues.methode }) : lues.methode));
+    setChoisis((locaux) =>
+      avant ? garderSiModifie({ locale: locaux, hydratee: avant.choisis, serveur: lues.choisis, egal: memeListe }) : lues.choisis,
+    );
   }, [enregistrees]);
 
   const plan = useMemo(
@@ -120,15 +173,29 @@ export default function RegroupementSettings() {
   const nbErreurs = Object.keys(plan.erreurs).length;
   const nbChangements = plan.changements.length;
 
+  // La page suit les modifications de la section (texte et blocage de son
+  // bouton du bas).
+  useEffect(() => {
+    surEtat?.({ changements: nbChangements, erreurs: nbErreurs });
+  }, [nbChangements, nbErreurs, surEtat]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      etat: () => ({ changements: nbChangements, erreurs: nbErreurs }),
+      enregistrer: async () => {
+        if (nbErreurs > 0) throw new Error("Regroupement : une valeur est refusée.");
+        return executerPlan(plan.changements);
+      },
+    }),
+    [plan, nbChangements, nbErreurs],
+  );
+
   const enregistrer = async () => {
     if (nbErreurs > 0 || nbChangements === 0) return;
     setEnCours(true);
     try {
-      await Promise.all(
-        plan.changements.map((c) =>
-          c.action === "effacer" ? deleteSetting(c.cle) : updateSetting(c.cle, c.valeur, c.description),
-        ),
-      );
+      await executerPlan(plan.changements);
       toast.success("Regroupement enregistré");
       setEnregistre(true);
       setTimeout(() => setEnregistre(false), 2000);
@@ -267,8 +334,7 @@ export default function RegroupementSettings() {
 
       {methode === "v1" && (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          Ancienne méthode choisie : les limites ci-dessous ne servent qu&apos;à la nouvelle, sauf le nombre maximal de
-          commandes par course. Les courses en cours se terminent normalement.
+          {TEXTE_ANCIENNE_METHODE_CHOISIE}
         </p>
       )}
 
@@ -280,6 +346,7 @@ export default function RegroupementSettings() {
           erreurs={plan.erreurs}
           refus={refusParCle}
           onChange={changer}
+          ancienneChoisie={methode === "v1"}
         />
       ))}
 
@@ -329,6 +396,9 @@ export default function RegroupementSettings() {
   );
 }
 
+const RegroupementSettings = forwardRef(SectionRegroupement);
+export default RegroupementSettings;
+
 function Groupe({
   groupe,
   saisies,
@@ -336,6 +406,7 @@ function Groupe({
   refus,
   onChange,
   sansTitre,
+  ancienneChoisie,
 }: {
   groupe: GroupeReglages;
   saisies: Record<string, string>;
@@ -343,6 +414,8 @@ function Groupe({
   refus: Map<string, string>;
   onChange: (cle: string, valeur: string) => void;
   sansTitre?: boolean;
+  /** Ancienne méthode choisie : les réglages qu'elle lit aussi sont repérés. */
+  ancienneChoisie?: boolean;
 }) {
   return (
     <div>
@@ -357,6 +430,7 @@ function Groupe({
             erreur={erreurs[def.cle]}
             refus={refus.get(def.cle)}
             onChange={(v) => onChange(def.cle, v)}
+            repere={ancienneChoisie && def.aussiAncienne ? TEXTE_AUSSI_ANCIENNE : undefined}
           />
         ))}
       </div>
@@ -370,12 +444,15 @@ function Champ({
   erreur,
   refus,
   onChange,
+  repere,
 }: {
   def: DefinitionReglage;
   valeur: string;
   erreur?: string;
   refus?: string;
   onChange: (valeur: string) => void;
+  /** Petit repère sous le libellé (« Aussi pour l'ancienne méthode »). */
+  repere?: string;
 }) {
   const id = `reglage-${def.cle.replace(/\./g, "-")}`;
   const bordure = erreur || refus ? "border-red-400 focus:ring-red-400" : "border-gray-300 focus:ring-orange-500";
@@ -384,6 +461,11 @@ function Champ({
       <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-gray-700">
         {libelleAvecUnite(def)}
       </label>
+      {repere && (
+        <span className="mb-1.5 inline-block rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-900">
+          {repere}
+        </span>
+      )}
       {def.type === "oui_non" ? (
         <select
           id={id}

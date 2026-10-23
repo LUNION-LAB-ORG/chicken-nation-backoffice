@@ -39,6 +39,11 @@ export interface DefinitionReglage {
   entier?: boolean;
   /** Pas de saisie. */
   pas?: string;
+  /**
+   * Le serveur le lit aussi avec l'ancienne méthode (relecture du 23/10) :
+   * repéré à l'écran quand l'ancienne méthode est choisie.
+   */
+  aussiAncienne?: boolean;
 }
 
 export interface GroupeReglages {
@@ -58,7 +63,18 @@ export interface GroupeReglages {
  * plafond (serveur 8ec6b0c), la phrase ne doit plus les nommer.
  */
 export const TEXTE_PLAFOND_GOOGLE =
-  "Tracés, détours et temps de trajet du regroupement des commandes. Au-delà, jusqu'à minuit, le regroupement continue à vol d'oiseau. 0 : aucun de ces appels.";
+  "Tracés, détours et temps de trajet du regroupement des commandes, et temps de trajet des livreurs pour choisir à qui proposer une course. Au-delà, jusqu'à minuit, l'un et l'autre continuent à vol d'oiseau. 0 : aucun de ces appels.";
+
+/** Repère des réglages que l'ancienne méthode lit aussi. */
+export const TEXTE_AUSSI_ANCIENNE = "Aussi pour l'ancienne méthode";
+
+/**
+ * Note affichée quand l'ancienne méthode est choisie. Relecture du 23/10 :
+ * elle disait que seules les limites « de la nouvelle » étaient concernées,
+ * alors que la bascule vers Turbo, le classement et la mise hors service
+ * des livreurs, le plafond Google et les alertes servent aussi à l'ancienne.
+ */
+export const TEXTE_ANCIENNE_METHODE_CHOISIE = `Ancienne méthode choisie : seuls les réglages marqués « ${TEXTE_AUSSI_ANCIENNE} » servent encore, avec ceux de l'ancienne méthode plus bas. Les courses en cours se terminent normalement.`;
 
 export const CLE_METHODE = 'course.planificateur';
 export const CLE_RESTAURANTS = 'course.planificateur_restaurants';
@@ -177,13 +193,13 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
       {
         cle: 'course.max_orders_per_course',
         libelle: 'Nombre maximal de commandes par course',
-        aide: "Vaut aussi pour l'ancienne méthode.",
         type: 'nombre',
         defaut: '3',
         lecture: 'planificateur',
         min: 1,
         max: 10,
         entier: true,
+        aussiAncienne: true,
       },
       {
         cle: 'course.max_route_duration_min',
@@ -389,6 +405,7 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         type: 'oui_non',
         defaut: '0',
         lecture: 'livreur',
+        aussiAncienne: true,
       },
       {
         cle: 'deliverer.hors_service_sans_signal_min',
@@ -399,6 +416,7 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         defaut: '20',
         lecture: 'livreur',
         min: 0,
+        aussiAncienne: true,
       },
     ],
   },
@@ -432,8 +450,9 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
     ],
   },
   {
-    titre: 'Turbo et Google',
-    description: "Turbo reste le dernier recours quand aucun livreur interne n'est libre.",
+    titre: 'Turbo, alertes et Google',
+    description:
+      "Turbo reste le dernier recours quand aucun livreur interne n'est libre. Le restaurant et le siège sont prévenus quand une course attend ou traîne.",
     reglages: [
       {
         cle: 'course.turbo_fallback_enabled',
@@ -441,6 +460,7 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         type: 'oui_non',
         defaut: '1',
         lecture: 'planificateur',
+        aussiAncienne: true,
       },
       {
         cle: 'course.turbo_fallback_after_min_v2',
@@ -452,14 +472,49 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         min: 0,
         max: 240,
       },
+      // Réglages déjà lus par le serveur, absents de l'écran jusqu'ici
+      // (conception 6.1, relecture du 23/10). Lecture historique du module
+      // course : 0 et les nombres négatifs y sont refusés.
+      {
+        cle: 'course.no_deliverer_alert_after_min',
+        libelle: 'Prévenir le restaurant et le siège si aucun livreur après',
+        unite: minutes,
+        aide: 'Compté depuis la création de la course. Nouvelle méthode avec Turbo : jamais avant la bascule vers Turbo plus 1 minute.',
+        type: 'nombre',
+        defaut: '5',
+        lecture: 'ancienne',
+        aussiAncienne: true,
+      },
+      {
+        cle: 'course.no_deliverer_max_wait_min',
+        libelle: "Abandonner la recherche d'un livreur après",
+        unite: minutes,
+        aide: 'Compté depuis la création de la course, qui passe alors en « Aucun livreur trouvé ».',
+        type: 'nombre',
+        defaut: '60',
+        lecture: 'ancienne',
+        aussiAncienne: true,
+      },
+      {
+        cle: 'course.delay_alert_factor',
+        libelle: 'Signaler une tournée en retard au-delà de',
+        unite: 'fois la durée estimée',
+        aide: 'Compté depuis le retrait. 1,5 : la cloche sonne quand la tournée dure moitié plus que prévu.',
+        type: 'nombre',
+        defaut: '1.5',
+        lecture: 'ancienne',
+        pas: '0.1',
+        aussiAncienne: true,
+      },
       {
         cle: 'maps.plafond_appels_jour',
         libelle: "Plafond d'appels Google par jour",
         unite: 'appels',
         // Relecture du 23/10 : le plafond du serveur (`FONCTIONS_PLAFONNEES`)
         // ne couvre plus que les appels du regroupement (tracés, détours,
-        // temps de trajet) ; les frais de livraison et le choix du
-        // restaurant gardent Google sans limite.
+        // temps de trajet), dont le temps de trajet qui classe les livreurs
+        // (`getTravelTimes`, ancienne méthode comprise) ; les frais de
+        // livraison et le choix du restaurant gardent Google sans limite.
         aide: TEXTE_PLAFOND_GOOGLE,
         type: 'nombre',
         defaut: '2000',
@@ -467,6 +522,7 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         min: 0,
         entier: true,
         pas: '100',
+        aussiAncienne: true,
       },
       {
         cle: 'course.planificateur_tache_s',
@@ -489,7 +545,8 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
 
 export const GROUPE_ANCIENNE_METHODE: GroupeReglages = {
   titre: 'Ancienne méthode',
-  description: "Utilisés seulement quand la méthode de regroupement est « Ancienne ». 0 n'y est jamais accepté.",
+  description:
+    "Lots de l'ancienne méthode. Avec la nouvelle, les trois premiers servent encore aux commandes dont le service de livraison est Turbo. 0 n'y est jamais accepté.",
   reglages: [
     {
       cle: 'course.batch_window_seconds',

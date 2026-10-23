@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 import {
   Ban,
   BarChart3,
@@ -15,9 +17,21 @@ import {
   Truck,
 } from "lucide-react";
 
-import { useSettingMutation, useSettingsQuery } from "@/hooks/useSettingsQuery";
+import { useSettingsQuery } from "@/hooks/useSettingsQuery";
+import { updateSetting } from "@/services/settings.service";
 import ServiceByRestaurantSection from "./ServiceByRestaurantSection";
-import RegroupementSettings from "../../../../../features/courses/components/reglages/RegroupementSettings";
+import RegroupementSettings, {
+  type PoigneeRegroupement,
+} from "../../../../../features/courses/components/reglages/RegroupementSettings";
+import {
+  champsAEcrire,
+  etatEnregistrementPage,
+  garderSiModifie,
+  memeListe,
+  rehydrater,
+  texteModifications,
+  type EtatRegroupement,
+} from "../../../../../features/courses/utils/enregistrement-livraison";
 
 interface ISettingField {
   key: string;
@@ -65,6 +79,22 @@ const DEFAULT_FEE_TIERS: { maxKm: string; price: string }[] = [
   { maxKm: "16", price: "4500" },
   { maxKm: "", price: "5000" },
 ];
+
+type Palier = { maxKm: string; price: string };
+
+/** Grille enregistrée (`delivery.fee_grid`, JSON) lue en paliers ; défaut si absente ou illisible. */
+function lireGrille(brut: string | undefined): Palier[] {
+  if (!brut) return DEFAULT_FEE_TIERS;
+  try {
+    const parsed = JSON.parse(brut) as { maxKm: number | null; price: number }[];
+    return parsed.map((t) => ({
+      maxKm: t.maxKm == null ? "" : String(t.maxKm),
+      price: String(t.price ?? ""),
+    }));
+  } catch {
+    return DEFAULT_FEE_TIERS;
+  }
+}
 
 const SECTIONS: ISettingSection[] = [
   // ── Disponibilité de la livraison (coupure temporaire app) ─────────────
@@ -572,12 +602,23 @@ const DeliverySettings: React.FC = () => {
     useSettingsQuery("schedule.");
   const { data: deliverySettings, isLoading: isLoadingDelivery } =
     useSettingsQuery("delivery.");
-  const { mutate: updateSetting, isPending } = useSettingMutation();
+  const queryClient = useQueryClient();
+  const [isPending, setIsPending] = useState(false);
 
   const [values, setValues] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState(false);
   // Grille frais de livraison (distance→prix), éditée en tableau.
-  const [tiers, setTiers] = useState<{ maxKm: string; price: string }[]>([]);
+  const [tiers, setTiers] = useState<Palier[]>([]);
+  // Ce que la dernière lecture a mis à l'écran : une relecture (après
+  // « Enregistrer le regroupement » ou « Service par restaurant ») ne
+  // remplace que les champs restés tels quels (relecture du 23/10).
+  const hydrateesRef = useRef<Record<string, string> | null>(null);
+  const grilleHydrateeRef = useRef<Palier[] | null>(null);
+  // Même lecture, pour l'affichage (ce qui a changé depuis).
+  const [lues, setLues] = useState<{ valeurs: Record<string, string>; grille: Palier[] } | null>(null);
+  // Section « Regroupement des commandes » : enregistrée aussi par le bouton du bas.
+  const regroupementRef = useRef<PoigneeRegroupement>(null);
+  const [etatRegroupement, setEtatRegroupement] = useState<EtatRegroupement>({ changements: 0, erreurs: 0 });
 
   const updateTier = (idx: number, field: "maxKm" | "price", value: string) =>
     setTiers((prev) => prev.map((t, i) => (i === idx ? { ...t, [field]: value } : t)));
@@ -591,41 +632,49 @@ const DeliverySettings: React.FC = () => {
   // Liste plate des champs pour la boucle de save
   const allFields = useMemo(() => SECTIONS.flatMap((s) => s.fields), []);
 
-  // Hydrate le state local à partir des settings chargés
+  // Hydrate le state local à partir des settings chargés, sans effacer les
+  // saisies en cours (seuls les champs non modifiés reprennent la base).
   useEffect(() => {
     const map: Record<string, string> = {};
     for (const s of courseSettings ?? []) map[s.key] = s.value;
     for (const s of delivererSettings ?? []) map[s.key] = s.value;
     for (const s of scheduleSettings ?? []) map[s.key] = s.value;
     for (const s of deliverySettings ?? []) map[s.key] = s.value;
-    setValues(map);
+    const avant = hydrateesRef.current;
+    hydrateesRef.current = map;
+    setValues((locales) => rehydrater({ locales, hydratees: avant, serveur: map }));
 
     // Hydrate la grille distance→prix depuis le JSON `delivery.fee_grid`.
-    const gridRaw = (deliverySettings ?? []).find(
-      (s) => s.key === "delivery.fee_grid"
-    )?.value;
-    if (gridRaw) {
-      try {
-        const parsed = JSON.parse(gridRaw) as { maxKm: number | null; price: number }[];
-        setTiers(
-          parsed.map((t) => ({
-            maxKm: t.maxKm == null ? "" : String(t.maxKm),
-            price: String(t.price ?? ""),
-          }))
-        );
-      } catch {
-        setTiers(DEFAULT_FEE_TIERS);
-      }
-    } else {
-      setTiers(DEFAULT_FEE_TIERS);
-    }
+    const grille = lireGrille(
+      (deliverySettings ?? []).find((s) => s.key === "delivery.fee_grid")?.value
+    );
+    const grilleAvant = grilleHydrateeRef.current;
+    grilleHydrateeRef.current = grille;
+    setTiers((locaux) =>
+      grilleAvant
+        ? garderSiModifie({ locale: locaux, hydratee: grilleAvant, serveur: grille, egal: memeListe })
+        : grille
+    );
+    setLues({ valeurs: map, grille });
   }, [courseSettings, delivererSettings, scheduleSettings, deliverySettings]);
 
-  const handleSave = () => {
-    // On ne sauve que les champs non-vides (un champ vide = garder le default backend)
-    const dirty = allFields.filter(
-      (f) => values[f.key] !== undefined && values[f.key] !== ""
-    );
+  // Ce que le bouton du bas écrira : champs modifiés (non vides), grille
+  // modifiée, et la section « Regroupement des commandes ».
+  const cles = useMemo(() => allFields.map((f) => f.key), [allFields]);
+  const aEcrire = champsAEcrire(cles, values, lues?.valeurs ?? {});
+  const grilleModifiee = lues !== null && !memeListe(tiers, lues.grille);
+  const etatPage = etatEnregistrementPage({
+    page: aEcrire.length + (grilleModifiee ? 1 : 0),
+    regroupement: etatRegroupement,
+  });
+
+  const handleSave = async () => {
+    // Saisie refusée dans le regroupement : rien n'est écrit, le message le dit.
+    const regroupement = regroupementRef.current?.etat() ?? { changements: 0, erreurs: 0 };
+    if (regroupement.erreurs > 0) {
+      toast.error(etatEnregistrementPage({ page: 0, regroupement }).bloque ?? "Valeur refusée");
+      return;
+    }
 
     // Grille frais de livraison → JSON (maxKm vide = palier « au-delà » / null)
     const gridPayload = tiers
@@ -634,39 +683,38 @@ const DeliverySettings: React.FC = () => {
         maxKm: t.maxKm === "" ? null : Number(t.maxKm),
         price: Number(t.price) || 0,
       }));
-    const saveGrid = gridPayload.length > 0;
+    const saveGrid = grilleModifiee && gridPayload.length > 0;
 
-    const total = dirty.length + (saveGrid ? 1 : 0);
-    if (total === 0) {
+    if (aEcrire.length === 0 && !saveGrid && regroupement.changements === 0) {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
       return;
     }
 
-    let remaining = total;
-    const done = () => {
-      remaining--;
-      if (remaining <= 0) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      }
-    };
-
-    for (const field of dirty) {
-      updateSetting(
-        { key: field.key, value: String(values[field.key]), description: field.label },
-        { onSuccess: done }
-      );
-    }
-    if (saveGrid) {
-      updateSetting(
-        {
-          key: "delivery.fee_grid",
-          value: JSON.stringify(gridPayload),
-          description: "Grille frais de livraison (distance→prix)",
-        },
-        { onSuccess: done }
-      );
+    const libelles = new Map(allFields.map((f) => [f.key, f.label]));
+    setIsPending(true);
+    try {
+      await Promise.all([
+        ...aEcrire.map((key) => updateSetting(key, String(values[key]), libelles.get(key))),
+        ...(saveGrid
+          ? [
+              updateSetting(
+                "delivery.fee_grid",
+                JSON.stringify(gridPayload),
+                "Grille frais de livraison (distance→prix)"
+              ),
+            ]
+          : []),
+        regroupementRef.current?.enregistrer() ?? Promise.resolve(0),
+      ]);
+      toast.success("Paramètres enregistrés");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (e) {
+      toast.error((e as Error)?.message || "Enregistrement impossible");
+    } finally {
+      setIsPending(false);
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
     }
   };
 
@@ -815,12 +863,22 @@ const DeliverySettings: React.FC = () => {
         {section.title === "Service de livraison par défaut" && (
           <ServiceByRestaurantSection />
         )}
-        {/* Regroupement des commandes (planificateur), son propre bouton d'enregistrement. */}
-        {section.title === "Offre de course & refus" && <RegroupementSettings />}
+        {/* Regroupement des commandes (planificateur) : son propre bouton, et
+            enregistré aussi par le bouton du bas de la page. */}
+        {section.title === "Offre de course & refus" && (
+          <RegroupementSettings ref={regroupementRef} surEtat={setEtatRegroupement} />
+        )}
         </React.Fragment>
       ))}
 
-      <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-100">
+      <div className="flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-gray-100">
+        {etatPage.bloque ? (
+          <span className="text-sm font-medium text-red-600">{etatPage.bloque}</span>
+        ) : (
+          texteModifications(etatPage.total) && (
+            <span className="text-sm text-gray-500">{texteModifications(etatPage.total)}</span>
+          )
+        )}
         {saved && (
           <span className="flex items-center gap-1.5 text-green-600 text-sm font-medium">
             <CheckCircle size={16} /> Enregistré
@@ -828,7 +886,7 @@ const DeliverySettings: React.FC = () => {
         )}
         <button
           onClick={handleSave}
-          disabled={isPending}
+          disabled={isPending || !!etatPage.bloque}
           className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
         >
           {isPending ? "Enregistrement..." : "Enregistrer"}
