@@ -20,11 +20,13 @@
  * `Delivery.ajoutee_apres_retrait`. Tous facultatifs : un serveur plus ancien
  * ne les envoie pas, l'écran montre alors ce qu'il montrait avant.
  *
- * Champs pas encore envoyés par `GET /orders/operations/active`, lus s'ils
- * arrivent : `course.arrivee_estimee`, `course.deliverer.last_location` et
- * `last_location_at`, `restaurant.latitude` et `longitude`. Sans eux, l'heure
- * d'arrivée vient de la position en direct du livreur (socket), ou n'est pas
- * affichée.
+ * Champs de `GET /orders/operations/active` (serveur du 23/10) :
+ * `course.deliverer.last_location` et `last_location_at`, `restaurant.latitude`
+ * et `longitude` (heure d'arrivée du livreur), `course.offre_en_cours`
+ * (« Proposée à Koffi »), `course.fenetre_ajout_ferme_a`. Un serveur plus
+ * ancien ne les envoie pas : l'heure d'arrivée vient alors de la position en
+ * direct du livreur (socket), l'offre reste « à un livreur » et la fenêtre
+ * suit le réglage par défaut. `course.arrivee_estimee` est lue si elle arrive.
  *
  * Heures : celles d'Abidjan, c'est-à-dire UTC, comme le serveur.
  */
@@ -74,7 +76,7 @@ export interface LivreurDeCourse {
   first_name?: string | null;
   last_name?: string | null;
   phone?: string | null;
-  /** Pas encore envoyé par `operations/active` : lu s'il arrive. */
+  /** Dernière position (`operations/active`, serveur du 23/10). */
   last_location?: unknown;
   last_location_at?: string | null;
 }
@@ -99,8 +101,12 @@ export interface CourseOperations {
   commandes_attendues?: unknown;
   parti_at?: string | null;
   motif_regroupement?: string | null;
-  /** Pas encore envoyé par le serveur : heure d'arrivée estimée du livreur au restaurant. */
+  /** Heure d'arrivée estimée du livreur au restaurant, si le serveur la donne. */
   arrivee_estimee?: string | null;
+  /** Offre en attente : prénom du livreur sollicité et échéance (`operations/active`). */
+  offre_en_cours?: { prenom?: string | null; expires_at?: string | null } | null;
+  /** Fin de la fenêtre d'ajout après le retrait, livreur pas encore parti (`operations/active`). */
+  fenetre_ajout_ferme_a?: string | null;
 }
 
 export interface LivraisonOperations {
@@ -423,11 +429,13 @@ export function etatCourse(
   }
 
   if (statut === 'PENDING_ASSIGNMENT' || !course.deliverer_id) {
-    const echeance = instant(course.offer_expires_at);
+    const offre = course.offre_en_cours ?? null;
+    const echeance = instant(offre?.expires_at ?? course.offer_expires_at);
     if (echeance !== null && echeance > t) {
+      const prenom = offre?.prenom?.trim();
       return {
         etat: 'PROPOSEE',
-        libelle: `Proposée à un livreur, réponse avant ${heureCourte(new Date(echeance))}`,
+        libelle: `Proposée à ${prenom || 'un livreur'}, réponse avant ${heureCourte(new Date(echeance))}`,
         livreur: null,
         ton: 'ambre',
       };
@@ -457,8 +465,11 @@ export function etatCourse(
     const parti = instant(course.parti_at);
     if (parti !== null) return { etat: 'PARTI', libelle: `Parti à ${heureCourte(new Date(parti))}`, livreur, ton: 'gris' };
     if (ctx.livraisonsCommencees) return { etat: 'EN_LIVRAISON', libelle: 'En livraison', livreur, ton: 'gris' };
+    // Fin de la fenêtre donnée par le serveur ; sinon le réglage par défaut.
+    const finServeur = instant(course.fenetre_ajout_ferme_a);
     const retrait = instant(course.picked_up_at);
-    if (retrait !== null && t - retrait < FENETRE_APRES_RETRAIT_S * 1000) {
+    const fin = finServeur ?? (retrait !== null ? retrait + FENETRE_APRES_RETRAIT_S * 1000 : null);
+    if (fin !== null && t < fin) {
       return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
     }
     return { etat: 'PARTI', libelle: 'Parti', livreur, ton: 'gris' };
@@ -646,8 +657,9 @@ export const RAISON_AJOUT = 'COMMANDE_AJOUTEE';
 
 /**
  * Avis à montrer après `course:statut:changed` du planificateur :
- *  - fusion : les commandes qui étaient sur une autre course de la liste
- *    donnent la référence de la course absorbée (le serveur ne l'envoie pas) ;
+ *  - fusion : références des courses absorbées données par le serveur
+ *    (`fusion.absorbees`), complétées par les commandes qui étaient sur une
+ *    autre course de la liste (ancien serveur) ;
  *  - ajout : les commandes qui n'étaient sur aucune course.
  * Rien si aucune commande de la course n'était affichée (autre restaurant).
  */
@@ -656,6 +668,8 @@ export function avisDeCourse(
   course: CourseEvenement | null | undefined,
   avant: CoursesAvant,
   maintenant: Date,
+  /** Références des courses absorbées, données par le serveur (`fusion.absorbees`). */
+  absorbeesServeur: readonly string[] = [],
 ): Avis | null {
   if (!course || typeof course.id !== 'string') return null;
   if (raison !== RAISON_FUSION && raison !== RAISON_AJOUT) return null;
@@ -666,7 +680,7 @@ export function avisDeCourse(
   });
   if (connues.length === 0) return null;
 
-  const absorbees: string[] = [];
+  const absorbees: string[] = absorbeesServeur.filter((r) => typeof r === 'string' && r.length > 0);
   const ajoutees: string[] = [];
   for (const d of connues) {
     const id = (d.order_id ?? d.order?.id) as string;

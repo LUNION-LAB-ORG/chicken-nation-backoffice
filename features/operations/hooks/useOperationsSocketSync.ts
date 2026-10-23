@@ -51,6 +51,8 @@ const STATUT_CHANGED = 'course:statut:changed';
 interface StatutChangedPayload {
   course?: CourseEvenement | null;
   reason?: string | null;
+  /** Fusion : références des courses absorbées (serveur du 23/10). */
+  fusion?: { absorbees?: string[] | null } | null;
 }
 
 export const useOperationsSocketSync = () => {
@@ -67,7 +69,13 @@ export const useOperationsSocketSync = () => {
         const listes = queryClient
           .getQueriesData<CommandeOperations[]>({ queryKey: operationsKeyQuery('active') })
           .map(([, data]) => data);
-        const avis = avisDeCourse(payload?.reason, payload?.course, indexerCommandes(listes), new Date());
+        const avis = avisDeCourse(
+          payload?.reason,
+          payload?.course,
+          indexerCommandes(listes),
+          new Date(),
+          payload?.fusion?.absorbees ?? [],
+        );
         if (avis) {
           ajouterAvis(avis);
           toast(avis.texte, { duration: 6000 });

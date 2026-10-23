@@ -6,9 +6,10 @@ import { avisEncoreValides, DUREE_AVIS_MS, type Avis } from '../utils/suivi-cour
 /**
  * Avis du planificateur reçus pendant que la page est ouverte (fusion de
  * courses, commande ajoutée), gardés 10 minutes et montrés sur la carte de la
- * course. Le serveur n'envoie pas la référence d'une course absorbée : elle
- * est déduite de la liste affichée au moment de l'événement
- * (`avisDeCourse`), d'où ce petit magasin en mémoire.
+ * course. Les références des courses absorbées viennent du serveur
+ * (`fusion.absorbees`), ou de la liste affichée au moment de l'événement
+ * pour un serveur plus ancien (`avisDeCourse`) : d'où ce petit magasin en
+ * mémoire.
  */
 interface EtatAvis {
   avis: Avis[];

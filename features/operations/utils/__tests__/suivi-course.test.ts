@@ -241,6 +241,20 @@ describe('état de la course et de son livreur', () => {
     expect(etatCourse(course(retire), { maintenant, livraisonsCommencees: true }).libelle).toBe('En livraison');
   });
 
+  test('serveur du 23/10 : offre nommée, fin de la fenêtre après retrait donnée par le serveur', () => {
+    const sans = { deliverer_id: null, deliverer: null, statut: 'PENDING_ASSIGNMENT' };
+    expect(
+      etatCourse(course({ ...sans, offre_en_cours: { prenom: 'Ali', expires_at: ISO('12:31') } }), { maintenant }).libelle,
+    ).toBe('Proposée à Ali, réponse avant 12 h 31');
+    expect(etatCourse(course({ ...sans, offre_en_cours: { prenom: null, expires_at: ISO('12:31') } }), { maintenant }).libelle).toBe(
+      'Proposée à un livreur, réponse avant 12 h 31',
+    );
+    // Fenêtre de 60 s réglée au serveur : à 12 h 30, le livreur récupéré à 12 h 28 est parti.
+    const retire = { statut: 'IN_DELIVERY', picked_up_at: ISO('12:28'), fenetre_ajout_ferme_a: ISO('12:29') };
+    expect(etatCourse(course(retire), { maintenant }).libelle).toBe('Parti');
+    expect(etatCourse(course({ ...retire, fenetre_ajout_ferme_a: ISO('12:35') }), { maintenant }).etat).toBe('AU_COMPTOIR');
+  });
+
   test('fin de vie', () => {
     expect(etatCourse(course({ statut: 'COMPLETED' }), { maintenant }).libelle).toBe('Course terminée');
     expect(etatCourse(course({ statut: 'CANCELLED' }), { maintenant }).libelle).toBe('Course annulée');
@@ -375,6 +389,21 @@ describe('fusion de courses', () => {
       texte: 'Courses CRS-A et CRS-B fusionnées : même trajet',
       at: A('12:30').getTime(),
     });
+  });
+
+  test('avis de fusion : références des courses absorbées données par le serveur', () => {
+    // Page ouverte après coup : la course absorbée n'est plus dans la liste.
+    const avant = indexerCommandes([[commande('2', 'READY', { id: 'kB', reference: 'CRS-B', statut: 'PENDING_ASSIGNMENT', deliverer_id: null })]]);
+    const payload = {
+      id: 'kB',
+      reference: 'CRS-B',
+      statut: 'PENDING_ASSIGNMENT',
+      motif_regroupement: 'même zone',
+      deliveries: [{ order_id: '2', statut: 'PENDING', order: { id: '2', reference: 'CMD-2' } }],
+    };
+    expect(avisDeCourse('COURSES_FUSIONNEES', payload, avant, A('12:30'), ['CRS-A'])?.texte).toBe(
+      'Courses CRS-A et CRS-B fusionnées : même zone',
+    );
   });
 
   test('avis d\'ajout : la commande n\'avait pas de course', () => {
