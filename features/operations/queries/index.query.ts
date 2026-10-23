@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 
 /**
@@ -17,11 +18,14 @@ export const operationsKeyQuery = (...params: unknown[]) => {
  */
 export const useInvalidateOperationsQuery = () => {
   const queryClient = useQueryClient();
-  return async () => {
+  // Fonction stable : les écouteurs du socket (useOperationsSocketSync) ne sont
+  // plus retirés et reposés à chaque rendu, ce qui annulait la relecture de
+  // confirmation après une rafale (banc du 23/10).
+  return useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: operationsKeyQuery() }),
       queryClient.invalidateQueries({ queryKey: ['order'] }),
       queryClient.invalidateQueries({ queryKey: ['courses'] }),
     ]);
-  };
+  }, [queryClient]);
 };
