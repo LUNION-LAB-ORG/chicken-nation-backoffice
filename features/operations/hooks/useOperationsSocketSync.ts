@@ -10,6 +10,7 @@ import {
   type CommandeOperations,
   type CourseEvenement,
 } from '../utils/suivi-course';
+import { abonnerOperations } from '../utils/synchro-operations';
 import { useAvisCoursesStore } from './use-avis-courses';
 
 /**
@@ -27,26 +28,10 @@ import { useAvisCoursesStore } from './use-avis-courses';
  * ajout, l'avis (« Courses CRS-A et CRS-B fusionnées : même trajet ») est
  * calculé AVANT le rechargement, à partir de la liste encore affichée : c'est
  * elle qui dit d'où venaient les commandes.
+ *
+ * Reconnexion du socket : la liste est relue (les événements émis pendant la
+ * coupure sont perdus). Liste des événements : `utils/synchro-operations.ts`.
  */
-const ORDER_EVENTS = [
-  'order:created',
-  'order:updated',
-  'order:statusUpdated',
-  'order:deleted',
-  'order:refresh',
-] as const;
-
-const COURSE_EVENTS = [
-  'course:assigned',
-  'course:delivery:statut:changed',
-  'course:completed',
-  'course:cancelled',
-  'course:refresh',
-] as const;
-
-const ALL_EVENTS = [...ORDER_EVENTS, ...COURSE_EVENTS];
-
-const STATUT_CHANGED = 'course:statut:changed';
 
 interface StatutChangedPayload {
   course?: CourseEvenement | null;
@@ -86,11 +71,9 @@ export const useOperationsSocketSync = () => {
       void invalidate();
     };
 
-    ALL_EVENTS.forEach((event) => socket.on(event, invalidate));
-    socket.on(STATUT_CHANGED, onStatutChanged);
-    return () => {
-      ALL_EVENTS.forEach((event) => socket.off(event, invalidate));
-      socket.off(STATUT_CHANGED, onStatutChanged);
-    };
+    return abonnerOperations<StatutChangedPayload>(socket, {
+      recharger: () => void invalidate(),
+      surStatutCourse: onStatutChanged,
+    });
   }, [socket, invalidate, queryClient, ajouterAvis]);
 };
