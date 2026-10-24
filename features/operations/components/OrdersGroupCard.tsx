@@ -21,9 +21,9 @@ interface Props {
 /**
  * Commandes prêtes d'une même course. Planificateur v2 : la course naît dès
  * qu'une commande est prête, souvent avec une seule commande. Toute course a
- * donc son en-tête (code de retrait en grand, livreur et son état, retenue,
- * ajouts, fusion), quel que soit son nombre de commandes. Une commande sans
- * course reste une carte seule, comme avant.
+ * donc son en-tête (code de retrait en grand, livreur et son état, retenue),
+ * quel que soit son nombre de commandes. Une commande sans course reste une
+ * carte seule, comme avant.
  */
 export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClick, commandes, maintenant }) => {
   if (group.courseId === null) {

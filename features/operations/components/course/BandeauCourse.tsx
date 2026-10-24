@@ -1,19 +1,11 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, GitMerge, Hourglass, Package, PlusCircle, Route } from "lucide-react";
+import { Hourglass, Package } from "lucide-react";
 
 import type { IOrderGroup } from "../../types/operations.types";
-import { useAvisDeCourse } from "../../hooks/use-avis-courses";
-import {
-  courseDeCommande,
-  estAjouteeARemettre,
-  etiquetteMotif,
-  texteAjout,
-  texteRetenue,
-  texteToutEstPret,
-  type CommandeOperations,
-} from "../../utils/suivi-course";
+import { ligneRetenue } from "../../utils/ligne-retenue";
+import { courseDeCommande, etiquetteMotif, type CommandeOperations } from "../../utils/suivi-course";
 import { EtatCourseLivreur } from "./EtatCourseLivreur";
 
 interface Props {
@@ -25,27 +17,22 @@ interface Props {
 
 /**
  * En-tête d'une course sur l'écran Opérations, visible dès la création de la
- * course (une seule commande comprise) : référence, code de retrait en grand,
- * motif du regroupement, livreur et son état, retenue au comptoir, commandes
- * ajoutées à remettre, courses fusionnées.
+ * course (une seule commande comprise) : référence, nombre de commandes à
+ * remettre, code de retrait en grand, livreur et son état, et la retenue en
+ * une ligne courte quand il y en a une.
+ *
+ * Demande du 24/10 (« reste simple ») : plus de phrase d'ajout (« CMD-C
+ * ajoutée à la course de Koffi : remettre avec le code 123 ») ni de fusion
+ * (« Courses CRS-A et CRS-B fusionnées ») : la carte montre déjà les
+ * commandes regroupées et le code. Le motif du regroupement reste en petit.
  */
 export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant }) => {
   const course = group.orders.map((o) => courseDeCommande(o as CommandeOperations)).find(Boolean) ?? null;
-  const avis = useAvisDeCourse(group.courseId);
   if (!course) return null;
 
   const n = group.orders.length;
-  const apresRetrait = course.statut === "IN_DELIVERY";
   const motif = etiquetteMotif(course.motif_regroupement);
-  const retenue = texteRetenue(course, maintenant);
-  const toutPret = retenue ? null : texteToutEstPret(course);
-  const ajoutees = group.orders
-    .filter((o) => estAjouteeARemettre(o as CommandeOperations))
-    .map((o) => o.reference);
-  // Après le retrait, seules les commandes ajoutées restent au comptoir.
-  const texteAjoutees =
-    ajoutees.length > 0 ? texteAjout(course, n === 1 && apresRetrait ? [] : ajoutees) : null;
-  const avisAffiches = avis.filter((a) => a.type === "FUSION" || (a.type === "AJOUT" && !texteAjoutees));
+  const retenue = ligneRetenue(course, maintenant);
 
   return (
     <div className="space-y-2 px-1 pt-1">
@@ -59,6 +46,7 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant })
             <div className="truncate text-sm font-bold text-gray-900">{course.reference ?? "Course"}</div>
             <div className="text-[11px] text-gray-600">
               {n} commande{n > 1 ? "s" : ""} à remettre
+              {motif && <span className="text-gray-400"> · {motif}</span>}
             </div>
           </div>
         </div>
@@ -71,13 +59,6 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant })
         )}
       </div>
 
-      {motif && (
-        <div className="inline-flex items-center gap-1 rounded-lg border border-orange-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-[#C2570C]">
-          <Route className="h-3 w-3" aria-hidden />
-          {motif}
-        </div>
-      )}
-
       <EtatCourseLivreur
         course={course}
         commandes={commandes}
@@ -85,52 +66,12 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant })
         maintenant={maintenant}
       />
 
-      {texteAjoutees && (
-        <Ligne Icone={PlusCircle} classes="border-green-300 bg-green-50 text-green-900" fort>
-          {texteAjoutees}
-        </Ligne>
-      )}
-
       {retenue && (
-        <Ligne Icone={Hourglass} classes="border-amber-300 bg-amber-50 text-amber-900">
-          {retenue}
-        </Ligne>
+        <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-2 text-amber-900">
+          <Hourglass className="h-4 w-4 shrink-0" aria-hidden />
+          <p className="text-[12px] font-semibold leading-snug">{retenue}</p>
+        </div>
       )}
-
-      {toutPret && (
-        <Ligne Icone={CheckCircle2} classes="border-green-300 bg-green-50 text-green-900">
-          {toutPret}
-        </Ligne>
-      )}
-
-      {avisAffiches.map((a) => (
-        <Ligne
-          key={`${a.at}-${a.texte}`}
-          Icone={a.type === "FUSION" ? GitMerge : PlusCircle}
-          classes="border-purple-200 bg-purple-50 text-purple-900"
-        >
-          {a.texte}
-        </Ligne>
-      ))}
     </div>
   );
 };
-
-function Ligne({
-  Icone,
-  classes,
-  fort,
-  children,
-}: {
-  Icone: React.ComponentType<{ className?: string }>;
-  classes: string;
-  fort?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className={`flex items-start gap-2 rounded-xl border px-2.5 py-2 ${classes}`}>
-      <Icone className="mt-0.5 h-4 w-4 shrink-0" />
-      <p className={`text-[12px] leading-snug ${fort ? "font-bold" : "font-semibold"}`}>{children}</p>
-    </div>
-  );
-}

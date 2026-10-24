@@ -13,14 +13,8 @@ import { piedDuTiroir } from "../../utils/pied-tiroir";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
 import { useCommandeEnCours } from "../../hooks/use-commande-en-cours";
 import { useMaintenant } from "../../hooks/use-maintenant";
-import {
-  courseDeCommande,
-  estAjouteeARemettre,
-  texteAjout,
-  texteRetenue,
-  texteToutEstPret,
-  type CommandeOperations,
-} from "../../utils/suivi-course";
+import { courseDeCommande, type CommandeOperations } from "../../utils/suivi-course";
+import { ligneRetenue } from "../../utils/ligne-retenue";
 import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 
 interface Props {
@@ -37,7 +31,7 @@ interface Props {
 export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   const { peutChangerStatut } = useDroitsCommande();
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
-  // Course complète (code, livreur, retenue, ajouts) : celle de la liste des
+  // Course complète (code, livreur, retenue) : celle de la liste des
   // Opérations, le détail de la commande n'en porte qu'une partie.
   const enCours = useCommandeEnCours(order.id);
   const maintenant = useMaintenant(15_000);
@@ -49,7 +43,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     écran qui le réutilise.
 
     Il garde en revanche le SUIVI de la course (livreur et son état, retenue,
-    ajout, code), qui n'est que de l'information (`pied-tiroir.ts`, relecture
+    code), qui n'est que de l'information (`pied-tiroir.ts`, relecture
     du 24/10) : sans boutons ni annulation.
 
     ⚠️ APRÈS tous les hooks, jamais avant. Les droits arrivent après
@@ -122,10 +116,9 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   }
 
   if (order.status === OrderStatus.READY && course) {
-    // Planificateur v2 : livreur et son état, retenue, ajout, avec le code.
-    const retenue = texteRetenue(course, maintenant);
-    const toutPret = retenue ? null : texteToutEstPret(course);
-    const ajout = estAjouteeARemettre(suivie) ? texteAjout(course, []) : null;
+    // Planificateur v2 : livreur et son état, retenue en une ligne, code.
+    // Demande du 24/10 (« reste simple ») : plus de phrase d'ajout à la course.
+    const retenue = ligneRetenue(course, maintenant);
     return (
       <div className="space-y-2">
         <EtatCourseLivreur
@@ -134,22 +127,12 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
           service={order.delivery_service}
           maintenant={maintenant}
         />
-        {ajout && (
-          <p className="rounded-xl border border-green-300 bg-green-50 px-3 py-2 text-xs font-bold text-green-900">
-            {ajout}
-          </p>
-        )}
         {retenue && (
           <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
             {retenue}
           </p>
         )}
-        {toutPret && (
-          <p className="rounded-xl border border-green-300 bg-green-50 px-3 py-2 text-xs font-semibold text-green-900">
-            {toutPret}
-          </p>
-        )}
-        {pickup && !ajout && (
+        {pickup && (
           <p className="text-xs text-gray-600">
             Code retrait :{" "}
             <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
