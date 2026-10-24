@@ -16,6 +16,7 @@ import {
 
 import { useDelivererScoringInfoQuery } from "../../queries/deliverer-scoring.query";
 import type { IDelivererScoringInfo } from "../../types/deliverer-scoring.type";
+import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible, texteClassement } from "../../utils/classement";
 import { estPauseSansFin } from "../../utils/disponibilite";
 
 interface ScoringQueueSectionProps {
@@ -26,7 +27,7 @@ interface ScoringQueueSectionProps {
  * Section « Rang dans la file » de la fiche du livreur (ancien « Scoring & File d'attente »).
  *
  * Affiche en temps réel (polling 15 s) :
- *   - Position dans la file FIFO + total candidats
+ *   - Classement par le score (« 3e sur 5 ») et place dans la file
  *   - Score composite + breakdown des composantes
  *   - Refus récents avec barre de progression vers seuil auto-pause
  *   - Auto-pause / Pénalité queue actives (countdown)
@@ -98,18 +99,15 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
           <Users className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">Position dans la file</p>
+          <p className="text-xs text-[#71717A]">{LIBELLE_CLASSEMENT}</p>
           {ranking && ranking.position !== null ? (
             <>
               <p className="text-2xl font-bold text-[#18181B] mt-1">
-                #{ranking.position}{" "}
-                <span className="text-sm font-normal text-[#71717A]">
-                  / {ranking.totalCandidates} candidat{ranking.totalCandidates > 1 ? "s" : ""}
-                </span>
+                {texteClassement(ranking.position, ranking.totalCandidates)}
               </p>
               {ranking.rankInQueue !== null && ranking.rankInQueue !== ranking.position && (
                 <p className="text-xs text-[#71717A] mt-1">
-                  Place dans la file : {ranking.rankInQueue === 1 ? "1er" : `${ranking.rankInQueue}e`}{" "}
+                  Place dans la file : {rangLisible(ranking.rankInQueue)}{" "}
                   <span className="text-[#A1A1AA]">
                     (le score composite a modifié l&apos;ordre)
                   </span>
@@ -120,9 +118,7 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
               )}
             </>
           ) : (
-            <p className="text-sm text-[#A1A1AA] italic mt-1">
-              Pas dans le ranking actuel
-            </p>
+            <p className="text-sm text-[#A1A1AA] italic mt-1">{PAS_CLASSE}</p>
           )}
         </div>
       </div>
@@ -182,7 +178,7 @@ const ScoringCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
 
       <div className="space-y-2">
         <ScoreBar
-          label="File FIFO"
+          label={LIBELLE_FILE_SCORE}
           rawValue={components.queue}
           weightedValue={weighted.queue}
           weight={weights.queue}
