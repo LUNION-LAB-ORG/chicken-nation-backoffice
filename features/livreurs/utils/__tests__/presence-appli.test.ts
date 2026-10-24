@@ -421,7 +421,8 @@ describe.skipIf(!existsSync(regle))('« Appli fermée », fidèle au serveur', (
   });
 
   test('`appli_active` et `appli_vue_a` portés par `disponibilite`', () => {
-    expect(source).toMatch(/appli_active: l\.appli_active/);
+    // Règle coupée (réglage à 0) : le serveur peut dire null, lu ici « Appli non connectée ».
+    expect(source).toMatch(/appli_active: (\w+ \? )?l\.appli_active( : null)?/);
     expect(source).toMatch(/appli_vue_a: l\.appli_vue_a \?\? null/);
   });
 });

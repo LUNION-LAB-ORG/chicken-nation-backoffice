@@ -189,6 +189,17 @@ export function etatLivreur(
   maintenant: Date,
   appliActive: boolean | null | undefined = d.appli_active,
 ): EtatAffiche {
+  // État que ce backoffice ne connaît pas (serveur déployé avant lui) :
+  // « hors service », jamais « disponible », avec le texte du serveur. Sans
+  // cela, la liste et la carte plantaient faute de couleurs pour cet état.
+  if (!Object.hasOwn(COULEURS_ETAT, d.etat)) {
+    return {
+      etat: 'HORS_SERVICE',
+      libelle: d.libelle || NOM_ETAT.HORS_SERVICE,
+      peutRecevoirOffre: false,
+      raison: d.message_refus,
+    };
+  }
   let etat = d.etat;
   if (etat === 'EN_PAUSE' && !estFuture(d.pause_until, maintenant)) {
     etat = etatApresPause(d, maintenant, true);

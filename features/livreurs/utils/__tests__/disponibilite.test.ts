@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  COULEURS_ETAT,
   NOM_ETAT,
   ORDRE_ETATS,
   choixAffectation,
@@ -350,5 +351,32 @@ describe('textes visibles', () => {
       expect(texte).not.toMatch(/\b(available|paused|offline|auto-pause)\b/i);
     }
     expect(ORDRE_ETATS).toHaveLength(Object.keys(NOM_ETAT).length);
+  });
+});
+
+describe('état que ce backoffice ne connaît pas (serveur déployé avant lui)', () => {
+  test('« hors service » avec le texte du serveur : la liste et la carte ont leurs couleurs', () => {
+    const d = dispo({
+      etat: 'NOUVEL_ETAT',
+      libelle: 'Nouvel état',
+      peut_recevoir_offre: true,
+      message_refus: 'Raison du serveur.',
+    });
+    const affiche = etatLivreur(d, A('14:00'));
+    expect(affiche).toEqual({
+      etat: 'HORS_SERVICE',
+      libelle: 'Nouvel état',
+      peutRecevoirOffre: false,
+      raison: 'Raison du serveur.',
+    });
+    expect(COULEURS_ETAT[affiche.etat].texte).toBeTruthy();
+    expect(etatLivreurAffiche({ disponibilite: d }, A('14:00'))?.etat).toBe('HORS_SERVICE');
+    // Sans libellé : le nom de l'état, jamais la valeur brute.
+    expect(etatLivreur(dispo({ etat: 'NOUVEL_ETAT', libelle: '' }), A('14:00')).libelle).toBe('Hors service');
+  });
+
+  test('« Appli fermée », connu de ce backoffice : inchangé', () => {
+    const d = dispo({ etat: 'APPLI_FERMEE', libelle: 'Appli fermée', peut_recevoir_offre: false });
+    expect(etatLivreur(d, A('14:00')).etat).toBe('APPLI_FERMEE');
   });
 });
