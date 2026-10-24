@@ -41,7 +41,8 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
  *
  * Toucher un livreur (ligne, marqueur, alerte qui le nomme) le choisit : la
  * carte se centre et ouvre sa fenêtre. Une alerte sans livreur à montrer
- * ouvre la fiche de la course.
+ * ouvre la fiche de la course. Une pastille de la ligne Livreurs de
+ * Commandes ouvre cet écran sur son livreur (`pendingEnDirectLivreurId`).
  *
  * Serveur pas encore à jour : sans `GET /livraison/tableau`, ni « À
  * surveiller » ni bandeau (les onglets des restaurants gardent le filtre) ;
@@ -73,6 +74,8 @@ export default function EnDirect() {
   const selectedRestaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const openCourse = useDashboardStore((s) => s.openCourse);
   const openLivreur = useDashboardStore((s) => s.openLivreur);
+  const livreurDemande = useDashboardStore((s) => s.pendingEnDirectLivreurId);
+  const clearPendingEnDirect = useDashboardStore((s) => s.clearPendingEnDirect);
   const membre = useAuthStore((s) => s.user);
   const maintenant = useMaintenant(30_000);
   const grandEcran = useGrandEcran();
@@ -148,6 +151,13 @@ export default function EnDirect() {
     },
     [grandEcran],
   );
+
+  // Venu d'une pastille de la ligne Livreurs (Commandes) : ce livreur est choisi.
+  useEffect(() => {
+    if (!livreurDemande) return;
+    choisir(livreurDemande);
+    clearPendingEnDirect();
+  }, [livreurDemande, choisir, clearPendingEnDirect]);
 
   const toucherAlerte = useCallback(
     (s: SignalLivraison) => {

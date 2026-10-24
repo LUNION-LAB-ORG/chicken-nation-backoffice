@@ -81,6 +81,12 @@ export interface DashboardState {
    */
   pendingCourseId: string | null;
   pendingLivreurId: string | null;
+  /**
+   * Livreur à montrer dans En direct (pastille de la ligne Livreurs de
+   * Commandes) : carte centrée sur lui. À part de `pendingLivreurId` (fiche
+   * dans Livreurs). Jamais persisté, consommé par En direct.
+   */
+  pendingEnDirectLivreurId: string | null;
   // Dernière conversation et dernier ticket consultés : conservés pour
   // retrouver son écran en revenant d'un autre module (avant, tout
   // repartait de l'écran vide « Sélectionnez une conversation »).
@@ -149,6 +155,9 @@ export interface DashboardState {
   /** Ouvre l'écran Livreurs sur la fiche de ce livreur. */
   openLivreur: (livreurId: string) => void;
   clearPendingLivreur: () => void;
+  /** Ouvre En direct sur ce livreur (carte centrée, sa fenêtre ouverte). */
+  openEnDirect: (livreurId: string) => void;
+  clearPendingEnDirect: () => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string, messageId?: string | null) => void;
@@ -208,6 +217,7 @@ export const useDashboardStore = create<DashboardState>()(
       repriseTelephoneId: null,
       pendingCourseId: null,
       pendingLivreurId: null,
+      pendingEnDirectLivreurId: null,
       pendingTicketId: null,
       lastConversationId: null,
       lastTicketId: null,
@@ -320,6 +330,13 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       clearPendingLivreur: () => set((state) => {
         state.pendingLivreurId = null;
+      }),
+      openEnDirect: (livreurId) => set((state) => {
+        state.activeTab = 'en_direct';
+        state.pendingEnDirectLivreurId = livreurId;
+      }),
+      clearPendingEnDirect: () => set((state) => {
+        state.pendingEnDirectLivreurId = null;
       }),
       setLastConversation: (id) => set((state) => {
         state.lastConversationId = id;

@@ -23,8 +23,8 @@ import { AUCUN_LIVREUR_EN_SERVICE, pastillesLivreurs, restaurantDeLaLigne } from
  * serveur qui n'a pas la route : elle ne bloque jamais l'écran. Pas pour le
  * centre d'appels ni la cuisine (le serveur leur refuse le tableau).
  *
- * Toucher une pastille ouvre le livreur pour qui voit la livraison, sinon
- * rien.
+ * Toucher une pastille ouvre En direct sur ce livreur pour qui voit la
+ * livraison, sinon rien.
  */
 
 export interface LigneLivreursProps {
@@ -33,7 +33,7 @@ export interface LigneLivreursProps {
    * bord (`selectedRestaurantId`). Un compte de restaurant voit toujours le sien.
    */
   restaurantChoisi?: string | null;
-  /** Toucher une pastille ; par défaut, ouvre le livreur (`openLivreur`) si le compte voit la livraison. */
+  /** Toucher une pastille ; par défaut, ouvre En direct sur ce livreur (`openEnDirect`) si le compte voit la livraison. */
   onChoisirLivreur?: (livreurId: string) => void;
   className?: string;
 }
@@ -41,7 +41,7 @@ export interface LigneLivreursProps {
 export function LigneLivreurs({ restaurantChoisi, onChoisirLivreur, className = '' }: LigneLivreursProps) {
   const membre = useAuthStore((s) => s.user);
   const restaurantDuTableauDeBord = useDashboardStore((s) => s.selectedRestaurantId);
-  const openLivreur = useDashboardStore((s) => s.openLivreur);
+  const openEnDirect = useDashboardStore((s) => s.openEnDirect);
   const { voirLivraison } = useDroitsLivraison();
 
   const restaurantId = restaurantDeLaLigne(
@@ -56,7 +56,7 @@ export function LigneLivreurs({ restaurantChoisi, onChoisirLivreur, className = 
   if (!restaurant) return null;
 
   const pastilles = pastillesLivreurs(restaurant.liste);
-  const choisir = onChoisirLivreur ?? (voirLivraison ? openLivreur : null);
+  const choisir = onChoisirLivreur ?? (voirLivraison ? openEnDirect : null);
 
   return (
     <div
