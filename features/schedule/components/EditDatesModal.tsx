@@ -5,6 +5,7 @@ import { Loader2, X } from "lucide-react";
 
 import { useRegeneratePlanMutation } from "../queries/schedule.query";
 import type { ISchedulePlan } from "../types/schedule.types";
+import { textesFenetres } from "../utils/actions-planning";
 
 interface Props {
   isOpen: boolean;
@@ -15,8 +16,9 @@ interface Props {
 }
 
 /**
- * Modal de réédition des dates d'un plan DRAFT/SENT.
- * Régénère un nouveau plan DRAFT pour les nouvelles dates (l'ancien est remplacé).
+ * « Modifier les dates », dans les quatre états (conception du 24/10, 10.3).
+ * Le serveur refait un brouillon pour les nouvelles dates et efface l'ancien ;
+ * le texte dit, selon l'état, qui est prévenu ou que c'est noté au journal.
  */
 export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) {
   const [periodStart, setPeriodStart] = useState("");
@@ -38,7 +40,7 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
   const handleSubmit = async () => {
     setError(null);
     if (!periodStart) {
-      setError("Date de début requise");
+      setError("Choisissez la date de début.");
       return;
     }
     try {
@@ -67,10 +69,7 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
           </button>
         </div>
 
-        <p className="text-xs text-gray-500 mb-4">
-          Le plan sera <b>régénéré</b> pour les nouvelles dates et repassera en{" "}
-          <b>brouillon</b>. Les ajustements manuels de repos seront recalculés.
-        </p>
+        <p className="text-sm text-gray-600 mb-4">{textesFenetres(plan.status).dates}</p>
 
         <div className="space-y-3">
           <div>
@@ -95,9 +94,7 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
               onChange={(e) => setPeriodEnd(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
             />
-            <p className="text-[11px] text-gray-500 mt-1">
-              Si vide, calculée auto via <code>planning_period_weeks</code>.
-            </p>
+            <p className="text-[11px] text-gray-500 mt-1">Vide : durée réglée dans Paramètres.</p>
           </div>
 
           {error && (
@@ -123,7 +120,7 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
             className="flex-1 inline-flex items-center justify-center gap-2 py-2 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:bg-[#D8631F] disabled:opacity-60"
           >
             {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
-            Régénérer
+            Refaire le planning
           </button>
         </div>
       </div>

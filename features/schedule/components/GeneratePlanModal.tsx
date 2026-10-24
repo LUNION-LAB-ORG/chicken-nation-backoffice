@@ -10,17 +10,22 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   defaultRestaurantId?: string;
+  /**
+   * Faux pour un compte de restaurant : le planning est pour le sien, le
+   * choix disparaît (le serveur refuse les autres).
+   */
+  choixRestaurant?: boolean;
   /** Appelée avec l'ID du plan généré pour le sélectionner immédiatement. */
   onGenerated: (planId: string) => void;
 }
 
 /**
- * Modal de génération d'un plan DRAFT.
+ * « Nouveau planning » : génère un brouillon.
  *
  * Champs :
- *   - Restaurant (UUID — pré-rempli si fourni en prop)
- *   - Date de début (input date)
- *   - Date de fin (optionnel — sinon calculée auto via planning_period_weeks)
+ *   - Restaurant (pré-rempli ; absent pour un compte de restaurant)
+ *   - Date de début
+ *   - Date de fin (vide : durée réglée dans Paramètres, `planning_period_weeks`)
  *
  * Au succès : appelle `onGenerated(planId)` pour sélectionner le plan créé.
  */
@@ -28,6 +33,7 @@ export function GeneratePlanModal({
   isOpen,
   onClose,
   defaultRestaurantId,
+  choixRestaurant = true,
   onGenerated,
 }: Props) {
   const [restaurantId, setRestaurantId] = useState(defaultRestaurantId ?? "");
@@ -49,11 +55,11 @@ export function GeneratePlanModal({
   const handleSubmit = async () => {
     setError(null);
     if (!restaurantId.trim()) {
-      setError("Restaurant requis");
+      setError("Choisissez un restaurant.");
       return;
     }
     if (!periodStart) {
-      setError("Date de début requise");
+      setError("Choisissez la date de début.");
       return;
     }
     try {
@@ -74,7 +80,7 @@ export function GeneratePlanModal({
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Générer un plan</h3>
+          <h3 className="text-lg font-bold text-gray-900">Nouveau planning</h3>
           <button
             type="button"
             onClick={onClose}
@@ -85,9 +91,11 @@ export function GeneratePlanModal({
         </div>
 
         <div className="space-y-3">
-          <Field label="Restaurant">
-            <RestaurantSelect value={restaurantId} onChange={setRestaurantId} />
-          </Field>
+          {choixRestaurant && (
+            <Field label="Restaurant">
+              <RestaurantSelect value={restaurantId} onChange={setRestaurantId} />
+            </Field>
+          )}
 
           <Field label="Date de début">
             <input
@@ -105,9 +113,7 @@ export function GeneratePlanModal({
               onChange={(e) => setPeriodEnd(e.target.value)}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
             />
-            <p className="text-[11px] text-gray-500 mt-1">
-              Si vide, calculée auto via le setting <code>planning_period_weeks</code>.
-            </p>
+            <p className="text-[11px] text-gray-500 mt-1">Vide : durée réglée dans Paramètres.</p>
           </Field>
 
           {error && (
@@ -170,7 +176,7 @@ const RestaurantSelect: React.FC<{
       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
     >
       <option value="" disabled>
-        {isLoading ? "Chargement…" : "Sélectionne un restaurant"}
+        {isLoading ? "Chargement…" : "Choisissez un restaurant"}
       </option>
       {restaurants.map((r) => (
         <option key={r.id} value={r.id}>{r.name}</option>
