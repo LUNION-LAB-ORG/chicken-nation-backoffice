@@ -32,9 +32,9 @@ describe('troisième ligne : une seule information, par priorité', () => {
     );
   });
 
-  test('programmée mais déjà prête : son statut, pas l’heure souhaitée', () => {
+  test('programmée mais déjà prête : pas l’heure souhaitée, ligne vide', () => {
     const prete = commande({ status: 'READY', time: '20:00', created_at: ISO('12:00') });
-    expect(ligneTrois(prete, { maintenant: A('19:30') })).toEqual({ texte: 'Prête', ton: 'gris' });
+    expect(ligneTrois(prete, { maintenant: A('19:30') })).toEqual({ texte: '', ton: 'gris' });
   });
 
   test('attendue par une course retenue : le texte court de la retenue, en ambre', () => {
@@ -48,8 +48,11 @@ describe('troisième ligne : une seule information, par priorité', () => {
     expect(ligneTrois(commande({ status: 'ACCEPTED' }), { maintenant: A('12:30') })).toEqual({ texte: 'Nouvelle', ton: 'gris' });
     expect(ligneTrois(commande({ status: 'PENDING' }), { maintenant: A('12:30') }).texte).toBe('Nouvelle');
     expect(ligneTrois(commande(), { maintenant: A('12:30') }).texte).toBe('En préparation');
-    expect(ligneTrois(commande({ status: 'READY' }), { maintenant: A('12:30') }).texte).toBe('Prête');
     expect(ligneTrois(commande({ date: null, time: null }), { maintenant: A('12:30') }).texte).toBe('En préparation');
+  });
+
+  test('dans « Prêtes », « Prête » répéterait le titre de la colonne : ligne vide (3.1)', () => {
+    expect(ligneTrois(commande({ status: 'READY' }), { maintenant: A('12:30') })).toEqual({ texte: '', ton: 'gris' });
   });
 });
 

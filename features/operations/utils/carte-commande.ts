@@ -81,7 +81,8 @@ const AVANT_PRETE = new Set(['PENDING', 'ACCEPTED', 'IN_PROGRESS']);
  *     (ambre) ;
  *  2. commande en cuisine attendue par une course retenue : « Attendue par
  *     Koffi, départ 12 h 44 » (ambre, texte de `attentesParCommande`) ;
- *  3. sinon le statut, en gris.
+ *  3. sinon le statut, en gris ; une commande prête n'en dit rien : elle
+ *     est dans « Prêtes », la ligne reste vide (3.1).
  */
 export function ligneTrois(
   commande: CommandeCarte,
@@ -95,6 +96,7 @@ export function ligneTrois(
     return { texte: `${plusTard ? 'Plus tard' : 'À préparer'} · ${heureCourte(moment)}`, ton: 'ambre' };
   }
   if (ctx.attente) return { texte: ctx.attente, ton: 'ambre' };
+  if (commande.status === 'READY') return { texte: '', ton: 'gris' };
   return { texte: libelleStatut(commande.status), ton: 'gris' };
 }
 

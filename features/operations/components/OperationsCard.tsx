@@ -82,9 +82,10 @@ export const OperationsCard: React.FC<Props> = ({ order, onClick, maintenant, re
         </span>
       </span>
 
+      {/* Ligne vide (commande prête) : sa hauteur reste, la carte ne bouge pas. */}
       <span
-        className={`block w-full truncate text-xs ${ligne.ton === "ambre" ? "font-semibold text-amber-700" : "text-gray-500"}`}
-        title={ligne.texte}
+        className={`block min-h-4 w-full truncate text-xs ${ligne.ton === "ambre" ? "font-semibold text-amber-700" : "text-gray-500"}`}
+        title={ligne.texte || undefined}
       >
         {ligne.texte}
       </span>
