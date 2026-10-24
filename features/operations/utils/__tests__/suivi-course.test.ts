@@ -316,10 +316,20 @@ describe('parti sans un sac (relecture du 24/10)', () => {
         etatCourse(partie, { maintenant, resteARemettre: true, referencesARemettre: refs, livraisonsCommencees: true }),
       ).toMatchObject({ etat: 'PARTI_SANS_SAC', libelle: 'Parti à 12 h 20, CMD-B pas remise', livreur: 'Koffi', ton: 'rouge' });
     }
-    // Même avec une position au comptoir : le serveur a décidé, la cloche a sonné.
+    // Position précise reçue après le départ, encore au restaurant (« Je pars »
+    // touché au comptoir, fenêtre fermée par le serveur pendant qu'il attend) :
+    // au comptoir tant qu'elle a moins de 2 min, puis parti.
+    const auComptoir = { ...PRES, ts: ISO('12:20', '50'), precision_m: 10 };
+    expect(partiSansRemise(partie, { maintenant: A('12:21'), position: auComptoir, restaurant: RESTO })).toBe(false);
+    expect(partiSansRemise(partie, { maintenant: A('12:23'), position: auComptoir, restaurant: RESTO })).toBe(true);
+    // Position d'avant le départ, imprécise, ou loin : le départ du serveur compte.
+    expect(partiSansRemise(partie, { maintenant: A('12:21'), position: { ...PRES, ts: ISO('12:19') }, restaurant: RESTO })).toBe(true);
     expect(
-      partiSansRemise(partie, { maintenant: A('12:21'), position: { ...PRES, ts: ISO('12:20', '50') }, restaurant: RESTO }),
+      partiSansRemise(partie, { maintenant: A('12:21'), position: { ...auComptoir, precision_m: 150 }, restaurant: RESTO }),
     ).toBe(true);
+    expect(partiSansRemise(partie, { maintenant: A('12:21'), position: { ...LOIN, ts: ISO('12:20', '50') }, restaurant: RESTO })).toBe(
+      true,
+    );
     // Le sac remis ensuite : plus rien à signaler.
     expect(etatCourse(partie, { maintenant: A('12:30'), resteARemettre: false }).libelle).toBe('Parti à 12 h 20');
   });

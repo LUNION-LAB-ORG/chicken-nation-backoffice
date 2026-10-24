@@ -443,7 +443,11 @@ export function referencesARemettre(courseId: string, commandes: readonly Comman
  *  - départ noté par le serveur APRÈS la validation du retrait (`parti_at`
  *    postérieur à `picked_up_at`) : départ réel (position, « Je pars »,
  *    première livraison démarrée, fenêtre écoulée), la cloche « commande pas
- *    remise » vient de sonner au restaurant et au siège ;
+ *    remise » vient de sonner au restaurant et au siège. Seule une position
+ *    précise de moins de 2 min, reçue depuis, dans le rayon de départ le
+ *    garde « au comptoir » : « Je pars » touché au comptoir, ou fenêtre
+ *    fermée par le serveur pendant qu'il attend (réglage coupé, retour à
+ *    l'ancienne méthode) ;
  *  - départ posé à la validation même (`parti_at` égal à `picked_up_at` :
  *    ancienne appli, restaurant en v1, réglage coupé) ou retrait non daté :
  *    le serveur n'en sait rien, la caisse remet peut-être le second sac. Le
@@ -461,19 +465,26 @@ export function partiSansRemise(
 ): boolean {
   const parti = instant(course.parti_at);
   if (parti === null) return false;
-  const retrait = instant(course.picked_up_at);
-  if (retrait !== null && parti > retrait) return true;
-
   const t = ctx.maintenant.getTime();
+  // Dernière position précise reçue après le départ noté : dans le rayon de
+  // départ (vrai), plus loin (faux), ou aucune (null). Âge en millisecondes.
   const pos = ctx.position ?? null;
   const posAt = pos ? instant(pos.ts) : null;
   const precise = pos?.precision_m == null || pos.precision_m <= PRECISION_MAX_M;
-  if (pos && ctx.restaurant && posAt !== null && posAt > parti && precise) {
-    if (distanceMetres(pos, ctx.restaurant) > DEPART_RAYON_M) return true;
-    if (t - posAt <= AU_RESTAURANT_FRAICHEUR_MIN * 60_000) return false;
-  }
+  const lue = pos && ctx.restaurant && posAt !== null && posAt > parti && precise;
+  const auRestaurant = lue ? distanceMetres(pos, ctx.restaurant!) <= DEPART_RAYON_M : null;
+  const age = posAt !== null ? t - posAt : Number.POSITIVE_INFINITY;
+
+  const retrait = instant(course.picked_up_at);
+  if (retrait !== null && parti > retrait) return !(auRestaurant === true && age <= FRAICHEUR_APRES_DEPART_MS);
+
+  if (auRestaurant === false) return true;
+  if (auRestaurant === true && age <= AU_RESTAURANT_FRAICHEUR_MIN * 60_000) return false;
   return t >= parti + (FENETRE_APRES_RETRAIT_S + PROLONGATION_REMISE_S) * 1000;
 }
+
+/** Après un départ noté par le serveur, âge maximal d'une position qui le dit encore au comptoir. */
+const FRAICHEUR_APRES_DEPART_MS = 2 * 60_000;
 
 /**
  * « Parti à 12 h 20, CMD-B pas remise » ; plusieurs : « …, CMD-B et CMD-C
