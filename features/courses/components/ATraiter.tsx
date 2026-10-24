@@ -101,55 +101,76 @@ export function ATraiter() {
     else relancerLivraison(courseId);
   };
 
+  // Ligne sur une rangée quand « À traiter » a la place (56rem) ; plus étroit :
+  // référence et situation en haut, restaurant et gestes dessous, gestes en
+  // icône seule sous 36rem. La situation garde toujours sa largeur.
   const ligne = (s: SignalLivraison, index: number) => {
     const course = s.course!;
     const actions = piloterCourses ? actionsATraiter(s) : [];
     const situation = situationCourse(s);
+    const restaurant = selectedRestaurantId ? null : (nomsRestaurants.get(s.restaurant_id) ?? null);
     return (
       <li
         key={`${s.cle}-${course.id}-${index}`}
         onClick={() => openCourse(course.id)}
-        className="flex h-12 cursor-pointer items-center gap-3 border-t border-slate-100 px-3 text-sm first:border-t-0 hover:bg-orange-50/40"
+        className="flex cursor-pointer flex-col gap-1.5 border-t border-slate-100 px-3 py-2 text-sm first:border-t-0 hover:bg-orange-50/40 @4xl:h-12 @4xl:flex-row @4xl:items-center @4xl:gap-3 @4xl:py-0"
       >
-        <span
-          className={`h-2 w-2 shrink-0 rounded-full ${s.gravite === 'rouge' ? 'bg-red-600' : 'bg-amber-500'}`}
-          aria-hidden
-        />
-        <span className="w-36 shrink-0 truncate font-medium text-gray-900">{course.reference}</span>
-        {!selectedRestaurantId && (
-          <span className="w-28 shrink-0 truncate text-gray-600">{nomsRestaurants.get(s.restaurant_id) ?? ''}</span>
-        )}
-        <span
-          className={`min-w-0 flex-1 truncate ${s.gravite === 'rouge' ? 'text-red-700' : 'text-amber-800'}`}
-          title={situation}
-        >
-          {situation}
+        <span className="flex min-w-0 items-center gap-3 @4xl:contents">
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${s.gravite === 'rouge' ? 'bg-red-600' : 'bg-amber-500'}`}
+            aria-hidden
+          />
+          <span className="w-28 shrink-0 truncate font-medium text-gray-900 @4xl:w-36" title={course.reference}>
+            {course.reference}
+          </span>
+          {restaurant && (
+            <span className="hidden w-28 shrink-0 truncate text-gray-600 @4xl:block" title={restaurant}>
+              {restaurant}
+            </span>
+          )}
+          <span
+            className={`min-w-0 flex-1 truncate ${s.gravite === 'rouge' ? 'text-red-700' : 'text-amber-800'}`}
+            title={situation}
+          >
+            {situation}
+          </span>
         </span>
-        {actions.length > 0 && (
-          <span className="flex shrink-0 items-center gap-2">
-            {actions.map((action) => {
-              const Icone = ICONES[action];
-              const occupe = enCours(action, course.id);
-              return (
-                <button
-                  key={action}
-                  type="button"
-                  disabled={occupe}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    agir(action, course.id);
-                  }}
-                  className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition disabled:opacity-60 ${
-                    action === 'FORCER'
-                      ? 'bg-[#F17922] text-white hover:opacity-90'
-                      : 'border border-[#F17922] text-[#F17922] hover:bg-orange-50'
-                  }`}
-                >
-                  <Icone className={`h-3.5 w-3.5 ${occupe ? 'animate-spin' : ''}`} />
-                  {LIBELLES[action]}
-                </button>
-              );
-            })}
+        {(restaurant || actions.length > 0) && (
+          <span className="flex min-w-0 items-center gap-2 pl-5 @4xl:contents">
+            {restaurant && (
+              <span className="min-w-0 flex-1 truncate text-xs text-gray-600 @4xl:hidden" title={restaurant}>
+                {restaurant}
+              </span>
+            )}
+            {actions.length > 0 && (
+              <span className="ml-auto flex shrink-0 items-center gap-2">
+                {actions.map((action) => {
+                  const Icone = ICONES[action];
+                  const occupe = enCours(action, course.id);
+                  return (
+                    <button
+                      key={action}
+                      type="button"
+                      disabled={occupe}
+                      title={LIBELLES[action]}
+                      aria-label={LIBELLES[action]}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        agir(action, course.id);
+                      }}
+                      className={`inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition disabled:opacity-60 @xl:px-3 ${
+                        action === 'FORCER'
+                          ? 'bg-[#F17922] text-white hover:opacity-90'
+                          : 'border border-[#F17922] text-[#F17922] hover:bg-orange-50'
+                      }`}
+                    >
+                      <Icone className={`h-3.5 w-3.5 ${occupe ? 'animate-spin' : ''}`} />
+                      <span className="hidden @xl:inline">{LIBELLES[action]}</span>
+                    </button>
+                  );
+                })}
+              </span>
+            )}
           </span>
         )}
       </li>
@@ -157,7 +178,7 @@ export function ATraiter() {
   };
 
   return (
-    <section className="rounded-xl border border-slate-300 bg-white">
+    <section className="@container rounded-xl border border-slate-300 bg-white">
       <h2 className="flex items-center gap-2 px-3 pt-3 pb-2 text-sm font-semibold text-gray-900">
         À traiter
         <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-700">
