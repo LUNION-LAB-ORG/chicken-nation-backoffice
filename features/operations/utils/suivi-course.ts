@@ -109,6 +109,12 @@ export interface CourseOperations {
   retenue_jusqua?: string | null;
   commandes_attendues?: unknown;
   parti_at?: string | null;
+  /**
+   * Ce qui a posé `parti_at` (serveur du 24/10) : départ réel (BOUTON,
+   * POSITION, LIVRAISON_DEMARREE, FENETRE_ECHUE) ou fenêtre fermée d'office
+   * (ANCIENNE_APPLI, REPLI_V1, AJOUT_COUPE…). Absent sur un serveur plus ancien.
+   */
+  motif_depart?: string | null;
   motif_regroupement?: string | null;
   /** Heure d'arrivée estimée du livreur au restaurant, si le serveur la donne. */
   arrivee_estimee?: string | null;
@@ -440,16 +446,18 @@ export function referencesARemettre(courseId: string, commandes: readonly Comman
  * comptoir » en vert pendant toute la tournée, au moment même où la cloche
  * du serveur annonçait son départ) ?
  *
- *  - départ noté par le serveur APRÈS la validation du retrait (`parti_at`
- *    postérieur à `picked_up_at`) : départ réel (position, « Je pars »,
+ *  - départ RÉEL (motif du départ donné par le serveur, `motif_depart` ;
+ *    serveur plus ancien : départ noté APRÈS la validation du retrait,
+ *    `parti_at` postérieur à `picked_up_at`) : position, « Je pars »,
  *    première livraison démarrée, fenêtre écoulée), la cloche « commande pas
  *    remise » vient de sonner au restaurant et au siège. Seule une position
  *    précise de moins de 2 min, reçue depuis, dans le rayon de départ le
  *    garde « au comptoir » : « Je pars » touché au comptoir, ou fenêtre
  *    fermée par le serveur pendant qu'il attend (réglage coupé, retour à
  *    l'ancienne méthode) ;
- *  - départ posé à la validation même (`parti_at` égal à `picked_up_at` :
- *    ancienne appli, restaurant en v1, réglage coupé) ou retrait non daté :
+ *  - fenêtre fermée d'office (motif ANCIENNE_APPLI, REPLI_V1, AJOUT_COUPE… ;
+ *    serveur plus ancien : départ posé à la validation même, `parti_at` égal
+ *    à `picked_up_at`) ou retrait non daté :
  *    le serveur n'en sait rien, la caisse remet peut-être le second sac. Le
  *    livreur reste « au comptoir » tant que sa dernière position précise,
  *    reçue après la validation, est dans le rayon de départ (15 min au
@@ -460,7 +468,7 @@ export function referencesARemettre(courseId: string, commandes: readonly Comman
  * Pas encore de départ noté (`parti_at` nul) : jamais.
  */
 export function partiSansRemise(
-  course: Pick<CourseOperations, 'parti_at' | 'picked_up_at'>,
+  course: Pick<CourseOperations, 'parti_at' | 'picked_up_at' | 'motif_depart'>,
   ctx: { maintenant: Date; position?: PositionDatee | null; restaurant?: PositionGps | null },
 ): boolean {
   const parti = instant(course.parti_at);
@@ -475,12 +483,25 @@ export function partiSansRemise(
   const auRestaurant = lue ? distanceMetres(pos, ctx.restaurant!) <= DEPART_RAYON_M : null;
   const age = posAt !== null ? t - posAt : Number.POSITIVE_INFINITY;
 
-  const retrait = instant(course.picked_up_at);
-  if (retrait !== null && parti > retrait) return !(auRestaurant === true && age <= FRAICHEUR_APRES_DEPART_MS);
+  if (departReel(course, parti)) return !(auRestaurant === true && age <= FRAICHEUR_APRES_DEPART_MS);
 
   if (auRestaurant === false) return true;
   if (auRestaurant === true && age <= AU_RESTAURANT_FRAICHEUR_MIN * 60_000) return false;
   return t >= parti + (FENETRE_APRES_RETRAIT_S + PROLONGATION_REMISE_S) * 1000;
+}
+
+/** Motifs de départ réel écrits par le serveur dans `motif_depart` (même liste que `estDepartReel`). */
+export const MOTIFS_DEPART_REEL: ReadonlySet<string> = new Set(['BOUTON', 'POSITION', 'LIVRAISON_DEMARREE', 'FENETRE_ECHUE']);
+
+/**
+ * Départ réel ? Le motif du serveur décide quand il est donné ; sinon
+ * (serveur plus ancien, course partie avant la colonne) un départ noté
+ * après la validation du retrait.
+ */
+function departReel(course: Pick<CourseOperations, 'picked_up_at' | 'motif_depart'>, parti: number): boolean {
+  if (typeof course.motif_depart === 'string' && course.motif_depart) return MOTIFS_DEPART_REEL.has(course.motif_depart);
+  const retrait = instant(course.picked_up_at);
+  return retrait !== null && parti > retrait;
 }
 
 /** Après un départ noté par le serveur, âge maximal d'une position qui le dit encore au comptoir. */

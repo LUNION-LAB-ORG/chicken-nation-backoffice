@@ -364,6 +364,28 @@ describe('parti sans un sac (relecture du 24/10)', () => {
     expect(etatCourse(sansRetrait, { ...ctx, maintenant: A('12:27') }).etat).toBe('PARTI_SANS_SAC');
   });
 
+  test('motif du départ donné par le serveur : il décide, plus les heures', () => {
+    const ctx = { resteARemettre: true, referencesARemettre: ['CMD-B'], restaurant: RESTO };
+    // Retour à l'ancienne méthode en plein service : départ noté à 12 h 24, après
+    // la validation de 12 h 16, mais ce n'est pas un départ réel. Le livreur
+    // attend peut-être son second sac : au comptoir 6 min, puis parti.
+    const repli = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:16'), parti_at: ISO('12:24'), motif_depart: 'REPLI_V1' });
+    expect(etatCourse(repli, { ...ctx, maintenant: A('12:25') }).etat).toBe('AU_COMPTOIR');
+    expect(etatCourse(repli, { ...ctx, maintenant: A('12:30') })).toMatchObject({
+      etat: 'PARTI_SANS_SAC',
+      libelle: 'Parti à 12 h 24, CMD-B pas remise',
+    });
+    // Ancienne appli, fenêtre fermée à la validation : même règle.
+    const ancienne = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:20'), parti_at: ISO('12:20'), motif_depart: 'ANCIENNE_APPLI' });
+    expect(etatCourse(ancienne, { ...ctx, maintenant: A('12:22') }).etat).toBe('AU_COMPTOIR');
+    // « Je pars » touché à la seconde même de la validation : départ réel, parti tout de suite.
+    const bouton = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:20'), parti_at: ISO('12:20'), motif_depart: 'BOUTON' });
+    expect(etatCourse(bouton, { ...ctx, maintenant: A('12:20', '30') }).etat).toBe('PARTI_SANS_SAC');
+    for (const motif of ['POSITION', 'LIVRAISON_DEMARREE', 'FENETRE_ECHUE']) {
+      expect(partiSansRemise({ ...bouton, motif_depart: motif }, { maintenant: A('12:20', '30') })).toBe(true);
+    }
+  });
+
   test('pas encore de départ noté : au comptoir', () => {
     const ouverte = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:20'), parti_at: null });
     expect(partiSansRemise(ouverte, { maintenant: A('12:40') })).toBe(false);
