@@ -97,8 +97,13 @@ export interface LigneHors {
   nonPayee: boolean;
 }
 
-/** État dont l'avatar prend la couleur (`COULEURS_ETAT` des livreurs), ou Turbo. */
-export type EtatAvatar = 'EN_COURSE' | 'APPLI_FERMEE' | 'HORS_SERVICE' | 'TURBO' | null;
+/**
+ * État dont l'avatar prend la couleur (`COULEURS_ETAT` des livreurs), ou
+ * Turbo. `NEUTRE` : plus de course en cours (il ne reste que de l'argent à
+ * rapporter), l'état du livreur n'est pas connu ici ; anneau gris clair, qui
+ * n'est la couleur d'aucun état.
+ */
+export type EtatAvatar = 'EN_COURSE' | 'APPLI_FERMEE' | 'NEUTRE' | 'TURBO' | null;
 
 export interface GroupeHors {
   cle: string;
@@ -301,7 +306,7 @@ function construireGroupe(cle: string, commandes: CommandeHors[], ctx: Contexte)
     const livreur = (course ?? premiereCourse)?.deliverer ?? null;
     titre = nomLivreur(livreur);
     noms = initiales(livreur);
-    etatAvatar = appli?.cas === 'FERMEE' ? 'APPLI_FERMEE' : course && COURSE_VIVANTE.has(course.statut) ? 'EN_COURSE' : 'HORS_SERVICE';
+    etatAvatar = appli?.cas === 'FERMEE' ? 'APPLI_FERMEE' : course && COURSE_VIVANTE.has(course.statut) ? 'EN_COURSE' : 'NEUTRE';
   } else if (genre === 'turbo') {
     const nom = texte(livraisonDeCommande(premiere)?.turbo_courier_name);
     titre = nom ? `Turbo · ${nom}` : 'Turbo';

@@ -165,7 +165,9 @@ describe('argent à rapporter', () => {
     const [g] = groupesHorsRestaurant([livree('1', 1, fini), livree('2', 2, fini, { amount: 7500 })], { maintenant: A('13:00') });
     expect(g.droite).toEqual({ texte: 'Tout est livré', ton: 'vert' });
     expect(g.ligne2).toEqual([{ texte: 'À encaisser 15.500 F', ton: 'ambre' }]);
-    expect(g.etatAvatar).toBe('HORS_SERVICE');
+    // Son état n'est pas connu ici (il est peut-être déjà 1er de la file) :
+    // anneau neutre, jamais le gris « Hors service ».
+    expect(g.etatAvatar).toBe('NEUTRE');
   });
 
   test('au-delà d’une heure : rouge, avec « À encaisser depuis 1 h 05 »', () => {

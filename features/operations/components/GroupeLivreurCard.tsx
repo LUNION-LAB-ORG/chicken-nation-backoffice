@@ -27,6 +27,8 @@ const ICONES: Record<Exclude<IconeLigne, "sans_livreur">, { Icone: LucideIcon; c
 
 /** Violet de Turbo (`TONS` des états de course). */
 const VIOLET_TURBO = "#7C3AED";
+/** Anneau sans état (il ne reste que de l'argent à rapporter) : gris des bordures, aucune couleur d'état. */
+const ANNEAU_NEUTRE = "#E4E4E7";
 
 interface Props {
   groupe: GroupeHors;
@@ -112,7 +114,10 @@ function Avatar({ groupe }: { groupe: GroupeHors }) {
       </span>
     );
   }
-  const couleur = COULEURS_ETAT[groupe.etatAvatar ?? "HORS_SERVICE"]?.couleur ?? COULEURS_ETAT.HORS_SERVICE.couleur;
+  const couleur =
+    groupe.etatAvatar === "EN_COURSE" || groupe.etatAvatar === "APPLI_FERMEE"
+      ? COULEURS_ETAT[groupe.etatAvatar].couleur
+      : ANNEAU_NEUTRE;
   return (
     <span
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-50 text-xs font-bold text-gray-700"
