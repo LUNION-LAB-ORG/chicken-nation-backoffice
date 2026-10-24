@@ -11,6 +11,7 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 // ── Onglet "En cours" ──────────────────────────────────────────────────────────
+import { LigneLivreurs } from "../../../../features/operations/components/LigneLivreurs";
 import { OperationsDrawer } from "../../../../features/operations/components/OperationsDrawer";
 import {
   OperationsSections,
@@ -388,8 +389,9 @@ export default function Operations() {
               reste pilote par le backend via le JWT. */}
           <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
 
-          {/* Ligne Livreurs (conception 6.2) : composant LigneLivreurs à part,
-              placé ici, entre le choix du restaurant et les colonnes. */}
+          {/* Ligne Livreurs (conception 6.2) : un seul restaurant affiché et
+              `GET /livraison/tableau` qui répond ; sinon rien, l'écran n'attend pas. */}
+          <LigneLivreurs />
 
           {/* Erreur avec données : les cartes restent, une fine ligne rouge. */}
           {enCoursEnErreur && data && (

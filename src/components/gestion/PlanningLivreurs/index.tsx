@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
 
-import RestaurantTabs from "../../../../features/orders/components/filtrage/RestaurantTabs";
+import { BandeauRestaurants } from "../../../../features/courses/components/BandeauRestaurants";
 import { estCompteDeRestaurant } from "../../../../features/operations/utils/code-retrait";
 import { ApercuPlannings } from "../../../../features/schedule/components/ApercuPlannings";
 import { SchedulePlanningView } from "../../../../features/schedule/components/SchedulePlanningView";
@@ -47,11 +47,10 @@ export default function PlanningLivreurs() {
         ]}
       />
 
-      {/* Emplacement du bandeau des restaurants (section 8, branche
-          bo-livraison), branché à la fusion. En attendant, et sur un serveur
-          sans `GET /livraison/tableau`, les onglets des restaurants gardent le
-          filtre (section 12). Un compte de restaurant n'a pas d'onglets. */}
-      {!compteDeRestaurant && <RestaurantTabs showAllTab />}
+      {/* Bandeau des restaurants (section 8) : le filtre du siège, la seule
+          carte d'un compte de restaurant. Sur un serveur sans
+          `GET /livraison/tableau`, il rend les onglets des restaurants. */}
+      <BandeauRestaurants />
 
       {restaurantId ? (
         <SchedulePlanningView
