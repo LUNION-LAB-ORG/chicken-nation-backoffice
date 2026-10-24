@@ -39,6 +39,8 @@ describe('les réglages de la conception 6.1, avec leur défaut', () => {
   const attendus = {
     'course.attente_max_commande_prete_s': '300',
     'course.horizon_preparation_s': '420',
+    'course.petit_retard_retour_min': '5',
+    'course.attente_max_trajet_long_s': '1200',
     'course.retenue_meme_si_livreur_libre': '0',
     'course.max_orders_per_course': '3',
     'course.max_route_duration_min': '25',
@@ -123,6 +125,26 @@ describe('libellés', () => {
     );
   });
 
+  test('trajet long (demande du 24/10) : libellés, unités, rangés dans « Attente au comptoir »', () => {
+    expect(libelleAvecUnite(def('course.petit_retard_retour_min'))).toBe(
+      'Petit retard toléré au retour du livreur (minutes)',
+    );
+    expect(libelleAvecUnite(def('course.attente_max_trajet_long_s'))).toBe(
+      'Attente maximale quand le trajet est long (secondes)',
+    );
+    const comptoir = GROUPES_NOUVELLE_METHODE.find((g) => g.titre === 'Attente au comptoir');
+    expect(comptoir.reglages.map((d) => d.cle)).toEqual([
+      'course.attente_max_commande_prete_s',
+      'course.horizon_preparation_s',
+      'course.petit_retard_retour_min',
+      'course.attente_max_trajet_long_s',
+      'course.retenue_meme_si_livreur_libre',
+    ]);
+    expect(comptoir.description).toContain('le trajet est long');
+    expect(def('course.petit_retard_retour_min').aide).toContain('0 : aucun retard toléré');
+    expect(def('course.attente_max_trajet_long_s').aide).toContain("0 : jamais, seule l'attente courte reste");
+  });
+
   test('méthodes : Nouvelle en premier, Ancienne ensuite', () => {
     expect(METHODES.map((m) => m.libelle)).toEqual(['Nouvelle', 'Ancienne']);
     expect(METHODES.map((m) => m.valeur)).toEqual(['v2', 'v1']);
@@ -174,6 +196,8 @@ describe('saisie : 0 permis là où il a un sens, valeur refusée signalée', ()
     for (const cle of [
       'course.attente_max_commande_prete_s',
       'course.horizon_preparation_s',
+      'course.petit_retard_retour_min',
+      'course.attente_max_trajet_long_s',
       'course.retard_max_client_min',
       'course.detour_max_ajout_min',
       'course.ajout_apres_retrait_max_s',
@@ -203,6 +227,15 @@ describe('saisie : 0 permis là où il a un sens, valeur refusée signalée', ()
       ok: false,
       message: 'Valeur attendue entre 5 et 300',
     });
+  });
+
+  test('trajet long : mêmes contrôles que les réglages voisins', () => {
+    expect(verifierSaisie(def('course.petit_retard_retour_min'), '7,5')).toEqual({ ok: true, valeur: '7.5' });
+    expect(verifierSaisie(def('course.petit_retard_retour_min'), '61')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 60' });
+    expect(verifierSaisie(def('course.petit_retard_retour_min'), '-1')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 60' });
+    expect(verifierSaisie(def('course.attente_max_trajet_long_s'), '900')).toEqual({ ok: true, valeur: '900' });
+    expect(verifierSaisie(def('course.attente_max_trajet_long_s'), '3601')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 3600' });
+    expect(verifierSaisie(def('course.attente_max_trajet_long_s'), 'vingt')).toEqual({ ok: false, message: 'Nombre attendu' });
   });
 
   test("ancienne méthode : 0 n'est jamais accepté", () => {
@@ -271,6 +304,19 @@ describe('valeur en base : ce que le serveur applique', () => {
   test("ancienne lecture des oui ou non : jamais refusée, tout ce qui n'est pas « oui » vaut non", () => {
     expect(valeurAppliquee(def('course.rebalance_enabled'), 'oui')).toEqual({ valeur: '0', refusee: false, message: null });
     expect(valeurAppliquee(def('course.rebalance_enabled'), 'true')).toEqual({ valeur: '1', refusee: false, message: null });
+  });
+
+  test('trajet long : absent, le défaut ; refusé en base, signalé avec le défaut appliqué', () => {
+    expect(valeurAppliquee(def('course.petit_retard_retour_min'), undefined)).toEqual({ valeur: '5', refusee: false, message: null });
+    expect(valeurAppliquee(def('course.attente_max_trajet_long_s'), '0')).toEqual({ valeur: '0', refusee: false, message: null });
+    expect(valeurAppliquee(def('course.attente_max_trajet_long_s'), '5000')).toEqual({
+      valeur: '1200',
+      refusee: true,
+      message: 'Valeur enregistrée « 5000 » refusée : le serveur applique 1200.',
+    });
+    expect(valeurAppliquee(def('course.petit_retard_retour_min'), 'long').message).toBe(
+      'Valeur enregistrée « long » refusée : le serveur applique 5.',
+    );
   });
 
   test('plafond Google : arrondi vers le bas, négatif refusé', () => {

@@ -9,14 +9,17 @@
  *
  *  - livreur et son état : « En route, arrivée vers 12 h 38 », « Au comptoir »,
  *    « Parti à 12 h 45 » ;
- *  - retenue : « Attendre CMD-B, prête vers 12 h 41, départ au plus tard 12 h 44 » ;
+ *  - retenue : « Attendre CMD-B, prête vers 12 h 41, départ au plus tard 12 h 44 »,
+ *    ou, quand le livreur reviendrait trop tard s'il partait livrer (demande
+ *    du 24/10), « Trajet long : attendre CMD-B, prête vers 12 h 55 » ;
  *  - ajout : « CMD-C ajoutée à la course de Koffi : remettre avec le code 123 » ;
  *  - fusion : « Courses CRS-A et CRS-B fusionnées : même trajet » ;
  *  - motif de regroupement : « Même trajet », « Même zone ».
  *
  * Champs lus (conception 3.13) : `Course.retenue_jusqua`,
- * `Course.commandes_attendues` [{ order_id, reference, prete_vers }],
- * `Course.parti_at`, `Course.motif_regroupement`, `Delivery.ajoutee_at`,
+ * `Course.commandes_attendues` [{ order_id, reference, prete_vers, motif }]
+ * (motif de la retenue, serveur du 24/10), `Course.parti_at`,
+ * `Course.motif_regroupement`, `Delivery.ajoutee_at`,
  * `Delivery.ajoutee_apres_retrait`. Tous facultatifs : un serveur plus ancien
  * ne les envoie pas, l'écran montre alors ce qu'il montrait avant.
  *
@@ -70,6 +73,13 @@ export interface PositionGps {
   lng: number;
 }
 
+/**
+ * Motif d'une retenue (serveur du 24/10) : `TRAJET_LONG`, le livreur
+ * reviendrait trop tard s'il partait livrer, la course attend la fin de la
+ * préparation ; `ATTENTE_COURTE`, la règle des 5 minutes. Jamais affiché brut.
+ */
+export type MotifRetenue = 'TRAJET_LONG' | 'ATTENTE_COURTE';
+
 /** Commande attendue par une retenue, telle qu'écrite dans `Course.commandes_attendues`. */
 export interface CommandeAttendue {
   order_id: string;
@@ -78,6 +88,8 @@ export interface CommandeAttendue {
   prete_vers: string | null;
   /** Fin estimée prudente (8e décile), ISO. Facultatif. */
   prete_au_plus_tard: string | null;
+  /** Motif de la retenue pour cette commande, s'il est donné et lisible. */
+  motif?: MotifRetenue;
 }
 
 export interface LivreurDeCourse {
@@ -108,6 +120,12 @@ export interface CourseOperations {
   // Planificateur v2 (conception 3.13)
   retenue_jusqua?: string | null;
   commandes_attendues?: unknown;
+  /**
+   * Motif de la retenue, si le serveur le donne au niveau de la course
+   * (sinon il est lu dans chaque commande attendue). Absent : affichage
+   * d'avant le 24/10.
+   */
+  motif_retenue?: unknown;
   parti_at?: string | null;
   /**
    * Ce qui a posé `parti_at` (serveur du 24/10) : départ réel (BOUTON,
@@ -200,15 +218,36 @@ export function lireCommandesAttendues(valeur: unknown): CommandeAttendue[] {
     const cle = orderId || reference;
     if (vues.has(cle)) continue;
     vues.add(cle);
+    const motif = lireMotifRetenue(e.motif ?? e.motif_retenue);
     resultat.push({
       order_id: orderId,
       reference: reference || 'une commande',
       prete_vers: typeof e.prete_vers === 'string' && instant(e.prete_vers) !== null ? e.prete_vers : null,
       prete_au_plus_tard:
         typeof e.prete_au_plus_tard === 'string' && instant(e.prete_au_plus_tard) !== null ? e.prete_au_plus_tard : null,
+      ...(motif ? { motif } : {}),
     });
   }
   return resultat;
+}
+
+/**
+ * Motif d'une retenue, sans jamais planter : valeur d'énumération
+ * (`TRAJET_LONG`, `ATTENTE_COURTE`) ou texte (« trajet long », « attente
+ * courte »), casse et accents ignorés. Absent ou inconnu : null.
+ */
+export function lireMotifRetenue(valeur: unknown): MotifRetenue | null {
+  if (typeof valeur !== 'string') return null;
+  const v = valeur
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (v === 'trajet long') return 'TRAJET_LONG';
+  if (v === 'attente courte') return 'ATTENTE_COURTE';
+  return null;
 }
 
 // ============================================================
@@ -640,6 +679,12 @@ const STATUTS_RETENUE = new Set(['PENDING_ASSIGNMENT', 'ACCEPTED', 'AT_RESTAURAN
 export interface Retenue {
   jusqua: Date;
   attendues: CommandeAttendue[];
+  /**
+   * Retenue « trajet long » (serveur du 24/10) : le livreur reviendrait trop
+   * tard s'il partait livrer, la course attend la fin de la préparation.
+   * Motif absent ou inconnu : false, la retenue est montrée comme avant.
+   */
+  trajetLong: boolean;
 }
 
 /**
@@ -652,29 +697,46 @@ export function retenueEnCours(course: CourseOperations, maintenant: Date): Rete
   if (jusqua === null || jusqua <= maintenant.getTime()) return null;
   const attendues = lireCommandesAttendues(course.commandes_attendues);
   if (attendues.length === 0) return null;
-  return { jusqua: new Date(jusqua), attendues };
+  // Motif de la course s'il est donné, sinon celui des commandes attendues :
+  // une seule attendue pour un trajet long suffit.
+  const motifCourse = lireMotifRetenue(course.motif_retenue);
+  const trajetLong = motifCourse ? motifCourse === 'TRAJET_LONG' : attendues.some((a) => a.motif === 'TRAJET_LONG');
+  return { jusqua: new Date(jusqua), attendues, trajetLong };
 }
 
 /**
  * « Attendre CMD-B, prête vers 12 h 41, départ au plus tard 12 h 44 » ;
  * plusieurs : « Attendre CMD-B (prête vers 12 h 41) et CMD-C (prête vers
- * 12 h 43), départ au plus tard 12 h 44 ». Pas de retenue : null.
+ * 12 h 43), départ au plus tard 12 h 44 ». Trajet long (demande du 24/10) :
+ * « Trajet long : attendre CMD-B, prête vers 12 h 55 », la course part quand
+ * la commande est prête. Pas de retenue : null.
  */
 export function texteRetenue(course: CourseOperations, maintenant: Date): string | null {
   const retenue = retenueEnCours(course, maintenant);
   if (!retenue) return null;
-  const depart = `départ au plus tard ${heureCourte(retenue.jusqua)}`;
   const prete = (a: CommandeAttendue) => (a.prete_vers ? `prête vers ${heureCourte(new Date(a.prete_vers))}` : null);
+  const liste = (): string =>
+    enumerer(
+      retenue.attendues.map((a) => {
+        const vers = prete(a);
+        return vers ? `${a.reference} (${vers})` : a.reference;
+      }),
+    );
+  if (retenue.trajetLong) {
+    if (retenue.attendues.length === 1) {
+      const a = retenue.attendues[0];
+      const vers = prete(a);
+      return `Trajet long : attendre ${a.reference}${vers ? `, ${vers}` : ''}`;
+    }
+    return `Trajet long : attendre ${liste()}`;
+  }
+  const depart = `départ au plus tard ${heureCourte(retenue.jusqua)}`;
   if (retenue.attendues.length === 1) {
     const a = retenue.attendues[0];
     const vers = prete(a);
     return `Attendre ${a.reference}, ${vers ? `${vers}, ` : ''}${depart}`;
   }
-  const liste = retenue.attendues.map((a) => {
-    const vers = prete(a);
-    return vers ? `${a.reference} (${vers})` : a.reference;
-  });
-  return `Attendre ${enumerer(liste)}, ${depart}`;
+  return `Attendre ${liste()}, ${depart}`;
 }
 
 /**
