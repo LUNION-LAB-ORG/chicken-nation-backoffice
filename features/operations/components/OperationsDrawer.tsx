@@ -128,7 +128,12 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
 
   const showPayment = !!live && peutVoirPaiements && (isAdmin || paiementAttendu);
   // Pied de page : boutons, ou seulement le suivi de la course pour un rôle de consultation.
-  const pied = piedDuTiroir(live, droits.peutChangerStatut);
+  // Livraison interne livrée (COLLECTED) : plus rien au pied (l'encaissement est dans Paiement).
+  const piedVide =
+    live?.type === OrderType.DELIVERY &&
+    live.delivery_service === DeliveryService.CHICKEN_NATION &&
+    live.status === OrderStatus.COLLECTED;
+  const pied = piedVide ? null : piedDuTiroir(live, droits.peutChangerStatut);
 
   return (
     <>
@@ -202,7 +207,7 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
                  - DELIVERY via CHICKEN_NATION → DrawerActionsChickenNation (module course interne)
                  - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel)
                 Rôle de consultation : seulement le suivi d'une course interne
-                (livreur, retenue, ajout, code), sans bouton (`pied-tiroir.ts`). */}
+                (livreur, retenue), sans bouton (`pied-tiroir.ts`). */}
             {pied && (
               <footer className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50/80">
                 {live.type !== OrderType.DELIVERY ? (

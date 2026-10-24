@@ -2,6 +2,7 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  appliLivreurLivraison,
   etatLivraison,
   libelleService,
   lienAppel,
@@ -9,11 +10,16 @@ import {
   lireLivraison,
   livraisonTerminee,
   livreurAffiche,
+  retardLivraison,
   sectionAAfficher,
   texteArret,
+  texteArretTournee,
+  texteCode,
   texteDuree,
+  texteEchec,
   texteHeure,
   texteTotal,
+  tourneeAAfficher,
 } from '../suivi-livraison';
 
 /**
@@ -347,6 +353,97 @@ describe('frise', () => {
   test('relecture tant que la livraison n\'est pas finie', () => {
     expect(livraisonTerminee(lue())).toBe(false);
     expect(livraisonTerminee(null)).toBe(true);
+  });
+});
+
+/**
+ * Demande du 24/10 au soir : « dans le drawer de la commande avoir une section
+ * qui donne des informations sur la livraison » : code tant que la commande
+ * est au restaurant, retard, tournée, échec, appli du livreur.
+ */
+describe('section Livraison complétée (serveur du 24/10)', () => {
+  const tournee = [
+    { reference: 'ORD-4820', rang: 3, etat: 'a_livrer', heure: null, cette_commande: false },
+    { reference: 'ORD-4818', rang: 1, etat: 'livree', heure: ISO('12:52'), cette_commande: false },
+    { reference: 'ORD-4819', rang: 2, etat: 'en_route', heure: ISO('12:53'), cette_commande: true },
+    { reference: 'ORD-X', rang: 4, etat: 'inconnu', heure: null, cette_commande: false },
+    { rang: 5, etat: 'a_livrer' },
+  ];
+
+  test('code « Code 614 » seulement tant que la commande attend au restaurant', () => {
+    expect(texteCode(lue(), 'READY')).toBe('Code 614');
+    expect(texteCode(lue(), 'PICKED_UP')).toBeNull();
+    expect(texteCode(lue({ course: null }), 'READY')).toBeNull();
+  });
+
+  test('retard : « En retard de 12 min », sinon rien', () => {
+    const course = (champs) => ({ ...reponse().course, statut: 'IN_DELIVERY', ...champs });
+    expect(retardLivraison(lue({ course: course({ en_retard: true, retard_min: 12, fin_prevue: ISO('13:05') }) }))).toBe(
+      'En retard de 12 min',
+    );
+    expect(retardLivraison(lue({ course: course({ en_retard: true, retard_min: null }) }))).toBe('En retard');
+    expect(retardLivraison(lue({ course: course({ en_retard: false, retard_min: 3 }) }))).toBeNull();
+    // Serveur plus ancien : rien.
+    expect(retardLivraison(lue())).toBeNull();
+    expect(lue({ course: course({ fin_prevue: 'pas une date', retard_min: -4 }) }).course).toMatchObject({
+      fin_prevue: null,
+      retard_min: null,
+      en_retard: null,
+    });
+  });
+
+  test('tournée : arrêts lus, triés, entrées illisibles écartées ; montrée à partir de deux arrêts', () => {
+    const l = lue({ tournee });
+    expect(l.tournee.map(texteArretTournee)).toEqual([
+      'Arrêt 1 · ORD-4818 · Livrée 12 h 52',
+      'Arrêt 2 · ORD-4819 · En route',
+      'Arrêt 3 · ORD-4820 · À livrer',
+    ]);
+    expect(l.tournee.find((a) => a.cette_commande).reference).toBe('ORD-4819');
+    expect(tourneeAAfficher(l)).toBe(true);
+    expect(tourneeAAfficher(lue({ tournee: [tournee[2]] }))).toBe(false);
+    expect(tourneeAAfficher(lue())).toBe(false);
+    expect(
+      texteArretTournee({ reference: 'ORD-1', rang: 1, etat: 'chez_le_client', heure: null, cette_commande: false }),
+    ).toBe('Arrêt 1 · ORD-1 · Chez le client');
+    expect(texteArretTournee({ reference: 'ORD-1', rang: 1, etat: 'echec', heure: null, cette_commande: false })).toBe(
+      'Arrêt 1 · ORD-1 · Échec',
+    );
+  });
+
+  test('échec : « Échec : Client absent » et la note du livreur ; motif inconnu : « Échec »', () => {
+    expect(texteEchec(lue({ echec: { motif: 'CLIENT_ABSENT', note: 'Personne au portail' } }))).toEqual({
+      titre: 'Échec : Client absent',
+      note: 'Personne au portail',
+    });
+    expect(texteEchec(lue({ echec: { motif: 'AU_HASARD', note: null } }))).toEqual({ titre: 'Échec', note: null });
+    expect(texteEchec(lue({ echec: null }))).toBeNull();
+    expect(texteEchec(lue())).toBeNull();
+  });
+
+  test('appli du livreur : seulement fermée ou en arrière-plan, jamais sans les champs', () => {
+    const livreur = (champs) => ({ id: 'liv-1', nom: 'Koffi Yao', telephone: null, etat: 'vers_client', ...champs });
+    const maintenant = new Date(ISO('12:55'));
+    expect(
+      appliLivreurLivraison(lue({ livreur: livreur({ appli_active: false, appli_vue_a: ISO('12:49'), appli_connectee: false }) }), maintenant),
+    ).toMatchObject({ cas: 'FERMEE', libelle: 'Appli fermée', vue: 'vue il y a 6 min' });
+    expect(
+      appliLivreurLivraison(lue({ livreur: livreur({ appli_active: true, appli_vue_a: ISO('12:54'), appli_connectee: false }) }), maintenant),
+    ).toMatchObject({ cas: 'ARRIERE_PLAN', libelle: 'En arrière-plan' });
+    expect(
+      appliLivreurLivraison(lue({ livreur: livreur({ appli_active: true, appli_vue_a: ISO('12:54'), appli_connectee: true }) }), maintenant),
+    ).toBeNull();
+    // Serveur plus ancien (champs absents), Turbo, livraison finie : rien.
+    expect(appliLivreurLivraison(lue({ livreur: livreur({}) }), maintenant)).toBeNull();
+    expect(
+      appliLivreurLivraison(lue({ service: 'TURBO', livreur: livreur({ appli_active: false, appli_connectee: false }) }), maintenant),
+    ).toBeNull();
+    expect(
+      appliLivreurLivraison(
+        lue({ livreur: livreur({ etat: 'livree', appli_active: false, appli_connectee: false }) }),
+        maintenant,
+      ),
+    ).toBeNull();
   });
 });
 

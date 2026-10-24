@@ -18,6 +18,7 @@ import {
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDelivererLivePosition } from "../../../maps/hooks/use-deliverer-live-socket";
 import { PresenceAppliLigne } from "../../../livreurs/components/PresenceAppliLigne";
+import type { PresenceAppli } from "../../../livreurs/utils/disponibilite";
 import {
   appliDuLivreur,
   etatCourse,
@@ -77,7 +78,17 @@ interface Props {
  * « En arrière-plan ». Sur une carte de commande (une ligne), seule l'appli
  * fermée est signalée : en arrière-plan pendant une livraison, c'est normal.
  */
-export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service, maintenant, compact }) => {
+/**
+ * État de la course et appli de son livreur, avec la position en direct du
+ * livreur qui vient au restaurant. Partagé par la ligne d'état et le groupe
+ * de la course (couleur du bouton « Confirmer la récupération »).
+ */
+export function useEtatCourseLivreur(
+  course: CourseOperations,
+  commandes: readonly CommandeOperations[],
+  service: string | null | undefined,
+  maintenant: Date,
+): { etat: EtatAffiche; appli: PresenceAppli | null } {
   // Position en direct seulement pour un livreur qui vient au restaurant.
   const enApproche = course.statut === "ACCEPTED" && !!course.deliverer_id;
   const direct = useDelivererLivePosition(enApproche ? course.deliverer_id : null);
@@ -100,9 +111,15 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
     referencesARemettre: aRemettre,
     service,
   });
+  return { etat, appli: appliDuLivreur(course, maintenant) };
+}
+
+export { ICONES as ICONES_ETAT_COURSE, TONS as TONS_ETAT_COURSE };
+
+export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service, maintenant, compact }) => {
+  const { etat, appli } = useEtatCourseLivreur(course, commandes, service, maintenant);
   const ton = TONS[etat.ton];
   const Icone = ICONES[etat.etat];
-  const appli = appliDuLivreur(course, maintenant);
 
   if (compact) {
     const fermee = appli?.cas === "FERMEE" ? appli : null;

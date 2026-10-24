@@ -17,10 +17,20 @@
  * Heures : celles d'Abidjan, c'est-à-dire UTC, comme le reste de l'écran
  * Opérations (`heureCourte`).
  *
+ * Ajouts du 24/10 au soir (serveur, conception 11.3) : retard de la tournée
+ * (`course.en_retard`, `retard_min`), arrêts de la tournée (`tournee`), échec
+ * de la livraison (`echec`) et appli du livreur (`livreur.appli_active`,
+ * `appli_vue_a`, `appli_connectee`). Absents d'un serveur plus ancien : la
+ * section montre ce qu'elle montrait avant.
+ *
  * Fichier pur : testé par `bun test`.
  */
 
-import { heureCourte } from './suivi-course';
+// ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
+import { DELIVERY_FAILURE_LABELS } from '../../courses/utils/course-labels';
+import type { DeliveryFailureReason } from '../../courses/types/course.types';
+import { presenceAppli, type PresenceAppli } from '../../livreurs/utils/disponibilite';
+import { heureCourte, texteRetard } from './suivi-course';
 
 // ============================================================
 // TYPES (forme de la réponse du serveur)
@@ -55,6 +65,11 @@ export interface CourseDeLivraison {
   /** Rang de cette commande dans la tournée (1 = premier arrêt). */
   rang_arret: number | null;
   statut: string | null;
+  /** Fin prévue de la tournée (ISO), si le serveur la donne. */
+  fin_prevue: string | null;
+  /** Tournée en retard ; null : le serveur ne le dit pas. */
+  en_retard: boolean | null;
+  retard_min: number | null;
 }
 
 export interface LivreurDeLivraison {
@@ -62,6 +77,29 @@ export interface LivreurDeLivraison {
   nom: string | null;
   telephone: string | null;
   etat: EtatLivreur | null;
+  /** Appli du livreur Chicken Nation (absents : serveur plus ancien, Turbo). */
+  appli_active?: boolean | null;
+  appli_vue_a?: string | null;
+  appli_connectee?: boolean | null;
+}
+
+/** État d'un arrêt de la tournée. */
+export type EtatArret = 'a_livrer' | 'en_route' | 'chez_le_client' | 'livree' | 'echec';
+
+/** Un arrêt de la tournée : référence et état seulement, rien des autres clients. */
+export interface ArretTournee {
+  reference: string;
+  rang: number;
+  etat: EtatArret;
+  /** Heure de cet état (ISO), null à livrer. */
+  heure: string | null;
+  /** L'arrêt de la commande ouverte. */
+  cette_commande: boolean;
+}
+
+export interface EchecLivraison {
+  motif: DeliveryFailureReason | null;
+  note: string | null;
 }
 
 export interface DureesLivraison {
@@ -75,6 +113,10 @@ export interface LivraisonCommande {
   service: ServiceLivraison | null;
   course: CourseDeLivraison | null;
   livreur: LivreurDeLivraison | null;
+  /** Arrêts de la course (vide sans course ou sur un serveur plus ancien). */
+  tournee: ArretTournee[];
+  /** Échec de la livraison de cette commande. */
+  echec: EchecLivraison | null;
   etapes: EtapeLivraison[];
   durees: DureesLivraison;
 }
@@ -131,6 +173,7 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
   const service = r.service === 'CHICKEN_NATION' || r.service === 'TURBO' ? r.service : null;
 
   const c = objet(r.course);
+  const retard = nombre(c?.retard_min);
   const course: CourseDeLivraison | null =
     c && texte(c.id)
       ? {
@@ -140,17 +183,50 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
           nombre_commandes: nombre(c.nombre_commandes),
           rang_arret: nombre(c.rang_arret),
           statut: texte(c.statut),
+          fin_prevue: iso(c.fin_prevue),
+          en_retard: typeof c.en_retard === 'boolean' ? c.en_retard : null,
+          retard_min: retard !== null && retard > 0 ? Math.round(retard) : null,
         }
       : null;
 
   const l = objet(r.livreur);
   const etat = texte(l?.etat);
+  const booleen = (v: unknown): boolean | null | undefined => (typeof v === 'boolean' ? v : v === null ? null : undefined);
   const livreur: LivreurDeLivraison | null = l
     ? {
         id: texte(l.id),
         nom: texte(l.nom),
         telephone: texte(l.telephone),
         etat: etat && ETATS.has(etat) ? (etat as EtatLivreur) : null,
+        ...('appli_active' in l ? { appli_active: booleen(l.appli_active) } : {}),
+        ...('appli_vue_a' in l ? { appli_vue_a: iso(l.appli_vue_a) } : {}),
+        ...('appli_connectee' in l ? { appli_connectee: booleen(l.appli_connectee) } : {}),
+      }
+    : null;
+
+  const tournee: ArretTournee[] = [];
+  for (const a of Array.isArray(r.tournee) ? r.tournee : []) {
+    const o = objet(a);
+    const reference = texte(o?.reference);
+    const rang = nombre(o?.rang);
+    const etatArret = texte(o?.etat);
+    if (!o || !reference || rang === null || !etatArret || !ETATS_ARRET.has(etatArret)) continue;
+    tournee.push({
+      reference,
+      rang,
+      etat: etatArret as EtatArret,
+      heure: iso(o.heure),
+      cette_commande: o.cette_commande === true,
+    });
+  }
+  tournee.sort((a, b) => a.rang - b.rang);
+
+  const e = objet(r.echec);
+  const motif = texte(e?.motif);
+  const echec: EchecLivraison | null = e
+    ? {
+        motif: motif && Object.hasOwn(DELIVERY_FAILURE_LABELS, motif) ? (motif as DeliveryFailureReason) : null,
+        note: texte(e.note),
       }
     : null;
 
@@ -177,8 +253,10 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
     pret_a_livre_s: duree(d?.pret_a_livre_s),
   };
 
-  return { service, course, livreur, etapes, durees };
+  return { service, course, livreur, tournee, echec, etapes, durees };
 }
+
+const ETATS_ARRET: ReadonlySet<string> = new Set(['a_livrer', 'en_route', 'chez_le_client', 'livree', 'echec']);
 
 // ============================================================
 // TEXTES
@@ -442,4 +520,71 @@ export function texteTotal(livraison: LivraisonCommande): string | null {
   if (!livraison.etapes.find((e) => e.cle === 'livree')?.heure) return null;
   const d = texteDuree(livraison.durees.pret_a_livre_s);
   return d ? `Prête → livrée : ${d}` : null;
+}
+
+// ============================================================
+// RETARD, TOURNÉE, ÉCHEC, APPLI (demande du 24/10 au soir)
+// ============================================================
+
+/** « En retard de 12 min » quand le serveur dit la tournée en retard ; sinon null. */
+export function retardLivraison(livraison: LivraisonCommande): string | null {
+  return livraison.course?.en_retard ? texteRetard(livraison.course.retard_min) : null;
+}
+
+/** « Code 614 » tant que la commande attend le livreur au restaurant ; sinon null. */
+export function texteCode(livraison: LivraisonCommande, statutCommande: string | null | undefined): string | null {
+  const code = livraison.course?.code_retrait;
+  return code && statutCommande === 'READY' ? `Code ${code}` : null;
+}
+
+/** « À livrer », « En route », « Chez le client », « Livrée 12 h 52 », « Échec ». */
+export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): string {
+  switch (arret.etat) {
+    case 'en_route':
+      return 'En route';
+    case 'chez_le_client':
+      return 'Chez le client';
+    case 'livree': {
+      const h = texteHeure(arret.heure);
+      return h ? `Livrée ${h}` : 'Livrée';
+    }
+    case 'echec':
+      return 'Échec';
+    default:
+      return 'À livrer';
+  }
+}
+
+/** « Arrêt 2 · ORD-4819 · En route ». */
+export function texteArretTournee(arret: ArretTournee): string {
+  return `Arrêt ${arret.rang} · ${arret.reference} · ${texteEtatArret(arret)}`;
+}
+
+/** La tournée ne s'affiche que s'il y a au moins deux arrêts. */
+export function tourneeAAfficher(livraison: LivraisonCommande): boolean {
+  return livraison.tournee.length >= 2;
+}
+
+/** « Échec : Client absent » (motif inconnu : « Échec ») et la note du livreur. */
+export function texteEchec(livraison: LivraisonCommande): { titre: string; note: string | null } | null {
+  if (!livraison.echec) return null;
+  const motif = livraison.echec.motif ? DELIVERY_FAILURE_LABELS[livraison.echec.motif] : null;
+  return { titre: motif ? `Échec : ${motif}` : 'Échec', note: livraison.echec.note };
+}
+
+/**
+ * Appli du livreur, seulement si elle est fermée ou en arrière-plan : « Appli
+ * fermée · vue il y a 6 min », « En arrière-plan ». Rien pour Turbo, sans
+ * livreur, une livraison finie ou un serveur qui ne donne pas ces champs.
+ */
+export function appliLivreurLivraison(livraison: LivraisonCommande, maintenant: Date): PresenceAppli | null {
+  const l = livraison.livreur;
+  if (!l || livraison.service !== 'CHICKEN_NATION' || livraisonTerminee(livraison)) return null;
+  if (l.appli_active === undefined && l.appli_connectee === undefined) return null;
+  const presence = presenceAppli(
+    { appli_active: l.appli_active, appli_vue_a: l.appli_vue_a ?? null, appli_connectee: l.appli_connectee },
+    'EN_COURSE',
+    maintenant,
+  );
+  return presence && presence.cas !== 'NON_CONNECTEE' ? presence : null;
 }

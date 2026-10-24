@@ -1,77 +1,79 @@
 "use client";
 
 import React from "react";
-import { Hourglass, Package } from "lucide-react";
 
-import type { IOrderGroup } from "../../types/operations.types";
-import { ligneRetenue } from "../../utils/ligne-retenue";
-import { courseDeCommande, etiquetteMotif, type CommandeOperations } from "../../utils/suivi-course";
-import { EtatCourseLivreur } from "./EtatCourseLivreur";
+import type { EtatAffiche } from "../../utils/suivi-course";
+import { ICONES_ETAT_COURSE } from "./EtatCourseLivreur";
+
+/** Ligne qui demande d'agir : rouge (sac oublié, prête depuis trop longtemps) ou ambre (retenue). */
+export interface LigneAction {
+  texte: string;
+  ton: "rouge" | "ambre";
+}
+
+const COULEUR_ETAT: Record<EtatAffiche["ton"], string> = {
+  vert: "text-green-700",
+  bleu: "text-blue-700",
+  ambre: "text-amber-700",
+  violet: "text-purple-700",
+  gris: "text-gray-600",
+  rouge: "text-red-700",
+};
 
 interface Props {
-  group: IOrderGroup;
-  /** Toutes les commandes affichées (livraisons commencées, coordonnées). */
-  commandes: readonly CommandeOperations[];
-  maintenant: Date;
+  code: string | null | undefined;
+  etat: EtatAffiche;
+  /** « appli fermée » à la suite de l'état, en gris. */
+  appliFermee: string | null;
+  /** Restaurant en tête (compte du siège sur « Tous »). */
+  restaurant?: string | null;
+  /** Seconde ligne, seulement s'il faut agir. */
+  action: LigneAction | null;
 }
 
 /**
- * En-tête d'une course sur l'écran Opérations, visible dès la création de la
- * course (une seule commande comprise) : référence, nombre de commandes à
- * remettre, code de retrait en grand, livreur et son état, et la retenue en
- * une ligne courte quand il y en a une.
+ * En-tête du groupe d'une course (demande du 24/10 au soir) : le code de
+ * retrait en grand dans un cadre orange (la caissière le compare à celui que
+ * le livreur lui dit), puis en une ligne le livreur et son état
+ * (« Koffi · Au restaurant », « Proposée à Awa, réponse avant 12 h 36 »,
+ * « Confiée à Turbo »), puis une seconde ligne seulement s'il faut agir.
  *
- * Demande du 24/10 (« reste simple ») : plus de phrase d'ajout (« CMD-C
- * ajoutée à la course de Koffi : remettre avec le code 123 ») ni de fusion
- * (« Courses CRS-A et CRS-B fusionnées ») : la carte montre déjà les
- * commandes regroupées et le code. Le motif du regroupement reste en petit.
+ * Retirés : le mot « Course », la référence `CRS-…`, « 2 commandes à
+ * remettre » et le motif du regroupement (dans la fiche de la course).
  */
-export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant }) => {
-  const course = group.orders.map((o) => courseDeCommande(o as CommandeOperations)).find(Boolean) ?? null;
-  if (!course) return null;
-
-  const n = group.orders.length;
-  const motif = etiquetteMotif(course.motif_regroupement);
-  const retenue = ligneRetenue(course, maintenant);
+export const BandeauCourse: React.FC<Props> = ({ code, etat, appliFermee, restaurant, action }) => {
+  const Icone = ICONES_ETAT_COURSE[etat.etat];
+  // Sac oublié : la seconde ligne dit tout (« Parti à 12 h 20, ORD-4822 pas remise ») ; ici le livreur seul.
+  const etatTexte = etat.etat === "PARTI_SANS_SAC" ? null : etat.libelle;
+  const ligne1 = [etat.livreur, etatTexte].filter(Boolean).join(" · ");
+  const titre = [restaurant, ligne1, appliFermee].filter(Boolean).join(" · ");
 
   return (
-    <div className="space-y-2 px-1 pt-1">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F17922]">
-            <Package className="h-4 w-4 text-white" aria-hidden />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#F17922]">Course</div>
-            <div className="truncate text-sm font-bold text-gray-900">{course.reference ?? "Course"}</div>
-            <div className="text-[11px] text-gray-600">
-              {n} commande{n > 1 ? "s" : ""} à remettre
-              {motif && <span className="text-gray-400"> · {motif}</span>}
-            </div>
-          </div>
-        </div>
-
-        {course.pickup_code && (
-          <div className="shrink-0 rounded-xl border-2 border-[#F17922] bg-white px-3 py-1.5 text-center shadow-md">
-            <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-500">Code</div>
-            <div className="font-mono text-2xl font-bold leading-none text-[#F17922]">{course.pickup_code}</div>
-          </div>
-        )}
-      </div>
-
-      <EtatCourseLivreur
-        course={course}
-        commandes={commandes}
-        service={group.deliveryService}
-        maintenant={maintenant}
-      />
-
-      {retenue && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-2 text-amber-900">
-          <Hourglass className="h-4 w-4 shrink-0" aria-hidden />
-          <p className="text-[12px] font-semibold leading-snug">{retenue}</p>
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      {code && (
+        <div className="shrink-0 rounded-xl border-2 border-[#F17922] bg-white px-2.5 py-1 text-center">
+          <div className="text-[9px] font-semibold uppercase tracking-wider text-gray-500">Code</div>
+          <div className="font-mono text-2xl font-bold leading-none text-[#F17922]">{code}</div>
         </div>
       )}
+      <div className="min-w-0 flex-1">
+        <p className="flex min-w-0 items-center gap-1.5 text-sm" title={titre}>
+          <Icone className={`h-4 w-4 shrink-0 ${COULEUR_ETAT[etat.ton]}`} aria-hidden />
+          <span className="truncate">
+            {restaurant && <span className="font-semibold text-[#F17922]">{restaurant} · </span>}
+            <span className={`font-semibold ${COULEUR_ETAT[etat.ton]}`}>{ligne1 || etat.libelle}</span>
+            {appliFermee && <span className="text-gray-500"> · {appliFermee}</span>}
+          </span>
+        </p>
+        {action && (
+          <p
+            className={`mt-0.5 truncate text-xs font-semibold ${action.ton === "rouge" ? "text-red-700" : "text-amber-700"}`}
+            title={action.texte}
+          >
+            {action.texte}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

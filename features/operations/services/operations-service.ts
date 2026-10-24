@@ -2,7 +2,7 @@ import { api } from '@/services/api';
 
 import type { Course } from '../../courses/types/course.types';
 import type { Order } from '../../orders/types/order.types';
-import { messageErreurOperations } from '../utils/message-erreur';
+import { estRouteAbsente, messageErreurOperations } from '../utils/message-erreur';
 
 const BASE_ORDERS = '/orders';
 const BASE_OPERATIONS = '/courses/operations';
@@ -21,6 +21,8 @@ const safeCall = async <T>(fn: () => Promise<T>): Promise<T> => {
     throw Object.assign(
       new Error(messageErreurOperations(error)),
       typeof status === 'number' ? { status } : {},
+      // Route inconnue du serveur (pas encore à jour) : l'appelant se replie.
+      estRouteAbsente(error) ? { routeAbsente: true } : {},
     );
   }
 };
@@ -39,9 +41,9 @@ export const getActiveOperationsOrders = (restaurantId?: string) =>
   );
 
 /**
- * Preview d'une course pour un pickup_code, avant validation caissière.
- * `restaurantId` : restaurant où chercher (voir `utils/code-retrait.ts`) ;
- * absent, le serveur prend celui du membre rattaché, ou tous les restaurants.
+ * Aperçu d'une course par son code (ancienne route, repli tant que le serveur
+ * n'a pas `GET /courses/operations/:id`). `restaurantId` : celui de la course
+ * affichée ; absent, le serveur prend celui du membre rattaché, ou tous.
  */
 export const getCourseByPickupCode = (code: string, restaurantId?: string) =>
   safeCall(() =>
@@ -62,12 +64,71 @@ export const getLivraisonCommande = (orderId: string) =>
   safeCall(() => api.get<unknown>(`${BASE_ORDERS}/${encodeURIComponent(orderId)}/livraison`, true));
 
 // ============================================================
+// RÉCUPÉRATION PAR LA COURSE (sans saisie du code, demande du 24/10 au soir)
+// ============================================================
+
+/** Ce que l'écran connaît de la course à remettre : de quoi se replier sur le code. */
+export interface CourseARemettre {
+  id: string;
+  pickup_code?: string | null;
+  restaurant_id?: string | null;
+}
+
+/** Aperçu de la course à remettre, par son identifiant (`GET /courses/operations/:id`). */
+export const apercuCourse = (courseId: string) =>
+  safeCall(() => api.get<Course>(`${BASE_OPERATIONS}/${encodeURIComponent(courseId)}`, true));
+
+/**
+ * Confirme la récupération (`POST /courses/operations/:id/recuperation`) :
+ * les commandes `orderIds` passent récupérées. Renvoie la course remise.
+ */
+export const confirmerRecuperation = (courseId: string, orderIds: readonly string[]) =>
+  safeCall(() =>
+    api.post<Course>(
+      `${BASE_OPERATIONS}/${encodeURIComponent(courseId)}/recuperation`,
+      { order_ids: [...orderIds] },
+      true,
+    ),
+  );
+
+const routeAbsente = (erreur: unknown) => (erreur as { routeAbsente?: unknown } | null)?.routeAbsente === true;
+
+/**
+ * Aperçu pour la fenêtre de récupération : la route par identifiant, ou,
+ * tant que le serveur ne la connaît pas (404 de route), l'ancienne route à
+ * code avec le code et le restaurant de la course déjà à l'écran.
+ */
+export async function apercuRecuperation(course: CourseARemettre): Promise<Course> {
+  try {
+    return await apercuCourse(course.id);
+  } catch (erreur) {
+    if (!routeAbsente(erreur) || !course.pickup_code) throw erreur;
+    return getCourseByPickupCode(course.pickup_code, course.restaurant_id ?? undefined);
+  }
+}
+
+/**
+ * Confirmation de la fenêtre : la route par identifiant, ou l'ancienne
+ * validation par code (qui remet toutes les commandes prêtes de la course)
+ * tant que le serveur ne la connaît pas.
+ */
+export async function recupererCourse(course: CourseARemettre, orderIds: readonly string[]): Promise<Course> {
+  try {
+    return await confirmerRecuperation(course.id, orderIds);
+  } catch (erreur) {
+    if (!routeAbsente(erreur) || !course.pickup_code) throw erreur;
+    return validatePickup(course.pickup_code, course.restaurant_id ?? undefined);
+  }
+}
+
+// ============================================================
 // MUTATIONS
 // ============================================================
 
 /**
- * Valide la récupération (caissière) : Course → IN_DELIVERY, Orders → PICKED_UP.
- * `restaurantId` part dans le corps (`restaurant_id`), seulement s'il est connu.
+ * Valide la récupération par le code (ancienne route, repli) : Course →
+ * IN_DELIVERY, Orders → PICKED_UP. `restaurantId` part dans le corps
+ * (`restaurant_id`), seulement s'il est connu.
  */
 export const validatePickup = (pickup_code: string, restaurantId?: string) =>
   safeCall(() =>
