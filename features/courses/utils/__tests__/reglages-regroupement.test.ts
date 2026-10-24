@@ -142,6 +142,9 @@ describe('libellés', () => {
     ]);
     expect(comptoir.description).toContain('le trajet est long');
     expect(def('course.petit_retard_retour_min').aide).toContain('0 : aucun retard toléré');
+    // Au serveur, 0 coupe seulement l'attente courte : le trajet long garde son réglage.
+    expect(def('course.attente_max_commande_prete_s').aide).toContain('que pour un trajet long');
+    expect(def('course.horizon_preparation_s').aide).toContain('que pour un trajet long');
     expect(def('course.attente_max_trajet_long_s').aide).toContain("0 : jamais, seule l'attente courte reste");
   });
 
@@ -231,8 +234,8 @@ describe('saisie : 0 permis là où il a un sens, valeur refusée signalée', ()
 
   test('trajet long : mêmes contrôles que les réglages voisins', () => {
     expect(verifierSaisie(def('course.petit_retard_retour_min'), '7,5')).toEqual({ ok: true, valeur: '7.5' });
-    expect(verifierSaisie(def('course.petit_retard_retour_min'), '61')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 60' });
-    expect(verifierSaisie(def('course.petit_retard_retour_min'), '-1')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 60' });
+    expect(verifierSaisie(def('course.petit_retard_retour_min'), '121')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 120' });
+    expect(verifierSaisie(def('course.petit_retard_retour_min'), '-1')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 120' });
     expect(verifierSaisie(def('course.attente_max_trajet_long_s'), '900')).toEqual({ ok: true, valeur: '900' });
     expect(verifierSaisie(def('course.attente_max_trajet_long_s'), '3601')).toEqual({ ok: false, message: 'Valeur attendue entre 0 et 3600' });
     expect(verifierSaisie(def('course.attente_max_trajet_long_s'), 'vingt')).toEqual({ ok: false, message: 'Nombre attendu' });
