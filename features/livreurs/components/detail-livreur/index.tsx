@@ -15,6 +15,7 @@ import WorkflowActions from "./WorkflowActions";
 import AssignRestaurantModal from "@/components/gestion/Livreurs/AssignRestaurantModal";
 import RejectLivreurModal from "@/components/gestion/Livreurs/RejectLivreurModal";
 import SuspendLivreurModal from "@/components/gestion/Livreurs/SuspendLivreurModal";
+import { useDroitsLivraison } from "../../hook/use-droits-livraison";
 import { useLivreurDetail } from "../../hook/use-livreurs";
 import type { Livreur } from "../../types/livreur.types";
 
@@ -34,6 +35,8 @@ interface LivreurDetailsProps {
 const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
   const { data: fresh } = useLivreurDetail(selectedItem.id);
   const livreur = fresh ?? selectedItem;
+  // Valider, refuser, suspendre, réactiver, affecter : l'admin ; supprimer : son droit propre.
+  const { gererLivreurs, supprimerLivreur } = useDroitsLivraison();
 
   const setSectionView = useDashboardStore((s) => s.setSectionView);
   const backToList = () => setSectionView("livreurs", "list");
@@ -60,41 +63,49 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
           <div className="md:w-2/5 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto overflow-y-auto md:overflow-visible">
             <AffectationSection
               livreur={livreur}
-              onAssignRestaurant={() => setAssignOpen(true)}
+              onAssignRestaurant={gererLivreurs ? () => setAssignOpen(true) : undefined}
             />
             <ProximiteSection livreur={livreur} />
             <ScoringQueueSection livreurId={livreur.id} />
-            <WorkflowActions
-              livreur={livreur}
-              onBack={backToList}
-              onReject={() => setRejectOpen(true)}
-              onSuspend={() => setSuspendOpen(true)}
-              onAssignRestaurant={() => setAssignOpen(true)}
-            />
+            {(gererLivreurs || supprimerLivreur) && (
+              <WorkflowActions
+                livreur={livreur}
+                onBack={backToList}
+                onReject={() => setRejectOpen(true)}
+                onSuspend={() => setSuspendOpen(true)}
+                onAssignRestaurant={() => setAssignOpen(true)}
+                gerer={gererLivreurs}
+                supprimer={supprimerLivreur}
+              />
+            )}
           </div>
         </div>
       </div>
 
       {/* Modals d'actions — restent en modal car formulaires courts */}
-      <RejectLivreurModal
-        isOpen={rejectOpen}
-        onClose={() => setRejectOpen(false)}
-        livreurId={livreur.id}
-        livreurNom={livreurNom}
-      />
-      <SuspendLivreurModal
-        isOpen={suspendOpen}
-        onClose={() => setSuspendOpen(false)}
-        livreurId={livreur.id}
-        livreurNom={livreurNom}
-      />
-      <AssignRestaurantModal
-        isOpen={assignOpen}
-        onClose={() => setAssignOpen(false)}
-        livreurId={livreur.id}
-        livreurNom={livreurNom}
-        currentRestaurantId={livreur.restaurant_id}
-      />
+      {gererLivreurs && (
+        <>
+          <RejectLivreurModal
+            isOpen={rejectOpen}
+            onClose={() => setRejectOpen(false)}
+            livreurId={livreur.id}
+            livreurNom={livreurNom}
+          />
+          <SuspendLivreurModal
+            isOpen={suspendOpen}
+            onClose={() => setSuspendOpen(false)}
+            livreurId={livreur.id}
+            livreurNom={livreurNom}
+          />
+          <AssignRestaurantModal
+            isOpen={assignOpen}
+            onClose={() => setAssignOpen(false)}
+            livreurId={livreur.id}
+            livreurNom={livreurNom}
+            currentRestaurantId={livreur.restaurant_id}
+          />
+        </>
+      )}
     </>
   );
 };

@@ -3,9 +3,10 @@
 import {
   BarChart3,
   Bell,
+  Bike,
   BookOpen,
   Boxes,
-  Calendar,
+  CalendarDays,
   ClipboardList,
   CreditCard,
   Database,
@@ -15,6 +16,8 @@ import {
   MessageCircleMore,
   MessageSquare,
   Newspaper,
+  Package,
+  Radar,
   Star,
   Store,
   BadgePercent,
@@ -43,6 +46,7 @@ import { useAuthStore } from "../../features/users/hook/authStore";
 import { Modules, Action } from "../../features/users/types/auth.type";
 import { useUnreadCounts } from "../../features/messagerie/hooks/useUnreadCounts";
 import { useNombreARelancer } from "../../features/orders/queries/relance.query";
+import { useNombreAlertesRouges } from "../../features/courses/queries/tableau-livraison.query";
 
 export type CanAccessFn = () => boolean;
 
@@ -66,6 +70,9 @@ export const useGetMenuConfig = (): {
   // Paniers non payés à relancer : lecture du cache de la relance, sans
   // requête de plus ; toujours zéro pour un rôle non habilité (requête coupée).
   const aRelancer = useNombreARelancer();
+  // Alertes rouges de la livraison (tableau du serveur), pour qui voit En
+  // direct ; zéro pour les autres et tant que le serveur n'a pas la route.
+  const alertesRouges = useNombreAlertesRouges();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -88,11 +95,48 @@ export const useGetMenuConfig = (): {
       badge: aRelancer > 0 ? aRelancer : undefined,
     },
     {
-      id: "courses",
-      label: "Courses",
+      /**
+       * Livraison (conception du 24/10, section 5), juste sous Commandes. Les
+       * clés d'écran `courses`, `livreurs`, `planning_livreurs` ne changent
+       * pas (onglets mémorisés, liens) ; `en_direct` est nouvelle.
+       *
+       * En direct, Courses, Livreurs : droit LIVREURS (ADMIN, LIVRAISON_OPS),
+       * miroir de `ROLES_SUIVI_LIVRAISON` du serveur. Planning : son droit
+       * propre, que le manager reçoit pour son restaurant ; tant que le
+       * serveur ne le renvoie pas, seul l'ADMIN le voit (par ALL).
+       */
+      id: "livraison",
+      label: "Livraison",
       icon: Truck,
-      // Même permission que Livreurs : seul l'admin gère les courses
-      canAccess: () => can(Modules.LIVREURS, Action.READ),
+      canAccess: () => can(Modules.LIVREURS, Action.READ) || can(Modules.PLANNING, Action.READ),
+      badge: alertesRouges > 0 ? alertesRouges : undefined,
+      items: [
+        {
+          id: "livraison-en_direct",
+          label: "En direct",
+          icon: Radar,
+          canAccess: () => can(Modules.LIVREURS, Action.READ),
+          badge: alertesRouges > 0 ? alertesRouges : undefined,
+        },
+        {
+          id: "livraison-courses",
+          label: "Courses",
+          icon: Package,
+          canAccess: () => can(Modules.LIVREURS, Action.READ),
+        },
+        {
+          id: "livraison-livreurs",
+          label: "Livreurs",
+          icon: Bike,
+          canAccess: () => can(Modules.LIVREURS, Action.READ),
+        },
+        {
+          id: "livraison-planning_livreurs",
+          label: "Planning",
+          icon: CalendarDays,
+          canAccess: () => can(Modules.PLANNING, Action.READ),
+        },
+      ],
     },
     {
       id: "base_donnees",
@@ -249,26 +293,6 @@ export const useGetMenuConfig = (): {
       label: "Personnel",
       icon: UserCog,
       canAccess: () => can(Modules.PERSONNELS, Action.READ),
-    },
-    {
-      id: "livreurs",
-      label: "Livreurs",
-      icon: Truck,
-      canAccess: () => can(Modules.LIVREURS, Action.READ),
-      items: [
-        {
-          id: "livreurs-livreurs",
-          label: "Liste des livreurs",
-          icon: Truck,
-          canAccess: () => can(Modules.LIVREURS, Action.READ),
-        },
-        {
-          id: "livreurs-planning_livreurs",
-          label: "Planning",
-          icon: Calendar,
-          canAccess: () => can(Modules.LIVREURS, Action.READ),
-        },
-      ],
     },
     {
       id: "marketing_group",

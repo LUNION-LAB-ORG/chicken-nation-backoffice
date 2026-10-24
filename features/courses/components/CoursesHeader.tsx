@@ -33,7 +33,7 @@ export function CoursesHeader() {
         mode="list"
         title="Courses"
         searchConfig={{
-          placeholder: 'Rechercher par référence ou code retrait…',
+          placeholder: 'Rechercher par référence ou code de retrait…',
           buttonText: 'Chercher',
           value: filters?.search as string,
           onSearch: handleSearch,

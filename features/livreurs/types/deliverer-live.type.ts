@@ -40,6 +40,28 @@ export interface IDelivererLiveCourse {
   statut: CourseStatut;
   assigned_at: string | null;
   deliveries: IDelivererLiveDelivery[];
+  // Complétés le 24/10 (conception, 11.5) ; absents sur un serveur plus ancien.
+  restaurant_id?: string;
+  pickup_code?: string;
+  at_restaurant_at?: string | null;
+  picked_up_at?: string | null;
+  parti_at?: string | null;
+  estimated_duration_min?: number | null;
+  /** Fin prévue de la tournée (ISO), règle commune du retard. */
+  fin_prevue?: string | null;
+  en_retard?: boolean;
+  /** Minutes de retard au-delà de la fin prévue ; null sans retard. */
+  retard_min?: number | null;
+}
+
+/** Réponse d'un livreur à un créneau du jour ; null s'il n'y est pas affecté. */
+export type ReponseCreneau = "ASSIGNED" | "CONFIRMED" | "REFUSED" | null;
+
+/** Planning du jour d'un livreur (plannings envoyés ou confirmés, repos du jour). */
+export interface CreneauDuJour {
+  matin: ReponseCreneau;
+  soir: ReponseCreneau;
+  repos: boolean;
 }
 
 export interface IDelivererLive extends PresenceAppliServeur {
@@ -48,7 +70,7 @@ export interface IDelivererLive extends PresenceAppliServeur {
   last_name: string | null;
   image: string | null;
   type_vehicule: VehiculeType | null;
-  restaurant: { id: string; name: string } | null;
+  restaurant: { id: string; name: string; latitude?: number | null; longitude?: number | null } | null;
   /** `{ lat, lng }` ou null si pas encore remonté */
   location: { lat: number; lng: number } | null;
   location_at: string | null;
@@ -57,8 +79,13 @@ export interface IDelivererLive extends PresenceAppliServeur {
   speed_kmh: number | null;
   heading_deg: number | null;
   availability: IDelivererAvailability;
-  /** Position FIFO dans la queue (null si hors queue). */
+  /**
+   * Rang parmi TOUS les livreurs lus ensemble (anciens écrans) : juste pour
+   * un seul restaurant. Préférer `rang_file`.
+   */
   queue_rank: number | null;
+  /** Place dans la file de SON restaurant (1 = premier) ; absent sur un serveur plus ancien. */
+  rang_file?: number | null;
   pause_until: string | null;
   auto_pause_until: string | null;
   /**
@@ -69,4 +96,10 @@ export interface IDelivererLive extends PresenceAppliServeur {
   /** Connexion temps réel de l'appli (voir `Livreur.appli_connectee`). */
   appli_connectee?: boolean | null;
   active_course: IDelivererLiveCourse | null;
+  // Avec `jour=true` seulement (vue Livreurs « Aujourd'hui »), absents sur un serveur plus ancien.
+  creneau_du_jour?: CreneauDuJour;
+  /** Temps en ligne de la journée, en secondes ; null si le serveur n'a pas pu le lire. */
+  en_ligne_aujourdhui_s?: number | null;
+  /** Courses terminées depuis le début de la journée de service. */
+  courses_du_jour?: number;
 }

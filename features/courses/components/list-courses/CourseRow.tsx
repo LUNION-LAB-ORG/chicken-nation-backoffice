@@ -6,19 +6,27 @@ import { ArrowRight, MoreVertical, RotateCw, User } from 'lucide-react';
 import React from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 
+import { useDroitsLivraison } from '../../../livreurs/hook/use-droits-livraison';
 import { useCourseRetryMutation } from '../../queries/course-retry.mutation';
 import type { Course } from '../../types/course.types';
-import { formatDelivererName } from '../../utils/course-labels';
+import { dureeCourse, formatDelivererName } from '../../utils/course-labels';
 import { CourseStatutBadge } from '../CourseStatutBadge';
 
 interface Props {
   course: Course;
+  /** Heure du tableau, relue par la liste (durée d'une course en livraison). */
+  maintenant: Date;
 }
 
-/** Ligne de tableau enrichie : progress bar deliveries, avatar livreur, action rapide retry. */
-export function CourseRow({ course }: Props) {
+/**
+ * Ligne de tableau enrichie : progress bar deliveries, avatar livreur, durée.
+ * Menu ⋮ et relance rapide : seulement pour qui pilote les courses (l'admin).
+ */
+export function CourseRow({ course, maintenant }: Props) {
   const { setSectionView, setSelectedItem, toggleModal } = useDashboardStore();
+  const { piloterCourses } = useDroitsLivraison();
   const { mutate: retryCourse, isPending: isRetrying } = useCourseRetryMutation();
+  const duree = dureeCourse(course, maintenant);
 
   const deliveriesCount = course.deliveries.length;
   const terminal = course.deliveries.filter(
@@ -74,7 +82,7 @@ export function CourseRow({ course }: Props) {
             <span className="text-gray-700 text-xs">{delivererName}</span>
           </div>
         ) : (
-          <span className="text-xs text-gray-400 italic">Non assigné</span>
+          <span className="text-xs text-gray-400 italic">Sans livreur</span>
         )}
       </td>
 
@@ -86,13 +94,22 @@ export function CourseRow({ course }: Props) {
         <CourseStatutBadge statut={course.statut} />
       </td>
 
+      <td className="px-3 py-3 whitespace-nowrap text-xs">
+        <span className={duree.enRetard ? 'text-red-600' : 'text-gray-700'}>{duree.texte}</span>
+        {duree.enRetard && (
+          <span className="ml-1.5 inline-flex rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-700">
+            En retard
+          </span>
+        )}
+      </td>
+
       <td className="px-3 py-3 text-gray-900 font-semibold whitespace-nowrap">
         {course.total_delivery_fee.toLocaleString('fr-FR')} F
       </td>
 
       <td className="px-3 py-3">
-        <div className="flex items-center gap-1">
-          {course.statut === 'EXPIRED' && (
+        <div className="flex items-center justify-end gap-1">
+          {piloterCourses && course.statut === 'EXPIRED' && (
             <button
               onClick={handleRetry}
               disabled={isRetrying}
@@ -102,9 +119,11 @@ export function CourseRow({ course }: Props) {
               <RotateCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
             </button>
           )}
-          <button onClick={handleMenu} title="Actions" className="p-1.5 rounded hover:bg-gray-200">
-            <MoreVertical className="w-4 h-4 text-gray-500" />
-          </button>
+          {piloterCourses && (
+            <button onClick={handleMenu} title="Actions" className="p-1.5 rounded hover:bg-gray-200">
+              <MoreVertical className="w-4 h-4 text-gray-500" />
+            </button>
+          )}
           <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-[#F17922] transition-colors" />
         </div>
       </td>

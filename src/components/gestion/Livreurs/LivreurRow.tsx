@@ -13,8 +13,11 @@ import type { IDelivererLive } from "../../../../features/livreurs/types/deliver
 import {
   COULEURS_ETAT,
   etatLivreurAffiche,
+  heureLisible,
   presenceAppli,
 } from "../../../../features/livreurs/utils/disponibilite";
+import { rangDuLivreur } from "../../../../features/livreurs/utils/livreurs-du-jour";
+import { useDroitsLivraison } from "../../../../features/livreurs/hook/use-droits-livraison";
 import { PresenceAppliLigne } from "../../../../features/livreurs/components/PresenceAppliLigne";
 import BoutonAppelerLivreur from "../../../../features/calls/components/BoutonAppelerLivreur";
 import { livreurAppelable, nomLivreur, sousTitreLivreur } from "../../../../features/calls/utils/appel-livreur";
@@ -23,6 +26,8 @@ interface LivreurRowProps {
   livreur: Livreur;
   live?: IDelivererLive;
   onView: () => void;
+  /** Un seul restaurant filtré : la place dans la file d'un serveur plus ancien est juste. */
+  unSeulRestaurant?: boolean;
 }
 
 const vehiculeLabel: Record<string, string> = {
@@ -31,17 +36,12 @@ const vehiculeLabel: Record<string, string> = {
   VOITURE: "Voiture",
 };
 
-function formatGpsAge(locationAt: string): string {
-  const diffMs = Date.now() - new Date(locationAt).getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 60) {
-    return `Il y a ${diffMin}m`;
-  }
-  const diffH = Math.floor(diffMin / 60);
-  return `Il y a ${diffH}h`;
-}
+/** « 1er », « 2e » : place dans la file (colonne « File »). */
+const place = (rang: number): string => (rang === 1 ? "1er" : `${rang}e`);
 
-const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
+const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRestaurant = false }) => {
+  // Menu ⋮ (valider, réactiver) : seulement pour qui gère les livreurs (l'admin).
+  const { gererLivreurs } = useDroitsLivraison();
   const [menuOpen, setMenuOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -76,7 +76,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
 
   const avatarUrl = livreur.image ? formatImageUrl(livreur.image) : null;
   const nomComplet =
-    `${livreur.first_name ?? ""} ${livreur.last_name ?? ""}`.trim() || "—";
+    `${livreur.first_name ?? ""} ${livreur.last_name ?? ""}`.trim() || livreur.phone || "Livreur";
 
   /* ── Colonne Dispo ── */
   // État par la règle unique du serveur : « En pause jusqu'à 14 h 32 »,
@@ -126,33 +126,29 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
     );
   };
 
-  /* ── Colonne File ── */
+  /* ── Colonne File : place dans la file de son restaurant ── */
   const renderFile = () => {
-    if (!live || live.queue_rank === null) {
-      return <span className="text-[#A1A1AA]">—</span>;
-    }
-    return (
-      <span className="text-sm font-bold text-[#18181B]">#{live.queue_rank}</span>
-    );
+    const rang = live ? rangDuLivreur(live, unSeulRestaurant) : null;
+    if (!rang) return null;
+    return <span className="text-sm font-bold text-[#18181B]">{place(rang)}</span>;
   };
 
-  /* ── Colonne GPS ── */
+  /* ── Colonne Position : heure de la dernière position, ou « Position ancienne » ── */
   const renderGps = () => {
-    if (!live || !live.location_at) {
-      return <span className="text-[#A1A1AA]">—</span>;
-    }
+    if (!live || !live.location_at) return null;
     if (!live.location_fresh) {
       return (
         <span
-          className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+          className="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold"
           style={{ color: "#EF4444", backgroundColor: "rgba(239,68,68,0.15)" }}
+          title={`Dernière position ${heureLisible(new Date(live.location_at), new Date())}`}
         >
-          Expiré
+          Position ancienne
         </span>
       );
     }
     return (
-      <span className="text-xs text-[#52525B]">{formatGpsAge(live.location_at)}</span>
+      <span className="text-xs text-[#52525B]">{heureLisible(new Date(live.location_at), new Date())}</span>
     );
   };
 
@@ -195,7 +191,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
 
       {/* 3. Véhicule */}
       <td className="py-3 px-4 text-sm text-[#52525B]">
-        {livreur.type_vehicule ? vehiculeLabel[livreur.type_vehicule] ?? livreur.type_vehicule : "—"}
+        {livreur.type_vehicule ? vehiculeLabel[livreur.type_vehicule] ?? livreur.type_vehicule : ""}
       </td>
 
       {/* 4. Dispo */}
@@ -223,20 +219,22 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
               detail={sousTitreLivreur(livreur.restaurant?.name)}
             />
           )}
-          <button
-            ref={buttonRef}
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen((o) => !o);
-            }}
-            className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
-            aria-label="Actions"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
+          {gererLivreurs && (
+            <button
+              ref={buttonRef}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setMenuOpen((o) => !o);
+              }}
+              className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
+              aria-label="Actions"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          )}
         </div>
-        {renderMenu()}
+        {gererLivreurs && renderMenu()}
       </td>
     </tr>
   );

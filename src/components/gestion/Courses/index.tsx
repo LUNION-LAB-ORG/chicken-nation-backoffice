@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { Map, ChevronDown, ChevronUp } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
+import { toast } from 'react-hot-toast';
+
 import { useDashboardStore } from '@/store/dashboardStore';
 
-import { DelivererLiveMap } from '../../../../features/livreurs/components/DelivererLiveMap';
+import { ATraiter } from '../../../../features/courses/components/ATraiter';
+import { BandeauRestaurants } from '../../../../features/courses/components/BandeauRestaurants';
 import { CoursesHeader } from '../../../../features/courses/components/CoursesHeader';
 import { CourseDetails } from '../../../../features/courses/components/detail-course';
 import { CoursesFilters } from '../../../../features/courses/components/filtrage/CoursesFilters';
@@ -12,34 +15,71 @@ import { CoursesTable } from '../../../../features/courses/components/list-cours
 import { CancelCourseModal } from '../../../../features/courses/components/modals/CancelCourseModal';
 import { ForceAssignModal } from '../../../../features/courses/components/modals/ForceAssignModal';
 import { useCoursesSocketSync } from '../../../../features/courses/hooks/useCoursesSocketSync';
+import { courseDetailQueryOption } from '../../../../features/courses/queries/course-detail.query';
 import { useCourseListQuery } from '../../../../features/courses/queries/course-list.query';
 import type { CourseStatut } from '../../../../features/courses/types/course.types';
 
 /**
  * Page Courses (backoffice admin) — vue 100 % opérationnelle.
  *
- * Volontairement minimaliste : Header + Filtres + Table + Détail.
- * Les **statistiques** (KPI courses, breakdown journalier, répartition statuts)
- * ont été déplacées dans `/gestion/statistiques/livraison` pour deux raisons :
- *  1. Continuité métier : les stats courses prolongent les stats livraison
- *     (mêmes filtres période + restaurant, même contexte d'analyse).
- *  2. Performance : `getStats` backend fait 8 requêtes Prisma dont un findMany
- *     lourd → plus dans le chemin critique de la page Courses, qui doit
- *     s'afficher rapidement pour permettre l'affectation des courses en
- *     attente (statut PENDING_ASSIGNMENT) sans latence.
+ * Bandeau des restaurants (qui sert de filtre), « À traiter » (alertes du
+ * serveur qui portent une course), filtres, tableau, fiche. Les gestes
+ * (forcer, relancer, Turbo, annuler) ne sont montrés qu'à qui pilote les
+ * courses ; le suivi des livraisons lit seulement.
  *
- *  TTI : passe de "attente getStats (~1-3 s)" à "attente getList (~200-500 ms)".
+ * Les **statistiques** (KPI courses, breakdown journalier, répartition statuts)
+ * vivent dans `/gestion/statistiques/livraison` : `getStats` fait 8 requêtes
+ * lourdes, hors du chemin de cette page qui doit s'afficher vite.
+ *
+ * Une course s'ouvre aussi depuis un autre écran (« Voir la course » du
+ * tiroir d'une commande, alerte d'En direct, ligne « À traiter ») par
+ * `openCourse` du tableau de bord (`pendingCourseId`).
  */
 export default function Courses() {
   useCoursesSocketSync();
-  const [showMap, setShowMap] = useState(false);
 
   const {
     courses: { view, selectedItem, filters, pagination, modals },
     selectedRestaurantId,
   } = useDashboardStore();
+  const pendingCourseId = useDashboardStore((s) => s.pendingCourseId);
+  const clearPendingCourse = useDashboardStore((s) => s.clearPendingCourse);
+  const setSelectedItem = useDashboardStore((s) => s.setSelectedItem);
+  const setSectionView = useDashboardStore((s) => s.setSectionView);
+  const setPagination = useDashboardStore((s) => s.setPagination);
+  const queryClient = useQueryClient();
 
   const restaurantFilter = selectedRestaurantId ?? undefined;
+
+  // Un autre restaurant choisi dans le bandeau : retour à la première page.
+  const restaurantPrecedent = useRef(selectedRestaurantId);
+  useEffect(() => {
+    if (restaurantPrecedent.current === selectedRestaurantId) return;
+    restaurantPrecedent.current = selectedRestaurantId;
+    setPagination('courses', 1, pagination.limit);
+  }, [selectedRestaurantId, pagination.limit, setPagination]);
+
+  // Course demandée par un autre écran : lue, puis sa fiche s'ouvre.
+  useEffect(() => {
+    if (!pendingCourseId) return;
+    let annule = false;
+    queryClient
+      .fetchQuery(courseDetailQueryOption(pendingCourseId))
+      .then((course) => {
+        if (annule) return;
+        setSelectedItem('courses', course);
+        setSectionView('courses', 'view');
+        clearPendingCourse();
+      })
+      .catch((e: Error) => {
+        if (annule) return;
+        toast.error(e.message);
+        clearPendingCourse();
+      });
+    return () => {
+      annule = true;
+    };
+  }, [pendingCourseId, queryClient, setSelectedItem, setSectionView, clearPendingCourse]);
 
   const listQuery = useCourseListQuery({
     restaurant_id: restaurantFilter,
@@ -57,23 +97,8 @@ export default function Courses() {
 
       {view === 'list' && (
         <>
-          {/* Carte live livreurs — toggle */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowMap((v) => !v)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[#F17922] hover:text-[#d4621a] transition-colors mb-3"
-            >
-              <Map className="w-4 h-4" />
-              Carte live des livreurs
-              {showMap ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-            {showMap && (
-              <div className="mb-4">
-                <DelivererLiveMap restaurantId={restaurantFilter} />
-              </div>
-            )}
-          </div>
+          <BandeauRestaurants />
+          <ATraiter />
           <CoursesFilters />
           <CoursesTable
             courses={listQuery.data}

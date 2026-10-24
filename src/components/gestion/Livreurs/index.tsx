@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
 
 import { useDashboardStore } from "@/store/dashboardStore";
 import LivreursHeader from "./LivreursHeader";
 import LivreursList from "./LivreursList";
 import LivreursTabs, { LIVREURS_TABS, type LivreursTab } from "./LivreursTabs";
 
-import { DelivererLiveMap } from "../../../../features/livreurs/components/DelivererLiveMap";
+import { BandeauRestaurants } from "../../../../features/courses/components/BandeauRestaurants";
 import LivreurDetails from "../../../../features/livreurs/components/detail-livreur";
-import { useLivreursList } from "../../../../features/livreurs/hook/use-livreurs";
+import { LivreursDuJour } from "../../../../features/livreurs/components/LivreursDuJour";
+import { livreursKeys, useLivreursList } from "../../../../features/livreurs/hook/use-livreurs";
 import { useDelivererLiveLocationsQuery } from "../../../../features/livreurs/queries/deliverer-live.query";
-import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
+import { getLivreurById } from "../../../../features/livreurs/services/livreur.service";
 import type { IDelivererLive } from "../../../../features/livreurs/types/deliverer-live.type";
 import type {
   Livreur,
@@ -19,32 +22,51 @@ import type {
 } from "../../../../features/livreurs/types/livreur.types";
 
 /**
- * Module Livreurs (admin backoffice).
+ * Module Livreurs (admin et suivi des livraisons), conception du 24/10, 10.2.
  *
- * Navigation :
- *  - view === 'list' : liste avec tabs + search
- *  - view === 'view' : page détail (sections + lightbox photos/documents)
+ * Deux vues sous le titre :
+ *  - « Aujourd'hui » : par restaurant, l'état de chaque livreur, sa place
+ *    dans la file, son planning du jour, son temps en ligne et ses courses ;
+ *  - « Comptes » : le tableau des comptes (Tous, À valider, Actifs,
+ *    Suspendus, Refusés).
+ * Le bandeau des restaurants sert de filtre aux deux (le même que Courses et
+ * Commandes).
  *
- * État piloté par `dashboardStore.livreurs` (view + selectedItem) — pattern
- * cohérent avec Orders. Les actions (valider/refuser/suspendre/affecter)
- * ouvrent des modals depuis la page détail.
+ * Toucher un livreur ouvre sa fiche (`view === 'view'`). Un livreur s'ouvre
+ * aussi depuis un autre écran (« Voir le livreur » d'une course, ligne
+ * Livreurs de Commandes) par `openLivreur` du tableau de bord
+ * (`pendingLivreurId`).
  */
+
+type Vue = "AUJOURDHUI" | "COMPTES";
+
+const VUES: { cle: Vue; libelle: string }[] = [
+  { cle: "AUJOURDHUI", libelle: "Aujourd'hui" },
+  { cle: "COMPTES", libelle: "Comptes" },
+];
+
 export default function Livreurs() {
   const {
-    livreurs: { view, selectedItem },
+    livreurs: { view, selectedItem, filters },
+    selectedRestaurantId,
     setSectionView,
     setSelectedItem,
+    setFilter,
   } = useDashboardStore();
+  const pendingLivreurId = useDashboardStore((s) => s.pendingLivreurId);
+  const clearPendingLivreur = useDashboardStore((s) => s.clearPendingLivreur);
+  const openLivreur = useDashboardStore((s) => s.openLivreur);
+  const queryClient = useQueryClient();
 
+  const vue: Vue = filters?.vue === "COMPTES" ? "COMPTES" : "AUJOURDHUI";
   const [tab, setTab] = useState<LivreursTab>("TOUS");
   const [search, setSearch] = useState("");
-  const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
+  const restaurantId = selectedRestaurantId ?? undefined;
 
-  // La tab virtuelle "CARTE_LIVE" n'est pas un filtre de statut.
   const statusFilter: LivreursQueryFilters["status"] | undefined =
-    tab === "TOUS" || tab === "CARTE_LIVE" ? undefined : tab;
+    tab === "TOUS" ? undefined : tab;
 
-  const filters: LivreursQueryFilters = useMemo(
+  const filtersComptes: LivreursQueryFilters = useMemo(
     () => ({
       ...(statusFilter ? { status: statusFilter } : {}),
       ...(search.trim() ? { search: search.trim() } : {}),
@@ -54,28 +76,21 @@ export default function Livreurs() {
     [statusFilter, search, restaurantId],
   );
 
-  // Pas besoin de fetcher la liste sur la tab virtuelle carte
-  const { data, isLoading } = useLivreursList(
-    filters,
-    view === "list" && tab !== "CARTE_LIVE",
-  );
+  const comptesVisibles = view === "list" && vue === "COMPTES";
+  const { data, isLoading } = useLivreursList(filtersComptes, comptesVisibles);
   const livreurs = data?.items ?? [];
 
-  // Live data partagée entre liste et carte
-  const { data: liveLocations } = useDelivererLiveLocationsQuery({
-    restaurantId,
-    includeOffline: true,
-  });
+  // État de chaque livreur (pause, course, appli) pour le tableau des comptes
+  const { data: liveLocations } = useDelivererLiveLocationsQuery(
+    { restaurantId, includeOffline: true },
+    { enabled: comptesVisibles },
+  );
 
   const liveMap = useMemo<Map<string, IDelivererLive>>(() => {
     const m = new Map<string, IDelivererLive>();
     (liveLocations ?? []).forEach((l) => m.set(l.id, l));
     return m;
   }, [liveLocations]);
-
-  // Restaurants pour le sélecteur
-  const { data: restaurantData } = useRestaurantListQuery({ limit: 100 });
-  const restaurants = restaurantData?.data ?? [];
 
   const counts = useMemo(() => {
     const c: Partial<Record<LivreursTab, number>> = { TOUS: data?.total };
@@ -85,6 +100,32 @@ export default function Livreurs() {
     });
     return c;
   }, [data?.total, livreurs]);
+
+  // Livreur demandé par un autre écran : lu, puis sa fiche s'ouvre.
+  useEffect(() => {
+    if (!pendingLivreurId) return;
+    let annule = false;
+    queryClient
+      .fetchQuery({
+        queryKey: livreursKeys.detail(pendingLivreurId),
+        queryFn: () => getLivreurById(pendingLivreurId),
+        staleTime: 30 * 1000,
+      })
+      .then((livreur) => {
+        if (annule) return;
+        setSelectedItem("livreurs", livreur);
+        setSectionView("livreurs", "view");
+        clearPendingLivreur();
+      })
+      .catch((e: Error) => {
+        if (annule) return;
+        toast.error(e.message);
+        clearPendingLivreur();
+      });
+    return () => {
+      annule = true;
+    };
+  }, [pendingLivreurId, queryClient, setSelectedItem, setSectionView, clearPendingLivreur]);
 
   const openDetail = (livreur: Livreur) => {
     setSelectedItem("livreurs", livreur);
@@ -112,39 +153,49 @@ export default function Livreurs() {
       />
 
       {view === "list" && (
-        <>
-          {/* Tabs + sélecteur restaurant sur la même ligne */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <LivreursTabs selected={tab} onSelect={setTab} counts={counts} />
-            </div>
-            <div className="flex-shrink-0 pb-2">
-              <select
-                value={restaurantId ?? ""}
-                onChange={(e) => setRestaurantId(e.target.value || undefined)}
-                className="text-sm border border-[#E4E4E7] rounded-lg px-3 py-1.5 bg-white text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
-              >
-                <option value="">Tous les restaurants</option>
-                {restaurants.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div className="space-y-4">
+          <div
+            role="tablist"
+            className="flex w-fit items-center rounded-[12px] bg-[#f4f4f5] px-2"
+            style={{ minHeight: 40 }}
+          >
+            {VUES.map((v, idx) => {
+              const actif = vue === v.cle;
+              return (
+                <button
+                  key={v.cle}
+                  type="button"
+                  role="tab"
+                  aria-selected={actif}
+                  onClick={() => setFilter("livreurs", "vue", v.cle)}
+                  className={`inline-flex items-center whitespace-nowrap rounded-[12px] px-5 py-1 text-[11px] font-bold transition-colors focus:outline-none lg:text-[14px] ${
+                    actif ? "bg-[#F17922] text-white" : "bg-transparent font-normal text-[#71717A]"
+                  } ${idx === 0 ? "" : "ml-1"}`}
+                  style={{ minWidth: 75, height: 30 }}
+                >
+                  {v.libelle}
+                </button>
+              );
+            })}
           </div>
 
-          {tab === "CARTE_LIVE" ? (
-            <DelivererLiveMap restaurantId={restaurantId} />
+          <BandeauRestaurants />
+
+          {vue === "AUJOURDHUI" ? (
+            <LivreursDuJour restaurantId={selectedRestaurantId} recherche={search} onOuvrir={openLivreur} />
           ) : (
-            <LivreursList
-              livreurs={livreurs}
-              isLoading={isLoading}
-              onView={openDetail}
-              liveMap={liveMap}
-            />
+            <div>
+              <LivreursTabs selected={tab} onSelect={setTab} counts={counts} />
+              <LivreursList
+                livreurs={livreurs}
+                isLoading={isLoading}
+                onView={openDetail}
+                liveMap={liveMap}
+                unSeulRestaurant={!!restaurantId}
+              />
+            </div>
           )}
-        </>
+        </div>
       )}
 
       {view === "view" && selectedItem && (

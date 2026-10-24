@@ -17,6 +17,10 @@ interface WorkflowActionsProps {
   onReject: () => void;
   onSuspend: () => void;
   onAssignRestaurant: () => void;
+  /** Valider, refuser, suspendre, réactiver, affecter (droit `gererLivreurs`). */
+  gerer?: boolean;
+  /** Supprimer définitivement (droit `supprimerLivreur`). */
+  supprimer?: boolean;
 }
 
 const WorkflowActions: React.FC<WorkflowActionsProps> = ({
@@ -25,16 +29,19 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
   onReject,
   onSuspend,
   onAssignRestaurant,
+  gerer = true,
+  supprimer = true,
 }) => {
   const { mutate: validate, isPending: isValidating } = useValidateLivreur();
   const { mutate: forceActivate, isPending: isForcing } = useForceActivateLivreur();
   const { mutate: reactivate, isPending: isReactivating } = useReactivateLivreur();
   const { mutate: deleteLivreur, isPending: isDeleting } = useDeleteLivreur();
 
-  const isPending = livreur.status === "PENDING_VALIDATION";
-  const isRejected = livreur.status === "REJECTED";
-  const isActive = livreur.status === "ACTIVE";
-  const isSuspended = livreur.status === "SUSPENDED";
+  // Sans le droit de gérer, aucun geste de statut n'est proposé.
+  const isPending = gerer && livreur.status === "PENDING_VALIDATION";
+  const isRejected = gerer && livreur.status === "REJECTED";
+  const isActive = gerer && livreur.status === "ACTIVE";
+  const isSuspended = gerer && livreur.status === "SUSPENDED";
   // Accepter : possible depuis PENDING **ou REJECTED** (accepter après refus) — le
   // backend autorise désormais REJECTED→ACTIVE via PATCH :id/validate.
   const canValidate =
@@ -141,15 +148,17 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
           </button>
         )}
 
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#71717A] hover:text-[#EF4444] mt-4 disabled:opacity-50"
-        >
-          <Trash2 className="w-4 h-4" />
-          Supprimer définitivement
-        </button>
+        {supprimer && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#71717A] hover:text-[#EF4444] mt-4 disabled:opacity-50"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer définitivement
+          </button>
+        )}
       </div>
     </div>
   );

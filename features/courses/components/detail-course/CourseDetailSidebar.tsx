@@ -6,6 +6,7 @@ import { fr } from "date-fns/locale";
 import { AlertTriangle, Ban, Phone, RotateCw, Send, Truck, Undo2, UserPlus } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 
+import { useDroitsLivraison } from "../../../livreurs/hook/use-droits-livraison";
 import {
   useCourseRelancerMutation,
   useCourseVersInterneMutation,
@@ -23,9 +24,15 @@ function formatPrix(n: number): string {
   return n.toLocaleString("fr-FR").replace(/\s/g, ".") + " F";
 }
 
-/** Colonne droite du détail course : livreur + actions + breakdown financier. */
+/**
+ * Colonne droite du détail course : livreur + actions + breakdown financier.
+ * Le bloc « Actions » n'apparaît que pour qui pilote les courses (l'admin) :
+ * le suivi des livraisons lit seulement.
+ */
 export function CourseDetailSidebar({ course }: Props) {
   const { toggleModal } = useDashboardStore();
+  const openLivreur = useDashboardStore((s) => s.openLivreur);
+  const { piloterCourses, voirLivraison } = useDroitsLivraison();
   const { mutate: retryCourse, isPending: isRetrying } = useCourseRetryMutation();
   const { mutate: versTurbo, isPending: isVersTurbo } = useCourseVersTurboMutation();
   const { mutate: versInterne, isPending: isVersInterne } = useCourseVersInterneMutation();
@@ -70,10 +77,19 @@ export function CourseDetailSidebar({ course }: Props) {
                   {course.deliverer.phone}
                 </a>
               )}
+              {voirLivraison && (
+                <button
+                  type="button"
+                  onClick={() => openLivreur(course.deliverer!.id)}
+                  className="mt-1 block text-xs font-semibold text-[#F17922] hover:underline"
+                >
+                  Voir le livreur
+                </button>
+              )}
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">Aucun livreur assigné</p>
+          <p className="text-xs text-gray-400 italic">Sans livreur</p>
         )}
       </div>
 
@@ -106,77 +122,89 @@ export function CourseDetailSidebar({ course }: Props) {
         </dl>
       </div>
 
-      {/* Actions */}
-      <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-5">
-        <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Actions</h3>
+      {/* Actions : l'admin seulement */}
+      {piloterCourses && (
+        <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-5">
+          <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Actions</h3>
+          <div className="space-y-2">
+            {/* Course chez Turbo : le serveur refuse l'affectation forcée, il faut d'abord la reprendre en interne. */}
+            {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
+              <button
+                onClick={() => toggleModal("courses", "force_assign")}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F17922] text-white text-sm font-semibold hover:opacity-90 transition"
+              >
+                <UserPlus className="w-4 h-4" />
+                Forcer l&apos;affectation
+              </button>
+            )}
+            {course.statut === "EXPIRED" && (
+              <button
+                onClick={() => retryCourse(course.id)}
+                disabled={isRetrying}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+              >
+                <RotateCw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />
+                {isRetrying ? "Relance en cours…" : "Relancer la recherche"}
+              </button>
+            )}
+            {/* Course annulée par Turbo — totalement OU partiellement (les
+                commandes restent vivantes) : relance = NOUVELLE course avec
+                référence neuve, une referenceCourse déjà envoyée à Turbo n'est
+                jamais réutilisée. */}
+            {hasRelancable && (
+              <button
+                onClick={() => relancer(course.id)}
+                disabled={isRelancing}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+              >
+                <RotateCw className={`w-4 h-4 ${isRelancing ? "animate-spin" : ""}`} />
+                {isRelancing ? "Relance en cours…" : "Relancer la livraison"}
+              </button>
+            )}
+            {/* Bascule de flotte. Le staff tranche sans attendre le délai
+                automatique, dans un sens comme dans l'autre. */}
+            {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
+              <button
+                onClick={() => versTurbo(course.id)}
+                disabled={isVersTurbo}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-[#F17922] text-[#F17922] text-sm font-semibold hover:bg-orange-50 transition disabled:opacity-60"
+              >
+                <Send className={`w-4 h-4 ${isVersTurbo ? "animate-pulse" : ""}`} />
+                {isVersTurbo ? "Envoi à Turbo…" : "Confier à Turbo"}
+              </button>
+            )}
+            {course.statut === "PENDING_ASSIGNMENT" && course.turbo_escalated_at && (
+              <button
+                onClick={() => versInterne(course.id)}
+                disabled={isVersInterne}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-500 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition disabled:opacity-60"
+              >
+                <Undo2 className={`w-4 h-4 ${isVersInterne ? "animate-pulse" : ""}`} />
+                {isVersInterne ? "Reprise en cours…" : "Reprendre en interne"}
+              </button>
+            )}
+
+            {!terminal && (
+              <button
+                onClick={() => toggleModal("courses", "cancel")}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-red-500 text-red-600 text-sm font-semibold hover:bg-red-50 transition"
+              >
+                <Ban className="w-4 h-4" />
+                Annuler la course
+              </button>
+            )}
+            {terminal && !course.cancelled_reason && (
+              <p className="text-xs text-gray-400 text-center py-2">
+                Course terminée : aucune action disponible
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Situation de la course, pour tous */}
+      {(course.turbo_escalated_at || (terminal && course.cancelled_reason)) && (
         <div className="space-y-2">
-          {/* Course chez Turbo : le serveur refuse l'affectation forcée, il faut d'abord la reprendre en interne. */}
-          {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
-            <button
-              onClick={() => toggleModal("courses", "force_assign")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F17922] text-white text-sm font-semibold hover:opacity-90 transition"
-            >
-              <UserPlus className="w-4 h-4" />
-              Forcer l&apos;affectation
-            </button>
-          )}
-          {course.statut === "EXPIRED" && (
-            <button
-              onClick={() => retryCourse(course.id)}
-              disabled={isRetrying}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
-            >
-              <RotateCw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />
-              {isRetrying ? "Relance en cours…" : "Relancer la recherche"}
-            </button>
-          )}
-          {/* Course annulée par Turbo — totalement OU partiellement (les
-              commandes restent vivantes) : relance = NOUVELLE course avec
-              référence neuve, une referenceCourse déjà envoyée à Turbo n'est
-              jamais réutilisée. */}
-          {hasRelancable && (
-            <button
-              onClick={() => relancer(course.id)}
-              disabled={isRelancing}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
-            >
-              <RotateCw className={`w-4 h-4 ${isRelancing ? "animate-spin" : ""}`} />
-              {isRelancing ? "Relance en cours…" : "Relancer la livraison"}
-            </button>
-          )}
-          {/* Bascule de flotte. Le staff tranche sans attendre le délai
-              automatique, dans un sens comme dans l'autre. */}
-          {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
-            <button
-              onClick={() => versTurbo(course.id)}
-              disabled={isVersTurbo}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-[#F17922] text-[#F17922] text-sm font-semibold hover:bg-orange-50 transition disabled:opacity-60"
-            >
-              <Send className={`w-4 h-4 ${isVersTurbo ? "animate-pulse" : ""}`} />
-              {isVersTurbo ? "Envoi à Turbo…" : "Confier à Turbo"}
-            </button>
-          )}
-          {course.statut === "PENDING_ASSIGNMENT" && course.turbo_escalated_at && (
-            <button
-              onClick={() => versInterne(course.id)}
-              disabled={isVersInterne}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-blue-500 text-blue-600 text-sm font-semibold hover:bg-blue-50 transition disabled:opacity-60"
-            >
-              <Undo2 className={`w-4 h-4 ${isVersInterne ? "animate-pulse" : ""}`} />
-              {isVersInterne ? "Reprise en cours…" : "Reprendre en interne"}
-            </button>
-          )}
-
-          {!terminal && (
-            <button
-              onClick={() => toggleModal("courses", "cancel")}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-red-500 text-red-600 text-sm font-semibold hover:bg-red-50 transition"
-            >
-              <Ban className="w-4 h-4" />
-              Annuler la course
-            </button>
-          )}
-
           {course.turbo_escalated_at && (
             <div className="flex items-start gap-2 rounded-xl bg-[#FFF6E9] border border-[#F5D8AE] px-3 py-2">
               <Truck className="w-4 h-4 text-[#F17922] shrink-0 mt-0.5" />
@@ -196,7 +224,7 @@ export function CourseDetailSidebar({ course }: Props) {
                     : "Raison d'annulation"}
                 </p>
                 <p className="text-red-700 mt-0.5">{course.cancelled_reason}</p>
-                {course.cancelled_by === "turbo" && (
+                {piloterCourses && course.cancelled_by === "turbo" && (
                   <p className="text-red-600/80 mt-1">
                     Les commandes restent actives : relancez la livraison
                     ci-dessus ou annulez-les manuellement.
@@ -205,13 +233,8 @@ export function CourseDetailSidebar({ course }: Props) {
               </div>
             </div>
           )}
-          {terminal && !course.cancelled_reason && (
-            <p className="text-xs text-gray-400 text-center py-2">
-              Course terminée : aucune action disponible
-            </p>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

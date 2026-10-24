@@ -6,12 +6,14 @@ import { useOrdersSocketSync } from '../../orders/hooks/useOrdersSocketSync';
 import { useActiveOrders } from '../../orders/hooks/useActiveOrders';
 import { useOrdersSlaWatcher } from '../../orders/hooks/useOrdersSlaWatcher';
 import { useRelancesWatcher } from '../../orders/hooks/useRelancesWatcher';
+import { useTableauLivraisonWatcher } from '../../courses/hooks/useTableauLivraisonWatcher';
 
 export const useNotificationBootstrap = () => {
   useOrdersSocketSync();   // 📡 socket
   useActiveOrders();       // 🔄 API
   useOrdersSlaWatcher();   // ⏱️ SLA
   useRelancesWatcher();    // Paniers non payés à relancer (ADMIN, CALL_CENTER)
+  useTableauLivraisonWatcher(); // Alertes de la livraison, pastille du menu (ADMIN, LIVRAISON_OPS)
   useMessagesSound();
 
   // Chargement du contexte pour déclencher le son

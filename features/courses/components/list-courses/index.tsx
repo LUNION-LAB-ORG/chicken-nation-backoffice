@@ -2,6 +2,8 @@
 
 import { ErrorState, LoadingState, PaginationInfo } from '@/components/TableStates';
 
+import { useMaintenant } from '../../../livreurs/hook/use-maintenant';
+
 import type { CoursesListResponse } from '../../types/course.types';
 import { CourseRow } from './CourseRow';
 import { TableHeader } from './TableHeader';
@@ -15,6 +17,8 @@ interface Props {
 /** Liste paginée des courses (admin). */
 export function CoursesTable({ courses, isLoading, error }: Props) {
   const items = courses?.items ?? [];
+  // Durée d'une course en livraison : relue chaque minute.
+  const maintenant = useMaintenant(60_000);
 
   if (isLoading && items.length === 0) return <LoadingState />;
   if (error && items.length === 0) return <ErrorState error={error} title="Erreur lors du chargement des courses" />;
@@ -32,7 +36,7 @@ export function CoursesTable({ courses, isLoading, error }: Props) {
                 </td>
               </tr>
             ) : (
-              items.map((course) => <CourseRow key={course.id} course={course} />)
+              items.map((course) => <CourseRow key={course.id} course={course} maintenant={maintenant} />)
             )}
           </tbody>
         </table>

@@ -7,7 +7,8 @@ import type { Livreur, VehiculeType } from "../../types/livreur.types";
 
 interface AffectationSectionProps {
   livreur: Livreur;
-  onAssignRestaurant: () => void;
+  /** Absent pour qui ne gère pas les livreurs : pas de bouton « Changer ». */
+  onAssignRestaurant?: () => void;
 }
 
 const vehiculeLabel: Record<VehiculeType, string> = {
@@ -44,13 +45,15 @@ const AffectationSection: React.FC<AffectationSectionProps> = ({
             <p className="text-sm text-[#A1A1AA] italic mt-0.5">Aucun restaurant affecté</p>
           )}
         </div>
-        <button
-          type="button"
-          onClick={onAssignRestaurant}
-          className="px-3 py-1.5 text-xs font-semibold text-[#F17922] bg-[#F17922]/10 rounded-lg hover:bg-[#F17922]/20"
-        >
-          {livreur.restaurant_id ? "Changer" : "Affecter"}
-        </button>
+        {onAssignRestaurant && (
+          <button
+            type="button"
+            onClick={onAssignRestaurant}
+            className="px-3 py-1.5 text-xs font-semibold text-[#F17922] bg-[#F17922]/10 rounded-lg hover:bg-[#F17922]/20"
+          >
+            {livreur.restaurant_id ? "Changer" : "Affecter"}
+          </button>
+        )}
       </div>
     </div>
 
