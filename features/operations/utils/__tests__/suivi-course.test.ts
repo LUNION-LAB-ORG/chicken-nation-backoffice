@@ -15,6 +15,7 @@ import {
   heureCourte,
   indexerCommandes,
   lireCommandesAttendues,
+  lireMotifRetenue,
   livraisonsCommencees,
   motifRegroupement,
   nomDeCourse,
@@ -465,6 +466,119 @@ describe('retenue au comptoir', () => {
   });
 });
 
+/**
+ * Demande du 24/10 : une commande prête attend tout le temps de la
+ * préparation de sa voisine quand le livreur reviendrait trop tard s'il
+ * partait livrer (trajet long), sinon 5 minutes au plus (attente courte).
+ * Le serveur donne le motif dans chaque commande attendue ; motif absent ou
+ * inconnu : la retenue est montrée comme avant.
+ */
+describe('retenue « trajet long » (demande du 24/10)', () => {
+  const longue = (attendues, champs = {}) =>
+    course({ statut: 'AT_RESTAURANT', retenue_jusqua: ISO('12:58'), commandes_attendues: attendues, ...champs });
+
+  test('le texte de la demande', () => {
+    const k = longue([{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), prete_au_plus_tard: ISO('12:58'), motif: 'TRAJET_LONG' }]);
+    expect(texteRetenue(k, A('12:35'))).toBe('Trajet long : attendre CMD-B, prête vers 12 h 55');
+    expect(retenueEnCours(k, A('12:35'))).toMatchObject({ trajetLong: true });
+  });
+
+  test('plusieurs commandes attendues, heure inconnue', () => {
+    expect(
+      texteRetenue(
+        longue([
+          { order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' },
+          { order_id: 'oC', reference: 'CMD-C', prete_vers: ISO('12:57'), motif: 'TRAJET_LONG' },
+        ]),
+        A('12:35'),
+      ),
+    ).toBe('Trajet long : attendre CMD-B (prête vers 12 h 55) et CMD-C (prête vers 12 h 57)');
+    expect(texteRetenue(longue([{ order_id: 'oB', reference: 'CMD-B', motif: 'TRAJET_LONG' }]), A('12:35'))).toBe(
+      'Trajet long : attendre CMD-B',
+    );
+  });
+
+  test('une seule commande attendue pour un trajet long suffit', () => {
+    const k = longue([
+      { order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:41'), motif: 'ATTENTE_COURTE' },
+      { order_id: 'oC', reference: 'CMD-C', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' },
+    ]);
+    expect(texteRetenue(k, A('12:35'))).toBe('Trajet long : attendre CMD-B (prête vers 12 h 41) et CMD-C (prête vers 12 h 55)');
+  });
+
+  test('attente courte, motif absent ou inconnu : le texte d\'avant, inchangé', () => {
+    const courte = (motif) =>
+      course({
+        statut: 'AT_RESTAURANT',
+        retenue_jusqua: ISO('12:44'),
+        commandes_attendues: [{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:41'), ...(motif === undefined ? {} : { motif }) }],
+      });
+    const avant = 'Attendre CMD-B, prête vers 12 h 41, départ au plus tard 12 h 44';
+    expect(texteRetenue(courte('ATTENTE_COURTE'), A('12:35'))).toBe(avant);
+    expect(texteRetenue(courte(undefined), A('12:35'))).toBe(avant);
+    expect(texteRetenue(courte('AUTRE_CHOSE'), A('12:35'))).toBe(avant);
+    expect(texteRetenue(courte(42), A('12:35'))).toBe(avant);
+    expect(retenueEnCours(courte(undefined), A('12:35'))).toMatchObject({ trajetLong: false });
+  });
+
+  test('motif donné au niveau de la course : il décide', () => {
+    const attendues = [{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55') }];
+    expect(texteRetenue(longue(attendues, { motif_retenue: 'TRAJET_LONG' }), A('12:35'))).toBe(
+      'Trajet long : attendre CMD-B, prête vers 12 h 55',
+    );
+    expect(
+      texteRetenue(longue([{ ...attendues[0], motif: 'TRAJET_LONG' }], { motif_retenue: 'ATTENTE_COURTE' }), A('12:35')),
+    ).toBe('Attendre CMD-B, prête vers 12 h 55, départ au plus tard 12 h 58');
+  });
+
+  test('échue, partie ou chez Turbo : plus rien, comme une retenue courte', () => {
+    const k = longue([{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' }]);
+    expect(texteRetenue(k, A('12:58'))).toBeNull();
+    expect(texteRetenue({ ...k, statut: 'IN_DELIVERY', parti_at: ISO('12:40') }, A('12:41'))).toBeNull();
+    expect(texteRetenue({ ...k, turbo_escalated_at: ISO('12:40') }, A('12:41'))).toBeNull();
+  });
+
+  test('motif lu sans planter : énumération ou texte, casse et accents ignorés', () => {
+    expect(lireMotifRetenue('TRAJET_LONG')).toBe('TRAJET_LONG');
+    expect(lireMotifRetenue(' trajet long ')).toBe('TRAJET_LONG');
+    expect(lireMotifRetenue('Trajet-Long')).toBe('TRAJET_LONG');
+    expect(lireMotifRetenue('ATTENTE_COURTE')).toBe('ATTENTE_COURTE');
+    expect(lireMotifRetenue('attente courte')).toBe('ATTENTE_COURTE');
+    expect(lireMotifRetenue('Attente côurte')).toBe('ATTENTE_COURTE');
+    expect(lireMotifRetenue('')).toBeNull();
+    expect(lireMotifRetenue(null)).toBeNull();
+    expect(lireMotifRetenue({ motif: 'TRAJET_LONG' })).toBeNull();
+  });
+
+  test('colonne JSON : le motif lisible est gardé, sinon la forme d\'avant', () => {
+    expect(
+      lireCommandesAttendues([
+        { order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' },
+        { order_id: 'oC', reference: 'CMD-C', motif: 'n\'importe' },
+      ]),
+    ).toEqual([
+      { order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), prete_au_plus_tard: null, motif: 'TRAJET_LONG' },
+      { order_id: 'oC', reference: 'CMD-C', prete_vers: null, prete_au_plus_tard: null },
+    ]);
+    expect(Object.keys(lireCommandesAttendues([{ order_id: 'oC', reference: 'CMD-C', motif: 'n\'importe' }])[0])).not.toContain('motif');
+  });
+
+  test('la commande en cuisine sait toujours quelle course l\'attend', () => {
+    const commandes = [
+      commande('A', 'READY', {
+        statut: 'AT_RESTAURANT',
+        retenue_jusqua: ISO('12:58'),
+        commandes_attendues: [{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' }],
+      }),
+      { id: 'oB', reference: 'CMD-B', status: 'IN_PROGRESS', delivery: null },
+    ];
+    expect(attentesParCommande(commandes, A('12:35')).get('oB')).toEqual({
+      courseId: 'k1',
+      texte: 'Attendue par la course de Koffi, départ au plus tard 12 h 58',
+    });
+  });
+});
+
 describe('ajout à une course', () => {
   test('texte pour la caisse', () => {
     expect(texteAjout(course(), [])).toBe('Ajoutée à la course de Koffi : remettre avec le code 123');
@@ -626,12 +740,16 @@ describe('aucun texte avec tiret cadratin', () => {
   test('échantillon de tous les textes', () => {
     const textes = [
       texteRetenue(course({ statut: 'AT_RESTAURANT', retenue_jusqua: ISO('12:44'), commandes_attendues: [{ order_id: 'o', reference: 'CMD-B', prete_vers: ISO('12:41') }] }), A('12:35')),
+      texteRetenue(course({ statut: 'AT_RESTAURANT', retenue_jusqua: ISO('12:58'), commandes_attendues: [{ order_id: 'o', reference: 'CMD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' }] }), A('12:35')),
       texteToutEstPret(course({ retenue_jusqua: ISO('12:34'), commandes_attendues: [] })),
       texteAjout(course(), ['CMD-C']),
       texteFusion(['CRS-A', 'CRS-B'], 'sur le trajet'),
       etatCourse(course({ arrivee_estimee: ISO('12:38') }), { maintenant: A('12:30') }).libelle,
       etatCourse(course({ statut: 'IN_DELIVERY', parti_at: ISO('12:29') }), { maintenant: A('12:30') }).libelle,
     ];
-    for (const t of textes) expect(t).not.toContain('—');
+    for (const t of textes) {
+      expect(t).not.toContain('—');
+      expect(t).not.toMatch(/TRAJET_LONG|ATTENTE_COURTE/);
+    }
   });
 });

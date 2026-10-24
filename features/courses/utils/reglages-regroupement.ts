@@ -86,7 +86,7 @@ export const METHODES: { valeur: Methode; libelle: string; description: string }
     valeur: 'v2',
     libelle: 'Nouvelle',
     description:
-      "La course part dès qu'une commande est prête et reçoit les commandes de la même direction. Elle attend au comptoir une commande presque prête, dans les limites ci-dessous.",
+      "La course part dès qu'une commande est prête et reçoit les commandes de la même direction. Elle attend au comptoir une commande presque prête, ou plus longtemps quand le trajet est long, dans les limites ci-dessous.",
   },
   {
     valeur: 'v1',
@@ -150,13 +150,13 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
   {
     titre: 'Attente au comptoir',
     description:
-      "Une commande prête peut attendre une commande de la même direction encore en préparation, jamais au-delà de ces limites. La commande attendue est ajoutée dès qu'elle est prête.",
+      "Une commande prête peut attendre une commande de la même direction encore en préparation, jamais au-delà de ces limites. La commande attendue est ajoutée dès qu'elle est prête. Si le livreur ne peut pas livrer et revenir à temps pour elle, le trajet est long et l'attente peut durer plus.",
     reglages: [
       {
         cle: 'course.attente_max_commande_prete_s',
         libelle: "Attente maximale d'une commande prête",
         unite: secondes,
-        aide: "0 : une commande prête n'attend jamais.",
+        aide: "Attente courte, quand le trajet n'est pas long. 0 : une commande prête n'attend plus que pour un trajet long.",
         type: 'nombre',
         defaut: '300',
         lecture: 'planificateur',
@@ -168,13 +168,38 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         cle: 'course.horizon_preparation_s',
         libelle: 'Attendre une commande en préparation si elle est prête dans moins de',
         unite: secondes,
-        aide: "0 : on n'attend jamais une commande encore en préparation.",
+        aide: "Attente courte, quand le trajet n'est pas long. 0 : une commande en préparation n'est plus attendue que pour un trajet long.",
         type: 'nombre',
         defaut: '420',
         lecture: 'planificateur',
         min: 0,
         max: 3600,
         pas: '10',
+      },
+      // Demande du 24/10 : une commande prête attend plus longtemps quand le
+      // livreur reviendrait trop tard s'il partait livrer tout de suite.
+      {
+        cle: 'course.petit_retard_retour_min',
+        libelle: 'Petit retard toléré au retour du livreur',
+        unite: minutes,
+        aide: "Le trajet est court si le livreur peut livrer et revenir avant que la commande attendue soit prête, à ce retard près : l'attente maximale d'une commande prête s'applique. Sinon le trajet est long. 0 : aucun retard toléré.",
+        type: 'nombre',
+        defaut: '5',
+        lecture: 'planificateur',
+        min: 0,
+        max: 120,
+      },
+      {
+        cle: 'course.attente_max_trajet_long_s',
+        libelle: 'Attente maximale quand le trajet est long',
+        unite: secondes,
+        aide: "Trajet long : la commande prête attend que la commande attendue soit prête, sans dépasser ce délai ni le retard toléré sur la promesse. 0 : jamais, seule l'attente courte reste.",
+        type: 'nombre',
+        defaut: '1200',
+        lecture: 'planificateur',
+        min: 0,
+        max: 3600,
+        pas: '60',
       },
       {
         cle: 'course.retenue_meme_si_livreur_libre',
