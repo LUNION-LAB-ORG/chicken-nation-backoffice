@@ -6,7 +6,7 @@
     "dev": "bun run --bun next dev",
     "build": "bun run --bun next build",
     "start": "bun run --bun next start",
-    "lint": "bun run --bun lint",
+    "lint": "eslint .",
     "lint:fix": "bun run --bun lint --fix",
     "type-check": "bun tsc --noEmit",
     "build:analyze": "ANALYZE=true bun build",
