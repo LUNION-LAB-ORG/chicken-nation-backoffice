@@ -317,7 +317,7 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
         <div className="px-4 py-3 border-b border-gray-100 bg-white">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-bold text-gray-900">Livreurs live</h3>
+              <h3 className="text-sm font-bold text-gray-900">Livreurs</h3>
               <p className="text-[11px] text-gray-400 mt-0.5">
                 {isLoading ? "Chargement…" : `${visible.length} sur la carte`}
                 {!isLoading && sansPosition > 0 && (
@@ -471,7 +471,6 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
               {NOM_ETAT[etat]}
             </span>
           ))}
-          <span className="text-gray-400">· temps réel</span>
         </div>
 
         <GoogleMap

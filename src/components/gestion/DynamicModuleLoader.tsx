@@ -31,6 +31,10 @@ const modulesMap: Record<string, any> = {
   historique: dynamic(() => import("@/components/gestion/Operations"), {
     loading: () => <LoadingSpinner />,
   }),
+  // ---- Livraison : En direct, Courses, Livreurs, Planning ----
+  en_direct: dynamic(() => import("@/components/gestion/EnDirect"), {
+    loading: () => <LoadingSpinner />,
+  }),
   courses: dynamic(() => import("@/components/gestion/Courses"), {
     loading: () => <LoadingSpinner />,
   }),

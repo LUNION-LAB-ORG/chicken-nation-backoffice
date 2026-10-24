@@ -21,6 +21,8 @@ export type TabKey =
   | 'hubrise'
   // Planning livreurs (sous-page dédiée)
   | 'planning_livreurs'
+  // Livraison : suivi des livreurs et des courses en cours
+  | 'en_direct'
   // CRM : inscrits sans commande, clients inactifs et clients Glovo/Yango (module Base de Données)
   | 'crm'
   // Audits (admin) : actions du personnel + logs techniques
@@ -71,6 +73,14 @@ export interface DashboardState {
   // formulaire s'ouvre sur l'origine « Call center ». Transient, comme
   // pendingOrdersView ; effacé à la fermeture du formulaire.
   repriseTelephoneId: string | null;
+  /**
+   * Course ou livreur à ouvrir depuis un autre écran (« Voir la course » du
+   * tiroir d'une commande, alerte d'En direct, « Voir le livreur » d'une
+   * course). Même mécanique que pendingConversationId : jamais persisté,
+   * consommé par l'écran Courses ou Livreurs puis remis à null.
+   */
+  pendingCourseId: string | null;
+  pendingLivreurId: string | null;
   // Dernière conversation et dernier ticket consultés : conservés pour
   // retrouver son écran en revenant d'un autre module (avant, tout
   // repartait de l'écran vide « Sélectionnez une conversation »).
@@ -114,6 +124,8 @@ export interface DashboardState {
   hubrise: SectionState;
   // Planning livreurs
   planning_livreurs: SectionState;
+  // En direct
+  en_direct: SectionState;
   // CRM
   crm: SectionState;
   // Audits
@@ -131,6 +143,12 @@ export interface DashboardState {
   openRelances: () => void;
   clearPendingOrdersView: () => void;
   setRepriseTelephone: (orderId: string | null) => void;
+  /** Ouvre l'écran Courses sur la fiche de cette course. */
+  openCourse: (courseId: string) => void;
+  clearPendingCourse: () => void;
+  /** Ouvre l'écran Livreurs sur la fiche de ce livreur. */
+  openLivreur: (livreurId: string) => void;
+  clearPendingLivreur: () => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string, messageId?: string | null) => void;
@@ -168,6 +186,8 @@ const SECTION_KEYS: TabKey[] = [
   'hubrise',
   // Planning livreurs
   'planning_livreurs',
+  // En direct
+  'en_direct',
   // CRM
   'crm',
   // Audits
@@ -186,6 +206,8 @@ export const useDashboardStore = create<DashboardState>()(
       pendingCrmRecherche: null,
       pendingOrdersView: null,
       repriseTelephoneId: null,
+      pendingCourseId: null,
+      pendingLivreurId: null,
       pendingTicketId: null,
       lastConversationId: null,
       lastTicketId: null,
@@ -226,6 +248,8 @@ export const useDashboardStore = create<DashboardState>()(
       hubrise: createInitialSectionState(),
       // Planning livreurs
       planning_livreurs: createInitialSectionState(),
+      // En direct
+      en_direct: createInitialSectionState(),
       // CRM
       crm: createInitialSectionState(),
       // Audits
@@ -282,6 +306,20 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       setRepriseTelephone: (orderId) => set((state) => {
         state.repriseTelephoneId = orderId;
+      }),
+      openCourse: (courseId) => set((state) => {
+        state.activeTab = 'courses';
+        state.pendingCourseId = courseId;
+      }),
+      clearPendingCourse: () => set((state) => {
+        state.pendingCourseId = null;
+      }),
+      openLivreur: (livreurId) => set((state) => {
+        state.activeTab = 'livreurs';
+        state.pendingLivreurId = livreurId;
+      }),
+      clearPendingLivreur: () => set((state) => {
+        state.pendingLivreurId = null;
       }),
       setLastConversation: (id) => set((state) => {
         state.lastConversationId = id;
