@@ -31,7 +31,5 @@ export function ligneRetenue(course: CourseOperations, maintenant: Date): string
     ? `, ${plusieurs ? 'prêtes' : 'prête'} vers ${heureCourte(new Date(Math.max(...heures)))}`
     : '';
 
-  // Motif « trajet long » : lu s'il existe (retenue du serveur du 24/10), sans en dépendre.
-  const trajetLong = (retenue as { trajetLong?: unknown }).trajetLong === true;
-  return `${trajetLong ? 'Trajet long : attendre' : 'Attendre'} ${enumerer(references)}${prete}`;
+  return `${retenue.trajetLong ? 'Trajet long : attendre' : 'Attendre'} ${enumerer(references)}${prete}`;
 }

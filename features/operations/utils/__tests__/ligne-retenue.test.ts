@@ -47,6 +47,13 @@ describe('retenue en une ligne courte', () => {
     expect(ligneRetenue(course({ commandes_attendues: uneSansHeure }), A('12:35'))).toBe('Attendre ORD-B et ORD-C');
   });
 
+  test('retenue « trajet long » du serveur : dite en tête de ligne', () => {
+    const longue = [{ order_id: 'oB', reference: 'ORD-B', prete_vers: ISO('12:55'), motif: 'TRAJET_LONG' }];
+    expect(ligneRetenue(course({ retenue_jusqua: ISO('12:55'), commandes_attendues: longue }), A('12:35'))).toBe(
+      'Trajet long : attendre ORD-B, prête vers 12 h 55',
+    );
+  });
+
   test('ni code, ni livreur, ni départ au plus tard, ni tiret cadratin', () => {
     const texte = ligneRetenue(course(), A('12:35'));
     expect(texte).not.toContain('614');
