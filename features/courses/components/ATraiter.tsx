@@ -120,7 +120,7 @@ export function ATraiter() {
             className={`h-2 w-2 shrink-0 rounded-full ${s.gravite === 'rouge' ? 'bg-red-600' : 'bg-amber-500'}`}
             aria-hidden
           />
-          <span className="w-28 shrink-0 truncate font-medium text-gray-900 @4xl:w-36" title={course.reference}>
+          <span className="max-w-36 shrink-0 truncate font-medium text-gray-900 @4xl:w-36" title={course.reference}>
             {course.reference}
           </span>
           {restaurant && (
