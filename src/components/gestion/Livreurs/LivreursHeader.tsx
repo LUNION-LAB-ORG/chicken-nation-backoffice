@@ -10,6 +10,8 @@ interface LivreursHeaderProps {
   onBack?: () => void;
   onSearch?: (query: string) => void;
   detailTitle?: string;
+  /** Ce que la recherche lit (la vue « Aujourd'hui » n'a que le nom). */
+  placeholder?: string;
 }
 
 /**
@@ -23,6 +25,7 @@ function LivreursHeader({
   onBack,
   onSearch,
   detailTitle = "Détails du livreur",
+  placeholder = "Rechercher par nom, prénom, email ou téléphone",
 }: LivreursHeaderProps) {
   if (currentView === "list") {
     return (
@@ -30,7 +33,7 @@ function LivreursHeader({
         mode="list"
         title="Livreurs"
         searchConfig={{
-          placeholder: "Rechercher par nom, prénom, email ou téléphone",
+          placeholder,
           buttonText: "Chercher",
           onSearch: onSearch || (() => {}),
           realTimeSearch: true,

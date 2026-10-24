@@ -2,14 +2,17 @@
 import { describe, expect, test } from 'bun:test';
 
 import {
+  RECHERCHE_AUJOURDHUI,
   avancementTournee,
   comparerLivreursDuJour,
+  correspondALaRecherche,
   detailEtatDuJour,
   dureeEnLigne,
   enTeteRestaurant,
   estEnService,
   estReplie,
   jusquA,
+  messageAucunLivreur,
   placeDansLaFile,
   planningDuJour,
   rangDuLivreur,
@@ -228,5 +231,26 @@ describe('« Aujourd’hui » : livreur en appel ou injoignable (serveur du 24/1
   test('hors service et inactif : pas en service', () => {
     expect(estEnService('HORS_SERVICE')).toBe(false);
     expect(estEnService('INACTIF')).toBe(false);
+  });
+});
+
+describe('recherche de la vue « Aujourd’hui »', () => {
+  test('le champ annonce ce qui est cherché : le nom (ni email ni téléphone dans cette vue)', () => {
+    expect(RECHERCHE_AUJOURDHUI).toBe('Rechercher par nom ou prénom');
+  });
+
+  test('nom ou prénom, sans accents ni majuscules', () => {
+    expect(correspondALaRecherche('Koffi Yao', 'yao')).toBe(true);
+    expect(correspondALaRecherche('Zié Traoré', 'zie tra')).toBe(true);
+    expect(correspondALaRecherche('Koffi Yao', '  ')).toBe(true);
+    expect(correspondALaRecherche('Koffi Yao', '0707000000')).toBe(false);
+  });
+
+  test('rien trouvé : « Aucun livreur ne correspond à la recherche. », pas une liste vide', () => {
+    expect(messageAucunLivreur({ restaurantId: 'r1', recherche: '0707000000' })).toBe(
+      'Aucun livreur ne correspond à la recherche.',
+    );
+    expect(messageAucunLivreur({ restaurantId: 'r1', recherche: '' })).toBe('Aucun livreur actif pour ce restaurant.');
+    expect(messageAucunLivreur({ restaurantId: null, recherche: ' ' })).toBe('Aucun livreur actif.');
   });
 });

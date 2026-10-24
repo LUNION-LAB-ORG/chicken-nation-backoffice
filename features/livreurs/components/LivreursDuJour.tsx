@@ -13,11 +13,13 @@ import type { EtatDisponibilite } from '../types/livreur.types';
 import { appliVueADe, etatLivreurAffiche } from '../utils/disponibilite';
 import {
   comparerLivreursDuJour,
+  correspondALaRecherche,
   detailEtatDuJour,
   dureeEnLigne,
   enTeteRestaurant,
   estEnService,
   estReplie,
+  messageAucunLivreur,
   planningDuJour,
   rangDuLivreur,
   type DetailEtat,
@@ -40,7 +42,7 @@ import { COLONNES_AVEC_JOUR, COLONNES_SANS_JOUR, LigneLivreurDuJour } from './Li
 export interface LivreursDuJourProps {
   /** Restaurant du bandeau ; null : tous. */
   restaurantId: string | null;
-  /** Recherche du titre de l'écran (nom, prénom). */
+  /** Recherche du titre de l'écran (nom, prénom ; le champ l'annonce, `RECHERCHE_AUJOURDHUI`). */
   recherche?: string;
   /** Toucher une ligne : fiche du livreur. */
   onOuvrir: (livreurId: string) => void;
@@ -61,12 +63,6 @@ interface Bloc {
   nom: string;
   lignes: LigneCalculee[];
 }
-
-const sansAccents = (t: string) =>
-  t
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase();
 
 /** Créneau où le serveur signale le livreur prévu mais pas en service. */
 function prevusAuCreneau(tableau: TableauLivraison | undefined): Map<string, 'MORNING' | 'EVENING'> {
@@ -106,11 +102,10 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
   const blocs = useMemo<Bloc[]>(() => {
     if (!data) return [];
     const prevus = prevusAuCreneau(tableau);
-    const filtre = sansAccents(recherche.trim());
     const parRestaurant = new Map<string, Bloc>();
     for (const live of data) {
       const nom = nomLivreur(live) ?? 'Livreur';
-      if (filtre && !sansAccents(nom).includes(filtre)) continue;
+      if (!correspondALaRecherche(nom, recherche)) continue;
       const affiche = etatLivreurAffiche(live, maintenant);
       const etat = affiche?.etat ?? 'HORS_SERVICE';
       const rang = rangDuLivreur(live, !!restaurantId);
@@ -175,9 +170,7 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
 
   if (blocs.length === 0) {
     return (
-      <p className="py-10 text-center text-sm text-[#A1A1AA]">
-        {restaurantId ? 'Aucun livreur actif pour ce restaurant.' : 'Aucun livreur actif.'}
-      </p>
+      <p className="py-10 text-center text-sm text-[#A1A1AA]">{messageAucunLivreur({ restaurantId, recherche })}</p>
     );
   }
 

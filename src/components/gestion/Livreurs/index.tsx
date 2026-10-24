@@ -12,6 +12,7 @@ import LivreursTabs, { LIVREURS_TABS, type LivreursTab } from "./LivreursTabs";
 import { BandeauRestaurants } from "../../../../features/courses/components/BandeauRestaurants";
 import LivreurDetails from "../../../../features/livreurs/components/detail-livreur";
 import { LivreursDuJour } from "../../../../features/livreurs/components/LivreursDuJour";
+import { RECHERCHE_AUJOURDHUI } from "../../../../features/livreurs/utils/livreurs-du-jour";
 import { livreursKeys, useLivreursList } from "../../../../features/livreurs/hook/use-livreurs";
 import { useDelivererLiveLocationsQuery } from "../../../../features/livreurs/queries/deliverer-live.query";
 import { getLivreurById } from "../../../../features/livreurs/services/livreur.service";
@@ -150,6 +151,7 @@ export default function Livreurs() {
         onBack={backToList}
         onSearch={setSearch}
         detailTitle={detailTitle}
+        placeholder={vue === "AUJOURDHUI" ? RECHERCHE_AUJOURDHUI : undefined}
       />
 
       {view === "list" && (

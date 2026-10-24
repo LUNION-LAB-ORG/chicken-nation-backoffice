@@ -189,3 +189,28 @@ export function enTeteRestaurant(nom: string, enService: number, total: number, 
   if (prevus != null) parties.push(`${prevus} ${prevus > 1 ? 'prévus' : 'prévu'}`);
   return parties.join(' · ');
 }
+
+// ============================================================
+// RECHERCHE
+// ============================================================
+
+/** La vue n'a que le nom des livreurs (ni email ni téléphone) : le champ le dit. */
+export const RECHERCHE_AUJOURDHUI = 'Rechercher par nom ou prénom';
+
+const sansAccents = (t: string) =>
+  t
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase();
+
+/** Le nom contient la recherche, sans accents ni majuscules ; recherche vide : oui. */
+export function correspondALaRecherche(nom: string, recherche: string): boolean {
+  const filtre = sansAccents(recherche.trim());
+  return !filtre || sansAccents(nom).includes(filtre);
+}
+
+/** Liste vide : recherche sans résultat, ou aucun livreur actif. */
+export function messageAucunLivreur(p: { restaurantId: string | null; recherche: string }): string {
+  if (p.recherche.trim()) return 'Aucun livreur ne correspond à la recherche.';
+  return p.restaurantId ? 'Aucun livreur actif pour ce restaurant.' : 'Aucun livreur actif.';
+}
