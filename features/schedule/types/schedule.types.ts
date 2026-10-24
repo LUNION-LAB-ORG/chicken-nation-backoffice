@@ -50,9 +50,55 @@ export interface IShift {
   assignments: IShiftAssignment[];
 }
 
+/** Jour de la semaine des réglages du planning (`no_rest_days`). */
+export type WeekDay =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
+
+/** Livreur du planning (ligne de la grille), même s'il n'a que des repos. */
+export interface IPlanningLivreur {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  image: string | null;
+}
+
+/** Jour de repos d'un livreur dans la période du planning. */
+export interface IPlanningRepos {
+  deliverer_id: string;
+  date: string; // ISO
+  source: RestDaySource;
+}
+
 export interface ISchedulePlanDetail extends ISchedulePlan {
   shifts: IShift[];
   restaurant: { id: string; name: string; address: string | null };
+  /**
+   * Champs du serveur du 24/10. Absents sur un serveur plus ancien : la
+   * grille reprend alors les livreurs des affectations, sans repos ni règle.
+   */
+  livreurs?: IPlanningLivreur[];
+  repos?: IPlanningRepos[];
+  regles?: { jours_sans_repos: WeekDay[] };
+}
+
+/** Une ligne de `GET /schedule/apercu` (tableau du siège, un restaurant). */
+export interface IApercuPlanning {
+  restaurant: { id: string; nom: string };
+  en_cours: {
+    id: string;
+    statut: SchedulePlanStatus;
+    debut: string; // ISO
+    fin: string;
+    reponses: { confirmees: number; en_attente: number; refusees: number };
+  } | null;
+  suivant: { id: string; statut: SchedulePlanStatus; debut: string; fin: string } | null;
+  prevus_aujourdhui: number;
 }
 
 export interface ISchedulePlanStats {
