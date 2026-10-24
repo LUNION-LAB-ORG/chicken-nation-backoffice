@@ -5,10 +5,12 @@ import { History, PhoneMissed } from "lucide-react";
 import { useAuthStore } from "../../users/hook/authStore";
 import { useIsAdmin } from "../../users/hook/useIsAdmin";
 import { UserType } from "../../users/types/user.types";
+import { Action, Modules } from "../../users/types/auth.type";
 import { useCallHistoryQuery } from "../queries/calls-history.query";
 import { useOutgoingCall } from "../hooks/useOutgoingCall";
 import { useCallStore } from "../stores/callStore";
 import { ICall } from "../types/call.type";
+import { livreurDeLAppel, rappelLivreur } from "../utils/appel-livreur";
 import CallHistoryRow, { isMissedForMe } from "./CallHistoryRow";
 
 function SkeletonRows() {
@@ -30,6 +32,7 @@ function SkeletonRows() {
 export default function CallHistoryList() {
   const user = useAuthStore((s) => s.user);
   const isAdmin = useIsAdmin();
+  const droitAppels = useAuthStore((s) => s.can(Modules.CALLS, Action.READ));
   const { data: calls, isLoading } = useCallHistoryQuery(50);
   const { call, starting } = useOutgoingCall();
   const active = useCallStore((s) => s.active);
@@ -44,6 +47,7 @@ export default function CallHistoryList() {
 
   /** Peut-on rappeler cette entrée ? (miroir exact des branches de onCallBack) */
   const canCallBack = (c: ICall): boolean => {
+    if (livreurDeLAppel(c)) return !!rappelLivreur(c, user?.role, droitAppels); // un livreur : lui seul
     if (c.caller_id === user?.id) return true; // je re-cible ma propre cible
     if (isAdmin && c.caller) return true; // admin → rappel P2P de l'appelant
     if (c.caller?.restaurant) return true; // je rappelle le restaurant de l'appelant
@@ -52,6 +56,19 @@ export default function CallHistoryList() {
 
   /** Rappeler : re-cible ce que je peux légitimement appeler. */
   const onCallBack = (c: ICall) => {
+    // Appel avec un livreur (entrant ou sortant) : on rappelle le livreur.
+    if (livreurDeLAppel(c)) {
+      const cible = rappelLivreur(c, user?.role, droitAppels);
+      if (cible) {
+        call({
+          targetKind: "DELIVERER",
+          deliverer_id: cible.delivererId,
+          targetLabel: cible.nom,
+          peerDetail: cible.detail,
+        });
+      }
+      return;
+    }
     if (c.caller_id === user?.id) {
       // Je rappelle ma propre cible.
       if (c.target_kind === "USER" && c.target_user) {

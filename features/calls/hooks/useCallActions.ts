@@ -11,6 +11,7 @@ import {
 } from "../utils/notifications";
 import { useInvalidateCallsQuery } from "../queries/index.query";
 import { useAuthStore } from "../../users/hook/authStore";
+import { detailAppelLivreur, lireAppelantLivreur } from "../utils/appel-livreur";
 
 /** Actions sur un appel entrant/en cours : décrocher, refuser, raccrocher. */
 export function useCallActions() {
@@ -38,12 +39,16 @@ export function useCallActions() {
         setIncoming(null);
         return;
       }
+      // Appel d'un livreur : son nom et « Livreur · Angré · Course CRS-A1 ».
+      const livreur = lireAppelantLivreur(inc);
       setActive({
         callId: inc.callId,
         access: res.access,
         direction: "incoming",
         phase: "connected",
-        peerLabel: inc.callerName,
+        peerLabel: livreur?.nom ?? inc.callerName,
+        peerDetail: livreur ? detailAppelLivreur(livreur) : null,
+        livreurId: livreur?.id ?? null,
         myName: user?.fullname ?? "Moi",
       });
       setIncoming(null);

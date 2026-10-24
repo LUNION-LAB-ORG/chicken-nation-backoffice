@@ -4,8 +4,12 @@ import { Phone, PhoneIncoming, PhoneMissed, PhoneOutgoing } from "lucide-react";
 import { CallStatus, ICall } from "../types/call.type";
 import { formatDuration, formatRelativeTime } from "../utils/call-format";
 import { getInitials } from "../utils/initials";
+import { detailLivreur, livreurDeLAppel } from "../utils/appel-livreur";
 
 export function peerLabel(call: ICall, meId?: string): string {
+  // Appel avec un livreur (il a appelé, ou on l'a appelé) : son nom.
+  const livreur = livreurDeLAppel(call);
+  if (livreur) return livreur.nom;
   if (call.caller_id === meId) {
     if (call.target_kind === "USER") return call.target_user?.fullname ?? "Personne";
     if (call.target_kind === "CALL_CENTER") return "Call Center";
@@ -36,6 +40,7 @@ export default function CallHistoryRow({
   const iAmCaller = call.caller_id === meId;
   const missed = call.status === CallStatus.MISSED || call.status === CallStatus.CANCELLED;
   const label = peerLabel(call, meId);
+  const livreur = livreurDeLAppel(call);
   const Icon = missed ? PhoneMissed : iAmCaller ? PhoneOutgoing : PhoneIncoming;
   const iconColor = missed ? "text-red-500" : iAmCaller ? "text-[#F17922]" : "text-emerald-600";
 
@@ -65,7 +70,13 @@ export default function CallHistoryRow({
           {label}
         </div>
         <div className="flex items-center gap-1.5 text-xs text-slate-400">
-          <span>{formatRelativeTime(call.started_at)}</span>
+          {livreur && (
+            <>
+              <span className="truncate">{detailLivreur(livreur.restaurant, livreur.courseReference)}</span>
+              <span>·</span>
+            </>
+          )}
+          <span className="shrink-0">{formatRelativeTime(call.started_at)}</span>
           {detail && (
             <>
               <span>·</span>

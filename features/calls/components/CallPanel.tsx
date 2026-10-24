@@ -207,6 +207,9 @@ function CallPanelInner({ call }: { call: ActiveCall }) {
           </div>
           <div className="min-w-0 flex-1">
             <div className="font-semibold truncate">{call.peerLabel}</div>
+            {call.peerDetail && (
+              <div className="text-xs text-slate-400 truncate">{call.peerDetail}</div>
+            )}
             <div className="text-sm text-slate-400 tabular-nums">{statusLabel}</div>
           </div>
           {/* Égaliseur (actif en communication) */}

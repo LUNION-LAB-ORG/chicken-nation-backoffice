@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Phone, PhoneOff } from "lucide-react";
+import { Bike, Phone, PhoneOff } from "lucide-react";
 import { useCallActions } from "../hooks/useCallActions";
 import { useCallStore } from "../stores/callStore";
 import { callsApi } from "../apis/calls.api";
@@ -9,6 +9,7 @@ import { CallStatus, type IIncomingCallEvent } from "../types/call.type";
 import { getInitials } from "../utils/initials";
 import { incomingRing } from "../utils/ringtone";
 import { closeCallNotification, stopTitleFlash } from "../utils/notifications";
+import { lignesSonnerieLivreur, lireAppelantLivreur } from "../utils/appel-livreur";
 
 const KEYFRAMES = `
 @keyframes cn-slide-up { from { transform: translateY(48px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
@@ -17,6 +18,10 @@ const KEYFRAMES = `
 
 export default function IncomingCallModal({ incoming }: { incoming: IIncomingCallEvent }) {
   const { accept, reject } = useCallActions();
+  // Appel d'un livreur depuis son appli : nom, téléphone, restaurant, course.
+  const livreur = lireAppelantLivreur(incoming);
+  const lignes = livreur ? lignesSonnerieLivreur(livreur) : null;
+  const nom = livreur?.nom ?? incoming.callerName;
   // Débounce : décrocher/refuser ne peut être cliqué qu'une fois.
   const [busy, setBusy] = useState(false);
 
@@ -55,7 +60,7 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Appel entrant de ${incoming.callerName}`}
+      aria-label={`Appel entrant de ${nom}`}
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4"
     >
       <style>{KEYFRAMES}</style>
@@ -66,7 +71,7 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
           </span>
-          Appel entrant
+          {livreur ? "Appel d'un livreur" : "Appel entrant"}
         </div>
 
         {/* Avatar + anneaux animés */}
@@ -77,12 +82,31 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
             style={{ animationDelay: "300ms" }}
           />
           <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-[#F17922] to-[#d95f0e] text-4xl font-bold shadow-lg shadow-[#F17922]/30">
-            {getInitials(incoming.callerName)}
+            {getInitials(nom)}
           </div>
+          {livreur && (
+            <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#F17922] shadow-md">
+              <Bike className="h-5 w-5" />
+            </span>
+          )}
         </div>
 
-        <div className="text-2xl font-semibold tracking-tight truncate">{incoming.callerName}</div>
-        <div className="mt-1 text-sm text-slate-400">Appel · {incoming.targetLabel}</div>
+        <div className="text-2xl font-semibold tracking-tight truncate">{nom}</div>
+        {lignes ? (
+          <>
+            <div className="mt-1 text-sm text-slate-300 truncate">{lignes.sousTitre}</div>
+            {lignes.telephone && (
+              <div className="mt-1 text-sm text-slate-400 tabular-nums">{lignes.telephone}</div>
+            )}
+            {lignes.course && (
+              <div className="mt-3 inline-flex max-w-full items-center rounded-full bg-[#F17922]/20 px-3 py-1 text-xs font-semibold text-[#FDBA74]">
+                <span className="truncate">{lignes.course}</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="mt-1 text-sm text-slate-400">Appel · {incoming.targetLabel}</div>
+        )}
 
         {/* Actions */}
         <div className="mt-9 flex items-center justify-between px-6">

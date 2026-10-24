@@ -3,6 +3,8 @@
 import React from "react";
 import { Bike, Check, Phone, Timer } from "lucide-react";
 
+import BoutonAppelerLivreur from "../../../calls/components/BoutonAppelerLivreur";
+import { detailLivreur, livreurAAppeler } from "../../../calls/utils/appel-livreur";
 import { useLivraisonCommandeQuery } from "../../queries/livraison-commande.query";
 import {
   etatLivraison,
@@ -33,6 +35,8 @@ const TONS: Record<TonEtat, string> = {
  *  - service, référence de la course et « Arrêt 2 sur 3 » s'il y a
  *    plusieurs commandes ;
  *  - livreur (nom, téléphone à appeler) et son état en une étiquette ;
+ *    bouton « Appeler » pour l'appeler dans son appli (service client et
+ *    admin, livreur Chicken Nation seulement) ;
  *  - frise verticale : une ligne par étape avec son heure, et entre deux
  *    étapes la durée (trajet vers le restaurant, attente au comptoir, trajet
  *    vers le client) ; étape en cours mise en avant, étapes à venir en gris
@@ -53,6 +57,8 @@ export function SectionLivraison({ commande }: Props) {
   const arret = course ? texteArret(course.rang_arret, course.nombre_commandes) : null;
   const etat = etatLivraison(livraison);
   const livreur = livreurAffiche(livraison);
+  // Livreur Chicken Nation sur la commande : on peut l'appeler dans son appli.
+  const aAppeler = livreurAAppeler(livraison);
   const lignes = lignesFrise(livraison);
   const total = texteTotal(livraison);
 
@@ -110,11 +116,22 @@ export function SectionLivraison({ commande }: Props) {
             <p className="text-sm font-semibold text-gray-700">{etat?.libelle ?? "Pas encore de livreur"}</p>
           )}
         </div>
-        {livreur && etat && (
-          <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS[etat.ton]}`}>
-            {etat.libelle}
-          </span>
-        )}
+        {(livreur && etat) || aAppeler ? (
+          <div className="shrink-0 flex flex-col items-end gap-1.5">
+            {livreur && etat && (
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS[etat.ton]}`}>
+                {etat.libelle}
+              </span>
+            )}
+            {aAppeler && (
+              <BoutonAppelerLivreur
+                delivererId={aAppeler.delivererId}
+                nom={livreur?.nom ?? aAppeler.nom}
+                detail={detailLivreur(null, course?.reference)}
+              />
+            )}
+          </div>
+        ) : null}
       </div>
 
       {/* Frise des étapes */}

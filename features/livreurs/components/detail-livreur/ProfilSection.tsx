@@ -5,6 +5,8 @@ import { User } from "lucide-react";
 
 import StatutBadge from "@/components/gestion/Livreurs/StatutBadge";
 import ZoomableImage from "../common/ZoomableImage";
+import BoutonAppelerLivreur from "../../../calls/components/BoutonAppelerLivreur";
+import { livreurAppelable, nomLivreur, sousTitreLivreur } from "../../../calls/utils/appel-livreur";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import type { Livreur } from "../../types/livreur.types";
 
@@ -47,6 +49,15 @@ const ProfilSection: React.FC<ProfilSectionProps> = ({ livreur }) => {
               </span>
             )}
           </div>
+          {/* Appeler dans l'appli (service client et admin seulement) */}
+          {livreurAppelable(livreur.entity_status) && (
+            <BoutonAppelerLivreur
+              className="mt-3"
+              delivererId={livreur.id}
+              nom={nomLivreur(livreur) ?? "Livreur"}
+              detail={sousTitreLivreur(livreur.restaurant?.name)}
+            />
+          )}
         </div>
       </div>
     </div>

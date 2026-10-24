@@ -14,6 +14,12 @@ import {
   startTitleFlash,
   stopTitleFlash,
 } from "../utils/notifications";
+import {
+  detailAppelLivreur,
+  detailDepuisServeur,
+  lireAppelantLivreur,
+  texteFinAppelLivreur,
+} from "../utils/appel-livreur";
 import type {
   ICallAcceptedEvent,
   ICallCancelledEvent,
@@ -100,9 +106,11 @@ export function useCallSocket() {
       if (document.hidden) {
         // Hors-onglet : notification système (sonore, au cas où l'audio de la
         // page serait bloqué) + titre clignotant. Cliquer = revenir à l'onglet.
+        // Un livreur : son nom, son restaurant et sa course.
+        const livreur = lireAppelantLivreur(e);
         showCallNotification(
-          `📞 ${e.callerName} vous appelle`,
-          `Appel ${e.targetLabel} — cliquez pour répondre`,
+          `📞 ${livreur?.nom ?? e.callerName} vous appelle`,
+          `${livreur ? detailAppelLivreur(livreur) : `Appel ${e.targetLabel}`}, cliquez pour répondre`,
           { silent: false },
         );
         startTitleFlash("📞 Appel entrant…");
@@ -139,6 +147,12 @@ export function useCallSocket() {
       refreshHistory();
     };
     const onEnded = (e: ICallEndedEvent) => {
+      // Appel vers un livreur qui sonnait encore : il a refusé ou n'a pas répondu.
+      const act = store().active;
+      if (act?.callId === e.callId && act.livreurId && act.direction === "outgoing" && act.phase === "calling") {
+        const fin = texteFinAppelLivreur(e.reason, act.peerLabel);
+        if (fin) toast(fin, { icon: "📵" });
+      }
       store().endIfMatches(e.callId);
       store().clearIncomingIf(e.callId);
       stopAlerts();
@@ -178,6 +192,9 @@ export function useCallSocket() {
                 direction: restored.direction,
                 phase: restored.phase,
                 peerLabel: restored.peerLabel,
+                // Appel avec un livreur : restaurant et course.
+                peerDetail: detailDepuisServeur(restored.livreur),
+                livreurId: restored.livreur?.id ?? null,
                 myName: useAuthStore.getState().user?.fullname ?? "Moi",
               });
             }

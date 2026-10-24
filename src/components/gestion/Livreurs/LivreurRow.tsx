@@ -16,6 +16,8 @@ import {
   presenceAppli,
 } from "../../../../features/livreurs/utils/disponibilite";
 import { PresenceAppliLigne } from "../../../../features/livreurs/components/PresenceAppliLigne";
+import BoutonAppelerLivreur from "../../../../features/calls/components/BoutonAppelerLivreur";
+import { livreurAppelable, nomLivreur, sousTitreLivreur } from "../../../../features/calls/utils/appel-livreur";
 
 interface LivreurRowProps {
   livreur: Livreur;
@@ -210,20 +212,30 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
         <StatutBadge status={livreur.status} isOperational={livreur.is_operational} />
       </td>
 
-      {/* 8. Actions */}
+      {/* 8. Actions : appeler dans l'appli (service client, admin), menu */}
       <td className="py-3 px-4 text-right">
-        <button
-          ref={buttonRef}
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen((o) => !o);
-          }}
-          className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
-          aria-label="Actions"
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
+        <div className="inline-flex items-center gap-1.5">
+          {livreurAppelable(livreur.entity_status) && (
+            <BoutonAppelerLivreur
+              variante="icone"
+              delivererId={livreur.id}
+              nom={nomLivreur(livreur) ?? "Livreur"}
+              detail={sousTitreLivreur(livreur.restaurant?.name)}
+            />
+          )}
+          <button
+            ref={buttonRef}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((o) => !o);
+            }}
+            className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
+            aria-label="Actions"
+          >
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </div>
         {renderMenu()}
       </td>
     </tr>
