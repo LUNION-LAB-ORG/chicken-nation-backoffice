@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { AVANCE_PREPARATION_MS, momentSouhaite } from "../../../orders/utils/momentSouhaite";
 import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
+import { piedDuTiroir } from "../../utils/pied-tiroir";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
 import { useCommandeEnCours } from "../../hooks/use-commande-en-cours";
 import { useMaintenant } from "../../hooks/use-maintenant";
@@ -47,12 +48,18 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     doit refuser d'agir où qu'on le monte, sinon le trou revient au prochain
     écran qui le réutilise.
 
+    Il garde en revanche le SUIVI de la course (livreur et son état, retenue,
+    ajout, code), qui n'est que de l'information (`pied-tiroir.ts`, relecture
+    du 24/10) : sans boutons ni annulation.
+
     ⚠️ APRÈS tous les hooks, jamais avant. Les droits arrivent après
     l'hydratation du magasin : un retour anticipé placé plus haut sauterait les
     hooks suivants au premier rendu puis les appellerait au second, et React
     casse sur « plus de hooks qu'au rendu précédent ».
   */
-  if (!peutChangerStatut) return null;
+  if (!piedDuTiroir(order, peutChangerStatut)) return null;
+  // Rôle de consultation : jamais d'annulation.
+  const annulation = peutChangerStatut ? <DrawerCancelAction order={order} /> : null;
 
   const suivie = (enCours ?? order) as unknown as CommandeOperations;
   const course = courseDeCommande(suivie) ?? courseDeCommande(order as unknown as CommandeOperations);
@@ -148,7 +155,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
             <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
           </p>
         )}
-        <DrawerCancelAction order={order} />
+        {annulation}
       </div>
     );
   }
@@ -171,7 +178,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
             </p>
           </div>
         </div>
-        <DrawerCancelAction order={order} />
+        {annulation}
       </div>
     );
   }

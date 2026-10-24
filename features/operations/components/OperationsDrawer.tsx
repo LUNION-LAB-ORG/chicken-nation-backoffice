@@ -11,6 +11,7 @@ import { useOrderActions } from "../../orders/hooks/useOrderActions";
 import { useIsAdmin } from "../../users/hook/useIsAdmin";
 import { Printer } from "lucide-react";
 import { TYPE_LABEL } from "../utils/status-colors";
+import { piedDuTiroir } from "../utils/pied-tiroir";
 import type { OrderTable } from "../../orders/types/ordersTable.types";
 import { DrawerActionsChickenNation } from "./drawer/DrawerActionsChickenNation";
 import { DrawerActionsMenu } from "./drawer/DrawerActionsMenu";
@@ -126,6 +127,8 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
   const peutVoirPaiements = droits.peutModifier;
 
   const showPayment = !!live && peutVoirPaiements && (isAdmin || paiementAttendu);
+  // Pied de page : boutons, ou seulement le suivi de la course pour un rôle de consultation.
+  const pied = piedDuTiroir(live, droits.peutChangerStatut);
 
   return (
     <>
@@ -197,8 +200,10 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
                 Routage par type de commande :
                  - PICKUP / TABLE → DrawerActionsClient (séquence sans PICKED_UP)
                  - DELIVERY via CHICKEN_NATION → DrawerActionsChickenNation (module course interne)
-                 - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel) */}
-            {droits.peutChangerStatut && (
+                 - DELIVERY via Turbo/autre → DrawerActionsTurbo (workflow manuel)
+                Rôle de consultation : seulement le suivi d'une course interne
+                (livreur, retenue, ajout, code), sans bouton (`pied-tiroir.ts`). */}
+            {pied && (
               <footer className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-100 bg-gray-50/80">
                 {live.type !== OrderType.DELIVERY ? (
                   <DrawerActionsClient order={live} />
