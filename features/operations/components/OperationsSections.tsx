@@ -6,6 +6,7 @@ import { AlertTriangle, ChefHat, PackageCheck, Truck } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDroitsCommande } from "../../orders/hooks/useDroitsCommande";
+import { nomCourtRestaurant } from "../../restaurants/utils/nom-court";
 import { type Order, OrderStatus } from "../../orders/types/order.types";
 import { useAuthStore } from "../../users/hook/authStore";
 import { UserType } from "../../users/types/user.types";
@@ -129,7 +130,8 @@ export const OperationsSections: React.FC<Props> = ({ buckets, onCardClick, onPa
     );
   }
 
-  const restaurantDe = (o: Order | undefined): string | null => (surTous ? o?.restaurant?.name ?? null : null);
+  // Nom court (« ZONE 4 ») : le nom entier prenait la place du client et du livreur.
+  const restaurantDe = (o: Order | undefined): string | null => (surTous ? nomCourtRestaurant(o?.restaurant?.name) : null);
   const deLaCourse = (courseId: string | null | undefined) =>
     toutes.filter((o) => !!courseId && (o as unknown as CommandeOperations).delivery?.course?.id === courseId);
   // Fenêtre de récupération : toutes les commandes de la course à l'écran (y compris déjà remises).

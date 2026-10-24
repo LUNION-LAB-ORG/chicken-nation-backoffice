@@ -57,13 +57,16 @@ export const OperationsCard: React.FC<Props> = ({ order, onClick, maintenant, re
       onClick={onClick}
       className="flex h-[92px] w-full flex-col justify-between rounded-2xl border border-gray-200 bg-white px-3 py-2.5 text-left transition hover:border-[#F17922] hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922]"
     >
-      <span className="flex w-full min-w-0 items-center gap-2">
-        <span className="truncate text-sm font-bold text-gray-900" title={order.reference}>
+      {/* Ligne serrée (écarts, pastille, lettres) : sur trois colonnes à 1280 px, la
+          référence était coupée (« ORD-261024-30… ») dès que le minuteur passait à
+          cinq caractères et le montant à cinq chiffres. */}
+      <span className="flex w-full min-w-0 items-center gap-1.5">
+        <span className="truncate text-sm font-bold tracking-tight text-gray-900" title={order.reference}>
           {order.reference}
         </span>
         {elapsedSec !== null && (
           <span
-            className={`shrink-0 rounded-md border px-1.5 text-[11px] font-bold leading-[18px] tabular-nums ${couleurs.bg} ${couleurs.text} ${couleurs.border}`}
+            className={`shrink-0 rounded-md border px-1 text-[11px] font-bold leading-[18px] tabular-nums ${couleurs.bg} ${couleurs.text} ${couleurs.border}`}
           >
             {formatElapsed(elapsedSec)}
           </span>

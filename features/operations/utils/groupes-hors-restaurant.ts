@@ -26,6 +26,7 @@
  * Fichier pur : testé par `bun test`.
  */
 
+import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import { OVERDUE_COLLECTED_UNPAID_MIN } from '../types/operations.types';
 import { formatPrix } from './carte-commande';
 import {
@@ -329,7 +330,8 @@ function construireGroupe(cle: string, commandes: CommandeHors[], ctx: Contexte)
 
   // Seconde ligne.
   const ligne2: Morceau[] = [];
-  const restaurant = texte(premiere.restaurant?.name);
+  // Nom court : « CHICKEN NATION ANGRÉ » coupait « 1 sur 3 livrée ».
+  const restaurant = texte(nomCourtRestaurant(premiere.restaurant?.name));
   if (ctx.avecRestaurant && restaurant) ligne2.push({ texte: restaurant, ton: 'gris' });
   if (tournee && resteEnTournee) {
     const t = texteTournee(tournee.livrees, tournee.total);

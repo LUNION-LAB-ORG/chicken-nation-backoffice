@@ -111,6 +111,12 @@ describe('un livreur et sa tournée', () => {
     expect(tous.ligne2.map((m) => m.texte)).toEqual(['Angré', '1 sur 3 livrée']);
   });
 
+  test('sur « Tous » : le nom court du restaurant, sans la marque qui coupait la ligne', () => {
+    const avecMarque = commandes.map((c) => ({ ...c, restaurant: { name: 'CHICKEN NATION ANGRÉ' } }));
+    const [tous] = groupesHorsRestaurant(avecMarque, { maintenant: A('12:55'), avecRestaurant: true });
+    expect(tous.ligne2.map((m) => m.texte)).toEqual(['ANGRÉ', '1 sur 3 livrée']);
+  });
+
   test('en retard : « En retard de 12 min » en rouge, à la place de la fin prévue', () => {
     const t = { ...TOURNEE, en_retard: true, retard_min: 12 };
     const [g] = groupesHorsRestaurant([enRoute('1', 1, 'IN_ROUTE', { tournee: t })], { maintenant: A('13:17') });

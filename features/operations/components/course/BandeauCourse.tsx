@@ -57,10 +57,16 @@ export const BandeauCourse: React.FC<Props> = ({ code, etat, appliFermee, restau
         </div>
       )}
       <div className="min-w-0 flex-1">
+        {/* Restaurant (siège, « Tous ») sur sa propre petite ligne, à côté du code :
+            en tête de la ligne du livreur, il la coupait avant le livreur et son état. */}
+        {restaurant && (
+          <p className="truncate text-[11px] font-semibold leading-4 text-[#F17922]" title={restaurant}>
+            {restaurant}
+          </p>
+        )}
         <p className="flex min-w-0 items-center gap-1.5 text-sm" title={titre}>
           <Icone className={`h-4 w-4 shrink-0 ${COULEUR_ETAT[etat.ton]}`} aria-hidden />
           <span className="truncate">
-            {restaurant && <span className="font-semibold text-[#F17922]">{restaurant} · </span>}
             <span className={`font-semibold ${COULEUR_ETAT[etat.ton]}`}>{ligne1 || etat.libelle}</span>
             {appliFermee && <span className="text-gray-500"> · {appliFermee}</span>}
           </span>
