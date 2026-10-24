@@ -53,6 +53,14 @@ export const getCourseByPickupCode = (code: string, restaurantId?: string) =>
     ),
   );
 
+/**
+ * Suivi de la livraison d'une commande pour le tiroir (livreur, étapes et
+ * durées), `GET /orders/:id/livraison`. Réponse brute : elle est rendue sûre
+ * par `lireLivraison` (`utils/suivi-livraison.ts`).
+ */
+export const getLivraisonCommande = (orderId: string) =>
+  safeCall(() => api.get<unknown>(`${BASE_ORDERS}/${encodeURIComponent(orderId)}/livraison`, true));
+
 // ============================================================
 // MUTATIONS
 // ============================================================

@@ -57,6 +57,7 @@ import type { OrderTable, OrderTableItem } from "../../../orders/types/ordersTab
 import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
 import { estDuSite, libelleCanal } from "../../../orders/utils/canal-commande";
 import { libellePaiement } from "../../../orders/utils/libelle-paiement";
+import { SectionLivraison } from "./SectionLivraison";
 
 interface Props {
   order: Order;
@@ -106,6 +107,7 @@ export function DrawerDetailsTab({ order }: Props) {
       <ItemsBlock ui={ui} />
       <PriceBlock ui={ui} />
       <ProgressBlock ui={ui} />
+      <SectionLivraison commande={source} />
       <InfoBlock ui={ui} source={source} />
     </div>
   );

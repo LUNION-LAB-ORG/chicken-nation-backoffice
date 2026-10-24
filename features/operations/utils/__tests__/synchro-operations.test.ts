@@ -149,7 +149,7 @@ describe("écran Opérations : écouteurs du socket", () => {
       expect(source).toMatch(/\}, \[queryClient\]\);/);
     }
     const hook = readFileSync(join(import.meta.dir, '../../hooks/useOperationsSocketSync.ts'), 'utf8');
-    expect(hook).toMatch(/\[socket, invalidate, queryClient, ajouterAvis\]/);
+    expect(hook).toMatch(/\}, \[socket, invalidate\]\);/);
   });
 
   test('relecture de filet toutes les 20 s (offres proposées, refusées ou expirées)', () => {
