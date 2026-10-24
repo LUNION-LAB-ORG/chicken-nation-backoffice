@@ -28,8 +28,11 @@ import {
   texteAjout,
   texteDepartSansSac,
   texteFusion,
+  lireTournee,
+  texteRetard,
   texteRetenue,
   texteToutEstPret,
+  texteTournee,
 } from '../suivi-course';
 
 /**
@@ -461,8 +464,22 @@ describe('retenue au comptoir', () => {
       { id: 'oB', reference: 'CMD-B', status: 'IN_PROGRESS', delivery: null },
     ];
     const attentes = attentesParCommande(commandes, A('12:35'));
-    expect(attentes.get('oB')).toEqual({ courseId: 'k1', texte: 'Attendue par la course de Koffi, départ au plus tard 12 h 44' });
+    expect(attentes.get('oB')).toEqual({ courseId: 'k1', texte: 'Attendue par Koffi, départ 12 h 44' });
     expect(attentesParCommande(commandes, A('12:45')).size).toBe(0);
+  });
+
+  test('course sans livreur : « Attendue par une course » (une ligne de carte, demande du 24/10 au soir)', () => {
+    const commandes = [
+      commande('A', 'READY', {
+        statut: 'PENDING_ASSIGNMENT',
+        deliverer_id: null,
+        deliverer: null,
+        retenue_jusqua: ISO('12:44'),
+        commandes_attendues: [{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:41') }],
+      }),
+      { id: 'oB', reference: 'CMD-B', status: 'IN_PROGRESS', delivery: null },
+    ];
+    expect(attentesParCommande(commandes, A('12:35')).get('oB')?.texte).toBe('Attendue par une course, départ 12 h 44');
   });
 });
 
@@ -574,7 +591,7 @@ describe('retenue « trajet long » (demande du 24/10)', () => {
     ];
     expect(attentesParCommande(commandes, A('12:35')).get('oB')).toEqual({
       courseId: 'k1',
-      texte: 'Attendue par la course de Koffi, départ au plus tard 12 h 58',
+      texte: 'Attendue par Koffi, départ 12 h 58',
     });
   });
 });
@@ -733,6 +750,42 @@ describe('lecture défensive', () => {
     expect(courseDeCommande({ id: '1', reference: 'x', status: 'READY' })).toBeNull();
     expect(courseDeCommande({ id: '1', reference: 'x', status: 'READY', delivery: { course: { reference: 'sans id' } } })).toBeNull();
     expect(courseDeCommande(commande('1', 'READY', {}))?.id).toBe('k1');
+  });
+});
+
+describe('tournée et retard (serveur du 24/10)', () => {
+  test('tournée lue sans jamais planter', () => {
+    expect(lireTournee({ total: 3, livrees: 1, fin_prevue: ISO('13:05'), en_retard: false, retard_min: null })).toEqual({
+      total: 3,
+      livrees: 1,
+      fin_prevue: ISO('13:05'),
+      en_retard: false,
+      retard_min: null,
+    });
+    expect(lireTournee({ total: 3, livrees: 5, fin_prevue: 'pas une date', en_retard: 'oui', retard_min: -2 })).toEqual({
+      total: 3,
+      livrees: 3,
+      fin_prevue: null,
+      en_retard: false,
+      retard_min: null,
+    });
+    expect(lireTournee(undefined)).toBeNull();
+    expect(lireTournee({ livrees: 1 })).toBeNull();
+    expect(lireTournee([1, 2])).toBeNull();
+  });
+
+  test('« 1 sur 3 livrée », « 2 sur 3 livrées », « Tout est livré »', () => {
+    expect(texteTournee(0, 3)).toBe('0 sur 3 livrée');
+    expect(texteTournee(1, 3)).toBe('1 sur 3 livrée');
+    expect(texteTournee(2, 3)).toBe('2 sur 3 livrées');
+    expect(texteTournee(3, 3)).toBe('Tout est livré');
+    expect(texteTournee(0, 0)).toBeNull();
+  });
+
+  test('« En retard de 12 min », sinon « En retard »', () => {
+    expect(texteRetard(12)).toBe('En retard de 12 min');
+    expect(texteRetard(null)).toBe('En retard');
+    expect(texteRetard(0)).toBe('En retard');
   });
 });
 

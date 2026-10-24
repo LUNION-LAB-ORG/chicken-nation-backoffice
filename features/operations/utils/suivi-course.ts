@@ -116,6 +116,21 @@ export interface LivreurDeCourse {
   appli_connectee?: boolean | null;
 }
 
+/**
+ * Tournée d'une course (`course.tournee`, serveur du 24/10, conception 11.2) :
+ * livraisons non annulées, livrées, fin prévue et retard par la règle commune
+ * du serveur. Absente sur un serveur plus ancien.
+ */
+export interface TourneeOperations {
+  total: number;
+  livrees: number;
+  /** Fin prévue de la tournée (ISO), null tant que le livreur n'est pas parti ou sans durée estimée. */
+  fin_prevue: string | null;
+  en_retard: boolean;
+  /** Minutes au-delà de la fin prévue ; null : pas en retard, ou en retard sans fin prévue. */
+  retard_min: number | null;
+}
+
 export interface CourseOperations {
   id: string;
   reference?: string | null;
@@ -125,6 +140,8 @@ export interface CourseOperations {
   deliverer?: LivreurDeCourse | null;
   restaurant_id?: string | null;
   restaurant?: { latitude?: number | null; longitude?: number | null } | null;
+  /** Tournée « 1 sur 3 livrée », fin prévue, retard (serveur du 24/10). Lue par `lireTournee`. */
+  tournee?: unknown;
   assigned_at?: string | null;
   at_restaurant_at?: string | null;
   picked_up_at?: string | null;
@@ -159,6 +176,12 @@ export interface CourseOperations {
 export interface LivraisonOperations {
   id?: string;
   statut?: string | null;
+  /** Rang de l'arrêt dans la tournée (1, 2, 3…). */
+  sequence_order?: number | null;
+  delivered_at?: string | null;
+  /** Livreur Turbo, quand Turbo l'a donné. */
+  turbo_courier_id?: string | null;
+  turbo_courier_name?: string | null;
   ajoutee_at?: string | null;
   ajoutee_apres_retrait?: boolean | null;
   course?: CourseOperations | null;
@@ -768,14 +791,15 @@ export function texteToutEstPret(course: CourseOperations): string | null {
 
 export interface Attente {
   courseId: string;
-  /** « Attendue par la course de Koffi, départ au plus tard 12 h 44 ». */
+  /** « Attendue par Koffi, départ 12 h 44 » ; sans livreur : « Attendue par une course, départ 12 h 44 ». */
   texte: string;
 }
 
 /**
  * Commandes encore en cuisine attendues par une course : identifiant de la
- * commande → texte pour sa carte. Lit toutes les courses présentes dans la
- * liste (une même course apparaît sur chacune de ses commandes).
+ * commande → texte de la troisième ligne de sa carte, court pour tenir sur
+ * une ligne (demande du 24/10 au soir). Lit toutes les courses présentes dans
+ * la liste (une même course apparaît sur chacune de ses commandes).
  */
 export function attentesParCommande(commandes: readonly CommandeOperations[], maintenant: Date): Map<string, Attente> {
   const resultat = new Map<string, Attente>();
@@ -786,11 +810,12 @@ export function attentesParCommande(commandes: readonly CommandeOperations[], ma
     vues.add(course.id);
     const retenue = retenueEnCours(course, maintenant);
     if (!retenue) continue;
+    const prenom = course.deliverer_id || course.deliverer ? prenomLivreur(course.deliverer) : null;
     for (const a of retenue.attendues) {
       if (!a.order_id || resultat.has(a.order_id)) continue;
       resultat.set(a.order_id, {
         courseId: course.id,
-        texte: `Attendue par ${nomDeCourse(course)}, départ au plus tard ${heureCourte(retenue.jusqua)}`,
+        texte: `Attendue par ${prenom ?? 'une course'}, départ ${heureCourte(retenue.jusqua)}`,
       });
     }
   }
@@ -978,4 +1003,39 @@ export function avisEncoreValides<T extends { at: number }>(avis: readonly T[], 
 export function appliDuLivreur(course: CourseOperations, maintenant: Date): PresenceAppli | null {
   if (!course.deliverer_id || !course.deliverer || !STATUTS_AVEC_LIVREUR.has(course.statut)) return null;
   return presenceAppli(course.deliverer, 'EN_COURSE', maintenant);
+}
+
+// ============================================================
+// TOURNÉE ET RETARD (groupes « Hors restaurant », tiroir)
+// ============================================================
+
+/**
+ * Tournée envoyée par le serveur (`course.tournee`), sans jamais planter.
+ * Absente, mal formée ou sans total : null, l'écran fait sans.
+ */
+export function lireTournee(valeur: unknown): TourneeOperations | null {
+  if (!valeur || typeof valeur !== 'object' || Array.isArray(valeur)) return null;
+  const v = valeur as Record<string, unknown>;
+  const entier = (x: unknown): number | null =>
+    typeof x === 'number' && Number.isInteger(x) && x >= 0 ? x : null;
+  const total = entier(v.total);
+  const livrees = entier(v.livrees);
+  if (total === null || livrees === null) return null;
+  const fin = typeof v.fin_prevue === 'string' && instant(v.fin_prevue) !== null ? v.fin_prevue : null;
+  const retard = typeof v.retard_min === 'number' && Number.isFinite(v.retard_min) && v.retard_min > 0 ? Math.round(v.retard_min) : null;
+  return { total, livrees: Math.min(livrees, total), fin_prevue: fin, en_retard: v.en_retard === true, retard_min: retard };
+}
+
+/** « En retard de 12 min » ; minutes inconnues : « En retard ». */
+export function texteRetard(minutes: number | null | undefined): string {
+  return typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0
+    ? `En retard de ${Math.round(minutes)} min`
+    : 'En retard';
+}
+
+/** « 1 sur 3 livrée », « 2 sur 3 livrées », « Tout est livré » ; tournée vide : null. */
+export function texteTournee(livrees: number, total: number): string | null {
+  if (!Number.isFinite(total) || total <= 0) return null;
+  if (livrees >= total) return 'Tout est livré';
+  return `${Math.max(0, livrees)} sur ${total} ${livrees > 1 ? 'livrées' : 'livrée'}`;
 }

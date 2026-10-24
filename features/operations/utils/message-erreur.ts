@@ -88,3 +88,16 @@ export function messageErreurOperations(erreur: unknown): string {
   if (statut >= 500) return REPLI_SERVEUR;
   return REPLI;
 }
+
+/**
+ * La route n'existe pas sur ce serveur (pas encore à jour) : 404 sans refus
+ * écrit pour la caissière (« Cannot GET /api/v1/… », corps vide, page du
+ * proxy). Un 404 du serveur à jour (« Course introuvable. ») n'en est pas
+ * un : son texte est affiché. Sert au repli sur les anciennes routes.
+ */
+export function estRouteAbsente(erreur: unknown): boolean {
+  const objet = erreur && typeof erreur === 'object' ? (erreur as Record<string, unknown>) : {};
+  if (objet.status !== 404) return false;
+  if (objet.routeAbsente === true) return true;
+  return !estMessageLisible(objet.messageServeur);
+}

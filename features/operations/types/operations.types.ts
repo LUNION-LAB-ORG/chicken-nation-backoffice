@@ -1,4 +1,5 @@
 import type { DeliveryService, Order, OrderStatus } from '../../orders/types/order.types';
+import type { CourseOperations } from '../utils/suivi-course';
 
 /** Onglets visuels de la page Opérations (regroupement par présence physique). */
 export type OperationsTabKey = 'au_restaurant' | 'hors_restaurant';
@@ -21,6 +22,12 @@ export interface IOrderGroup {
   pickupCode: string | null;
   /** Service livraison (TURBO / FREE / CHICKEN_NATION) */
   deliveryService: DeliveryService;
+  /**
+   * Course telle que renvoyée par `operations/active` (code, livreur,
+   * retenue, tournée), null sans course. Lue par `utils/suivi-course.ts`.
+   */
+  course?: CourseOperations | null;
+  /** Commandes prêtes de la course (vide pour une course retenue sans commande prête). */
   orders: Order[];
 }
 
