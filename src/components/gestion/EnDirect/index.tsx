@@ -74,14 +74,27 @@ export default function EnDirect() {
   const selectedRestaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const openCourse = useDashboardStore((s) => s.openCourse);
   const openLivreur = useDashboardStore((s) => s.openLivreur);
-  const livreurDemande = useDashboardStore((s) => s.pendingEnDirectLivreurId);
   const clearPendingEnDirect = useDashboardStore((s) => s.clearPendingEnDirect);
   const membre = useAuthStore((s) => s.user);
   const maintenant = useMaintenant(30_000);
   const grandEcran = useGrandEcran();
-  const [choix, setChoix] = useState<{ id: string; n: number } | null>(null);
-  const [carteOuverte, setCarteOuverte] = useState(false);
+  // Venu d'une pastille de la ligne Livreurs (Commandes) : ce livreur est
+  // choisi dès l'ouverture (l'écran est monté par ce changement d'onglet).
+  const [demande] = useState(() => useDashboardStore.getState().pendingEnDirectLivreurId);
+  const [choix, setChoix] = useState<{ id: string; n: number } | null>(() => (demande ? { id: demande, n: 1 } : null));
+  const [carteOuverte, setCarteOuverte] = useState(
+    () => !!demande && typeof window !== "undefined" && !window.matchMedia(GRAND_ECRAN).matches,
+  );
   const carteRef = useRef<HTMLDivElement>(null);
+
+  // Demande lue une fois ; petit écran : la carte, ouverte sous la liste, vient à l'écran.
+  useEffect(() => {
+    if (!demande) return;
+    clearPendingEnDirect();
+    if (!window.matchMedia(GRAND_ECRAN).matches) {
+      window.requestAnimationFrame(() => carteRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [demande, clearPendingEnDirect]);
 
   const livreursQuery = useDelivererLiveLocationsQuery({
     restaurantId: selectedRestaurantId ?? undefined,
@@ -151,13 +164,6 @@ export default function EnDirect() {
     },
     [grandEcran],
   );
-
-  // Venu d'une pastille de la ligne Livreurs (Commandes) : ce livreur est choisi.
-  useEffect(() => {
-    if (!livreurDemande) return;
-    choisir(livreurDemande);
-    clearPendingEnDirect();
-  }, [livreurDemande, choisir, clearPendingEnDirect]);
 
   const toucherAlerte = useCallback(
     (s: SignalLivraison) => {
