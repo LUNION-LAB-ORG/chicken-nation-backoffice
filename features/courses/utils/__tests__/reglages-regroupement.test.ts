@@ -459,7 +459,26 @@ describe('« Appli considérée fermée après (secondes) »', () => {
   test('aide en français simple, sans tiret cadratin ni valeur technique', () => {
     expect(d().aide).toContain('0 : jamais');
     expect(d().aide).toContain('sans pause ni pénalité');
+    // Signal écrit au plus une fois par minute au serveur : un délai trop court ferait paraître fermée une appli en arrière-plan.
+    expect(d().aide).toContain('une fois par minute');
     expect(`${d().libelle}${d().aide}`).not.toMatch(/[—–]/);
     expect(d().aide).not.toMatch(/[a-z]+_[a-z]+|APPLI_FERMEE/);
+  });
+});
+
+const reglagesLivreur = join(
+  import.meta.dir,
+  '../../../../../backend/src/modules/deliverers/helpers/deliverer-scoring-settings.helper.ts',
+);
+describe.skipIf(!existsSync(reglagesLivreur))('« Appli considérée fermée après », fidèle au serveur', () => {
+  const source = existsSync(reglagesLivreur) ? readFileSync(reglagesLivreur, 'utf8') : '';
+
+  test('même défaut, 0 accepté (règle coupée), négatif refusé', () => {
+    const defaut = source.match(/appli_fermee_apres_s: (\d+),/)?.[1];
+    expect(defaut).toBe(def('deliverer.appli_fermee_apres_s').defaut);
+    expect(source).toMatch(
+      /toNumber\(map\['deliverer\.appli_fermee_apres_s'\], DEFAULTS\.appli_fermee_apres_s, \{ allowZero: true \}\)/,
+    );
+    expect(def('deliverer.appli_fermee_apres_s').lecture).toBe('livreur');
   });
 });

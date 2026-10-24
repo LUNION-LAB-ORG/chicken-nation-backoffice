@@ -1,5 +1,7 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
   COULEURS_ETAT,
@@ -397,5 +399,29 @@ describe('textes visibles', () => {
     }
     expect(ORDRE_ETATS).toHaveLength(Object.keys(NOM_ETAT).length);
     expect(Object.keys(COULEURS_ETAT).sort()).toEqual([...ORDRE_ETATS].sort());
+  });
+});
+
+/**
+ * Fidèle au serveur (serveur db9a87c), quand ses sources sont là : ordre de
+ * la règle (appli fermée après hors service), libellé et refus (409).
+ */
+const regle = join(import.meta.dir, '../../../../../backend/src/modules/deliverers/helpers/disponibilite.rules.ts');
+describe.skipIf(!existsSync(regle))('« Appli fermée », fidèle au serveur', () => {
+  const source = existsSync(regle) ? readFileSync(regle, 'utf8') : '';
+
+  test('motif dit juste après « hors service », comme `etatLivreur` et la fenêtre', () => {
+    const motifs = [...source.matchAll(/return \{ ok: false, motif: '([A-Z_]+)' \}/g)].map((m) => m[1]);
+    expect(motifs.slice(-2)).toEqual(['HORS_SERVICE', 'APPLI_FERMEE']);
+  });
+
+  test('libellé et refus du serveur, mot pour mot', () => {
+    expect(source).toContain(`APPLI_FERMEE: '${NOM_ETAT.APPLI_FERMEE}'`);
+    expect(source).toContain(`return "${REFUS_APPLI_FERMEE}";`);
+  });
+
+  test('`appli_active` et `appli_vue_a` portés par `disponibilite`', () => {
+    expect(source).toMatch(/appli_active: l\.appli_active/);
+    expect(source).toMatch(/appli_vue_a: l\.appli_vue_a \?\? null/);
   });
 });
