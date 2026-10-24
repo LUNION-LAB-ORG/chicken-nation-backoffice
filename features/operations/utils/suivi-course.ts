@@ -51,6 +51,15 @@ export const POSITION_FRAICHEUR_MIN = 5;
  * n'a pas noté son départ (`parti_at`).
  */
 export const FENETRE_APRES_RETRAIT_S = 240;
+/**
+ * `PROLONGATION_REMISE_S` du serveur : fenêtre échue, le livreur qui attend
+ * encore un sac au comptoir garde sa course 2 min de plus.
+ */
+export const PROLONGATION_REMISE_S = 120;
+/** `course.depart_rayon_m` : une position plus loin, reçue après le retrait, dit que le livreur est parti. */
+export const DEPART_RAYON_M = 250;
+/** `PRECISION_MAX_M` du serveur : une position moins précise ne décide d'aucun départ. */
+export const PRECISION_MAX_M = 80;
 
 // ============================================================
 // TYPES (forme des données de `GET /orders/operations/active`)
@@ -286,6 +295,8 @@ export function distanceMetres(a: PositionGps, b: PositionGps): number {
 export interface PositionDatee extends PositionGps {
   /** ISO de la remontée. */
   ts: string | null;
+  /** Précision annoncée par le téléphone (mètres), si le serveur la garde. */
+  precision_m?: number | null;
 }
 
 export interface Approche {
@@ -344,7 +355,17 @@ export function positionRestaurant(
 export function positionConnue(livreur: LivreurDeCourse | null | undefined): PositionDatee | null {
   const pos = lirePosition(livreur?.last_location);
   if (!pos) return null;
-  return { ...pos, ts: livreur?.last_location_at ?? null };
+  const precision = lirePrecision(livreur?.last_location);
+  const ts = livreur?.last_location_at ?? null;
+  return precision === null ? { ...pos, ts } : { ...pos, ts, precision_m: precision };
+}
+
+/** Précision gardée avec la position (`precision_m`, ou `accuracy`), ou null. */
+function lirePrecision(valeur: unknown): number | null {
+  if (!valeur || typeof valeur !== 'object') return null;
+  const v = valeur as { precision_m?: unknown; accuracy?: unknown };
+  const precision = Number(v.precision_m ?? v.accuracy);
+  return v.precision_m == null && v.accuracy == null ? null : Number.isFinite(precision) ? precision : null;
 }
 
 /** La plus récente de deux positions datées. */
@@ -365,6 +386,8 @@ export type EtatCourse =
   | 'EN_ROUTE'
   | 'AU_COMPTOIR'
   | 'PARTI'
+  /** Parti alors qu'une commande de la course est encore notée au comptoir. */
+  | 'PARTI_SANS_SAC'
   | 'EN_LIVRAISON'
   | 'TERMINEE'
   | 'ANNULEE'
@@ -397,10 +420,71 @@ export function livraisonsCommencees(courseId: string, commandes: readonly Comma
  * commande : tant qu'il en reste une, le livreur n'est pas « Parti ».
  */
 export function commandeARemettre(courseId: string, commandes: readonly CommandeOperations[]): boolean {
-  return commandes.some((c) => {
+  return referencesARemettre(courseId, commandes).length > 0;
+}
+
+/** Références des commandes de la course encore prêtes au comptoir (« CMD-B »). */
+export function referencesARemettre(courseId: string, commandes: readonly CommandeOperations[]): string[] {
+  const references: string[] = [];
+  for (const c of commandes) {
     const l = livraisonDeCommande(c);
-    return l?.course?.id === courseId && c.status === 'READY' && l.statut !== 'CANCELLED';
-  });
+    if (l?.course?.id !== courseId || c.status !== 'READY' || l.statut === 'CANCELLED') continue;
+    if (!references.includes(c.reference)) references.push(c.reference);
+  }
+  return references;
+}
+
+/**
+ * Le livreur est-il vraiment parti alors qu'une commande de sa course est
+ * encore notée au comptoir (relecture du 24/10 : l'écran disait « Au
+ * comptoir » en vert pendant toute la tournée, au moment même où la cloche
+ * du serveur annonçait son départ) ?
+ *
+ *  - départ noté par le serveur APRÈS la validation du retrait (`parti_at`
+ *    postérieur à `picked_up_at`) : départ réel (position, « Je pars »,
+ *    première livraison démarrée, fenêtre écoulée), la cloche « commande pas
+ *    remise » vient de sonner au restaurant et au siège ;
+ *  - départ posé à la validation même (`parti_at` égal à `picked_up_at` :
+ *    ancienne appli, restaurant en v1, réglage coupé) ou retrait non daté :
+ *    le serveur n'en sait rien, la caisse remet peut-être le second sac. Le
+ *    livreur reste « au comptoir » tant que sa dernière position précise,
+ *    reçue après la validation, est dans le rayon de départ (15 min au
+ *    plus), ou pendant la fenêtre et sa prolongation (6 min) s'il n'y a pas
+ *    de telle position. Une position précise plus loin, ou ce délai passé :
+ *    il est parti.
+ *
+ * Pas encore de départ noté (`parti_at` nul) : jamais.
+ */
+export function partiSansRemise(
+  course: Pick<CourseOperations, 'parti_at' | 'picked_up_at'>,
+  ctx: { maintenant: Date; position?: PositionDatee | null; restaurant?: PositionGps | null },
+): boolean {
+  const parti = instant(course.parti_at);
+  if (parti === null) return false;
+  const retrait = instant(course.picked_up_at);
+  if (retrait !== null && parti > retrait) return true;
+
+  const t = ctx.maintenant.getTime();
+  const pos = ctx.position ?? null;
+  const posAt = pos ? instant(pos.ts) : null;
+  const precise = pos?.precision_m == null || pos.precision_m <= PRECISION_MAX_M;
+  if (pos && ctx.restaurant && posAt !== null && posAt > parti && precise) {
+    if (distanceMetres(pos, ctx.restaurant) > DEPART_RAYON_M) return true;
+    if (t - posAt <= AU_RESTAURANT_FRAICHEUR_MIN * 60_000) return false;
+  }
+  return t >= parti + (FENETRE_APRES_RETRAIT_S + PROLONGATION_REMISE_S) * 1000;
+}
+
+/**
+ * « Parti à 12 h 20, CMD-B pas remise » ; plusieurs : « …, CMD-B et CMD-C
+ * pas remises » ; références inconnues : « …, un sac pas remis ».
+ */
+export function texteDepartSansSac(partiAt: string | null | undefined, references: readonly string[]): string {
+  const parti = instant(partiAt);
+  const debut = parti !== null ? `Parti à ${heureCourte(new Date(parti))}` : 'Parti';
+  const refs = references.filter(Boolean);
+  if (refs.length === 0) return `${debut}, un sac pas remis`;
+  return `${debut}, ${enumerer(refs)} ${refs.length > 1 ? 'pas remises' : 'pas remise'}`;
 }
 
 /**
@@ -412,11 +496,13 @@ export function commandeARemettre(courseId: string, commandes: readonly Commande
  *  - au restaurant : « Au comptoir » ;
  *  - retrait validé : « Au comptoir » tant que le serveur n'a pas noté son
  *    départ et qu'aucune livraison n'a commencé (4 min au plus), puis
- *    « Parti à 12 h 45 », « Parti » ou « En livraison ». Jamais « Parti »
- *    tant qu'une commande de la course reste à remettre (`resteARemettre`,
- *    même règle que la caisse, relecture du 23/10) : un départ posé dès la
- *    première remise (ancienne méthode, ancienne appli) le disait devant la
- *    caissière qui tend le second sac.
+ *    « Parti à 12 h 45 », « Parti » ou « En livraison » ;
+ *  - une commande de la course reste à remettre (`resteARemettre`) : « Au
+ *    comptoir » tant que le livreur peut y être (`partiSansRemise` : un
+ *    départ posé dès la première remise, ancienne méthode ou ancienne appli,
+ *    ne le fait pas partir devant la caissière qui tend le second sac,
+ *    relecture du 23/10) ; vraiment parti : « Parti à 12 h 20, CMD-B pas
+ *    remise » en rouge (relecture du 24/10), comme la cloche du serveur.
  */
 export function etatCourse(
   course: CourseOperations,
@@ -430,6 +516,8 @@ export function etatCourse(
     livraisonsCommencees?: boolean;
     /** Une commande de la course est encore prête au comptoir. */
     resteARemettre?: boolean;
+    /** Leurs références (« CMD-B »), pour dire laquelle n'a pas été remise. */
+    referencesARemettre?: readonly string[];
     /** Service de livraison de la commande (TURBO d'origine). */
     service?: string | null;
   },
@@ -485,7 +573,15 @@ export function etatCourse(
   if (statut === 'AT_RESTAURANT') return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
 
   if (statut === 'IN_DELIVERY') {
-    if (ctx.resteARemettre) return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+    if (ctx.resteARemettre) {
+      if (!partiSansRemise(course, ctx)) return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+      return {
+        etat: 'PARTI_SANS_SAC',
+        libelle: texteDepartSansSac(course.parti_at, ctx.referencesARemettre ?? []),
+        livreur,
+        ton: 'rouge',
+      };
+    }
     const parti = instant(course.parti_at);
     if (parti !== null) return { etat: 'PARTI', libelle: `Parti à ${heureCourte(new Date(parti))}`, livreur, ton: 'gris' };
     if (ctx.livraisonsCommencees) return { etat: 'EN_LIVRAISON', libelle: 'En livraison', livreur, ton: 'gris' };

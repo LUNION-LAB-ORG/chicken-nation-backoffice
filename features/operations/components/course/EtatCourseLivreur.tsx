@@ -6,6 +6,7 @@ import {
   Bike,
   CheckCircle2,
   Navigation,
+  PackageX,
   Search,
   Send,
   Store,
@@ -17,12 +18,12 @@ import {
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDelivererLivePosition } from "../../../maps/hooks/use-deliverer-live-socket";
 import {
-  commandeARemettre,
   etatCourse,
   livraisonsCommencees,
   plusRecente,
   positionConnue,
   positionRestaurant,
+  referencesARemettre,
   type CommandeOperations,
   type CourseOperations,
   type EtatAffiche,
@@ -36,6 +37,7 @@ const ICONES: Record<EtatCourse, LucideIcon> = {
   EN_ROUTE: Bike,
   AU_COMPTOIR: Store,
   PARTI: Navigation,
+  PARTI_SANS_SAC: PackageX,
   EN_LIVRAISON: Navigation,
   TERMINEE: CheckCircle2,
   ANNULEE: XCircle,
@@ -66,7 +68,8 @@ interface Props {
  * Livreur d'une course et son état, tenus à jour par les événements du
  * serveur et par la position en direct du livreur qui vient au restaurant :
  * « Koffi · En route, arrivée vers 12 h 38 », « Au comptoir », « Parti à
- * 12 h 45 », « Recherche d'un livreur », « Confiée à Turbo ».
+ * 12 h 45 », « Recherche d'un livreur », « Confiée à Turbo », et en rouge
+ * « Parti à 12 h 20, CMD-B pas remise » quand il est parti sans un sac.
  */
 export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service, maintenant, compact }) => {
   // Position en direct seulement pour un livreur qui vient au restaurant.
@@ -81,12 +84,14 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
     direct ? { lat: direct.lat, lng: direct.lng, ts: direct.ts } : null,
     positionConnue(course.deliverer),
   );
+  const aRemettre = referencesARemettre(course.id, commandes);
   const etat = etatCourse(course, {
     maintenant,
     position,
     restaurant,
     livraisonsCommencees: livraisonsCommencees(course.id, commandes),
-    resteARemettre: commandeARemettre(course.id, commandes),
+    resteARemettre: aRemettre.length > 0,
+    referencesARemettre: aRemettre,
     service,
   });
   const ton = TONS[etat.ton];

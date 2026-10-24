@@ -18,11 +18,14 @@ import {
   livraisonsCommencees,
   motifRegroupement,
   nomDeCourse,
+  partiSansRemise,
   positionConnue,
   positionRestaurant,
   plusRecente,
+  referencesARemettre,
   retenueEnCours,
   texteAjout,
+  texteDepartSansSac,
   texteFusion,
   texteRetenue,
   texteToutEstPret,
@@ -292,6 +295,85 @@ describe('état de la course et de son livreur', () => {
     ];
     expect(livraisonsCommencees('k1', commandes)).toBe(true);
     expect(livraisonsCommencees('k2', commandes)).toBe(false);
+  });
+});
+
+describe('parti sans un sac (relecture du 24/10)', () => {
+  // Remise commande par commande à la caisse : CMD-A remise à 12 h 16, CMD-B
+  // encore prête. Le serveur note le départ à 12 h 20 (position, « Je pars »,
+  // fenêtre écoulée) et sonne la cloche « commande pas remise ».
+  const commandes = [
+    commande('A', 'PICKED_UP', { statut: 'IN_DELIVERY', picked_up_at: ISO('12:16'), parti_at: ISO('12:20') }, { statut: 'IN_ROUTE' }),
+    commande('B', 'READY', { statut: 'IN_DELIVERY', picked_up_at: ISO('12:16'), parti_at: ISO('12:20') }),
+  ];
+  const partie = courseDeCommande(commandes[0]);
+
+  test('départ réel noté par le serveur : « Parti à 12 h 20, CMD-B pas remise » en rouge, pas « Au comptoir »', () => {
+    const refs = referencesARemettre('k1', commandes);
+    expect(refs).toEqual(['CMD-B']);
+    for (const maintenant of [A('12:20', '30'), A('12:30'), A('12:55')]) {
+      expect(
+        etatCourse(partie, { maintenant, resteARemettre: true, referencesARemettre: refs, livraisonsCommencees: true }),
+      ).toMatchObject({ etat: 'PARTI_SANS_SAC', libelle: 'Parti à 12 h 20, CMD-B pas remise', livreur: 'Koffi', ton: 'rouge' });
+    }
+    // Même avec une position au comptoir : le serveur a décidé, la cloche a sonné.
+    expect(
+      partiSansRemise(partie, { maintenant: A('12:21'), position: { ...PRES, ts: ISO('12:20', '50') }, restaurant: RESTO }),
+    ).toBe(true);
+    // Le sac remis ensuite : plus rien à signaler.
+    expect(etatCourse(partie, { maintenant: A('12:30'), resteARemettre: false }).libelle).toBe('Parti à 12 h 20');
+  });
+
+  test('départ posé à la validation (ancienne appli, v1) : au comptoir le temps de remettre, puis parti', () => {
+    const fermee = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:20'), parti_at: ISO('12:20') });
+    const ctx = { resteARemettre: true, referencesARemettre: ['CMD-B'], restaurant: RESTO };
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:25', '59') }).etat).toBe('AU_COMPTOIR');
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:26') })).toMatchObject({
+      etat: 'PARTI_SANS_SAC',
+      libelle: 'Parti à 12 h 20, CMD-B pas remise',
+    });
+    // Position précise au restaurant reçue après la validation : il y est encore.
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:31'), position: { ...PRES, ts: ISO('12:30'), precision_m: 15 } }).etat).toBe(
+      'AU_COMPTOIR',
+    );
+    // Position au restaurant trop ancienne : le délai reprend la main.
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:50'), position: { ...PRES, ts: ISO('12:30') } }).etat).toBe('PARTI_SANS_SAC');
+    // Position précise loin du restaurant : parti tout de suite.
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:22'), position: { ...LOIN, ts: ISO('12:21', '30'), precision_m: 20 } }).etat).toBe(
+      'PARTI_SANS_SAC',
+    );
+    // Relevé imprécis (150 m) loin du restaurant : il ne décide rien.
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:22'), position: { ...LOIN, ts: ISO('12:21', '30'), precision_m: 150 } }).etat).toBe(
+      'AU_COMPTOIR',
+    );
+    // Position d'avant la validation : ne compte pas.
+    expect(etatCourse(fermee, { ...ctx, maintenant: A('12:22'), position: { ...LOIN, ts: ISO('12:19') } }).etat).toBe('AU_COMPTOIR');
+    // Retrait non daté : même règle que la fenêtre fermée.
+    const sansRetrait = course({ statut: 'IN_DELIVERY', parti_at: ISO('12:20') });
+    expect(etatCourse(sansRetrait, { ...ctx, maintenant: A('12:21') }).etat).toBe('AU_COMPTOIR');
+    expect(etatCourse(sansRetrait, { ...ctx, maintenant: A('12:27') }).etat).toBe('PARTI_SANS_SAC');
+  });
+
+  test('pas encore de départ noté : au comptoir', () => {
+    const ouverte = course({ statut: 'IN_DELIVERY', picked_up_at: ISO('12:20'), parti_at: null });
+    expect(partiSansRemise(ouverte, { maintenant: A('12:40') })).toBe(false);
+    expect(etatCourse(ouverte, { maintenant: A('12:22'), resteARemettre: true }).etat).toBe('AU_COMPTOIR');
+  });
+
+  test('textes : une, plusieurs ou aucune référence', () => {
+    expect(texteDepartSansSac(ISO('12:20'), ['CMD-B'])).toBe('Parti à 12 h 20, CMD-B pas remise');
+    expect(texteDepartSansSac(ISO('12:20'), ['CMD-B', 'CMD-C'])).toBe('Parti à 12 h 20, CMD-B et CMD-C pas remises');
+    expect(texteDepartSansSac(ISO('12:20'), [])).toBe('Parti à 12 h 20, un sac pas remis');
+    expect(texteDepartSansSac(null, ['CMD-B'])).toBe('Parti, CMD-B pas remise');
+    for (const t of [texteDepartSansSac(ISO('12:20'), ['CMD-B', 'CMD-C']), texteDepartSansSac(null, [])]) {
+      expect(t).not.toContain('—');
+    }
+  });
+
+  test('précision de la position gardée par le serveur', () => {
+    const livreur = { ...KOFFI, last_location: { lat: LOIN.lat, lng: LOIN.lng, precision_m: 150 }, last_location_at: ISO('12:21') };
+    expect(positionConnue(livreur)).toMatchObject({ precision_m: 150 });
+    expect(positionConnue({ ...livreur, last_location: { lat: LOIN.lat, lng: LOIN.lng } })?.precision_m).toBeUndefined();
   });
 });
 
