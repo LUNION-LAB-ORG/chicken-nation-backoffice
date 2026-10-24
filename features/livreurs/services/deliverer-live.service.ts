@@ -10,6 +10,8 @@ export interface IGetLiveLocationsParams {
   restaurantId?: string;
   /** Inclure les livreurs sans GPS récent (default `false`). */
   includeOffline?: boolean;
+  /** Vue Livreurs « Aujourd'hui » : planning du jour, temps en ligne, courses du jour. */
+  jour?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export async function getDelivererLiveLocations(
     const searchParams = new URLSearchParams();
     if (params.restaurantId) searchParams.append("restaurantId", params.restaurantId);
     if (params.includeOffline) searchParams.append("includeOffline", "true");
+    if (params.jour) searchParams.append("jour", "true");
     const qs = searchParams.toString();
     const url = qs ? `${ENDPOINT}?${qs}` : ENDPOINT;
     return await api.get<IDelivererLive[]>(url);

@@ -12,6 +12,8 @@ interface LivreursListProps {
   isLoading: boolean;
   onView: (livreur: Livreur) => void;
   liveMap?: Map<string, IDelivererLive>;
+  /** Un seul restaurant filtré : la place dans la file d'un serveur plus ancien est juste. */
+  unSeulRestaurant?: boolean;
 }
 
 const HEADERS = [
@@ -20,9 +22,9 @@ const HEADERS = [
   "Véhicule",
   "Disponibilité",
   "File",
-  "GPS",
+  "Position",
   "Statut",
-  "Actions",
+  "",
 ] as const;
 
 const SkeletonRow: React.FC = () => (
@@ -73,6 +75,7 @@ const LivreursList: React.FC<LivreursListProps> = ({
   isLoading,
   onView,
   liveMap,
+  unSeulRestaurant = false,
 }) => {
   return (
     <div className="bg-white rounded-[12px] border border-[#F4F4F5] overflow-hidden">
@@ -82,7 +85,7 @@ const LivreursList: React.FC<LivreursListProps> = ({
             <tr>
               {HEADERS.map((header, idx) => (
                 <th
-                  key={header}
+                  key={header || "actions"}
                   className={`py-3 px-4 text-xs font-semibold text-[#71717A] uppercase tracking-wide ${
                     idx === HEADERS.length - 1 ? "text-right" : "text-left"
                   }`}
@@ -117,6 +120,7 @@ const LivreursList: React.FC<LivreursListProps> = ({
                   livreur={livreur}
                   live={liveMap?.get(livreur.id)}
                   onView={() => onView(livreur)}
+                  unSeulRestaurant={unSeulRestaurant}
                 />
               ))
             )}

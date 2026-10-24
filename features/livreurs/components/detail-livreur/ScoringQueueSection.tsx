@@ -23,7 +23,7 @@ interface ScoringQueueSectionProps {
 }
 
 /**
- * Section "Scoring & File d'attente" du drawer livreur.
+ * Section « Rang dans la file » de la fiche du livreur (ancien « Scoring & File d'attente »).
  *
  * Affiche en temps réel (polling 15 s) :
  *   - Position dans la file FIFO + total candidats
@@ -40,7 +40,7 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   if (isLoading) {
     return (
       <div className="mb-6">
-        <p className="text-[18px] font-medium text-[#F17922] mb-3">Scoring & File d&apos;attente</p>
+        <p className="text-[18px] font-medium text-[#F17922] mb-3">Rang dans la file</p>
         <div className="rounded-xl border border-[#E4E4E7] bg-white p-6 text-center">
           <p className="text-sm text-[#71717A]">Chargement…</p>
         </div>
@@ -51,11 +51,9 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   if (error || !data) {
     return (
       <div className="mb-6">
-        <p className="text-[18px] font-medium text-[#F17922] mb-3">Scoring & File d&apos;attente</p>
+        <p className="text-[18px] font-medium text-[#F17922] mb-3">Rang dans la file</p>
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700">
-            Impossible de charger les infos scoring : {(error as Error)?.message ?? "erreur inconnue"}
-          </p>
+          <p className="text-sm text-red-700">Rang dans la file indisponible.</p>
         </div>
       </div>
     );
@@ -64,7 +62,7 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[18px] font-medium text-[#F17922]">Scoring & File d&apos;attente</p>
+        <p className="text-[18px] font-medium text-[#F17922]">Rang dans la file</p>
         {isFetching && (
           <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider">
             actualisation…
@@ -111,7 +109,7 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
               </p>
               {ranking.rankInQueue !== null && ranking.rankInQueue !== ranking.position && (
                 <p className="text-xs text-[#71717A] mt-1">
-                  Rang FIFO pur : #{ranking.rankInQueue}{" "}
+                  Place dans la file : {ranking.rankInQueue === 1 ? "1er" : `${ranking.rankInQueue}e`}{" "}
                   <span className="text-[#A1A1AA]">
                     (le score composite a modifié l&apos;ordre)
                   </span>
