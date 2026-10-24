@@ -152,15 +152,16 @@ export function SectionLivraison({ commande }: Props) {
               <p className="text-sm font-bold text-gray-900 truncate">{livreur.nom}</p>
               {livreur.telephone &&
                 (livreur.lienAppel ? (
+                  // Coupé plutôt que glissé sous « Appeler » quand la place manque (écran étroit).
                   <a
                     href={livreur.lienAppel}
-                    className="inline-flex items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
+                    className="flex max-w-full items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
                   >
-                    <Phone className="w-3.5 h-3.5" /> {livreur.telephone}
+                    <Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{livreur.telephone}</span>
                   </a>
                 ) : (
-                  <p className="inline-flex items-center gap-1.5 text-xs text-gray-500">
-                    <Phone className="w-3.5 h-3.5" /> {livreur.telephone}
+                  <p className="flex max-w-full items-center gap-1.5 text-xs text-gray-500">
+                    <Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{livreur.telephone}</span>
                   </p>
                 ))}
               {appli && <PresenceAppliLigne presence={appli} className="mt-0.5" />}

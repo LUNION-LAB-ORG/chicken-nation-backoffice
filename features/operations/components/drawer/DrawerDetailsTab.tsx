@@ -727,13 +727,10 @@ function ProgressBlock({ ui }: { ui: OrderTable }) {
               >
                 {s.label}
               </p>
-              {at ? (
-                <p className="text-[10px] text-gray-500 mt-0.5 tabular-nums">
-                  {format(new Date(at), "HH:mm")}
-                </p>
-              ) : (
-                <p className="text-[10px] text-gray-300 mt-0.5">—</p>
-              )}
+              {/* Étape pas encore atteinte : ligne vide de même hauteur (pas de tiret à la place d'une heure). */}
+              <p className="mt-0.5 h-[15px] text-[10px] text-gray-500 tabular-nums">
+                {at ? format(new Date(at), "HH:mm") : ""}
+              </p>
             </li>
           );
         })}

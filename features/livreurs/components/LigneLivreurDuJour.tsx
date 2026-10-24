@@ -113,12 +113,16 @@ export function LigneLivreurDuJour({
       {/* État */}
       <div className="min-w-0">
         <PastilleEtat etat={etat} title={libelleEtat} />
-        <p className="mt-0.5 h-4 truncate text-[11px]" title={texteDetail || undefined}>
+        {/* Le retard reste entier en bout de ligne : à 768 px, « +1 h 02 » était coupé
+            derrière la référence de la course, coupée à sa place. */}
+        <p className="mt-0.5 flex h-4 min-w-0 text-[11px]" title={texteDetail || undefined}>
           {detail.texte && (
-            <span className={detail.ambre ? 'font-semibold text-amber-700' : 'text-[#52525B]'}>{detail.texte}</span>
+            <span className={`truncate ${detail.ambre ? 'font-semibold text-amber-700' : 'text-[#52525B]'}`}>
+              {detail.texte}
+            </span>
           )}
           {detail.retard && (
-            <span className="font-semibold text-red-600">
+            <span className="shrink-0 whitespace-pre font-semibold text-red-600">
               {detail.texte ? ' · ' : ''}
               {detail.retard}
             </span>
