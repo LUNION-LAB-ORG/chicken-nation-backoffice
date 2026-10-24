@@ -6,6 +6,7 @@ import {
   groupesRetenusSansCommandePrete,
   groupOrdersForOperations,
   ordonnerGroupesPretes,
+  quelquUnARemettre,
 } from '../group-orders';
 
 /**
@@ -119,5 +120,48 @@ describe('ordre de la colonne « Prêtes »', () => {
       'course-k2',
       'course-k1',
     ]);
+  });
+});
+
+describe('commande prête dont la livraison ou la course est finie', () => {
+  const livraisonAnnulee = (id, c) => ({ ...cmd(id, 'READY', c), delivery: { id: `d-${id}`, statut: 'CANCELLED', course: c } });
+
+  test('course annulée : carte seule, la commande reste touchable', () => {
+    const k = course('k', { statut: 'CANCELLED' });
+    const { pretesGroupes } = groupOrdersForOperations([livraisonAnnulee('a', k)]);
+    expect(pretesGroupes.map((g) => [g.key, g.courseId, g.orders.map((o) => o.id)])).toEqual([['solo-a', null, ['a']]]);
+  });
+
+  test('commande détachée d’une course partie : carte seule, pas une ligne de cette course', () => {
+    const k = course('k', { statut: 'IN_DELIVERY', picked_up_at: ISO('12:30') });
+    const { pretesGroupes } = groupOrdersForOperations([livraisonAnnulee('a', k), cmd('b', 'READY', k)]);
+    expect(pretesGroupes.map((g) => [g.key, g.orders.map((o) => o.id)])).toEqual([
+      ['solo-a', ['a']],
+      ['course-k', ['b']],
+    ]);
+  });
+
+  test('course terminée : carte seule ; « Aucun livreur trouvé » garde son groupe', () => {
+    const fini = course('f', { statut: 'COMPLETED' });
+    const expiree = course('e', { statut: 'EXPIRED', deliverer_id: null, deliverer: null });
+    const { pretesGroupes } = groupOrdersForOperations([cmd('a', 'READY', fini), cmd('b', 'READY', expiree)]);
+    expect(pretesGroupes.map((g) => g.key)).toEqual(['solo-a', 'course-e']);
+  });
+});
+
+describe('quelqu’un à qui remettre (« Confirmer la récupération »)', () => {
+  test('un livreur a accepté, ou Turbo a la course', () => {
+    expect(quelquUnARemettre(course('k'))).toBe(true);
+    expect(quelquUnARemettre(course('k', { statut: 'AT_RESTAURANT' }))).toBe(true);
+    expect(quelquUnARemettre(course('t', { deliverer_id: null, turbo_escalated_at: ISO('12:10') }))).toBe(true);
+  });
+
+  test('personne : recherche, aucun livreur trouvé, course annulée ou terminée, comme la caisse', () => {
+    expect(quelquUnARemettre(course('k', { statut: 'PENDING_ASSIGNMENT', deliverer_id: null }))).toBe(false);
+    expect(quelquUnARemettre(course('k', { statut: 'EXPIRED' }))).toBe(false);
+    // Course annulée : le serveur garde le livreur, mais il ne vient plus (409 sinon).
+    expect(quelquUnARemettre(course('k', { statut: 'CANCELLED' }))).toBe(false);
+    expect(quelquUnARemettre(course('k', { statut: 'COMPLETED' }))).toBe(false);
+    expect(quelquUnARemettre(null)).toBe(false);
   });
 });

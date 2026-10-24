@@ -15,7 +15,13 @@ import { useCommandeEnCours, useCommandesDeCourse } from "../../hooks/use-comman
 import { useMaintenant } from "../../hooks/use-maintenant";
 import { useAuthStore } from "../../../users/hook/authStore";
 import { peutConfirmerRecuperation } from "../../utils/code-retrait";
-import { courseDeCommande, type CommandeOperations, type CourseOperations } from "../../utils/suivi-course";
+import { courseDeLaPrete, quelquUnARemettre } from "../../utils/group-orders";
+import {
+  courseDeCommande,
+  livraisonDeCommande,
+  type CommandeOperations,
+  type CourseOperations,
+} from "../../utils/suivi-course";
 import { ligneRetenue } from "../../utils/ligne-retenue";
 import { EtatCourseLivreur, useEtatCourseLivreur } from "../course/EtatCourseLivreur";
 import { BoutonConfirmerRecuperation, FenetreRecuperation } from "../FenetreRecuperation";
@@ -115,12 +121,19 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     );
   }
 
-  if (order.status === OrderStatus.READY && course) {
+  // Commande prête : la course qui viendra la chercher, comme le groupe de la
+  // colonne « Prêtes » (pas une course annulée, terminée, ni une course dont
+  // la livraison de cette commande a été annulée).
+  // Livraison de la liste des Opérations d'abord, celle du détail sinon.
+  const source = enCours && livraisonDeCommande(enCours as unknown as CommandeOperations) ? enCours : order;
+  const courseAuRestaurant = order.status === OrderStatus.READY ? courseDeLaPrete(source) : null;
+
+  if (order.status === OrderStatus.READY && courseAuRestaurant) {
     // Livreur et son état, retenue en une ligne, « Confirmer la récupération »
     // (demande du 24/10 au soir : le code est en grand dans la fenêtre).
     return (
       <PiedCourseAuRestaurant
-        course={course}
+        course={courseAuRestaurant}
         commande={suivie}
         service={order.delivery_service}
         maintenant={maintenant}
@@ -174,7 +187,8 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
  * Pied du tiroir d'une commande prête qui a sa course : état du livreur et
  * retenue (une ligne chacun), puis « Confirmer la récupération », même
  * fenêtre et même règle qu'au groupe de la course : pour qui peut la
- * confirmer, dès qu'un livreur a accepté ou que Turbo a la course.
+ * confirmer, dès qu'un livreur a accepté ou que Turbo a la course, jamais
+ * sur une course sans livreur trouvé (`quelquUnARemettre`).
  */
 function PiedCourseAuRestaurant({
   course,
@@ -195,7 +209,7 @@ function PiedCourseAuRestaurant({
   const suivies = commandes.length > 0 ? (commandes as unknown as CommandeOperations[]) : [commande];
   const { etat } = useEtatCourseLivreur(course, suivies, service, maintenant);
   const retenue = ligneRetenue(course, maintenant);
-  const bouton = peutConfirmerRecuperation(membre) && (!!course.deliverer_id || !!course.turbo_escalated_at);
+  const bouton = peutConfirmerRecuperation(membre) && quelquUnARemettre(course);
 
   return (
     <div className="space-y-2">

@@ -6,6 +6,7 @@ import {
   approcheLivreur,
   courseDeCommande,
   etatCourse,
+  livraisonDeCommande,
   livraisonsCommencees,
   positionConnue,
   positionRestaurant,
@@ -59,6 +60,37 @@ function getCourseFromOrder(order: Order): CourseOperations | null {
   return courseDeCommande(order as unknown as CommandeOperations);
 }
 
+/** Course annulée ou terminée : plus personne ne vient chercher ses sacs. */
+const COURSES_FINIES = new Set(['CANCELLED', 'COMPLETED']);
+
+/**
+ * Course sous laquelle ranger une commande prête : celle de sa livraison,
+ * sauf si cette livraison est annulée (course annulée, commande détachée
+ * d'une course partie, annulation Turbo d'une commande du groupe) ou si la
+ * course est annulée ou terminée. La commande est alors une carte seule :
+ * le groupe de la course ne la listerait pas, elle ne serait plus touchable.
+ * « Aucun livreur trouvé » (course expirée) garde son groupe.
+ */
+export function courseDeLaPrete(order: Order): CourseOperations | null {
+  const commande = order as unknown as CommandeOperations;
+  if (livraisonDeCommande(commande)?.statut === 'CANCELLED') return null;
+  const course = courseDeCommande(commande);
+  return course && !COURSES_FINIES.has(course.statut) ? course : null;
+}
+
+/**
+ * Quelqu'un à qui remettre les sacs (« Confirmer la récupération ») : un
+ * livreur a accepté, ou Turbo a la course. Personne pendant la recherche,
+ * ni sur une course sans livreur trouvé, annulée ou terminée (le serveur
+ * garde le livreur d'une course annulée et répondrait 409). Même règle que
+ * la caisse.
+ */
+export function quelquUnARemettre(course: CourseOperations | null | undefined): boolean {
+  if (!course) return false;
+  if (course.statut === 'CANCELLED' || course.statut === 'EXPIRED' || course.statut === 'COMPLETED') return false;
+  return !!course.deliverer_id || !!course.turbo_escalated_at;
+}
+
 /**
  * Répartit les orders actives en 3 buckets logiques (par présence physique de
  * la commande) — alimentent les 2 onglets de la page Opérations :
@@ -106,7 +138,7 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
 
     // 3. Au restaurant - Prêtes (groupées par course pour les multi-commande)
     if (order.status === OrderStatus.READY) {
-      const course = getCourseFromOrder(order);
+      const course = courseDeLaPrete(order);
       const groupKey = course?.id ? `course-${course.id}` : `solo-${order.id}`;
       const existing = pretesMap.get(groupKey);
       if (existing) {

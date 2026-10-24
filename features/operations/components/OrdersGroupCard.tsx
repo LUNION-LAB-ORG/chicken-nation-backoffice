@@ -5,6 +5,7 @@ import React from "react";
 import type { Order } from "../../orders/types/order.types";
 import type { IOrderGroup } from "../types/operations.types";
 import { libelleStatut, nomClient, preteDepuis } from "../utils/carte-commande";
+import { quelquUnARemettre } from "../utils/group-orders";
 import { ligneRetenue } from "../utils/ligne-retenue";
 import type { CommandeOperations, CourseOperations } from "../utils/suivi-course";
 import { BandeauCourse, type LigneAction } from "./course/BandeauCourse";
@@ -36,7 +37,7 @@ interface Props {
  *    seulement s'il n'est pas « Prête » ; toucher : tiroir ;
  *  - « Confirmer la récupération » pour qui peut la confirmer, dès qu'un
  *    livreur a accepté ou que Turbo a la course (personne à qui remettre
- *    pendant la recherche).
+ *    pendant la recherche, ni sur une course annulée ou terminée).
  */
 export const OrdersGroupCard: React.FC<Props> = ({
   group,
@@ -71,7 +72,7 @@ export const OrdersGroupCard: React.FC<Props> = ({
           ? { texte: attente, ton: "rouge" }
           : null;
 
-  const quelquUn = !!course.deliverer_id || !!course.turbo_escalated_at;
+  const quelquUn = quelquUnARemettre(course);
 
   return (
     <div className="rounded-2xl border-2 border-orange-200 bg-white shadow-sm overflow-hidden">
