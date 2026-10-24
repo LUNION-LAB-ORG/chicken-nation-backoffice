@@ -7,7 +7,6 @@ import LivreursHeader from "./LivreursHeader";
 import LivreursList from "./LivreursList";
 import LivreursTabs, { LIVREURS_TABS, type LivreursTab } from "./LivreursTabs";
 
-import { DelivererLiveMap } from "../../../../features/livreurs/components/DelivererLiveMap";
 import LivreurDetails from "../../../../features/livreurs/components/detail-livreur";
 import { useLivreursList } from "../../../../features/livreurs/hook/use-livreurs";
 import { useDelivererLiveLocationsQuery } from "../../../../features/livreurs/queries/deliverer-live.query";
@@ -40,9 +39,8 @@ export default function Livreurs() {
   const [search, setSearch] = useState("");
   const [restaurantId, setRestaurantId] = useState<string | undefined>(undefined);
 
-  // La tab virtuelle "CARTE_LIVE" n'est pas un filtre de statut.
   const statusFilter: LivreursQueryFilters["status"] | undefined =
-    tab === "TOUS" || tab === "CARTE_LIVE" ? undefined : tab;
+    tab === "TOUS" ? undefined : tab;
 
   const filters: LivreursQueryFilters = useMemo(
     () => ({
@@ -54,14 +52,10 @@ export default function Livreurs() {
     [statusFilter, search, restaurantId],
   );
 
-  // Pas besoin de fetcher la liste sur la tab virtuelle carte
-  const { data, isLoading } = useLivreursList(
-    filters,
-    view === "list" && tab !== "CARTE_LIVE",
-  );
+  const { data, isLoading } = useLivreursList(filters, view === "list");
   const livreurs = data?.items ?? [];
 
-  // Live data partagée entre liste et carte
+  // État de chaque livreur (pause, course, appli) pour la liste
   const { data: liveLocations } = useDelivererLiveLocationsQuery({
     restaurantId,
     includeOffline: true,
@@ -134,16 +128,12 @@ export default function Livreurs() {
             </div>
           </div>
 
-          {tab === "CARTE_LIVE" ? (
-            <DelivererLiveMap restaurantId={restaurantId} />
-          ) : (
-            <LivreursList
-              livreurs={livreurs}
-              isLoading={isLoading}
-              onView={openDetail}
-              liveMap={liveMap}
-            />
-          )}
+          <LivreursList
+            livreurs={livreurs}
+            isLoading={isLoading}
+            onView={openDetail}
+            liveMap={liveMap}
+          />
         </>
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { SidebarItem } from "./SidebarItem";
 import { NavigationItem } from "@/hooks/useMenuConfig";
@@ -21,6 +21,20 @@ export default function SidebarNavigation({
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({});
+
+  // Le groupe qui contient l'écran ouvert s'ouvre tout seul : au montage
+  // (onglet mémorisé) et quand un autre écran y mène (« Voir la course »).
+  // Les autres groupes restent comme on les a laissés.
+  const groupeActif = navigationItems.find((item) =>
+    item.items?.some((sub) => {
+      const subKey = sub.id.includes('-') ? sub.id.split('-').slice(1).join('-') : sub.id;
+      return subKey === activeTab;
+    }),
+  )?.id;
+  useEffect(() => {
+    if (!groupeActif) return;
+    setExpandedSections((p) => (p[groupeActif] ? p : { ...p, [groupeActif]: true }));
+  }, [groupeActif]);
 
   const toggleSection = (id: string, e: React.MouseEvent) => {
     e.preventDefault();

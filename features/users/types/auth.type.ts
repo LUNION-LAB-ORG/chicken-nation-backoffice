@@ -26,6 +26,12 @@ export enum Modules {
   /** Diffusions de messages : séparées de MARKETING pour que le menu Marketing puisse être en lecture seule. */
   DIFFUSIONS = 'broadcasts',
   AUDIT = 'audit',
+  /**
+   * Planning des livreurs (24/10) : son droit propre, pour l'ouvrir au manager
+   * de son restaurant sans lui ouvrir Livreurs. Même valeur que le serveur
+   * (`module-enum.ts`).
+   */
+  PLANNING = 'planning',
   ALL = 'all',
 }
 
