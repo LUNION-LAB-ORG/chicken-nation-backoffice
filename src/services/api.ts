@@ -183,6 +183,12 @@ export async function apiRequest<T>(
     // ✅ SÉCURITÉ: Messages d'erreur sécurisés selon le statut
     let errorMessage: string;
     let messageServeur: string | undefined;
+    // Code machine du refus (`APPEL_EN_COURS`…), quand le serveur en donne un.
+    let code: string | undefined;
+    const lireCode = (d: unknown) => {
+      const c = (d as { code?: unknown } | null)?.code;
+      if (typeof c === 'string' && c.trim()) code = c;
+    };
 
     // Pour debug: récupérer le message d'erreur du serveur pour les 400
     if (response.status === 400) {
@@ -191,6 +197,7 @@ export async function apiRequest<T>(
         console.error('❌ [API] Erreur 400 détaillée:', errorText);
         const errorData = JSON.parse(errorText);
         console.error('❌ [API] Erreur 400 JSON:', errorData);
+        lireCode(errorData);
         errorMessage = errorData.message || errorData.error || 'Requête invalide (400)';
       } catch {
         errorMessage = 'Requête invalide (400)';
@@ -202,6 +209,7 @@ export async function apiRequest<T>(
       const parDefaut = response.status === 409 ? 'Action impossible : la donnée a changé entre-temps.' : 'Accès non autorisé.';
       try {
         const errorData = JSON.parse(await response.text());
+        lireCode(errorData);
         const message = typeof errorData.message === 'string' ? errorData.message : '';
         errorMessage = message && message !== 'Forbidden resource' ? message : parDefaut;
       } catch {
@@ -214,6 +222,7 @@ export async function apiRequest<T>(
       // autres gardent le texte par défaut ci-dessous.
       try {
         const errorData = JSON.parse(await response.text());
+        lireCode(errorData);
         if (typeof errorData?.message === 'string' && errorData.message.trim()) {
           messageServeur = errorData.message;
         }
@@ -247,6 +256,7 @@ export async function apiRequest<T>(
     throw Object.assign(
       new Error(errorMessage),
       messageServeur ? { status: response.status, messageServeur } : { status: response.status },
+      code ? { code } : {},
     );
   } catch (error) {
     // Gérer les erreurs de réseau ou autres
