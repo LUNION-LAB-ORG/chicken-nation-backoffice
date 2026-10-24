@@ -46,6 +46,7 @@ import { useAuthStore } from "../../features/users/hook/authStore";
 import { Modules, Action } from "../../features/users/types/auth.type";
 import { useUnreadCounts } from "../../features/messagerie/hooks/useUnreadCounts";
 import { useNombreARelancer } from "../../features/orders/queries/relance.query";
+import { useNombreAlertesRouges } from "../../features/courses/queries/tableau-livraison.query";
 
 export type CanAccessFn = () => boolean;
 
@@ -69,6 +70,9 @@ export const useGetMenuConfig = (): {
   // Paniers non payés à relancer : lecture du cache de la relance, sans
   // requête de plus ; toujours zéro pour un rôle non habilité (requête coupée).
   const aRelancer = useNombreARelancer();
+  // Alertes rouges de la livraison (tableau du serveur), pour qui voit En
+  // direct ; zéro pour les autres et tant que le serveur n'a pas la route.
+  const alertesRouges = useNombreAlertesRouges();
 
   const navigationItems: NavigationItem[] = [
     {
@@ -105,12 +109,14 @@ export const useGetMenuConfig = (): {
       label: "Livraison",
       icon: Truck,
       canAccess: () => can(Modules.LIVREURS, Action.READ) || can(Modules.PLANNING, Action.READ),
+      badge: alertesRouges > 0 ? alertesRouges : undefined,
       items: [
         {
           id: "livraison-en_direct",
           label: "En direct",
           icon: Radar,
           canAccess: () => can(Modules.LIVREURS, Action.READ),
+          badge: alertesRouges > 0 ? alertesRouges : undefined,
         },
         {
           id: "livraison-courses",

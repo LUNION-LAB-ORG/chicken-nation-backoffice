@@ -13,10 +13,15 @@ export const courseKeyQuery = (...params: unknown[]) => {
   return ['courses', ...params] as const;
 };
 
-/** Invalide toutes les queries du module courses (liste + détail). */
+/**
+ * Invalide toutes les queries du module courses (liste + détail), et le
+ * tableau de la livraison : « À traiter » et le bandeau suivent un geste
+ * (affectation forcée, relance, Turbo, annulation).
+ */
 export const useInvalidateCourseQuery = () => {
   const queryClient = useQueryClient();
   return async () => {
+    void queryClient.invalidateQueries({ queryKey: ['livraison'], exact: false });
     await queryClient.invalidateQueries({
       queryKey: courseKeyQuery(),
       exact: false,
