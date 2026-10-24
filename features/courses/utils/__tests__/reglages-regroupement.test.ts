@@ -127,14 +127,14 @@ describe('libellés', () => {
     );
   });
 
-  test('trajet long (demande du 24/10) : libellés, unités, rangés dans « Attente au comptoir »', () => {
+  test('trajet long (demande du 24/10) : libellés, unités, rangés dans « Attente au restaurant »', () => {
     expect(libelleAvecUnite(def('course.petit_retard_retour_min'))).toBe(
       'Petit retard toléré au retour du livreur (minutes)',
     );
     expect(libelleAvecUnite(def('course.attente_max_trajet_long_s'))).toBe(
       'Attente maximale quand le trajet est long (secondes)',
     );
-    const comptoir = GROUPES_NOUVELLE_METHODE.find((g) => g.titre === 'Attente au comptoir');
+    const comptoir = GROUPES_NOUVELLE_METHODE.find((g) => g.titre === 'Attente au restaurant');
     expect(comptoir.reglages.map((d) => d.cle)).toEqual([
       'course.attente_max_commande_prete_s',
       'course.horizon_preparation_s',

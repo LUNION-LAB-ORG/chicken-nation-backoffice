@@ -69,7 +69,7 @@ interface Props {
 /**
  * Livreur d'une course et son état, tenus à jour par les événements du
  * serveur et par la position en direct du livreur qui vient au restaurant :
- * « Koffi · En route, arrivée vers 12 h 38 », « Au comptoir », « Parti à
+ * « Koffi · En route, arrivée vers 12 h 38 », « Au restaurant », « Parti à
  * 12 h 45 », « Recherche d'un livreur », « Confiée à Turbo », et en rouge
  * « Parti à 12 h 20, CMD-B pas remise » quand il est parti sans un sac.
  *

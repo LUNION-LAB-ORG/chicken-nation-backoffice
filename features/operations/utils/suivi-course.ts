@@ -7,7 +7,7 @@
  * à un livreur encore au restaurant après le retrait. Ce module traduit ces
  * champs en phrases courtes pour la caissière et le siège :
  *
- *  - livreur et son état : « En route, arrivée vers 12 h 38 », « Au comptoir »,
+ *  - livreur et son état : « En route, arrivée vers 12 h 38 », « Au restaurant »,
  *    « Parti à 12 h 45 » ;
  *  - retenue : « Attendre CMD-B, prête vers 12 h 41, départ au plus tard 12 h 44 »,
  *    ou, quand le livreur reviendrait trop tard s'il partait livrer (demande
@@ -454,7 +454,7 @@ export type EtatCourse =
 
 export interface EtatAffiche {
   etat: EtatCourse;
-  /** « En route, arrivée vers 12 h 38 », « Au comptoir », « Parti à 12 h 45 »… */
+  /** « En route, arrivée vers 12 h 38 », « Au restaurant », « Parti à 12 h 45 »… */
   libelle: string;
   /** Prénom du livreur, s'il y en a un. */
   livreur: string | null;
@@ -505,14 +505,14 @@ export function referencesARemettre(courseId: string, commandes: readonly Comman
  *    première livraison démarrée, fenêtre écoulée), la cloche « commande pas
  *    remise » vient de sonner au restaurant et au siège. Seule une position
  *    précise de moins de 2 min, reçue depuis, dans le rayon de départ le
- *    garde « au comptoir » : « Je pars » touché au comptoir, ou fenêtre
+ *    garde « au restaurant » : « Je pars » touché au comptoir, ou fenêtre
  *    fermée par le serveur pendant qu'il attend (réglage coupé, retour à
  *    l'ancienne méthode) ;
  *  - fenêtre fermée d'office (motif ANCIENNE_APPLI, REPLI_V1, AJOUT_COUPE… ;
  *    serveur plus ancien : départ posé à la validation même, `parti_at` égal
  *    à `picked_up_at`) ou retrait non daté :
  *    le serveur n'en sait rien, la caisse remet peut-être le second sac. Le
- *    livreur reste « au comptoir » tant que sa dernière position précise,
+ *    livreur reste « au restaurant » tant que sa dernière position précise,
  *    reçue après la validation, est dans le rayon de départ (15 min au
  *    plus), ou pendant la fenêtre et sa prolongation (6 min) s'il n'y a pas
  *    de telle position. Une position précise plus loin, ou ce délai passé :
@@ -577,13 +577,13 @@ export function texteDepartSansSac(partiAt: string | null | undefined, reference
  *  - sans livreur : « Recherche d'un livreur », « Proposée à un livreur,
  *    réponse avant 12 h 36 », « Confiée à Turbo » ;
  *  - acceptée : « En route, arrivée vers 12 h 38 » (ou « En route »), ou
- *    « Au comptoir » si sa position le dit déjà ;
- *  - au restaurant : « Au comptoir » ;
- *  - retrait validé : « Au comptoir » tant que le serveur n'a pas noté son
+ *    « Au restaurant » si sa position le dit déjà ;
+ *  - au restaurant : « Au restaurant » ;
+ *  - retrait validé : « Au restaurant » tant que le serveur n'a pas noté son
  *    départ et qu'aucune livraison n'a commencé (4 min au plus), puis
  *    « Parti à 12 h 45 », « Parti » ou « En livraison » ;
  *  - une commande de la course reste à remettre (`resteARemettre`) : « Au
- *    comptoir » tant que le livreur peut y être (`partiSansRemise` : un
+ *    restaurant » tant que le livreur peut y être (`partiSansRemise` : un
  *    départ posé dès la première remise, ancienne méthode ou ancienne appli,
  *    ne le fait pas partir devant la caissière qui tend le second sac,
  *    relecture du 23/10) ; vraiment parti : « Parti à 12 h 20, CMD-B pas
@@ -646,7 +646,7 @@ export function etatCourse(
       restaurant: ctx.restaurant ?? null,
       maintenant: ctx.maintenant,
     });
-    if (approche.auRestaurant) return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+    if (approche.auRestaurant) return { etat: 'AU_COMPTOIR', libelle: 'Au restaurant', livreur, ton: 'vert' };
     return {
       etat: 'EN_ROUTE',
       libelle: approche.arrivee ? `En route, arrivée vers ${heureCourte(approche.arrivee)}` : 'En route',
@@ -655,11 +655,11 @@ export function etatCourse(
     };
   }
 
-  if (statut === 'AT_RESTAURANT') return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+  if (statut === 'AT_RESTAURANT') return { etat: 'AU_COMPTOIR', libelle: 'Au restaurant', livreur, ton: 'vert' };
 
   if (statut === 'IN_DELIVERY') {
     if (ctx.resteARemettre) {
-      if (!partiSansRemise(course, ctx)) return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+      if (!partiSansRemise(course, ctx)) return { etat: 'AU_COMPTOIR', libelle: 'Au restaurant', livreur, ton: 'vert' };
       return {
         etat: 'PARTI_SANS_SAC',
         libelle: texteDepartSansSac(course.parti_at, ctx.referencesARemettre ?? []),
@@ -675,7 +675,7 @@ export function etatCourse(
     const retrait = instant(course.picked_up_at);
     const fin = finServeur ?? (retrait !== null ? retrait + FENETRE_APRES_RETRAIT_S * 1000 : null);
     if (fin !== null && t < fin) {
-      return { etat: 'AU_COMPTOIR', libelle: 'Au comptoir', livreur, ton: 'vert' };
+      return { etat: 'AU_COMPTOIR', libelle: 'Au restaurant', livreur, ton: 'vert' };
     }
     return { etat: 'PARTI', libelle: 'Parti', livreur, ton: 'gris' };
   }

@@ -246,7 +246,7 @@ const prenom = (nom: string | null | undefined): string | null => texte(nom)?.sp
 
 /**
  * État en une étiquette : « Recherche d'un livreur », « Proposée à Koffi »,
- * « En route vers le restaurant », « Au comptoir », « En route vers le
+ * « En route vers le restaurant », « Au restaurant », « En route vers le
  * client », « Livrée », « Annulée ». Aucun état connu : null (jamais la
  * valeur brute).
  */
@@ -262,7 +262,7 @@ export function etatLivraison(livraison: LivraisonCommande): EtatAffiche | null 
     case 'vers_restaurant':
       return { cle, libelle: 'En route vers le restaurant', ton: 'bleu' };
     case 'au_comptoir':
-      return { cle, libelle: 'Au comptoir', ton: 'vert' };
+      return { cle, libelle: 'Au restaurant', ton: 'vert' };
     case 'vers_client':
       return { cle, libelle: 'En route vers le client', ton: 'bleu' };
     case 'livree':
@@ -338,7 +338,7 @@ export interface LigneFrise {
   heure: string | null;
   /** « vers 12 h 55 » pour une étape pas encore passée, si le serveur la prévoit. */
   prevue: string | null;
-  /** Durée qui mène à cette étape : « 6 min de trajet », « 4 min au comptoir ». */
+  /** Durée qui mène à cette étape : « 6 min de trajet », « 4 min au restaurant ». */
   duree: string | null;
   statut: StatutLigne;
 }
@@ -408,7 +408,7 @@ export function lignesFrise(livraison: LivraisonCommande): LigneFrise[] {
       return t ? `${t} ${suffixe}` : null;
     };
     if (cle === 'arrivee_restaurant') return avec(d.vers_restaurant_s, 'de trajet');
-    if (cle === 'recuperee') return avec(d.attente_comptoir_s, 'au comptoir');
+    if (cle === 'recuperee') return avec(d.attente_comptoir_s, 'au restaurant');
     if (cle === 'arrivee_client') return avec(d.vers_client_s, 'de trajet');
     if (cle === 'livree' && !montrees.includes('arrivee_client')) return avec(d.vers_client_s, 'de trajet');
     return null;

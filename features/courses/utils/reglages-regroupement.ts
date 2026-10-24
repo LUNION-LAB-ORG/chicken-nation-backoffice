@@ -86,7 +86,7 @@ export const METHODES: { valeur: Methode; libelle: string; description: string }
     valeur: 'v2',
     libelle: 'Nouvelle',
     description:
-      "La course part dès qu'une commande est prête et reçoit les commandes de la même direction. Elle attend au comptoir une commande presque prête, ou plus longtemps quand le trajet est long, dans les limites ci-dessous.",
+      "La course part dès qu'une commande est prête et reçoit les commandes de la même direction. Elle attend au restaurant une commande presque prête, ou plus longtemps quand le trajet est long, dans les limites ci-dessous.",
   },
   {
     valeur: 'v1',
@@ -148,7 +148,7 @@ const metres = 'mètres';
 
 export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
   {
-    titre: 'Attente au comptoir',
+    titre: 'Attente au restaurant',
     description:
       "Une commande prête peut attendre une commande de la même direction encore en préparation, jamais au-delà de ces limites. La commande attendue est ajoutée dès qu'elle est prête. Si le livreur ne peut pas livrer et revenir à temps pour elle, le trajet est long et l'attente peut durer plus.",
     reglages: [

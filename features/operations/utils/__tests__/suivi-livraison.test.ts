@@ -122,7 +122,7 @@ describe('livreur et son état', () => {
     expect(libelle('proposee')).toBe('Proposée à Andy');
     expect(libelle('proposee', null)).toBe('Proposée à un livreur');
     expect(libelle('vers_restaurant')).toBe('En route vers le restaurant');
-    expect(libelle('au_comptoir')).toBe('Au comptoir');
+    expect(libelle('au_comptoir')).toBe('Au restaurant');
     expect(libelle('vers_client')).toBe('En route vers le client');
     expect(libelle('livree')).toBe('Livrée');
     expect(libelle('annulee')).toBe('Annulée');
@@ -210,7 +210,7 @@ describe('frise', () => {
     expect(resume(l)).toEqual([
       ['Course acceptée', 'faite', '12 h 30', null],
       ['Arrivé au restaurant', 'faite', '12 h 36', '6 min de trajet'],
-      ['Commande récupérée', 'faite', '12 h 40', '4 min au comptoir'],
+      ['Commande récupérée', 'faite', '12 h 40', '4 min au restaurant'],
       ['Arrivé chez le client', 'faite', '12 h 52', '12 min de trajet'],
       ['Livrée', 'faite', '12 h 54', null],
     ]);

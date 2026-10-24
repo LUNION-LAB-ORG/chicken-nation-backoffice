@@ -222,18 +222,18 @@ describe('état de la course et de son livreur', () => {
     });
   });
 
-  test('acceptée : en route avec l\'heure d\'arrivée, ou au comptoir si sa position le dit', () => {
+  test('acceptée : en route avec l\'heure d\'arrivée, ou au restaurant si sa position le dit', () => {
     expect(etatCourse(course(), { maintenant })).toMatchObject({ etat: 'EN_ROUTE', libelle: 'En route', livreur: 'Koffi' });
     expect(etatCourse(course({ arrivee_estimee: ISO('12:38') }), { maintenant }).libelle).toBe('En route, arrivée vers 12 h 38');
     expect(
       etatCourse(course(), { maintenant, position: { ...PRES, ts: ISO('12:29') }, restaurant: RESTO }),
-    ).toMatchObject({ etat: 'AU_COMPTOIR', libelle: 'Au comptoir' });
+    ).toMatchObject({ etat: 'AU_COMPTOIR', libelle: 'Au restaurant' });
   });
 
-  test('au restaurant : au comptoir', () => {
+  test('au restaurant : « Au restaurant »', () => {
     expect(etatCourse(course({ statut: 'AT_RESTAURANT' }), { maintenant })).toMatchObject({
       etat: 'AU_COMPTOIR',
-      libelle: 'Au comptoir',
+      libelle: 'Au restaurant',
       ton: 'vert',
     });
   });
@@ -277,7 +277,7 @@ describe('état de la course et de son livreur', () => {
     expect(etatCourse(parti, { maintenant }).libelle).toBe('Parti à 12 h 28');
     expect(etatCourse(parti, { maintenant, resteARemettre: true })).toMatchObject({
       etat: 'AU_COMPTOIR',
-      libelle: 'Au comptoir',
+      libelle: 'Au restaurant',
     });
     const commandes = [
       commande('1', 'PICKED_UP', { statut: 'IN_DELIVERY' }),
@@ -309,7 +309,7 @@ describe('parti sans un sac (relecture du 24/10)', () => {
   ];
   const partie = courseDeCommande(commandes[0]);
 
-  test('départ réel noté par le serveur : « Parti à 12 h 20, CMD-B pas remise » en rouge, pas « Au comptoir »', () => {
+  test('départ réel noté par le serveur : « Parti à 12 h 20, CMD-B pas remise » en rouge, pas « Au restaurant »', () => {
     const refs = referencesARemettre('k1', commandes);
     expect(refs).toEqual(['CMD-B']);
     for (const maintenant of [A('12:20', '30'), A('12:30'), A('12:55')]) {
