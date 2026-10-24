@@ -70,9 +70,7 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
     <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-lg bg-blue-50 border border-blue-200 px-3 py-2">
         <Info className="w-4 h-4 text-blue-600 shrink-0" />
-        <p className="text-xs text-blue-800">
-          Livraison gérée par <strong>Turbo Delivery</strong> — workflow manuel.
-        </p>
+        <p className="text-xs text-blue-800">Livraison confiée à Turbo.</p>
       </div>
 
       {next ? (
@@ -90,7 +88,7 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
         </button>
       ) : (
         <p className="text-sm text-gray-500 text-center py-4">
-          Commande terminée — aucune action disponible.
+          Commande terminée : aucune action disponible.
         </p>
       )}
       <DrawerCancelAction order={order} />
