@@ -443,3 +443,23 @@ describe('fenêtre du livreur', () => {
     expect(texteDernierePosition(null, MAINTENANT)).toBeNull();
   });
 });
+
+describe('livreur en appel avec le service client (serveur du 24/10)', () => {
+  test('rangé dans « Disponibles », pastille « En appel »', () => {
+    expect(sectionDuLivreur('EN_APPEL', null)).toBe('DISPONIBLES');
+    const l = livreur('Koffi', 'EN_APPEL', { disponibilite: { libelle: 'En appel', en_service: true } });
+    expect(ligneEnDirect(l, UN)).toMatchObject({ etat: 'EN_APPEL', section: 'DISPONIBLES', libelleEtat: 'En appel', detail: '' });
+  });
+
+  test('après les disponibles et les offres en attente, comme au serveur', () => {
+    const sections = groupesEnDirect(
+      [
+        livreur('Appel', 'EN_APPEL', { disponibilite: { libelle: 'En appel' } }),
+        livreur('Offre', 'OFFRE_EN_ATTENTE'),
+        livreur('Un', 'DISPONIBLE', { rang_file: 1 }),
+      ],
+      UN,
+    );
+    expect(sections.map((s) => [s.titre, s.lignes.map((l) => l.nom)])).toEqual([['Disponibles', ['Un', 'Offre', 'Appel']]]);
+  });
+});

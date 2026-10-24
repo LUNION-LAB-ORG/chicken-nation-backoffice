@@ -16,6 +16,7 @@ import {
   detailEtatDuJour,
   dureeEnLigne,
   enTeteRestaurant,
+  estEnService,
   estReplie,
   planningDuJour,
   rangDuLivreur,
@@ -199,7 +200,7 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
         {blocs.map((bloc) => {
           const visibles = bloc.lignes.filter((l) => !l.replie);
           const replies = bloc.lignes.filter((l) => l.replie);
-          const enService = bloc.lignes.filter((l) => l.etat !== 'HORS_SERVICE' && l.etat !== 'INACTIF').length;
+          const enService = bloc.lignes.filter((l) => estEnService(l.etat)).length;
           const ouvert = !!hsOuverts[bloc.id];
           const ligne = (l: LigneCalculee) => (
             <LigneLivreurDuJour

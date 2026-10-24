@@ -77,3 +77,12 @@ describe('restaurant de la ligne', () => {
     expect(restaurantDeLaLigne({ role: 'LIVRAISON_OPS', type: 'BACKOFFICE' }, null)).toBe(null);
   });
 });
+
+describe('livreur en appel avec le service client (serveur du 24/10)', () => {
+  test('« Koffi en appel », couleur des disponibles, jamais retiré de la ligne', () => {
+    expect(texteLivreurDeLigne(livreur({ prenom: 'Koffi', etat: 'EN_APPEL' }))).toBe('Koffi en appel');
+    expect(pastillesLivreurs([livreur({ prenom: 'Koffi', etat: 'EN_APPEL' })])).toEqual([
+      { id: 'Koffi', etat: 'EN_APPEL', texte: 'Koffi en appel' },
+    ]);
+  });
+});

@@ -70,6 +70,7 @@ export function sectionDuLivreur(
       return 'EN_COURSE';
     case 'DISPONIBLE':
     case 'OFFRE_EN_ATTENTE':
+    case 'EN_APPEL':
       return 'DISPONIBLES';
     case 'EN_PAUSE':
     case 'PAUSE_AUTO':
@@ -194,7 +195,7 @@ function detailDeSection(
       return minutes === null ? 'au restaurant' : `au restaurant depuis ${dureeLisible(minutes)}`;
     }
     case 'DISPONIBLES':
-      // Offre en attente : la pastille le dit, la ligne reste vide.
+      // Offre en attente, en appel : la pastille le dit, la ligne reste vide.
       return etat === 'DISPONIBLE' ? placeDansLaFile(rang) : null;
     case 'EN_PAUSE':
       return etat === 'PAUSE_AUTO'
@@ -257,8 +258,8 @@ function cleDeTri(
       // Celui qui attend depuis le plus longtemps d'abord.
       return { groupe: 0, valeur: instant(c?.at_restaurant_at) };
     case 'DISPONIBLES':
-      // Ordre de la file, puis ceux qui ont une offre à lire.
-      return { groupe: etat === 'DISPONIBLE' ? 0 : 1, valeur: rang };
+      // Ordre de la file, puis ceux qui ont une offre à lire, puis ceux en appel (ordre du serveur).
+      return { groupe: rangEtat(etat), valeur: rang };
     case 'EN_PAUSE': {
       // Celui qui revient le plus tôt d'abord ; pause sans fin en dernier.
       const fin = etat === 'PAUSE_AUTO'
@@ -272,16 +273,12 @@ function cleDeTri(
 }
 
 /**
- * État du livreur à l'instant. « Injoignable » (ni appli connectée ni
- * notifications, état que ce backoffice ne connaît pas) est rangé avec les
- * applis fermées, comme le bandeau des restaurants ; un autre état inconnu
- * est « Hors service », jamais « Disponible ».
+ * État du livreur à l'instant, par la règle commune de `etatLivreur`
+ * (« Injoignable » avec les applis fermées, un état inconnu « Hors
+ * service ») ; rien de connu : « Hors service ».
  */
 export function etatEnDirect(l: IDelivererLive, maintenant: Date): { etat: EtatDisponibilite; libelle: string } {
   const affiche = etatLivreurAffiche(l, maintenant);
-  if ((l.disponibilite?.etat as string | undefined) === 'INJOIGNABLE') {
-    return { etat: 'APPLI_FERMEE', libelle: affiche?.libelle || NOM_ETAT.APPLI_FERMEE };
-  }
   return { etat: affiche?.etat ?? 'HORS_SERVICE', libelle: affiche?.libelle ?? NOM_ETAT.HORS_SERVICE };
 }
 

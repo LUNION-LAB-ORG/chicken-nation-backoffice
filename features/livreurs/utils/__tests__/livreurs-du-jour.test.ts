@@ -7,12 +7,14 @@ import {
   detailEtatDuJour,
   dureeEnLigne,
   enTeteRestaurant,
+  estEnService,
   estReplie,
   jusquA,
   placeDansLaFile,
   planningDuJour,
   rangDuLivreur,
 } from '../livreurs-du-jour';
+import { etatLivreurAffiche } from '../disponibilite';
 
 /**
  * Vue Livreurs « Aujourd'hui » (conception du 24/10, 10.2) : détail de
@@ -188,5 +190,43 @@ describe('tri et repli', () => {
     expect(enTeteRestaurant('Angré', 6, 8, 7)).toBe('Angré · 6 en service sur 8 · 7 prévus');
     expect(enTeteRestaurant('Angré', 6, 8, null)).toBe('Angré · 6 en service sur 8');
     expect(enTeteRestaurant('Angré', 1, 2, 1)).toBe('Angré · 1 en service sur 2 · 1 prévu');
+  });
+});
+
+describe('« Aujourd’hui » : livreur en appel ou injoignable (serveur du 24/10)', () => {
+  const dispo = (etat, libelle) => ({
+    etat,
+    libelle,
+    peut_recevoir_offre: false,
+    message_refus: null,
+    en_pause: false,
+    en_pause_auto: false,
+    pause_until: null,
+    auto_pause_until: null,
+    en_service: true,
+    en_course: false,
+    offre_en_attente: false,
+    offre_course_id: null,
+    appli_active: true,
+  });
+
+  test('en appel : en service, jamais replié sous « Hors service »', () => {
+    const affiche = etatLivreurAffiche({ disponibilite: dispo('EN_APPEL', 'En appel') }, MAINTENANT);
+    expect(affiche?.etat).toBe('EN_APPEL');
+    expect(estEnService(affiche.etat)).toBe(true);
+    expect(estReplie(affiche.etat, null)).toBe(false);
+  });
+
+  test('injoignable : « Appli fermée », en service comme au bandeau', () => {
+    const affiche = etatLivreurAffiche({ disponibilite: dispo('INJOIGNABLE', 'Injoignable') }, MAINTENANT);
+    expect(affiche).toMatchObject({ etat: 'APPLI_FERMEE', libelle: 'Injoignable' });
+    expect(estEnService(affiche.etat)).toBe(true);
+    expect(estReplie(affiche.etat, 'EVENING')).toBe(false);
+    expect(detailEtatDuJour(affiche.etat, { rang: null, prevuAuCreneau: 'EVENING' }, MAINTENANT).ambre).toBe(false);
+  });
+
+  test('hors service et inactif : pas en service', () => {
+    expect(estEnService('HORS_SERVICE')).toBe(false);
+    expect(estEnService('INACTIF')).toBe(false);
   });
 });

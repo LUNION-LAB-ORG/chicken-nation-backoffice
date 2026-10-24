@@ -4,8 +4,9 @@
  *
  * Une pastille par livreur en service du restaurant affiché, couleur de son
  * état : « Koffi au restaurant », « Koffi vers le restaurant », « Awa en
- * livraison », « Yao 1er de la file », « Inès offre en attente », « Diane en
- * pause », « Ali appli fermée ». Hors service et inactifs n'y sont pas.
+ * livraison », « Yao 1er de la file », « Inès offre en attente », « Koffi en
+ * appel », « Diane en pause », « Ali appli fermée ». Hors service et inactifs
+ * n'y sont pas.
  *
  * Données : `restaurants[].liste[]` de `GET /livraison/tableau`, déjà
  * rangées par le serveur (état, puis place dans la file) : l'ordre est gardé.
@@ -14,7 +15,7 @@
 import { etatAffichable } from '../../courses/utils/tableau-livraison';
 import type { LivreurDuTableau } from '../../courses/types/tableau-livraison.types';
 import type { EtatDisponibilite } from '../../livreurs/types/livreur.types';
-import { placeDansLaFile } from '../../livreurs/utils/livreurs-du-jour';
+import { estEnService, placeDansLaFile } from '../../livreurs/utils/livreurs-du-jour';
 import { estCompteDeRestaurant } from './code-retrait';
 
 export interface PastilleLivreur {
@@ -51,6 +52,8 @@ function activite(l: LivreurDuTableau, etat: EtatDisponibilite): string {
       return placeDansLaFile(l.rang_file) ?? 'disponible';
     case 'OFFRE_EN_ATTENTE':
       return 'offre en attente';
+    case 'EN_APPEL':
+      return 'en appel';
     case 'EN_PAUSE':
       return 'en pause';
     case 'PAUSE_AUTO':
@@ -72,6 +75,6 @@ export function texteLivreurDeLigne(l: LivreurDuTableau): string {
 export function pastillesLivreurs(liste: readonly LivreurDuTableau[]): PastilleLivreur[] {
   return liste
     .map((l) => ({ l, etat: etatAffichable(l.etat) }))
-    .filter(({ etat }) => etat !== 'HORS_SERVICE' && etat !== 'INACTIF')
+    .filter(({ etat }) => estEnService(etat))
     .map(({ l, etat }) => ({ id: l.id, etat, texte: texteLivreurDeLigne(l) }));
 }

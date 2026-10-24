@@ -21,6 +21,7 @@ import {
   choixAffectation,
   comparerPourAffectation,
   correspondAuFiltre,
+  etatConnu,
   etatLivreur,
   etatLivreurAffiche,
   libellePresence,
@@ -410,9 +411,15 @@ const regle = join(import.meta.dir, '../../../../../backend/src/modules/delivere
 describe.skipIf(!existsSync(regle))('« Appli fermée », fidèle au serveur', () => {
   const source = existsSync(regle) ? readFileSync(regle, 'utf8') : '';
 
-  test('motif dit juste après « hors service », comme `etatLivreur` et la fenêtre', () => {
-    const motifs = [...source.matchAll(/return \{ ok: false, motif: '([A-Z_]+)' \}/g)].map((m) => m[1]);
-    expect(motifs.slice(-2)).toEqual(['HORS_SERVICE', 'APPLI_FERMEE']);
+  const motifs = [...source.matchAll(/return \{ ok: false, motif: '([A-Z_]+)' \}/g)].map((m) => m[1]);
+
+  test('motif dit juste après « hors service », puis injoignable et en appel, comme `etatLivreur` et la fenêtre', () => {
+    expect(motifs.slice(-4)).toEqual(['HORS_SERVICE', 'APPLI_FERMEE', 'INJOIGNABLE', 'EN_APPEL']);
+  });
+
+  test('chaque état du serveur a sa place à l’écran, aucun ne tombe en « Hors service »', () => {
+    const perdus = motifs.filter((m) => m !== 'HORS_SERVICE' && etatConnu(m) === 'HORS_SERVICE');
+    expect(perdus).toEqual([]);
   });
 
   test('libellé et refus du serveur, mot pour mot', () => {

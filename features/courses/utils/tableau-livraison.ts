@@ -12,6 +12,7 @@
  */
 
 import type { EtatDisponibilite } from '../../livreurs/types/livreur.types';
+import { etatConnu } from '../../livreurs/utils/disponibilite';
 import type { CleSignal, RestaurantDuTableau, SignalLivraison, TableauLivraison } from '../types/tableau-livraison.types';
 
 // ============================================================
@@ -38,25 +39,13 @@ export function estRouteAbsente(erreur: unknown): boolean {
 // ÉTAT D'UN LIVREUR DU TABLEAU
 // ============================================================
 
-const ETATS_CONNUS: ReadonlySet<string> = new Set<EtatDisponibilite>([
-  'DISPONIBLE',
-  'OFFRE_EN_ATTENTE',
-  'EN_COURSE',
-  'EN_PAUSE',
-  'PAUSE_AUTO',
-  'APPLI_FERMEE',
-  'HORS_SERVICE',
-  'INACTIF',
-]);
-
 /**
- * État à montrer. « Injoignable » (ni connexion ni notification) est compté
- * par le serveur avec les applis fermées : même pastille. Un état inconnu
- * de cet écran : « Hors service », jamais « Disponible ».
+ * État à montrer, par la règle commune (`etatConnu`) : « En appel » avec sa
+ * pastille, « Injoignable » avec les applis fermées (le serveur les compte
+ * ainsi), un état inconnu « Hors service », jamais « Disponible ».
  */
 export function etatAffichable(etat: string | null | undefined): EtatDisponibilite {
-  if (etat === 'INJOIGNABLE') return 'APPLI_FERMEE';
-  return etat && ETATS_CONNUS.has(etat) ? (etat as EtatDisponibilite) : 'HORS_SERVICE';
+  return etatConnu(etat);
 }
 
 // ============================================================

@@ -18,6 +18,14 @@ export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
  * a été fermée (ni connexion temps réel ni signal depuis
  * `deliverer.appli_fermee_apres_s`) : plus aucune offre, sans pause ni
  * pénalité, jusqu'à ce qu'il la rouvre.
+ *
+ * `EN_APPEL` (serveur du 24/10) : en appel avec le service client. Il reste
+ * en service et dans la file, et reçoit de nouveau des offres à la fin de
+ * l'appel : le serveur le compte avec les disponibles.
+ *
+ * Le serveur envoie aussi `INJOIGNABLE` (ni connexion ni jeton de
+ * notification) : l'écran le range avec les applis fermées, comme le
+ * bandeau (`etatConnu`).
  */
 export type EtatDisponibilite =
   | 'DISPONIBLE'
@@ -26,6 +34,7 @@ export type EtatDisponibilite =
   | 'PAUSE_AUTO'
   | 'EN_COURSE'
   | 'OFFRE_EN_ATTENTE'
+  | 'EN_APPEL'
   | 'HORS_SERVICE'
   | 'APPLI_FERMEE';
 

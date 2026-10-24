@@ -215,3 +215,9 @@ describe('alertes', () => {
     expect(actionsATraiter(signal({ cle: 'SANS_LIVREUR', course: null }))).toEqual([]);
   });
 });
+
+describe('état « En appel » du tableau (serveur du 24/10)', () => {
+  test('connu de l’écran, jamais « Hors service »', () => {
+    expect(etatAffichable('EN_APPEL')).toBe('EN_APPEL');
+  });
+});

@@ -173,9 +173,14 @@ export function comparerLivreursDuJour(a: CleDeTri, b: CleDeTri): number {
   return a.nom.localeCompare(b.nom, 'fr');
 }
 
+/** En service : tout état sauf « Hors service » et « Inactif » (en appel et appli fermée compris, comme le bandeau). */
+export function estEnService(etat: EtatDisponibilite): boolean {
+  return etat !== 'HORS_SERVICE' && etat !== 'INACTIF';
+}
+
 /** Hors service ou inactif, et pas attendu au créneau en cours : replié sous « Hors service ». */
 export function estReplie(etat: EtatDisponibilite, prevuAuCreneau: string | null | undefined): boolean {
-  return (etat === 'HORS_SERVICE' || etat === 'INACTIF') && !prevuAuCreneau;
+  return !estEnService(etat) && !prevuAuCreneau;
 }
 
 /** « Angré · 6 en service sur 8 · 7 prévus » (prévus seulement si un planning couvre la journée). */

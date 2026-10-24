@@ -43,6 +43,7 @@ export interface EtatAffiche {
 export const ORDRE_ETATS: EtatDisponibilite[] = [
   'DISPONIBLE',
   'OFFRE_EN_ATTENTE',
+  'EN_APPEL',
   'EN_COURSE',
   'EN_PAUSE',
   'PAUSE_AUTO',
@@ -55,6 +56,7 @@ export const ORDRE_ETATS: EtatDisponibilite[] = [
 export const NOM_ETAT: Record<EtatDisponibilite, string> = {
   DISPONIBLE: 'Disponible',
   OFFRE_EN_ATTENTE: 'Offre en attente',
+  EN_APPEL: 'En appel',
   EN_COURSE: 'En course',
   EN_PAUSE: 'En pause',
   PAUSE_AUTO: 'Pause automatique',
@@ -63,9 +65,16 @@ export const NOM_ETAT: Record<EtatDisponibilite, string> = {
   APPLI_FERMEE: 'Appli fermée',
 };
 
-/** Couleurs d'un état : `couleur` pour la pastille et le marqueur, `fond` et `texte` pour l'étiquette. */
+const COULEURS_DISPONIBLE = { couleur: '#17C964', fond: '#DCFCE7', texte: '#166534' };
+
+/**
+ * Couleurs d'un état : `couleur` pour la pastille et le marqueur, `fond` et
+ * `texte` pour l'étiquette. « En appel » prend celle des disponibles (aucune
+ * nouvelle couleur) : le serveur le compte avec eux.
+ */
 export const COULEURS_ETAT: Record<EtatDisponibilite, { couleur: string; fond: string; texte: string }> = {
-  DISPONIBLE: { couleur: '#17C964', fond: '#DCFCE7', texte: '#166534' },
+  DISPONIBLE: COULEURS_DISPONIBLE,
+  EN_APPEL: COULEURS_DISPONIBLE,
   OFFRE_EN_ATTENTE: { couleur: '#7C3AED', fond: '#EDE9FE', texte: '#5B21B6' },
   EN_COURSE: { couleur: '#007AFF', fond: '#DBEAFE', texte: '#1E40AF' },
   EN_PAUSE: { couleur: '#F5A524', fond: '#FEF3C7', texte: '#92400E' },
@@ -142,6 +151,8 @@ function textes(etat: EtatDisponibilite, pauses: Pauses, maintenant: Date): { li
       return { libelle: 'En course', raison: 'Ce livreur a déjà une course en cours.' };
     case 'OFFRE_EN_ATTENTE':
       return { libelle: 'Offre en attente', raison: 'Ce livreur a déjà une offre en attente de réponse.' };
+    case 'EN_APPEL':
+      return { libelle: NOM_ETAT.EN_APPEL, raison: 'Ce livreur est en appel avec le service client.' };
     case 'HORS_SERVICE':
       return {
         libelle: 'Hors service',
@@ -176,6 +187,19 @@ function etatApresPause(d: DisponibiliteLivreur, maintenant: Date, verifierPause
 }
 
 /**
+ * État envoyé par le serveur, ramené aux états de cet écran (règle commune à
+ * Commandes, Livreurs, « Aujourd'hui » et En direct) :
+ *  - « Injoignable » (ni connexion ni jeton de notification) : avec les
+ *    applis fermées, comme le bandeau des restaurants ;
+ *  - un état que ce backoffice ne connaît pas (serveur déployé après lui) :
+ *    « Hors service », jamais « Disponible ».
+ */
+export function etatConnu(etat: string | null | undefined): EtatDisponibilite {
+  if (etat === 'INJOIGNABLE') return 'APPLI_FERMEE';
+  return etat && Object.hasOwn(COULEURS_ETAT, etat) ? (etat as EtatDisponibilite) : 'HORS_SERVICE';
+}
+
+/**
  * État du livreur à l'instant `maintenant`, à partir de ce que le serveur a
  * calculé au chargement. Tant que l'état n'a pas bougé, les textes sont ceux
  * du serveur, tels quels.
@@ -189,13 +213,14 @@ export function etatLivreur(
   maintenant: Date,
   appliActive: boolean | null | undefined = d.appli_active,
 ): EtatAffiche {
-  // État que ce backoffice ne connaît pas (serveur déployé avant lui) :
-  // « hors service », jamais « disponible », avec le texte du serveur. Sans
-  // cela, la liste et la carte plantaient faute de couleurs pour cet état.
+  // État que cet écran ne connaît pas tel quel (« Injoignable », état d'un
+  // serveur plus récent) : ramené par `etatConnu`, avec le texte du serveur.
+  // Sans cela, la liste et la carte plantaient faute de couleurs pour cet état.
   if (!Object.hasOwn(COULEURS_ETAT, d.etat)) {
+    const etat = etatConnu(d.etat);
     return {
-      etat: 'HORS_SERVICE',
-      libelle: d.libelle || NOM_ETAT.HORS_SERVICE,
+      etat,
+      libelle: d.libelle || NOM_ETAT[etat],
       peutRecevoirOffre: false,
       raison: d.message_refus,
     };
@@ -207,7 +232,8 @@ export function etatLivreur(
     // La pause manuelle passe avant : si le serveur a dit « pause automatique », il n'y en avait pas.
     etat = etatApresPause(d, maintenant, false);
   }
-  if (etat === 'DISPONIBLE' && appliActive === false) etat = 'APPLI_FERMEE';
+  // L'appli fermée passe avant l'appel, comme au serveur.
+  if ((etat === 'DISPONIBLE' || etat === 'EN_APPEL') && appliActive === false) etat = 'APPLI_FERMEE';
 
   if (etat !== d.etat || !d.libelle) return construire(etat, d, maintenant);
   return { etat, libelle: d.libelle, peutRecevoirOffre: d.peut_recevoir_offre, raison: d.message_refus };
@@ -265,6 +291,7 @@ export const FILTRES_CARTE: { cle: FiltreCarte; libelle: string }[] = [
 const FILTRE_DE_L_ETAT: Record<EtatDisponibilite, Exclude<FiltreCarte, 'TOUS'>> = {
   DISPONIBLE: 'DISPONIBLE',
   OFFRE_EN_ATTENTE: 'DISPONIBLE',
+  EN_APPEL: 'DISPONIBLE',
   EN_COURSE: 'EN_COURSE',
   EN_PAUSE: 'EN_PAUSE',
   PAUSE_AUTO: 'EN_PAUSE',
@@ -273,7 +300,7 @@ const FILTRE_DE_L_ETAT: Record<EtatDisponibilite, Exclude<FiltreCarte, 'TOUS'>> 
   APPLI_FERMEE: 'APPLI_FERMEE',
 };
 
-/** « En pause » regroupe la pause et la pause automatique, « Disponibles » ceux qui ont une offre à lire. */
+/** « En pause » regroupe la pause et la pause automatique, « Disponibles » ceux qui ont une offre à lire ou sont en appel. */
 export function correspondAuFiltre(etat: EtatDisponibilite, filtre: FiltreCarte): boolean {
   return filtre === 'TOUS' || FILTRE_DE_L_ETAT[etat] === filtre;
 }

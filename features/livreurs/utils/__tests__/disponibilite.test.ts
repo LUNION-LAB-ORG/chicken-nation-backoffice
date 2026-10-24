@@ -380,3 +380,55 @@ describe('état que ce backoffice ne connaît pas (serveur déployé avant lui)'
     expect(etatLivreur(d, A('14:00')).etat).toBe('APPLI_FERMEE');
   });
 });
+
+describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () => {
+  const enAppel = () =>
+    dispo({
+      etat: 'EN_APPEL',
+      libelle: 'En appel',
+      peut_recevoir_offre: false,
+      message_refus: 'Ce livreur est en appel avec le service client.',
+    });
+
+  test('« En appel » : un état connu, compté avec les disponibles comme au serveur', () => {
+    expect(etatLivreur(enAppel(), A('14:00'))).toEqual({
+      etat: 'EN_APPEL',
+      libelle: 'En appel',
+      peutRecevoirOffre: false,
+      raison: 'Ce livreur est en appel avec le service client.',
+    });
+    expect(etatLivreurAffiche({ disponibilite: enAppel() }, A('14:00'))?.etat).toBe('EN_APPEL');
+    expect(NOM_ETAT.EN_APPEL).toBe('En appel');
+    // Aucune nouvelle couleur : celle des disponibles.
+    expect(COULEURS_ETAT.EN_APPEL).toEqual(COULEURS_ETAT.DISPONIBLE);
+    // Rangé juste après les disponibles et les offres en attente, comme au serveur.
+    expect(ORDRE_ETATS.indexOf('EN_APPEL')).toBe(ORDRE_ETATS.indexOf('OFFRE_EN_ATTENTE') + 1);
+    expect(correspondAuFiltre('EN_APPEL', 'DISPONIBLE')).toBe(true);
+  });
+
+  test('« En appel » dans la fenêtre « Forcer l’affectation » : pas sélectionnable, raison du serveur', () => {
+    expect(choixAffectation(enAppel(), COURSE, A('14:00'))).toMatchObject({
+      etat: 'EN_APPEL',
+      selectionnable: false,
+      raison: 'Ce livreur est en appel avec le service client.',
+    });
+  });
+
+  test('« Injoignable » : avec les applis fermées, libellé du serveur gardé', () => {
+    const d = dispo({
+      etat: 'INJOIGNABLE',
+      libelle: 'Injoignable',
+      peut_recevoir_offre: false,
+      message_refus: 'Ce livreur est injoignable : ni appli connectée, ni notifications.',
+    });
+    expect(etatLivreur(d, A('14:00'))).toEqual({
+      etat: 'APPLI_FERMEE',
+      libelle: 'Injoignable',
+      peutRecevoirOffre: false,
+      raison: 'Ce livreur est injoignable : ni appli connectée, ni notifications.',
+    });
+    expect(etatLivreurAffiche({ disponibilite: d }, A('14:00'))?.etat).toBe('APPLI_FERMEE');
+    // Sans libellé : le nom de l'état affiché.
+    expect(etatLivreur(dispo({ etat: 'INJOIGNABLE', libelle: '' }), A('14:00')).libelle).toBe('Appli fermée');
+  });
+});
