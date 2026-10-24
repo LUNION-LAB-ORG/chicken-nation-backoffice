@@ -36,12 +36,14 @@ export function estAConfirmer(
 /**
  * Ce que deviendra la commande si elle passe au call center.
  *
- * Le MONTANT reste tel quel quand il est déjà engagé, par ordre de priorité :
- *  - `payee` : commande payée ;
- *  - `livraison` : commande à livrer prête ou plus loin (la course est partie
- *    avec ce montant à encaisser) ;
- *  - `site` : commande du site à payer à la livraison, le client a accepté ce
- *    total sur le site, frais de service compris.
+ * Demande du 24/10 : la taxe tombe à zéro et le total est refait, y compris
+ * pour une commande du site à payer à la livraison ou une livraison déjà
+ * prête. Le MONTANT ne reste tel quel que pour une commande déjà payée
+ * (`payee`). Une livraison déjà confiée à Turbo garde aussi son montant :
+ * l'écran ne le sait pas, le serveur le dit à l'agent après l'enregistrement.
+ *
+ * `fraisDuSite` : commande du site à payer à la livraison ; ses frais de
+ * LIVRAISON restent tant que la livraison ne change pas (serveur, même règle).
  *
  * Le PAIEMENT passe à la caisse quand la commande était payable dans
  * l'application, qu'il reste à payer, et qu'aucun encaissement de livreur
@@ -50,23 +52,13 @@ export function estAConfirmer(
  * commande de l'application payable en ligne.
  */
 export function apresBascule(commande: CommandeBascule): {
-  montantFige: "payee" | "livraison" | "site" | null;
+  montantFige: "payee" | null;
+  fraisDuSite: boolean;
   paiement: "caisse" | "livreur" | "inchange";
 } {
-  const livraisonLancee =
-    commande.orderType === "À livrer" &&
-    commande.rawStatus !== OrderStatus.PENDING &&
-    commande.rawStatus !== OrderStatus.ACCEPTED &&
-    commande.rawStatus !== OrderStatus.IN_PROGRESS;
-  const fraisAcceptesSurLeSite =
+  const fraisDuSite =
     !commande.paied && commande.channel === "WEB" && commande.paymentChannel === "Restaurant" && !!commande.auto;
-  const montantFige = commande.paied
-    ? "payee"
-    : livraisonLancee
-      ? "livraison"
-      : fraisAcceptesSurLeSite
-        ? "site"
-        : null;
+  const montantFige = commande.paied ? "payee" : null;
 
   const paiements = commande.paiements ?? [];
   const dejaPercu = paiements
@@ -76,7 +68,7 @@ export function apresBascule(commande: CommandeBascule): {
   if (commande.paymentChannel === "Appli" && !commande.paied && commande.amount - dejaPercu > 50) {
     paiement = paiements.some((p) => p.status === PaiementStatus.PENDING) ? "livreur" : "caisse";
   }
-  return { montantFige, paiement };
+  return { montantFige, fraisDuSite, paiement };
 }
 
 /**

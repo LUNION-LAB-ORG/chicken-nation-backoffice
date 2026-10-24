@@ -53,8 +53,8 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // modification d'une annulée la laisse annulée.
   const reactivation = repriseTelephone && annulee;
   // Après réactivation, la commande part comme un panier en attente repris :
-  // taxe à zéro, total refait, paiement à la caisse ; une commande du site à
-  // payer à la livraison garde sa taxe et son total. Le calcul se fait donc
+  // taxe à zéro, total refait, paiement à la caisse (une commande du site à
+  // payer à la livraison aussi, depuis le 24/10). Le calcul se fait donc
   // sur le statut d'avant l'annulation, jamais sur « annulée ».
   const bascule = editOrder
     ? apresBascule(reactivation ? { ...editOrder, rawStatus: OrderStatus.PENDING } : editOrder)
@@ -78,7 +78,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   // pas (le serveur applique la même règle).
   const [depart] = useState(() => formData);
   const fraisFiges =
-    bascule?.montantFige === "site"
+    bascule?.fraisDuSite
       ? {
           type: depart.type,
           address: depart.address,
@@ -108,8 +108,11 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const remise = reduction?.montant ?? 0;
   // Modification : le serveur reconduit aussi la taxe figée (commandes de
   // l'app ; zéro pour celles du personnel). Sans elle, le total affiché
-  // était inférieur au montant enregistré.
-  const taxeFigee = editOrder && editOrder.tax > 0 ? editOrder.tax : 0;
+  // était inférieur au montant enregistré. Passage en manuel (« Call
+  // center ») d'une commande non payée : la taxe tombe à zéro (24/10).
+  const passeEnManuel = !!editOrder?.auto && !formData.auto;
+  const taxeFigee =
+    editOrder && editOrder.tax > 0 && !(passeEnManuel && bascule?.montantFige === null) ? editOrder.tax : 0;
   // Coupon vérifié : sous-total et articles remisés sont ceux du serveur, donc
   // le total affiché égale celui que la création enregistrera. Sinon, calcul
   // de l'écran. Le coupon ne couvre jamais la livraison.
