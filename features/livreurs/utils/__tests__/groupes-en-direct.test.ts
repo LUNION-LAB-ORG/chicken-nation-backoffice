@@ -191,6 +191,11 @@ describe('ligneEnDirect : L2', () => {
     expect(ligneEnDirect(livreur('Zié', 'HORS_SERVICE'), UN).detail).toBe('');
   });
 
+  test('sur « Tous » : le nom court du restaurant, sans la marque', () => {
+    const l = livreur('Moussa', 'DISPONIBLE', { rang_file: 1, restaurant: { ...RESTO, name: 'CHICKEN NATION ANGRÉ' } });
+    expect(ligneEnDirect(l, TOUS).detail).toBe('ANGRÉ · 1er de la file');
+  });
+
   test('en course sans position récente : « position ancienne » à la fin', () => {
     const l = livreur('Awa', 'EN_COURSE', { location_fresh: false, active_course: course('ACCEPTED') });
     expect(ligneEnDirect(l, TOUS).detail).toBe('Angré · CRS-241024-0040 · vers le restaurant · position ancienne');

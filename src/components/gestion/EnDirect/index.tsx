@@ -24,6 +24,7 @@ import {
 import { useDelivererLiveSync } from "../../../../features/maps/hooks/use-deliverer-live-socket";
 import type { PositionGps } from "../../../../features/operations/utils/suivi-course";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
+import { nomCourtRestaurant } from "../../../../features/restaurants/utils/nom-court";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 
 /**
@@ -140,7 +141,10 @@ export default function EnDirect() {
     [tableau, selectedRestaurantId],
   );
   const nomsRestaurants = useMemo(
-    () => (selectedRestaurantId ? null : new Map((tableau?.restaurants ?? []).map((r) => [r.id, r.nom]))),
+    () =>
+      selectedRestaurantId
+        ? null
+        : new Map((tableau?.restaurants ?? []).map((r) => [r.id, nomCourtRestaurant(r.nom) ?? r.nom])),
     [tableau, selectedRestaurantId],
   );
 

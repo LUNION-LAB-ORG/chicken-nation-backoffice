@@ -7,6 +7,7 @@ import {
   estRouteAbsente,
   etatAffichable,
   libelleAlertes,
+  lignesPiedCarte,
   minutesDepuis,
   nombreAlertesRouges,
   peutLireTableau,
@@ -145,6 +146,18 @@ describe('bandeau des restaurants', () => {
         restaurant({ livreurs: { disponibles: 1, en_course: 0, en_pause: 0, appli_fermee: 0, en_service: 1, prevus: 1 } }),
       ),
     ).toBe('Livrées 0 · 1 en service sur 1 prévu');
+  });
+
+  test('pied de carte en deux lignes : livraisons, puis livreurs en service (une seule ligne coupait la fin)', () => {
+    expect(lignesPiedCarte(restaurant())).toEqual({ activite: 'Livrées 0', service: null });
+    expect(
+      lignesPiedCarte(
+        restaurant({
+          jour: { livrees: 38, duree_moyenne_s: 31 * 60 },
+          livreurs: { disponibles: 3, en_course: 2, en_pause: 1, appli_fermee: 0, en_service: 4, prevus: 6 },
+        }),
+      ),
+    ).toEqual({ activite: 'Livrées 38 · 31 min en moyenne', service: '4 en service sur 6 prévus' });
   });
 
   test('alertes : « 1 alerte », « 3 alertes », rien à zéro', () => {

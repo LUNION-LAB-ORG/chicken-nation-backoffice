@@ -24,6 +24,7 @@ import type { SignalLivraison } from '../../courses/types/tableau-livraison.type
 import { DELIVERY_STATUT_LABELS } from '../../courses/utils/course-labels';
 import { dureeLisible, minutesDepuis } from '../../courses/utils/tableau-livraison';
 import { approcheLivreur, heureCourte, type PositionGps } from '../../operations/utils/suivi-course';
+import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import type { IDelivererLive, IDelivererLiveCourse, IDelivererLiveDelivery } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
 import { NOM_ETAT, appliVueADe, estPauseSansFin, etatLivreurAffiche, heureLisible, rangEtat, vueIlYa } from './disponibilite';
@@ -296,7 +297,7 @@ export function ligneEnDirect(l: IDelivererLive, ctx: ContexteEnDirect): Livreur
 
   const avecCourse = section === 'EN_COURSE' || section === 'AU_RESTAURANT';
   const detail = joindre(
-    ctx.unSeulRestaurant ? null : l.restaurant?.name,
+    ctx.unSeulRestaurant ? null : nomCourtRestaurant(l.restaurant?.name),
     detailDeSection(section, etat, l, rang, maintenant),
     avecCourse && !l.location_fresh ? 'position ancienne' : null,
   );

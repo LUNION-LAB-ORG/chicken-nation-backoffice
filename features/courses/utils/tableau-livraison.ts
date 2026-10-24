@@ -155,15 +155,24 @@ export function tonSansLivreur(
  * prévus » ; sans livraison « Livrées 0 » ; sans planning, rien sur les prévus.
  */
 export function piedCarte(r: RestaurantDuTableau): string {
+  const { activite, service } = lignesPiedCarte(r);
+  return service ? `${activite} · ${service}` : activite;
+}
+
+/**
+ * Le même pied en deux lignes pour la carte de 260 px : sur une seule, la fin
+ * (« 4 en service sur 6 prévus ») était coupée (vérification à l'écran du
+ * 24/10). `service` est nul sans planning du jour.
+ */
+export function lignesPiedCarte(r: RestaurantDuTableau): { activite: string; service: string | null } {
   const parties = [`Livrées ${r.jour.livrees}`];
   if (r.jour.livrees > 0 && r.jour.duree_moyenne_s !== null) {
     parties.push(`${dureeLisible(r.jour.duree_moyenne_s / 60)} en moyenne`);
   }
   const prevus = r.livreurs.prevus;
-  if (prevus !== null) {
-    parties.push(`${r.livreurs.en_service} en service sur ${prevus} ${prevus > 1 ? 'prévus' : 'prévu'}`);
-  }
-  return parties.join(' · ');
+  const service =
+    prevus !== null ? `${r.livreurs.en_service} en service sur ${prevus} ${prevus > 1 ? 'prévus' : 'prévu'}` : null;
+  return { activite: parties.join(' · '), service };
 }
 
 // ============================================================

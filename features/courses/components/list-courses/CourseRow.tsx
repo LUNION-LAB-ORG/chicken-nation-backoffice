@@ -7,6 +7,7 @@ import React from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useDroitsLivraison } from '../../../livreurs/hook/use-droits-livraison';
+import { nomCourtRestaurant } from '../../../restaurants/utils/nom-court';
 import { useCourseRetryMutation } from '../../queries/course-retry.mutation';
 import type { Course } from '../../types/course.types';
 import { dureeCourse, formatDelivererName } from '../../utils/course-labels';
@@ -71,7 +72,9 @@ export function CourseRow({ course, maintenant }: Props) {
         </span>
       </td>
 
-      <td className="px-3 py-3 text-gray-700">{course.restaurant.name}</td>
+      <td className="px-3 py-3 text-gray-700" title={course.restaurant.name}>
+        {nomCourtRestaurant(course.restaurant.name) ?? course.restaurant.name}
+      </td>
 
       <td className="px-3 py-3">
         {course.deliverer_id ? (

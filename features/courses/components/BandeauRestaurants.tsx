@@ -9,6 +9,7 @@ import { useDroitsLivraison } from '../../livreurs/hook/use-droits-livraison';
 import { useMaintenant } from '../../livreurs/hook/use-maintenant';
 import { estCompteDeRestaurant } from '../../operations/utils/code-retrait';
 import RestaurantTabs from '../../orders/components/filtrage/RestaurantTabs';
+import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import { useAuthStore } from '../../users/hook/authStore';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { RestaurantDuTableau, SignalLivraison } from '../types/tableau-livraison.types';
@@ -16,6 +17,7 @@ import {
   dureeLisible,
   estRouteAbsente,
   libelleAlertes,
+  lignesPiedCarte,
   minutesDepuis,
   peutLireTableau,
   piedCarte,
@@ -52,7 +54,8 @@ const COULEURS_TON: Record<TonSansLivreur, string> = {
   rouge: '#B91C1C',
 };
 
-const CARTE = 'h-[120px] w-[260px] shrink-0 rounded-xl border bg-white p-3 text-left';
+// 136 px : le pied tient sur deux lignes (sur une seule, sa fin était coupée).
+const CARTE = 'h-[136px] w-[260px] shrink-0 rounded-xl border bg-white p-3 text-left';
 
 function Chiffre({
   valeur,
@@ -101,12 +104,14 @@ function CarteRestaurant({
   const attente =
     r.sans_livreur.courses > 0 ? minutesDepuis(r.sans_livreur.plus_ancienne_depuis, maintenant) : null;
   const pied = piedCarte(r);
+  const { activite, service } = lignesPiedCarte(r);
+  const nom = restaurantId === null ? r.nom : (nomCourtRestaurant(r.nom) ?? r.nom);
 
   const contenu = (
     <>
       <div className="flex items-center justify-between gap-2">
         <span className="truncate text-sm font-semibold text-[#18181B]" title={r.nom}>
-          {r.nom}
+          {nom}
         </span>
         {alertes && (
           <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-red-700">
@@ -114,7 +119,7 @@ function CarteRestaurant({
           </span>
         )}
       </div>
-      <div className="mt-1.5 grid grid-cols-4 gap-1">
+      <div className="mt-1.5 flex justify-between gap-1.5">
         <Chiffre
           valeur={r.livreurs.disponibles}
           libelle="Disponibles"
@@ -129,9 +134,10 @@ function CarteRestaurant({
           sous={attente !== null ? `depuis ${dureeLisible(attente)}` : null}
         />
       </div>
-      <p className="mt-1.5 truncate text-[11px] text-[#52525B]" title={pied}>
-        {pied}
-      </p>
+      <div className="mt-1.5 text-[11px] leading-4 text-[#52525B]" title={pied}>
+        <p className="truncate">{activite}</p>
+        <p className="h-4 truncate">{service ?? ''}</p>
+      </div>
     </>
   );
 
@@ -164,6 +170,7 @@ function Squelettes() {
             ))}
           </div>
           <div className="mt-3 h-3 w-40 rounded-full bg-[#F4F4F5]" />
+          <div className="mt-1.5 h-3 w-32 rounded-full bg-[#F4F4F5]" />
         </div>
       ))}
     </>
