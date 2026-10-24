@@ -445,9 +445,9 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         cle: 'deliverer.appli_fermee_apres_s',
         libelle: 'Appli considérée fermée après',
         unite: secondes,
-        // Le serveur n'écrit le signal qu'une fois par minute (`signal-livreur.rules.ts`) :
-        // en dessous de 60 s, une appli en arrière-plan paraîtrait fermée entre deux écritures.
-        aide: "Ni connexion ni signal de son appli depuis ce délai : plus d'offre pour ce livreur, sans pause ni pénalité, jusqu'à ce qu'il la rouvre. Le signal n'est noté qu'une fois par minute : 120 au moins conseillé. 0 : jamais.",
+        // En arrière-plan, l'appli n'envoie sa position que toutes les 45 à 60 s (jusqu'à 85 s
+        // au pire) : en dessous de 120 s, une appli en arrière-plan paraîtrait fermée entre deux envois.
+        aide: "Ni connexion ni signal de son appli depuis ce délai : plus d'offre pour ce livreur, sans pause ni pénalité, jusqu'à ce qu'il la rouvre. En arrière-plan, l'appli envoie sa position environ une fois par minute : 120 au moins conseillé. 0 : jamais.",
         type: 'nombre',
         defaut: '180',
         lecture: 'livreur',
