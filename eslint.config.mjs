@@ -1,22 +1,27 @@
-import { FlatCompat } from "@eslint/eslintrc";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "out/**",
-      "build/**",
-      "dist/**",
-      "*.config.js",
-      "*.config.mjs"
-    ],
-  },
-];
-
-export default eslintConfig;
+// eslint-config-next 16 exporte des configurations plates : on les importe
+// directement. FlatCompat les relisait comme des .eslintrc et plantait.
+export default defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "dist/**",
+    "*.config.js",
+    "*.config.mjs",
+    // Repris de l'ancien .eslintignore, qu'ESLint 9 ne lit plus.
+    "**/.yoyo/",
+    "**/coverage/",
+    "**/.env",
+    "**/.env.local",
+    "**/.env.development.local",
+    "**/.env.test.local",
+    "**/.env.production.local",
+  ]),
+]);
