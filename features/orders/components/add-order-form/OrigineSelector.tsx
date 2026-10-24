@@ -19,12 +19,10 @@ interface OrigineSelectorProps {
    * Pourquoi la bascule ne touche ni à la taxe ni au total, décidé par le
    * serveur selon les mêmes règles (`OrderService.update`) :
    *  - `payee` : le client a déjà réglé, taxe comprise ;
-   *  - `livraison` : la course est partie avec ce montant à encaisser ;
-   *  - `site` : commande du site à payer à la livraison, le client a accepté
-   *    ce total sur le site, frais de service compris ;
-   *  - `null` : la taxe tombe à zéro et le total est recalculé.
+   *  - `null` : la taxe tombe à zéro et le total est recalculé (y compris une
+   *    commande du site à payer à la livraison, depuis le 24/10).
    */
-  montantFige?: "payee" | "livraison" | "site" | null;
+  montantFige?: "payee" | null;
   /**
    * Ce que la bascule fait du paiement, mêmes règles :
    *  - `caisse` : payable dans l'application et pas soldée, la caisse
@@ -165,11 +163,7 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
           ) : (
             <>
               Passer au call center ne change <strong className="font-semibold">ni la taxe ni le total</strong> :{" "}
-              {montantFige === "payee"
-                ? "la commande est déjà payée."
-                : montantFige === "site"
-                  ? "le client les a acceptés sur le site."
-                  : "la livraison est déjà lancée avec ce montant à encaisser."}
+              la commande est déjà payée.
             </>
           )}
           {paiementApresBascule === "caisse" && (

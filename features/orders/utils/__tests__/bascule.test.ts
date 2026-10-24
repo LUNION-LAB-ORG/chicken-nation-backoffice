@@ -22,16 +22,16 @@ const commande = (o = {}) => ({
 });
 
 describe('apresBascule : montant figé', () => {
-  test('commande du site à payer à la livraison : « site », paiement inchangé', () => {
-    expect(apresBascule(commande())).toEqual({ montantFige: 'site', paiement: 'inchange' });
+  test('commande du site à payer à la livraison : taxe à zéro (24/10), frais de livraison du site, paiement inchangé', () => {
+    expect(apresBascule(commande())).toEqual({ montantFige: null, fraisDuSite: true, paiement: 'inchange' });
   });
 
-  test('« payee » passe avant « site »', () => {
+  test('commande payée : montant figé', () => {
     expect(apresBascule(commande({ paied: true })).montantFige).toBe('payee');
   });
 
-  test('« livraison » passe avant « site »', () => {
-    expect(apresBascule(commande({ rawStatus: 'READY' })).montantFige).toBe('livraison');
+  test('livraison déjà prête : taxe à zéro aussi (24/10)', () => {
+    expect(apresBascule(commande({ rawStatus: 'READY' })).montantFige).toBe(null);
   });
 
   test('ailleurs que sur le site, ou déjà saisie par le personnel : taxe à zéro (inchangé)', () => {
@@ -42,16 +42,18 @@ describe('apresBascule : montant figé', () => {
   });
 
   test('panier en ligne non payé (site ou appli) : taxe à zéro et paiement à la caisse (inchangé)', () => {
-    expect(apresBascule(commande({ paymentChannel: 'Appli' }))).toEqual({ montantFige: null, paiement: 'caisse' });
+    expect(apresBascule(commande({ paymentChannel: 'Appli' }))).toEqual({ montantFige: null, fraisDuSite: false, paiement: 'caisse' });
     expect(apresBascule(commande({ paymentChannel: 'Appli', channel: 'APP' }))).toEqual({
       montantFige: null,
+      fraisDuSite: false,
       paiement: 'caisse',
     });
   });
 
   test('encaissement du livreur en attente : paiement « livreur » (inchangé)', () => {
     const c = commande({ paymentChannel: 'Appli', rawStatus: 'COLLECTED', paiements: [{ status: 'PENDING', amount: 5250 }] });
-    expect(apresBascule(c)).toEqual({ montantFige: 'livraison', paiement: 'livreur' });
+    // Livraison déjà prête : la taxe tombe aussi (24/10), le paiement reste au livreur.
+    expect(apresBascule(c)).toEqual(expect.objectContaining({ montantFige: null, paiement: 'livreur' }));
   });
 });
 
