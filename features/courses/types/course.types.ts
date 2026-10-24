@@ -179,6 +179,8 @@ export interface Course {
   turbo_escalated_at?: string | null;
   total_delivery_fee: number;
   estimated_duration_min?: number | null;
+  /** Tournée signalée en retard par le serveur (règle du retard) ; null sinon. */
+  delay_alerted_at?: string | null;
   created_at: string;
   updated_at: string;
 }
