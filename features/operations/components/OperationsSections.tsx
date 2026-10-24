@@ -144,7 +144,10 @@ export const OperationsSections: React.FC<Props> = ({ buckets, onCardClick, onPa
         horsRestaurant={recuperees.length}
       />
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-3">
+      {/* Écran moyen : Hors restaurant couvre les deux rangées. Rangées `auto 1fr` :
+          seule la seconde grandit quand Hors restaurant est plus haute que Prêtes et
+          En cuisine réunies, pas de trou sous Prêtes. */}
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 lg:grid-rows-[auto_1fr] xl:grid-cols-3 xl:grid-rows-none">
         {/* En cuisine : à gauche en bas sur écran moyen, première colonne sur grand écran. */}
         <Colonne
           Icon={ChefHat}
