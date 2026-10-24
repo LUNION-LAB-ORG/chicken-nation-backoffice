@@ -4,8 +4,8 @@ import { describe, expect, test } from 'bun:test';
 import {
   LIBELLE_APPLI_NON_CONNECTEE,
   RAISON_APPLI_NON_CONNECTEE,
-  appliNonConnectee,
   choixAffectation,
+  presenceAppli,
 } from '../disponibilite';
 
 /**
@@ -14,6 +14,11 @@ import {
  * l'appli ; sa connexion temps réel, elle, peut être coupée. Le serveur dit
  * maintenant s'il la voit (`appli_connectee`), et le backoffice l'affiche là
  * où l'admin décide : « Forcer l'affectation » et la carte.
+ *
+ * Depuis le 24/10, le serveur dit aussi si l'appli tourne encore
+ * (`appli_active`) : « En arrière-plan » ou « Appli fermée »
+ * (presence-appli.test.ts). « Appli non connectée » reste le texte d'un
+ * serveur qui ne le dit pas : c'est ce que ce fichier vérifie.
  */
 
 const dispo = (champs = {}) => ({
@@ -34,7 +39,11 @@ const dispo = (champs = {}) => ({
 
 const MAINTENANT = new Date('2026-10-23T10:00:00Z');
 
-describe('appliNonConnectee', () => {
+/** « Appli non connectée » : serveur sans `appli_active`. */
+const appliNonConnectee = (appliConnectee, etat) =>
+  presenceAppli({ appli_connectee: appliConnectee }, etat, MAINTENANT)?.cas === 'NON_CONNECTEE';
+
+describe('appli non connectée (serveur sans `appli_active`)', () => {
   test('livreur en service sans connexion : signalé', () => {
     expect(appliNonConnectee(false, 'DISPONIBLE')).toBe(true);
     expect(appliNonConnectee(false, 'OFFRE_EN_ATTENTE')).toBe(true);
@@ -42,15 +51,24 @@ describe('appliNonConnectee', () => {
   });
 
   test('connecté, inconnu (null) ou serveur ancien (absent) : rien', () => {
-    expect(appliNonConnectee(true, 'DISPONIBLE')).toBe(false);
-    expect(appliNonConnectee(null, 'DISPONIBLE')).toBe(false);
-    expect(appliNonConnectee(undefined, 'DISPONIBLE')).toBe(false);
+    expect(presenceAppli({ appli_connectee: true }, 'DISPONIBLE', MAINTENANT)).toBeNull();
+    expect(presenceAppli({ appli_connectee: null }, 'DISPONIBLE', MAINTENANT)).toBeNull();
+    expect(presenceAppli({}, 'DISPONIBLE', MAINTENANT)).toBeNull();
   });
 
   test('en pause, hors service ou inactif : appli fermée attendue, rien', () => {
     for (const etat of ['EN_PAUSE', 'PAUSE_AUTO', 'HORS_SERVICE', 'INACTIF', null, undefined]) {
-      expect(appliNonConnectee(false, etat)).toBe(false);
+      expect(presenceAppli({ appli_connectee: false }, etat, MAINTENANT)).toBeNull();
     }
+  });
+
+  test('libellé et explication du 23/10, inchangés', () => {
+    expect(presenceAppli({ appli_connectee: false }, 'DISPONIBLE', MAINTENANT)).toEqual({
+      cas: 'NON_CONNECTEE',
+      libelle: LIBELLE_APPLI_NON_CONNECTEE,
+      vue: null,
+      raison: RAISON_APPLI_NON_CONNECTEE,
+    });
   });
 });
 

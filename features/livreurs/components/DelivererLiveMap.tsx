@@ -12,6 +12,7 @@ import {
   MapPin,
   Pause,
   Power,
+  PowerOff,
   TrendingDown,
   Truck,
   Zap,
@@ -27,17 +28,20 @@ import { useDelivererLiveSync } from "../../maps/hooks/use-deliverer-live-socket
 import { useMaintenant } from "../hook/use-maintenant";
 import {
   COULEURS_ETAT,
+  COULEURS_PRESENCE,
   FILTRES_CARTE,
-  LIBELLE_APPLI_NON_CONNECTEE,
   NOM_ETAT,
   ORDRE_ETATS,
-  appliNonConnectee,
   correspondAuFiltre,
   etatLivreurAffiche,
+  libellePresence,
+  presenceAppli,
   rangEtat,
   type EtatAffiche,
   type FiltreCarte,
+  type PresenceAppli,
 } from "../utils/disponibilite";
+import { ICONE_PRESENCE } from "./PresenceAppliLigne";
 import type { IDelivererLive } from "../types/deliverer-live.type";
 import type { EtatDisponibilite } from "../types/livreur.types";
 
@@ -72,10 +76,14 @@ const ICONE_ETAT: Record<EtatDisponibilite, React.ComponentType<{ className?: st
   PAUSE_AUTO: AlertOctagon,
   HORS_SERVICE: Power,
   INACTIF: Power,
+  APPLI_FERMEE: PowerOff,
 };
 
-/** Livreur de la carte avec son état à l'instant et sa présence sur la carte. */
-type LivreurCarte = IDelivererLive & { affiche: EtatAffiche; surCarte: boolean };
+/**
+ * Livreur de la carte avec son état à l'instant, sa présence sur la carte et
+ * son appli (fermée, en arrière-plan, non connectée), null si rien à dire.
+ */
+type LivreurCarte = IDelivererLive & { affiche: EtatAffiche; surCarte: boolean; appli: PresenceAppli | null };
 
 const ETAT_INCONNU: EtatAffiche = {
   etat: "HORS_SERVICE",
@@ -86,14 +94,21 @@ const ETAT_INCONNU: EtatAffiche = {
 
 /**
  * Détails sous le nom : l'heure de fin d'une pause, l'absence de position
- * récente, l'appli sans connexion temps réel (les offres ne lui arrivent
- * alors que par notification).
+ * récente, l'appli (« appli fermée · vue il y a 6 min », « en arrière-plan » :
+ * les offres lui arrivent alors par notification).
  */
 function detailsLivreur(l: LivreurCarte): string {
   const details: string[] = [];
   if (l.affiche.libelle !== NOM_ETAT[l.affiche.etat]) details.push(l.affiche.libelle);
   if (!l.surCarte) details.push(l.location ? "position ancienne" : "sans position");
-  if (appliNonConnectee(l.appli_connectee, l.affiche.etat)) details.push(LIBELLE_APPLI_NON_CONNECTEE.toLowerCase());
+  if (l.appli) {
+    // Le badge dit déjà « Appli fermée » : seule l'heure du dernier signal s'ajoute.
+    if (l.affiche.etat === "APPLI_FERMEE") {
+      if (l.appli.vue) details.push(l.appli.vue);
+    } else {
+      details.push(libellePresence(l.appli).toLowerCase());
+    }
+  }
   return details.join(" · ");
 }
 
@@ -221,11 +236,13 @@ export function DelivererLiveMap({ restaurantId }: { restaurantId?: string }) {
 
   const normalized = useMemo<LivreurCarte[]>(() => (livreurs ?? []).map((l) => {
     const location = safeLocation(l.location);
+    const affiche = etatLivreurAffiche(l, maintenant) ?? ETAT_INCONNU;
     return {
       ...l,
       location,
-      affiche: etatLivreurAffiche(l, maintenant) ?? ETAT_INCONNU,
+      affiche,
       surCarte: location !== null && (l.location_fresh || includeOffline),
+      appli: presenceAppli(l, affiche.etat, maintenant),
     };
   }), [livreurs, maintenant, includeOffline]);
 
@@ -571,6 +588,9 @@ function LivreurInfoCard({ livreur }: { livreur: LivreurCarte }) {
             <dd className="text-orange-600 font-semibold">{scoring.refusals.countInWindow}/{scoring.refusals.threshold}</dd>
           </div>
         )}
+        {livreur.appli && (
+          <AppliInfoLigne appli={livreur.appli} />
+        )}
         {livreur.active_course && (
           <div className="flex items-center justify-between">
             <dt className="text-gray-500">Course active</dt>
@@ -584,6 +604,19 @@ function LivreurInfoCard({ livreur }: { livreur: LivreurCarte }) {
           </div>
         )}
       </dl>
+    </div>
+  );
+}
+
+/** Ligne « Appli » de la fiche : « Appli fermée · vue il y a 6 min », « En arrière-plan ». */
+function AppliInfoLigne({ appli }: { appli: PresenceAppli }) {
+  const Icone = ICONE_PRESENCE[appli.cas];
+  return (
+    <div className="flex items-center justify-between gap-3" title={appli.raison}>
+      <dt className="text-gray-500">Appli</dt>
+      <dd className="font-semibold flex items-center gap-1 text-right" style={{ color: COULEURS_PRESENCE[appli.cas].texte }}>
+        <Icone className="w-3 h-3 shrink-0" />{libellePresence(appli)}
+      </dd>
     </div>
   );
 }

@@ -440,6 +440,18 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         min: 0,
         aussiAncienne: true,
       },
+      // Demande du 24/10 : appli fermée (glissée hors de la liste des applis) = plus d'offre.
+      {
+        cle: 'deliverer.appli_fermee_apres_s',
+        libelle: 'Appli considérée fermée après',
+        unite: secondes,
+        aide: "Ni connexion ni signal de son appli depuis ce délai : plus d'offre pour ce livreur, sans pause ni pénalité, jusqu'à ce qu'il la rouvre. 0 : jamais.",
+        type: 'nombre',
+        defaut: '180',
+        lecture: 'livreur',
+        min: 0,
+        aussiAncienne: true,
+      },
     ],
   },
   {

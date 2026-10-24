@@ -62,6 +62,7 @@ describe('les réglages de la conception 6.1, avec leur défaut', () => {
     'deliverer.eta_par_defaut_min': '8',
     'course.planificateur_tache_s': '10',
     'deliverer.hors_service_sans_signal_min': '20',
+    'deliverer.appli_fermee_apres_s': '180',
     'deliverer.au_restaurant_rayon_m': '200',
     'deliverer.au_restaurant_fraicheur_min': '15',
     'deliverer.travel_time_ranking': '0',
@@ -118,6 +119,7 @@ describe('libellés', () => {
       'Bascule vers Turbo après (minutes, depuis la commande prête)',
     );
     expect(libelleAvecUnite(def('maps.plafond_appels_jour'))).toBe("Plafond d'appels Google par jour (appels)");
+    expect(libelleAvecUnite(def('deliverer.appli_fermee_apres_s'))).toBe('Appli considérée fermée après (secondes)');
     expect(libelleAvecUnite(def('course.retenue_meme_si_livreur_libre'))).toBe(
       'Attendre même si un autre livreur est libre',
     );
@@ -182,6 +184,7 @@ describe('saisie : 0 permis là où il a un sens, valeur refusée signalée', ()
       'course.direction_zone_rayon_m',
       'course.direction_angle_max_deg',
       'deliverer.hors_service_sans_signal_min',
+      'deliverer.appli_fermee_apres_s',
       'maps.plafond_appels_jour',
     ]) {
       expect(verifierSaisie(def(cle), '0')).toEqual({ ok: true, valeur: '0' });
@@ -425,5 +428,38 @@ describe.skipIf(!existsSync(planification))('réglages du planificateur, fidèle
       refusee: true,
       message: 'Valeur enregistrée « 0 » refusée : le serveur applique 12.',
     });
+  });
+});
+
+/**
+ * Demande du 24/10 : une appli de livreur fermée (glissée hors de la liste
+ * des applis) ne reçoit plus d'offre. Le serveur la dit fermée sans
+ * connexion ni signal depuis `deliverer.appli_fermee_apres_s` secondes
+ * (défaut 180, 0 = règle coupée).
+ */
+describe('« Appli considérée fermée après (secondes) »', () => {
+  const d = () => def('deliverer.appli_fermee_apres_s');
+
+  test('rangé avec les livreurs, sous « Hors service sans signe de vie », défaut 180', () => {
+    const livreurs = GROUPES_NOUVELLE_METHODE.find((g) => g.titre === 'Livreurs');
+    const cles = livreurs.reglages.map((r) => r.cle);
+    expect(cles.indexOf('deliverer.appli_fermee_apres_s')).toBe(cles.indexOf('deliverer.hors_service_sans_signal_min') + 1);
+    expect(d().defaut).toBe('180');
+    expect(d().aussiAncienne).toBe(true);
+  });
+
+  test('0 accepté (jamais), nombre négatif refusé, valeur absente : 180', () => {
+    expect(verifierSaisie(d(), '0')).toEqual({ ok: true, valeur: '0' });
+    expect(verifierSaisie(d(), '240')).toEqual({ ok: true, valeur: '240' });
+    expect(verifierSaisie(d(), '-5').ok).toBe(false);
+    expect(valeurAppliquee(d(), null)).toMatchObject({ valeur: '180', refusee: false });
+    expect(valeurAppliquee(d(), '-5')).toMatchObject({ valeur: '180', refusee: true });
+  });
+
+  test('aide en français simple, sans tiret cadratin ni valeur technique', () => {
+    expect(d().aide).toContain('0 : jamais');
+    expect(d().aide).toContain('sans pause ni pénalité');
+    expect(`${d().libelle}${d().aide}`).not.toMatch(/[—–]/);
+    expect(d().aide).not.toMatch(/[a-z]+_[a-z]+|APPLI_FERMEE/);
   });
 });

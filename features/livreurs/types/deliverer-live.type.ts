@@ -1,4 +1,4 @@
-import type { DisponibiliteLivreur, VehiculeType } from "./livreur.types";
+import type { DisponibiliteLivreur, PresenceAppliServeur, VehiculeType } from "./livreur.types";
 
 export type CourseStatut =
   | "PENDING_ASSIGNMENT"
@@ -42,7 +42,7 @@ export interface IDelivererLiveCourse {
   deliveries: IDelivererLiveDelivery[];
 }
 
-export interface IDelivererLive {
+export interface IDelivererLive extends PresenceAppliServeur {
   id: string;
   first_name: string | null;
   last_name: string | null;

@@ -1,19 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { AlertTriangle, RotateCw, WifiOff } from 'lucide-react';
+import { AlertTriangle, RotateCw } from 'lucide-react';
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useLivreursList } from '../../../livreurs/hook/use-livreurs';
 import { useMaintenant } from '../../../livreurs/hook/use-maintenant';
 import {
   COULEURS_ETAT,
-  LIBELLE_APPLI_NON_CONNECTEE,
-  RAISON_APPLI_NON_CONNECTEE,
-  appliNonConnectee,
+  COULEURS_PRESENCE,
+  appliActiveDe,
   choixAffectation,
   comparerPourAffectation,
+  presenceAppli,
+  type PresenceAppli,
 } from '../../../livreurs/utils/disponibilite';
+import { ICONE_PRESENCE, PresenceAppliLigne } from '../../../livreurs/components/PresenceAppliLigne';
 import { formatDelivererName } from '../../utils/course-labels';
 import { useCourseForceAssignMutation } from '../../queries/course-force-assign.mutation';
 import type { Course } from '../../types/course.types';
@@ -32,9 +34,13 @@ interface Props {
  * avec leur raison. L'état est relu à l'ouverture, toutes les 15 s et après
  * un refus ; le refus du serveur est affiché tel quel.
  *
- * « Appli non connectée » : le serveur ne voit pas la connexion temps réel de
- * l'appli de ce livreur. Il reste sélectionnable, mais l'offre ne lui
- * arrivera que par notification : l'admin le sait avant d'envoyer.
+ * L'appli du livreur (demande du 24/10) :
+ *  - « Appli fermée » : grisé comme les autres refus, avec le texte du
+ *    serveur affiché tel quel et l'heure du dernier signal (« vue il y a
+ *    6 min ») ; il redevient sélectionnable dès qu'il rouvre l'appli ;
+ *  - « En arrière-plan » (ou « Appli non connectée » avec un serveur plus
+ *    ancien) : sans connexion temps réel. Il reste sélectionnable, mais
+ *    l'offre lui arrivera par notification : l'admin le sait avant d'envoyer.
  */
 export function ForceAssignModal({ isOpen, course }: Props) {
   const { toggleModal } = useDashboardStore();
@@ -52,12 +58,14 @@ export function ForceAssignModal({ isOpen, course }: Props) {
     () =>
       (data?.items ?? [])
         .map((livreur) => {
-          const choix = choixAffectation(livreur.disponibilite, course.id, maintenant);
+          const choix = choixAffectation(livreur.disponibilite, course.id, maintenant, appliActiveDe(livreur));
+          const presence = presenceAppli(livreur, choix.etat, maintenant);
           return {
             livreur,
             nom: formatDelivererName(livreur),
             choix,
-            sansAppli: choix.selectionnable && appliNonConnectee(livreur.appli_connectee, choix.etat),
+            // Grisé pour une autre raison (en course ailleurs…) : la raison du serveur suffit.
+            presence: choix.selectionnable || choix.etat === 'APPLI_FERMEE' ? presence : null,
           };
         })
         .sort(comparerPourAffectation),
@@ -121,8 +129,8 @@ export function ForceAssignModal({ isOpen, course }: Props) {
         </div>
         {lignes.length > 0 && nbSelectionnables < lignes.length && (
           <p className="text-xs text-gray-500 mb-2">
-            Les livreurs grisés ne peuvent pas recevoir d&apos;offre : en pause, en course, déjà sollicités
-            ou hors service (pas encore repris dans l&apos;appli).
+            Les livreurs grisés ne peuvent pas recevoir d&apos;offre : en pause, en course, déjà sollicités,
+            hors service (pas encore repris dans l&apos;appli) ou appli fermée.
           </p>
         )}
 
@@ -135,9 +143,11 @@ export function ForceAssignModal({ isOpen, course }: Props) {
             </p>
           ) : (
             <ul>
-              {lignes.map(({ livreur, nom, choix, sansAppli }) => {
+              {lignes.map(({ livreur, nom, choix, presence }) => {
                 const selected = choisi?.livreur.id === livreur.id;
                 const couleurs = choix.etat ? COULEURS_ETAT[choix.etat] : null;
+                const fermee = choix.etat === 'APPLI_FERMEE';
+                const IconeFermee = ICONE_PRESENCE.FERMEE;
                 return (
                   <li key={livreur.id}>
                     <button
@@ -145,7 +155,7 @@ export function ForceAssignModal({ isOpen, course }: Props) {
                       onClick={() => handleSelect(livreur.id)}
                       disabled={!choix.selectionnable}
                       aria-pressed={selected}
-                      title={choix.raison ?? (sansAppli ? RAISON_APPLI_NON_CONNECTEE : undefined)}
+                      title={choix.raison ?? presence?.raison}
                       className={`w-full text-left px-4 py-3 border-b last:border-b-0 transition flex items-center gap-3 ${
                         !choix.selectionnable
                           ? 'bg-gray-50 cursor-not-allowed'
@@ -154,25 +164,38 @@ export function ForceAssignModal({ isOpen, course }: Props) {
                             : 'hover:bg-gray-50'
                       }`}
                     >
-                      <div className={`flex-1 min-w-0 ${choix.selectionnable ? '' : 'opacity-50'}`}>
-                        <div className="text-sm font-medium text-gray-900 truncate">{nom}</div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {livreur.reference} · {livreur.phone}
-                        </div>
-                        {sansAppli && (
-                          <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-amber-700">
-                            <WifiOff className="w-3 h-3 shrink-0" />
-                            {LIBELLE_APPLI_NON_CONNECTEE}
+                      <div className="flex-1 min-w-0">
+                        <div className={choix.selectionnable ? '' : 'opacity-50'}>
+                          <div className="text-sm font-medium text-gray-900 truncate">{nom}</div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {livreur.reference} · {livreur.phone}
                           </div>
+                        </div>
+                        {fermee && choix.raison ? (
+                          // Refus du serveur, tel quel.
+                          <div
+                            className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold"
+                            style={{ color: COULEURS_PRESENCE.FERMEE.texte }}
+                          >
+                            <IconeFermee className="w-3 h-3 shrink-0" aria-hidden />
+                            <span className="truncate">{choix.raison}</span>
+                          </div>
+                        ) : (
+                          presence && <PresenceAppliLigne presence={presence} className="mt-0.5" />
                         )}
                       </div>
                       {choix.libelle && couleurs && (
-                        <span
-                          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                          style={{ backgroundColor: couleurs.fond, color: couleurs.texte }}
-                        >
-                          {choix.libelle}
-                        </span>
+                        <div className="shrink-0 flex flex-col items-end gap-0.5">
+                          <span
+                            className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                            style={{ backgroundColor: couleurs.fond, color: couleurs.texte }}
+                          >
+                            {choix.libelle}
+                          </span>
+                          {fermee && presence?.vue && (
+                            <span className="text-[10px] text-gray-500">{presence.vue}</span>
+                          )}
+                        </div>
                       )}
                     </button>
                   </li>
@@ -182,11 +205,8 @@ export function ForceAssignModal({ isOpen, course }: Props) {
           )}
         </div>
 
-        {choisi?.sansAppli && !forceAssign.error && (
-          <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            <WifiOff className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>{RAISON_APPLI_NON_CONNECTEE}</span>
-          </div>
+        {choisi?.presence && !forceAssign.error && (
+          <ExplicationPresence presence={choisi.presence} />
         )}
 
         {forceAssign.error && (
@@ -219,6 +239,21 @@ export function ForceAssignModal({ isOpen, course }: Props) {
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Avant l'envoi : pourquoi l'offre arrivera par notification à ce livreur. */
+function ExplicationPresence({ presence }: { presence: PresenceAppli }) {
+  const Icone = ICONE_PRESENCE[presence.cas];
+  const c = COULEURS_PRESENCE[presence.cas];
+  return (
+    <div
+      className="mt-3 flex items-start gap-2 rounded-lg border px-3 py-2 text-sm"
+      style={{ backgroundColor: c.fond, borderColor: c.bord, color: c.texte }}
+    >
+      <Icone className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
+      <span>{presence.raison}</span>
     </div>
   );
 }

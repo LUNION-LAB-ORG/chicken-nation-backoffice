@@ -17,7 +17,9 @@ import {
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDelivererLivePosition } from "../../../maps/hooks/use-deliverer-live-socket";
+import { PresenceAppliLigne } from "../../../livreurs/components/PresenceAppliLigne";
 import {
+  appliDuLivreur,
   etatCourse,
   livraisonsCommencees,
   plusRecente,
@@ -70,6 +72,10 @@ interface Props {
  * « Koffi · En route, arrivée vers 12 h 38 », « Au comptoir », « Parti à
  * 12 h 45 », « Recherche d'un livreur », « Confiée à Turbo », et en rouge
  * « Parti à 12 h 20, CMD-B pas remise » quand il est parti sans un sac.
+ *
+ * Son appli (demande du 24/10) : « Appli fermée · vue il y a 6 min » (gris),
+ * « En arrière-plan ». Sur une carte de commande (une ligne), seule l'appli
+ * fermée est signalée : en arrière-plan pendant une livraison, c'est normal.
  */
 export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service, maintenant, compact }) => {
   // Position en direct seulement pour un livreur qui vient au restaurant.
@@ -96,14 +102,20 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
   });
   const ton = TONS[etat.ton];
   const Icone = ICONES[etat.etat];
+  const appli = appliDuLivreur(course, maintenant);
 
   if (compact) {
+    const fermee = appli?.cas === "FERMEE" ? appli : null;
     return (
-      <div className={`inline-flex max-w-full items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold ${ton.cadre} ${ton.texte}`}>
+      <div
+        className={`inline-flex max-w-full items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold ${ton.cadre} ${ton.texte}`}
+        title={fermee?.raison}
+      >
         <Icone className="h-3 w-3 shrink-0" aria-hidden />
         <span className="truncate">
           {etat.livreur ? `${etat.livreur} · ` : ""}
           {etat.libelle}
+          {fermee ? ` · ${fermee.libelle.toLowerCase()}` : ""}
         </span>
       </div>
     );
@@ -119,6 +131,7 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
         <div className={`leading-snug ${etat.livreur ? "text-[12px] font-semibold" : "text-xs font-bold"} ${ton.texte}`}>
           {etat.libelle}
         </div>
+        {appli && <PresenceAppliLigne presence={appli} className="mt-0.5" />}
       </div>
     </div>
   );

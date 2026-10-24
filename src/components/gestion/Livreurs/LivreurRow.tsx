@@ -10,7 +10,12 @@ import StatutBadge from "./StatutBadge";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import type { Livreur } from "../../../../features/livreurs/types/livreur.types";
 import type { IDelivererLive } from "../../../../features/livreurs/types/deliverer-live.type";
-import { COULEURS_ETAT, etatLivreurAffiche } from "../../../../features/livreurs/utils/disponibilite";
+import {
+  COULEURS_ETAT,
+  etatLivreurAffiche,
+  presenceAppli,
+} from "../../../../features/livreurs/utils/disponibilite";
+import { PresenceAppliLigne } from "../../../../features/livreurs/components/PresenceAppliLigne";
 
 interface LivreurRowProps {
   livreur: Livreur;
@@ -73,21 +78,27 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
 
   /* ── Colonne Dispo ── */
   // État par la règle unique du serveur : « En pause jusqu'à 14 h 32 »,
-  // « Hors service »… La carte (relue toutes les 15 s) passe avant la liste.
+  // « Hors service »… La carte (relue toutes les 15 s) passe avant la liste,
+  // pour l'état comme pour l'appli (« Appli fermée · vue il y a 6 min »,
+  // « En arrière-plan »).
   const renderDispo = () => {
+    const maintenant = new Date();
+    const source = live ?? livreur;
     const affiche = etatLivreurAffiche(
       {
         disponibilite: live?.disponibilite ?? livreur.disponibilite,
         availability: live?.availability,
         pause_until: live?.pause_until,
         auto_pause_until: live?.auto_pause_until,
+        appli_active: source.appli_active,
       },
-      new Date(),
+      maintenant,
     );
     if (!affiche || affiche.etat === "INACTIF") {
       return <StatutBadge status={livreur.status} isOperational={livreur.is_operational} />;
     }
     const couleurs = COULEURS_ETAT[affiche.etat];
+    const appli = presenceAppli(source, affiche.etat, maintenant);
     return (
       <div className="flex flex-col gap-0.5" title={affiche.raison ?? undefined}>
         <span
@@ -100,6 +111,14 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView }) => {
           <span className="text-[10px] text-[#007AFF] pl-0.5 font-mono">
             {live.active_course.reference}
           </span>
+        )}
+        {appli && (
+          <PresenceAppliLigne
+            presence={appli}
+            sansLibelle={affiche.etat === "APPLI_FERMEE"}
+            petit
+            className="pl-0.5"
+          />
         )}
       </div>
     );

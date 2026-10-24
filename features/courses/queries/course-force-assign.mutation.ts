@@ -11,8 +11,9 @@ import { useInvalidateCourseQuery } from './index.query';
  * Le backend envoie l'offer au livreur — il doit encore accepter (statut=PENDING_ASSIGNMENT).
  *
  * Le serveur refuse (409) un livreur en pause, en pause automatique, en
- * course, avec une offre en attente ou hors service, et une course qui ne
- * cherche plus de livreur. Son refus est affiché tel quel dans la fenêtre
+ * course, avec une offre en attente, hors service ou dont l'appli est fermée
+ * (« L'appli de ce livreur est fermée. »), et une course qui ne cherche plus
+ * de livreur. Son refus est affiché tel quel dans la fenêtre
  * (`error.message`), et l'état des livreurs et de la course est relu.
  *
  * Offre partie vers un livreur dont l'appli n'est pas connectée en temps réel

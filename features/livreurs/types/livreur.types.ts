@@ -12,7 +12,12 @@ export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
  * État d'un livreur pour une offre de course, calculé par le serveur avec la
  * règle unique (backend `deliverers/helpers/disponibilite.rules.ts`), par
  * ordre de priorité : inactif, en pause, pause automatique, en course, offre
- * en attente, hors service. Sinon : disponible.
+ * en attente, hors service, appli fermée. Sinon : disponible.
+ *
+ * `APPLI_FERMEE` (demande du 24/10) : en service, pas en pause, mais l'appli
+ * a été fermée (ni connexion temps réel ni signal depuis
+ * `deliverer.appli_fermee_apres_s`) : plus aucune offre, sans pause ni
+ * pénalité, jusqu'à ce qu'il la rouvre.
  */
 export type EtatDisponibilite =
   | 'DISPONIBLE'
@@ -21,14 +26,29 @@ export type EtatDisponibilite =
   | 'PAUSE_AUTO'
   | 'EN_COURSE'
   | 'OFFRE_EN_ATTENTE'
-  | 'HORS_SERVICE';
+  | 'HORS_SERVICE'
+  | 'APPLI_FERMEE';
+
+/**
+ * Appli du livreur vue par le serveur (demande du 24/10) : « active » = une
+ * connexion temps réel ouverte OU un signal (position, requête) depuis moins
+ * de `deliverer.appli_fermee_apres_s` secondes. Une appli en arrière-plan ou
+ * téléphone verrouillé reste active ; une appli fermée (glissée hors de la
+ * liste des applis) ne l'est plus. Champs absents sur un serveur plus ancien.
+ */
+export interface PresenceAppliServeur {
+  /** `false` : appli fermée. `null` : le serveur n'a pas pu le savoir. */
+  appli_active?: boolean | null;
+  /** Dernier signal de l'appli (ISO), pour « vue il y a 6 min ». */
+  appli_vue_a?: string | null;
+}
 
 /**
  * Champ `disponibilite` porté par chaque livreur de `GET /deliverers` et de
  * `GET /deliverers/live-locations` (lot 1 du 22/10). Absent sur un serveur
  * plus ancien.
  */
-export interface DisponibiliteLivreur {
+export interface DisponibiliteLivreur extends PresenceAppliServeur {
   etat: EtatDisponibilite;
   /** Texte prêt à afficher : « En pause jusqu'à 14 h 32 », « Hors service »… */
   libelle: string;
@@ -56,7 +76,7 @@ export interface RestaurantLight {
   phone?: string;
 }
 
-export interface Livreur {
+export interface Livreur extends PresenceAppliServeur {
   id: string;
   /** Référence métier unique (LIV-YYMMDD-XXXXX) */
   reference: string;

@@ -127,6 +127,7 @@ describe('textes fidèles au serveur', () => {
         'course.no_deliverer_alert_after_min',
         'course.no_deliverer_max_wait_min',
         'course.turbo_fallback_enabled',
+        'deliverer.appli_fermee_apres_s',
         'deliverer.hors_service_sans_signal_min',
         'deliverer.travel_time_ranking',
         'maps.plafond_appels_jour',

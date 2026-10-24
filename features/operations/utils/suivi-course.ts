@@ -28,8 +28,16 @@
  * direct du livreur (socket), l'offre reste « à un livreur » et la fenêtre
  * suit le réglage par défaut. `course.arrivee_estimee` est lue si elle arrive.
  *
+ * Appli du livreur (demande du 24/10) : `course.deliverer.appli_active`,
+ * `appli_vue_a` et `appli_connectee`, si le serveur les envoie : « Appli
+ * fermée · vue il y a 6 min » (sa position n'arrive plus), « En
+ * arrière-plan ». Sans ces champs, rien.
+ *
  * Heures : celles d'Abidjan, c'est-à-dire UTC, comme le serveur.
  */
+
+// ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
+import { presenceAppli, type PresenceAppli } from '../../livreurs/utils/disponibilite';
 
 // ============================================================
 // CONSTANTES (miroir des défauts du serveur)
@@ -88,6 +96,12 @@ export interface LivreurDeCourse {
   /** Dernière position (`operations/active`, serveur du 23/10). */
   last_location?: unknown;
   last_location_at?: string | null;
+  /** Appli active : connexion temps réel ou signal récent (demande du 24/10). */
+  appli_active?: boolean | null;
+  /** Dernier signal de l'appli (ISO). */
+  appli_vue_a?: string | null;
+  /** Connexion temps réel ouverte. */
+  appli_connectee?: boolean | null;
 }
 
 export interface CourseOperations {
@@ -886,4 +900,20 @@ export const DUREE_AVIS_MS = 10 * 60_000;
 
 export function avisEncoreValides<T extends { at: number }>(avis: readonly T[], maintenant: Date): T[] {
   return avis.filter((a) => maintenant.getTime() - a.at < DUREE_AVIS_MS);
+}
+
+// ============================================================
+// APPLI DU LIVREUR
+// ============================================================
+
+/**
+ * Appli du livreur d'une course qu'il a acceptée (demande du 24/10) :
+ * « Appli fermée · vue il y a 6 min » (plus de position ni d'avancée tant
+ * qu'il ne la rouvre pas), « En arrière-plan ». Null si rien à dire, si la
+ * course n'a pas (ou plus) de livreur, ou si le serveur n'envoie pas ces
+ * champs.
+ */
+export function appliDuLivreur(course: CourseOperations, maintenant: Date): PresenceAppli | null {
+  if (!course.deliverer_id || !course.deliverer || !STATUTS_AVEC_LIVREUR.has(course.statut)) return null;
+  return presenceAppli(course.deliverer, 'EN_COURSE', maintenant);
 }
