@@ -15,6 +15,7 @@ import { AnimatedDelivererMarker } from "../../../maps/components/AnimatedDelive
 import { useDirectionsQuery } from "../../../maps/queries/directions.query";
 import { useDelivererLivePosition } from "../../../maps/hooks/use-deliverer-live-socket";
 import type { IGetRouteParams } from "../../../maps/services/directions.service";
+import { arretsDeLaCourse, toLatLng, type LatLng } from "../../utils/arrets-course";
 
 interface Props {
   course: CourseWithAttempts;
@@ -28,31 +29,6 @@ const containerStyle = {
 
 /** Statuts pendant lesquels le livreur bouge → on suit sa position en direct. */
 const ACTIVE_STATUTS: CourseStatut[] = ["ACCEPTED", "AT_RESTAURANT", "IN_DELIVERY"];
-
-/**
- * Type étroit pour les coords validées — `lat`/`lng` garantis être des nombres
- * finis. Tout `LatLng` qui sort des helpers ci-dessous est safe à passer
- * à Google Maps sans risquer un `InvalidValueError`.
- */
-type LatLng = { lat: number; lng: number };
-
-/**
- * Garde stricte : Google Maps exige des nombres FINIS (pas `null`,
- * `undefined`, `NaN`, `Infinity`, ni des strings). Le DTO type
- * `OrderAddress.latitude` comme `number` mais en pratique l'API renvoie
- * parfois `null`/`undefined` pour les anciennes commandes pré-obligation
- * coords — d'où ce check défensif au site d'usage.
- */
-function toLatLng(lat: unknown, lng: unknown): LatLng | null {
-  const n1 = typeof lat === "string" ? Number(lat) : lat;
-  const n2 = typeof lng === "string" ? Number(lng) : lng;
-  if (typeof n1 !== "number" || !Number.isFinite(n1)) return null;
-  if (typeof n2 !== "number" || !Number.isFinite(n2)) return null;
-  // Bornes Google Maps strictes — au-delà → InvalidValueError aussi.
-  if (n1 < -90 || n1 > 90) return null;
-  if (n2 < -180 || n2 > 180) return null;
-  return { lat: n1, lng: n2 };
-}
 
 /** Mètres → « 850 m » / « 1.2 km » / « 14 km ». */
 function formatDistance(m: number): string {
@@ -99,28 +75,9 @@ export function CourseMapView({ course }: Props) {
   // `stops` ne contient QUE les livraisons avec coords valides — on garde
   // séparément le compte des invalides pour pouvoir afficher un avertissement
   // côté UI (sinon les ops ne savent pas pourquoi un marker manque).
-  const { stops, invalidCount } = useMemo(() => {
-    let invalid = 0;
-    const valid = course.deliveries
-      .slice()
-      .sort((a, b) => a.sequence_order - b.sequence_order)
-      .map((d) => {
-        const coords = toLatLng(d.order.address?.latitude, d.order.address?.longitude);
-        if (!coords) {
-          invalid += 1;
-          return null;
-        }
-        return {
-          id: d.id,
-          index: d.sequence_order,
-          lat: coords.lat,
-          lng: coords.lng,
-          label: d.order.reference,
-        };
-      })
-      .filter((s): s is NonNullable<typeof s> => s !== null);
-    return { stops: valid, invalidCount: invalid };
-  }, [course.deliveries]);
+  // Adresse en texte JSON lue par `arretsDeLaCourse` (sinon « 0 arrêt » et
+  // « coordonnées manquantes » pour des commandes bien placées).
+  const { stops, invalidCount } = useMemo(() => arretsDeLaCourse(course.deliveries), [course.deliveries]);
 
   const multiStop = stops.length > 1;
 
@@ -222,7 +179,7 @@ export function CourseMapView({ course }: Props) {
         <div className="flex items-center gap-2">
           <MapIcon className="w-4 h-4 text-[#F17922]" />
           <h3 className="text-sm font-bold text-gray-900">
-            Trajet — {stops.length} arrêt{stops.length > 1 ? "s" : ""}
+            Trajet · {stops.length} arrêt{stops.length > 1 ? "s" : ""}
           </h3>
         </div>
         {route && (
