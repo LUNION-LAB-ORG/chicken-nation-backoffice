@@ -40,6 +40,7 @@
  */
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
+import { dureeLisible } from '../../courses/utils/tableau-livraison';
 import { presenceAppli, type PresenceAppli } from '../../livreurs/utils/disponibilite';
 
 // ============================================================
@@ -1026,10 +1027,14 @@ export function lireTournee(valeur: unknown): TourneeOperations | null {
   return { total, livrees: Math.min(livrees, total), fin_prevue: fin, en_retard: v.en_retard === true, retard_min: retard };
 }
 
-/** « En retard de 12 min » ; minutes inconnues : « En retard ». */
+/**
+ * « En retard de 12 min », « En retard de 1 h 15 » (même mise en forme
+ * qu'En direct et « À traiter », `dureeLisible`) ; minutes inconnues :
+ * « En retard ».
+ */
 export function texteRetard(minutes: number | null | undefined): string {
   return typeof minutes === 'number' && Number.isFinite(minutes) && minutes > 0
-    ? `En retard de ${Math.round(minutes)} min`
+    ? `En retard de ${dureeLisible(minutes)}`
     : 'En retard';
 }
 

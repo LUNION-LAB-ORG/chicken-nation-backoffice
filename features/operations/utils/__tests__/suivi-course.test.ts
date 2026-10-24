@@ -787,6 +787,11 @@ describe('tournée et retard (serveur du 24/10)', () => {
     expect(texteRetard(null)).toBe('En retard');
     expect(texteRetard(0)).toBe('En retard');
   });
+
+  test('au-delà d’une heure, comme En direct et « À traiter » : « En retard de 1 h 15 »', () => {
+    expect(texteRetard(75)).toBe('En retard de 1 h 15');
+    expect(texteRetard(60)).toBe('En retard de 1 h 00');
+  });
 });
 
 describe('aucun texte avec tiret cadratin', () => {
