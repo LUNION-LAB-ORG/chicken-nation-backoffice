@@ -792,7 +792,31 @@ export function indexerCommandes(listes: readonly (readonly CommandeOperations[]
 
 /** Course telle que portée par `course:statut:changed` (payload du serveur). */
 export interface CourseEvenement extends CourseOperations {
-  deliveries?: { order_id?: string | null; statut?: string | null; order?: { id?: string; reference?: string | null } | null }[];
+  deliveries?: {
+    order_id?: string | null;
+    statut?: string | null;
+    ajoutee_at?: string | null;
+    ajoutee_apres_retrait?: boolean | null;
+    order?: { id?: string; reference?: string | null } | null;
+  }[];
+}
+
+/**
+ * La livraison a-t-elle vraiment été AJOUTÉE à une course que le livreur
+ * avait déjà acceptée (ou récupérée) ? Même règle que la ligne de la carte
+ * (`estAjouteeARemettre`) : une commande de la création de la course
+ * (`ajoutee_at` nul), ou ajoutée pendant la recherche, fait partie de ce que
+ * le livreur a accepté. Serveur plus ancien (champs absents) : oui.
+ */
+function ajoutApresAcceptation(
+  livraison: NonNullable<CourseEvenement['deliveries']>[number],
+  course: Pick<CourseOperations, 'assigned_at'>,
+): boolean {
+  if (!('ajoutee_at' in livraison) && !('ajoutee_apres_retrait' in livraison)) return true;
+  if (livraison.ajoutee_apres_retrait) return true;
+  const ajoutee = instant(livraison.ajoutee_at);
+  const acceptee = instant(course.assigned_at);
+  return ajoutee !== null && acceptee !== null && ajoutee > acceptee;
 }
 
 export interface Avis {
@@ -812,7 +836,11 @@ export const RAISON_AJOUT = 'COMMANDE_AJOUTEE';
  *  - fusion : références des courses absorbées données par le serveur
  *    (`fusion.absorbees`), complétées par les commandes qui étaient sur une
  *    autre course de la liste (ancien serveur) ;
- *  - ajout : les commandes qui n'étaient sur aucune course.
+ *  - ajout : les commandes qui n'étaient sur aucune course, ajoutées après
+ *    l'acceptation du livreur ou après le retrait (`ajoutApresAcceptation`) :
+ *    la liste affichée peut être en retard d'une relecture, une commande de
+ *    la création de la course y paraît encore sans course (relecture du
+ *    24/10 : « CMD-A ajoutée », A étant la première commande, déjà partie).
  * Rien si aucune commande de la course n'était affichée (autre restaurant).
  */
 export function avisDeCourse(
@@ -840,7 +868,7 @@ export function avisDeCourse(
     if (precedente.courseId === course.id) continue;
     if (precedente.courseId && precedente.reference) {
       if (!absorbees.includes(precedente.reference)) absorbees.push(precedente.reference);
-    } else if (!precedente.courseId) {
+    } else if (!precedente.courseId && ajoutApresAcceptation(d, course)) {
       ajoutees.push(d.order?.reference ?? 'Une commande');
     }
   }

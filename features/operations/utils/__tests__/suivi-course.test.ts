@@ -560,6 +560,44 @@ describe('fusion de courses', () => {
     );
   });
 
+  test('avis d\'ajout : jamais pour une commande de la création ni pour un ajout pendant la recherche (relecture du 24/10)', () => {
+    // Liste affichée en retard d'une relecture : A et B y sont encore sans course.
+    const avant = indexerCommandes([
+      [
+        { id: 'A', reference: 'CMD-A', status: 'READY', delivery: null },
+        { id: 'B', reference: 'CMD-B', status: 'READY', delivery: null },
+      ],
+    ]);
+    // A : première commande de la course ; B : ajoutée pendant la recherche, avant l'acceptation.
+    const recherche = {
+      ...course({ statut: 'PENDING_ASSIGNMENT', deliverer_id: null, assigned_at: null }),
+      deliveries: [
+        { order_id: 'A', statut: 'PENDING', ajoutee_at: null, ajoutee_apres_retrait: false, order: { reference: 'CMD-A' } },
+        { order_id: 'B', statut: 'PENDING', ajoutee_at: ISO('12:20'), ajoutee_apres_retrait: false, order: { reference: 'CMD-B' } },
+      ],
+    };
+    expect(avisDeCourse('COMMANDE_AJOUTEE', recherche, avant, A('12:30'))).toBeNull();
+    // Ajoutée après l'acceptation : annoncée, et elle seule.
+    const acceptee = {
+      ...course({ statut: 'AT_RESTAURANT', assigned_at: ISO('12:21') }),
+      deliveries: [
+        { order_id: 'A', statut: 'PENDING', ajoutee_at: null, ajoutee_apres_retrait: false, order: { reference: 'CMD-A' } },
+        { order_id: 'B', statut: 'PENDING', ajoutee_at: ISO('12:25'), ajoutee_apres_retrait: false, order: { reference: 'CMD-B' } },
+      ],
+    };
+    expect(avisDeCourse('COMMANDE_AJOUTEE', acceptee, avant, A('12:30'))?.texte).toBe(
+      'CMD-B ajoutée à la course de Koffi : remettre avec le code 123',
+    );
+    // Ajoutée après le retrait : annoncée.
+    const apresRetrait = {
+      ...acceptee,
+      deliveries: [{ order_id: 'B', statut: 'PENDING', ajoutee_at: ISO('12:25'), ajoutee_apres_retrait: true, order: { reference: 'CMD-B' } }],
+    };
+    expect(avisDeCourse('COMMANDE_AJOUTEE', apresRetrait, avant, A('12:30'))?.texte).toBe(
+      'CMD-B ajoutée à la course de Koffi : remettre avec le code 123',
+    );
+  });
+
   test('rien pour un autre restaurant, une autre raison ou rien de nouveau', () => {
     const avant = indexerCommandes([[commande('1', 'READY', {})]]);
     const autre = { ...course({ id: 'kZ' }), deliveries: [{ order_id: '99', statut: 'PENDING' }] };
