@@ -531,13 +531,13 @@ export function retardLivraison(livraison: LivraisonCommande): string | null {
   return livraison.course?.en_retard ? texteRetard(livraison.course.retard_min) : null;
 }
 
-/** « À livrer », « En route », « Chez le client », « Livrée 12 h 52 », « Échec ». */
+/** Statuts d'une livraison, mots d'avant : « En attente », « En route », « Arrivé », « Livrée 12 h 52 », « Échec ». */
 export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): string {
   switch (arret.etat) {
     case 'en_route':
       return 'En route';
     case 'chez_le_client':
-      return 'Chez le client';
+      return 'Arrivé';
     case 'livree': {
       const h = texteHeure(arret.heure);
       return h ? `Livrée ${h}` : 'Livrée';
@@ -545,7 +545,7 @@ export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): str
     case 'echec':
       return 'Échec';
     default:
-      return 'À livrer';
+      return 'En attente';
   }
 }
 

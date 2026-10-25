@@ -390,7 +390,7 @@ describe('section Livraison complétée (serveur du 24/10)', () => {
     expect(l.tournee.map(texteArretTournee)).toEqual([
       'Arrêt 1 · ORD-4818 · Livrée 12 h 52',
       'Arrêt 2 · ORD-4819 · En route',
-      'Arrêt 3 · ORD-4820 · À livrer',
+      'Arrêt 3 · ORD-4820 · En attente',
     ]);
     expect(l.tournee.find((a) => a.cette_commande).reference).toBe('ORD-4819');
     expect(tourneeAAfficher(l)).toBe(true);
@@ -398,7 +398,7 @@ describe('section Livraison complétée (serveur du 24/10)', () => {
     expect(tourneeAAfficher(lue())).toBe(false);
     expect(
       texteArretTournee({ reference: 'ORD-1', rang: 1, etat: 'chez_le_client', heure: null, cette_commande: false }),
-    ).toBe('Arrêt 1 · ORD-1 · Chez le client');
+    ).toBe('Arrêt 1 · ORD-1 · Arrivé');
     expect(texteArretTournee({ reference: 'ORD-1', rang: 1, etat: 'echec', heure: null, cette_commande: false })).toBe(
       'Arrêt 1 · ORD-1 · Échec',
     );
