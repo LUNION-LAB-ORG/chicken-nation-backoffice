@@ -54,8 +54,10 @@ interface Props {
  * présentation que le groupe d'une course (`GroupeLivreurCard`).
  *
  * Mobile (< lg) : les colonnes s'empilent verticalement.
- * Grand écran (xl+) : les cards à l'intérieur de chaque colonne passent en
- * grille 2 colonnes.
+ * Très grand écran (1800 px et plus) : les cards à l'intérieur de chaque
+ * colonne passent en grille 2 colonnes. Plus tôt, la rangée de pastilles
+ * (statut, type, origine), qui tient sur une seule ligne depuis le 24/10,
+ * n'aurait plus la place.
  */
 export const OperationsSections: React.FC<Props> = ({
   buckets,
@@ -139,7 +141,7 @@ export const OperationsSections: React.FC<Props> = ({
           // les nouvelles commandes d'abord (PENDING/ACCEPTED), puis "en
           // préparation" (IN_PROGRESS), puis les groupes "Prêtes" (READY)
           // — chaque card porte son badge de statut, ce qui suffit à se repérer.
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 min-[1800px]:grid-cols-2 gap-2">
             {sortedAPreparer.map((o) => {
               const attente = attentes.get(o.id);
               return (
@@ -152,9 +154,12 @@ export const OperationsSections: React.FC<Props> = ({
                   warningLabel="En retard"
                   extra={
                     attente ? (
-                      <span className="inline-flex max-w-full items-start gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900">
-                        <Hourglass className="mt-px h-3 w-3 shrink-0" aria-hidden />
-                        <span>{attente.texte}</span>
+                      <span
+                        className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-900"
+                        title={attente.texte}
+                      >
+                        <Hourglass className="h-3 w-3 shrink-0" aria-hidden />
+                        <span className="truncate">{attente.texte}</span>
                       </span>
                     ) : undefined
                   }
@@ -186,7 +191,7 @@ export const OperationsSections: React.FC<Props> = ({
         {horsRestaurantCount === 0 ? (
           <EmptyState message="Aucune commande hors restaurant" />
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 min-[1800px]:grid-cols-2 gap-2">
             {groupesHors.map((g) => (
               <GroupeLivreurCard
                 key={g.key}
