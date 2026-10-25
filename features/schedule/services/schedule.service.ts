@@ -9,11 +9,12 @@ import type {
   ISchedulePlanStats,
   SchedulePlanStatus,
 } from "../types/schedule.types";
+import type { ErreurPlanning } from "../utils/erreurs-planning";
+
+export type { ErreurPlanning } from "../utils/erreurs-planning";
+export { estPlanningEfface, estRouteAbsente } from "../utils/erreurs-planning";
 
 const ENDPOINT = "/schedule";
-
-/** Erreur d'un appel du planning : le texte du serveur et son statut HTTP. */
-export type ErreurPlanning = Error & { status?: number };
 
 /**
  * Le refus du serveur est écrit pour l'écran (« Pas de repos ce jour-là. »,
@@ -35,19 +36,6 @@ const safeCall = async <T>(fn: () => Promise<T>): Promise<T> => {
       "Une erreur est survenue. Veuillez réessayer.";
     throw Object.assign(new Error(texte), { status: e?.status }) as ErreurPlanning;
   }
-};
-
-/**
- * Vrai si la route n'existe pas sur ce serveur (serveur pas encore à jour) :
- * 404 de NestJS « Cannot GET /… », pas le 404 d'un planning effacé
- * (« Ce planning n'existe plus. »).
- */
-export const estRouteAbsente = (error: unknown): boolean => {
-  const e = error as ErreurPlanning | null;
-  if (e?.status !== 404) return false;
-  const texte = e.message ?? "";
-  // Sans corps JSON (proxy), `api` lève son texte par défaut.
-  return /^Cannot [A-Z]+ \//.test(texte) || texte === "Ressource non trouvée.";
 };
 
 interface IListPlansParams {

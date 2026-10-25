@@ -7,6 +7,7 @@ import {
   archiveSchedulePlan,
   confirmSchedulePlan,
   deleteSchedulePlan,
+  estPlanningEfface,
   estRouteAbsente,
   generateSchedulePlan,
   getApercuPlannings,
@@ -24,6 +25,7 @@ import type {
   IPlanningLivreur,
   SchedulePlanStatus,
 } from "../types/schedule.types";
+import { relectureDuDetail } from "../utils/erreurs-planning";
 
 const KEY = ["schedule"];
 
@@ -33,6 +35,9 @@ const montrerRefus = (e: unknown) =>
 
 /** Pas de nouvel essai quand la route manque (serveur ancien) : la réponse ne changera pas. */
 const nouvelEssai = (n: number, e: unknown) => !estRouteAbsente(e) && n < 2;
+
+/** Planning effacé : la réponse ne changera pas non plus. Sinon un essai, comme par défaut. */
+const nouvelEssaiDuDetail = (n: number, e: unknown) => !estPlanningEfface(e) && n < 1;
 
 export const useSchedulePlansQuery = (
   params: {
@@ -54,9 +59,11 @@ export const useSchedulePlanDetailQuery = (planId: string | null | undefined) =>
     queryKey: [...KEY, "plan", planId],
     queryFn: () => getSchedulePlanDetail(planId as string),
     enabled: Boolean(planId),
-    refetchInterval: 15 * 1000, // pour suivre les confirmations en live
+    // Pour suivre les confirmations en live ; arrêtée si le planning n'existe plus.
+    refetchInterval: (query) => relectureDuDetail(query.state.error),
     refetchIntervalInBackground: false,
     staleTime: 10 * 1000,
+    retry: nouvelEssaiDuDetail,
   });
 
 export const useSchedulePlanStatsQuery = (planId: string | null | undefined) =>
@@ -64,8 +71,9 @@ export const useSchedulePlanStatsQuery = (planId: string | null | undefined) =>
     queryKey: [...KEY, "stats", planId],
     queryFn: () => getSchedulePlanStats(planId as string),
     enabled: Boolean(planId),
-    refetchInterval: 15 * 1000,
+    refetchInterval: (query) => relectureDuDetail(query.state.error),
     staleTime: 10 * 1000,
+    retry: nouvelEssaiDuDetail,
   });
 
 /** Tableau du siège « Plannings des restaurants » (`GET /schedule/apercu`). */
@@ -125,6 +133,18 @@ const useRelire = () => {
   };
 };
 
+/**
+ * Refus d'un geste. Planning qui n'existe plus (supprimé ou refait ailleurs) :
+ * la liste et le détail sont relus tout de suite, et l'écran le dit.
+ */
+const useRefus = () => {
+  const relire = useRelire();
+  return (e: unknown, planId: string) => {
+    montrerRefus(e);
+    if (estPlanningEfface(e)) relire(planId);
+  };
+};
+
 export const useGeneratePlanMutation = () => {
   const relire = useRelire();
   return useMutation({
@@ -135,42 +155,47 @@ export const useGeneratePlanMutation = () => {
 
 export const useSendPlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (planId: string) => sendSchedulePlan(planId),
     onSuccess: (_, planId) => relire(planId),
-    onError: montrerRefus,
+    onError: (e, planId) => refus(e, planId),
   });
 };
 
 export const useConfirmPlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (planId: string) => confirmSchedulePlan(planId),
     onSuccess: (_, planId) => relire(planId),
-    onError: montrerRefus,
+    onError: (e, planId) => refus(e, planId),
   });
 };
 
 export const useArchivePlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (planId: string) => archiveSchedulePlan(planId),
     onSuccess: (_, planId) => relire(planId),
-    onError: montrerRefus,
+    onError: (e, planId) => refus(e, planId),
   });
 };
 
 export const useDeletePlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (planId: string) => deleteSchedulePlan(planId),
     onSuccess: () => relire(),
-    onError: montrerRefus,
+    onError: (e, planId) => refus(e, planId),
   });
 };
 
 export const useSetDelivererDayMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (vars: {
       planId: string;
@@ -179,27 +204,29 @@ export const useSetDelivererDayMutation = () => {
       mode: "REST" | "WORK";
     }) => setDelivererDay(vars.planId, vars.delivererId, { date: vars.date, mode: vars.mode }),
     onSuccess: (_, vars) => relire(vars.planId),
-    onError: montrerRefus,
+    onError: (e, vars) => refus(e, vars.planId),
   });
 };
 
 export const useAddDelivererToPlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (vars: { planId: string; delivererId: string }) =>
       addDelivererToPlan(vars.planId, vars.delivererId),
     onSuccess: (_, vars) => relire(vars.planId),
-    onError: montrerRefus,
+    onError: (e, vars) => refus(e, vars.planId),
   });
 };
 
 export const useRemoveDelivererFromPlanMutation = () => {
   const relire = useRelire();
+  const refus = useRefus();
   return useMutation({
     mutationFn: (vars: { planId: string; delivererId: string }) =>
       removeDelivererFromPlan(vars.planId, vars.delivererId),
     onSuccess: (_, vars) => relire(vars.planId),
-    onError: montrerRefus,
+    onError: (e, vars) => refus(e, vars.planId),
   });
 };
 
