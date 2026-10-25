@@ -104,9 +104,10 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant, o
 /**
  * Plein vert quand le livreur est au restaurant, contour orange sinon (sa
  * position peut avoir du retard sur le livreur qui est devant la caissière).
- * Toujours actif : la fenêtre dit s'il manque quelque chose.
+ * Toujours actif : la fenêtre dit s'il manque quelque chose. Le même bouton
+ * est au pied du tiroir de la commande.
  */
-function BoutonConfirmerRecuperation({
+export function BoutonConfirmerRecuperation({
   course,
   commandes,
   service,

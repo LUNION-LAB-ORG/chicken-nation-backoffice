@@ -56,7 +56,7 @@ const TONS: Record<TonEtat, string> = {
  *    avec l'heure prévue si le serveur la connaît ;
  *  - « Prête → livrée : 28 min » une fois livrée.
  *
- * Ajouts du 24/10 au soir : « En retard de 12 min » à la place de l'état ;
+ * Ajouts du 24/10 au soir : « En retard de 12 min » sous l'état (qui reste) ;
  * l'appli du livreur quand elle est fermée ou en arrière-plan ; la tournée
  * (deux arrêts ou plus), la commande ouverte en gras ; l'échec et la note du
  * livreur. Serveur plus ancien : ces lignes n'apparaissent pas. « Voir la
@@ -168,15 +168,14 @@ export function SectionLivraison({ commande }: Props) {
         </div>
         {(livreur && (etat || retard)) || aAppeler ? (
           <div className="shrink-0 flex flex-col items-end gap-1.5">
-            {livreur && retard ? (
+            {/* L'état d'avant reste ; le retard s'ajoute dessous, sans le remplacer. */}
+            {livreur && etat && (
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS[etat.ton]}`}>
+                {etat.libelle}
+              </span>
+            )}
+            {livreur && retard && (
               <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS.rouge}`}>{retard}</span>
-            ) : (
-              livreur &&
-              etat && (
-                <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS[etat.ton]}`}>
-                  {etat.libelle}
-                </span>
-              )
             )}
             {aAppeler && (
               <BoutonAppelerLivreur

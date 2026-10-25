@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { CheckCircle, Info, Truck } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
@@ -11,11 +12,16 @@ import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
 import { piedDuTiroir } from "../../utils/pied-tiroir";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
-import { useCommandeEnCours } from "../../hooks/use-commande-en-cours";
+import { useCommandeEnCours, useCommandesDeLaCourse } from "../../hooks/use-commande-en-cours";
 import { useMaintenant } from "../../hooks/use-maintenant";
-import { courseDeCommande, type CommandeOperations } from "../../utils/suivi-course";
+import { useAuthStore } from "../../../users/hook/authStore";
+import { peutConfirmerRecuperation } from "../../utils/code-retrait";
+import { courseDeLaPrete, quelquUnARemettre } from "../../utils/group-orders";
+import { courseDeCommande, type CommandeOperations, type CourseOperations } from "../../utils/suivi-course";
 import { ligneRetenue } from "../../utils/ligne-retenue";
+import { BoutonConfirmerRecuperation } from "../course/BandeauCourse";
 import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
+import { PickupValidationModal } from "../PickupValidationModal";
 
 interface Props {
   order: Order;
@@ -35,6 +41,11 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   // Opérations, le détail de la commande n'en porte qu'une partie.
   const enCours = useCommandeEnCours(order.id);
   const maintenant = useMaintenant(15_000);
+  const membre = useAuthStore((s) => s.user);
+  // « Confirmer la récupération » depuis le tiroir (demande du 24/10 : « la
+  // caissière clique sur le groupe ou la commande »), même fenêtre que le groupe.
+  const [aRemettre, setARemettre] = useState<CourseOperations | null>(null);
+  const commandesDeLaCourse = useCommandesDeLaCourse(aRemettre?.id);
 
   /*
     Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
@@ -70,8 +81,8 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
    */
   const moment = momentSouhaite(order.date, order.time);
   const ouverture = moment ? new Date(moment.getTime() - AVANCE_PREPARATION_MS) : null;
-  const tropTot = !!ouverture && Date.now() < ouverture.getTime();
-
+  // Heure relue toutes les 15 s (`useMaintenant`), sans lecture de l'horloge pendant le rendu.
+  const tropTot = !!ouverture && maintenant.getTime() < ouverture.getTime();
 
   if (order.status === OrderStatus.ACCEPTED) {
     return (
@@ -119,6 +130,11 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     // Planificateur v2 : livreur et son état, retenue en une ligne, code.
     // Demande du 24/10 (« reste simple ») : plus de phrase d'ajout à la course.
     const retenue = ligneRetenue(course, maintenant);
+    // Mêmes conditions que le bouton du groupe : rôle admis par le serveur,
+    // quelqu'un pour prendre les sacs, commande encore dans cette course.
+    const aConfirmer = courseDeLaPrete(suivie as unknown as Order);
+    const peutConfirmer =
+      peutChangerStatut && peutConfirmerRecuperation(membre) && !!aConfirmer && quelquUnARemettre(aConfirmer);
     return (
       <div className="space-y-2">
         <EtatCourseLivreur
@@ -138,7 +154,28 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
             <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
           </p>
         )}
+        {peutConfirmer && aConfirmer && (
+          <BoutonConfirmerRecuperation
+            course={aConfirmer}
+            commandes={[suivie]}
+            service={order.delivery_service}
+            maintenant={maintenant}
+            onClick={() => setARemettre(aConfirmer)}
+          />
+        )}
         {annulation}
+        {/* Hors du tiroir (qui glisse avec `transform`) : la fenêtre couvre tout l'écran. */}
+        {aRemettre &&
+          typeof document !== "undefined" &&
+          createPortal(
+            <PickupValidationModal
+              course={aRemettre}
+              commandes={commandesDeLaCourse.length > 0 ? commandesDeLaCourse : [suivie as unknown as Order]}
+              restaurantNom={order.restaurant?.name ?? null}
+              onClose={() => setARemettre(null)}
+            />,
+            document.body,
+          )}
       </div>
     );
   }
