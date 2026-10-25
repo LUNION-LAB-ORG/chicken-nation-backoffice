@@ -1,81 +1,122 @@
 "use client";
 
-import React from "react";
-import { AlertCircle, Check, X } from "lucide-react";
+import React, { useEffect } from "react";
+import { AlertCircle, Check, Loader2, X } from "lucide-react";
 
-import type { Course, Delivery } from "../../courses/types/course.types";
-import { DeliveryService, type OrderStatus } from "../../orders/types/order.types";
-import { useValidatePickupMutation } from "../queries/validate-pickup.mutation";
-import { etatRemise, remiseParCode, type EtatRemise } from "../utils/remise-par-code";
+import type { Course } from "../../courses/types/course.types";
+import { DeliveryService } from "../../orders/types/order.types";
+import { useApercuRecuperationQuery } from "../queries/apercu-recuperation.query";
+import { useConfirmerRecuperationMutation } from "../queries/confirmer-recuperation.mutation";
+import {
+  commandesARemettre,
+  courseRemiseDeLEcran,
+  etatRemise,
+  libellePastille,
+  remiseParCode,
+  texteClientMontant,
+  type CommandeDeLEcran,
+  type CourseRemise,
+  type EtatRemise,
+  type LivraisonRemise,
+} from "../utils/remise-par-code";
+import type { CourseOperations } from "../utils/suivi-course";
 import { ServiceBadge } from "./ServiceBadge";
 
-/**
- * Libellés alignés sur le mapper `orderMapper.ts` de la page Commandes —
- * aucune divergence tolérée : on affiche partout exactement ce que la page
- * Commandes affiche pour un statut donné.
- */
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  PENDING: "EN ATTENTE",
-  ACCEPTED: "NOUVELLE",
-  IN_PROGRESS: "EN PRÉPARATION",
-  READY: "PRÊT",
-  PICKED_UP: "EN LIVRAISON",
-  COLLECTED: "RÉCUPÉRÉE",
-  COMPLETED: "TERMINÉE",
-  CANCELLED: "ANNULÉE",
-};
-
 interface Props {
-  course: Course;
+  /** Course telle que l'écran la connaît (identifiant, code, référence, restaurant). */
+  course: CourseOperations;
+  /** Commandes de la course déjà à l'écran : lignes montrées avant la lecture de la course. */
+  commandes: readonly CommandeDeLEcran[];
+  /** Nom du restaurant de la course, si l'écran le connaît. */
+  restaurantNom?: string | null;
   onClose: () => void;
 }
 
 /**
- * Modal affichée quand la caissière a saisi un pickup_code valide.
- * Liste toutes les commandes de la course + leur statut.
+ * Fenêtre « Récupération · code 123 », ouverte par « Confirmer la
+ * récupération » sur le groupe de la course (demande du 24/10 au soir : plus
+ * de saisie du code). Mêmes mots et même aspect qu'avant ; le code est écrit
+ * en grand, la caissière le compare à celui que le livreur lui dit.
+ *
+ *  - s'ouvre tout de suite avec les commandes de l'écran, puis lit la course
+ *    (`GET /courses/operations/:id`, repli sur l'ancienne route à code si le
+ *    serveur répond 404 de route) ;
  *  - retrait : « Valider la récupération » est désactivé tant que toutes ne
  *    sont pas prêtes ;
  *  - retrait complémentaire (course déjà récupérée, livreur encore au
  *    comptoir, commande ajoutée après le retrait) : les commandes déjà
- *    remises sont marquées « Déjà remise », « Remettre au livreur » remet
- *    les commandes prêtes (`utils/remise-par-code.ts`).
- *
- * Le restaurant de la course est affiché : le même code peut exister dans un
- * autre restaurant (incident du 22/10). Un refus du serveur s'affiche ici
- * avec SON texte, en plus du toast.
+ *    remises sont marquées « DÉJÀ REMISE », « Remettre au livreur » remet
+ *    les commandes prêtes (`utils/remise-par-code.ts`) ;
+ *  - un refus du serveur s'affiche ici avec SON texte, la course est relue.
  */
-export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
-  const { mutate: validate, isPending, error } = useValidatePickupMutation();
+export const PickupValidationModal: React.FC<Props> = ({ course, commandes, restaurantNom, onClose }) => {
+  const apercu = useApercuRecuperationQuery({
+    id: course.id,
+    pickup_code: course.pickup_code,
+    restaurant_id: course.restaurant_id,
+  });
+  const { mutate: valider, isPending, error } = useConfirmerRecuperationMutation();
 
-  const remise = remiseParCode(course);
+  useEffect(() => {
+    const fermer = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", fermer);
+    return () => window.removeEventListener("keydown", fermer);
+  }, [onClose]);
+
+  const lue = apercu.data as Course | undefined;
+  const source: CourseRemise = lue
+    ? { statut: lue.statut, deliveries: (lue.deliveries ?? []) as unknown as LivraisonRemise[] }
+    : courseRemiseDeLEcran(course, commandes);
+  const remise = remiseParCode(source);
+  const aRemettre = commandesARemettre(source);
+  const code = lue?.pickup_code ?? course.pickup_code ?? null;
+  const reference = lue?.reference ?? course.reference ?? null;
+  const restaurant = lue?.restaurant?.name ?? restaurantNom ?? null;
+  const refus = error?.message ?? apercu.error?.message ?? null;
+  const lecture = apercu.isFetching;
 
   const handleValidate = () => {
-    validate(course, {
-      onSuccess: () => onClose(),
-    });
+    if (!remise.peutValider || aRemettre.length === 0 || lecture || isPending) return;
+    valider(
+      {
+        course: { id: course.id, pickup_code: code, restaurant_id: lue?.restaurant_id ?? course.restaurant_id },
+        orderIds: aRemettre,
+        statut: source.statut,
+      },
+      { onSuccess: () => onClose() },
+    );
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={code ? `Récupération · code ${code}` : "Récupération"}
+    >
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <div>
-            <h3 className="text-base font-bold text-gray-900">
-              Récupération · code <span className="font-mono text-[#F17922]">{course.pickup_code}</span>
+          <div className="min-w-0">
+            <h3 className="flex flex-wrap items-baseline gap-x-2 text-base font-bold text-gray-900">
+              <span>Récupération{code ? " · code" : ""}</span>
+              {code && (
+                <span className="font-mono text-4xl leading-none tracking-[0.15em] text-[#F17922]">{code}</span>
+              )}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Course {course.reference}
-              {course.restaurant?.name ? ` · ${course.restaurant.name}` : ""} ·{" "}
-              {course.deliveries.length} commande(s)
+            <p className="text-xs text-gray-500 mt-1">
+              {reference ? `Course ${reference}` : "Course"}
+              {restaurant ? ` · ${restaurant}` : ""} · {source.deliveries.length} commande(s)
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button onClick={onClose} aria-label="Fermer" className="p-2 hover:bg-gray-100 rounded-lg">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
-          {course.deliveries.map((d) => (
+          {source.deliveries.map((d) => (
             <DeliveryStatusRow
               key={d.id}
               delivery={d}
@@ -83,10 +124,10 @@ export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
               complementaire={remise.complementaire}
             />
           ))}
-          {error && (
+          {refus && (
             <div className="flex items-start gap-2 text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
-              <span>{error.message}</span>
+              <span>{refus}</span>
             </div>
           )}
         </div>
@@ -108,10 +149,10 @@ export const PickupValidationModal: React.FC<Props> = ({ course, onClose }) => {
             </button>
             <button
               onClick={handleValidate}
-              disabled={!remise.peutValider || isPending}
+              disabled={!remise.peutValider || aRemettre.length === 0 || lecture || isPending}
               className="px-4 py-2 text-sm bg-[#F17922] text-white font-semibold rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
-              <Check className="w-4 h-4" />
+              {lecture ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Check className="w-4 h-4" />}
               {isPending ? "Validation…" : remise.bouton}
             </button>
           </div>
@@ -137,25 +178,12 @@ const PASTILLE: Record<Exclude<EtatRemise, "PAS_PRETE">, { cadre: string; badge:
   },
 };
 
-function libellePastille(delivery: Delivery, etat: EtatRemise, complementaire: boolean): string {
-  switch (etat) {
-    case "A_REMETTRE":
-      return complementaire ? "À REMETTRE" : "PRÊT";
-    case "DEJA_REMISE":
-      return "DÉJÀ REMISE";
-    case "TERMINEE":
-      return "TERMINÉE";
-    default:
-      return STATUS_LABEL[delivery.order.status as OrderStatus] ?? "INCONNU";
-  }
-}
-
 function DeliveryStatusRow({
   delivery,
   etat,
   complementaire,
 }: {
-  delivery: Delivery;
+  delivery: LivraisonRemise;
   etat: EtatRemise;
   complementaire: boolean;
 }) {
@@ -170,10 +198,7 @@ function DeliveryStatusRow({
           <span className="text-sm font-bold text-gray-900">{delivery.order.reference}</span>
           <ServiceBadge service={DeliveryService.CHICKEN_NATION} size="sm" />
         </div>
-        <div className="text-xs text-gray-600 mt-0.5">
-          {delivery.order.fullname ?? "Client"} ·{" "}
-          {delivery.order.amount.toLocaleString("fr-FR")} F
-        </div>
+        <div className="text-xs text-gray-600 mt-0.5">{texteClientMontant(delivery)}</div>
       </div>
       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${style.badge}`}>
         {libellePastille(delivery, etat, complementaire)}

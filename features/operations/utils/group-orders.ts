@@ -49,6 +49,21 @@ function getCourseFromOrder(order: Order): { id: string; reference: string; pick
 }
 
 /**
+ * Quelqu'un à qui remettre les sacs (« Confirmer la récupération ») : un
+ * livreur a accepté, ou Turbo a la course. Personne pendant la recherche,
+ * ni sur une course sans livreur trouvé, annulée ou terminée (le serveur
+ * garde le livreur d'une course annulée et répondrait 409). Même règle que
+ * la caisse.
+ */
+export function quelquUnARemettre(
+  course: { statut: string; deliverer_id?: string | null; turbo_escalated_at?: string | null } | null | undefined,
+): boolean {
+  if (!course) return false;
+  if (course.statut === 'CANCELLED' || course.statut === 'EXPIRED' || course.statut === 'COMPLETED') return false;
+  return !!course.deliverer_id || !!course.turbo_escalated_at;
+}
+
+/**
  * Répartit les orders actives en 3 buckets logiques (par présence physique de
  * la commande) — alimentent les 2 onglets de la page Opérations :
  *

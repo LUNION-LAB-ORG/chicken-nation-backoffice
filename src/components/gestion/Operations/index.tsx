@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Activity, AlertCircle, Archive, PhoneCall, Plus, RotateCw, UserPlus } from "lucide-react";
+import { Activity, Archive, PhoneCall, Plus, RotateCw, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
@@ -14,13 +14,9 @@ import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { OperationsDrawer } from "../../../../features/operations/components/OperationsDrawer";
 import { OperationsKpiBar } from "../../../../features/operations/components/OperationsKpiBar";
 import { OperationsSections } from "../../../../features/operations/components/OperationsSections";
-import { PickupCodeInput } from "../../../../features/operations/components/PickupCodeInput";
-import { PickupValidationModal } from "../../../../features/operations/components/PickupValidationModal";
 import type { DrawerTabKey } from "../../../../features/operations/components/drawer/DrawerTabs";
 import { useOperationsSocketSync } from "../../../../features/operations/hooks/useOperationsSocketSync";
-import { useCourseByPickupCodeQuery } from "../../../../features/operations/queries/course-by-pickup-code.query";
 import { useOperationsActiveQuery } from "../../../../features/operations/queries/operations-active.query";
-import { peutValiderCodeRetrait } from "../../../../features/operations/utils/code-retrait";
 import { groupOrdersForOperations } from "../../../../features/operations/utils/group-orders";
 import { OrderType, type Order } from "../../../../features/orders/types/order.types";
 import { useOrderDetailQuery } from "../../../../features/orders/queries/order-detail.query";
@@ -63,7 +59,8 @@ const TABS: { key: CommandesTab; label: string; Icon: React.FC<{ className?: str
 /**
  * Page "Commandes" unifiée, trois onglets :
  *
- *  • **En cours**  : suivi temps réel (KPI + cards + code retrait livreur)
+ *  • **En cours**  : suivi temps réel (KPI + cards) ; la récupération se
+ *    confirme sur le groupe de la course, sans saisir le code
  *  • **Commandes** : table paginée avec filtres, création, modification
  *  • **À relancer** : paniers de l'application restés sans paiement (ADMIN,
  *    centre d'appels), avec leur compteur dans l'en-tête
@@ -149,18 +146,6 @@ export default function Operations() {
     setFilter("orders", "search", query);
     setPagination("orders", 1, 10);
   };
-
-  // ── Pickup code (onglet "En cours") ─────────────────────────────────────────
-  // Cherché dans le restaurant du membre, ou celui choisi ci-dessous (22/10).
-  const [submittedCode, setSubmittedCode] = useState<string | null>(null);
-  const {
-    data: course,
-    error: pickupError,
-    isLoading: pickupLoading,
-    isFetching: pickupFetching,
-    isError: pickupIsError,
-    refetch: pickupRefetch,
-  } = useCourseByPickupCodeQuery(submittedCode ?? "", submittedCode !== null);
 
   // ── Données "En cours" ───────────────────────────────────────────────────────
   const { data, isLoading } = useOperationsActiveQuery(selectedRestaurantId ?? undefined);
@@ -398,38 +383,6 @@ export default function Operations() {
               Pour un manager restaurant, le composant ne se rend pas et le filtre
               reste pilote par le backend via le JWT. */}
           <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
-
-          {/* Code retrait livreur : seulement pour les rôles admis par le serveur */}
-          {peutValiderCodeRetrait(currentUser) && (
-            <div className="max-w-md">
-              <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading || pickupFetching} />
-              {/* Le texte du serveur : code inconnu ici aujourd'hui, ou présent
-                  dans plusieurs restaurants (choisir le restaurant au-dessus). */}
-              {pickupIsError && submittedCode && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>
-                    {pickupError?.message ||
-                      "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
-                  </span>
-                  <button
-                    onClick={() => pickupRefetch()}
-                    disabled={pickupFetching}
-                    className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
-                  >
-                    Réessayer
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {course && submittedCode && (
-            <PickupValidationModal
-              course={course}
-              onClose={() => setSubmittedCode(null)}
-            />
-          )}
 
           {/* KPIs masqués sur mobile : les compteurs sont repris dans les onglets d'état */}
           <div className="hidden md:block">

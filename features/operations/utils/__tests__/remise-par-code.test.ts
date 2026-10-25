@@ -4,7 +4,17 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { estRetraitComplementaire, etatRemise, remiseParCode, texteRemiseValidee } from '../remise-par-code';
+import {
+  commandesARemettre,
+  courseRemiseDeLEcran,
+  estRetraitComplementaire,
+  etatRemise,
+  libellePastille,
+  remiseParCode,
+  texteClientMontant,
+  texteRemiseValidee,
+} from '../remise-par-code';
+import { quelquUnARemettre } from '../group-orders';
 
 // Même adresse d'API que les autres tests du dossier (`code-retrait.test.ts`) :
 // bun garde les modules d'un fichier à l'autre, le client HTTP chargé par la
@@ -131,14 +141,22 @@ describe('retrait ordinaire : la règle du serveur ne change pas', () => {
 });
 
 describe('la fenêtre affichée à la caissière', () => {
-  const rendre = (c) =>
-    renderToStaticMarkup(
+  // Course lue par la fenêtre, gardée fraîche : le rendu ne relance pas la lecture.
+  const rendre = (c, ecran = []) => {
+    const client = new QueryClient();
+    client.setQueryData(['operations', 'recuperation', c.id], c, { updatedAt: Date.now() + 3_600_000 });
+    return renderToStaticMarkup(
       React.createElement(
         QueryClientProvider,
-        { client: new QueryClient() },
-        React.createElement(PickupValidationModal, { course: c, onClose: () => undefined }),
+        { client },
+        React.createElement(PickupValidationModal, {
+          course: { id: c.id, reference: c.reference, pickup_code: c.pickup_code, statut: c.statut, restaurant_id: c.restaurant_id },
+          commandes: ecran,
+          onClose: () => undefined,
+        }),
       ),
     );
+  };
   const boutonValider = (html) => {
     const boutons = html.match(/<button[^>]*>(?:(?!<\/button>).)*<\/button>/gs) ?? [];
     return boutons.find((b) => /Remettre au livreur|Valider la récupération/.test(b));
@@ -167,5 +185,98 @@ describe('la fenêtre affichée à la caissière', () => {
   test('aucun tiret cadratin dans la fenêtre', () => {
     expect(rendre(K)).not.toContain('—');
     expect(rendre(course('ACCEPTED', [livraison('a', 'SOMETHING')]))).not.toContain('—');
+  });
+});
+
+describe('fenêtre ouverte par « Confirmer la récupération » (demande du 24/10 au soir)', () => {
+  const rendre = (c) => {
+    const client = new QueryClient();
+    client.setQueryData(['operations', 'recuperation', c.id], c, { updatedAt: Date.now() + 3_600_000 });
+    return renderToStaticMarkup(
+      React.createElement(
+        QueryClientProvider,
+        { client },
+        React.createElement(PickupValidationModal, {
+          course: { id: c.id, reference: c.reference, pickup_code: c.pickup_code, statut: c.statut, restaurant_id: c.restaurant_id },
+          commandes: [],
+          onClose: () => undefined,
+        }),
+      ),
+    );
+  };
+
+  test('mêmes mots qu’avant : « Récupération · code », la course, le restaurant, le nombre de commandes', () => {
+    const html = rendre(course('AT_RESTAURANT', [livraison('a', 'READY'), livraison('b', 'READY')]));
+    expect(html).toContain('Récupération · code');
+    expect(html).toContain('>123<');
+    expect(html).toContain('Course CRS-K · Angré · 2 commande(s)');
+    expect(html).toContain('Valider la récupération');
+    expect(html).toContain('Toutes les commandes sont prêtes');
+    expect(html).toContain('PRÊT');
+    expect(html).toContain('Chicken Nation');
+    expect(html).not.toContain('<input');
+  });
+
+  test('chaque ligne garde le client et le montant', () => {
+    expect(texteClientMontant(livraison('a', 'READY'))).toBe(`Client a · ${(5000).toLocaleString('fr-FR')} F`);
+    expect(texteClientMontant({ id: 'x', order: { status: 'READY', fullname: null, amount: null } })).toBe('Client · 0 F');
+    expect(rendre(course('AT_RESTAURANT', [livraison('a', 'READY')]))).toContain(`Client a · ${(5000).toLocaleString('fr-FR')} F`);
+  });
+
+  test('pastilles : PRÊT, À REMETTRE, DÉJÀ REMISE, TERMINÉE, sinon le statut comme la page Commandes', () => {
+    expect(libellePastille(livraison('a', 'READY'), 'A_REMETTRE', false)).toBe('PRÊT');
+    expect(libellePastille(livraison('a', 'READY'), 'A_REMETTRE', true)).toBe('À REMETTRE');
+    expect(libellePastille(livraison('a', 'PICKED_UP'), 'DEJA_REMISE', true)).toBe('DÉJÀ REMISE');
+    expect(libellePastille(livraison('a', 'COLLECTED'), 'TERMINEE', true)).toBe('TERMINÉE');
+    expect(libellePastille(livraison('a', 'IN_PROGRESS'), 'PAS_PRETE', false)).toBe('EN PRÉPARATION');
+    expect(libellePastille(livraison('a', 'ACCEPTED'), 'PAS_PRETE', false)).toBe('NOUVELLE');
+    expect(libellePastille(livraison('a', 'PENDING'), 'PAS_PRETE', false)).toBe('EN ATTENTE');
+  });
+
+  test('`order_ids` : les commandes à remettre, sans les déjà remises ni celles en cuisine', () => {
+    expect(commandesARemettre(K)).toEqual(['o-c']);
+    expect(commandesARemettre(course('AT_RESTAURANT', [livraison('a', 'READY'), livraison('b', 'READY')]))).toEqual([
+      'o-a',
+      'o-b',
+    ]);
+    expect(
+      commandesARemettre(course('IN_DELIVERY', [livraison('a', 'PICKED_UP'), livraison('c', 'READY'), livraison('d', 'IN_PROGRESS')])),
+    ).toEqual(['o-c']);
+  });
+
+  test('la fenêtre s’ouvre avec les commandes de l’écran, avant de lire la course', () => {
+    const ecran = [
+      { id: 'o-a', reference: 'CMD-A', status: 'READY', amount: 7000, fullname: 'Awa Koné', delivery: { id: 'a', statut: 'PENDING', course: { id: 'k' } } },
+      { id: 'o-b', reference: 'CMD-B', status: 'IN_PROGRESS', fullname: 'Yao B.', delivery: { id: 'b', statut: 'PENDING', course: { id: 'k' } } },
+      { id: 'o-x', reference: 'CMD-X', status: 'READY', delivery: { id: 'x', statut: 'PENDING', course: { id: 'autre' } } },
+      { id: 'o-z', reference: 'CMD-Z', status: 'READY', delivery: { id: 'z', statut: 'CANCELLED', course: { id: 'k' } } },
+    ];
+    const c = courseRemiseDeLEcran({ id: 'k', statut: 'AT_RESTAURANT' }, ecran);
+    expect(c.deliveries.map((d) => d.order.reference)).toEqual(['CMD-A', 'CMD-B']);
+    expect(c.deliveries[0].order.amount).toBe(7000);
+    expect(remiseParCode(c).bilan).toBe('1 commande pas encore prête');
+    expect(remiseParCode(c).bouton).toBe('Valider la récupération');
+    expect(commandesARemettre(c)).toEqual(['o-a']);
+  });
+
+  test('message bref de réussite : les mots d’avant', () => {
+    expect(texteRemiseValidee({ statut: 'AT_RESTAURANT' })).toBe('Course validée : le livreur peut partir en livraison');
+    expect(texteRemiseValidee({ statut: 'IN_DELIVERY' })).toBe('Commande remise : le livreur peut partir');
+  });
+});
+
+describe('« Confirmer la récupération » sur le groupe : quelqu’un pour prendre les sacs', () => {
+  test('un livreur a accepté, ou Turbo a la course', () => {
+    expect(quelquUnARemettre({ statut: 'ACCEPTED', deliverer_id: 'l1' })).toBe(true);
+    expect(quelquUnARemettre({ statut: 'IN_DELIVERY', deliverer_id: 'l1' })).toBe(true);
+    expect(quelquUnARemettre({ statut: 'ACCEPTED', deliverer_id: null, turbo_escalated_at: '2026-10-24T12:00:00Z' })).toBe(true);
+  });
+
+  test('personne pendant la recherche, ni sur une course sans livreur trouvé, annulée ou terminée', () => {
+    expect(quelquUnARemettre({ statut: 'PENDING_ASSIGNMENT', deliverer_id: null })).toBe(false);
+    expect(quelquUnARemettre({ statut: 'EXPIRED', deliverer_id: null })).toBe(false);
+    expect(quelquUnARemettre({ statut: 'CANCELLED', deliverer_id: 'l1' })).toBe(false);
+    expect(quelquUnARemettre({ statut: 'COMPLETED', deliverer_id: 'l1' })).toBe(false);
+    expect(quelquUnARemettre(null)).toBe(false);
   });
 });

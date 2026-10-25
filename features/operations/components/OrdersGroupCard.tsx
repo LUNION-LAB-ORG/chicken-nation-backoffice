@@ -1,11 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
 import type { Order } from "../../orders/types/order.types";
+import { useAuthStore } from "../../users/hook/authStore";
 import type { IOrderGroup } from "../types/operations.types";
-import type { CommandeOperations } from "../utils/suivi-course";
+import { peutConfirmerRecuperation } from "../utils/code-retrait";
+import { quelquUnARemettre } from "../utils/group-orders";
+import { courseDeCommande, type CommandeOperations, type CourseOperations } from "../utils/suivi-course";
 import { OperationsCard } from "./OperationsCard";
+import { PickupValidationModal } from "./PickupValidationModal";
 import { BandeauCourse } from "./course/BandeauCourse";
 
 interface Props {
@@ -24,8 +28,15 @@ interface Props {
  * donc son en-tête (code de retrait en grand, livreur et son état, retenue),
  * quel que soit son nombre de commandes. Une commande sans course reste une
  * carte seule, comme avant.
+ *
+ * « Confirmer la récupération » (demande du 24/10 au soir, plus de saisie du
+ * code) : pour les rôles admis par le serveur, dès qu'un livreur a accepté
+ * ou que Turbo a la course. Il ouvre la fenêtre « Récupération · code ».
  */
 export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClick, commandes, maintenant }) => {
+  const [aRemettre, setARemettre] = useState<CourseOperations | null>(null);
+  const membre = useAuthStore((s) => s.user);
+
   if (group.courseId === null) {
     return (
       <>
@@ -42,13 +53,17 @@ export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClic
   }
 
   const plusieurs = group.orders.length > 1;
+  const toutes = commandes ?? group.orders;
+  const course = group.orders.map((o) => courseDeCommande(o as unknown as CommandeOperations)).find(Boolean) ?? null;
+  const peutConfirmer = peutConfirmerRecuperation(membre) && quelquUnARemettre(course);
 
   return (
     <div className="rounded-3xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50/40 p-3 space-y-2 shadow-sm">
       <BandeauCourse
         group={group}
-        commandes={(commandes ?? group.orders) as unknown as CommandeOperations[]}
+        commandes={toutes as unknown as CommandeOperations[]}
         maintenant={maintenant ?? new Date()}
+        onConfirmer={peutConfirmer ? setARemettre : undefined}
       />
 
       <div className="space-y-2">
@@ -63,6 +78,15 @@ export const OrdersGroupCard: React.FC<Props> = ({ group, onCardClick, onPayClic
           />
         ))}
       </div>
+
+      {aRemettre && (
+        <PickupValidationModal
+          course={aRemettre}
+          commandes={toutes}
+          restaurantNom={group.orders[0]?.restaurant?.name ?? null}
+          onClose={() => setARemettre(null)}
+        />
+      )}
     </div>
   );
 };

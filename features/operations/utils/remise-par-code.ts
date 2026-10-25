@@ -2,6 +2,12 @@
  * REMISE AU LIVREUR PAR LE CODE DE RETRAIT (fenêtre « Récupération · code 123 »
  * de l'écran Opérations).
  *
+ * Depuis le 24/10 au soir, la caissière ne saisit plus le code : le livreur
+ * le lui dit, elle touche « Confirmer la récupération » sur le groupe de la
+ * course et valide dans la même fenêtre qu'avant, le code en grand. La
+ * fenêtre lit la course par son identifiant ; ces règles restent celles du
+ * serveur.
+ *
  * Deux cas, les mêmes que le serveur (`CourseActionService.validatePickupByCashier`,
  * backend) :
  *  - RETRAIT : course acceptée (ou confiée à Turbo) pas encore récupérée.
@@ -25,7 +31,14 @@
 export interface LivraisonRemise {
   id: string;
   statut?: string | null;
-  order: { status: string; reference?: string | null };
+  order_id?: string | null;
+  order: {
+    id?: string | null;
+    status: string;
+    reference?: string | null;
+    fullname?: string | null;
+    amount?: number | null;
+  };
 }
 
 /** Ce que la fenêtre lit de la course trouvée par le code (sous-ensemble de `Course`). */
@@ -125,4 +138,92 @@ export function texteRemiseValidee(course: Partial<Pick<CourseRemise, 'statut'>>
   return course?.statut === 'IN_DELIVERY'
     ? 'Commande remise : le livreur peut partir'
     : 'Course validée : le livreur peut partir en livraison';
+}
+
+/**
+ * Libellés alignés sur le mapper `orderMapper.ts` de la page Commandes :
+ * aucune divergence tolérée, on affiche partout exactement ce que la page
+ * Commandes affiche pour un statut donné.
+ */
+const STATUT_COMMANDE: Record<string, string> = {
+  PENDING: 'EN ATTENTE',
+  ACCEPTED: 'NOUVELLE',
+  IN_PROGRESS: 'EN PRÉPARATION',
+  READY: 'PRÊT',
+  PICKED_UP: 'EN LIVRAISON',
+  COLLECTED: 'RÉCUPÉRÉE',
+  COMPLETED: 'TERMINÉE',
+  CANCELLED: 'ANNULÉE',
+};
+
+/** Pastille à droite de la ligne d'une commande dans la fenêtre (mêmes mots qu'avant). */
+export function libellePastille(livraison: LivraisonRemise, etat: EtatRemise, complementaire: boolean): string {
+  switch (etat) {
+    case 'A_REMETTRE':
+      return complementaire ? 'À REMETTRE' : 'PRÊT';
+    case 'DEJA_REMISE':
+      return 'DÉJÀ REMISE';
+    case 'TERMINEE':
+      return 'TERMINÉE';
+    default:
+      return STATUT_COMMANDE[livraison.order?.status ?? ''] ?? 'INCONNU';
+  }
+}
+
+/** « Koffi Yao · 12 500 F » sous la référence (mise en forme de la fenêtre d'avant). */
+export function texteClientMontant(livraison: LivraisonRemise): string {
+  const montant = typeof livraison.order?.amount === 'number' && Number.isFinite(livraison.order.amount) ? livraison.order.amount : 0;
+  return `${livraison.order?.fullname || 'Client'} · ${montant.toLocaleString('fr-FR')} F`;
+}
+
+/** Identifiant de la commande d'une livraison. */
+const idCommande = (d: LivraisonRemise): string | null => d.order?.id || d.order_id || null;
+
+/**
+ * Commandes que la validation remet (`order_ids` de `POST
+ * /courses/operations/:id/recuperation`) : celles « à remettre » dans la
+ * fenêtre, sans doublon.
+ */
+export function commandesARemettre(course: CourseRemise): string[] {
+  const complementaire = estRetraitComplementaire(course);
+  const ids: string[] = [];
+  for (const d of course.deliveries ?? []) {
+    const id = idCommande(d);
+    if (id && etatRemise(d, complementaire) === 'A_REMETTRE' && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
+/** Ce que l'écran Commandes connaît d'une commande (sous-ensemble de `Order`). */
+export interface CommandeDeLEcran {
+  id: string;
+  reference: string;
+  status: string;
+  amount?: number | null;
+  fullname?: string | null;
+  delivery?: { id?: string | null; statut?: string | null; course?: { id?: string | null } | null } | null;
+}
+
+/**
+ * La course telle que l'écran la connaît déjà (ses commandes de la liste) :
+ * la fenêtre s'ouvre tout de suite avec ces lignes, avant la lecture de la
+ * course, et les garde si cette lecture échoue.
+ */
+export function courseRemiseDeLEcran(
+  course: { id: string; statut: string },
+  commandes: readonly CommandeDeLEcran[],
+): CourseRemise {
+  const deliveries: LivraisonRemise[] = [];
+  for (const c of commandes) {
+    const livraison = c.delivery;
+    if (!livraison || livraison.course?.id !== course.id || livraison.statut === 'CANCELLED') continue;
+    if (deliveries.some((d) => d.order.id === c.id)) continue;
+    deliveries.push({
+      id: livraison.id || c.id,
+      statut: livraison.statut ?? null,
+      order_id: c.id,
+      order: { id: c.id, status: c.status, reference: c.reference, fullname: c.fullname ?? null, amount: c.amount ?? null },
+    });
+  }
+  return { statut: course.statut, deliveries };
 }

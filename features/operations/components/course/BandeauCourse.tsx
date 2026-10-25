@@ -5,14 +5,24 @@ import { Hourglass, Package } from "lucide-react";
 
 import type { IOrderGroup } from "../../types/operations.types";
 import { ligneRetenue } from "../../utils/ligne-retenue";
-import { courseDeCommande, etiquetteMotif, type CommandeOperations } from "../../utils/suivi-course";
-import { EtatCourseLivreur } from "./EtatCourseLivreur";
+import {
+  courseDeCommande,
+  etiquetteMotif,
+  type CommandeOperations,
+  type CourseOperations,
+} from "../../utils/suivi-course";
+import { EtatCourseLivreur, useEtatCourseLivreur } from "./EtatCourseLivreur";
 
 interface Props {
   group: IOrderGroup;
   /** Toutes les commandes affichées (livraisons commencées, coordonnées). */
   commandes: readonly CommandeOperations[];
   maintenant: Date;
+  /**
+   * « Confirmer la récupération » (demande du 24/10 au soir) : présent pour
+   * qui peut la confirmer, quand quelqu'un est là pour prendre les sacs.
+   */
+  onConfirmer?: (course: CourseOperations) => void;
 }
 
 /**
@@ -25,8 +35,13 @@ interface Props {
  * ajoutée à la course de Koffi : remettre avec le code 123 ») ni de fusion
  * (« Courses CRS-A et CRS-B fusionnées ») : la carte montre déjà les
  * commandes regroupées et le code. Le motif du regroupement reste en petit.
+ *
+ * Demande du 24/10 au soir : plus de saisie du code. Le livreur dit son
+ * code, la caissière le compare à la case « Code » et touche « Confirmer la
+ * récupération » sous la retenue ; la fenêtre « Récupération · code »
+ * s'ouvre.
  */
-export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant }) => {
+export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant, onConfirmer }) => {
   const course = group.orders.map((o) => courseDeCommande(o as CommandeOperations)).find(Boolean) ?? null;
   if (!course) return null;
 
@@ -72,6 +87,51 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant })
           <p className="text-[12px] font-semibold leading-snug">{retenue}</p>
         </div>
       )}
+
+      {onConfirmer && (
+        <BoutonConfirmerRecuperation
+          course={course}
+          commandes={commandes}
+          service={group.deliveryService}
+          maintenant={maintenant}
+          onClick={() => onConfirmer(course)}
+        />
+      )}
     </div>
   );
 };
+
+/**
+ * Plein vert quand le livreur est au restaurant, contour orange sinon (sa
+ * position peut avoir du retard sur le livreur qui est devant la caissière).
+ * Toujours actif : la fenêtre dit s'il manque quelque chose.
+ */
+function BoutonConfirmerRecuperation({
+  course,
+  commandes,
+  service,
+  maintenant,
+  onClick,
+}: {
+  course: CourseOperations;
+  commandes: readonly CommandeOperations[];
+  service?: string | null;
+  maintenant: Date;
+  onClick: () => void;
+}) {
+  const { etat } = useEtatCourseLivreur(course, commandes, service, maintenant);
+  const auRestaurant = etat.etat === "AU_COMPTOIR";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-xl px-3 py-2 text-sm font-bold transition ${
+        auRestaurant
+          ? "bg-green-600 text-white hover:bg-green-700"
+          : "border-2 border-[#F17922] bg-white text-[#F17922] hover:bg-orange-50"
+      }`}
+    >
+      Confirmer la récupération
+    </button>
+  );
+}
