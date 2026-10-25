@@ -1,14 +1,14 @@
 import type { Course, CourseStatut, DeliveryStatut, DeliveryFailureReason, CourseOfferStatus } from '../types/course.types';
 
-/** Mots de la conception du 24/10 (3.3) : « Recherche d'un livreur », « Aucun livreur trouvé ». */
+/** Mots connus des équipes, ceux d'avant le 24/10 (demande du client du 25/10). */
 export const COURSE_STATUT_LABELS: Record<CourseStatut, string> = {
-  PENDING_ASSIGNMENT: "Recherche d'un livreur",
-  ACCEPTED: 'Vers le restaurant',
+  PENDING_ASSIGNMENT: "En attente d'affectation",
+  ACCEPTED: 'Acceptée',
   AT_RESTAURANT: 'Au restaurant',
   IN_DELIVERY: 'En livraison',
   COMPLETED: 'Terminée',
   CANCELLED: 'Annulée',
-  EXPIRED: 'Aucun livreur trouvé',
+  EXPIRED: 'Expirée',
 };
 
 /**
@@ -27,9 +27,9 @@ export const COURSE_STATUT_CLASSES: Record<CourseStatut, string> = {
 };
 
 export const DELIVERY_STATUT_LABELS: Record<DeliveryStatut, string> = {
-  PENDING: 'À livrer',
+  PENDING: 'En attente',
   IN_ROUTE: 'En route',
-  ARRIVED: 'Chez le client',
+  ARRIVED: 'Arrivé',
   DELIVERED: 'Livrée',
   FAILED: 'Échec',
   CANCELLED: 'Annulée',

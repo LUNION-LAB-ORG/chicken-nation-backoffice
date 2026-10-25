@@ -10,7 +10,7 @@ export function TableHeader() {
         <th className="px-3 py-3">Statut</th>
         <th className="px-3 py-3">Durée</th>
         <th className="px-3 py-3">Frais</th>
-        <th className="px-3 py-3 w-16 text-right" aria-label="Actions" />
+        <th className="px-3 py-3 w-16 text-right">Actions</th>
       </tr>
     </thead>
   );

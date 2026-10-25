@@ -7,13 +7,13 @@ import { COURSE_STATUT_LABELS, DELIVERY_STATUT_LABELS, dureeCourse } from '../co
 
 const MAINTENANT = new Date('2026-10-24T12:40:00Z');
 
-describe('libellés en français simple', () => {
+describe('libellés connus des équipes, ceux d’avant', () => {
   test('statuts de course et de livraison', () => {
-    expect(COURSE_STATUT_LABELS.PENDING_ASSIGNMENT).toBe("Recherche d'un livreur");
-    expect(COURSE_STATUT_LABELS.ACCEPTED).toBe('Vers le restaurant');
-    expect(COURSE_STATUT_LABELS.EXPIRED).toBe('Aucun livreur trouvé');
-    expect(DELIVERY_STATUT_LABELS.PENDING).toBe('À livrer');
-    expect(DELIVERY_STATUT_LABELS.ARRIVED).toBe('Chez le client');
+    expect(COURSE_STATUT_LABELS.PENDING_ASSIGNMENT).toBe("En attente d'affectation");
+    expect(COURSE_STATUT_LABELS.ACCEPTED).toBe('Acceptée');
+    expect(COURSE_STATUT_LABELS.EXPIRED).toBe('Expirée');
+    expect(DELIVERY_STATUT_LABELS.PENDING).toBe('En attente');
+    expect(DELIVERY_STATUT_LABELS.ARRIVED).toBe('Arrivé');
   });
 });
 

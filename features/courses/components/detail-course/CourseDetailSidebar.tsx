@@ -89,7 +89,7 @@ export function CourseDetailSidebar({ course }: Props) {
             </div>
           </div>
         ) : (
-          <p className="text-xs text-gray-400 italic">Sans livreur</p>
+          <p className="text-xs text-gray-400 italic">Aucun livreur assigné</p>
         )}
       </div>
 

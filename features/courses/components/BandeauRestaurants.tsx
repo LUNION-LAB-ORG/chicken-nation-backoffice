@@ -9,7 +9,6 @@ import { useDroitsLivraison } from '../../livreurs/hook/use-droits-livraison';
 import { useMaintenant } from '../../livreurs/hook/use-maintenant';
 import { estCompteDeRestaurant } from '../../operations/utils/code-retrait';
 import RestaurantTabs from '../../orders/components/filtrage/RestaurantTabs';
-import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import { useAuthStore } from '../../users/hook/authStore';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { RestaurantDuTableau, SignalLivraison } from '../types/tableau-livraison.types';
@@ -105,7 +104,7 @@ function CarteRestaurant({
     r.sans_livreur.courses > 0 ? minutesDepuis(r.sans_livreur.plus_ancienne_depuis, maintenant) : null;
   const pied = piedCarte(r);
   const { activite, service } = lignesPiedCarte(r);
-  const nom = restaurantId === null ? r.nom : (nomCourtRestaurant(r.nom) ?? r.nom);
+  const nom = r.nom;
 
   const contenu = (
     <>
@@ -129,7 +128,7 @@ function CarteRestaurant({
         <Chiffre valeur={r.livreurs.en_pause} libelle="En pause" couleur="#92400E" />
         <Chiffre
           valeur={r.sans_livreur.courses}
-          libelle="Sans livreur"
+          libelle="Non assignées"
           couleur={COULEURS_TON[ton]}
           sous={attente !== null ? `depuis ${dureeLisible(attente)}` : null}
         />

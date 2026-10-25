@@ -53,7 +53,7 @@ describe('texteSignal : L1 et L2 de chaque alerte', () => {
       commandes: ['ORD-1', 'ORD-2'],
     });
     expect(texteSignal(enRecherche, { restaurant: 'Marcory' })).toEqual({
-      titre: 'CRS-241024-0043 : sans livreur depuis 9 min',
+      titre: "CRS-241024-0043 : en attente d'affectation depuis 9 min",
       detail: 'Marcory · 2 commandes',
     });
     const expiree = signal({ cle: 'SANS_LIVREUR', course: course('EXPIRED', true), commandes: ['ORD-1'] });
@@ -205,7 +205,7 @@ describe('texteSignal : L1 et L2 de chaque alerte', () => {
 describe('situationCourse : la phrase d’« À traiter », sans la référence', () => {
   test('sans livreur', () => {
     expect(situationCourse(signal({ cle: 'SANS_LIVREUR', minutes: 9, course: course() }))).toBe(
-      'Sans livreur depuis 9 min',
+      "En attente d'affectation depuis 9 min",
     );
     expect(situationCourse(signal({ cle: 'SANS_LIVREUR', course: course('EXPIRED', true) }))).toBe(
       'Aucun livreur trouvé',

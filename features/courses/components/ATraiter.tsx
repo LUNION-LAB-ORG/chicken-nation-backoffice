@@ -8,7 +8,6 @@ import { toast } from 'react-hot-toast';
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useDroitsLivraison } from '../../livreurs/hook/use-droits-livraison';
-import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import { courseDetailQueryOption } from '../queries/course-detail.query';
 import { useCourseRelancerMutation, useCourseVersTurboMutation } from '../queries/course-fleet.mutation';
 import { useCourseRetryMutation } from '../queries/course-retry.mutation';
@@ -70,7 +69,7 @@ export function ATraiter() {
   const signaux = signauxATraiter(data.signaux, selectedRestaurantId);
   if (signaux.length === 0) return null;
 
-  const nomsRestaurants = new Map(data.restaurants.map((r) => [r.id, nomCourtRestaurant(r.nom) ?? r.nom]));
+  const nomsRestaurants = new Map(data.restaurants.map((r) => [r.id, r.nom]));
   const visibles = tout ? signaux : signaux.slice(0, VISIBLES);
   const reste = signaux.length - VISIBLES;
 

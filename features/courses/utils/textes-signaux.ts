@@ -11,7 +11,8 @@
  * « À traiter » (écran Courses) montre la référence dans sa propre colonne :
  * `situationCourse` donne la même phrase sans elle.
  *
- * Mots de la section 3.3 : « Sans livreur », « Aucun livreur trouvé »,
+ * Mots connus des équipes : « En attente d'affectation » (statut d'une
+ * course), « Aucun livreur trouvé » (écran Commandes),
  * « Au restaurant », « À encaisser ». Heures et durées comme le serveur
  * (« 9 min », « 1 h 05 »).
  */
@@ -65,7 +66,7 @@ function creneau(s: SignalLivraison): string {
 export function situationCourse(s: SignalLivraison): string {
   switch (s.cle) {
     case 'SANS_LIVREUR':
-      return estExpiree(s) ? 'Aucun livreur trouvé' : `Sans livreur${depuis(s.minutes)}`;
+      return estExpiree(s) ? 'Aucun livreur trouvé' : `En attente d'affectation${depuis(s.minutes)}`;
     case 'TOURNEE_EN_RETARD':
       return s.minutes !== null ? `${nom(s)} · en retard de ${dureeLisible(s.minutes)}` : `${nom(s)} · en retard`;
     case 'PARTI_SANS_SAC':
@@ -99,7 +100,7 @@ export function texteSignal(s: SignalLivraison, contexte: ContexteTexte = {}): T
       return {
         titre: estExpiree(s)
           ? `${reference(s)} : aucun livreur trouvé`
-          : `${reference(s)} : sans livreur${depuis(s.minutes)}`,
+          : `${reference(s)} : en attente d'affectation${depuis(s.minutes)}`,
         detail: lieu(resto, s.commandes.length > 0 ? nombreCommandes(s.commandes.length) : null),
       };
     case 'PARTI_SANS_SAC':
