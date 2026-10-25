@@ -51,7 +51,7 @@ export interface CourseRemise {
  *  - `A_REMETTRE` : prête, la caisse la remet maintenant ;
  *  - `DEJA_REMISE` : remise au premier retrait (retrait complémentaire) ;
  *  - `PAS_PRETE` : encore en cuisine (ou statut inattendu) ;
- *  - `TERMINEE` : livraison finie ou annulée (retrait complémentaire).
+ *  - `TERMINEE` : livraison annulée, ou finie (retrait complémentaire).
  */
 export type EtatRemise = 'A_REMETTRE' | 'DEJA_REMISE' | 'PAS_PRETE' | 'TERMINEE';
 
@@ -68,6 +68,10 @@ export function estRetraitComplementaire(course: Pick<CourseRemise, 'statut'>): 
 
 export function etatRemise(livraison: LivraisonRemise, complementaire: boolean): EtatRemise {
   const statutCommande = livraison.order?.status;
+  // Livraison annulée (Turbo a annulé une commande, commande détachée) : plus
+  // une commande de la course pour le serveur (`commandesConfirmees`, 409
+  // sinon), même si la commande est restée prête.
+  if (livraison.statut === 'CANCELLED') return 'TERMINEE';
   if (!complementaire) return statutCommande === 'READY' ? 'A_REMETTRE' : 'PAS_PRETE';
   if (livraison.statut && LIVRAISON_TERMINEE.has(livraison.statut)) return 'TERMINEE';
   if (COMMANDE_REMISE.has(statutCommande)) return 'DEJA_REMISE';
@@ -226,4 +230,17 @@ export function courseRemiseDeLEcran(
     });
   }
   return { statut: course.statut, deliveries };
+}
+
+/**
+ * La course lue par la fenêtre (`GET /courses/operations/:id`), sans ses
+ * livraisons annulées : le serveur les renvoie, mais elles ne sont plus de la
+ * course (il refuserait leurs commandes). Mêmes lignes que
+ * `courseRemiseDeLEcran`.
+ */
+export function courseRemiseLue(course: { statut: string; deliveries?: readonly LivraisonRemise[] | null }): CourseRemise {
+  return {
+    statut: course.statut,
+    deliveries: (course.deliveries ?? []).filter((d) => d.statut !== 'CANCELLED'),
+  };
 }

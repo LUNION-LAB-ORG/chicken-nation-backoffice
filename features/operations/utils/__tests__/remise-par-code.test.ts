@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment -- tests bun : leurs types ne sont pas installés dans le backoffice. */
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
 import React from 'react';
@@ -7,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
   commandesARemettre,
   courseRemiseDeLEcran,
+  courseRemiseLue,
   estRetraitComplementaire,
   etatRemise,
   libellePastille,
@@ -188,22 +190,25 @@ describe('la fenêtre affichée à la caissière', () => {
   });
 });
 
+/** La fenêtre rendue avec la course déjà lue (aperçu en cache). */
+function rendreFenetre(c) {
+  const client = new QueryClient();
+  client.setQueryData(['operations', 'recuperation', c.id], c, { updatedAt: Date.now() + 3_600_000 });
+  return renderToStaticMarkup(
+    React.createElement(
+      QueryClientProvider,
+      { client },
+      React.createElement(PickupValidationModal, {
+        course: { id: c.id, reference: c.reference, pickup_code: c.pickup_code, statut: c.statut, restaurant_id: c.restaurant_id },
+        commandes: [],
+        onClose: () => undefined,
+      }),
+    ),
+  );
+}
+
 describe('fenêtre ouverte par « Confirmer la récupération » (demande du 24/10 au soir)', () => {
-  const rendre = (c) => {
-    const client = new QueryClient();
-    client.setQueryData(['operations', 'recuperation', c.id], c, { updatedAt: Date.now() + 3_600_000 });
-    return renderToStaticMarkup(
-      React.createElement(
-        QueryClientProvider,
-        { client },
-        React.createElement(PickupValidationModal, {
-          course: { id: c.id, reference: c.reference, pickup_code: c.pickup_code, statut: c.statut, restaurant_id: c.restaurant_id },
-          commandes: [],
-          onClose: () => undefined,
-        }),
-      ),
-    );
-  };
+  const rendre = rendreFenetre;
 
   test('mêmes mots qu’avant : « Récupération · code », la course, le restaurant, le nombre de commandes', () => {
     const html = rendre(course('AT_RESTAURANT', [livraison('a', 'READY'), livraison('b', 'READY')]));
@@ -262,6 +267,36 @@ describe('fenêtre ouverte par « Confirmer la récupération » (demande du 24/
   test('message bref de réussite : les mots d’avant', () => {
     expect(texteRemiseValidee({ statut: 'AT_RESTAURANT' })).toBe('Course validée : le livreur peut partir en livraison');
     expect(texteRemiseValidee({ statut: 'IN_DELIVERY' })).toBe('Commande remise : le livreur peut partir');
+  });
+});
+
+describe('livraison annulée dans la course lue (relecture du 25/10)', () => {
+  /*
+   * Course Turbo de 2 commandes prêtes ; Turbo en annule une : sa livraison
+   * passe CANCELLED, la commande reste READY. Le serveur renvoie les deux
+   * livraisons à la lecture mais refuse la commande annulée (409 « La course
+   * a changé »), à chaque essai.
+   */
+  const T = course('AT_RESTAURANT', [livraison('a', 'READY'), livraison('b', 'READY', { statut: 'CANCELLED' })]);
+
+  test('`order_ids` : la seule commande vivante', () => {
+    expect(commandesARemettre(T)).toEqual(['o-a']);
+    expect(etatRemise(T.deliveries[1], false)).toBe('TERMINEE');
+  });
+
+  test('la fenêtre ne montre que les livraisons de la course, bouton actif', () => {
+    const lue = courseRemiseLue(T);
+    expect(lue.deliveries.map((d) => d.id)).toEqual(['a']);
+    expect(remiseParCode(lue).peutValider).toBe(true);
+    const html = rendreFenetre(T);
+    expect(html).toContain('Course CRS-K · Angré · 1 commande(s)');
+    expect(html).not.toContain('CMD-B');
+  });
+
+  test('retrait complémentaire : la livraison annulée reste hors de la remise', () => {
+    const c = course('IN_DELIVERY', [livraison('a', 'PICKED_UP'), livraison('b', 'READY', { statut: 'CANCELLED' })]);
+    expect(commandesARemettre(c)).toEqual([]);
+    expect(remiseParCode(courseRemiseLue(c)).bilan).toBe('Tout est déjà remis au livreur');
   });
 });
 

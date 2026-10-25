@@ -11,8 +11,9 @@ import { useInvalidateOperationsQuery } from './index.query';
  * serveur pas encore à jour : l'ancienne validation par code.
  *
  * Refus du serveur (commande repassée en cuisine, course qui a changé,
- * double confirmation) : rien ne se ferme, la fenêtre affiche son texte et
- * relit la course ; la liste est relue aussi.
+ * double confirmation) : rien ne se ferme, une notification rouge et la
+ * fenêtre affichent son texte, la fenêtre relit la course ; la liste est
+ * relue aussi.
  */
 export const useConfirmerRecuperationMutation = () => {
   const invalidate = useInvalidateOperationsQuery();
@@ -26,7 +27,10 @@ export const useConfirmerRecuperationMutation = () => {
       void invalidate();
       toast.success(texteRemiseValidee({ statut }));
     },
-    onError: () => {
+    // Comme avant : notification rouge avec le texte du serveur, en plus du
+    // cadre rouge de la fenêtre.
+    onError: (e: Error) => {
+      toast.error(e.message);
       void invalidate();
     },
   });

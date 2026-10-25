@@ -10,6 +10,7 @@ import { useConfirmerRecuperationMutation } from "../queries/confirmer-recuperat
 import {
   commandesARemettre,
   courseRemiseDeLEcran,
+  courseRemiseLue,
   etatRemise,
   libellePastille,
   remiseParCode,
@@ -66,8 +67,9 @@ export const PickupValidationModal: React.FC<Props> = ({ course, commandes, rest
   }, [onClose]);
 
   const lue = apercu.data as Course | undefined;
+  // Livraisons annulées retirées, comme sur l'écran et pour le serveur.
   const source: CourseRemise = lue
-    ? { statut: lue.statut, deliveries: (lue.deliveries ?? []) as unknown as LivraisonRemise[] }
+    ? courseRemiseLue({ statut: lue.statut, deliveries: (lue.deliveries ?? []) as unknown as LivraisonRemise[] })
     : courseRemiseDeLEcran(course, commandes);
   const remise = remiseParCode(source);
   const aRemettre = commandesARemettre(source);
