@@ -17,7 +17,7 @@ export type ErreurPlanning = Error & { status?: number };
 
 /**
  * Le refus du serveur est écrit pour l'écran (« Repos interdit ce jour-là : jour de forte activité. »,
- * « Ce planning n'est pas celui de votre restaurant. ») : il est montré tel
+ * « Ce plan n'est pas celui de votre restaurant. ») : il est montré tel
  * quel. `getHumanReadableError` le remplaçait par des phrases des promotions.
  * Le statut reste joint : un 404 dit qu'une route nouvelle manque au serveur.
  */
@@ -27,7 +27,7 @@ const safeCall = async <T>(fn: () => Promise<T>): Promise<T> => {
   } catch (error) {
     const e = error as { message?: string; messageServeur?: string; status?: number };
     // `api` garde déjà le texte du serveur pour 400, 403 et 409 ; pour un 404
-    // (« Ce planning n'existe plus. »), il est à côté, dans `messageServeur`.
+    // (« Plan introuvable. »), il est à côté, dans `messageServeur`.
     // Les 5xx gardent le texte par défaut de `api`.
     const texte =
       (e?.status === 404 ? e?.messageServeur?.trim() : undefined) ||
@@ -40,7 +40,7 @@ const safeCall = async <T>(fn: () => Promise<T>): Promise<T> => {
 /**
  * Vrai si la route n'existe pas sur ce serveur (serveur pas encore à jour) :
  * 404 de NestJS « Cannot GET /… », pas le 404 d'un planning effacé
- * (« Ce planning n'existe plus. »).
+ * (« Plan introuvable. »).
  */
 export const estRouteAbsente = (error: unknown): boolean => {
   const e = error as ErreurPlanning | null;

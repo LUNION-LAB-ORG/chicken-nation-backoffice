@@ -44,8 +44,9 @@ import { ICONE_PRESENCE } from './PresenceAppliLigne';
  *  - légende des états ; « Positions anciennes » montre ou cache les
  *    livreurs sans position récente (le livreur choisi reste montré) ;
  *  - fenêtre du livreur choisi : état, véhicule, place dans la file, course
- *    et ses arrêts, fin de tournée, appli, dernière position, « Voir la
- *    fiche », « Voir la course », « Appeler » (admin et centre d'appels).
+ *    et ses arrêts, fin de tournée, appli, dernière position, « Voir le
+ *    livreur » (comme la fiche d'une course), « Voir la course », « Appeler »
+ *    (admin et centre d'appels).
  *    Sans position, la fenêtre s'ouvre dans un coin de la carte.
  */
 
@@ -200,7 +201,7 @@ function FenetreLivreur({ ligne, maintenant }: { ligne: LivreurEnDirect; mainten
           onClick={() => openLivreur(live.id)}
           className="text-xs font-semibold text-[#F17922] hover:underline"
         >
-          Voir la fiche
+          Voir le livreur
         </button>
         {course && (
           <button

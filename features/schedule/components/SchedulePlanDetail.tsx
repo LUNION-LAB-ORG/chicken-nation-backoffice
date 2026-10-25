@@ -496,6 +496,7 @@ const CaseJour: React.FC<{
           type="button"
           disabled={occupe}
           onClick={(e) => onToucher(e, travaille)}
+          title={travaille ? "Mettre en repos" : "Faire travailler"}
           className="w-full h-8 rounded-md inline-flex items-center justify-center hover:bg-orange-100/60 disabled:cursor-wait"
         >
           {contenu}
