@@ -14,20 +14,21 @@
  * plus ancien n'a ni `rang_file`, ni l'heure d'arrivée au restaurant, ni la
  * fin prévue : la case reste vide, rien n'est inventé.
  *
- * Mots de la section 3.3 : « 1er de la file », « 2 sur 3 livrées »,
- * « vers le restaurant », « Au restaurant depuis 6 min », « jusqu'à
- * 14 h 32 », « vue il y a 6 min », « position ancienne », « Fin vers
- * 13 h 05 », « En retard de 12 min », « Dernière position 12 h 40 ».
+ * Mots connus des équipes, ceux de la Carte live et du tiroir d'une
+ * commande (demande du client du 25/10) : « Rang FIFO #1 », « en route vers
+ * le restaurant », « Course active », « Code retrait », « Dernier GPS ».
+ * Mots des choses nouvelles : « 2 sur 3 livrées », « Au restaurant depuis
+ * 6 min », « jusqu'à 14 h 32 », « vue il y a 6 min », « position ancienne »,
+ * « Fin vers 13 h 05 », « En retard de 12 min ».
  */
 
 import type { SignalLivraison } from '../../courses/types/tableau-livraison.types';
 import { DELIVERY_STATUT_LABELS } from '../../courses/utils/course-labels';
 import { dureeLisible, minutesDepuis } from '../../courses/utils/tableau-livraison';
 import { approcheLivreur, heureCourte, type PositionGps } from '../../operations/utils/suivi-course';
-import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import type { IDelivererLive, IDelivererLiveCourse, IDelivererLiveDelivery } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
-import { NOM_ETAT, appliVueADe, estPauseSansFin, etatLivreurAffiche, heureLisible, rangEtat, vueIlYa } from './disponibilite';
+import { NOM_ETAT, appliVueADe, estPauseSansFin, etatLivreurAffiche, rangEtat, vueIlYa } from './disponibilite';
 import { avancementTournee, jusquA, placeDansLaFile, rangDuLivreur } from './livreurs-du-jour';
 
 // ============================================================
@@ -187,7 +188,7 @@ function detailDeSection(
   switch (section) {
     case 'EN_COURSE': {
       if (!c) return null;
-      if (c.statut === 'ACCEPTED') return `${c.reference} · vers le restaurant`;
+      if (c.statut === 'ACCEPTED') return `${c.reference} · en route vers le restaurant`;
       const avancement = c.statut === 'IN_DELIVERY' ? avancementTournee(c.deliveries ?? []) : null;
       return avancement ? `${c.reference} · ${avancement}` : c.reference;
     }
@@ -297,7 +298,7 @@ export function ligneEnDirect(l: IDelivererLive, ctx: ContexteEnDirect): Livreur
 
   const avecCourse = section === 'EN_COURSE' || section === 'AU_RESTAURANT';
   const detail = joindre(
-    ctx.unSeulRestaurant ? null : nomCourtRestaurant(l.restaurant?.name),
+    ctx.unSeulRestaurant ? null : l.restaurant?.name,
     detailDeSection(section, etat, l, rang, maintenant),
     avecCourse && !l.location_fresh ? 'position ancienne' : null,
   );
@@ -419,16 +420,16 @@ export function cibleDuSignal(s: SignalLivraison, livreursPresents: ReadonlySet<
 // FENÊTRE DU LIVREUR SUR LA CARTE
 // ============================================================
 
-/** « 1er », « 2e » ; null sans place. */
+/** « #1 », « #2 » (Rang FIFO, comme la Carte live) ; null sans place. */
 export function placeCourte(rang: number | null | undefined): string | null {
   if (!rang || rang < 1) return null;
-  return rang === 1 ? '1er' : `${rang}e`;
+  return `#${rang}`;
 }
 
-/** « CRS-241024-0042 · Code 614 », ou la référence seule sans code. */
+/** « #CRS-241024-0042 · Code retrait 614 », ou la référence seule sans code. */
 export function texteCourseCarte(c: Pick<IDelivererLiveCourse, 'reference' | 'pickup_code'>): string {
   const code = c.pickup_code?.trim();
-  return code ? `${c.reference} · Code ${code}` : c.reference;
+  return code ? `#${c.reference} · Code retrait ${code}` : `#${c.reference}`;
 }
 
 /** « Arrêt 1 · ORD-4818 · Livrée », un par arrêt, dans l'ordre de la tournée. */
@@ -450,8 +451,18 @@ export function texteFinTournee(
   return fin === null ? null : { texte: `Fin vers ${heureCourte(new Date(fin))}`, retard: false };
 }
 
-/** « Dernière position 12 h 40 », « Dernière position le 23/10 à 12 h 40 » ; null sans heure. */
+const deuxChiffres = (n: number): string => String(n).padStart(2, '0');
+
+/** « Dernier GPS : 12:40:33 », « Dernier GPS : 23/10 12:40:33 » un autre jour ; null sans heure. */
 export function texteDernierePosition(iso: string | null | undefined, maintenant: Date): string | null {
   const t = instant(iso);
-  return t === null ? null : `Dernière position ${heureLisible(new Date(t), maintenant)}`;
+  if (t === null) return null;
+  const d = new Date(t);
+  const heure = `${deuxChiffres(d.getUTCHours())}:${deuxChiffres(d.getUTCMinutes())}:${deuxChiffres(d.getUTCSeconds())}`;
+  const memeJour =
+    d.getUTCFullYear() === maintenant.getUTCFullYear() &&
+    d.getUTCMonth() === maintenant.getUTCMonth() &&
+    d.getUTCDate() === maintenant.getUTCDate();
+  const jour = memeJour ? '' : `${deuxChiffres(d.getUTCDate())}/${deuxChiffres(d.getUTCMonth() + 1)} `;
+  return `Dernier GPS : ${jour}${heure}`;
 }

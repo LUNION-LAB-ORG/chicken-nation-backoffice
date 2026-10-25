@@ -1,29 +1,21 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
 
-import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible, texteClassement } from '../classement';
+import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible } from '../classement';
 
 /**
- * Fiche du livreur, « Rang dans la file » : le classement par score et la
- * place dans la file sont deux rangs différents, avec deux mots différents
- * (conception 3.3 : « Classement » sur la fiche, « Place dans la file » ;
- * plus de « #3 », « File FIFO » ni « ranking »).
+ * Fiche du livreur, « Scoring & File d'attente » : les mots d'avant le
+ * 24/10, que les équipes connaissent (demande du client du 25/10).
  */
 describe('classement de la fiche', () => {
-  test('« Classement » « 3e sur 5 », jamais « #3 »', () => {
-    expect(LIBELLE_CLASSEMENT).toBe('Classement');
-    expect(texteClassement(3, 5)).toBe('3e sur 5');
-    expect(texteClassement(1, 1)).toBe('1er sur 1');
-    expect(texteClassement(3, 5)).not.toContain('#');
+  test('« Position dans la file », rang en « #3 »', () => {
+    expect(LIBELLE_CLASSEMENT).toBe('Position dans la file');
+    expect(rangLisible(1)).toBe('#1');
+    expect(rangLisible(3)).toBe('#3');
   });
 
-  test('rang en mots : « 1er », « 2e »', () => {
-    expect(rangLisible(1)).toBe('1er');
-    expect(rangLisible(2)).toBe('2e');
-  });
-
-  test('ni « FIFO » ni « ranking »', () => {
-    expect(LIBELLE_FILE_SCORE).toBe('File');
-    expect(PAS_CLASSE).toBe('Pas classé en ce moment');
+  test('« File FIFO », « Pas dans le ranking actuel »', () => {
+    expect(LIBELLE_FILE_SCORE).toBe('File FIFO');
+    expect(PAS_CLASSE).toBe('Pas dans le ranking actuel');
   });
 });

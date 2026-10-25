@@ -176,10 +176,10 @@ function FenetreLivreur({ ligne, maintenant }: { ligne: LivreurEnDirect; mainten
             </span>
           </Info>
         )}
-        {place && <Info terme="Place dans la file">{place}</Info>}
+        {place && <Info terme="Rang FIFO">{place}</Info>}
         {course && (
           <>
-            <Info terme="Course" title={texteCourseCarte(course)}>
+            <Info terme="Course active" title={texteCourseCarte(course)}>
               {texteCourseCarte(course)}
             </Info>
             {arrets.map((texte) => (

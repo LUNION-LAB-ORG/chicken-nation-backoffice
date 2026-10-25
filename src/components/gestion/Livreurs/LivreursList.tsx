@@ -22,9 +22,9 @@ const HEADERS = [
   "Véhicule",
   "Disponibilité",
   "File",
-  "Position",
+  "GPS",
   "Statut",
-  "",
+  "Actions",
 ] as const;
 
 const SkeletonRow: React.FC = () => (

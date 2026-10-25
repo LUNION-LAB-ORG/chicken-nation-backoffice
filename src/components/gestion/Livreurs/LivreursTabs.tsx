@@ -4,7 +4,7 @@ import React from "react";
 
 import type { DelivererStatus } from "../../../../features/livreurs/types/livreur.types";
 
-// Onglets de la vue « Comptes ». La carte des livreurs est l'écran En direct,
+// Onglets de la vue « Liste des livreurs ». La carte des livreurs est l'écran En direct,
 // le planning l'écran Planning (groupe Livraison du menu).
 export type LivreursTab = "TOUS" | DelivererStatus;
 
@@ -16,7 +16,7 @@ interface ITabConfig {
 
 export const LIVREURS_TABS: ITabConfig[] = [
   { key: "TOUS", label: "Tous" },
-  { key: "PENDING_VALIDATION", label: "À valider" },
+  { key: "PENDING_VALIDATION", label: "En attente" },
   { key: "ACTIVE", label: "Actifs" },
   { key: "SUSPENDED", label: "Suspendus" },
   { key: "REJECTED", label: "Refusés" },

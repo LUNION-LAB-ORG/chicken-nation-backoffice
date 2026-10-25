@@ -13,7 +13,6 @@ import type { IDelivererLive } from "../../../../features/livreurs/types/deliver
 import {
   COULEURS_ETAT,
   etatLivreurAffiche,
-  heureLisible,
   presenceAppli,
 } from "../../../../features/livreurs/utils/disponibilite";
 import { rangDuLivreur } from "../../../../features/livreurs/utils/livreurs-du-jour";
@@ -36,8 +35,19 @@ const vehiculeLabel: Record<string, string> = {
   VOITURE: "Voiture",
 };
 
-/** « 1er », « 2e » : place dans la file (colonne « File »). */
-const place = (rang: number): string => (rang === 1 ? "1er" : `${rang}e`);
+/** « #1 », « #2 » : place dans la file (colonne « File »). */
+const place = (rang: number): string => `#${rang}`;
+
+/** Âge de la dernière position (colonne « GPS ») : « Il y a 6m », « Il y a 2h ». */
+function formatGpsAge(locationAt: string): string {
+  const diffMs = Date.now() - new Date(locationAt).getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 60) {
+    return `Il y a ${diffMin}m`;
+  }
+  const diffH = Math.floor(diffMin / 60);
+  return `Il y a ${diffH}h`;
+}
 
 const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRestaurant = false }) => {
   // Menu ⋮ (valider, réactiver) : seulement pour qui gère les livreurs (l'admin).
@@ -133,7 +143,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
     return <span className="text-sm font-bold text-[#18181B]">{place(rang)}</span>;
   };
 
-  /* ── Colonne Position : heure de la dernière position, ou « Position ancienne » ── */
+  /* ── Colonne GPS : âge de la dernière position, ou « Expiré » ── */
   const renderGps = () => {
     if (!live || !live.location_at) return null;
     if (!live.location_fresh) {
@@ -141,14 +151,14 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
         <span
           className="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold"
           style={{ color: "#EF4444", backgroundColor: "rgba(239,68,68,0.15)" }}
-          title={`Dernière position ${heureLisible(new Date(live.location_at), new Date())}`}
+          title={`Dernier GPS : ${formatGpsAge(live.location_at)}`}
         >
-          Position ancienne
+          Expiré
         </span>
       );
     }
     return (
-      <span className="text-xs text-[#52525B]">{heureLisible(new Date(live.location_at), new Date())}</span>
+      <span className="text-xs text-[#52525B]">{formatGpsAge(live.location_at)}</span>
     );
   };
 

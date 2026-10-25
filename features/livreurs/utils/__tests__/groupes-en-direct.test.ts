@@ -143,9 +143,9 @@ describe('ligneEnDirect : L2', () => {
     expect(ligneEnDirect(l, UN).detail).toBe('CRS-241024-0040 · 2 sur 3 livrées');
   });
 
-  test('vers le restaurant', () => {
+  test('en route vers le restaurant', () => {
     const l = livreur('Awa', 'EN_COURSE', { active_course: course('ACCEPTED') });
-    expect(ligneEnDirect(l, UN).detail).toBe('CRS-241024-0040 · vers le restaurant');
+    expect(ligneEnDirect(l, UN).detail).toBe('CRS-241024-0040 · en route vers le restaurant');
   });
 
   test('au restaurant depuis 6 min ; sans heure d’arrivée (serveur ancien), « Au restaurant »', () => {
@@ -158,15 +158,15 @@ describe('ligneEnDirect : L2', () => {
   });
 
   test('disponible : place dans la file ; offre en attente : ligne vide', () => {
-    expect(ligneEnDirect(livreur('Moussa', 'DISPONIBLE', { rang_file: 1 }), UN).detail).toBe('1er de la file');
-    expect(ligneEnDirect(livreur('Moussa', 'DISPONIBLE', { rang_file: 2 }), UN).detail).toBe('2e de la file');
+    expect(ligneEnDirect(livreur('Moussa', 'DISPONIBLE', { rang_file: 1 }), UN).detail).toBe('Rang FIFO #1');
+    expect(ligneEnDirect(livreur('Moussa', 'DISPONIBLE', { rang_file: 2 }), UN).detail).toBe('Rang FIFO #2');
     expect(ligneEnDirect(livreur('Moussa', 'OFFRE_EN_ATTENTE', { rang_file: null }), UN).detail).toBe('');
   });
 
   test('serveur ancien sans rang_file : queue_rank sur un seul restaurant, rien sur « Tous »', () => {
     const ancien = livreur('Moussa', 'DISPONIBLE', { queue_rank: 3 });
     delete ancien.rang_file;
-    expect(ligneEnDirect(ancien, UN).detail).toBe('3e de la file');
+    expect(ligneEnDirect(ancien, UN).detail).toBe('Rang FIFO #3');
     expect(ligneEnDirect(ancien, TOUS).detail).toBe('Angré');
   });
 
@@ -186,21 +186,21 @@ describe('ligneEnDirect : L2', () => {
 
   test('sur « Tous » : le restaurant en tête', () => {
     const l = livreur('Moussa', 'DISPONIBLE', { rang_file: 1 });
-    expect(ligneEnDirect(l, TOUS).detail).toBe('Angré · 1er de la file');
+    expect(ligneEnDirect(l, TOUS).detail).toBe('Angré · Rang FIFO #1');
     expect(ligneEnDirect(livreur('Zié', 'HORS_SERVICE'), TOUS).detail).toBe('Angré');
     expect(ligneEnDirect(livreur('Zié', 'HORS_SERVICE'), UN).detail).toBe('');
   });
 
-  test('sur « Tous » : le nom court du restaurant, sans la marque', () => {
+  test('sur « Tous » : le nom entier du restaurant, comme avant', () => {
     const l = livreur('Moussa', 'DISPONIBLE', { rang_file: 1, restaurant: { ...RESTO, name: 'CHICKEN NATION ANGRÉ' } });
-    expect(ligneEnDirect(l, TOUS).detail).toBe('ANGRÉ · 1er de la file');
+    expect(ligneEnDirect(l, TOUS).detail).toBe('CHICKEN NATION ANGRÉ · Rang FIFO #1');
   });
 
   test('en course sans position récente : « position ancienne » à la fin', () => {
     const l = livreur('Awa', 'EN_COURSE', { location_fresh: false, active_course: course('ACCEPTED') });
-    expect(ligneEnDirect(l, TOUS).detail).toBe('Angré · CRS-241024-0040 · vers le restaurant · position ancienne');
+    expect(ligneEnDirect(l, TOUS).detail).toBe('Angré · CRS-241024-0040 · en route vers le restaurant · position ancienne');
     const dispo = livreur('Moussa', 'DISPONIBLE', { location_fresh: false, rang_file: 1 });
-    expect(ligneEnDirect(dispo, UN).detail).toBe('1er de la file');
+    expect(ligneEnDirect(dispo, UN).detail).toBe('Rang FIFO #1');
   });
 
   test('injoignable : avec les applis fermées, comme le bandeau', () => {
@@ -414,16 +414,16 @@ describe('« À surveiller »', () => {
 });
 
 describe('fenêtre du livreur', () => {
-  test('place courte', () => {
-    expect(placeCourte(1)).toBe('1er');
-    expect(placeCourte(2)).toBe('2e');
+  test('rang FIFO, comme la Carte live', () => {
+    expect(placeCourte(1)).toBe('#1');
+    expect(placeCourte(2)).toBe('#2');
     expect(placeCourte(null)).toBeNull();
     expect(placeCourte(0)).toBeNull();
   });
 
-  test('course et code de retrait', () => {
-    expect(texteCourseCarte({ reference: 'CRS-241024-0042', pickup_code: '614' })).toBe('CRS-241024-0042 · Code 614');
-    expect(texteCourseCarte({ reference: 'CRS-241024-0042' })).toBe('CRS-241024-0042');
+  test('course active et code retrait', () => {
+    expect(texteCourseCarte({ reference: 'CRS-241024-0042', pickup_code: '614' })).toBe('#CRS-241024-0042 · Code retrait 614');
+    expect(texteCourseCarte({ reference: 'CRS-241024-0042' })).toBe('#CRS-241024-0042');
   });
 
   test('un arrêt par livraison, dans l’ordre de la tournée', () => {
@@ -442,9 +442,9 @@ describe('fenêtre du livreur', () => {
     expect(texteFinTournee(course('IN_DELIVERY'))).toBeNull();
   });
 
-  test('dernière position', () => {
-    expect(texteDernierePosition(ISO('12:40'), MAINTENANT)).toBe('Dernière position 12 h 40');
-    expect(texteDernierePosition(ISO('12:40', '2026-10-23'), MAINTENANT)).toBe('Dernière position le 23/10 à 12 h 40');
+  test('dernier GPS', () => {
+    expect(texteDernierePosition('2026-10-24T12:40:33.000Z', MAINTENANT)).toBe('Dernier GPS : 12:40:33');
+    expect(texteDernierePosition(ISO('12:40', '2026-10-23'), MAINTENANT)).toBe('Dernier GPS : 23/10 12:40:00');
     expect(texteDernierePosition(null, MAINTENANT)).toBeNull();
   });
 });

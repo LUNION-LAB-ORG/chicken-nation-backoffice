@@ -1,24 +1,18 @@
 /**
- * CLASSEMENT ET FILE SUR LA FICHE DU LIVREUR (conception du 24/10, 3.3).
+ * CLASSEMENT ET FILE SUR LA FICHE DU LIVREUR.
  *
- * Deux rangs différents, deux mots différents :
- *  - « Classement » (fiche seulement) : la place par le score, parmi les
- *    livreurs qui peuvent recevoir l'offre, « 3e sur 5 » ;
- *  - « Place dans la file » : l'ordre d'arrivée dans la file, « 2e ».
- * Plus de « #3 », de « File FIFO » ni de « ranking ».
+ * Mots connus des équipes, ceux d'avant le 24/10 (demande du client du
+ * 25/10) : « Position dans la file » (place par le score, « #3 / 5
+ * candidats »), « Rang FIFO pur » (ordre d'arrivée dans la file, « #2 »),
+ * composante « File FIFO » du score.
  */
 
-export const LIBELLE_CLASSEMENT = 'Classement';
+export const LIBELLE_CLASSEMENT = 'Position dans la file';
 /** Part du score qui vient de la place dans la file. */
-export const LIBELLE_FILE_SCORE = 'File';
-export const PAS_CLASSE = 'Pas classé en ce moment';
+export const LIBELLE_FILE_SCORE = 'File FIFO';
+export const PAS_CLASSE = 'Pas dans le ranking actuel';
 
-/** « 1er », « 2e ». */
+/** « #1 », « #2 ». */
 export function rangLisible(rang: number): string {
-  return rang === 1 ? '1er' : `${rang}e`;
-}
-
-/** « 3e sur 5 ». */
-export function texteClassement(position: number, total: number): string {
-  return `${rangLisible(position)} sur ${total}`;
+  return `#${rang}`;
 }

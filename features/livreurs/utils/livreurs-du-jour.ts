@@ -21,10 +21,10 @@ import { estPauseSansFin, heureLisible, rangEtat, vueIlYa } from './disponibilit
 // FILE
 // ============================================================
 
-/** « 1er de la file », « 2e de la file » ; null sans place. */
+/** « Rang FIFO #1 », « Rang FIFO #2 » (mots de la Carte live) ; null sans place. */
 export function placeDansLaFile(rang: number | null | undefined): string | null {
   if (!rang || rang < 1) return null;
-  return rang === 1 ? '1er de la file' : `${rang}e de la file`;
+  return `Rang FIFO #${rang}`;
 }
 
 /**
@@ -63,7 +63,7 @@ export function jusquA(iso: string | null | undefined, maintenant: Date): string
 }
 
 export interface DetailEtat {
-  /** « 1er de la file », « CRS-… · 1 sur 3 livrée », « jusqu'à 14 h 32 »… ; null : ligne vide. */
+  /** « Rang FIFO #1 », « CRS-… · 1 sur 3 livrée », « jusqu'à 14 h 32 »… ; null : ligne vide. */
   texte: string | null;
   /** « +12 min » en rouge, tournée en retard. */
   retard: string | null;
@@ -92,7 +92,7 @@ export function detailEtatDuJour(etat: EtatDisponibilite, l: EntreeDetail, maint
       const c = l.course;
       if (!c) return RIEN;
       let suite: string | null = null;
-      if (c.statut === 'ACCEPTED') suite = 'vers le restaurant';
+      if (c.statut === 'ACCEPTED') suite = 'en route vers le restaurant';
       else if (c.statut === 'AT_RESTAURANT') suite = 'au restaurant';
       else if (c.statut === 'IN_DELIVERY') suite = avancementTournee(c.deliveries);
       const retard = c.en_retard && c.retard_min != null && c.retard_min > 0 ? `+${dureeLisible(c.retard_min)}` : null;

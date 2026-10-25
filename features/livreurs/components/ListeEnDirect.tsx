@@ -134,7 +134,7 @@ export function ListeEnDirect({
 
   return (
     <section className="pb-1">
-      <h3 className="px-3 pb-1 pt-3 text-sm font-semibold text-[#18181B]">Livreurs</h3>
+      <h3 className="px-3 pb-1 pt-3 text-sm font-semibold text-[#18181B]">Livreurs live</h3>
       {contenu}
     </section>
   );

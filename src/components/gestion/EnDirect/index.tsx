@@ -24,7 +24,6 @@ import {
 import { useDelivererLiveSync } from "../../../../features/maps/hooks/use-deliverer-live-socket";
 import type { PositionGps } from "../../../../features/operations/utils/suivi-course";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
-import { nomCourtRestaurant } from "../../../../features/restaurants/utils/nom-court";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 
 /**
@@ -144,7 +143,7 @@ export default function EnDirect() {
     () =>
       selectedRestaurantId
         ? null
-        : new Map((tableau?.restaurants ?? []).map((r) => [r.id, nomCourtRestaurant(r.nom) ?? r.nom])),
+        : new Map((tableau?.restaurants ?? []).map((r) => [r.id, r.nom])),
     [tableau, selectedRestaurantId],
   );
 
@@ -188,7 +187,7 @@ export default function EnDirect() {
 
   return (
     <div className="flex flex-col gap-4 p-4 lg:h-[calc(100dvh-3.5rem)]">
-      <DashboardPageHeader mode="list" title="En direct" />
+      <DashboardPageHeader mode="list" title="Carte live" />
       <BandeauRestaurants className="shrink-0" />
 
       <div className="flex flex-col gap-4 lg:grid lg:min-h-[520px] lg:flex-1 lg:grid-cols-[380px_minmax(0,1fr)]">

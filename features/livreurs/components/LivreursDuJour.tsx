@@ -221,7 +221,7 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
                     }`}
                   >
                     <span>Livreur</span>
-                    <span>État</span>
+                    <span>Disponibilité</span>
                     {avecJour && (
                       <>
                         <span>Planning du jour</span>

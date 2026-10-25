@@ -16,7 +16,7 @@ import {
 
 import { useDelivererScoringInfoQuery } from "../../queries/deliverer-scoring.query";
 import type { IDelivererScoringInfo } from "../../types/deliverer-scoring.type";
-import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible, texteClassement } from "../../utils/classement";
+import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible } from "../../utils/classement";
 import { estPauseSansFin } from "../../utils/disponibilite";
 
 interface ScoringQueueSectionProps {
@@ -24,10 +24,10 @@ interface ScoringQueueSectionProps {
 }
 
 /**
- * Section « Rang dans la file » de la fiche du livreur (ancien « Scoring & File d'attente »).
+ * Section « Scoring & File d'attente » de la fiche du livreur.
  *
  * Affiche en temps réel (polling 15 s) :
- *   - Classement par le score (« 3e sur 5 ») et place dans la file
+ *   - Position dans la file (« #3 / 5 candidats ») et rang FIFO pur
  *   - Score composite + breakdown des composantes
  *   - Refus récents avec barre de progression vers seuil auto-pause
  *   - Auto-pause / Pénalité queue actives (countdown)
@@ -41,7 +41,7 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   if (isLoading) {
     return (
       <div className="mb-6">
-        <p className="text-[18px] font-medium text-[#F17922] mb-3">Rang dans la file</p>
+        <p className="text-[18px] font-medium text-[#F17922] mb-3">Scoring & File d&apos;attente</p>
         <div className="rounded-xl border border-[#E4E4E7] bg-white p-6 text-center">
           <p className="text-sm text-[#71717A]">Chargement…</p>
         </div>
@@ -52,9 +52,11 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   if (error || !data) {
     return (
       <div className="mb-6">
-        <p className="text-[18px] font-medium text-[#F17922] mb-3">Rang dans la file</p>
+        <p className="text-[18px] font-medium text-[#F17922] mb-3">Scoring & File d&apos;attente</p>
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700">Rang dans la file indisponible.</p>
+          <p className="text-sm text-red-700">
+            Impossible de charger les infos scoring : {(error as Error)?.message ?? "erreur inconnue"}
+          </p>
         </div>
       </div>
     );
@@ -63,7 +65,7 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[18px] font-medium text-[#F17922]">Rang dans la file</p>
+        <p className="text-[18px] font-medium text-[#F17922]">Scoring & File d&apos;attente</p>
         {isFetching && (
           <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider">
             actualisation…
@@ -103,11 +105,14 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
           {ranking && ranking.position !== null ? (
             <>
               <p className="text-2xl font-bold text-[#18181B] mt-1">
-                {texteClassement(ranking.position, ranking.totalCandidates)}
+                {rangLisible(ranking.position)}{" "}
+                <span className="text-sm font-normal text-[#71717A]">
+                  / {ranking.totalCandidates} candidat{ranking.totalCandidates > 1 ? "s" : ""}
+                </span>
               </p>
               {ranking.rankInQueue !== null && ranking.rankInQueue !== ranking.position && (
                 <p className="text-xs text-[#71717A] mt-1">
-                  Place dans la file : {rangLisible(ranking.rankInQueue)}{" "}
+                  Rang FIFO pur : {rangLisible(ranking.rankInQueue)}{" "}
                   <span className="text-[#A1A1AA]">
                     (le score composite a modifié l&apos;ordre)
                   </span>

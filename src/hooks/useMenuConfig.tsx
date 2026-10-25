@@ -113,7 +113,7 @@ export const useGetMenuConfig = (): {
       items: [
         {
           id: "livraison-en_direct",
-          label: "En direct",
+          label: "Carte live",
           icon: Radar,
           canAccess: () => can(Modules.LIVREURS, Action.READ),
           badge: alertesRouges > 0 ? alertesRouges : undefined,
@@ -126,7 +126,7 @@ export const useGetMenuConfig = (): {
         },
         {
           id: "livraison-livreurs",
-          label: "Livreurs",
+          label: "Liste des livreurs",
           icon: Bike,
           canAccess: () => can(Modules.LIVREURS, Action.READ),
         },

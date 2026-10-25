@@ -29,9 +29,9 @@ const MAINTENANT = new Date('2026-10-24T12:40:00Z');
 const livraison = (statut) => ({ id: statut, statut, sequence_order: 1, order_reference: 'ORD', address: null });
 
 describe('place dans la file', () => {
-  test('« 1er de la file », « 2e de la file »', () => {
-    expect(placeDansLaFile(1)).toBe('1er de la file');
-    expect(placeDansLaFile(2)).toBe('2e de la file');
+  test('« Rang FIFO #1 », « Rang FIFO #2 »', () => {
+    expect(placeDansLaFile(1)).toBe('Rang FIFO #1');
+    expect(placeDansLaFile(2)).toBe('Rang FIFO #2');
     expect(placeDansLaFile(null)).toBe(null);
     expect(placeDansLaFile(0)).toBe(null);
   });
@@ -60,7 +60,7 @@ describe('tournée', () => {
 describe("détail de l'état", () => {
   test('disponible : place dans la file', () => {
     expect(detailEtatDuJour('DISPONIBLE', { rang: 1 }, MAINTENANT)).toEqual({
-      texte: '1er de la file',
+      texte: 'Rang FIFO #1',
       retard: null,
       ambre: false,
     });
@@ -85,7 +85,7 @@ describe("détail de l'état", () => {
     expect(
       detailEtatDuJour('EN_COURSE', { course: { ...course, statut: 'ACCEPTED', en_retard: false }, rang: null }, MAINTENANT)
         .texte,
-    ).toBe('CRS-241024-0040 · vers le restaurant');
+    ).toBe('CRS-241024-0040 · en route vers le restaurant');
     expect(
       detailEtatDuJour('EN_COURSE', { course: { ...course, statut: 'AT_RESTAURANT' }, rang: null }, MAINTENANT).texte,
     ).toBe('CRS-241024-0040 · au restaurant');
