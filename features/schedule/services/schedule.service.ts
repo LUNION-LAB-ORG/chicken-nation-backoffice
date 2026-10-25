@@ -16,7 +16,7 @@ const ENDPOINT = "/schedule";
 export type ErreurPlanning = Error & { status?: number };
 
 /**
- * Le refus du serveur est écrit pour l'écran (« Pas de repos ce jour-là. »,
+ * Le refus du serveur est écrit pour l'écran (« Repos interdit ce jour-là : jour de forte activité. »,
  * « Ce planning n'est pas celui de votre restaurant. ») : il est montré tel
  * quel. `getHumanReadableError` le remplaçait par des phrases des promotions.
  * Le statut reste joint : un 404 dit qu'une route nouvelle manque au serveur.

@@ -38,11 +38,11 @@ export const LIBELLE_GESTE: Record<GestePrincipal, string> = {
   archiver: 'Archiver',
 };
 
-/** Message après le geste principal. */
+/** Message après le geste principal, avec le mot d'avant pour un plan de la liste (« Plan supprimé »). */
 export const MESSAGE_GESTE: Record<GestePrincipal, string> = {
-  envoyer: 'Planning envoyé aux livreurs',
-  confirmer: 'Planning confirmé',
-  archiver: 'Planning archivé',
+  envoyer: 'Plan envoyé aux livreurs',
+  confirmer: 'Plan confirmé',
+  archiver: 'Plan archivé',
 };
 
 export const LIBELLE_ETAT: Record<SchedulePlanStatus, string> = {
@@ -118,7 +118,7 @@ export function suiteGeste(statut: SchedulePlanStatus): SuiteGeste {
   return 'aucune';
 }
 
-const NOTE_JOURNAL = 'Planning archivé : noté au journal.';
+const NOTE_JOURNAL = 'Plan archivé : noté au journal.';
 
 /** Textes des fenêtres, selon l'état du planning. `prenom` : le livreur concerné. */
 export function textesFenetres(statut: SchedulePlanStatus, prenom = 'Le livreur') {

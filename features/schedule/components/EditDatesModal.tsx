@@ -40,7 +40,7 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
   const handleSubmit = async () => {
     setError(null);
     if (!periodStart) {
-      setError("Choisissez la date de début.");
+      setError("Date de début requise");
       return;
     }
     try {

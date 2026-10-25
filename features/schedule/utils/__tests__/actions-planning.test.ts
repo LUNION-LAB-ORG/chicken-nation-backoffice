@@ -7,6 +7,7 @@ import {
   AUCUNE_ACTION,
   GESTE_PRINCIPAL,
   LIBELLE_GESTE,
+  MESSAGE_GESTE,
   actionsPlanning,
   suiteGeste,
   textesFenetres,
@@ -87,6 +88,12 @@ describe('actionsPlanning : selon l’état', () => {
     expect(actions('ADMIN', 'ARCHIVED').principal).toBeNull();
     expect(GESTE_PRINCIPAL.ARCHIVED).toBeNull();
     expect(LIBELLE_GESTE.envoyer).toBe('Envoyer');
+    // Le message suit le mot d'avant d'un plan de la liste (« Plan supprimé »).
+    expect(MESSAGE_GESTE).toEqual({
+      envoyer: 'Plan envoyé aux livreurs',
+      confirmer: 'Plan confirmé',
+      archiver: 'Plan archivé',
+    });
   });
 
   test.each(ETATS)('%s : dates, ajout, retrait, jour et suppression permis', (statut) => {
@@ -195,8 +202,8 @@ describe('textes des fenêtres', () => {
 
   test('archivé : noté au journal, personne n’est prévenu', () => {
     const t = textesFenetres('ARCHIVED', 'Koffi');
-    expect(t.jour).toBe('Planning archivé : noté au journal.');
-    expect(t.ajout).toBe('Planning archivé : noté au journal.');
+    expect(t.jour).toBe('Plan archivé : noté au journal.');
+    expect(t.ajout).toBe('Plan archivé : noté au journal.');
     expect(t.retrait).toContain('noté au journal');
     expect(t.dates).toContain('noté au journal');
     expect(t.suppression).toContain('notée au journal');

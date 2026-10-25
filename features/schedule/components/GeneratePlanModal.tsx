@@ -55,11 +55,11 @@ export function GeneratePlanModal({
   const handleSubmit = async () => {
     setError(null);
     if (!restaurantId.trim()) {
-      setError("Choisissez un restaurant.");
+      setError("Restaurant requis");
       return;
     }
     if (!periodStart) {
-      setError("Choisissez la date de début.");
+      setError("Date de début requise");
       return;
     }
     try {
@@ -176,7 +176,7 @@ const RestaurantSelect: React.FC<{
       className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"
     >
       <option value="" disabled>
-        {isLoading ? "Chargement…" : "Choisissez un restaurant"}
+        {isLoading ? "Chargement…" : "Sélectionne un restaurant"}
       </option>
       {restaurants.map((r) => (
         <option key={r.id} value={r.id}>{r.name}</option>
