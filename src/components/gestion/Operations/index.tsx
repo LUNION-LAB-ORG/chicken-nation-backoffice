@@ -11,17 +11,18 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 // ── Onglet "En cours" ──────────────────────────────────────────────────────────
-import { LigneLivreurs } from "../../../../features/operations/components/LigneLivreurs";
 import { OperationsDrawer } from "../../../../features/operations/components/OperationsDrawer";
-import {
-  OperationsSections,
-  OperationsSectionsSquelette,
-} from "../../../../features/operations/components/OperationsSections";
+import { OperationsKpiBar } from "../../../../features/operations/components/OperationsKpiBar";
+import { OperationsSections } from "../../../../features/operations/components/OperationsSections";
+import { PickupCodeInput } from "../../../../features/operations/components/PickupCodeInput";
+import { PickupValidationModal } from "../../../../features/operations/components/PickupValidationModal";
 import type { DrawerTabKey } from "../../../../features/operations/components/drawer/DrawerTabs";
 import { useOperationsSocketSync } from "../../../../features/operations/hooks/useOperationsSocketSync";
+import { useCourseByPickupCodeQuery } from "../../../../features/operations/queries/course-by-pickup-code.query";
 import { useOperationsActiveQuery } from "../../../../features/operations/queries/operations-active.query";
+import { peutValiderCodeRetrait } from "../../../../features/operations/utils/code-retrait";
 import { groupOrdersForOperations } from "../../../../features/operations/utils/group-orders";
-import { type Order } from "../../../../features/orders/types/order.types";
+import { OrderType, type Order } from "../../../../features/orders/types/order.types";
 import { useOrderDetailQuery } from "../../../../features/orders/queries/order-detail.query";
 
 // ── Onglet "Commandes" ─────────────────────────────────────────────────────────
@@ -62,8 +63,7 @@ const TABS: { key: CommandesTab; label: string; Icon: React.FC<{ className?: str
 /**
  * Page "Commandes" unifiée, trois onglets :
  *
- *  • **En cours**  : suivi en direct en trois colonnes (En cuisine, Prêtes,
- *    Hors restaurant) ; la récupération se confirme sur le groupe de la course
+ *  • **En cours**  : suivi temps réel (KPI + cards + code retrait livreur)
  *  • **Commandes** : table paginée avec filtres, création, modification
  *  • **À relancer** : paniers de l'application restés sans paiement (ADMIN,
  *    centre d'appels), avec leur compteur dans l'en-tête
@@ -150,16 +150,26 @@ export default function Operations() {
     setPagination("orders", 1, 10);
   };
 
-  // ── Données "En cours" ───────────────────────────────────────────────────────
+  // ── Pickup code (onglet "En cours") ─────────────────────────────────────────
+  // Cherché dans le restaurant du membre, ou celui choisi ci-dessous (22/10).
+  const [submittedCode, setSubmittedCode] = useState<string | null>(null);
   const {
-    data,
-    isLoading,
-    isError: enCoursEnErreur,
-    isFetching: enCoursRelecture,
-    refetch: relireEnCours,
-  } = useOperationsActiveQuery(selectedRestaurantId ?? undefined);
+    data: course,
+    error: pickupError,
+    isLoading: pickupLoading,
+    isFetching: pickupFetching,
+    isError: pickupIsError,
+    refetch: pickupRefetch,
+  } = useCourseByPickupCodeQuery(submittedCode ?? "", submittedCode !== null);
+
+  // ── Données "En cours" ───────────────────────────────────────────────────────
+  const { data, isLoading } = useOperationsActiveQuery(selectedRestaurantId ?? undefined);
 
   const buckets = useMemo(() => groupOrdersForOperations(data ?? []), [data]);
+  const inDeliveryCount = useMemo(
+    () => buckets.recuperees.filter((o) => o.type === OrderType.DELIVERY).length,
+    [buckets.recuperees],
+  );
 
   // ── Drawer partagé ───────────────────────────────────────────────────────────
   // selectedOrder            : commande venant des cards "En cours" (objet complet)
@@ -389,32 +399,46 @@ export default function Operations() {
               reste pilote par le backend via le JWT. */}
           <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
 
-          {/* Ligne Livreurs (conception 6.2) : un seul restaurant affiché et
-              `GET /livraison/tableau` qui répond ; sinon rien, l'écran n'attend pas. */}
-          <LigneLivreurs />
-
-          {/* Erreur avec données : les cartes restent, une fine ligne rouge. */}
-          {enCoursEnErreur && data && (
-            <p className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-              Connexion perdue, nouvel essai en cours
-            </p>
+          {/* Code retrait livreur : seulement pour les rôles admis par le serveur */}
+          {peutValiderCodeRetrait(currentUser) && (
+            <div className="max-w-md">
+              <PickupCodeInput onSubmit={setSubmittedCode} isLoading={pickupLoading || pickupFetching} />
+              {/* Le texte du serveur : code inconnu ici aujourd'hui, ou présent
+                  dans plusieurs restaurants (choisir le restaurant au-dessus). */}
+              {pickupIsError && submittedCode && (
+                <div className="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>
+                    {pickupError?.message ||
+                      "Aucune course en cours avec ce code. Vérifiez le code dicté par le livreur."}
+                  </span>
+                  <button
+                    onClick={() => pickupRefetch()}
+                    disabled={pickupFetching}
+                    className="ml-auto shrink-0 text-[#F17922] underline disabled:opacity-50"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
+          {course && submittedCode && (
+            <PickupValidationModal
+              course={course}
+              onClose={() => setSubmittedCode(null)}
+            />
+          )}
+
+          {/* KPIs masqués sur mobile : les compteurs sont repris dans les onglets d'état */}
+          <div className="hidden md:block">
+            <OperationsKpiBar buckets={buckets} inDeliveryCount={inDeliveryCount} />
+          </div>
+
           {isLoading && !data ? (
-            <OperationsSectionsSquelette />
-          ) : enCoursEnErreur && !data ? (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden />
-              <span>Commandes indisponibles.</span>
-              <button
-                type="button"
-                onClick={() => relireEnCours()}
-                disabled={enCoursRelecture}
-                className="ml-auto shrink-0 font-semibold text-[#F17922] underline disabled:opacity-50"
-              >
-                Réessayer
-              </button>
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]" />
             </div>
           ) : (
             <OperationsSections

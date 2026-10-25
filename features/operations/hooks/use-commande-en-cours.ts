@@ -25,25 +25,3 @@ export function useCommandeEnCours(orderId: string | null | undefined): Order | 
   }
   return null;
 }
-
-/**
- * Commandes d'une course telles que la liste des Opérations les connaît : la
- * fenêtre de récupération ouverte depuis le tiroir s'ouvre tout de suite avec
- * ces lignes, avant de relire la course.
- */
-export function useCommandesDeCourse(courseId: string | null | undefined): Order[] {
-  const queryClient = useQueryClient();
-  const [, relire] = useReducer((n: number) => n + 1, 0);
-
-  useEffect(() => queryClient.getQueryCache().subscribe(relire), [queryClient]);
-
-  if (!courseId) return [];
-  for (const [, data] of queryClient.getQueriesData<Order[]>({ queryKey: operationsKeyQuery("active") })) {
-    if (!Array.isArray(data)) continue;
-    const trouvees = data.filter(
-      (o) => (o as unknown as { delivery?: { course?: { id?: string } | null } | null })?.delivery?.course?.id === courseId,
-    );
-    if (trouvees.length > 0) return trouvees;
-  }
-  return [];
-}

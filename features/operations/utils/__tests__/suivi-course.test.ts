@@ -464,22 +464,8 @@ describe('retenue au comptoir', () => {
       { id: 'oB', reference: 'CMD-B', status: 'IN_PROGRESS', delivery: null },
     ];
     const attentes = attentesParCommande(commandes, A('12:35'));
-    expect(attentes.get('oB')).toEqual({ courseId: 'k1', texte: 'Attendue par Koffi, départ 12 h 44' });
+    expect(attentes.get('oB')).toEqual({ courseId: 'k1', texte: 'Attendue par la course de Koffi, départ au plus tard 12 h 44' });
     expect(attentesParCommande(commandes, A('12:45')).size).toBe(0);
-  });
-
-  test('course sans livreur : « Attendue par une course » (une ligne de carte, demande du 24/10 au soir)', () => {
-    const commandes = [
-      commande('A', 'READY', {
-        statut: 'PENDING_ASSIGNMENT',
-        deliverer_id: null,
-        deliverer: null,
-        retenue_jusqua: ISO('12:44'),
-        commandes_attendues: [{ order_id: 'oB', reference: 'CMD-B', prete_vers: ISO('12:41') }],
-      }),
-      { id: 'oB', reference: 'CMD-B', status: 'IN_PROGRESS', delivery: null },
-    ];
-    expect(attentesParCommande(commandes, A('12:35')).get('oB')?.texte).toBe('Attendue par une course, départ 12 h 44');
   });
 });
 
@@ -591,7 +577,7 @@ describe('retenue « trajet long » (demande du 24/10)', () => {
     ];
     expect(attentesParCommande(commandes, A('12:35')).get('oB')).toEqual({
       courseId: 'k1',
-      texte: 'Attendue par Koffi, départ 12 h 58',
+      texte: 'Attendue par la course de Koffi, départ au plus tard 12 h 58',
     });
   });
 });

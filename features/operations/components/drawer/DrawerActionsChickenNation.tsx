@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { CheckCircle, Truck } from "lucide-react";
+import React from "react";
+import { CheckCircle, Info, Truck } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { format } from "date-fns";
@@ -11,20 +11,11 @@ import { OrderStatus, type Order } from "../../../orders/types/order.types";
 import { DrawerCancelAction } from "./DrawerCancelAction";
 import { piedDuTiroir } from "../../utils/pied-tiroir";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
-import { useCommandeEnCours, useCommandesDeCourse } from "../../hooks/use-commande-en-cours";
+import { useCommandeEnCours } from "../../hooks/use-commande-en-cours";
 import { useMaintenant } from "../../hooks/use-maintenant";
-import { useAuthStore } from "../../../users/hook/authStore";
-import { peutConfirmerRecuperation } from "../../utils/code-retrait";
-import { courseDeLaPrete, quelquUnARemettre } from "../../utils/group-orders";
-import {
-  courseDeCommande,
-  livraisonDeCommande,
-  type CommandeOperations,
-  type CourseOperations,
-} from "../../utils/suivi-course";
+import { courseDeCommande, type CommandeOperations } from "../../utils/suivi-course";
 import { ligneRetenue } from "../../utils/ligne-retenue";
-import { EtatCourseLivreur, useEtatCourseLivreur } from "../course/EtatCourseLivreur";
-import { BoutonConfirmerRecuperation, FenetreRecuperation } from "../FenetreRecuperation";
+import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 
 interface Props {
   order: Order;
@@ -40,8 +31,8 @@ interface Props {
 export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   const { peutChangerStatut } = useDroitsCommande();
   const { handleOrderUpdateStatus, isLoading } = useOrderActions();
-  // Course complète (livreur, retenue, code pour la fenêtre) : celle de la
-  // liste des Opérations, le détail de la commande n'en porte qu'une partie.
+  // Course complète (code, livreur, retenue) : celle de la liste des
+  // Opérations, le détail de la commande n'en porte qu'une partie.
   const enCours = useCommandeEnCours(order.id);
   const maintenant = useMaintenant(15_000);
 
@@ -51,9 +42,9 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     doit refuser d'agir où qu'on le monte, sinon le trou revient au prochain
     écran qui le réutilise.
 
-    Il garde en revanche le SUIVI de la course (livreur et son état,
-    retenue), qui n'est que de l'information (`pied-tiroir.ts`, relecture
-    du 24/10) : sans boutons ni annulation, ni « Confirmer la récupération ».
+    Il garde en revanche le SUIVI de la course (livreur et son état, retenue,
+    code), qui n'est que de l'information (`pied-tiroir.ts`, relecture
+    du 24/10) : sans boutons ni annulation.
 
     ⚠️ APRÈS tous les hooks, jamais avant. Les droits arrivent après
     l'hydratation du magasin : un retour anticipé placé plus haut sauterait les
@@ -66,6 +57,9 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
 
   const suivie = (enCours ?? order) as unknown as CommandeOperations;
   const course = courseDeCommande(suivie) ?? courseDeCommande(order as unknown as CommandeOperations);
+  const pickup =
+    course?.pickup_code ??
+    (order as unknown as { delivery?: { course?: { pickup_code: string } } }).delivery?.course?.pickup_code;
   /**
    * La préparation ne s'ouvre qu'une heure avant l'heure souhaitée.
    *
@@ -121,52 +115,78 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
     );
   }
 
-  // Commande prête : la course qui viendra la chercher, comme le groupe de la
-  // colonne « Prêtes » (pas une course annulée, terminée, ni une course dont
-  // la livraison de cette commande a été annulée).
-  // Livraison de la liste des Opérations d'abord, celle du détail sinon.
-  const source = enCours && livraisonDeCommande(enCours as unknown as CommandeOperations) ? enCours : order;
-  const courseAuRestaurant = order.status === OrderStatus.READY ? courseDeLaPrete(source) : null;
-
-  if (order.status === OrderStatus.READY && courseAuRestaurant) {
-    // Livreur et son état, retenue en une ligne, « Confirmer la récupération »
-    // (demande du 24/10 au soir : le code est en grand dans la fenêtre).
+  if (order.status === OrderStatus.READY && course) {
+    // Planificateur v2 : livreur et son état, retenue en une ligne, code.
+    // Demande du 24/10 (« reste simple ») : plus de phrase d'ajout à la course.
+    const retenue = ligneRetenue(course, maintenant);
     return (
-      <PiedCourseAuRestaurant
-        course={courseAuRestaurant}
-        commande={suivie}
-        service={order.delivery_service}
-        maintenant={maintenant}
-        annulation={annulation}
-      />
+      <div className="space-y-2">
+        <EtatCourseLivreur
+          course={course}
+          commandes={[suivie]}
+          service={order.delivery_service}
+          maintenant={maintenant}
+        />
+        {retenue && (
+          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+            {retenue}
+          </p>
+        )}
+        {pickup && (
+          <p className="text-xs text-gray-600">
+            Code retrait :{" "}
+            <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
+          </p>
+        )}
+        {annulation}
+      </div>
     );
   }
 
   if (order.status === OrderStatus.READY) {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-3 rounded-xl bg-orange-50 border border-orange-200 px-3 py-3">
-          <Truck className="w-5 h-5 text-[#F17922] shrink-0" />
-          <p className="text-sm font-semibold text-gray-900">En attente du livreur</p>
+        <div className="flex items-start gap-3 rounded-xl bg-orange-50 border border-orange-200 px-3 py-3">
+          <Truck className="w-5 h-5 text-[#F17922] shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-900">En attente du livreur</p>
+            {pickup && (
+              <p className="text-xs text-gray-600 mt-0.5">
+                Code retrait :{" "}
+                <span className="font-mono font-bold text-[#F17922] text-base">{pickup}</span>
+              </p>
+            )}
+            <p className="text-[11px] text-gray-500 mt-1">
+              Le livreur dictera le code à la caissière dès son arrivée.
+            </p>
+          </div>
         </div>
         {annulation}
       </div>
     );
   }
 
-  if (order.status === OrderStatus.PICKED_UP) {
-    return course ? (
-      <EtatCourseLivreur
-        course={course}
-        commandes={[suivie]}
-        service={order.delivery_service}
-        maintenant={maintenant}
-        compact
-      />
-    ) : null;
+  if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.COLLECTED) {
+    return (
+      <div className="space-y-2">
+        {order.status === OrderStatus.PICKED_UP && course && (
+          <EtatCourseLivreur
+            course={course}
+            commandes={[suivie]}
+            service={order.delivery_service}
+            maintenant={maintenant}
+            compact
+          />
+        )}
+        <div className="flex items-center gap-2 rounded-xl bg-blue-50 border border-blue-200 px-3 py-2">
+          <Info className="w-4 h-4 text-blue-600 shrink-0" />
+          <p className="text-xs text-blue-800">
+            Commande récupérée par le livreur : suivi dans le module Courses.
+          </p>
+        </div>
+      </div>
+    );
   }
-
-  if (order.status === OrderStatus.COLLECTED) return null;
 
   if (order.status === OrderStatus.COMPLETED) {
     return (
@@ -182,54 +202,3 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
 
   return null;
 };
-
-/**
- * Pied du tiroir d'une commande prête qui a sa course : état du livreur et
- * retenue (une ligne chacun), puis « Confirmer la récupération », même
- * fenêtre et même règle qu'au groupe de la course : pour qui peut la
- * confirmer, dès qu'un livreur a accepté ou que Turbo a la course, jamais
- * sur une course sans livreur trouvé (`quelquUnARemettre`).
- */
-function PiedCourseAuRestaurant({
-  course,
-  commande,
-  service,
-  maintenant,
-  annulation,
-}: {
-  course: CourseOperations;
-  commande: CommandeOperations;
-  service: string | null | undefined;
-  maintenant: Date;
-  annulation: React.ReactNode;
-}) {
-  const [fenetre, setFenetre] = useState(false);
-  const membre = useAuthStore((s) => s.user);
-  const commandes = useCommandesDeCourse(course.id);
-  const suivies = commandes.length > 0 ? (commandes as unknown as CommandeOperations[]) : [commande];
-  const { etat } = useEtatCourseLivreur(course, suivies, service, maintenant);
-  const retenue = ligneRetenue(course, maintenant);
-  const bouton = peutConfirmerRecuperation(membre) && quelquUnARemettre(course);
-
-  return (
-    <div className="space-y-2">
-      <EtatCourseLivreur course={course} commandes={suivies} service={service} maintenant={maintenant} compact />
-      {retenue && (
-        <p className="truncate text-xs font-semibold text-amber-700" title={retenue}>
-          {retenue}
-        </p>
-      )}
-      {bouton && (
-        <BoutonConfirmerRecuperation auRestaurant={etat.etat === "AU_COMPTOIR"} onClick={() => setFenetre(true)} />
-      )}
-      {annulation}
-      {fenetre && (
-        <FenetreRecuperation
-          course={course}
-          commandes={commandes.length > 0 ? commandes : [commande]}
-          onClose={() => setFenetre(false)}
-        />
-      )}
-    </div>
-  );
-}

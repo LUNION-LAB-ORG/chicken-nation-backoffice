@@ -3,20 +3,6 @@ import { differenceInMinutes } from 'date-fns';
 import { DeliveryService, type Order, OrderStatus } from '../../orders/types/order.types';
 
 import {
-  approcheLivreur,
-  courseDeCommande,
-  etatCourse,
-  livraisonDeCommande,
-  livraisonsCommencees,
-  positionConnue,
-  positionRestaurant,
-  referencesARemettre,
-  retenueEnCours,
-  type CommandeOperations,
-  type CourseOperations,
-  type EtatCourse,
-} from './suivi-course';
-import {
   LATE_READY_THRESHOLD_MIN,
   OVERDUE_COLLECTED_UNPAID_MIN,
   type IOperationsBuckets,
@@ -55,40 +41,11 @@ export function isOrderLate(order: Order): boolean {
   return isReadyLate(order) || isCollectedUnpaidOverdue(order);
 }
 
-/** Course de la commande (relation `delivery.course` de `operations/active`), ou null. */
-function getCourseFromOrder(order: Order): CourseOperations | null {
-  return courseDeCommande(order as unknown as CommandeOperations);
-}
-
-/** Course annulée ou terminée : plus personne ne vient chercher ses sacs. */
-const COURSES_FINIES = new Set(['CANCELLED', 'COMPLETED']);
-
-/**
- * Course sous laquelle ranger une commande prête : celle de sa livraison,
- * sauf si cette livraison est annulée (course annulée, commande détachée
- * d'une course partie, annulation Turbo d'une commande du groupe) ou si la
- * course est annulée ou terminée. La commande est alors une carte seule :
- * le groupe de la course ne la listerait pas, elle ne serait plus touchable.
- * « Aucun livreur trouvé » (course expirée) garde son groupe.
- */
-export function courseDeLaPrete(order: Order): CourseOperations | null {
-  const commande = order as unknown as CommandeOperations;
-  if (livraisonDeCommande(commande)?.statut === 'CANCELLED') return null;
-  const course = courseDeCommande(commande);
-  return course && !COURSES_FINIES.has(course.statut) ? course : null;
-}
-
-/**
- * Quelqu'un à qui remettre les sacs (« Confirmer la récupération ») : un
- * livreur a accepté, ou Turbo a la course. Personne pendant la recherche,
- * ni sur une course sans livreur trouvé, annulée ou terminée (le serveur
- * garde le livreur d'une course annulée et répondrait 409). Même règle que
- * la caisse.
- */
-export function quelquUnARemettre(course: CourseOperations | null | undefined): boolean {
-  if (!course) return false;
-  if (course.statut === 'CANCELLED' || course.statut === 'EXPIRED' || course.statut === 'COMPLETED') return false;
-  return !!course.deliverer_id || !!course.turbo_escalated_at;
+/** Accès defensif à delivery.course sans casser si propriété absente */
+function getCourseFromOrder(order: Order): { id: string; reference: string; pickup_code: string } | null {
+  // La relation delivery.course est fournie par le backend operations/active
+  const delivery = (order as unknown as { delivery?: { course?: { id: string; reference: string; pickup_code: string } } }).delivery;
+  return delivery?.course ?? null;
 }
 
 /**
@@ -138,7 +95,7 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
 
     // 3. Au restaurant - Prêtes (groupées par course pour les multi-commande)
     if (order.status === OrderStatus.READY) {
-      const course = courseDeLaPrete(order);
+      const course = getCourseFromOrder(order);
       const groupKey = course?.id ? `course-${course.id}` : `solo-${order.id}`;
       const existing = pretesMap.get(groupKey);
       if (existing) {
@@ -150,7 +107,6 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
           courseReference: course?.reference ?? null,
           pickupCode: course?.pickup_code ?? null,
           deliveryService: order.delivery_service,
-          course,
           orders: [order],
         });
       }
@@ -165,124 +121,4 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
     pretesGroupes: Array.from(pretesMap.values()),
     recuperees,
   };
-}
-
-// ============================================================
-// COLONNE « PRÊTES » (demande du 24/10 au soir)
-// ============================================================
-
-/** Statuts d'une commande encore au restaurant (cuisine ou comptoir). */
-const AU_RESTAURANT = new Set<string>([
-  OrderStatus.PENDING,
-  OrderStatus.ACCEPTED,
-  OrderStatus.IN_PROGRESS,
-  OrderStatus.READY,
-]);
-
-/**
- * Courses retenues au comptoir pour une commande en cuisine, sans aucune
- * commande prête (livreur encore au restaurant après le premier retrait,
- * commande ajoutée pas encore prête) : un groupe en-tête seul, comme à la
- * caisse, sinon la retenue n'apparaîtrait nulle part.
- */
-export function groupesRetenusSansCommandePrete(
-  commandes: readonly Order[],
-  groupes: readonly IOrderGroup[],
-  maintenant: Date,
-): IOrderGroup[] {
-  const dejaLa = new Set(groupes.map((g) => g.courseId).filter(Boolean));
-  const resultat = new Map<string, IOrderGroup>();
-  for (const o of commandes) {
-    const course = getCourseFromOrder(o);
-    if (!course || dejaLa.has(course.id) || resultat.has(course.id)) continue;
-    if (!retenueEnCours(course, maintenant)) continue;
-    resultat.set(course.id, {
-      key: `course-${course.id}`,
-      courseId: course.id,
-      courseReference: course.reference ?? null,
-      pickupCode: course.pickup_code ?? null,
-      deliveryService: o.delivery_service,
-      course,
-      orders: [],
-    });
-  }
-  return Array.from(resultat.values());
-}
-
-/**
- * Commandes d'une course encore au restaurant, telles que l'écran les
- * connaît : les prêtes d'abord, puis celles en cuisine (« En préparation »),
- * les plus anciennes d'abord. Ce sont les lignes du groupe de la course.
- */
-export function commandesAuRestaurantDeLaCourse(courseId: string, commandes: readonly Order[]): Order[] {
-  return commandes
-    .filter((o) => {
-      if (!AU_RESTAURANT.has(o.status)) return false;
-      const livraison = (o as unknown as CommandeOperations).delivery;
-      return livraison?.course?.id === courseId && livraison.statut !== 'CANCELLED';
-    })
-    .sort((a, b) => {
-      const pa = a.status === OrderStatus.READY ? 0 : 1;
-      const pb = b.status === OrderStatus.READY ? 0 : 1;
-      if (pa !== pb) return pa - pb;
-      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-    });
-}
-
-/** Rang de l'état d'une course dans la colonne « Prêtes ». */
-const RANG_ETAT: Partial<Record<EtatCourse, number>> = {
-  AU_COMPTOIR: 0,
-  PARTI_SANS_SAC: 0,
-  EN_ROUTE: 1,
-  TURBO: 3,
-};
-
-/**
- * Ordre de la colonne « Prêtes » : livreur au restaurant (et sac oublié),
- * puis en route (arrivée la plus proche d'abord), puis recherche et offre,
- * puis Turbo, puis les commandes sans course (à emporter, sur place). À
- * égalité, la commande prête depuis le plus longtemps d'abord.
- *
- * L'état est celui de la dernière position connue par le serveur : l'en-tête
- * du groupe, lui, suit aussi la position en direct du livreur.
- */
-export function ordonnerGroupesPretes(
-  groupes: readonly IOrderGroup[],
-  ctx: { maintenant: Date; commandes: readonly Order[] },
-): IOrderGroup[] {
-  const toutes = ctx.commandes as unknown as CommandeOperations[];
-  const cle = (g: IOrderGroup): [number, number, number] => {
-    const pretes = g.orders.map((o) => (o.ready_at ? Date.parse(o.ready_at) : Number.NaN)).filter(Number.isFinite);
-    const plusAncienne = pretes.length > 0 ? Math.min(...pretes) : Number.MAX_SAFE_INTEGER;
-    const course = g.course ?? null;
-    if (!course) return [4, 0, plusAncienne];
-    const restaurant = positionRestaurant(
-      course.restaurant,
-      ...g.orders.map((o) => (o as unknown as CommandeOperations).restaurant),
-    );
-    const position = positionConnue(course.deliverer);
-    const aRemettre = referencesARemettre(course.id, toutes);
-    const etat = etatCourse(course, {
-      maintenant: ctx.maintenant,
-      position,
-      restaurant,
-      livraisonsCommencees: livraisonsCommencees(course.id, toutes),
-      resteARemettre: aRemettre.length > 0,
-      referencesARemettre: aRemettre,
-      service: g.deliveryService,
-    }).etat;
-    const r = RANG_ETAT[etat] ?? 2;
-    if (r !== 1) return [r, 0, plusAncienne];
-    const arrivee = approcheLivreur({
-      arriveeServeur: course.arrivee_estimee,
-      position,
-      restaurant,
-      maintenant: ctx.maintenant,
-    }).arrivee;
-    return [1, arrivee ? arrivee.getTime() : Number.MAX_SAFE_INTEGER, plusAncienne];
-  };
-  return groupes
-    .map((g) => ({ g, k: cle(g) }))
-    .sort((a, b) => a.k[0] - b.k[0] || a.k[1] - b.k[1] || a.k[2] - b.k[2])
-    .map(({ g }) => g);
 }

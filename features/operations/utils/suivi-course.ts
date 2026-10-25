@@ -792,15 +792,14 @@ export function texteToutEstPret(course: CourseOperations): string | null {
 
 export interface Attente {
   courseId: string;
-  /** « Attendue par Koffi, départ 12 h 44 » ; sans livreur : « Attendue par une course, départ 12 h 44 ». */
+  /** « Attendue par la course de Koffi, départ au plus tard 12 h 44 ». */
   texte: string;
 }
 
 /**
  * Commandes encore en cuisine attendues par une course : identifiant de la
- * commande → texte de la troisième ligne de sa carte, court pour tenir sur
- * une ligne (demande du 24/10 au soir). Lit toutes les courses présentes dans
- * la liste (une même course apparaît sur chacune de ses commandes).
+ * commande → texte pour sa carte. Lit toutes les courses présentes dans la
+ * liste (une même course apparaît sur chacune de ses commandes).
  */
 export function attentesParCommande(commandes: readonly CommandeOperations[], maintenant: Date): Map<string, Attente> {
   const resultat = new Map<string, Attente>();
@@ -811,12 +810,11 @@ export function attentesParCommande(commandes: readonly CommandeOperations[], ma
     vues.add(course.id);
     const retenue = retenueEnCours(course, maintenant);
     if (!retenue) continue;
-    const prenom = course.deliverer_id || course.deliverer ? prenomLivreur(course.deliverer) : null;
     for (const a of retenue.attendues) {
       if (!a.order_id || resultat.has(a.order_id)) continue;
       resultat.set(a.order_id, {
         courseId: course.id,
-        texte: `Attendue par ${prenom ?? 'une course'}, départ ${heureCourte(retenue.jusqua)}`,
+        texte: `Attendue par ${nomDeCourse(course)}, départ au plus tard ${heureCourte(retenue.jusqua)}`,
       });
     }
   }

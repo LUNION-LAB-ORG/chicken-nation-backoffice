@@ -1,9 +1,6 @@
 /**
- * REMISE AU LIVREUR (fenêtre « Récupération » de l'écran Commandes).
- *
- * Depuis le 24/10 au soir, la caissière ne saisit plus le code : le livreur
- * le lui dit, elle touche le groupe de la course et confirme. La fenêtre lit
- * la course par son identifiant ; ces règles restent celles du serveur.
+ * REMISE AU LIVREUR PAR LE CODE DE RETRAIT (fenêtre « Récupération · code 123 »
+ * de l'écran Opérations).
  *
  * Deux cas, les mêmes que le serveur (`CourseActionService.validatePickupByCashier`,
  * backend) :
@@ -28,15 +25,7 @@
 export interface LivraisonRemise {
   id: string;
   statut?: string | null;
-  order_id?: string | null;
-  turbo_courier_name?: string | null;
-  order: {
-    id?: string | null;
-    status: string;
-    reference?: string | null;
-    fullname?: string | null;
-    customer?: { first_name?: string | null; last_name?: string | null } | null;
-  };
+  order: { status: string; reference?: string | null };
 }
 
 /** Ce que la fenêtre lit de la course trouvée par le code (sous-ensemble de `Course`). */
@@ -108,7 +97,7 @@ export function remiseParCode(course: CourseRemise): RemiseParCode {
         ? 'Toutes les commandes sont prêtes'
         : `${commandes(pasPretes)} pas encore ${pasPretes > 1 ? 'prêtes' : 'prête'}`,
       ton: peutValider ? 'vert' : 'ambre',
-      bouton: 'Confirmer la récupération',
+      bouton: 'Valider la récupération',
     };
   }
 
@@ -131,105 +120,9 @@ export function remiseParCode(course: CourseRemise): RemiseParCode {
   };
 }
 
-/** Message bref après une confirmation réussie (course telle qu'elle était dans la fenêtre). */
+/** Texte de confirmation après une validation réussie. */
 export function texteRemiseValidee(course: Partial<Pick<CourseRemise, 'statut'>> | null | undefined): string {
-  return course?.statut === 'IN_DELIVERY' ? 'Commande remise' : 'Récupération confirmée';
-}
-
-/** Identifiant de la commande d'une livraison. */
-const idCommande = (d: LivraisonRemise): string | null => d.order?.id || d.order_id || null;
-
-/**
- * Commandes que la confirmation remet (`order_ids` de `POST
- * /courses/operations/:id/recuperation`) : celles « à remettre » dans la
- * fenêtre, sans doublon.
- */
-export function commandesARemettre(course: CourseRemise): string[] {
-  const complementaire = estRetraitComplementaire(course);
-  const ids: string[] = [];
-  for (const d of course.deliveries ?? []) {
-    const id = idCommande(d);
-    if (id && etatRemise(d, complementaire) === 'A_REMETTRE' && !ids.includes(id)) ids.push(id);
-  }
-  return ids;
-}
-
-/**
- * Libellé à droite de la ligne d'une commande dans la fenêtre. À remettre :
- * aucun, la coche suffit.
- */
-export function libelleRemise(livraison: LivraisonRemise, etat: EtatRemise): string | null {
-  switch (etat) {
-    case 'A_REMETTRE':
-      return null;
-    case 'DEJA_REMISE':
-      return 'Déjà remise';
-    case 'PAS_PRETE':
-      return 'En cuisine';
-    default:
-      return livraison.statut === 'DELIVERED' ? 'Livrée' : livraison.statut === 'FAILED' ? 'Échec' : 'Annulée';
-  }
-}
-
-/** Ce que l'écran Commandes connaît d'une commande (sous-ensemble de `Order`). */
-export interface CommandeDeLEcran {
-  id: string;
-  reference: string;
-  status: string;
-  fullname?: string | null;
-  customer?: { first_name?: string | null; last_name?: string | null } | null;
-  delivery?: { id?: string | null; statut?: string | null; course?: { id?: string | null } | null } | null;
-}
-
-/**
- * La course telle que l'écran la connaît déjà (ses commandes de la liste) :
- * la fenêtre s'ouvre tout de suite avec ces lignes, avant la lecture de la
- * course, et les garde si cette lecture échoue.
- */
-export function courseRemiseDeLEcran(
-  course: { id: string; statut: string },
-  commandes: readonly CommandeDeLEcran[],
-): CourseRemise {
-  const deliveries: LivraisonRemise[] = [];
-  for (const c of commandes) {
-    const livraison = c.delivery;
-    if (!livraison || livraison.course?.id !== course.id || livraison.statut === 'CANCELLED') continue;
-    if (deliveries.some((d) => d.order.id === c.id)) continue;
-    deliveries.push({
-      id: livraison.id || c.id,
-      statut: livraison.statut ?? null,
-      order_id: c.id,
-      order: { id: c.id, status: c.status, reference: c.reference, fullname: c.fullname ?? null, customer: c.customer ?? null },
-    });
-  }
-  return { statut: course.statut, deliveries };
-}
-
-/** Ce que la fenêtre lit du livreur de la course (lue, ou celle de l'écran). */
-export interface LivreurFenetre {
-  deliverer_id?: string | null;
-  deliverer?: { first_name?: string | null; last_name?: string | null } | null;
-  turbo_escalated_at?: string | null;
-  deliveries?: readonly { turbo_courier_name?: string | null }[] | null;
-}
-
-/**
- * Livreur montré sous le code : « Koffi Yao » ; Turbo : « Livreur Turbo »,
- * puis le nom de son livreur s'il est connu (« Livreur Turbo · Moussa ») ;
- * personne : null.
- */
-export function livreurDeLaFenetre(course: LivreurFenetre | null | undefined): string | null {
-  if (!course) return null;
-  const nom = [course.deliverer?.first_name, course.deliverer?.last_name]
-    .map((v) => (typeof v === 'string' ? v.trim() : ''))
-    .filter(Boolean)
-    .join(' ');
-  if (course.deliverer_id && nom) return nom;
-  if (course.turbo_escalated_at) {
-    const turbo = (course.deliveries ?? [])
-      .map((d) => (typeof d?.turbo_courier_name === 'string' ? d.turbo_courier_name.trim() : ''))
-      .find(Boolean);
-    return turbo ? `Livreur Turbo · ${turbo}` : 'Livreur Turbo';
-  }
-  return nom || null;
+  return course?.statut === 'IN_DELIVERY'
+    ? 'Commande remise : le livreur peut partir'
+    : 'Course validée : le livreur peut partir en livraison';
 }
