@@ -43,11 +43,23 @@ export function isOrderLate(order: Order): boolean {
   return isReadyLate(order) || isCollectedUnpaidOverdue(order);
 }
 
-/** Accès defensif à delivery.course sans casser si propriété absente */
-function getCourseFromOrder(order: Order): { id: string; reference: string; pickup_code: string } | null {
-  // La relation delivery.course est fournie par le backend operations/active
-  const delivery = (order as unknown as { delivery?: { course?: { id: string; reference: string; pickup_code: string } } }).delivery;
-  return delivery?.course ?? null;
+/** Course annulée ou terminée : plus personne ne vient chercher ses sacs. */
+const COURSES_FINIES = new Set(['CANCELLED', 'COMPLETED']);
+
+/**
+ * Course sous laquelle ranger une commande prête : celle de sa livraison,
+ * sauf si cette livraison est annulée (course annulée, commande détachée
+ * d'une course partie, annulation Turbo d'une commande du groupe) ou si la
+ * course est annulée ou terminée. La commande est alors une carte seule :
+ * le groupe de la course ne la listerait pas, et « Confirmer la
+ * récupération » serait refusé par le serveur. « Aucun livreur trouvé »
+ * (course expirée) garde son groupe.
+ */
+export function courseDeLaPrete(order: Order): CourseOperations | null {
+  const commande = order as unknown as CommandeOperations;
+  if (livraisonDeCommande(commande)?.statut === 'CANCELLED') return null;
+  const course = courseDeCommande(commande);
+  return course && !COURSES_FINIES.has(course.statut) ? course : null;
 }
 
 /**
@@ -112,7 +124,7 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
 
     // 3. Au restaurant - Prêtes (groupées par course pour les multi-commande)
     if (order.status === OrderStatus.READY) {
-      const course = getCourseFromOrder(order);
+      const course = courseDeLaPrete(order);
       const groupKey = course?.id ? `course-${course.id}` : `solo-${order.id}`;
       const existing = pretesMap.get(groupKey);
       if (existing) {

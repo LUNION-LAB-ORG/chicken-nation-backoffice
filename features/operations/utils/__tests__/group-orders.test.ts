@@ -2,7 +2,7 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
 
-import { cleLivreur, courseDuLivreur, groupesHorsRestaurant } from '../group-orders';
+import { cleLivreur, courseDeLaPrete, courseDuLivreur, groupesHorsRestaurant, groupOrdersForOperations } from '../group-orders';
 
 /**
  * Demande du 24/10 : « de la même manière que les commandes sont groupées au
@@ -99,5 +99,41 @@ describe('un groupe par livreur, comme les courses au restaurant', () => {
     ];
     const ids = groupesHorsRestaurant(entree).flatMap((g) => g.orders.map((o) => o.id));
     expect(ids.sort()).toEqual(['1', '2', '3', '4']);
+  });
+});
+
+/**
+ * Commande prête dont la livraison ou la course est finie (correction du
+ * 24/10, ef84889, remise le 25/10) : carte seule, jamais une ligne d'une
+ * course qui ne viendra plus la chercher (le serveur refuserait « Confirmer
+ * la récupération »).
+ */
+describe('commande prête dont la livraison ou la course est finie', () => {
+  const prete = (id, laCourse, statutLivraison = 'PENDING') => ({
+    ...commande(id, 'READY', laCourse),
+    delivery: { id: `d-${id}`, statut: statutLivraison, course: laCourse },
+  });
+
+  test('course annulée : carte seule, la commande reste touchable', () => {
+    const k = course('k', { ...KOFFI, statut: 'CANCELLED' });
+    const { pretesGroupes } = groupOrdersForOperations([prete('a', k, 'CANCELLED')]);
+    expect(pretesGroupes.map((g) => [g.key, g.courseId, g.orders.map((o) => o.id)])).toEqual([['solo-a', null, ['a']]]);
+  });
+
+  test('commande détachée d’une course partie : carte seule, pas une ligne de cette course', () => {
+    const k = course('k', { ...KOFFI, statut: 'IN_DELIVERY', picked_up_at: ISO('12:30') });
+    const { pretesGroupes } = groupOrdersForOperations([prete('a', k, 'CANCELLED'), prete('b', k)]);
+    expect(pretesGroupes.map((g) => [g.key, g.orders.map((o) => o.id)])).toEqual([
+      ['solo-a', ['a']],
+      ['course-k', ['b']],
+    ]);
+  });
+
+  test('course terminée : carte seule ; « Aucun livreur trouvé » garde son groupe', () => {
+    const fini = course('f', { ...KOFFI, statut: 'COMPLETED' });
+    const expiree = course('e', { statut: 'EXPIRED' });
+    const { pretesGroupes } = groupOrdersForOperations([prete('a', fini), prete('b', expiree)]);
+    expect(pretesGroupes.map((g) => g.key)).toEqual(['solo-a', 'course-e']);
+    expect(courseDeLaPrete(prete('c', course('c', { ...KOFFI, statut: 'ACCEPTED' })))?.id).toBe('c');
   });
 });
