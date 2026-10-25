@@ -1,10 +1,12 @@
 import { differenceInMinutes } from 'date-fns';
 
-import { DeliveryService, type Order, OrderStatus } from '../../orders/types/order.types';
+import { DeliveryService, type Order, OrderStatus, OrderType } from '../../orders/types/order.types';
 
+import { courseDeCommande, livraisonDeCommande, type CommandeOperations, type CourseOperations } from './suivi-course';
 import {
   LATE_READY_THRESHOLD_MIN,
   OVERDUE_COLLECTED_UNPAID_MIN,
+  type IGroupeLivreur,
   type IOperationsBuckets,
   type IOrderGroup,
 } from '../types/operations.types';
@@ -136,4 +138,94 @@ export function groupOrdersForOperations(orders: Order[]): IOperationsBuckets {
     pretesGroupes: Array.from(pretesMap.values()),
     recuperees,
   };
+}
+
+// ============================================================
+// « HORS RESTAURANT » GROUPÉ PAR LIVREUR (demande du 24/10)
+// ============================================================
+
+const texte = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
+
+const instant = (iso: string | null | undefined): number => {
+  const t = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isNaN(t) ? 0 : t;
+};
+
+/**
+ * Clé du livreur d'une commande sortie :
+ *  - livreur Chicken Nation : `livreur-{deliverer_id}` (une commande livrée à
+ *    encaisser d'une course finie rejoint le même livreur : c'est lui qui
+ *    rapporte l'argent) ;
+ *  - Turbo : `turbo-{turbo_courier_id}`, sinon son nom, sinon la course ;
+ *  - personne (à emporter, sur place, commande sans course) : null, la
+ *    commande reste une carte seule, comme avant.
+ */
+export function cleLivreur(order: Order): string | null {
+  const commande = order as unknown as CommandeOperations;
+  const course = courseDeCommande(commande);
+  if (!course) return null;
+  if (course.deliverer_id) return `livreur-${course.deliverer_id}`;
+  if (course.turbo_escalated_at || order.delivery_service === DeliveryService.TURBO) {
+    const livraison = livraisonDeCommande(commande);
+    const id = texte(livraison?.turbo_courier_id);
+    if (id) return `turbo-${id}`;
+    const nom = texte(livraison?.turbo_courier_name);
+    if (nom) return `turbo-${nom.toLowerCase()}`;
+    return `turbo-${course.id}`;
+  }
+  return null;
+}
+
+/** Commande encore en route vers le client. */
+const enRoute = (o: Order): boolean => o.status === OrderStatus.PICKED_UP && o.type === OrderType.DELIVERY;
+
+/**
+ * Course montrée en tête du groupe : celle des commandes encore en route, la
+ * plus récente ; sinon (il ne reste que de l'argent à rapporter) la plus
+ * récente du groupe.
+ */
+export function courseDuLivreur(orders: readonly Order[]): CourseOperations | null {
+  let choisie: CourseOperations | null = null;
+  let rang = -1;
+  let quand = Number.NEGATIVE_INFINITY;
+  for (const o of orders) {
+    const course = courseDeCommande(o as unknown as CommandeOperations);
+    if (!course) continue;
+    const r = enRoute(o) ? 1 : 0;
+    const t = instant(course.picked_up_at ?? course.parti_at ?? course.created_at ?? null);
+    if (r > rang || (r === rang && t > quand)) {
+      choisie = course;
+      rang = r;
+      quand = t;
+    }
+  }
+  return choisie;
+}
+
+/**
+ * Colonne « Hors restaurant » groupée par livreur, comme les commandes
+ * prêtes le sont par course au restaurant. Ordre d'arrivée gardé : un groupe
+ * prend la place de sa première commande, ses commandes gardent leur ordre.
+ * Une commande sans livreur reste seule (`course` null).
+ */
+export function groupesHorsRestaurant(recuperees: readonly Order[]): IGroupeLivreur[] {
+  const groupes: IGroupeLivreur[] = [];
+  const parCle = new Map<string, IGroupeLivreur>();
+  for (const o of recuperees) {
+    const cle = cleLivreur(o);
+    if (!cle) {
+      groupes.push({ key: `solo-${o.id}`, course: null, deliveryService: o.delivery_service, orders: [o] });
+      continue;
+    }
+    const existant = parCle.get(cle);
+    if (existant) {
+      existant.orders.push(o);
+      continue;
+    }
+    const groupe: IGroupeLivreur = { key: cle, course: null, deliveryService: o.delivery_service, orders: [o] };
+    parCle.set(cle, groupe);
+    groupes.push(groupe);
+  }
+  for (const g of parCle.values()) g.course = courseDuLivreur(g.orders);
+  return groupes;
 }

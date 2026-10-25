@@ -1,4 +1,5 @@
 import type { DeliveryService, Order, OrderStatus } from '../../orders/types/order.types';
+import type { CourseOperations } from '../utils/suivi-course';
 
 /** Onglets visuels de la page Opérations (regroupement par présence physique). */
 export type OperationsTabKey = 'au_restaurant' | 'hors_restaurant';
@@ -20,6 +21,20 @@ export interface IOrderGroup {
   /** Code retrait 3 chiffres (affiché au livreur) — null si solo */
   pickupCode: string | null;
   /** Service livraison (TURBO / FREE / CHICKEN_NATION) */
+  deliveryService: DeliveryService;
+  orders: Order[];
+}
+
+/**
+ * Commandes « Hors restaurant » d'un même livreur (demande du 24/10 : la
+ * traçabilité du livreur qui traite les commandes). Présentées comme le
+ * groupe d'une course au restaurant ; en tête, le livreur et son état.
+ */
+export interface IGroupeLivreur {
+  /** `livreur-{id}`, `turbo-{…}`, ou `solo-{orderId}` pour une commande sans livreur. */
+  key: string;
+  /** Course montrée en tête (livreur et son état) ; null : commande seule, carte comme avant. */
+  course: CourseOperations | null;
   deliveryService: DeliveryService;
   orders: Order[];
 }

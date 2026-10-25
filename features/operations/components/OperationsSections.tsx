@@ -3,14 +3,13 @@
 import React, { useMemo } from "react";
 import { AlertTriangle, Hourglass, PackageCheck, Store, Truck } from "lucide-react";
 
-import { type Order, OrderStatus, OrderType } from "../../orders/types/order.types";
+import { type Order, OrderStatus } from "../../orders/types/order.types";
 import { useMaintenant } from "../hooks/use-maintenant";
 import type { IOperationsBuckets } from "../types/operations.types";
-import { isOrderLate } from "../utils/group-orders";
-import { attentesParCommande, courseDeCommande, type CommandeOperations } from "../utils/suivi-course";
+import { groupesHorsRestaurant, isOrderLate } from "../utils/group-orders";
+import { attentesParCommande, type CommandeOperations } from "../utils/suivi-course";
 import { OperationsCard } from "./OperationsCard";
-import { OrdersGroupCard } from "./OrdersGroupCard";
-import { EtatCourseLivreur } from "./course/EtatCourseLivreur";
+import { GroupeLivreurCard, OrdersGroupCard } from "./OrdersGroupCard";
 
 /**
  * Priorité d'affichage des commandes "Au restaurant" :
@@ -50,6 +49,9 @@ interface Props {
  * Ordre interne "Au restaurant" : nouvelles (PENDING/ACCEPTED) → en préparation
  * (IN_PROGRESS) → prêtes (READY, groupées par course). Pas de sous-sections
  * encadrées : chaque card porte son badge de statut, ce qui suffit.
+ *
+ * "Hors restaurant" (demande du 24/10) : groupé par livreur, avec la même
+ * présentation que le groupe d'une course (`GroupeLivreurCard`).
  *
  * Mobile (< lg) : les colonnes s'empilent verticalement.
  * Grand écran (xl+) : les cards à l'intérieur de chaque colonne passent en
@@ -91,6 +93,9 @@ export const OperationsSections: React.FC<Props> = ({
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     });
   }, [aPreparer]);
+
+  // Hors restaurant : groupé par livreur (demande du 24/10), ordre d'arrivée gardé.
+  const groupesHors = useMemo(() => groupesHorsRestaurant(recuperees), [recuperees]);
 
   // Compteurs par colonne (orders, pas groupes).
   const auRestaurantCount = aPreparer.length + pretesOrders.length;
@@ -182,34 +187,16 @@ export const OperationsSections: React.FC<Props> = ({
           <EmptyState message="Aucune commande hors restaurant" />
         ) : (
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
-            {recuperees.map((o) => {
-              // Livreur de la course et son état (au comptoir, parti à 12 h 45…).
-              const course =
-                o.type === OrderType.DELIVERY && o.status === OrderStatus.PICKED_UP
-                  ? courseDeCommande(o as unknown as CommandeOperations)
-                  : null;
-              return (
-                <OperationsCard
-                  key={o.id}
-                  order={o}
-                  onClick={() => onCardClick(o)}
-                  onPayClick={() => onPayClick(o)}
-                  showWarningBadge={isOrderLate(o)}
-                  warningLabel="En retard"
-                  extra={
-                    course ? (
-                      <EtatCourseLivreur
-                        course={course}
-                        commandes={commandesSuivi}
-                        service={o.delivery_service}
-                        maintenant={maintenant}
-                        compact
-                      />
-                    ) : undefined
-                  }
-                />
-              );
-            })}
+            {groupesHors.map((g) => (
+              <GroupeLivreurCard
+                key={g.key}
+                group={g}
+                onCardClick={onCardClick}
+                onPayClick={onPayClick}
+                commandes={toutes}
+                maintenant={maintenant}
+              />
+            ))}
           </div>
         )}
       </KanbanColumn>
