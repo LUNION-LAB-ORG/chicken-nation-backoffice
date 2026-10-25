@@ -17,7 +17,11 @@ import { ForceAssignModal } from '../../../../features/courses/components/modals
 import { useCoursesSocketSync } from '../../../../features/courses/hooks/useCoursesSocketSync';
 import { courseDetailQueryOption } from '../../../../features/courses/queries/course-detail.query';
 import { useCourseListQuery } from '../../../../features/courses/queries/course-list.query';
-import type { CourseStatut } from '../../../../features/courses/types/course.types';
+import {
+  CLE_RESTAURANT_DU_LIVREUR,
+  filtresListeCourses,
+  livreurChoisiValable,
+} from '../../../../features/courses/utils/filtres-courses';
 
 /**
  * Page Courses (backoffice admin) — vue 100 % opérationnelle.
@@ -47,9 +51,8 @@ export default function Courses() {
   const setSelectedItem = useDashboardStore((s) => s.setSelectedItem);
   const setSectionView = useDashboardStore((s) => s.setSectionView);
   const setPagination = useDashboardStore((s) => s.setPagination);
+  const setFilter = useDashboardStore((s) => s.setFilter);
   const queryClient = useQueryClient();
-
-  const restaurantFilter = selectedRestaurantId ?? undefined;
 
   // Un autre restaurant choisi dans le bandeau : retour à la première page.
   const restaurantPrecedent = useRef(selectedRestaurantId);
@@ -58,6 +61,14 @@ export default function Courses() {
     restaurantPrecedent.current = selectedRestaurantId;
     setPagination('courses', 1, pagination.limit);
   }, [selectedRestaurantId, pagination.limit, setPagination]);
+
+  // Livreur choisi pour un autre restaurant du bandeau : il ne filtre plus.
+  const livreurCaduc = !!filters?.deliverer_id && !livreurChoisiValable(filters, selectedRestaurantId);
+  useEffect(() => {
+    if (!livreurCaduc) return;
+    setFilter('courses', 'deliverer_id', undefined);
+    setFilter('courses', CLE_RESTAURANT_DU_LIVREUR, undefined);
+  }, [livreurCaduc, setFilter]);
 
   // Course demandée par un autre écran : lue, puis sa fiche s'ouvre.
   useEffect(() => {
@@ -81,15 +92,9 @@ export default function Courses() {
     };
   }, [pendingCourseId, queryClient, setSelectedItem, setSectionView, clearPendingCourse]);
 
-  const listQuery = useCourseListQuery({
-    restaurant_id: restaurantFilter,
-    page: pagination.page,
-    limit: pagination.limit,
-    search: filters?.search as string,
-    statut: filters?.statut as CourseStatut | undefined,
-    startDate: filters?.startDate as string | undefined,
-    endDate: filters?.endDate as string | undefined,
-  });
+  const listQuery = useCourseListQuery(
+    filtresListeCourses(filters, selectedRestaurantId, pagination.page, pagination.limit),
+  );
 
   return (
     <div className="flex-1 p-4 space-y-4">

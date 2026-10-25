@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Loader2, X } from "lucide-react";
 
 import { useRegeneratePlanMutation } from "../queries/schedule.query";
 import type { ISchedulePlan } from "../types/schedule.types";
 import { textesFenetres } from "../utils/actions-planning";
+import { remplissageDates } from "../utils/remplissage-dates";
 
 interface Props {
   isOpen: boolean;
@@ -27,12 +28,16 @@ export function EditDatesModal({ isOpen, plan, onClose, onRegenerated }: Props) 
 
   const mutation = useRegeneratePlanMutation();
 
+  // Remplis à l'ouverture seulement : le détail est relu toutes les 15 s et
+  // chaque réponse d'un livreur en fait un nouvel objet.
+  const rempliPour = useRef<string | null>(null);
   useEffect(() => {
-    if (isOpen && plan) {
-      setPeriodStart(plan.period_start.substring(0, 10));
-      setPeriodEnd(plan.period_end.substring(0, 10));
-      setError(null);
-    }
+    const { cle, remplir } = remplissageDates(rempliPour.current, isOpen, plan);
+    rempliPour.current = cle;
+    if (!remplir || !plan) return;
+    setPeriodStart(plan.period_start.substring(0, 10));
+    setPeriodEnd(plan.period_end.substring(0, 10));
+    setError(null);
   }, [isOpen, plan]);
 
   if (!isOpen || !plan) return null;

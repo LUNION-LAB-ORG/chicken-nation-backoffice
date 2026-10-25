@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import React, { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Loader2, Moon, MoreVertical, Sun, UserPlus, X } from "lucide-react";
 import { toast } from "react-hot-toast";
@@ -20,6 +21,7 @@ import {
   useSetDelivererDayMutation,
 } from "../queries/schedule.query";
 import type { IShiftAssignment, ShiftAssignmentStatus, ShiftType } from "../types/schedule.types";
+import { estPlanningEfface } from "../utils/erreurs-planning";
 import {
   LIBELLE_GESTE,
   MESSAGE_GESTE,
@@ -82,8 +84,12 @@ interface Props {
  * ne voit aucun bouton et les cases ne réagissent pas.
  */
 export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Props) {
-  const { data: plan, isLoading, isError, isFetching, refetch } = useSchedulePlanDetailQuery(planId);
+  const { data: plan, error, isLoading, isError, isFetching, refetch } = useSchedulePlanDetailQuery(planId);
   const { data: stats } = useSchedulePlanStatsQuery(planId);
+  const queryClient = useQueryClient();
+  // Supprimé, ou refait ailleurs par « Modifier les dates » : TanStack garde
+  // l'ancienne donnée, l'écran ne doit plus la montrer ni offrir ses gestes.
+  const efface = estPlanningEfface(error);
   const droits = useDroitsLivraison();
 
   const sendMut = useSendPlanMutation();
@@ -100,6 +106,16 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
   const [menu, setMenu] = useState<{ ancre: Ancre; livreur: LigneGrille | null } | null>(null);
 
   const grille = useMemo(() => (plan ? grillePlanning(plan) : null), [plan]);
+
+  // La liste n'est pas relue d'elle-même : le planning effacé en part, le
+  // nouveau y arrive, et la liste choisit alors un autre planning.
+  useEffect(() => {
+    if (!efface) return;
+    void queryClient.invalidateQueries({ queryKey: ["schedule", "plans"] });
+    void queryClient.invalidateQueries({ queryKey: ["schedule", "apercu"] });
+  }, [efface, queryClient]);
+
+  if (efface) return <PlanningEfface />;
 
   if (isLoading) return <SqueletteDetail />;
 
@@ -421,6 +437,18 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
 // ============================================================
 // SOUS-COMPOSANTS
 // ============================================================
+
+/** Plan supprimé ou régénéré ailleurs : aucun geste. */
+function PlanningEfface() {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <div className="flex items-center gap-2 text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+        <AlertCircle className="w-4 h-4 shrink-0" />
+        <span>Plan introuvable.</span>
+      </div>
+    </div>
+  );
+}
 
 const BoutonSecondaire: React.FC<{ onClick: () => void; children: React.ReactNode; title?: string }> = ({
   onClick,

@@ -35,6 +35,28 @@ export function estRouteAbsente(erreur: unknown): boolean {
   return !!erreur && typeof erreur === 'object' && (erreur as { status?: unknown }).status === 404;
 }
 
+export type AffichageBandeau = 'onglets' | 'rien' | 'erreur' | 'erreur_et_onglets' | 'squelettes' | 'cartes';
+
+/**
+ * Ce que montre le bandeau des restaurants. Compte du siège sans activité
+ * lisible (route absente, ou erreur sans donnée en cache) : les onglets des
+ * restaurants gardent le choix du restaurant, qui filtre aussi l'écran
+ * (relecture du 25/10).
+ */
+export function affichageBandeau(etat: {
+  compteDeRestaurant: boolean;
+  peutLire: boolean;
+  erreur: unknown;
+  aDesDonnees: boolean;
+  enErreur: boolean;
+  enChargement: boolean;
+}): AffichageBandeau {
+  if (!etat.peutLire || estRouteAbsente(etat.erreur)) return etat.compteDeRestaurant ? 'rien' : 'onglets';
+  if (etat.aDesDonnees) return 'cartes';
+  if (etat.enErreur) return etat.compteDeRestaurant ? 'erreur' : 'erreur_et_onglets';
+  return etat.enChargement ? 'squelettes' : 'rien';
+}
+
 // ============================================================
 // ÉTAT D'UN LIVREUR DU TABLEAU
 // ============================================================

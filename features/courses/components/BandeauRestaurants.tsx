@@ -13,8 +13,8 @@ import { useAuthStore } from '../../users/hook/authStore';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { RestaurantDuTableau, SignalLivraison } from '../types/tableau-livraison.types';
 import {
+  affichageBandeau,
   dureeLisible,
-  estRouteAbsente,
   libelleAlertes,
   lignesPiedCarte,
   minutesDepuis,
@@ -39,8 +39,8 @@ import {
  *    en tête ;
  *  - compte de restaurant : sa seule carte, qu'on ne touche pas.
  *
- * Serveur sans la route (404) : les onglets des restaurants
- * (`RestaurantTabs`) gardent le filtre.
+ * Serveur sans la route (404), ou activité illisible sans donnée en cache :
+ * les onglets des restaurants (`RestaurantTabs`) gardent le filtre.
  */
 
 export interface BandeauRestaurantsProps {
@@ -189,10 +189,18 @@ export function BandeauRestaurants({ className = '' }: BandeauRestaurantsProps) 
     pilote: !voirLivraison,
   });
 
+  const affichage = affichageBandeau({
+    compteDeRestaurant,
+    peutLire: peutLireTableau(membre),
+    erreur: error,
+    aDesDonnees: !!data,
+    enErreur: isError,
+    enChargement: isPending,
+  });
+
   // Serveur sans la route, ou compte qu'elle refuserait : les onglets gardent le filtre.
-  if (!peutLireTableau(membre) || estRouteAbsente(error)) {
-    return compteDeRestaurant ? null : <RestaurantTabs showAllTab />;
-  }
+  if (affichage === 'onglets') return <RestaurantTabs showAllTab />;
+  if (affichage === 'rien') return null;
 
   const rangee = (contenu: React.ReactNode) => (
     <div className={className}>
@@ -208,9 +216,11 @@ export function BandeauRestaurants({ className = '' }: BandeauRestaurantsProps) 
   );
 
   if (!data) {
-    if (isError) {
-      return (
-        <div className={`flex items-center gap-3 text-sm text-red-600 ${className}`}>
+    if (affichage === 'squelettes') return rangee(<Squelettes />);
+    // Siège : les onglets gardent le choix du restaurant, qui filtre encore l'écran.
+    return (
+      <div className={className}>
+        <div className="flex items-center gap-3 text-sm text-red-600">
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span>Impossible de lire l&apos;activité des restaurants.</span>
           <button
@@ -223,9 +233,13 @@ export function BandeauRestaurants({ className = '' }: BandeauRestaurantsProps) 
             Réessayer
           </button>
         </div>
-      );
-    }
-    return isPending ? rangee(<Squelettes />) : null;
+        {affichage === 'erreur_et_onglets' && (
+          <div className="mt-3">
+            <RestaurantTabs showAllTab />
+          </div>
+        )}
+      </div>
+    );
   }
 
   const restaurants = compteDeRestaurant

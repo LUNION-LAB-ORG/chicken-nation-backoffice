@@ -28,9 +28,11 @@ interface LivreursTabsProps {
   counts?: Partial<Record<LivreursTab, number>>;
 }
 
+// `max-w-full` : sur un téléphone, la rangée défile en elle-même au lieu de
+// sortir de l'écran (avec `w-fit` seul, elle prenait la largeur des onglets).
 const LivreursTabs: React.FC<LivreursTabsProps> = ({ selected, onSelect, counts }) => (
   <div
-    className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-4 w-fit overflow-x-auto scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
+    className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-4 w-fit max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
     style={{ minHeight: 40 }}
   >
     {LIVREURS_TABS.map((tab, idx) => {
@@ -41,7 +43,7 @@ const LivreursTabs: React.FC<LivreursTabsProps> = ({ selected, onSelect, counts 
           key={tab.key}
           type="button"
           onClick={() => onSelect(tab.key)}
-          className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap inline-flex items-center gap-1.5
+          className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0 inline-flex items-center gap-1.5
             ${isActive ? "bg-[#F17922] text-white shadow-none" : "bg-transparent text-[#71717A] font-normal"}
             ${idx === 0 ? "" : "ml-1"}
           `}

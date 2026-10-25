@@ -3,9 +3,13 @@
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useLivreursList } from '../../../livreurs/hook/use-livreurs';
-import { useRestaurantListQuery } from '../../../restaurants/queries/restaurant-list.query';
 import type { CourseStatut } from '../../types/course.types';
 import { COURSE_STATUT_LABELS, formatDelivererName } from '../../utils/course-labels';
+import {
+  CLE_RESTAURANT_DU_LIVREUR,
+  filtresCoursesActifs,
+  livreurChoisiValable,
+} from '../../utils/filtres-courses';
 
 const STATUT_OPTIONS: CourseStatut[] = [
   'PENDING_ASSIGNMENT',
@@ -18,26 +22,26 @@ const STATUT_OPTIONS: CourseStatut[] = [
 ];
 
 /**
- * Filtres liste courses : statut + restaurant + livreur + dates.
- * Quand un restaurant est sélectionné, la liste des livreurs est scopée à ce resto.
+ * Filtres liste courses : statut + livreur + dates. Le restaurant est celui
+ * du bandeau au-dessus (relecture du 25/10) : la liste des livreurs est
+ * limitée à ce restaurant, et le livreur choisi est oublié quand le bandeau
+ * change de restaurant.
  */
 export function CoursesFilters() {
   const {
     courses: { filters },
+    selectedRestaurantId,
     setFilter,
     resetFilters,
     setPagination,
   } = useDashboardStore();
 
-  const restaurantId = filters?.restaurant_id as string | undefined;
-  const { data: restaurantsData } = useRestaurantListQuery({ limit: 100 });
   const { data: livreursData } = useLivreursList({
     status: 'ACTIVE',
-    restaurant_id: restaurantId,
+    restaurant_id: selectedRestaurantId ?? undefined,
     limit: 100,
   });
 
-  const restaurants = restaurantsData?.data ?? [];
   const livreurs = livreursData?.items ?? [];
 
   const handleChange = (key: string, value: unknown) => {
@@ -45,10 +49,9 @@ export function CoursesFilters() {
     setPagination('courses', 1, 10);
   };
 
-  const handleRestaurantChange = (id: string) => {
-    setFilter('courses', 'restaurant_id', id || undefined);
-    // Reset livreur si on change de resto
-    setFilter('courses', 'deliverer_id', undefined);
+  const handleLivreurChange = (id: string) => {
+    setFilter('courses', 'deliverer_id', id || undefined);
+    setFilter('courses', CLE_RESTAURANT_DU_LIVREUR, id ? (selectedRestaurantId ?? null) : undefined);
     setPagination('courses', 1, 10);
   };
 
@@ -57,13 +60,8 @@ export function CoursesFilters() {
     setPagination('courses', 1, 10);
   };
 
-  const hasActiveFilters = !!(
-    filters?.statut ||
-    filters?.restaurant_id ||
-    filters?.deliverer_id ||
-    filters?.startDate ||
-    filters?.endDate
-  );
+  const hasActiveFilters = filtresCoursesActifs(filters, selectedRestaurantId);
+  const livreurChoisi = livreurChoisiValable(filters, selectedRestaurantId) ? (filters?.deliverer_id as string) : '';
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 flex flex-wrap items-end gap-4">
@@ -76,18 +74,10 @@ export function CoursesFilters() {
       />
 
       <FilterSelect
-        label="Restaurant"
-        value={restaurantId ?? ''}
-        onChange={handleRestaurantChange}
-        placeholder="Tous les restaurants"
-        options={restaurants.map((r) => ({ value: r.id, label: r.name }))}
-      />
-
-      <FilterSelect
         label="Livreur"
-        value={(filters?.deliverer_id as string) ?? ''}
-        onChange={(v) => handleChange('deliverer_id', v || undefined)}
-        placeholder={restaurantId ? 'Tous les livreurs du resto' : 'Tous les livreurs'}
+        value={livreurChoisi}
+        onChange={handleLivreurChange}
+        placeholder={selectedRestaurantId ? 'Tous les livreurs du resto' : 'Tous les livreurs'}
         options={livreurs.map((l) => ({ value: l.id, label: formatDelivererName(l) }))}
       />
 

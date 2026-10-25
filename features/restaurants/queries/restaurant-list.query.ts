@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import { RestaurantQuery } from "../types/restaurant.types";
 import { restaurantKeyQuery } from "./index.query";
 import { getAllRestaurants } from "../services/restaurants-service";
+import { bulleErreurRestaurants } from "../utils/erreur-liste";
 
 // Option de requête
 export const restaurantListQueryOption = (query?: RestaurantQuery) => {
@@ -23,12 +24,13 @@ export const restaurantListQueryOption = (query?: RestaurantQuery) => {
 export const useRestaurantListQuery = (query?: RestaurantQuery) => {
 	const result = useQuery(restaurantListQueryOption(query));
 
+	// `result` est un nouvel objet à chaque rendu : l'effet ne suit que l'erreur.
 	React.useEffect(() => {
 		if (result.isError || result.error) {
-			toast.error(result.error?.message);
+			const { message, options } = bulleErreurRestaurants(result.error);
+			toast.error(message, options);
 		}
-
-	}, [result]);
+	}, [result.isError, result.error]);
 
 	return result;
 };
