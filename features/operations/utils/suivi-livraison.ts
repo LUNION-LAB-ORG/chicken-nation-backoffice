@@ -531,12 +531,6 @@ export function retardLivraison(livraison: LivraisonCommande): string | null {
   return livraison.course?.en_retard ? texteRetard(livraison.course.retard_min) : null;
 }
 
-/** « Code 614 » tant que la commande attend le livreur au restaurant ; sinon null. */
-export function texteCode(livraison: LivraisonCommande, statutCommande: string | null | undefined): string | null {
-  const code = livraison.course?.code_retrait;
-  return code && statutCommande === 'READY' ? `Code ${code}` : null;
-}
-
 /** « À livrer », « En route », « Chez le client », « Livrée 12 h 52 », « Échec ». */
 export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): string {
   switch (arret.etat) {

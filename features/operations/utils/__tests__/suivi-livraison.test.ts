@@ -14,7 +14,6 @@ import {
   sectionAAfficher,
   texteArret,
   texteArretTournee,
-  texteCode,
   texteDuree,
   texteEchec,
   texteHeure,
@@ -369,12 +368,6 @@ describe('section Livraison complétée (serveur du 24/10)', () => {
     { reference: 'ORD-X', rang: 4, etat: 'inconnu', heure: null, cette_commande: false },
     { rang: 5, etat: 'a_livrer' },
   ];
-
-  test('code « Code 614 » seulement tant que la commande attend au restaurant', () => {
-    expect(texteCode(lue(), 'READY')).toBe('Code 614');
-    expect(texteCode(lue(), 'PICKED_UP')).toBeNull();
-    expect(texteCode(lue({ course: null }), 'READY')).toBeNull();
-  });
 
   test('retard : « En retard de 12 min », sinon rien', () => {
     const course = (champs) => ({ ...reponse().course, statut: 'IN_DELIVERY', ...champs });
