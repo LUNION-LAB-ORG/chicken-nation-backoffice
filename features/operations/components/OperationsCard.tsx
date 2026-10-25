@@ -61,21 +61,23 @@ interface Props {
   /** Cache le ring d'urgence pour les cards groupées dans une course */
   hideUrgencyRing?: boolean;
   /**
-   * Ligne de suivi, sur une seule ligne à côté du minuteur : course qui
-   * attend cette commande en cuisine, livreur et son état.
+   * Ligne de suivi sous les pastilles, comme avant : course qui attend cette
+   * commande en cuisine, livreur et son état.
    */
   extra?: React.ReactNode;
 }
 
 /**
  * Card commande avec minuteur d'urgence et pastilles, la carte que les
- * équipes connaissent : mêmes informations, même ordre (`utils/carte-operations.ts`).
+ * équipes connaissent : mêmes informations, même ordre, même place
+ * (`utils/carte-operations.ts`). Le minuteur reste à côté de ce qui décide
+ * (référence, montant, statut) ; les pastilles passent à la ligne quand la
+ * place manque, aucune n'est cachée.
  *
- * Demande du 24/10 : la carte ne grossit plus quand une information
- * s'ajoute. Chaque information tient sur UNE ligne, coupée proprement (texte
- * entier en infobulle, détail au tiroir) ; la commande programmée et la
- * ligne de suivi se partagent la ligne à côté du minuteur, qui existe
- * toujours.
+ * Demande du 24/10 (la carte ne grossit plus quand une information
+ * s'ajoute) : client, adresse et ligne de suivi tiennent chacun sur une ligne
+ * (« Attendue par… » sur deux au plus), le détail est au tiroir ; une ligne
+ * vide n'est jamais rendue.
  */
 export const OperationsCard: React.FC<Props> = ({
   order,
@@ -101,17 +103,12 @@ export const OperationsCard: React.FC<Props> = ({
   const programmee = commandeProgrammee(order, maintenant);
   const client = nomClientCarte(order);
   const adresse = order.type === OrderType.DELIVERY ? adresseCourte(order) : "";
-  const pastilles = [statut, typeMeta?.label, canal, showWarningBadge ? (warningLabel ?? "Attention") : null]
-    .filter(Boolean)
-    .join(" · ");
   // Un compte BACKOFFICE (admin, call center) voit les commandes de TOUS les
   // restaurants sur le même tableau : sans le nom du restaurant sur la carte,
   // impossible de savoir d'où vient chacune. Un compte RESTAURANT n'en a pas
   // besoin (il ne voit que le sien).
   const typeDuMembre = useAuthStore((s) => s.user?.type);
   const restaurant = restaurantDeLaCarte(order, typeDuMembre);
-  // À côté du minuteur, la ligne existe toujours : rien ne pousse la carte.
-  const ligneSuivie = !hideUrgencyRing || !!programmee || !!extra;
 
   return (
     /*
@@ -148,7 +145,7 @@ export const OperationsCard: React.FC<Props> = ({
 
         <div className="flex-1 min-w-0">
           {/* Ligne 1 : ref + prix */}
-          <div className="flex h-5 items-center justify-between gap-2">
+          <div className="flex items-baseline justify-between gap-2 mb-2">
             <span className="text-sm font-bold text-gray-900 truncate" title={order.reference}>
               {order.reference}
             </span>
@@ -158,67 +155,62 @@ export const OperationsCard: React.FC<Props> = ({
           </div>
 
           {/*
-            Ligne de suivi, UNE ligne : commande programmée (« Plus tard ·
-            20h00 », l'information qui décide s'il faut s'en occuper
-            MAINTENANT), puis la course qui l'attend en cuisine ou le livreur.
-            Ce qui ne tient pas est coupé ; le tiroir a tout.
+            COMMANDE PROGRAMMÉE, en tête, avant le statut : c'est l'information
+            qui décide s'il faut s'en occuper MAINTENANT. « Plus tard » tant
+            que la préparation n'est pas ouverte, « À préparer » dès qu'elle l'est.
           */}
-          {ligneSuivie && (
-            <div className="mt-1 flex h-6 min-w-0 items-center gap-1.5 overflow-hidden">
-              {programmee && (
-                <span
-                  className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg border ${
-                    programmee.plusTard
-                      ? "bg-[#FDF3E7] text-[#8A4B00] border-[#F3D5B0]"
-                      : "bg-[#EAF7F0] text-[#1E8E5A] border-[#CDEBD9]"
-                  }`}
-                  title={programmee.titre}
-                >
-                  <Clock className="w-3 h-3" />
-                  {programmee.texte}
-                </span>
-              )}
-              {extra && <div className="flex min-w-0 overflow-hidden">{extra}</div>}
+          {programmee && (
+            <div className="mb-2">
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg border ${
+                  programmee.plusTard
+                    ? "bg-[#FDF3E7] text-[#8A4B00] border-[#F3D5B0]"
+                    : "bg-[#EAF7F0] text-[#1E8E5A] border-[#CDEBD9]"
+                }`}
+                title={programmee.titre}
+              >
+                <Clock className="w-3 h-3" />
+                {programmee.texte}
+              </span>
             </div>
           )}
-        </div>
-      </div>
 
-      {/*
-        Rangée unique de pastilles : statut · type · origine · retard. Une
-        seule ligne, jamais de retour à la ligne (le texte entier est dans
-        l'infobulle de la rangée).
-      */}
-      <div className="mt-2 flex h-[26px] items-center gap-1 overflow-hidden" title={pastilles}>
-        {/* Statut (border-2, en évidence) : couleurs alignées sur la page Commandes */}
-        <span
-          className={`inline-flex shrink-0 items-center text-xs font-bold px-2 py-1 rounded-lg border-2 ${statusBadgeCls}`}
-        >
-          {statut}
-        </span>
-        {/* Type (border, en évidence) */}
-        {typeMeta && (
-          <span
-            className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold px-1.5 py-1 rounded-lg border ${typeMeta.cls}`}
-          >
-            <typeMeta.Icon className="w-3 h-3" />
-            {typeMeta.label}
-          </span>
-        )}
-        {/* Source : le canal (Site web, Appli, Manuel) */}
-        <span
-          className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold px-1.5 py-1 rounded-lg border ${COULEURS_CANAL[canal]}`}
-        >
-          <IconeCanal className="w-3 h-3" />
-          {canal}
-        </span>
-        {/* Warning (rare, ex. "En retard") */}
-        {showWarningBadge && (
-          <span className="inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold px-1.5 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200">
-            <AlertCircle className="w-3 h-3" />
-            {warningLabel ?? "Attention"}
-          </span>
-        )}
+          {/* Ligne 2 : rangée de pastilles, statut · type · origine · retard ; passe à la ligne si la place manque */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {/* Statut (border-2, en évidence) : couleurs alignées sur la page Commandes */}
+            <span
+              className={`inline-flex items-center text-xs font-bold px-2.5 py-1 rounded-lg border-2 ${statusBadgeCls}`}
+            >
+              {statut}
+            </span>
+            {/* Type (border, en évidence) */}
+            {typeMeta && (
+              <span
+                className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${typeMeta.cls}`}
+              >
+                <typeMeta.Icon className="w-3 h-3" />
+                {typeMeta.label}
+              </span>
+            )}
+            {/* Source : le canal (Site web, Appli, Manuel) */}
+            <span
+              className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg border ${COULEURS_CANAL[canal]}`}
+            >
+              <IconeCanal className="w-3 h-3" />
+              {canal}
+            </span>
+            {/* Warning (rare, ex. "En retard") */}
+            {showWarningBadge && (
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-lg bg-red-50 text-red-700 border border-red-200">
+                <AlertCircle className="w-3 h-3" />
+                {warningLabel ?? "Attention"}
+              </span>
+            )}
+          </div>
+
+          {/* Ligne de suivi (course qui l'attend, livreur), seulement si elle a un contenu */}
+          {extra && <div className="mt-2 min-w-0">{extra}</div>}
+        </div>
       </div>
 
       {/* Infos en PLEINE LARGEUR, une ligne chacune */}

@@ -16,8 +16,8 @@ import {
 
 /**
  * Carte « En cours », version 2 (retours du client du 24 et du 25/10) : la
- * carte d'avant, mêmes mots et mêmes informations dans le même ordre, mais
- * une ligne par information pour que la carte ne grossisse plus.
+ * carte d'avant, mêmes mots, mêmes informations, même ordre et même place ;
+ * restaurant, client et adresse sur une ligne chacun.
  */
 
 const consoleDOrigine = { log: console.log, warn: console.warn, error: console.error };
@@ -128,20 +128,32 @@ describe('la carte affichée', () => {
     expect(html).toContain('Faire le paiement');
   });
 
-  test('une information ajoutée ne grossit pas la carte : mêmes lignes, une ligne chacune', () => {
-    const lignes = (html) => (html.match(/class="[^"]*\bh-(?:4|5|6|8|\[26px\])\b[^"]*"/g) ?? []).length;
-    const simple = rendre(commande());
-    const chargee = rendre(commande({ date: '2099-10-24T00:00:00.000Z', time: '20:00' }), {
+  test('à côté du minuteur, comme avant : référence et montant, programmée, pastilles, puis la ligne de suivi', () => {
+    const html = rendre(commande({ date: '2099-10-24T00:00:00.000Z', time: '20:00' }), {
       showWarningBadge: true,
       warningLabel: 'En retard',
-      extra: React.createElement('span', { className: 'truncate' }, 'Attendue par la course de Koffi, départ au plus tard 12 h 44'),
+      extra: React.createElement('span', null, 'Attendue par la course de Koffi, départ au plus tard 12 h 44'),
     });
-    expect(chargee).toContain('Plus tard · 20h00');
-    expect(chargee).toContain('En retard');
-    expect(chargee).toContain('Attendue par la course de Koffi');
-    expect(lignes(chargee)).toBe(lignes(simple));
-    expect(simple).not.toContain('flex-wrap');
-    expect(chargee).not.toContain('flex-wrap');
+    const ordre = ['ORD-241024-0012', '12.500 F', 'Plus tard · 20h00', 'EN PRÉPARATION', 'À livrer', 'Site web', 'En retard', 'Attendue par la course de Koffi', 'Aya Koné', 'Riviera 3, Cocody'];
+    const places = ordre.map((mot) => html.indexOf(mot));
+    expect(places.every((p) => p >= 0)).toBe(true);
+    expect([...places].sort((x, y) => x - y)).toEqual(places);
+  });
+
+  test('les pastilles passent à la ligne quand la place manque : aucune cachée (relecture du 25/10)', () => {
+    const html = rendre(commande(), { showWarningBadge: true, warningLabel: 'En retard' });
+    expect(html).toContain('flex-wrap');
+    expect(html).not.toContain('overflow-hidden');
+    expect(html).not.toContain('h-[26px]');
+  });
+
+  test('pas de bande vide : sans programmée ni suivi, rien entre le montant et les pastilles', () => {
+    const html = rendre(commande({ status: 'ACCEPTED', type: 'DELIVERY', channel: 'CALL_CENTER', auto: false }));
+    const entre = html.slice(html.indexOf('12.500 F'), html.indexOf('NOUVELLE'));
+    expect(entre).not.toContain('h-6');
+    expect(entre).not.toContain('<div class="mt-1');
+    expect(html).toContain('Manuel');
+    expect(html).not.toContain('<div class="mt-2 min-w-0">');
   });
 
   test('aucun tiret cadratin', () => {

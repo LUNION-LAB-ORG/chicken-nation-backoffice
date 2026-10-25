@@ -4,17 +4,18 @@
  * connaissent :
  *
  *   minuteur · référence ........................ montant (« 12.500 F »)
- *              ligne de suivi (« Plus tard · 20h00 », « Attendue par… »)
- *   STATUT · type (« À livrer ») · origine (« Site web », « Appli », « Manuel ») · « En retard »
+ *              « Plus tard · 20h00 » (commande programmée)
+ *              STATUT · type (« À livrer ») · origine (« Site web », « Appli », « Manuel ») · « En retard »
+ *              ligne de suivi (« Attendue par… », livreur), s'il y en a une
  *   restaurant (compte du siège)
  *   client · téléphone
  *   adresse (commande à livrer)
  *   « Faire le paiement » ou « Paiement en attente »
  *
  * Demande du 24/10 : la carte ne grossit plus quand une information
- * s'ajoute. Chaque information tient sur UNE ligne, coupée proprement (le
- * texte entier en infobulle, le détail au tiroir) ; la ligne de suivi prend
- * la place libre à côté du minuteur, elle existe toujours.
+ * s'ajoute. Restaurant, client et adresse tiennent sur UNE ligne, coupée
+ * proprement (texte entier en infobulle, détail au tiroir). Les pastilles
+ * passent à la ligne comme avant : aucune n'est cachée.
  *
  * Fichier pur : testé par `bun test`.
  */
