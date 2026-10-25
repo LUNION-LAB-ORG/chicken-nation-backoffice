@@ -19,7 +19,7 @@ export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
  * `deliverer.appli_fermee_apres_s`) : plus aucune offre, sans pause ni
  * pénalité, jusqu'à ce qu'il la rouvre.
  *
- * `EN_APPEL` (serveur du 24/10) : en appel avec le service client. Il reste
+ * `EN_APPEL` (serveur du 24/10) : en appel avec le call center. Il reste
  * en service et dans la file, et reçoit de nouveau des offres à la fin de
  * l'appel : le serveur le compte avec les disponibles.
  *

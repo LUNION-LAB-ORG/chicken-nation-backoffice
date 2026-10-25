@@ -152,7 +152,7 @@ function textes(etat: EtatDisponibilite, pauses: Pauses, maintenant: Date): { li
     case 'OFFRE_EN_ATTENTE':
       return { libelle: 'Offre en attente', raison: 'Ce livreur a déjà une offre en attente de réponse.' };
     case 'EN_APPEL':
-      return { libelle: NOM_ETAT.EN_APPEL, raison: 'Ce livreur est en appel avec le service client.' };
+      return { libelle: NOM_ETAT.EN_APPEL, raison: 'Ce livreur est en appel avec le call center.' };
     case 'HORS_SERVICE':
       return {
         libelle: 'Hors service',

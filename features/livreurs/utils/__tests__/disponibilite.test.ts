@@ -387,7 +387,7 @@ describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () 
       etat: 'EN_APPEL',
       libelle: 'En appel',
       peut_recevoir_offre: false,
-      message_refus: 'Ce livreur est en appel avec le service client.',
+      message_refus: 'Ce livreur est en appel avec le call center.',
     });
 
   test('« En appel » : un état connu, compté avec les disponibles comme au serveur', () => {
@@ -395,7 +395,7 @@ describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () 
       etat: 'EN_APPEL',
       libelle: 'En appel',
       peutRecevoirOffre: false,
-      raison: 'Ce livreur est en appel avec le service client.',
+      raison: 'Ce livreur est en appel avec le call center.',
     });
     expect(etatLivreurAffiche({ disponibilite: enAppel() }, A('14:00'))?.etat).toBe('EN_APPEL');
     expect(NOM_ETAT.EN_APPEL).toBe('En appel');
@@ -410,7 +410,7 @@ describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () 
     expect(choixAffectation(enAppel(), COURSE, A('14:00'))).toMatchObject({
       etat: 'EN_APPEL',
       selectionnable: false,
-      raison: 'Ce livreur est en appel avec le service client.',
+      raison: 'Ce livreur est en appel avec le call center.',
     });
   });
 

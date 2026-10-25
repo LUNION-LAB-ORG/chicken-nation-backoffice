@@ -449,7 +449,7 @@ describe('fenêtre du livreur', () => {
   });
 });
 
-describe('livreur en appel avec le service client (serveur du 24/10)', () => {
+describe('livreur en appel avec le call center (serveur du 24/10)', () => {
   test('rangé dans « Disponibles », pastille « En appel »', () => {
     expect(sectionDuLivreur('EN_APPEL', null)).toBe('DISPONIBLES');
     const l = livreur('Koffi', 'EN_APPEL', { disponibilite: { libelle: 'En appel', en_service: true } });
