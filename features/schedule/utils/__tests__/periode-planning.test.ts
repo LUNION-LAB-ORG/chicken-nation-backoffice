@@ -28,9 +28,10 @@ const plan = (id, status, debut, fin) => ({
 });
 
 describe('dates', () => {
-  test('« du 27/10 au 09/11 » depuis les dates ISO du serveur', () => {
+  test('« 27 oct. → 09 nov. 2026 » depuis les dates ISO du serveur, le format d’avant', () => {
     expect(dateCourte('2026-10-27T00:00:00.000Z')).toBe('27/10');
-    expect(periode('2026-10-27T00:00:00.000Z', '2026-11-09T00:00:00.000Z')).toBe('du 27/10 au 09/11');
+    expect(periode('2026-10-27T00:00:00.000Z', '2026-11-09T00:00:00.000Z')).toBe('27 oct. → 09 nov. 2026');
+    expect(periode('2026-12-28T00:00:00.000Z', '2027-01-10T00:00:00.000Z')).toBe('28 déc. → 10 janv. 2027');
   });
 
   test('en-tête de colonne « lun. 27/10 »', () => {

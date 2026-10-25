@@ -20,7 +20,7 @@ interface Props {
 }
 
 /**
- * « Nouveau planning » : génère un brouillon.
+ * « Générer un plan » : génère un brouillon.
  *
  * Champs :
  *   - Restaurant (pré-rempli ; absent pour un compte de restaurant)
@@ -80,7 +80,7 @@ export function GeneratePlanModal({
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Nouveau planning</h3>
+          <h3 className="text-lg font-bold text-gray-900">Générer un plan</h3>
           <button
             type="button"
             onClick={onClose}

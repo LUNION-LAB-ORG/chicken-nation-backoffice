@@ -24,9 +24,14 @@ export function cleAujourdhui(maintenant: Date = new Date()): string {
 /** « 27/10 ». */
 export const dateCourte = (iso: string): string => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 
-/** « du 27/10 au 09/11 ». */
+/** Mois abrégés comme date-fns en français (« oct. », « nov. »), format d'avant. */
+const MOIS_COURTS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+
+const jourEtMois = (iso: string): string => `${iso.slice(8, 10)} ${MOIS_COURTS[Number(iso.slice(5, 7)) - 1] ?? ''}`.trim();
+
+/** « 27 oct. → 09 nov. 2026 », le format d'avant. */
 export const periode = (debut: string, fin: string): string =>
-  `du ${dateCourte(debut)} au ${dateCourte(fin)}`;
+  `${jourEtMois(debut)} → ${jourEtMois(fin)} ${fin.slice(0, 4)}`;
 
 const JOURS_COURTS = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.'];
 const JOURS_REGLAGE: WeekDay[] = [

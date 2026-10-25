@@ -86,7 +86,7 @@ describe('actionsPlanning : selon l’état', () => {
     expect(actions('ADMIN', 'CONFIRMED').principal).toBe('archiver');
     expect(actions('ADMIN', 'ARCHIVED').principal).toBeNull();
     expect(GESTE_PRINCIPAL.ARCHIVED).toBeNull();
-    expect(LIBELLE_GESTE.envoyer).toBe('Envoyer aux livreurs');
+    expect(LIBELLE_GESTE.envoyer).toBe('Envoyer');
   });
 
   test.each(ETATS)('%s : dates, ajout, retrait, jour et suppression permis', (statut) => {
@@ -170,8 +170,8 @@ describe('textes des fenêtres', () => {
     expect(t.jour).toBeNull();
     expect(t.ajout).toBeNull();
     expect(t.retrait).toBe('Ses jours de travail sont effacés.');
-    expect(t.dates).toBe('Le planning est refait pour ces dates.');
-    expect(t.suppression).toBe('Vous pourrez en faire un autre pour ces dates.');
+    expect(t.dates).toBe('Le plan sera régénéré pour les nouvelles dates.');
+    expect(t.suppression).toBe('Vous pourrez en régénérer un.');
   });
 
   test.each(['SENT', 'CONFIRMED'])('%s : le livreur est prévenu', (statut) => {
@@ -183,7 +183,7 @@ describe('textes des fenêtres', () => {
     expect(t.suppression).toContain('Les livreurs sont prévenus et ne le verront plus.');
   });
 
-  test('envoyé : les dates refont un brouillon à renvoyer', () => {
+  test('envoyé : les dates régénèrent un brouillon à renvoyer', () => {
     expect(textesFenetres('SENT').dates).toContain('envoyez-le à nouveau');
   });
 

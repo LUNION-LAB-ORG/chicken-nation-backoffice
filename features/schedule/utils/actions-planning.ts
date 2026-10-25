@@ -3,7 +3,7 @@
  * section 10.3).
  *
  * Un planning se modifie dans ses quatre états : Brouillon, Envoyé, Confirmé,
- * Archivé. Seul le geste principal change avec l'état (Envoyer aux livreurs,
+ * Archivé. Seul le geste principal change avec l'état (Envoyer,
  * Confirmer, Archiver) ; dates, ajout, retrait, jour et suppression restent.
  *
  * Droits (section 4) : `modifierPlanning(restaurantId)` pour tout geste sauf
@@ -33,7 +33,7 @@ export const GESTE_PRINCIPAL: Record<SchedulePlanStatus, GestePrincipal | null> 
 };
 
 export const LIBELLE_GESTE: Record<GestePrincipal, string> = {
-  envoyer: 'Envoyer aux livreurs',
+  envoyer: 'Envoyer',
   confirmer: 'Confirmer',
   archiver: 'Archiver',
 };
@@ -136,19 +136,19 @@ export function textesFenetres(statut: SchedulePlanStatus, prenom = 'Le livreur'
           : 'Ses jours de travail sont effacés.',
     dates:
       statut === 'DRAFT'
-        ? 'Le planning est refait pour ces dates.'
+        ? 'Le plan sera régénéré pour les nouvelles dates.'
         : statut === 'SENT'
-          ? 'Le planning est refait pour ces dates et repart en brouillon : envoyez-le à nouveau. Les livreurs sont prévenus.'
+          ? 'Le plan sera régénéré pour les nouvelles dates et repassera en brouillon : envoyez-le à nouveau. Les livreurs sont prévenus.'
           : statut === 'CONFIRMED'
-            ? 'Le planning est refait pour ces dates et repart en brouillon. Les réponses des livreurs sont effacées et ils sont prévenus.'
-            : 'Le planning est refait pour ces dates et repart en brouillon. Les réponses des livreurs sont effacées. Le changement est noté au journal.',
+            ? 'Le plan sera régénéré pour les nouvelles dates et repassera en brouillon. Les réponses des livreurs sont effacées et ils sont prévenus.'
+            : 'Le plan sera régénéré pour les nouvelles dates et repassera en brouillon. Les réponses des livreurs sont effacées. Le changement est noté au journal.',
     suppression:
       statut === 'DRAFT'
-        ? 'Vous pourrez en faire un autre pour ces dates.'
+        ? 'Vous pourrez en régénérer un.'
         : statut === 'SENT'
           ? 'Les livreurs sont prévenus et ne le verront plus.'
           : statut === 'CONFIRMED'
             ? 'Les livreurs sont prévenus et ne le verront plus. La suppression est notée au journal.'
-            : "L'historique de ce planning est effacé. La suppression est notée au journal.",
+            : "L'historique de ce plan est effacé. La suppression est notée au journal.",
   };
 }

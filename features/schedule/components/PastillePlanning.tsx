@@ -13,12 +13,12 @@ export const COULEURS_PLANNING: Record<SchedulePlanStatus, { color: string; bg: 
   ARCHIVED: { color: "#52525B", bg: "#F4F4F5" },
 };
 
-/** Pastille « Brouillon », « Envoyé », « Confirmé », « Archivé ». */
+/** Pastille « BROUILLON », « ENVOYÉ », « CONFIRMÉ », « ARCHIVÉ » (majuscules, comme avant). */
 export function PastillePlanning({ statut }: { statut: SchedulePlanStatus }) {
   const c = COULEURS_PLANNING[statut];
   return (
     <span
-      className="shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
+      className="shrink-0 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full whitespace-nowrap"
       style={{ color: c.color, backgroundColor: c.bg }}
     >
       {LIBELLE_ETAT[statut]}

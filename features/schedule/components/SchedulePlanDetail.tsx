@@ -108,7 +108,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
         <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2">
           <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>Impossible de charger le planning.</span>
+          <span>Impossible de charger le plan.</span>
           <button
             type="button"
             onClick={() => refetch()}
@@ -152,7 +152,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
       return;
     }
     if (travaille && estJourSansRepos(jour, joursSansRepos)) {
-      toast.error("Pas de repos ce jour-là.");
+      toast.error("Repos interdit ce jour-là.");
       return;
     }
     dayMut.mutate(
@@ -198,12 +198,15 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
               </button>
             )}
             {actions.modifierDates && (
-              <BoutonSecondaire onClick={() => setFenetre({ type: "dates" })}>Modifier les dates</BoutonSecondaire>
+              <BoutonSecondaire onClick={() => setFenetre({ type: "dates" })}>Dates</BoutonSecondaire>
             )}
             {actions.ajouterLivreur && (
-              <BoutonSecondaire onClick={() => setFenetre({ type: "ajout" })}>
+              <BoutonSecondaire
+                onClick={() => setFenetre({ type: "ajout" })}
+                title="Ajouter un livreur rattaché après la génération du plan"
+              >
                 <UserPlus className="w-3.5 h-3.5" />
-                Ajouter un livreur
+                Livreur
               </BoutonSecondaire>
             )}
             {actions.supprimer && (
@@ -228,7 +231,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
 
       {grille.livreurs.length === 0 ? (
         <div className="p-8 text-center">
-          <p className="text-sm text-gray-500">Aucun livreur sur ce planning.</p>
+          <p className="text-sm text-gray-500">Aucune affectation dans ce plan.</p>
           {actions.ajouterLivreur && (
             <button
               type="button"
@@ -258,9 +261,9 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
                           estAujourdhui ? "bg-orange-50 text-[#F17922]" : "text-gray-600"
                         }`}
                       >
-                        <span className="block whitespace-nowrap">{estAujourdhui ? "Aujourd'hui" : jourCourt(jour)}</span>
+                        <span className="block whitespace-nowrap">{jourCourt(jour)}</span>
                         <span className="block h-3 text-[10px] font-normal text-gray-400">
-                          {estJourSansRepos(jour, joursSansRepos) ? "sans repos" : ""}
+                          {estJourSansRepos(jour, joursSansRepos) ? "repos interdit" : ""}
                         </span>
                       </th>
                     );
@@ -385,7 +388,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
       <ConfirmDialog
         isOpen={fenetre?.type === "suppression"}
         onClose={() => setFenetre(null)}
-        title="Supprimer ce planning ?"
+        title="Supprimer ce plan ?"
         description={textes.suppression}
         confirmLabel="Supprimer"
         variant="danger"
@@ -393,7 +396,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
         onConfirm={() =>
           deleteMut.mutate(planId, {
             onSuccess: () => {
-              toast.success("Planning supprimé");
+              toast.success("Plan supprimé");
               setFenetre(null);
               onPlanSupprime();
             },
@@ -406,7 +409,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
         plan={plan}
         onClose={() => setFenetre(null)}
         onRegenerated={(nouveauId) => {
-          toast.success("Planning refait pour les nouvelles dates");
+          toast.success("Plan régénéré pour les nouvelles dates");
           setFenetre(null);
           onPlanRefait(nouveauId);
         }}
@@ -419,10 +422,15 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
 // SOUS-COMPOSANTS
 // ============================================================
 
-const BoutonSecondaire: React.FC<{ onClick: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+const BoutonSecondaire: React.FC<{ onClick: () => void; children: React.ReactNode; title?: string }> = ({
+  onClick,
+  children,
+  title,
+}) => (
   <button
     type="button"
     onClick={onClick}
+    title={title}
     className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 text-xs font-semibold px-3 py-2 hover:bg-gray-50 whitespace-nowrap"
   >
     {children}
@@ -613,7 +621,7 @@ const FenetreJour: React.FC<{
           </label>
           <label
             className={`flex items-center gap-2 ${sansRepos ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-            title={sansRepos ? "Pas de repos ce jour-là" : undefined}
+            title={sansRepos ? "Repos interdit ce jour-là" : undefined}
           >
             <input
               type="radio"
@@ -714,7 +722,7 @@ const FenetreAjout: React.FC<{
             </div>
           ) : !data || data.length === 0 ? (
             <p className="text-sm text-gray-500 text-center py-8 px-2">
-              Tous les livreurs actifs du restaurant sont déjà sur ce planning.
+              Aucun livreur à ajouter (tous déjà dans le plan).
             </p>
           ) : (
             <ul className="flex flex-col gap-1">

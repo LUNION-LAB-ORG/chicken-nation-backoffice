@@ -17,16 +17,16 @@ import { SchedulePlanDetail } from "./SchedulePlanDetail";
 type Filtre = SchedulePlanStatus | "ALL";
 
 const FILTRES: { key: Filtre; label: string; vide: string }[] = [
-  { key: "ALL", label: "Tous", vide: "Aucun planning pour ce restaurant." },
-  { key: "DRAFT", label: "Brouillons", vide: "Aucun brouillon." },
-  { key: "SENT", label: "Envoyés", vide: "Aucun planning envoyé." },
-  { key: "CONFIRMED", label: "Confirmés", vide: "Aucun planning confirmé." },
-  { key: "ARCHIVED", label: "Archivés", vide: "Aucun planning archivé." },
+  { key: "ALL", label: "Tous", vide: "Aucun plan." },
+  { key: "DRAFT", label: "Brouillons", vide: "Aucun plan brouillon." },
+  { key: "SENT", label: "Envoyés", vide: "Aucun plan envoyé." },
+  { key: "CONFIRMED", label: "Confirmés", vide: "Aucun plan confirmé." },
+  { key: "ARCHIVED", label: "Archivés", vide: "Aucun plan archivé." },
 ];
 
 interface Props {
   restaurantId: string;
-  /** Faux pour un compte de restaurant : « Nouveau planning » est pour le sien. */
+  /** Faux pour un compte de restaurant : « Générer » est pour le sien. */
   choixRestaurant: boolean;
 }
 
@@ -73,7 +73,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
       {/* Liste */}
       <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-200 p-4 self-start">
         <div className="flex items-center justify-between gap-2 mb-4">
-          <h3 className="text-base font-bold text-gray-900">Plannings</h3>
+          <h3 className="text-base font-bold text-gray-900">Plans de planning</h3>
           {peutCreer && (
             <button
               type="button"
@@ -81,7 +81,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
               className="inline-flex items-center gap-1 bg-[#F17922] text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#D8631F] whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
-              Nouveau planning
+              Générer
             </button>
           )}
         </div>
@@ -148,7 +148,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
                 className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[#F17922] hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Nouveau planning
+                Générer
               </button>
             )}
           </div>
@@ -166,7 +166,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
           />
         ) : plans && plans.length > 0 ? (
           <div className="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
-            <p className="text-sm text-gray-500">Choisissez un planning dans la liste.</p>
+            <p className="text-sm text-gray-500">Sélectionne un plan dans la liste pour voir le détail.</p>
           </div>
         ) : null}
       </div>
