@@ -5,9 +5,10 @@ import { PowerOff, Smartphone, WifiOff, type LucideIcon } from 'lucide-react';
 
 import { COULEURS_PRESENCE, libellePresence, type CasAppli, type PresenceAppli } from '../utils/disponibilite';
 
-/** Pictogramme de chaque cas : appli fermée, en arrière-plan, sans connexion (serveur ancien). */
+/** Pictogramme de chaque cas : appli fermée, connexion coupée, en arrière-plan, sans connexion (serveur ancien). */
 export const ICONE_PRESENCE: Record<CasAppli, LucideIcon> = {
   FERMEE: PowerOff,
+  COUPURE: WifiOff,
   ARRIERE_PLAN: Smartphone,
   NON_CONNECTEE: WifiOff,
 };
@@ -15,8 +16,9 @@ export const ICONE_PRESENCE: Record<CasAppli, LucideIcon> = {
 interface Props {
   presence: PresenceAppli;
   /**
-   * Le badge d'état dit déjà « Appli fermée » : seule l'heure du dernier
-   * signal est ajoutée (« vue il y a 6 min »).
+   * Le badge d'état dit déjà « Appli fermée » ou « Connexion coupée » :
+   * seule l'heure du dernier signal est ajoutée (« vue il y a 6 min »,
+   * « depuis 4 min »).
    */
   sansLibelle?: boolean;
   /** Texte plus petit (colonne d'une liste). */
@@ -26,8 +28,9 @@ interface Props {
 
 /**
  * Une ligne sous le nom d'un livreur : « Appli fermée · vue il y a 6 min »
- * (gris), « En arrière-plan » (offres par notification), « Appli non
- * connectée ». L'explication est dans l'infobulle.
+ * (gris), « Connexion coupée · depuis 4 min » (ambre), « En arrière-plan »
+ * (offres par notification), « Appli non connectée ». L'explication est
+ * dans l'infobulle.
  */
 export function PresenceAppliLigne({ presence, sansLibelle = false, petit = false, className = '' }: Props) {
   const texte = sansLibelle ? presence.vue : libellePresence(presence);

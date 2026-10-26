@@ -414,12 +414,19 @@ describe('section Livraison complétée (serveur du 24/10)', () => {
     expect(texteEchec(lue())).toBeNull();
   });
 
-  test('appli du livreur : seulement fermée ou en arrière-plan, jamais sans les champs', () => {
+  test('appli du livreur : seulement fermée, coupée ou en arrière-plan, jamais sans les champs', () => {
     const livreur = (champs) => ({ id: 'liv-1', nom: 'Koffi Yao', telephone: null, etat: 'vers_client', ...champs });
     const maintenant = new Date(ISO('12:55'));
     expect(
-      appliLivreurLivraison(lue({ livreur: livreur({ appli_active: false, appli_vue_a: ISO('12:49'), appli_connectee: false }) }), maintenant),
+      appliLivreurLivraison(
+        lue({ livreur: livreur({ appli_active: false, appli_etat: 'FERMEE', appli_vue_a: ISO('12:49'), appli_connectee: false }) }),
+        maintenant,
+      ),
     ).toMatchObject({ cas: 'FERMEE', libelle: 'Appli fermée', vue: 'vue il y a 6 min' });
+    // Sans preuve de fermeture (serveur plus ancien) : connexion coupée (25/10).
+    expect(
+      appliLivreurLivraison(lue({ livreur: livreur({ appli_active: false, appli_vue_a: ISO('12:49'), appli_connectee: false }) }), maintenant),
+    ).toMatchObject({ cas: 'COUPURE', libelle: 'Connexion coupée', vue: 'depuis 6 min' });
     expect(
       appliLivreurLivraison(lue({ livreur: livreur({ appli_active: true, appli_vue_a: ISO('12:54'), appli_connectee: false }) }), maintenant),
     ).toMatchObject({ cas: 'ARRIERE_PLAN', libelle: 'En arrière-plan' });

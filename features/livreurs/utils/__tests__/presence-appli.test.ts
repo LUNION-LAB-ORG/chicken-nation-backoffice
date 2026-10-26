@@ -16,7 +16,10 @@ import {
   RAISON_APPLI_FERMEE,
   RAISON_APPLI_NON_CONNECTEE,
   REFUS_APPLI_FERMEE,
+  REFUS_CONNEXION_COUPEE,
+  REFUS_INJOIGNABLE,
   appliActiveDe,
+  appliEtatDe,
   appliVueADe,
   choixAffectation,
   comparerPourAffectation,
@@ -45,6 +48,10 @@ import { appliDuLivreur } from '../../../operations/utils/suivi-course';
  *  - « En arrière-plan » : appli active sans connexion, offres par notification ;
  *  - « Appli non connectée » seulement pour un serveur qui ne dit pas si
  *    l'appli tourne encore.
+ *
+ * Depuis le retour du client du 25/10, « Appli fermée » demande la preuve
+ * du serveur (`appli_etat: 'FERMEE'`) ; un simple `appli_active: false`
+ * devient « Connexion coupée » (connexion-coupee.test.ts).
  *
  * Heures d'Abidjan = UTC.
  */
@@ -103,7 +110,7 @@ describe('« vue il y a 6 min »', () => {
 describe('appli du livreur à signaler', () => {
   test('appli fermée : gris, avec le dernier signal', () => {
     const p = presenceAppli(
-      { appli_active: false, appli_connectee: false, appli_vue_a: '2026-10-24T12:34:00Z' },
+      { appli_active: false, appli_etat: 'FERMEE', appli_connectee: false, appli_vue_a: '2026-10-24T12:34:00Z' },
       'DISPONIBLE',
       MAINTENANT,
     );
@@ -145,11 +152,15 @@ describe('appli du livreur à signaler', () => {
   });
 
   test('appli fermée même si la connexion est inconnue (null)', () => {
-    expect(presenceAppli({ appli_active: false, appli_connectee: null }, 'EN_COURSE', MAINTENANT).cas).toBe('FERMEE');
+    expect(presenceAppli({ appli_active: false, appli_etat: 'FERMEE', appli_connectee: null }, 'EN_COURSE', MAINTENANT).cas).toBe(
+      'FERMEE',
+    );
   });
 
   test('en course, appli fermée : signalée (sa position n’arrive plus)', () => {
-    expect(presenceAppli({ appli_active: false, appli_connectee: false }, 'EN_COURSE', MAINTENANT).cas).toBe('FERMEE');
+    expect(presenceAppli({ appli_active: false, appli_etat: 'FERMEE', appli_connectee: false }, 'EN_COURSE', MAINTENANT).cas).toBe(
+      'FERMEE',
+    );
     expect(presenceAppli({ appli_active: true, appli_connectee: false }, 'OFFRE_EN_ATTENTE', MAINTENANT).cas).toBe(
       'ARRIERE_PLAN',
     );
@@ -170,8 +181,9 @@ describe('appli du livreur à signaler', () => {
   });
 
   test('champs lus à côté de `disponibilite` ou dedans', () => {
-    const dedans = { disponibilite: { appli_active: false, appli_vue_a: '2026-10-24T12:34:00Z' } };
+    const dedans = { disponibilite: { appli_active: false, appli_etat: 'FERMEE', appli_vue_a: '2026-10-24T12:34:00Z' } };
     expect(appliActiveDe(dedans)).toBe(false);
+    expect(appliEtatDe(dedans)).toBe('FERMEE');
     expect(appliVueADe(dedans)).toBe('2026-10-24T12:34:00Z');
     expect(presenceAppli(dedans, 'DISPONIBLE', MAINTENANT)).toMatchObject({ cas: 'FERMEE', vue: 'vue il y a 6 min' });
     const aCote = { appli_active: true, appli_vue_a: '2026-10-24T12:39:00Z', disponibilite: { appli_active: false } };
@@ -201,7 +213,7 @@ describe('état « Appli fermée »', () => {
 
   test('disponible pour le serveur mais appli fermée : refus, avec le texte du 409', () => {
     expect(REFUS_APPLI_FERMEE).toBe("L'appli de ce livreur est fermée.");
-    expect(etatLivreur(dispo(), MAINTENANT, false)).toEqual({
+    expect(etatLivreur(dispo(), MAINTENANT, false, 'FERMEE')).toEqual({
       etat: 'APPLI_FERMEE',
       libelle: 'Appli fermée',
       peutRecevoirOffre: false,
@@ -211,8 +223,10 @@ describe('état « Appli fermée »', () => {
     expect(etatLivreur(dispo(), MAINTENANT, true).etat).toBe('DISPONIBLE');
     expect(etatLivreur(dispo(), MAINTENANT, null).etat).toBe('DISPONIBLE');
     expect(etatLivreur(dispo(), MAINTENANT).etat).toBe('DISPONIBLE');
-    // Champ porté par `disponibilite` elle-même.
-    expect(etatLivreur(dispo({ appli_active: false }), MAINTENANT).etat).toBe('APPLI_FERMEE');
+    // Champs portés par `disponibilite` elle-même.
+    expect(etatLivreur(dispo({ appli_active: false, appli_etat: 'FERMEE' }), MAINTENANT).etat).toBe('APPLI_FERMEE');
+    // Sans preuve de fermeture : connexion coupée (25/10).
+    expect(etatLivreur(dispo({ appli_active: false }), MAINTENANT).etat).toBe('CONNEXION_COUPEE');
   });
 
   test('fin de pause d’un livreur dont l’appli est fermée : « Appli fermée », pas « Disponible »', () => {
@@ -224,10 +238,11 @@ describe('état « Appli fermée »', () => {
       en_pause: true,
       pause_until: '2026-10-24T12:30:00Z',
     });
-    expect(etatLivreur(pause, MAINTENANT, false).etat).toBe('APPLI_FERMEE');
+    expect(etatLivreur(pause, MAINTENANT, false, 'FERMEE').etat).toBe('APPLI_FERMEE');
+    expect(etatLivreur(pause, MAINTENANT, false).etat).toBe('CONNEXION_COUPEE');
     expect(etatLivreur(pause, MAINTENANT, true).etat).toBe('DISPONIBLE');
     // La pause encore en cours passe avant.
-    expect(etatLivreur(pause, A('12:20'), false).etat).toBe('EN_PAUSE');
+    expect(etatLivreur(pause, A('12:20'), false, 'FERMEE').etat).toBe('EN_PAUSE');
   });
 
   test('en course ou hors service : l’état du serveur reste, l’appli se lit à part', () => {
@@ -240,21 +255,26 @@ describe('état « Appli fermée »', () => {
     ).toBe('HORS_SERVICE');
   });
 
-  test('liste et carte : `appli_active` à côté de `disponibilite`', () => {
-    expect(etatLivreurAffiche({ disponibilite: dispo(), appli_active: false }, MAINTENANT).etat).toBe('APPLI_FERMEE');
+  test('liste et carte : `appli_active` et `appli_etat` à côté de `disponibilite`', () => {
+    expect(etatLivreurAffiche({ disponibilite: dispo(), appli_active: false, appli_etat: 'FERMEE' }, MAINTENANT).etat).toBe(
+      'APPLI_FERMEE',
+    );
+    expect(etatLivreurAffiche({ disponibilite: dispo(), appli_active: false }, MAINTENANT).etat).toBe('CONNEXION_COUPEE');
     expect(etatLivreurAffiche({ disponibilite: dispo(), appli_active: true }, MAINTENANT).etat).toBe('DISPONIBLE');
     expect(etatLivreurAffiche({ disponibilite: appliFermee() }, MAINTENANT).libelle).toBe('Appli fermée');
   });
 
-  test('carte : un filtre « Appli fermée », à part de « Hors service »', () => {
+  test('carte : un filtre « Appli fermée », à part de « Hors service » et de « Connexion coupée »', () => {
     expect(FILTRES_CARTE.map((f) => f.libelle)).toEqual([
       'Tous',
       'Disponibles',
       'En course',
       'En pause',
+      'Connexion coupée',
       'Appli fermée',
       'Hors service',
     ]);
+    expect(correspondAuFiltre('APPLI_FERMEE', 'CONNEXION_COUPEE')).toBe(false);
     expect(correspondAuFiltre('APPLI_FERMEE', 'APPLI_FERMEE')).toBe(true);
     expect(correspondAuFiltre('APPLI_FERMEE', 'HORS_SERVICE')).toBe(false);
     expect(correspondAuFiltre('APPLI_FERMEE', 'DISPONIBLE')).toBe(false);
@@ -265,12 +285,13 @@ describe('état « Appli fermée »', () => {
 describe('fenêtre « Forcer l’affectation »', () => {
   // Même calcul que la fenêtre.
   const ligne = (livreur, nom = 'Koffi') => {
-    const choix = choixAffectation(livreur.disponibilite, COURSE, MAINTENANT, appliActiveDe(livreur));
+    const choix = choixAffectation(livreur.disponibilite, COURSE, MAINTENANT, appliActiveDe(livreur), appliEtatDe(livreur));
     const presence = presenceAppli(livreur, choix.etat, MAINTENANT);
+    const silence = choix.etat === 'APPLI_FERMEE' || choix.etat === 'CONNEXION_COUPEE';
     return {
       nom,
       choix,
-      presence: choix.selectionnable || choix.etat === 'APPLI_FERMEE' ? presence : null,
+      presence: choix.selectionnable || silence ? presence : null,
     };
   };
 
@@ -312,12 +333,17 @@ describe('fenêtre « Forcer l’affectation »', () => {
       offre_en_attente: true,
       offre_course_id: COURSE,
     });
-    expect(ligne({ disponibilite: offre, appli_active: false }).choix).toEqual({
+    expect(ligne({ disponibilite: offre, appli_active: false, appli_etat: 'FERMEE' }).choix).toEqual({
       etat: 'APPLI_FERMEE',
       libelle: 'Appli fermée',
       selectionnable: false,
       raison: REFUS_APPLI_FERMEE,
       renvoi: false,
+    });
+    // Sans preuve de fermeture : connexion coupée, grisé de même (25/10).
+    expect(ligne({ disponibilite: offre, appli_active: false }).choix).toMatchObject({
+      etat: 'CONNEXION_COUPEE',
+      selectionnable: false,
     });
     // « Hors service » passe avant, dans l'ordre du serveur.
     expect(ligne({ disponibilite: { ...offre, en_service: false }, appli_active: false }).choix.etat).toBe('HORS_SERVICE');
@@ -357,10 +383,15 @@ describe('écran Opérations : appli du livreur d’une course', () => {
   });
 
   test('appli fermée pendant la course : « Appli fermée · vue il y a 6 min »', () => {
-    const p = appliDuLivreur(course({}, { appli_active: false, appli_vue_a: '2026-10-24T12:34:00Z' }), MAINTENANT);
+    const p = appliDuLivreur(
+      course({}, { appli_active: false, appli_etat: 'FERMEE', appli_vue_a: '2026-10-24T12:34:00Z' }),
+      MAINTENANT,
+    );
     expect(libellePresence(p)).toBe('Appli fermée · vue il y a 6 min');
     for (const statut of ['ACCEPTED', 'AT_RESTAURANT']) {
-      expect(appliDuLivreur(course({ statut }, { appli_active: false }), MAINTENANT).cas).toBe('FERMEE');
+      expect(appliDuLivreur(course({ statut }, { appli_active: false, appli_etat: 'FERMEE' }), MAINTENANT).cas).toBe('FERMEE');
+      // Sans preuve : connexion coupée.
+      expect(appliDuLivreur(course({ statut }, { appli_active: false }), MAINTENANT).cas).toBe('COUPURE');
     }
   });
 
@@ -411,10 +442,25 @@ const regle = join(import.meta.dir, '../../../../../backend/src/modules/delivere
 describe.skipIf(!existsSync(regle))('« Appli fermée », fidèle au serveur', () => {
   const source = existsSync(regle) ? readFileSync(regle, 'utf8') : '';
 
-  const motifs = [...source.matchAll(/return \{ ok: false, motif: '([A-Z_]+)' \}/g)].map((m) => m[1]);
+  // Motifs de `peutRecevoirOffre`, ternaire compris (serveur du 25/10 :
+  // `motif: l.appli_fermee_prouvee ? 'APPLI_FERMEE' : 'CONNEXION_COUPEE'`).
+  const motifs = [...source.matchAll(/return \{ ok: false, motif: ([^}]+?) \}/g)].flatMap((m) =>
+    [...m[1].matchAll(/'([A-Z_]+)'/g)].map((x) => x[1]),
+  );
+  const coupureConnue = motifs.includes('CONNEXION_COUPEE');
 
   test('motif dit juste après « hors service », puis injoignable et en appel, comme `etatLivreur` et la fenêtre', () => {
-    expect(motifs.slice(-4)).toEqual(['HORS_SERVICE', 'APPLI_FERMEE', 'INJOIGNABLE', 'EN_APPEL']);
+    const attendu = coupureConnue
+      ? ['HORS_SERVICE', 'APPLI_FERMEE', 'CONNEXION_COUPEE', 'INJOIGNABLE', 'EN_APPEL']
+      : ['HORS_SERVICE', 'APPLI_FERMEE', 'INJOIGNABLE', 'EN_APPEL'];
+    expect(motifs.slice(-attendu.length)).toEqual(attendu);
+  });
+
+  test.skipIf(!coupureConnue)('« Connexion coupée » : libellé et refus du serveur, mot pour mot', () => {
+    expect(source).toContain(`CONNEXION_COUPEE: '${NOM_ETAT.CONNEXION_COUPEE}'`);
+    expect(source).toContain(REFUS_CONNEXION_COUPEE);
+    expect(source).toContain(`INJOIGNABLE: '${NOM_ETAT.INJOIGNABLE}'`);
+    expect(source).toContain(REFUS_INJOIGNABLE);
   });
 
   test('chaque état du serveur a sa place à l’écran, aucun ne tombe en « Hors service »', () => {

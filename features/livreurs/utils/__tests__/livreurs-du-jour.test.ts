@@ -220,9 +220,9 @@ describe('« Aujourd’hui » : livreur en appel ou injoignable (serveur du 24/1
     expect(estReplie(affiche.etat, null)).toBe(false);
   });
 
-  test('injoignable : « Appli fermée », en service comme au bandeau', () => {
+  test('injoignable : son état, en service comme au bandeau', () => {
     const affiche = etatLivreurAffiche({ disponibilite: dispo('INJOIGNABLE', 'Injoignable') }, MAINTENANT);
-    expect(affiche).toMatchObject({ etat: 'APPLI_FERMEE', libelle: 'Injoignable' });
+    expect(affiche).toMatchObject({ etat: 'INJOIGNABLE', libelle: 'Injoignable' });
     expect(estEnService(affiche.etat)).toBe(true);
     expect(estReplie(affiche.etat, 'EVENING')).toBe(false);
     expect(detailEtatDuJour(affiche.etat, { rang: null, prevuAuCreneau: 'EVENING' }, MAINTENANT).ambre).toBe(false);

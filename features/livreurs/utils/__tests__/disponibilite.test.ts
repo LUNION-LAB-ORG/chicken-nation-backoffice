@@ -414,7 +414,8 @@ describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () 
     });
   });
 
-  test('« Injoignable » : avec les applis fermées, libellé du serveur gardé', () => {
+  // Retour du client du 25/10 : un injoignable a une appli active, il n'est plus rangé avec les applis fermées.
+  test('« Injoignable » : état connu, libellé du serveur gardé, jamais « Appli fermée »', () => {
     const d = dispo({
       etat: 'INJOIGNABLE',
       libelle: 'Injoignable',
@@ -422,13 +423,13 @@ describe('états du serveur du 24/10 : « En appel » et « Injoignable »', () 
       message_refus: 'Ce livreur est injoignable : ni appli connectée, ni notifications.',
     });
     expect(etatLivreur(d, A('14:00'))).toEqual({
-      etat: 'APPLI_FERMEE',
+      etat: 'INJOIGNABLE',
       libelle: 'Injoignable',
       peutRecevoirOffre: false,
       raison: 'Ce livreur est injoignable : ni appli connectée, ni notifications.',
     });
-    expect(etatLivreurAffiche({ disponibilite: d }, A('14:00'))?.etat).toBe('APPLI_FERMEE');
-    // Sans libellé : le nom de l'état affiché.
-    expect(etatLivreur(dispo({ etat: 'INJOIGNABLE', libelle: '' }), A('14:00')).libelle).toBe('Appli fermée');
+    expect(etatLivreurAffiche({ disponibilite: d }, A('14:00'))?.etat).toBe('INJOIGNABLE');
+    // Sans libellé : le nom de l'état.
+    expect(etatLivreur(dispo({ etat: 'INJOIGNABLE', libelle: '' }), A('14:00')).libelle).toBe('Injoignable');
   });
 });

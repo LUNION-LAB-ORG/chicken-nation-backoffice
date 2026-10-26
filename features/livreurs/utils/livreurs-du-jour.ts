@@ -9,13 +9,14 @@
  * cases restent vides, rien n'est inventé.
  *
  * Mots de la section 3.3 : « 1er de la file », « 1 sur 3 livrée »,
- * « jusqu'à 14 h 32 », « vue il y a 6 min », « Matin », « Soir », « Repos ».
+ * « jusqu'à 14 h 32 », « vue il y a 6 min », « Matin », « Soir », « Repos » ;
+ * « depuis 4 min » pour une connexion coupée (25/10).
  */
 
 import { dureeLisible } from '../../courses/utils/tableau-livraison';
 import type { CreneauDuJour, IDelivererLive, IDelivererLiveCourse, ReponseCreneau } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
-import { estPauseSansFin, heureLisible, rangEtat, vueIlYa } from './disponibilite';
+import { depuisLisible, estPauseSansFin, heureLisible, rangEtat, vueIlYa } from './disponibilite';
 
 // ============================================================
 // FILE
@@ -103,7 +104,10 @@ export function detailEtatDuJour(etat: EtatDisponibilite, l: EntreeDetail, maint
     case 'PAUSE_AUTO':
       return { ...RIEN, texte: jusquA(l.auto_pause_until, maintenant) };
     case 'APPLI_FERMEE':
+    case 'INJOIGNABLE':
       return { ...RIEN, texte: vueIlYa(l.appli_vue_a, maintenant) };
+    case 'CONNEXION_COUPEE':
+      return { ...RIEN, texte: depuisLisible(l.appli_vue_a, maintenant) };
     case 'HORS_SERVICE':
     case 'INACTIF':
       if (!l.prevuAuCreneau) return RIEN;
@@ -173,7 +177,7 @@ export function comparerLivreursDuJour(a: CleDeTri, b: CleDeTri): number {
   return a.nom.localeCompare(b.nom, 'fr');
 }
 
-/** En service : tout état sauf « Hors service » et « Inactif » (en appel et appli fermée compris, comme le bandeau). */
+/** En service : tout état sauf « Hors service » et « Inactif » (en appel, appli fermée, connexion coupée compris, comme le bandeau). */
 export function estEnService(etat: EtatDisponibilite): boolean {
   return etat !== 'HORS_SERVICE' && etat !== 'INACTIF';
 }

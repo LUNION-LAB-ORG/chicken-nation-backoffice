@@ -32,9 +32,10 @@
  * suit le réglage par défaut. `course.arrivee_estimee` est lue si elle arrive.
  *
  * Appli du livreur (demande du 24/10) : `course.deliverer.appli_active`,
- * `appli_vue_a` et `appli_connectee`, si le serveur les envoie : « Appli
- * fermée · vue il y a 6 min » (sa position n'arrive plus), « En
- * arrière-plan ». Sans ces champs, rien.
+ * `appli_etat`, `appli_vue_a` et `appli_connectee`, si le serveur les
+ * envoie : « Appli fermée · vue il y a 6 min » (fermeture prouvée),
+ * « Connexion coupée · depuis 4 min » (25/10), « En arrière-plan ». Sans ces
+ * champs, rien.
  *
  * Heures : celles d'Abidjan, c'est-à-dire UTC, comme le serveur.
  */
@@ -42,6 +43,7 @@
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { dureeLisible } from '../../courses/utils/tableau-livraison';
 import { presenceAppli, type PresenceAppli } from '../../livreurs/utils/disponibilite';
+import type { EtatAppliServeur } from '../../livreurs/types/livreur.types';
 
 // ============================================================
 // CONSTANTES (miroir des défauts du serveur)
@@ -113,6 +115,8 @@ export interface LivreurDeCourse {
   appli_active?: boolean | null;
   /** Dernier signal de l'appli (ISO). */
   appli_vue_a?: string | null;
+  /** Fermée (preuve du serveur) ou connexion coupée (serveur du 25/10). */
+  appli_etat?: EtatAppliServeur | null;
   /** Connexion temps réel ouverte. */
   appli_connectee?: boolean | null;
 }
@@ -995,7 +999,8 @@ export function avisEncoreValides<T extends { at: number }>(avis: readonly T[], 
 /**
  * Appli du livreur d'une course qu'il a acceptée (demande du 24/10) :
  * « Appli fermée · vue il y a 6 min » (plus de position ni d'avancée tant
- * qu'il ne la rouvre pas), « En arrière-plan ». Null si rien à dire, si la
+ * qu'il ne la rouvre pas), « Connexion coupée · depuis 4 min », « En
+ * arrière-plan ». Null si rien à dire, si la
  * course n'a pas (ou plus) de livreur, ou si le serveur n'envoie pas ces
  * champs.
  */

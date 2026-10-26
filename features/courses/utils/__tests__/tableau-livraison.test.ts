@@ -65,8 +65,9 @@ describe('qui lit le tableau', () => {
 });
 
 describe('état affichable', () => {
-  test("injoignable se lit « Appli fermée », inconnu « Hors service »", () => {
-    expect(etatAffichable('INJOIGNABLE')).toBe('APPLI_FERMEE');
+  test("injoignable et connexion coupée ont leur pastille, inconnu « Hors service »", () => {
+    expect(etatAffichable('INJOIGNABLE')).toBe('INJOIGNABLE');
+    expect(etatAffichable('CONNEXION_COUPEE')).toBe('CONNEXION_COUPEE');
     expect(etatAffichable('ETAT_FUTUR')).toBe('HORS_SERVICE');
     expect(etatAffichable(null)).toBe('HORS_SERVICE');
     expect(etatAffichable('DISPONIBLE')).toBe('DISPONIBLE');

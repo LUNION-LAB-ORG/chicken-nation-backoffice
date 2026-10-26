@@ -203,11 +203,11 @@ describe('ligneEnDirect : L2', () => {
     expect(ligneEnDirect(dispo, UN).detail).toBe('Rang FIFO #1');
   });
 
-  test('injoignable : avec les applis fermées, comme le bandeau', () => {
+  test('injoignable : section « Connexion coupée », jamais « Appli fermée » (25/10)', () => {
     const l = livreur('Zié', 'DISPONIBLE');
     l.disponibilite.etat = 'INJOIGNABLE';
     l.disponibilite.libelle = 'Injoignable';
-    expect(ligneEnDirect(l, UN)).toMatchObject({ etat: 'APPLI_FERMEE', section: 'APPLI_FERMEE', libelleEtat: 'Injoignable' });
+    expect(ligneEnDirect(l, UN)).toMatchObject({ etat: 'INJOIGNABLE', section: 'CONNEXION_COUPEE', libelleEtat: 'Injoignable' });
   });
 
   test('autre état inconnu d’un serveur plus récent : hors service', () => {

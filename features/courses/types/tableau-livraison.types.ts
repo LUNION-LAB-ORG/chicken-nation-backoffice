@@ -50,8 +50,7 @@ export interface LivreurDuTableau {
   prenom: string | null;
   /**
    * État par la règle unique du serveur. Il peut en envoyer un que cet écran
-   * ne connaît pas (`INJOIGNABLE` : ni connexion ni jeton de notification) :
-   * `etatAffichable` le range.
+   * ne connaît pas (serveur plus récent) : `etatAffichable` le range.
    */
   etat: string;
   /** Place dans la file de CE restaurant, parmi les livreurs disponibles. */
@@ -68,7 +67,7 @@ export interface RestaurantDuTableau {
     en_course: number;
     /** En pause, Pause automatique. */
     en_pause: number;
-    /** Appli fermée (injoignables compris). */
+    /** Appli fermée, connexion coupée et injoignables (additionné, pas affiché). */
     appli_fermee: number;
     /** Tous sauf Hors service et Inactif. */
     en_service: number;

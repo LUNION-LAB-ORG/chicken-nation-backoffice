@@ -23,9 +23,13 @@ export type EntityStatus = 'NEW' | 'ACTIVE' | 'INACTIVE' | 'DELETED';
  * en service et dans la file, et reçoit de nouveau des offres à la fin de
  * l'appel : le serveur le compte avec les disponibles.
  *
- * Le serveur envoie aussi `INJOIGNABLE` (ni connexion ni jeton de
- * notification) : l'écran le range avec les applis fermées, comme le
- * bandeau (`etatConnu`).
+ * `CONNEXION_COUPEE` (retour du client du 25/10) : même effet qu'une appli
+ * fermée (plus aucune offre, sans pause ni pénalité), mais le serveur n'a
+ * pas la preuve d'une fermeture : réseau coupé, ou téléphone qui bloque
+ * l'appli. `APPLI_FERMEE` ne vaut plus que pour une fermeture prouvée.
+ *
+ * `INJOIGNABLE` : appli active, mais ni connexion temps réel ni jeton de
+ * notification ; rangé avec les connexions coupées, jamais « Appli fermée ».
  */
 export type EtatDisponibilite =
   | 'DISPONIBLE'
@@ -36,7 +40,16 @@ export type EtatDisponibilite =
   | 'OFFRE_EN_ATTENTE'
   | 'EN_APPEL'
   | 'HORS_SERVICE'
-  | 'APPLI_FERMEE';
+  | 'APPLI_FERMEE'
+  | 'CONNEXION_COUPEE'
+  | 'INJOIGNABLE';
+
+/**
+ * Appli du livreur selon le serveur (25/10) : `ACTIVE`, `FERMEE` (l'appli a
+ * fermé elle-même sa connexion, rien ensuite), `COUPURE` (tout autre silence).
+ * Null : règle coupée (réglage à 0) ou appli d'avant le protocole 4.
+ */
+export type EtatAppliServeur = 'ACTIVE' | 'FERMEE' | 'COUPURE';
 
 /**
  * Appli du livreur vue par le serveur (demande du 24/10) : « active » = une
@@ -46,10 +59,12 @@ export type EtatDisponibilite =
  * liste des applis) ne l'est plus. Champs absents sur un serveur plus ancien.
  */
 export interface PresenceAppliServeur {
-  /** `false` : appli fermée. `null` : le serveur n'a pas pu le savoir. */
+  /** `false` : appli silencieuse, fermée ou connexion coupée (`appli_etat`). `null` : le serveur n'a pas pu le savoir. */
   appli_active?: boolean | null;
   /** Dernier signal de l'appli (ISO), pour « vue il y a 6 min ». */
   appli_vue_a?: string | null;
+  /** Fermée (preuve du serveur) ou connexion coupée ; absent sur un serveur plus ancien. */
+  appli_etat?: EtatAppliServeur | null;
 }
 
 /**

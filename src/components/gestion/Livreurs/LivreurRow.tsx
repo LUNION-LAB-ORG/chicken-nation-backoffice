@@ -92,7 +92,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
   // État par la règle unique du serveur : « En pause jusqu'à 14 h 32 »,
   // « Hors service »… La carte (relue toutes les 15 s) passe avant la liste,
   // pour l'état comme pour l'appli (« Appli fermée · vue il y a 6 min »,
-  // « En arrière-plan »).
+  // « Connexion coupée · depuis 4 min », « En arrière-plan »).
   const renderDispo = () => {
     const maintenant = new Date();
     const source = live ?? livreur;
@@ -103,6 +103,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
         pause_until: live?.pause_until,
         auto_pause_until: live?.auto_pause_until,
         appli_active: source.appli_active,
+        appli_etat: source.appli_etat,
       },
       maintenant,
     );
@@ -127,7 +128,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
         {appli && (
           <PresenceAppliLigne
             presence={appli}
-            sansLibelle={affiche.etat === "APPLI_FERMEE"}
+            sansLibelle={affiche.etat === "APPLI_FERMEE" || affiche.etat === "CONNEXION_COUPEE"}
             petit
             className="pl-0.5"
           />

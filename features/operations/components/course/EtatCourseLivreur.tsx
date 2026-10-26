@@ -122,17 +122,18 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
   const Icone = ICONES[etat.etat];
 
   if (compact) {
-    const fermee = appli?.cas === "FERMEE" ? appli : null;
+    // Appli fermée ou connexion coupée : dite aussi dans la version courte.
+    const silence = appli?.cas === "FERMEE" || appli?.cas === "COUPURE" ? appli : null;
     return (
       <div
         className={`inline-flex max-w-full items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-semibold ${ton.cadre} ${ton.texte}`}
-        title={fermee?.raison}
+        title={silence?.raison}
       >
         <Icone className="h-3 w-3 shrink-0" aria-hidden />
         <span className="truncate">
           {etat.livreur ? `${etat.livreur} · ` : ""}
           {etat.libelle}
-          {fermee ? ` · ${fermee.libelle.toLowerCase()}` : ""}
+          {silence ? ` · ${silence.libelle.toLowerCase()}` : ""}
         </span>
       </div>
     );

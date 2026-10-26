@@ -3,8 +3,9 @@
  * `bun test`.
  *
  *  - « Livreurs » (9.3) : chaque livreur dans UNE section, la première qui le
- *    prend (En course, Au restaurant, Disponibles, En pause, Appli fermée,
- *    Hors service), avec sa ligne : détail et heure utile à droite ;
+ *    prend (En course, Au restaurant, Disponibles, En pause, Connexion
+ *    coupée, Appli fermée, Hors service), avec sa ligne : détail et heure
+ *    utile à droite ;
  *  - « À surveiller » (9.2) : alertes du serveur du restaurant choisi,
  *    rouges d'abord puis la plus ancienne, et ce que leur toucher ouvre ;
  *  - fenêtre du livreur sur la carte (9.4) : arrêts, fin de tournée,
@@ -19,7 +20,8 @@
  * le restaurant », « Course active », « Code retrait », « Dernier GPS ».
  * Mots des choses nouvelles : « 2 sur 3 livrées », « Au restaurant depuis
  * 6 min », « jusqu'à 14 h 32 », « vue il y a 6 min », « position ancienne »,
- * « Fin vers 13 h 05 », « En retard de 12 min ».
+ * « Fin vers 13 h 05 », « En retard de 12 min », « Connexion coupée »
+ * (« depuis 4 min », retour du client du 25/10).
  */
 
 import type { SignalLivraison } from '../../courses/types/tableau-livraison.types';
@@ -28,20 +30,36 @@ import { dureeLisible, minutesDepuis } from '../../courses/utils/tableau-livrais
 import { approcheLivreur, heureCourte, type PositionGps } from '../../operations/utils/suivi-course';
 import type { IDelivererLive, IDelivererLiveCourse, IDelivererLiveDelivery } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
-import { NOM_ETAT, appliVueADe, estPauseSansFin, etatLivreurAffiche, rangEtat, vueIlYa } from './disponibilite';
+import {
+  NOM_ETAT,
+  appliVueADe,
+  depuisLisible,
+  estPauseSansFin,
+  etatLivreurAffiche,
+  rangEtat,
+  vueIlYa,
+} from './disponibilite';
 import { avancementTournee, jusquA, placeDansLaFile, rangDuLivreur } from './livreurs-du-jour';
 
 // ============================================================
 // SECTIONS
 // ============================================================
 
-export type CleSection = 'EN_COURSE' | 'AU_RESTAURANT' | 'DISPONIBLES' | 'EN_PAUSE' | 'APPLI_FERMEE' | 'HORS_SERVICE';
+export type CleSection =
+  | 'EN_COURSE'
+  | 'AU_RESTAURANT'
+  | 'DISPONIBLES'
+  | 'EN_PAUSE'
+  | 'CONNEXION_COUPEE'
+  | 'APPLI_FERMEE'
+  | 'HORS_SERVICE';
 
 export const ORDRE_SECTIONS: readonly CleSection[] = [
   'EN_COURSE',
   'AU_RESTAURANT',
   'DISPONIBLES',
   'EN_PAUSE',
+  'CONNEXION_COUPEE',
   'APPLI_FERMEE',
   'HORS_SERVICE',
 ];
@@ -51,6 +69,7 @@ export const TITRES_SECTIONS: Record<CleSection, string> = {
   AU_RESTAURANT: 'Au restaurant',
   DISPONIBLES: 'Disponibles',
   EN_PAUSE: 'En pause',
+  CONNEXION_COUPEE: 'Connexion coupée',
   APPLI_FERMEE: 'Appli fermée',
   HORS_SERVICE: 'Hors service',
 };
@@ -77,6 +96,10 @@ export function sectionDuLivreur(
     case 'EN_PAUSE':
     case 'PAUSE_AUTO':
       return 'EN_PAUSE';
+    // Aucune offre ne leur parvient, sans preuve d'une appli fermée.
+    case 'CONNEXION_COUPEE':
+    case 'INJOIGNABLE':
+      return 'CONNEXION_COUPEE';
     case 'APPLI_FERMEE':
       return 'APPLI_FERMEE';
     default:
@@ -203,6 +226,9 @@ function detailDeSection(
       return etat === 'PAUSE_AUTO'
         ? jusquA(l.disponibilite?.auto_pause_until ?? l.auto_pause_until, maintenant)
         : jusquA(l.disponibilite?.pause_until ?? l.pause_until, maintenant);
+    case 'CONNEXION_COUPEE':
+      // Injoignable : l'appli donne signe de vie, la pastille dit le reste.
+      return etat === 'INJOIGNABLE' ? vueIlYa(appliVueADe(l), maintenant) : depuisLisible(appliVueADe(l), maintenant);
     case 'APPLI_FERMEE':
       return vueIlYa(appliVueADe(l), maintenant);
     default:
@@ -275,9 +301,8 @@ function cleDeTri(
 }
 
 /**
- * État du livreur à l'instant, par la règle commune de `etatLivreur`
- * (« Injoignable » avec les applis fermées, un état inconnu « Hors
- * service ») ; rien de connu : « Hors service ».
+ * État du livreur à l'instant, par la règle commune de `etatLivreur` (un
+ * état inconnu « Hors service ») ; rien de connu : « Hors service ».
  */
 export function etatEnDirect(l: IDelivererLive, maintenant: Date): { etat: EtatDisponibilite; libelle: string } {
   const affiche = etatLivreurAffiche(l, maintenant);

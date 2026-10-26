@@ -21,13 +21,21 @@
  *    serveur tranche ;
  *  - l'appli du livreur (demande du 24/10) : « Appli fermée, vue il y a
  *    6 min », « En arrière-plan » (offres par notification), d'après
- *    `appli_active`, `appli_vue_a` et `appli_connectee` du serveur.
+ *    `appli_active`, `appli_vue_a` et `appli_connectee` du serveur ;
+ *  - depuis le retour du client du 25/10 : « Connexion coupée · depuis
+ *    4 min » pour une appli silencieuse sans preuve de fermeture
+ *    (`appli_etat` du serveur). « Appli fermée » seulement sur cette preuve.
  *
  * Heures : celles d'Abidjan, c'est-à-dire UTC, comme le serveur.
  */
 
 import type { IDelivererAvailability } from '../types/deliverer-live.type';
-import type { DisponibiliteLivreur, EtatDisponibilite, PresenceAppliServeur } from '../types/livreur.types';
+import type {
+  DisponibiliteLivreur,
+  EtatAppliServeur,
+  EtatDisponibilite,
+  PresenceAppliServeur,
+} from '../types/livreur.types';
 
 export interface EtatAffiche {
   etat: EtatDisponibilite;
@@ -47,6 +55,8 @@ export const ORDRE_ETATS: EtatDisponibilite[] = [
   'EN_COURSE',
   'EN_PAUSE',
   'PAUSE_AUTO',
+  'CONNEXION_COUPEE',
+  'INJOIGNABLE',
   'APPLI_FERMEE',
   'HORS_SERVICE',
   'INACTIF',
@@ -63,9 +73,12 @@ export const NOM_ETAT: Record<EtatDisponibilite, string> = {
   HORS_SERVICE: 'Hors service',
   INACTIF: 'Inactif',
   APPLI_FERMEE: 'Appli fermée',
+  CONNEXION_COUPEE: 'Connexion coupée',
+  INJOIGNABLE: 'Injoignable',
 };
 
 const COULEURS_DISPONIBLE = { couleur: '#17C964', fond: '#DCFCE7', texte: '#166534' };
+const COULEURS_SILENCE = { couleur: '#B45309', fond: '#FFFBEB', texte: '#B45309' };
 
 /**
  * Couleurs d'un état : `couleur` pour la pastille et le marqueur, `fond` et
@@ -82,6 +95,9 @@ export const COULEURS_ETAT: Record<EtatDisponibilite, { couleur: string; fond: s
   HORS_SERVICE: { couleur: '#9CA3AF', fond: '#F3F4F6', texte: '#4B5563' },
   INACTIF: { couleur: '#6B7280', fond: '#E5E7EB', texte: '#374151' },
   APPLI_FERMEE: { couleur: '#64748B', fond: '#E2E8F0', texte: '#334155' },
+  // Ambre d'« Appli non connectée » : l'appli ne répond plus, sans preuve qu'elle est fermée.
+  CONNEXION_COUPEE: COULEURS_SILENCE,
+  INJOIGNABLE: COULEURS_SILENCE,
 };
 
 // ============================================================
@@ -160,6 +176,10 @@ function textes(etat: EtatDisponibilite, pauses: Pauses, maintenant: Date): { li
       };
     case 'APPLI_FERMEE':
       return { libelle: NOM_ETAT.APPLI_FERMEE, raison: REFUS_APPLI_FERMEE };
+    case 'CONNEXION_COUPEE':
+      return { libelle: NOM_ETAT.CONNEXION_COUPEE, raison: REFUS_CONNEXION_COUPEE };
+    case 'INJOIGNABLE':
+      return { libelle: NOM_ETAT.INJOIGNABLE, raison: REFUS_INJOIGNABLE };
   }
 }
 
@@ -188,15 +208,22 @@ function etatApresPause(d: DisponibiliteLivreur, maintenant: Date, verifierPause
 
 /**
  * État envoyé par le serveur, ramené aux états de cet écran (règle commune à
- * Commandes, Livreurs, « Aujourd'hui » et En direct) :
- *  - « Injoignable » (ni connexion ni jeton de notification) : avec les
- *    applis fermées, comme le bandeau des restaurants ;
- *  - un état que ce backoffice ne connaît pas (serveur déployé après lui) :
- *    « Hors service », jamais « Disponible ».
+ * Commandes, Livreurs, « Aujourd'hui » et En direct) : un état que ce
+ * backoffice ne connaît pas (serveur déployé après lui) devient « Hors
+ * service », jamais « Disponible ». « Injoignable » est connu depuis le
+ * 25/10 : il n'est plus rangé avec les applis fermées.
  */
 export function etatConnu(etat: string | null | undefined): EtatDisponibilite {
-  if (etat === 'INJOIGNABLE') return 'APPLI_FERMEE';
   return etat && Object.hasOwn(COULEURS_ETAT, etat) ? (etat as EtatDisponibilite) : 'HORS_SERVICE';
+}
+
+/**
+ * État d'un livreur que le serveur dirait disponible mais dont l'appli ne
+ * répond plus : « Appli fermée » sur la preuve du serveur seulement, sinon
+ * « Connexion coupée » (serveur plus ancien compris).
+ */
+function etatSilence(appliEtat: EtatAppliServeur | null | undefined): 'APPLI_FERMEE' | 'CONNEXION_COUPEE' {
+  return appliEtat === 'FERMEE' ? 'APPLI_FERMEE' : 'CONNEXION_COUPEE';
 }
 
 /**
@@ -204,17 +231,19 @@ export function etatConnu(etat: string | null | undefined): EtatDisponibilite {
  * calculé au chargement. Tant que l'état n'a pas bougé, les textes sont ceux
  * du serveur, tels quels.
  *
- * `appliActive` : `appli_active` du livreur (à côté de `disponibilite` ou
- * dedans). Un livreur qui serait disponible mais dont le serveur dit l'appli
- * fermée est « Appli fermée » : le serveur refuserait l'offre (409).
+ * `appliActive` et `appliEtat` : `appli_active` et `appli_etat` du livreur
+ * (à côté de `disponibilite` ou dedans). Un livreur qui serait disponible
+ * mais dont l'appli ne répond plus est « Appli fermée » (preuve du serveur)
+ * ou « Connexion coupée » : le serveur refuserait l'offre (409).
  */
 export function etatLivreur(
   d: DisponibiliteLivreur,
   maintenant: Date,
   appliActive: boolean | null | undefined = d.appli_active,
+  appliEtat: EtatAppliServeur | null | undefined = d.appli_etat,
 ): EtatAffiche {
-  // État que cet écran ne connaît pas tel quel (« Injoignable », état d'un
-  // serveur plus récent) : ramené par `etatConnu`, avec le texte du serveur.
+  // État que cet écran ne connaît pas (état d'un serveur plus récent) :
+  // ramené par `etatConnu`, avec le texte du serveur.
   // Sans cela, la liste et la carte plantaient faute de couleurs pour cet état.
   if (!Object.hasOwn(COULEURS_ETAT, d.etat)) {
     const etat = etatConnu(d.etat);
@@ -232,8 +261,8 @@ export function etatLivreur(
     // La pause manuelle passe avant : si le serveur a dit « pause automatique », il n'y en avait pas.
     etat = etatApresPause(d, maintenant, false);
   }
-  // L'appli fermée passe avant l'appel, comme au serveur.
-  if ((etat === 'DISPONIBLE' || etat === 'EN_APPEL') && appliActive === false) etat = 'APPLI_FERMEE';
+  // L'appli silencieuse passe avant l'appel, comme au serveur.
+  if ((etat === 'DISPONIBLE' || etat === 'EN_APPEL') && appliActive === false) etat = etatSilence(appliEtat);
 
   if (etat !== d.etat || !d.libelle) return construire(etat, d, maintenant);
   return { etat, libelle: d.libelle, peutRecevoirOffre: d.peut_recevoir_offre, raison: d.message_refus };
@@ -259,10 +288,11 @@ export function etatLivreurAffiche(
     pause_until?: string | null;
     auto_pause_until?: string | null;
     appli_active?: boolean | null;
+    appli_etat?: EtatAppliServeur | null;
   },
   maintenant: Date,
 ): EtatAffiche | null {
-  if (l.disponibilite) return etatLivreur(l.disponibilite, maintenant, appliActiveDe(l));
+  if (l.disponibilite) return etatLivreur(l.disponibilite, maintenant, appliActiveDe(l), appliEtatDe(l));
   if (!l.availability) return null;
   // Valeur inconnue d'un serveur ancien : « hors service », jamais « disponible ».
   const etat = ETAT_DEPUIS_AVAILABILITY[l.availability] ?? 'HORS_SERVICE';
@@ -277,13 +307,21 @@ export function etatLivreurAffiche(
 // CARTE DES LIVREURS : FILTRES
 // ============================================================
 
-export type FiltreCarte = 'TOUS' | 'DISPONIBLE' | 'EN_COURSE' | 'EN_PAUSE' | 'APPLI_FERMEE' | 'HORS_SERVICE';
+export type FiltreCarte =
+  | 'TOUS'
+  | 'DISPONIBLE'
+  | 'EN_COURSE'
+  | 'EN_PAUSE'
+  | 'CONNEXION_COUPEE'
+  | 'APPLI_FERMEE'
+  | 'HORS_SERVICE';
 
 export const FILTRES_CARTE: { cle: FiltreCarte; libelle: string }[] = [
   { cle: 'TOUS', libelle: 'Tous' },
   { cle: 'DISPONIBLE', libelle: 'Disponibles' },
   { cle: 'EN_COURSE', libelle: 'En course' },
   { cle: 'EN_PAUSE', libelle: 'En pause' },
+  { cle: 'CONNEXION_COUPEE', libelle: 'Connexion coupée' },
   { cle: 'APPLI_FERMEE', libelle: 'Appli fermée' },
   { cle: 'HORS_SERVICE', libelle: 'Hors service' },
 ];
@@ -298,9 +336,15 @@ const FILTRE_DE_L_ETAT: Record<EtatDisponibilite, Exclude<FiltreCarte, 'TOUS'>> 
   HORS_SERVICE: 'HORS_SERVICE',
   INACTIF: 'HORS_SERVICE',
   APPLI_FERMEE: 'APPLI_FERMEE',
+  CONNEXION_COUPEE: 'CONNEXION_COUPEE',
+  INJOIGNABLE: 'CONNEXION_COUPEE',
 };
 
-/** « En pause » regroupe la pause et la pause automatique, « Disponibles » ceux qui ont une offre à lire ou sont en appel. */
+/**
+ * « En pause » regroupe la pause et la pause automatique, « Disponibles » ceux
+ * qui ont une offre à lire ou sont en appel, « Connexion coupée » les
+ * coupures et les injoignables (aucune offre ne leur parvient).
+ */
 export function correspondAuFiltre(etat: EtatDisponibilite, filtre: FiltreCarte): boolean {
   return filtre === 'TOUS' || FILTRE_DE_L_ETAT[etat] === filtre;
 }
@@ -338,13 +382,14 @@ export function choixAffectation(
   courseId: string,
   maintenant: Date,
   appliActive: boolean | null | undefined = d?.appli_active,
+  appliEtat: EtatAppliServeur | null | undefined = d?.appli_etat,
 ): ChoixAffectation {
   if (!d) return { etat: null, libelle: null, selectionnable: true, raison: null, renvoi: false };
 
-  const e = etatLivreur(d, maintenant, appliActive);
+  const e = etatLivreur(d, maintenant, appliActive, appliEtat);
   if (e.etat === 'OFFRE_EN_ATTENTE' && d.offre_course_id === courseId) {
-    // Viennent ensuite « hors service » puis « appli fermée », dans l'ordre du serveur.
-    const suivant = !d.en_service ? 'HORS_SERVICE' : appliActive === false ? 'APPLI_FERMEE' : null;
+    // Viennent ensuite « hors service » puis l'appli silencieuse, dans l'ordre du serveur.
+    const suivant = !d.en_service ? 'HORS_SERVICE' : appliActive === false ? etatSilence(appliEtat) : null;
     if (suivant) {
       const h = construire(suivant, d, maintenant);
       return { etat: h.etat, libelle: h.libelle, selectionnable: false, raison: h.raison, renvoi: false };
@@ -361,7 +406,7 @@ export function choixAffectation(
 }
 
 // ============================================================
-// APPLI DU LIVREUR : FERMÉE, EN ARRIÈRE-PLAN, NON CONNECTÉE
+// APPLI DU LIVREUR : FERMÉE, COUPÉE, EN ARRIÈRE-PLAN, NON CONNECTÉE
 // ============================================================
 
 /**
@@ -370,14 +415,23 @@ export function choixAffectation(
  * fois FERMÉE (glissée hors de la liste des applis), le serveur ne lui
  * propose plus rien jusqu'à ce qu'il la rouvre, sans pause ni pénalité.
  *
+ * Retour du client du 25/10 : appli pas fermée, affichée « Appli fermée ».
+ * Le serveur garde désormais la raison de la fin de la connexion et dit
+ * `appli_etat` : `FERMEE` quand l'appli a fermé elle-même sa connexion,
+ * `COUPURE` pour tout autre silence (réseau coupé, téléphone qui bloque
+ * l'appli). Les effets sont les mêmes ; seuls le mot et la couleur changent.
+ *
  * Le serveur dit, pour chaque livreur :
  *  - `appli_connectee` : connexion temps réel ouverte (offre à l'écran) ;
  *  - `appli_active` : connexion ouverte OU signal récent (position, requête)
  *    depuis moins de `deliverer.appli_fermee_apres_s` secondes ;
+ *  - `appli_etat` : `ACTIVE`, `FERMEE` ou `COUPURE` (serveur du 25/10) ;
  *  - `appli_vue_a` : heure du dernier signal.
  *
- * Trois cas à signaler :
- *  - « Appli fermée » (gris, « vue il y a 6 min ») : ni connexion ni signal ;
+ * Quatre cas à signaler :
+ *  - « Appli fermée » (gris, « vue il y a 6 min ») : fermeture prouvée ;
+ *  - « Connexion coupée » (ambre, « depuis 4 min ») : tout autre silence, et
+ *    tout doute (serveur plus ancien sans `appli_etat`) ;
  *  - « En arrière-plan » : appli active sans connexion temps réel, l'offre
  *    lui arrive par notification ;
  *  - « Appli non connectée » : sans connexion, et un serveur plus ancien qui
@@ -386,8 +440,13 @@ export function choixAffectation(
 
 /** Texte du refus (409) du serveur pour une appli fermée. */
 export const REFUS_APPLI_FERMEE = "L'appli de ce livreur est fermée.";
+/** Texte du refus (409) du serveur pour une connexion coupée. */
+export const REFUS_CONNEXION_COUPEE = 'La connexion de ce livreur est coupée : son appli ne répond plus.';
+/** Texte du refus (409) du serveur pour un livreur injoignable. */
+export const REFUS_INJOIGNABLE = 'Ce livreur est injoignable : ni appli connectée, ni notifications.';
 
 export const LIBELLE_APPLI_FERMEE = NOM_ETAT.APPLI_FERMEE;
+export const LIBELLE_APPLI_COUPEE = NOM_ETAT.CONNEXION_COUPEE;
 export const LIBELLE_APPLI_ARRIERE_PLAN = 'En arrière-plan';
 export const LIBELLE_APPLI_NON_CONNECTEE = 'Appli non connectée';
 
@@ -399,21 +458,25 @@ export const RAISON_APPLI_NON_CONNECTEE =
   "L'appli du livreur n'est pas connectée en temps réel : une offre ne lui arrive que par notification. " +
   "Demandez-lui de rouvrir l'appli.";
 
-export type CasAppli = 'FERMEE' | 'ARRIERE_PLAN' | 'NON_CONNECTEE';
+export type CasAppli = 'FERMEE' | 'COUPURE' | 'ARRIERE_PLAN' | 'NON_CONNECTEE';
 
 export interface PresenceAppli {
   cas: CasAppli;
-  /** « Appli fermée », « En arrière-plan », « Appli non connectée ». */
+  /** « Appli fermée », « Connexion coupée », « En arrière-plan », « Appli non connectée ». */
   libelle: string;
-  /** « vue il y a 6 min » pour une appli fermée dont le dernier signal est connu, sinon null. */
+  /**
+   * « vue il y a 6 min » (appli fermée), « depuis 4 min » (connexion coupée)
+   * quand le dernier signal est connu, sinon null.
+   */
   vue: string | null;
   /** Explication (infobulle, fenêtre « Forcer l'affectation »). */
   raison: string;
 }
 
-/** Couleurs d'un cas : texte, fond et bordure (gris pour une appli fermée). */
+/** Couleurs d'un cas : texte, fond et bordure (gris pour une appli fermée, ambre pour une coupure). */
 export const COULEURS_PRESENCE: Record<CasAppli, { texte: string; fond: string; bord: string }> = {
   FERMEE: { texte: '#475569', fond: '#F1F5F9', bord: '#CBD5E1' },
+  COUPURE: { texte: '#B45309', fond: '#FFFBEB', bord: '#FDE68A' },
   ARRIERE_PLAN: { texte: '#0369A1', fond: '#F0F9FF', bord: '#BAE6FD' },
   NON_CONNECTEE: { texte: '#B45309', fond: '#FFFBEB', bord: '#FDE68A' },
 };
@@ -427,6 +490,11 @@ export interface SourcePresence extends PresenceAppliServeur {
 /** `appli_active` du livreur, à côté de `disponibilite` ou dedans ; undefined si le serveur ne la donne pas. */
 export function appliActiveDe(l: SourcePresence): boolean | null | undefined {
   return l.appli_active ?? l.disponibilite?.appli_active;
+}
+
+/** `appli_etat` du livreur, à côté de `disponibilite` ou dedans ; undefined sur un serveur plus ancien. */
+export function appliEtatDe(l: SourcePresence): EtatAppliServeur | null | undefined {
+  return l.appli_etat ?? l.disponibilite?.appli_etat;
 }
 
 /** `appli_vue_a` du livreur, à côté de `disponibilite` ou dedans. */
@@ -449,6 +517,28 @@ export function vueIlYa(iso: string | null | undefined, maintenant: Date): strin
   return h.startsWith('le ') ? `vue ${h}` : `vue à ${h}`;
 }
 
+/**
+ * Connexion coupée depuis le dernier signal : « depuis 4 min », « depuis
+ * 17 h 31 » (plus d'une heure, même jour), « depuis le 24/10 à 17 h 31 ».
+ * Null si l'heure est inconnue.
+ */
+export function depuisLisible(iso: string | null | undefined, maintenant: Date): string | null {
+  const t = instant(iso);
+  if (t === null) return null;
+  const minutes = Math.floor((maintenant.getTime() - t) / 60_000);
+  // Horloge du poste en retard sur le serveur : jamais une durée négative.
+  if (minutes < 1) return "depuis moins d'1 min";
+  if (minutes < 60) return `depuis ${minutes} min`;
+  return `depuis ${heureLisible(new Date(t), maintenant)}`;
+}
+
+/** « Plus de nouvelles de son appli depuis 17 h 31 : réseau coupé, ou téléphone qui bloque l'appli. … » */
+export function raisonConnexionCoupee(iso: string | null | undefined, maintenant: Date): string {
+  const t = instant(iso);
+  const depuis = t === null ? '' : ` depuis ${heureLisible(new Date(t), maintenant)}`;
+  return `Plus de nouvelles de son appli${depuis} : réseau coupé, ou téléphone qui bloque l'appli. Aucune offre jusqu'à son retour.`;
+}
+
 /** États où l'appli doit tourner : il peut recevoir une offre, ou il livre. */
 const ETATS_APPLI_ATTENDUE: ReadonlySet<EtatDisponibilite> = new Set<EtatDisponibilite>([
   'DISPONIBLE',
@@ -458,9 +548,14 @@ const ETATS_APPLI_ATTENDUE: ReadonlySet<EtatDisponibilite> = new Set<EtatDisponi
 
 /**
  * L'appli du livreur, à signaler ou non. Signalée seulement quand le serveur
- * l'affirme et que le livreur est en service : en pause, hors service ou
- * inactif, une appli fermée est attendue ; présence inconnue (`null`) ou
- * serveur plus ancien (absente) : rien.
+ * l'affirme et que le livreur est en service : en pause, hors service,
+ * inactif ou injoignable (sa pastille le dit), rien ; présence inconnue
+ * (`null`) ou serveur plus ancien (absente) : rien.
+ *
+ * Ordre de lecture (conception du 25/10) : fermeture prouvée (`appli_etat`
+ * `FERMEE` ou état « Appli fermée »), puis coupure (`appli_etat` `COUPURE`,
+ * état « Connexion coupée », ou `appli_active` faux sans `appli_etat`).
+ * `appli_active` vrai : jamais l'une ni l'autre.
  */
 export function presenceAppli(
   l: SourcePresence,
@@ -474,13 +569,25 @@ export function presenceAppli(
     vue: vueIlYa(appliVueADe(l), maintenant),
     raison: RAISON_APPLI_FERMEE,
   });
-  // Le serveur l'a déjà classé « Appli fermée » : on ajoute l'heure.
+  const coupure = (): PresenceAppli => ({
+    cas: 'COUPURE',
+    libelle: LIBELLE_APPLI_COUPEE,
+    vue: depuisLisible(appliVueADe(l), maintenant),
+    raison: raisonConnexionCoupee(appliVueADe(l), maintenant),
+  });
+  // Le serveur l'a déjà classé : on ajoute l'heure.
   if (etat === 'APPLI_FERMEE') return fermee();
+  if (etat === 'CONNEXION_COUPEE') return coupure();
   if (!ETATS_APPLI_ATTENDUE.has(etat)) return null;
   // Connexion temps réel ouverte : l'offre s'affiche à l'écran, rien à dire.
   if (l.appli_connectee === true) return null;
   const active = appliActiveDe(l);
-  if (active === false) return fermee();
+  if (active !== true) {
+    const appliEtat = appliEtatDe(l);
+    if (appliEtat === 'FERMEE') return fermee();
+    // Sans preuve de fermeture (serveur plus ancien compris) : coupure, jamais « Appli fermée ».
+    if (appliEtat === 'COUPURE' || active === false) return coupure();
+  }
   if (l.appli_connectee !== false) return null;
   if (active === true) {
     return { cas: 'ARRIERE_PLAN', libelle: LIBELLE_APPLI_ARRIERE_PLAN, vue: null, raison: RAISON_APPLI_ARRIERE_PLAN };
@@ -488,7 +595,7 @@ export function presenceAppli(
   return { cas: 'NON_CONNECTEE', libelle: LIBELLE_APPLI_NON_CONNECTEE, vue: null, raison: RAISON_APPLI_NON_CONNECTEE };
 }
 
-/** « Appli fermée · vue il y a 6 min », « En arrière-plan ». */
+/** « Appli fermée · vue il y a 6 min », « Connexion coupée · depuis 4 min », « En arrière-plan ». */
 export function libellePresence(p: Pick<PresenceAppli, 'libelle' | 'vue'>): string {
   return p.vue ? `${p.libelle} · ${p.vue}` : p.libelle;
 }

@@ -113,7 +113,7 @@ function Info({ terme, children, title }: { terme: string; children: React.React
   );
 }
 
-/** « Appli fermée · vue il y a 6 min », « En arrière-plan ». */
+/** « Appli fermée · vue il y a 6 min », « Connexion coupée · depuis 4 min », « En arrière-plan ». */
 function InfoAppli({ appli }: { appli: PresenceAppli }) {
   const Icone = ICONE_PRESENCE[appli.cas];
   return (
@@ -314,7 +314,8 @@ export function CarteEnDirect({
     <div className="relative h-full min-h-[320px] overflow-hidden rounded-xl border border-[#E4E4E7] bg-white">
       {/* Légende */}
       <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-5rem)] flex-wrap gap-2 rounded-xl border border-gray-100 bg-white/90 px-3 py-1.5 text-[11px] shadow-sm backdrop-blur-sm">
-        {ORDRE_ETATS.filter((etat) => etat !== 'INACTIF').map((etat) => (
+        {/* « Injoignable » a la couleur de « Connexion coupée » : une seule entrée. */}
+        {ORDRE_ETATS.filter((etat) => etat !== 'INACTIF' && etat !== 'INJOIGNABLE').map((etat) => (
           <span key={etat} className="inline-flex items-center gap-1 font-semibold" style={{ color: COULEURS_ETAT[etat].texte }}>
             <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: COULEURS_ETAT[etat].couleur }} />
             {NOM_ETAT[etat]}

@@ -62,9 +62,9 @@ export function affichageBandeau(etat: {
 // ============================================================
 
 /**
- * État à montrer, par la règle commune (`etatConnu`) : « En appel » avec sa
- * pastille, « Injoignable » avec les applis fermées (le serveur les compte
- * ainsi), un état inconnu « Hors service », jamais « Disponible ».
+ * État à montrer, par la règle commune (`etatConnu`) : « En appel »,
+ * « Connexion coupée » et « Injoignable » avec leur pastille, un état
+ * inconnu « Hors service », jamais « Disponible ».
  */
 export function etatAffichable(etat: string | null | undefined): EtatDisponibilite {
   return etatConnu(etat);

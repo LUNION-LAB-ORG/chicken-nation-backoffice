@@ -20,8 +20,9 @@
  * Ajouts du 24/10 au soir (serveur, conception 11.3) : retard de la tournée
  * (`course.en_retard`, `retard_min`), arrêts de la tournée (`tournee`), échec
  * de la livraison (`echec`) et appli du livreur (`livreur.appli_active`,
- * `appli_vue_a`, `appli_connectee`). Absents d'un serveur plus ancien : la
- * section montre ce qu'elle montrait avant.
+ * `appli_vue_a`, `appli_connectee`, et `appli_etat` depuis le 25/10).
+ * Absents d'un serveur plus ancien : la section montre ce qu'elle montrait
+ * avant.
  *
  * Fichier pur : testé par `bun test`.
  */
@@ -30,6 +31,7 @@
 import { DELIVERY_FAILURE_LABELS } from '../../courses/utils/course-labels';
 import type { DeliveryFailureReason } from '../../courses/types/course.types';
 import { presenceAppli, type PresenceAppli } from '../../livreurs/utils/disponibilite';
+import type { EtatAppliServeur } from '../../livreurs/types/livreur.types';
 import { heureCourte, texteRetard } from './suivi-course';
 
 // ============================================================
@@ -81,6 +83,8 @@ export interface LivreurDeLivraison {
   appli_active?: boolean | null;
   appli_vue_a?: string | null;
   appli_connectee?: boolean | null;
+  /** Fermée (preuve du serveur) ou connexion coupée (serveur du 25/10). */
+  appli_etat?: EtatAppliServeur | null;
 }
 
 /** État d'un arrêt de la tournée. */
@@ -145,7 +149,9 @@ const ETATS: ReadonlySet<string> = new Set([
   'annulee',
 ]);
 
-const objet = (v: unknown): Record<string, unknown> | null =>
+const ETATS_APPLI: ReadonlySet<string> = new Set<EtatAppliServeur>(['ACTIVE', 'FERMEE', 'COUPURE']);
+
+const objet =(v: unknown): Record<string, unknown> | null =>
   v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 
 const texte = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.trim() : null);
@@ -192,6 +198,9 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
   const l = objet(r.livreur);
   const etat = texte(l?.etat);
   const booleen = (v: unknown): boolean | null | undefined => (typeof v === 'boolean' ? v : v === null ? null : undefined);
+  // Valeur inconnue : ignorée, l'écran fait comme un serveur plus ancien (jamais « Appli fermée » sans preuve).
+  const etatAppli = (v: unknown): { appli_etat?: EtatAppliServeur | null } =>
+    v === null ? { appli_etat: null } : typeof v === 'string' && ETATS_APPLI.has(v) ? { appli_etat: v as EtatAppliServeur } : {};
   const livreur: LivreurDeLivraison | null = l
     ? {
         id: texte(l.id),
@@ -201,6 +210,7 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
         ...('appli_active' in l ? { appli_active: booleen(l.appli_active) } : {}),
         ...('appli_vue_a' in l ? { appli_vue_a: iso(l.appli_vue_a) } : {}),
         ...('appli_connectee' in l ? { appli_connectee: booleen(l.appli_connectee) } : {}),
+        ...('appli_etat' in l ? etatAppli(l.appli_etat) : {}),
       }
     : null;
 
@@ -567,16 +577,22 @@ export function texteEchec(livraison: LivraisonCommande): { titre: string; note:
 }
 
 /**
- * Appli du livreur, seulement si elle est fermée ou en arrière-plan : « Appli
- * fermée · vue il y a 6 min », « En arrière-plan ». Rien pour Turbo, sans
- * livreur, une livraison finie ou un serveur qui ne donne pas ces champs.
+ * Appli du livreur, seulement si elle est fermée, coupée ou en arrière-plan :
+ * « Appli fermée · vue il y a 6 min », « Connexion coupée · depuis 4 min »,
+ * « En arrière-plan ». Rien pour Turbo, sans livreur, une livraison finie ou
+ * un serveur qui ne donne pas ces champs.
  */
 export function appliLivreurLivraison(livraison: LivraisonCommande, maintenant: Date): PresenceAppli | null {
   const l = livraison.livreur;
   if (!l || livraison.service !== 'CHICKEN_NATION' || livraisonTerminee(livraison)) return null;
   if (l.appli_active === undefined && l.appli_connectee === undefined) return null;
   const presence = presenceAppli(
-    { appli_active: l.appli_active, appli_vue_a: l.appli_vue_a ?? null, appli_connectee: l.appli_connectee },
+    {
+      appli_active: l.appli_active,
+      appli_etat: l.appli_etat,
+      appli_vue_a: l.appli_vue_a ?? null,
+      appli_connectee: l.appli_connectee,
+    },
     'EN_COURSE',
     maintenant,
   );
