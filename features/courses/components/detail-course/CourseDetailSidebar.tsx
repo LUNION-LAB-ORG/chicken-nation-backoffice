@@ -122,7 +122,7 @@ export function CourseDetailSidebar({ course }: Props) {
         </dl>
       </div>
 
-      {/* Actions : l'admin seulement */}
+      {/* Actions : l'admin et le centre d'appels */}
       {piloterCourses && (
         <div className="bg-white border border-gray-100 rounded-3xl shadow-sm p-5">
           <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Actions</h3>

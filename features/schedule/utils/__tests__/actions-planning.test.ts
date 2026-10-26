@@ -45,6 +45,28 @@ const COMPTES = {
     },
     membre: { role: 'LIVRAISON_OPS', type: 'BACKOFFICE', restaurant_id: null },
   },
+  // Demande du 26/10 : le centre d'appels agit sur le planning, comme l'admin.
+  CALL_CENTER: {
+    permissions: {
+      modules: {
+        [Modules.COMMANDES]: [Action.CREATE, Action.READ, Action.UPDATE, Action.UPDATE_FULL, Action.PRINT],
+        [Modules.LIVREURS]: [Action.READ],
+        [Modules.PLANNING]: [Action.READ, Action.CREATE, Action.UPDATE, Action.DELETE],
+      },
+    },
+    membre: { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: null },
+  },
+  // Serveur de la lecture seule : le planning en lecture.
+  CALL_CENTER_LECTURE: {
+    permissions: {
+      modules: {
+        [Modules.COMMANDES]: [Action.CREATE, Action.READ, Action.UPDATE, Action.UPDATE_FULL, Action.PRINT],
+        [Modules.LIVREURS]: [Action.READ],
+        [Modules.PLANNING]: [Action.READ],
+      },
+    },
+    membre: { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: null },
+  },
   MANAGER_ANGRE: {
     permissions: {
       modules: {
@@ -124,6 +146,20 @@ describe('actionsPlanning : selon le rôle', () => {
   test.each(ETATS)('ADMIN, %s : tout, sur tous les restaurants', (statut) => {
     expect(actions('ADMIN', statut, MARCORY).modifierDates).toBe(true);
     expect(actions('ADMIN', statut, MARCORY).supprimer).toBe(true);
+  });
+
+  test.each(ETATS)('CALL_CENTER, %s : tous les gestes, sur tous les restaurants', (statut) => {
+    for (const restaurant of [ANGRE, MARCORY]) {
+      const a = actions('CALL_CENTER', statut, restaurant);
+      expect(a.principal).toBe(GESTE_PRINCIPAL[statut]);
+      expect(a.modifierDates && a.ajouterLivreur && a.retirerLivreur && a.changerJour && a.supprimer).toBe(true);
+      expect(a.jourSansFenetre).toBe(statut === 'DRAFT');
+    }
+  });
+
+  test.each(ETATS)('CALL_CENTER face au serveur de la lecture seule, %s : aucun geste', (statut) => {
+    expect(actions('CALL_CENTER_LECTURE', statut)).toEqual(AUCUNE_ACTION);
+    expect(actions('CALL_CENTER_LECTURE', statut, MARCORY)).toEqual(AUCUNE_ACTION);
   });
 
   test.each(ETATS)('LIVRAISON_OPS, %s : aucun geste', (statut) => {

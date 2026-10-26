@@ -45,7 +45,7 @@ const MANAGER = {
 };
 const MANAGER_ANCIEN = { modules: { [Modules.COMMANDES]: [Action.READ, Action.UPDATE, Action.UPDATE_FULL] } };
 const CAISSIER = { modules: { [Modules.COMMANDES]: [Action.READ, Action.UPDATE, Action.UPDATE_FULL] } };
-// Demande du 26/10 : le centre d'appels lit tout le module Livraison, comme LIVRAISON_OPS.
+// Serveur d'avant le 26/10 : le centre d'appels sans la livraison.
 const CALL_CENTER_ANCIEN = {
   modules: {
     [Modules.COMMANDES]: [Action.CREATE, Action.READ, Action.UPDATE, Action.UPDATE_FULL, Action.PRINT],
@@ -54,13 +54,33 @@ const CALL_CENTER_ANCIEN = {
     [Modules.CALLS]: [Action.READ],
   },
 };
-const CALL_CENTER = {
+// Première demande du 26/10 : tout le module Livraison en lecture, comme LIVRAISON_OPS.
+const CALL_CENTER_LECTURE = {
   modules: {
     ...CALL_CENTER_ANCIEN.modules,
     [Modules.LIVREURS]: [Action.READ],
     [Modules.PLANNING]: [Action.READ],
   },
 };
+// Seconde demande du 26/10 (« oui le call center peut agir dans livraison ») :
+// le planning en écriture ; les gestes des courses sont ouverts par une liste
+// de rôles (ROLES_ACTIONS_COURSES), LIVREURS reste en lecture.
+const CALL_CENTER = {
+  modules: {
+    ...CALL_CENTER_ANCIEN.modules,
+    [Modules.LIVREURS]: [Action.READ],
+    [Modules.PLANNING]: [Action.READ, Action.CREATE, Action.UPDATE, Action.DELETE],
+  },
+};
+const MARKETING = {
+  modules: {
+    [Modules.CLIENTS]: [Action.READ],
+    [Modules.CRM]: [Action.READ, Action.UPDATE],
+    [Modules.PROMOTIONS]: TOUT,
+  },
+};
+const COMPTABLE = { modules: { [Modules.COMMANDES]: [Action.READ, Action.EXPORT], [Modules.DASHBOARD]: [Action.READ] } };
+const CUISINE = { modules: { [Modules.COMMANDES]: [Action.READ, Action.UPDATE] } };
 
 const droits = (permissions, membre) => droitsLivraison({ can: canPour(permissions), membre });
 
@@ -138,8 +158,36 @@ describe('droitsLivraison', () => {
     expect(d.modifierPlanning(ANGRE)).toBe(false);
   });
 
-  test('CALL_CENTER : tout le module Livraison en lecture, sur tous les restaurants, aucune action', () => {
+  test('CALL_CENTER : agit sur les courses et le planning de tous les restaurants', () => {
     const d = droits(CALL_CENTER, { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: null });
+    expect(d.voirLivraison).toBe(true);
+    expect(d.voirPlanning).toBe(true);
+    // Affecter, annuler, relancer, réessayer, Turbo, reprendre en interne.
+    expect(d.piloterCourses).toBe(true);
+    expect(d.creerPlanning).toBe(true);
+    for (const restaurant of [ANGRE, MARCORY, null]) {
+      expect(d.modifierPlanning(restaurant)).toBe(true);
+      expect(d.supprimerPlanning(restaurant)).toBe(true);
+    }
+  });
+
+  test('CALL_CENTER : la gestion des comptes des livreurs reste à l\'administrateur', () => {
+    const d = droits(CALL_CENTER, { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: null });
+    // Valider, refuser, forcer l'activation, suspendre, réactiver, changer de restaurant.
+    expect(d.gererLivreurs).toBe(false);
+    expect(d.supprimerLivreur).toBe(false);
+  });
+
+  test('CALL_CENTER dont la fiche garde un restaurant : compte du siège, tous les restaurants', () => {
+    const membre = { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: ANGRE };
+    const d = droits(CALL_CENTER, membre);
+    expect(d.modifierPlanning(MARCORY)).toBe(true);
+    expect(d.supprimerPlanning(MARCORY)).toBe(true);
+    expect(peutAgirSurRestaurant(membre, MARCORY)).toBe(true);
+  });
+
+  test('CALL_CENTER face au serveur de la lecture seule : tout voir, aucune action', () => {
+    const d = droits(CALL_CENTER_LECTURE, { role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: null });
     expect(d.voirLivraison).toBe(true);
     expect(d.voirPlanning).toBe(true);
     for (const cle of ACTIONS) expect(d[cle]).toBe(false);
@@ -147,8 +195,6 @@ describe('droitsLivraison', () => {
       expect(d.modifierPlanning(restaurant)).toBe(false);
       expect(d.supprimerPlanning(restaurant)).toBe(false);
     }
-    // Compte du siège : aucun restaurant n'est caché.
-    expect(peutAgirSurRestaurant({ role: 'CALL_CENTER', type: 'BACKOFFICE', restaurant_id: ANGRE }, MARCORY)).toBe(true);
   });
 
   test('CALL_CENTER face à un serveur sans la lecture de la livraison : rien ne change', () => {
@@ -158,12 +204,42 @@ describe('droitsLivraison', () => {
     for (const cle of ACTIONS) expect(d[cle]).toBe(false);
   });
 
-  test('lecture seule même si un droit d\'écriture arrivait par erreur (CALL_CENTER, LIVRAISON_OPS)', () => {
+  test('droit LIVREURS d\'écriture reçu par erreur : CALL_CENTER ne gère pas les comptes, LIVRAISON_OPS ne fait rien', () => {
     const TOUT_LIVRAISON = { modules: { [Modules.LIVREURS]: TOUT, [Modules.PLANNING]: TOUT } };
-    for (const role of ['CALL_CENTER', 'LIVRAISON_OPS']) {
-      const d = droits(TOUT_LIVRAISON, { role, type: 'BACKOFFICE' });
-      expect(d.voirLivraison).toBe(true);
-      expect(d.voirPlanning).toBe(true);
+    const centre = droits(TOUT_LIVRAISON, { role: 'CALL_CENTER', type: 'BACKOFFICE' });
+    expect(centre.piloterCourses).toBe(true);
+    expect(centre.creerPlanning).toBe(true);
+    expect(centre.gererLivreurs).toBe(false);
+    expect(centre.supprimerLivreur).toBe(false);
+
+    const suivi = droits(TOUT_LIVRAISON, { role: 'LIVRAISON_OPS', type: 'BACKOFFICE' });
+    expect(suivi.voirLivraison).toBe(true);
+    expect(suivi.voirPlanning).toBe(true);
+    for (const cle of ACTIONS) expect(suivi[cle]).toBe(false);
+    expect(suivi.modifierPlanning(ANGRE)).toBe(false);
+    expect(suivi.supprimerPlanning(ANGRE)).toBe(false);
+  });
+
+  test('gestes des courses : ADMIN et CALL_CENTER seulement ; comptes des livreurs : ADMIN seul', () => {
+    // Miroir de ROLES_ACTIONS_COURSES et du @UserRoles(ADMIN) des livreurs : même
+    // avec tous les droits, aucun autre rôle n'a ces boutons.
+    for (const role of ['ADMIN', 'CALL_CENTER', 'LIVRAISON_OPS', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'MARKETING', 'COMPTABLE', 'CUISINE']) {
+      const d = droits(ADMIN, { role, type: 'BACKOFFICE' });
+      expect(d.piloterCourses).toBe(role === 'ADMIN' || role === 'CALL_CENTER');
+      expect(d.gererLivreurs).toBe(role === 'ADMIN');
+      expect(d.supprimerLivreur).toBe(role === 'ADMIN');
+    }
+  });
+
+  test('MARKETING, COMPTABLE, CUISINE : rien de plus', () => {
+    for (const [role, permissions] of [
+      ['MARKETING', MARKETING],
+      ['COMPTABLE', COMPTABLE],
+      ['CUISINE', CUISINE],
+    ]) {
+      const d = droits(permissions, { role, type: 'BACKOFFICE' });
+      expect(d.voirLivraison).toBe(false);
+      expect(d.voirPlanning).toBe(false);
       for (const cle of ACTIONS) expect(d[cle]).toBe(false);
       expect(d.modifierPlanning(ANGRE)).toBe(false);
       expect(d.supprimerPlanning(ANGRE)).toBe(false);
@@ -178,6 +254,17 @@ describe('droitsLivraison', () => {
     expect(d.modifierPlanning(ANGRE)).toBe(false);
   });
 
+  test('ADMIN sans le droit LIVREURS (exclusion) : ni courses ni comptes des livreurs', () => {
+    const d = droits(
+      { modules: { [Modules.ALL]: TOUT }, exclusions: [Modules.LIVREURS] },
+      { role: 'ADMIN', type: 'BACKOFFICE' },
+    );
+    expect(d.voirLivraison).toBe(false);
+    expect(d.piloterCourses).toBe(false);
+    expect(d.gererLivreurs).toBe(false);
+    expect(d.supprimerLivreur).toBe(false);
+  });
+
   test('exclusion du module : refus même avec ALL', () => {
     const d = droits(
       { modules: { [Modules.ALL]: TOUT }, exclusions: [Modules.PLANNING] },
@@ -190,16 +277,17 @@ describe('droitsLivraison', () => {
 
   test('aucun compte : rien', () => {
     const d = droits(ADMIN, null);
+    expect(d.piloterCourses).toBe(false);
+    expect(d.gererLivreurs).toBe(false);
     expect(d.modifierPlanning(ANGRE)).toBe(false);
     expect(d.supprimerPlanning(ANGRE)).toBe(false);
   });
 });
 
 describe('lectureSeuleLivraison', () => {
-  test('suivi des livraisons et centre d\'appels seulement', () => {
-    expect(lectureSeuleLivraison({ role: 'CALL_CENTER' })).toBe(true);
+  test('suivi des livraisons seulement ; le centre d\'appels agit depuis le 26/10', () => {
     expect(lectureSeuleLivraison({ role: 'LIVRAISON_OPS' })).toBe(true);
-    for (const role of ['ADMIN', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'MARKETING', null, undefined]) {
+    for (const role of ['ADMIN', 'CALL_CENTER', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER', 'MARKETING', null, undefined]) {
       expect(lectureSeuleLivraison({ role })).toBe(false);
     }
     expect(lectureSeuleLivraison(null)).toBe(false);

@@ -9,23 +9,33 @@
  *    LIVRAISON_OPS et, depuis le 26/10, CALL_CENTER), que le droit LIVREURS
  *    READ suit à l'identique ;
  *  - `voirPlanning`, `creerPlanning` : droit PLANNING du serveur ;
- *  - `piloterCourses` : `@UserRoles(ADMIN)` de `course-admin.controller.ts`
- *    (forcer, relancer, Turbo, reprendre en interne, annuler) ;
+ *  - `piloterCourses` : liste de rôles des gestes de `course-admin.controller.ts`
+ *    (`ROLES_ACTIONS_COURSES` : ADMIN et, depuis le 26/10, CALL_CENTER) pour
+ *    forcer, relancer, réessayer, confier à Turbo, reprendre en interne,
+ *    annuler ;
  *  - `gererLivreurs`, `supprimerLivreur` : `@UserRoles(ADMIN)` de
- *    `deliverers-admin.controller.ts` ;
+ *    `deliverers-admin.controller.ts`, l'administrateur seul ;
  *  - `modifierPlanning`, `supprimerPlanning` : droit PLANNING et
  *    cloisonnement. Un compte de restaurant (manager, assistant) ne touche
  *    qu'aux plannings de son restaurant ; le serveur refuse les autres (403).
  *
- * LIVRAISON_OPS et le centre d'appels (CALL_CENTER, demande du 26/10) ont la
- * lecture seule partout : toutes les clés d'action sont fausses pour eux,
- * quels que soient les droits reçus. Le centre d'appels garde ses boutons
- * « Appeler » (règle à part : `calls/utils/appel-livreur.ts`). C'est un
- * compte du siège : il voit tous les restaurants.
+ * Centre d'appels (CALL_CENTER, demande du 26/10 : « oui le call center peut
+ * agir dans livraison ») : compte du siège, il agit sur les courses et sur le
+ * planning de tous les restaurants, comme l'administrateur. La gestion des
+ * comptes des livreurs (valider, refuser, forcer l'activation, suspendre,
+ * réactiver, changer de restaurant, supprimer) reste à l'administrateur, même
+ * si un droit LIVREURS d'écriture lui arrivait. Les réglages du planificateur
+ * sont dans Paramètres (droit SETTINGS), que le centre d'appels n'a pas. Ses
+ * boutons « Appeler » suivent leur règle à part (`calls/utils/appel-livreur.ts`).
  *
- * Tant que le serveur ne renvoie pas le droit PLANNING (serveur pas encore
- * déployé), seul l'ADMIN l'a (par ALL) : le planning disparaît pour les
- * autres, rien n'est inventé.
+ * LIVRAISON_OPS a la lecture seule partout : toutes les clés d'action sont
+ * fausses pour lui, quels que soient les droits reçus.
+ *
+ * Serveur plus ancien, rien n'est inventé : le planning suit le droit
+ * PLANNING (sans lui, seul l'ADMIN l'a, par ALL). Les gestes des courses n'ont
+ * pas de droit à eux (liste de rôles) : le serveur qui les ouvre au centre
+ * d'appels lui donne en même temps le planning en écriture. Sans ce droit, le
+ * centre d'appels reste en lecture, sans bouton qui finirait en refus.
  *
  * Fichier pur (aucun React), testé par `bun test`. Le crochet est
  * `useDroitsLivraison` (`../hook/use-droits-livraison.ts`).
@@ -48,7 +58,7 @@ export interface MembreLivraison {
  * Rôles qui consultent la livraison sans jamais y agir (miroir du serveur :
  * lecture de LIVREURS et PLANNING seulement, routes d'écriture refusées).
  */
-const ROLES_LECTURE_SEULE: readonly string[] = ['LIVRAISON_OPS', 'CALL_CENTER'];
+const ROLES_LECTURE_SEULE: readonly string[] = ['LIVRAISON_OPS'];
 
 /** Compte qui voit la livraison sans aucun bouton d'action. */
 export function lectureSeuleLivraison(membre: MembreLivraison | null | undefined): boolean {
@@ -60,9 +70,9 @@ export interface DroitsLivraison {
   voirLivraison: boolean;
   /** Menu Planning (lecture). */
   voirPlanning: boolean;
-  /** Forcer l'affectation, relancer, confier à Turbo, reprendre en interne, annuler une course. */
+  /** Forcer l'affectation, relancer, réessayer, confier à Turbo, reprendre en interne, annuler une course. */
   piloterCourses: boolean;
-  /** Valider, refuser, suspendre, réactiver, affecter un livreur. */
+  /** Valider, refuser, forcer l'activation, suspendre, réactiver, changer le restaurant d'un livreur. */
   gererLivreurs: boolean;
   /** Supprimer un livreur. */
   supprimerLivreur: boolean;
@@ -95,19 +105,26 @@ export function droitsLivraison({
   can: PeutFaire;
   membre: MembreLivraison | null | undefined;
 }): DroitsLivraison {
+  const role = membre?.role ?? '';
   // Lecture seule : aucune action, même si un droit d'écriture arrivait par erreur.
   const agir = (module: Modules, action: Action) => !lectureSeuleLivraison(membre) && can(module, action);
   const lireLivraison = can(Modules.LIVREURS, Action.READ);
-  const modifierLivreurs = agir(Modules.LIVREURS, Action.UPDATE);
   const modifierPlannings = agir(Modules.PLANNING, Action.UPDATE);
   const effacerPlannings = agir(Modules.PLANNING, Action.DELETE);
+  // Comptes des livreurs : l'administrateur seul (`@UserRoles(ADMIN)`). Il
+  // pilote aussi les courses, avec ce même droit.
+  const administrateur = role === 'ADMIN';
+  const gererComptes = administrateur && can(Modules.LIVREURS, Action.UPDATE);
+  // Centre d'appels : les gestes des courses, dès que le serveur lui ouvre
+  // l'écriture (le planning en écriture arrive avec elle).
+  const centreAppelsAgit = role === 'CALL_CENTER' && lireLivraison && modifierPlannings;
 
   return {
     voirLivraison: lireLivraison,
     voirPlanning: can(Modules.PLANNING, Action.READ),
-    piloterCourses: modifierLivreurs,
-    gererLivreurs: modifierLivreurs,
-    supprimerLivreur: agir(Modules.LIVREURS, Action.DELETE),
+    piloterCourses: gererComptes || centreAppelsAgit,
+    gererLivreurs: gererComptes,
+    supprimerLivreur: administrateur && can(Modules.LIVREURS, Action.DELETE),
     creerPlanning: agir(Modules.PLANNING, Action.CREATE),
     modifierPlanning: (restaurantId) => modifierPlannings && peutAgirSurRestaurant(membre, restaurantId),
     supprimerPlanning: (restaurantId) => effacerPlannings && peutAgirSurRestaurant(membre, restaurantId),

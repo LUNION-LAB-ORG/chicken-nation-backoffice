@@ -104,8 +104,9 @@ export const useGetMenuConfig = (): {
        * et, depuis le 26/10, CALL_CENTER), miroir de `ROLES_SUIVI_LIVRAISON`
        * du serveur. Planning : son droit propre, que le manager reçoit pour
        * son restaurant ; tant que le serveur ne le renvoie pas, seul l'ADMIN
-       * le voit (par ALL). LIVRAISON_OPS et CALL_CENTER n'y ont que la
-       * lecture : aucun bouton d'action (`droits-livraison.ts`).
+       * le voit (par ALL). LIVRAISON_OPS n'y a que la lecture ; CALL_CENTER
+       * y agit depuis le 26/10 (courses, planning), sans la gestion des
+       * comptes des livreurs (`droits-livraison.ts`).
        */
       id: "livraison",
       label: "Livraison",

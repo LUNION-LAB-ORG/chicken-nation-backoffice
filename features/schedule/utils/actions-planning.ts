@@ -8,8 +8,9 @@
  *
  * Droits (section 4) : `modifierPlanning(restaurantId)` pour tout geste sauf
  * la suppression, `supprimerPlanning(restaurantId)` pour elle. Un manager ne
- * touche qu'au planning de son restaurant ; LIVRAISON_OPS ne voit aucun
- * geste.
+ * touche qu'au planning de son restaurant ; le centre d'appels (26/10),
+ * compte du siège, a tous les gestes sur tous les restaurants ;
+ * LIVRAISON_OPS ne voit aucun geste.
  *
  * Ce que la fenêtre dit après le geste dépend de l'état : rien sur un
  * brouillon (le livreur ne le voit pas), le livreur est prévenu sur un

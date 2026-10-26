@@ -14,8 +14,8 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 /**
  * Planning (menu Livraison, conception du 24/10, 10.3).
  *
- * Admin : tous les restaurants ; manager et assistant : le leur ; suivi des
- * livraisons : lecture. Siège sur « Tous les restaurants » : le tableau
+ * Admin et centre d'appels (26/10) : tous les restaurants ; manager et
+ * assistant : le leur ; suivi des livraisons : lecture. Siège sur « Tous les restaurants » : le tableau
  * « Plannings des restaurants » ; un restaurant choisi, ou un compte de
  * restaurant : la liste de ses plannings et le détail.
  *
