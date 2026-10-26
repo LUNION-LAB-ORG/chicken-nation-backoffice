@@ -180,7 +180,10 @@ describe('ligneEnDirect : L2', () => {
   });
 
   test('appli fermée : vue il y a', () => {
-    const l = livreur('Yao', 'APPLI_FERMEE', { appli_vue_a: ISO('12:24'), disponibilite: { appli_active: false } });
+    const l = livreur('Yao', 'APPLI_FERMEE', {
+      appli_vue_a: ISO('12:24'),
+      disponibilite: { appli_active: false, appli_etat: 'FERMEE' },
+    });
     expect(ligneEnDirect(l, UN).detail).toBe('Vue il y a 6 min');
   });
 

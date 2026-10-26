@@ -227,6 +227,16 @@ function etatSilence(appliEtat: EtatAppliServeur | null | undefined): 'APPLI_FER
 }
 
 /**
+ * « Appli fermée » envoyé par le serveur, gardé seulement avec sa preuve
+ * (`appli_etat` FERMEE). Relecture du 26/10 : un serveur d'avant le 25/10
+ * (sans `appli_etat`) envoie cet état pour tout silence ; il devient
+ * « Connexion coupée », comme pour un livreur en course dans le même silence.
+ */
+function etatPreuve(etat: EtatDisponibilite, appliEtat: EtatAppliServeur | null | undefined): EtatDisponibilite {
+  return etat === 'APPLI_FERMEE' ? etatSilence(appliEtat) : etat;
+}
+
+/**
  * État du livreur à l'instant `maintenant`, à partir de ce que le serveur a
  * calculé au chargement. Tant que l'état n'a pas bougé, les textes sont ceux
  * du serveur, tels quels.
@@ -254,7 +264,7 @@ export function etatLivreur(
       raison: d.message_refus,
     };
   }
-  let etat = d.etat;
+  let etat = etatPreuve(d.etat, appliEtat);
   if (etat === 'EN_PAUSE' && !estFuture(d.pause_until, maintenant)) {
     etat = etatApresPause(d, maintenant, true);
   } else if (etat === 'PAUSE_AUTO' && !estFuture(d.auto_pause_until, maintenant)) {
@@ -553,9 +563,10 @@ const ETATS_APPLI_ATTENDUE: ReadonlySet<EtatDisponibilite> = new Set<EtatDisponi
  * (`null`) ou serveur plus ancien (absente) : rien.
  *
  * Ordre de lecture (conception du 25/10) : fermeture prouvée (`appli_etat`
- * `FERMEE` ou état « Appli fermée »), puis coupure (`appli_etat` `COUPURE`,
- * état « Connexion coupée », ou `appli_active` faux sans `appli_etat`).
- * `appli_active` vrai : jamais l'une ni l'autre.
+ * `FERMEE`, avec ou sans l'état « Appli fermée »), puis coupure (`appli_etat`
+ * `COUPURE`, état « Connexion coupée », état « Appli fermée » sans
+ * `appli_etat` d'un serveur plus ancien, ou `appli_active` faux sans
+ * `appli_etat`). `appli_active` vrai : jamais l'une ni l'autre.
  */
 export function presenceAppli(
   l: SourcePresence,
@@ -575,8 +586,9 @@ export function presenceAppli(
     vue: depuisLisible(appliVueADe(l), maintenant),
     raison: raisonConnexionCoupee(appliVueADe(l), maintenant),
   });
-  // Le serveur l'a déjà classé : on ajoute l'heure.
-  if (etat === 'APPLI_FERMEE') return fermee();
+  // Le serveur l'a déjà classé : on ajoute l'heure. « Appli fermée » sans sa
+  // preuve (serveur d'avant le 25/10) : coupure.
+  if (etat === 'APPLI_FERMEE') return appliEtatDe(l) === 'FERMEE' ? fermee() : coupure();
   if (etat === 'CONNEXION_COUPEE') return coupure();
   if (!ETATS_APPLI_ATTENDUE.has(etat)) return null;
   // Connexion temps réel ouverte : l'offre s'affiche à l'écran, rien à dire.

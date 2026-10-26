@@ -78,12 +78,14 @@ const dispo = (champs = {}) => ({
 });
 
 /** Livreur que le serveur classe « Appli fermée ». */
+/** « Appli fermée » d'un serveur du 25/10 : toujours avec sa preuve (`appli_etat` FERMEE). */
 const appliFermee = (champs = {}) =>
   dispo({
     etat: 'APPLI_FERMEE',
     libelle: 'Appli fermée',
     peut_recevoir_offre: false,
     message_refus: "L'appli de ce livreur est fermée.",
+    appli_etat: 'FERMEE',
     ...champs,
   });
 
@@ -173,11 +175,15 @@ describe('appli du livreur à signaler', () => {
   });
 
   test('état « Appli fermée » du serveur : l’heure s’ajoute, même sans `appli_active`', () => {
-    expect(presenceAppli({ appli_vue_a: '2026-10-24T12:30:00Z' }, 'APPLI_FERMEE', MAINTENANT)).toMatchObject({
+    expect(
+      presenceAppli({ appli_etat: 'FERMEE', appli_vue_a: '2026-10-24T12:30:00Z' }, 'APPLI_FERMEE', MAINTENANT),
+    ).toMatchObject({
       cas: 'FERMEE',
       vue: 'vue il y a 10 min',
     });
-    expect(presenceAppli({}, 'APPLI_FERMEE', MAINTENANT)).toMatchObject({ cas: 'FERMEE', vue: null });
+    expect(presenceAppli({ appli_etat: 'FERMEE' }, 'APPLI_FERMEE', MAINTENANT)).toMatchObject({ cas: 'FERMEE', vue: null });
+    // Sans sa preuve (serveur d'avant le 25/10) : connexion coupée (26/10).
+    expect(presenceAppli({}, 'APPLI_FERMEE', MAINTENANT)).toMatchObject({ cas: 'COUPURE', vue: null });
   });
 
   test('champs lus à côté de `disponibilite` ou dedans', () => {

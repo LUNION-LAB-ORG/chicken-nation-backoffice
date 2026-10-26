@@ -375,9 +375,11 @@ describe('état que ce backoffice ne connaît pas (serveur déployé avant lui)'
     expect(etatLivreur(dispo({ etat: 'NOUVEL_ETAT', libelle: '' }), A('14:00')).libelle).toBe('Hors service');
   });
 
-  test('« Appli fermée », connu de ce backoffice : inchangé', () => {
+  test('« Appli fermée », connu de ce backoffice : inchangé avec sa preuve, « Connexion coupée » sans', () => {
     const d = dispo({ etat: 'APPLI_FERMEE', libelle: 'Appli fermée', peut_recevoir_offre: false });
-    expect(etatLivreur(d, A('14:00')).etat).toBe('APPLI_FERMEE');
+    expect(etatLivreur({ ...d, appli_etat: 'FERMEE' }, A('14:00')).etat).toBe('APPLI_FERMEE');
+    // Serveur d'avant le 25/10 (sans `appli_etat`) : tout silence y était « Appli fermée » (26/10).
+    expect(etatLivreur(d, A('14:00')).etat).toBe('CONNEXION_COUPEE');
   });
 });
 

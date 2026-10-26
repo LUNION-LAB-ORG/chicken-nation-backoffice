@@ -245,13 +245,58 @@ describe('« Appli fermée » seulement sur la preuve du serveur', () => {
   });
 
   test('état du serveur : « Appli fermée » et « Connexion coupée » gardent l’heure', () => {
-    expect(libellePresence(presenceAppli({ appli_vue_a: ISO('17:31') }, 'APPLI_FERMEE', T))).toBe(
+    expect(libellePresence(presenceAppli({ appli_etat: 'FERMEE', appli_vue_a: ISO('17:31') }, 'APPLI_FERMEE', T))).toBe(
       'Appli fermée · vue il y a 4 min',
     );
     expect(libellePresence(presenceAppli({ appli_vue_a: ISO('17:31') }, 'CONNEXION_COUPEE', T))).toBe(
       'Connexion coupée · depuis 4 min',
     );
     expect(presenceAppli({}, 'CONNEXION_COUPEE', T)).toMatchObject({ cas: 'COUPURE', vue: null });
+  });
+
+  /**
+   * Relecture du 26/10 : un serveur d'avant le 25/10 envoie l'état « Appli
+   * fermée » pour TOUT silence d'un livreur disponible, sans `appli_etat`.
+   * Le backoffice déployé avant lui disait alors « Appli fermée » pour un
+   * livreur disponible et « Connexion coupée » pour un livreur en course dans
+   * le même silence, sur le même écran.
+   */
+  test('serveur d’avant le 25/10 : son « Appli fermée » sans preuve devient « Connexion coupée », comme en course', () => {
+    const ancien = (champs = {}) => {
+      const d = fermee({ appli_vue_a: ISO('17:31'), ...champs });
+      delete d.appli_etat;
+      return d;
+    };
+    expect(etatLivreur(ancien(), T)).toEqual({
+      etat: 'CONNEXION_COUPEE',
+      libelle: 'Connexion coupée',
+      peutRecevoirOffre: false,
+      raison: REFUS_CONNEXION_COUPEE,
+    });
+    const l = live(ancien());
+    delete l.appli_etat;
+    const disponible = ecrans(l);
+    const enCourse = ecrans(live(ancien({ etat: 'EN_COURSE', libelle: 'En course', en_course: true }), { appli_etat: undefined }));
+    expect(disponible).toMatchObject({
+      badge: 'Connexion coupée',
+      ligneAppli: 'Connexion coupée · depuis 4 min',
+      section: 'Connexion coupée',
+      filtre: 'Connexion coupée',
+    });
+    expect(enCourse.ligneAppli).toBe('Connexion coupée · depuis 4 min');
+    // L'état seul, sans les champs de l'appli : coupure aussi.
+    expect(presenceAppli({ appli_vue_a: ISO('17:31') }, 'APPLI_FERMEE', T).cas).toBe('COUPURE');
+    expect(choixAffectation(ancien(), COURSE, T).etat).toBe('CONNEXION_COUPEE');
+  });
+
+  test('serveur du 25/10 : « Appli fermée » gardé avec sa preuve, partout', () => {
+    expect(etatLivreur(fermee(), T).etat).toBe('APPLI_FERMEE');
+    expect(ecrans(live(fermee()))).toMatchObject({
+      badge: 'Appli fermée',
+      ligneAppli: 'Appli fermée · vue il y a 3 min',
+      filtre: 'Appli fermée',
+    });
+    expect(choixAffectation(fermee(), COURSE, T).etat).toBe('APPLI_FERMEE');
   });
 
   test('en pause, hors service, inactif, injoignable : rien sur l’appli', () => {
