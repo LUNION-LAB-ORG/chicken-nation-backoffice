@@ -14,9 +14,9 @@ const REGROUPEMENT_MS = 1_500;
 
 /**
  * Guetteur global du tableau de la livraison, monté une fois avec les
- * notifications (`useNotificationBootstrap`), pour l'admin et le suivi des
- * livraisons (`voirLivraison`) : la pastille du menu reste à jour sur tous
- * les écrans.
+ * notifications (`useNotificationBootstrap`), pour l'admin, le suivi des
+ * livraisons et le centre d'appels (`voirLivraison`) : la pastille du menu
+ * reste à jour sur tous les écrans.
  *
  *  - relit toutes les 20 s (seul pilote de ces comptes) ;
  *  - relit après chaque évènement d'une course reçu en temps réel.

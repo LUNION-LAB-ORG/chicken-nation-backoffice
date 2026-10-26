@@ -13,7 +13,7 @@ export const useNotificationBootstrap = () => {
   useActiveOrders();       // 🔄 API
   useOrdersSlaWatcher();   // ⏱️ SLA
   useRelancesWatcher();    // Paniers non payés à relancer (ADMIN, CALL_CENTER)
-  useTableauLivraisonWatcher(); // Alertes de la livraison, pastille du menu (ADMIN, LIVRAISON_OPS)
+  useTableauLivraisonWatcher(); // Alertes de la livraison, pastille du menu (ADMIN, LIVRAISON_OPS, CALL_CENTER)
   useMessagesSound();
 
   // Chargement du contexte pour déclencher le son

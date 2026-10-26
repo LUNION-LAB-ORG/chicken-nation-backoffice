@@ -100,10 +100,12 @@ export const useGetMenuConfig = (): {
        * clés d'écran `courses`, `livreurs`, `planning_livreurs` ne changent
        * pas (onglets mémorisés, liens) ; `en_direct` est nouvelle.
        *
-       * En direct, Courses, Livreurs : droit LIVREURS (ADMIN, LIVRAISON_OPS),
-       * miroir de `ROLES_SUIVI_LIVRAISON` du serveur. Planning : son droit
-       * propre, que le manager reçoit pour son restaurant ; tant que le
-       * serveur ne le renvoie pas, seul l'ADMIN le voit (par ALL).
+       * En direct, Courses, Livreurs : droit LIVREURS (ADMIN, LIVRAISON_OPS
+       * et, depuis le 26/10, CALL_CENTER), miroir de `ROLES_SUIVI_LIVRAISON`
+       * du serveur. Planning : son droit propre, que le manager reçoit pour
+       * son restaurant ; tant que le serveur ne le renvoie pas, seul l'ADMIN
+       * le voit (par ALL). LIVRAISON_OPS et CALL_CENTER n'y ont que la
+       * lecture : aucun bouton d'action (`droits-livraison.ts`).
        */
       id: "livraison",
       label: "Livraison",

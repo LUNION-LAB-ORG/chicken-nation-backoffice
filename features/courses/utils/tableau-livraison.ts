@@ -21,10 +21,13 @@ import type { CleSignal, RestaurantDuTableau, SignalLivraison, TableauLivraison 
 
 /**
  * Rôles admis par `GET /livraison/tableau` (serveur,
- * `livraison-tableau.controller.ts`). Le centre d'appels et la cuisine
- * recevraient 403 : la requête ne part pas pour eux.
+ * `livraison-tableau.controller.ts`). Le centre d'appels y est depuis le
+ * 26/10 (module Livraison en lecture) ; la cuisine et le marketing
+ * recevraient 403 : la requête ne part pas pour eux. Sur un serveur plus
+ * ancien, le centre d'appels n'a pas la lecture des livreurs : ni menu, ni
+ * guetteur, la requête ne part pas non plus.
  */
-const ROLES_TABLEAU = ['ADMIN', 'LIVRAISON_OPS', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER'];
+const ROLES_TABLEAU = ['ADMIN', 'LIVRAISON_OPS', 'CALL_CENTER', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER'];
 
 export function peutLireTableau(membre: { role?: string | null } | null | undefined): boolean {
   return ROLES_TABLEAU.includes(membre?.role ?? '');

@@ -5,8 +5,9 @@
  * appelle. Chaque clé est le miroir d'une garde du serveur :
  *
  *  - `voirLivraison` : En direct, Courses et Livreurs. Le serveur garde ces
- *    lectures par une liste de rôles (`ROLES_SUIVI_LIVRAISON` : ADMIN et
- *    LIVRAISON_OPS), que le droit LIVREURS READ suit à l'identique ;
+ *    lectures par une liste de rôles (`ROLES_SUIVI_LIVRAISON` : ADMIN,
+ *    LIVRAISON_OPS et, depuis le 26/10, CALL_CENTER), que le droit LIVREURS
+ *    READ suit à l'identique ;
  *  - `voirPlanning`, `creerPlanning` : droit PLANNING du serveur ;
  *  - `piloterCourses` : `@UserRoles(ADMIN)` de `course-admin.controller.ts`
  *    (forcer, relancer, Turbo, reprendre en interne, annuler) ;
@@ -16,8 +17,11 @@
  *    cloisonnement. Un compte de restaurant (manager, assistant) ne touche
  *    qu'aux plannings de son restaurant ; le serveur refuse les autres (403).
  *
- * LIVRAISON_OPS a la lecture seule partout : toutes les clés d'action sont
- * fausses pour lui.
+ * LIVRAISON_OPS et le centre d'appels (CALL_CENTER, demande du 26/10) ont la
+ * lecture seule partout : toutes les clés d'action sont fausses pour eux,
+ * quels que soient les droits reçus. Le centre d'appels garde ses boutons
+ * « Appeler » (règle à part : `calls/utils/appel-livreur.ts`). C'est un
+ * compte du siège : il voit tous les restaurants.
  *
  * Tant que le serveur ne renvoie pas le droit PLANNING (serveur pas encore
  * déployé), seul l'ADMIN l'a (par ALL) : le planning disparaît pour les
@@ -38,6 +42,17 @@ export interface MembreLivraison {
   type?: string | null;
   role?: string | null;
   restaurant_id?: string | null;
+}
+
+/**
+ * Rôles qui consultent la livraison sans jamais y agir (miroir du serveur :
+ * lecture de LIVREURS et PLANNING seulement, routes d'écriture refusées).
+ */
+const ROLES_LECTURE_SEULE: readonly string[] = ['LIVRAISON_OPS', 'CALL_CENTER'];
+
+/** Compte qui voit la livraison sans aucun bouton d'action. */
+export function lectureSeuleLivraison(membre: MembreLivraison | null | undefined): boolean {
+  return ROLES_LECTURE_SEULE.includes(membre?.role ?? '');
 }
 
 export interface DroitsLivraison {
@@ -80,18 +95,20 @@ export function droitsLivraison({
   can: PeutFaire;
   membre: MembreLivraison | null | undefined;
 }): DroitsLivraison {
+  // Lecture seule : aucune action, même si un droit d'écriture arrivait par erreur.
+  const agir = (module: Modules, action: Action) => !lectureSeuleLivraison(membre) && can(module, action);
   const lireLivraison = can(Modules.LIVREURS, Action.READ);
-  const modifierLivreurs = can(Modules.LIVREURS, Action.UPDATE);
-  const modifierPlannings = can(Modules.PLANNING, Action.UPDATE);
-  const effacerPlannings = can(Modules.PLANNING, Action.DELETE);
+  const modifierLivreurs = agir(Modules.LIVREURS, Action.UPDATE);
+  const modifierPlannings = agir(Modules.PLANNING, Action.UPDATE);
+  const effacerPlannings = agir(Modules.PLANNING, Action.DELETE);
 
   return {
     voirLivraison: lireLivraison,
     voirPlanning: can(Modules.PLANNING, Action.READ),
     piloterCourses: modifierLivreurs,
     gererLivreurs: modifierLivreurs,
-    supprimerLivreur: can(Modules.LIVREURS, Action.DELETE),
-    creerPlanning: can(Modules.PLANNING, Action.CREATE),
+    supprimerLivreur: agir(Modules.LIVREURS, Action.DELETE),
+    creerPlanning: agir(Modules.PLANNING, Action.CREATE),
     modifierPlanning: (restaurantId) => modifierPlannings && peutAgirSurRestaurant(membre, restaurantId),
     supprimerPlanning: (restaurantId) => effacerPlannings && peutAgirSurRestaurant(membre, restaurantId),
   };

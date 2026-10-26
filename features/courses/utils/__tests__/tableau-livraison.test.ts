@@ -47,10 +47,11 @@ const signal = (partiel) => ({
 
 describe('qui lit le tableau', () => {
   test('mêmes rôles que le serveur', () => {
-    for (const role of ['ADMIN', 'LIVRAISON_OPS', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER']) {
+    // CALL_CENTER depuis le 26/10 : tout le module Livraison en lecture.
+    for (const role of ['ADMIN', 'LIVRAISON_OPS', 'CALL_CENTER', 'MANAGER', 'ASSISTANT_MANAGER', 'CAISSIER']) {
       expect(peutLireTableau({ role })).toBe(true);
     }
-    for (const role of ['CALL_CENTER', 'CUISINE', 'MARKETING', undefined]) {
+    for (const role of ['CUISINE', 'MARKETING', 'COMPTABLE', undefined]) {
       expect(peutLireTableau({ role })).toBe(false);
     }
     expect(peutLireTableau(null)).toBe(false);
