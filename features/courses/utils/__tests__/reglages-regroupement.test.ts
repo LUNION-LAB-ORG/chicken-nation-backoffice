@@ -514,6 +514,14 @@ describe('« Appli considérée fermée après (secondes) »', () => {
     expect(`${d().libelle}${d().aide}`).not.toMatch(/[—–]/);
     expect(d().aide).not.toMatch(/[a-z]+_[a-z]+|APPLI_FERMEE/);
   });
+
+  // Retour du client du 25/10 : le même délai vaut pour une connexion coupée ; à 120 s,
+  // une seule position perdue (une par minute en arrière-plan) suffisait.
+  test('coupure et fermeture nommées, 180 conseillé', () => {
+    expect(d().aide).toContain("jusqu'à son retour (appli fermée ou connexion coupée)");
+    expect(d().aide).toContain('180 conseillé');
+    expect(d().aide).not.toContain('120 au moins');
+  });
 });
 
 const reglagesLivreur = join(
