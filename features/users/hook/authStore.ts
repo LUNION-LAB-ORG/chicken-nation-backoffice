@@ -5,6 +5,7 @@ import { login as apiLogin, refreshToken as apiRefreshToken, logout as apiLogout
 import { api } from '../../../src/services/api';
 import { getCookie, setCookie, deleteCookie } from '@/utils/cookieHelpers';
 import { useDashboardStore } from '@/store/dashboardStore';
+import { viderLeCacheALaConnexion, viderLeCacheALaDeconnexion } from '@/providers/query-client';
 import { Action, LoginCredentials, LoginResponse, Modules, RolePermissions } from '../types/auth.type';
 import { UserRole } from '../types/user.types';
 
@@ -166,6 +167,8 @@ export const useAuthStore = create<AuthStore>()((set, get) => {
         };
 
         saveAuthToCookies(authData);
+        // Rien de ce que le compte précédent a lu (poste partagé du siège).
+        viderLeCacheALaConnexion();
         set({ ...authData, isLoading: false });
 
       } catch (error) {
@@ -194,6 +197,9 @@ export const useAuthStore = create<AuthStore>()((set, get) => {
         const dashboardStore = useDashboardStore.getState();
         dashboardStore.setSelectedRestaurantId(null);
         dashboardStore.setActiveTab(null);
+
+        // Le reste du cache part à la connexion suivante (query-client.ts).
+        viderLeCacheALaDeconnexion();
 
         set({
           user: null,
