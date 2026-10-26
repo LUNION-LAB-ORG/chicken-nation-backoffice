@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test';
 
 import {
   appliLivreurLivraison,
+  codeClientAAfficher,
   etatLivraison,
   libelleService,
   lienAppel,
@@ -444,6 +445,40 @@ describe('section Livraison complétée (serveur du 24/10)', () => {
         maintenant,
       ),
     ).toBeNull();
+  });
+});
+
+describe('code de retrait du client (demande du 26/10)', () => {
+  // Le serveur l'envoie à l'admin et au centre d'appels ; aux autres rôles, le champ est absent.
+  test('admin ou centre d\'appels : le code, en entier', () => {
+    const l = lue({ code_client: '4821' });
+    expect(l.code_client).toBe('4821');
+    expect(codeClientAAfficher(l)).toBe('4821');
+    expect(codeClientAAfficher(lue({ code_client: ' 0507 ' }))).toBe('0507');
+  });
+
+  test('autre rôle ou serveur plus ancien : champ absent, aucune ligne', () => {
+    const l = lue();
+    expect('code_client' in l).toBe(false);
+    expect(codeClientAAfficher(l)).toBeNull();
+  });
+
+  test('null, vide ou mal typé : aucune ligne, jamais une valeur inventée', () => {
+    for (const code_client of [null, '', '   ', 4821, { code: '4821' }, ['4821'], true]) {
+      const l = lue({ code_client });
+      expect('code_client' in l).toBe(true);
+      expect(l.code_client).toBeNull();
+      expect(codeClientAAfficher(l)).toBeNull();
+    }
+    expect(codeClientAAfficher(null)).toBeNull();
+    expect(codeClientAAfficher(undefined)).toBeNull();
+  });
+
+  test('distinct du code de retrait de la course, qui ne bouge pas', () => {
+    const l = lue({ code_client: '4821' });
+    expect(l.course.code_retrait).toBe('614');
+    expect(codeClientAAfficher(lue({ code_client: null }))).toBeNull();
+    expect(lue({ code_client: null }).course.code_retrait).toBe('614');
   });
 });
 

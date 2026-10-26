@@ -16,6 +16,7 @@ import { useMaintenant } from "../../hooks/use-maintenant";
 import { useLivraisonCommandeQuery } from "../../queries/livraison-commande.query";
 import {
   appliLivreurLivraison,
+  codeClientAAfficher,
   etatLivraison,
   libelleService,
   lignesFrise,
@@ -63,6 +64,10 @@ const TONS: Record<TonEtat, string> = {
  * course » pour qui a l'écran Courses (lecture des livreurs) : ouvre sa fiche.
  * Le code reste au pied du tiroir (« Code retrait : 614 »), comme avant.
  *
+ * Ajout du 26/10 : « Code de retrait du client », le code que le client
+ * dicte au livreur à la remise, en gros chiffres. Le serveur ne l'envoie qu'à
+ * l'admin et au centre d'appels ; sans lui, la ligne n'apparaît pas.
+ *
  * Données : `GET /orders/:id/livraison`, relu en direct (socket) et toutes
  * les 20 s tant que la livraison n'est pas finie. Serveur pas encore à jour
  * ou erreur : la section ne s'affiche pas. Textes : `utils/suivi-livraison.ts`.
@@ -92,6 +97,7 @@ export function SectionLivraison({ commande }: Props) {
   const lignes = lignesFrise(livraison);
   const total = texteTotal(livraison);
   const echec = texteEchec(livraison);
+  const codeClient = codeClientAAfficher(livraison);
   const sousTitre = [course?.reference, arret].filter(Boolean) as string[];
 
   // La fiche de la course s'ouvre une fois la course lue (l'écran Courses ne sait pas l'attendre).
@@ -187,6 +193,16 @@ export function SectionLivraison({ commande }: Props) {
           </div>
         ) : null}
       </div>
+
+      {/* Code de retrait du client : admin et centre d'appels seulement (le serveur l'envoie ou non) */}
+      {codeClient && (
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3">
+          <p className="text-sm font-semibold text-gray-700">Code de retrait du client</p>
+          <p className="shrink-0 font-mono text-2xl font-bold tracking-[0.2em] text-gray-900 tabular-nums">
+            {codeClient}
+          </p>
+        </div>
+      )}
 
       {/* Échec de cette livraison : motif et note du livreur */}
       {echec && (

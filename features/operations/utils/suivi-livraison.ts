@@ -24,6 +24,9 @@
  * Absents d'un serveur plus ancien : la section montre ce qu'elle montrait
  * avant.
  *
+ * Ajout du 26/10 : code de retrait du client (`code_client`), pour l'admin et
+ * le centre d'appels seulement (le serveur ne l'envoie pas aux autres).
+ *
  * Fichier pur : testé par `bun test`.
  */
 
@@ -123,6 +126,14 @@ export interface LivraisonCommande {
   echec: EchecLivraison | null;
   etapes: EtapeLivraison[];
   durees: DureesLivraison;
+  /**
+   * Code de retrait du client (`Order.recovery_code`, demande du 26/10) : le
+   * code qu'il dicte au livreur à la remise ou donne au comptoir. Le serveur
+   * ne l'envoie qu'à l'admin et au centre d'appels : absent pour les autres
+   * rôles et sur un serveur plus ancien. Ce n'est pas le code de retrait de
+   * la course (`course.code_retrait`), que le livreur donne à la caisse.
+   */
+  code_client?: string | null;
 }
 
 // ============================================================
@@ -263,7 +274,17 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
     pret_a_livre_s: duree(d?.pret_a_livre_s),
   };
 
-  return { service, course, livreur, tournee, echec, etapes, durees };
+  return {
+    service,
+    course,
+    livreur,
+    tournee,
+    echec,
+    etapes,
+    durees,
+    // Champ absent (rôle non autorisé, serveur plus ancien) : il reste absent.
+    ...('code_client' in r ? { code_client: texte(r.code_client) } : {}),
+  };
 }
 
 const ETATS_ARRET: ReadonlySet<string> = new Set(['a_livrer', 'en_route', 'chez_le_client', 'livree', 'echec']);
@@ -533,7 +554,7 @@ export function texteTotal(livraison: LivraisonCommande): string | null {
 }
 
 // ============================================================
-// RETARD, TOURNÉE, ÉCHEC, APPLI (demande du 24/10 au soir)
+// RETARD, CODE DU CLIENT, TOURNÉE, ÉCHEC, APPLI (24/10 au soir, 26/10)
 // ============================================================
 
 /** « En retard de 12 min » quand le serveur dit la tournée en retard ; sinon null. */
@@ -562,6 +583,15 @@ export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): str
 /** « Arrêt 2 · ORD-4819 · En route ». */
 export function texteArretTournee(arret: ArretTournee): string {
   return `Arrêt ${arret.rang} · ${arret.reference} · ${texteEtatArret(arret)}`;
+}
+
+/**
+ * Code de retrait du client à montrer en gros chiffres (demande du 26/10) :
+ * seulement une chaîne non vide. Champ absent (rôle sans ce droit, serveur
+ * plus ancien), null ou vide : null, la ligne ne s'affiche pas.
+ */
+export function codeClientAAfficher(livraison: Pick<LivraisonCommande, 'code_client'> | null | undefined): string | null {
+  return texte(livraison?.code_client);
 }
 
 /** La tournée ne s'affiche que s'il y a au moins deux arrêts. */
