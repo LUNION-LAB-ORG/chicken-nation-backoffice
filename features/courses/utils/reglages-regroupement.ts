@@ -471,9 +471,10 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
         cle: 'deliverer.appli_fermee_apres_s',
         libelle: 'Appli considérée fermée après',
         unite: secondes,
-        // En arrière-plan, l'appli envoie sa position environ une fois par minute, et chaque
-        // position est notée au serveur : à 120 s, une seule position perdue suffirait.
-        aide: "Ni connexion ni signal de son appli depuis ce délai : plus d'offre pour ce livreur, sans pause ni pénalité, jusqu'à son retour (appli fermée ou connexion coupée). En arrière-plan, l'appli envoie sa position environ une fois par minute : 180 conseillé. 0 : jamais.",
+        // En arrière-plan, l'appli envoie sa position au moins une fois par minute (toutes les
+        // 30 s environ après sa mise à jour du 26/10, une par minute en pause et avant), et
+        // chaque position est notée au serveur : à 120 s, une seule position perdue suffirait.
+        aide: "Ni connexion ni signal de son appli depuis ce délai : plus d'offre pour ce livreur, sans pause ni pénalité, jusqu'à son retour (appli fermée ou connexion coupée). En arrière-plan, l'appli envoie sa position au moins une fois par minute : 180 conseillé. 0 : jamais.",
         type: 'nombre',
         defaut: '180',
         lecture: 'livreur',

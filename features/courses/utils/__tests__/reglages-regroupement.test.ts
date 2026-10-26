@@ -509,7 +509,9 @@ describe('« Appli considérée fermée après (secondes) »', () => {
     expect(d().aide).toContain('0 : jamais');
     expect(d().aide).toContain('sans pause ni pénalité');
     // La raison du conseil : la cadence des positions de l'appli en arrière-plan (chaque position est notée au serveur).
-    expect(d().aide).toContain("En arrière-plan, l'appli envoie sa position environ une fois par minute");
+    // Vrai pour l'appli du 24/10 (une par minute) comme après sa mise à jour (toutes les 30 s environ).
+    expect(d().aide).toContain("En arrière-plan, l'appli envoie sa position au moins une fois par minute");
+    expect(d().aide).not.toContain('environ une fois par minute');
     expect(d().aide).not.toContain("n'est noté qu'une fois par minute");
     expect(`${d().libelle}${d().aide}`).not.toMatch(/[—–]/);
     expect(d().aide).not.toMatch(/[a-z]+_[a-z]+|APPLI_FERMEE/);
