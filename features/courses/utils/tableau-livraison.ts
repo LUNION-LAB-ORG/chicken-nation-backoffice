@@ -268,3 +268,15 @@ export function actionsATraiter(s: SignalLivraison): ActionATraiter[] {
   if (s.cle === 'COURSE_ANNULEE_A_RELANCER') return ['RELANCER_LIVRAISON'];
   return [];
 }
+
+/**
+ * Livraison annulée par le livreur (27/10) : la commande reste en livraison
+ * et c'est elle qu'il faut reprendre (« Annuler la commande », menu ⋮ du
+ * tiroir). Une seule commande : toucher la ligne mène à elle. Plusieurs, ou
+ * une autre alerte : `null`, la ligne ouvre la fiche de la course, dont les
+ * références mènent chacune à leur commande.
+ */
+export function commandeDuSignal(s: SignalLivraison): string | null {
+  if (s.cle !== 'LIVRAISON_ANNULEE_PAR_LIVREUR') return null;
+  return s.commandes.length === 1 ? s.commandes[0] : null;
+}

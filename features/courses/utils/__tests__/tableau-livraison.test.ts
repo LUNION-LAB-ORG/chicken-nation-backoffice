@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment -- tests bun : leurs types ne sont pas installés dans le backoffice. */
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
 
 import {
   actionsATraiter,
+  commandeDuSignal,
   dureeLisible,
   estRouteAbsente,
   etatAffichable,
@@ -258,6 +260,14 @@ describe('livraison annulée par le livreur (demande du 27/10)', () => {
   test('compte dans la pastille rouge du menu', () => {
     const signaux = [annulee, signal({ cle: 'SANS_LIVREUR' })];
     expect(nombreAlertesRouges({ genere_a: '', restaurants: [], signaux })).toBe(1);
+  });
+
+  test('une seule commande : la ligne mène à elle ; plusieurs, ou une autre alerte : la fiche de la course', () => {
+    expect(commandeDuSignal(annulee)).toBe('ORD-1');
+    expect(commandeDuSignal({ ...annulee, commandes: ['ORD-1', 'ORD-2'] })).toBeNull();
+    expect(commandeDuSignal({ ...annulee, commandes: [] })).toBeNull();
+    expect(commandeDuSignal(signal({ cle: 'PARTI_SANS_SAC', commandes: ['ORD-3'] }))).toBeNull();
+    expect(commandeDuSignal(signal({ cle: 'COURSE_ANNULEE_A_RELANCER', commandes: ['ORD-4'] }))).toBeNull();
   });
 });
 

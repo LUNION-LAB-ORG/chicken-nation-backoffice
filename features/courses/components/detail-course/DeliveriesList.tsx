@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { KeyRound } from 'lucide-react';
 
+import { useOuvrirCommande } from '../../../orders/hooks/useOuvrirCommande';
 import { libelleAdresse } from '../../../orders/utils/adresse-commande';
 import type { Delivery } from '../../types/course.types';
 import { DELIVERY_FAILURE_LABELS, badgeReportee } from '../../utils/course-labels';
@@ -11,8 +12,14 @@ interface Props {
   deliveries: Delivery[];
 }
 
-/** Liste des Deliveries d'une Course avec timeline + PIN + statut. */
+/**
+ * Liste des Deliveries d'une Course avec timeline + PIN + statut. La
+ * référence de la commande mène à la page Commandes (à qui peut les lire) :
+ * une livraison annulée par le livreur se reprend sur la commande (« Annuler
+ * la commande », menu ⋮ du tiroir), pas sur la course.
+ */
 export function DeliveriesList({ deliveries }: Props) {
+  const ouvrirCommande = useOuvrirCommande();
   const sorted = [...deliveries].sort((a, b) => a.sequence_order - b.sequence_order);
 
   if (sorted.length === 0) {
@@ -37,7 +44,19 @@ export function DeliveriesList({ deliveries }: Props) {
             <div className="flex items-start justify-between mb-2">
               <div>
                 <div className="text-sm font-semibold text-gray-900">
-                  #{delivery.sequence_order} · {delivery.order.reference}
+                  #{delivery.sequence_order} ·{' '}
+                  {ouvrirCommande ? (
+                    <button
+                      type="button"
+                      onClick={() => ouvrirCommande(delivery.order.reference)}
+                      title="Voir le détail de la commande"
+                      className="font-semibold text-gray-900 underline-offset-2 hover:text-[#F17922] hover:underline"
+                    >
+                      {delivery.order.reference}
+                    </button>
+                  ) : (
+                    delivery.order.reference
+                  )}
                 </div>
                 {client && <div className="text-xs text-gray-500">{client}</div>}
               </div>

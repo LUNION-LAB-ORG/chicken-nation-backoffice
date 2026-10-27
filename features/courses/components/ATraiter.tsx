@@ -8,13 +8,14 @@ import { toast } from 'react-hot-toast';
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useDroitsLivraison } from '../../livreurs/hook/use-droits-livraison';
+import { useOuvrirCommande } from '../../orders/hooks/useOuvrirCommande';
 import { courseDetailQueryOption } from '../queries/course-detail.query';
 import { useCourseRelancerMutation, useCourseVersTurboMutation } from '../queries/course-fleet.mutation';
 import { useCourseRetryMutation } from '../queries/course-retry.mutation';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { SignalLivraison } from '../types/tableau-livraison.types';
 import { situationCourse } from '../utils/textes-signaux';
-import { actionsATraiter, signauxATraiter, type ActionATraiter } from '../utils/tableau-livraison';
+import { actionsATraiter, commandeDuSignal, signauxATraiter, type ActionATraiter } from '../utils/tableau-livraison';
 
 /**
  * « À TRAITER » au-dessus du tableau des courses (conception du 24/10, 10.1).
@@ -22,7 +23,9 @@ import { actionsATraiter, signauxATraiter, type ActionATraiter } from '../utils/
  * Les alertes du serveur qui portent une course (sans livreur, tournée en
  * retard, parti sans une commande, attente au restaurant, annulée à
  * relancer, livraison annulée par le livreur), filtrées par le restaurant du
- * bandeau. Toucher une ligne ouvre la fiche de la course.
+ * bandeau. Toucher une ligne ouvre la fiche de la course ; une livraison
+ * annulée par le livreur, pour une seule commande, mène à cette commande
+ * (page Commandes, à qui peut les lire), car c'est elle qu'il faut reprendre.
  *
  * Gestes à droite, pour qui pilote les courses (l'admin) seulement :
  * « Forcer l'affectation » et « Confier à Turbo » sur une recherche en
@@ -55,6 +58,7 @@ export function ATraiter() {
   const setSelectedItem = useDashboardStore((s) => s.setSelectedItem);
   const toggleModal = useDashboardStore((s) => s.toggleModal);
   const { piloterCourses } = useDroitsLivraison();
+  const ouvrirCommande = useOuvrirCommande();
   const queryClient = useQueryClient();
   const [tout, setTout] = useState(false);
   const [ouverture, setOuverture] = useState<string | null>(null);
@@ -109,10 +113,11 @@ export function ATraiter() {
     const actions = piloterCourses ? actionsATraiter(s) : [];
     const situation = situationCourse(s);
     const restaurant = selectedRestaurantId ? null : (nomsRestaurants.get(s.restaurant_id) ?? null);
+    const commande = ouvrirCommande ? commandeDuSignal(s) : null;
     return (
       <li
         key={`${s.cle}-${course.id}-${index}`}
-        onClick={() => openCourse(course.id)}
+        onClick={() => (commande && ouvrirCommande ? ouvrirCommande(commande) : openCourse(course.id))}
         className="flex cursor-pointer flex-col gap-1.5 border-t border-slate-100 px-3 py-2 text-sm first:border-t-0 hover:bg-orange-50/40 @4xl:h-12 @4xl:flex-row @4xl:items-center @4xl:gap-3 @4xl:py-0"
       >
         <span className="flex min-w-0 items-center gap-3 @4xl:contents">
