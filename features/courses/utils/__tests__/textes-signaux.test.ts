@@ -176,6 +176,51 @@ describe('texteSignal : L1 et L2 de chaque alerte', () => {
     expect(texteSignal(s).titre).toBe('Koffi est parti sans ORD-1, ORD-2 et ORD-3');
   });
 
+  test('livraison annulée par le livreur : prénom, commande et motif', () => {
+    const s = signal({
+      cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR',
+      course: course('COMPLETED'),
+      livreur: { id: 'l1', prenom: 'Koffi' },
+      commandes: ['ORD-1'],
+      motif: 'CLIENT_ABSENT',
+    });
+    expect(texteSignal(s, { restaurant: 'Angré' })).toEqual({
+      titre: 'Koffi a annulé ORD-1 · Client absent',
+      detail: 'Angré · CRS-241024-0043',
+    });
+    expect(texteSignal(s).detail).toBe('CRS-241024-0043');
+  });
+
+  test('livraison annulée par le livreur : plusieurs commandes, sans prénom, sans commande', () => {
+    const base = { cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR', course: course('IN_DELIVERY') };
+    expect(
+      texteSignal(signal({ ...base, livreur: { id: 'l1', prenom: 'Koffi' }, commandes: ['ORD-1', 'ORD-2'] })).titre,
+    ).toBe('Koffi a annulé ORD-1 et ORD-2');
+    expect(texteSignal(signal({ ...base, commandes: ['ORD-1'] })).titre).toBe('Le livreur a annulé ORD-1');
+    expect(texteSignal(signal({ ...base, livreur: { id: 'l1', prenom: '  ' }, commandes: ['ORD-1'] })).titre).toBe(
+      'Le livreur a annulé ORD-1',
+    );
+    expect(texteSignal(signal({ ...base, livreur: { id: 'l1', prenom: 'Koffi' } })).titre).toBe(
+      'Koffi a annulé une livraison',
+    );
+  });
+
+  test('livraison annulée par le livreur : motif lu seulement pour une commande, et connu', () => {
+    const base = { cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR', course: course('IN_DELIVERY'), commandes: ['ORD-1'] };
+    expect(texteSignal(signal({ ...base, motif: 'OTHER' })).titre).toBe('Le livreur a annulé ORD-1 · Autre');
+    expect(texteSignal(signal({ ...base, motif: 'ADDRESS_NOT_FOUND' })).titre).toBe(
+      'Le livreur a annulé ORD-1 · Adresse introuvable',
+    );
+    // Sans motif, motif nul, motif qu'un serveur plus récent connaît : rien d'inventé.
+    expect(texteSignal(signal(base)).titre).toBe('Le livreur a annulé ORD-1');
+    expect(texteSignal(signal({ ...base, motif: null })).titre).toBe('Le livreur a annulé ORD-1');
+    expect(texteSignal(signal({ ...base, motif: 'NOUVEAU_MOTIF' })).titre).toBe('Le livreur a annulé ORD-1');
+    expect(texteSignal(signal({ ...base, motif: 'toString' })).titre).toBe('Le livreur a annulé ORD-1');
+    expect(texteSignal(signal({ ...base, commandes: ['ORD-1', 'ORD-2'], motif: 'CLIENT_ABSENT' })).titre).toBe(
+      'Le livreur a annulé ORD-1 et ORD-2',
+    );
+  });
+
   test('alerte inconnue de cet écran : texte neutre', () => {
     expect(texteSignal(signal({ cle: 'NOUVELLE_ALERTE', course: course() })).titre).toBe('CRS-241024-0043 : à vérifier');
   });
@@ -191,13 +236,19 @@ describe('texteSignal : L1 et L2 de chaque alerte', () => {
       'POSITION_PERDUE_EN_COURSE',
       'A_ENCAISSER',
       'PREVU_PAS_EN_SERVICE',
+      'LIVRAISON_ANNULEE_PAR_LIVREUR',
     ];
     for (const cle of cles) {
-      const t = texteSignal(signal({ cle, course: course(), livreur: { id: 'l', prenom: 'Awa' }, minutes: 3 }), {
-        restaurant: 'Angré',
-        maintenant: MAINTENANT,
-      });
+      const t = texteSignal(
+        signal({ cle, course: course(), livreur: { id: 'l', prenom: 'Awa' }, minutes: 3, commandes: ['ORD-1'], motif: 'CLIENT_ABSENT' }),
+        {
+          restaurant: 'Angré',
+          maintenant: MAINTENANT,
+        },
+      );
       expect(`${t.titre} ${t.detail}`).not.toMatch(/[—–]/);
+      // Chaque clé connue a sa phrase : jamais le texte neutre.
+      expect(t.titre).not.toMatch(/à vérifier/);
     }
   });
 });
@@ -236,5 +287,19 @@ describe('situationCourse : la phrase d’« À traiter », sans la référence'
         signal({ cle: 'ATTENTE_AU_RESTAURANT', minutes: 16, course: course('AT_RESTAURANT'), livreur: { id: 'l', prenom: 'Koffi' } }),
       ),
     ).toBe('Koffi attend au restaurant depuis 16 min');
+  });
+
+  test('livraison annulée par le livreur : la même phrase que « À surveiller »', () => {
+    const s = signal({
+      cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR',
+      course: course('COMPLETED'),
+      livreur: { id: 'l', prenom: 'Koffi' },
+      commandes: ['ORD-1'],
+      motif: 'CLIENT_ABSENT',
+    });
+    expect(situationCourse(s)).toBe('Koffi a annulé ORD-1 · Client absent');
+    expect(situationCourse({ ...s, livreur: null, commandes: ['ORD-1', 'ORD-2'] })).toBe(
+      'Le livreur a annulé ORD-1 et ORD-2',
+    );
   });
 });

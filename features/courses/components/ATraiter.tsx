@@ -21,8 +21,8 @@ import { actionsATraiter, signauxATraiter, type ActionATraiter } from '../utils/
  *
  * Les alertes du serveur qui portent une course (sans livreur, tournée en
  * retard, parti sans une commande, attente au restaurant, annulée à
- * relancer), filtrées par le restaurant du bandeau. Toucher une ligne ouvre
- * la fiche de la course.
+ * relancer, livraison annulée par le livreur), filtrées par le restaurant du
+ * bandeau. Toucher une ligne ouvre la fiche de la course.
  *
  * Gestes à droite, pour qui pilote les courses (l'admin) seulement :
  * « Forcer l'affectation » et « Confier à Turbo » sur une recherche en

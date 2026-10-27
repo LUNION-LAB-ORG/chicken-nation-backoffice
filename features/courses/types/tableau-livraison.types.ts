@@ -1,4 +1,4 @@
-import type { CourseStatut } from './course.types';
+import type { CourseStatut, DeliveryFailureReason } from './course.types';
 
 /**
  * TABLEAU DE LA LIVRAISON : réponse de `GET /livraison/tableau` (conception du
@@ -22,7 +22,13 @@ export type CleSignal =
   | 'APPLI_FERMEE_EN_COURSE'
   | 'POSITION_PERDUE_EN_COURSE'
   | 'A_ENCAISSER'
-  | 'PREVU_PAS_EN_SERVICE';
+  | 'PREVU_PAS_EN_SERVICE'
+  /**
+   * Demande du 27/10 : le livreur a annulé la livraison d'un client (« Annuler »
+   * de sa feuille « Problème »). La commande reste en livraison, le sac est
+   * chez lui ; rouge tant qu'elle l'est, pendant la journée de service.
+   */
+  | 'LIVRAISON_ANNULEE_PAR_LIVREUR';
 
 /** Rouge : agir maintenant. Ambre : surveiller. */
 export type GraviteSignal = 'rouge' | 'ambre';
@@ -43,6 +49,12 @@ export interface SignalLivraison {
   creneau?: 'MORNING' | 'EVENING';
   /** APPLI_FERMEE_EN_COURSE : dernier signe de vie de l'appli (ISO). */
   appli_vue_a?: string | null;
+  /**
+   * LIVRAISON_ANNULEE_PAR_LIVREUR : motif choisi par le livreur, envoyé
+   * seulement quand l'alerte porte une seule commande. Un motif que cet écran
+   * ne connaît pas n'est pas lu.
+   */
+  motif?: DeliveryFailureReason | null;
 }
 
 export interface LivreurDuTableau {

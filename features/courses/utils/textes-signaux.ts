@@ -19,6 +19,7 @@
 
 import { vueIlYa } from '../../livreurs/utils/disponibilite';
 import type { SignalLivraison } from '../types/tableau-livraison.types';
+import { DELIVERY_FAILURE_LABELS } from './course-labels';
 import { dureeLisible, estExpiree } from './tableau-livraison';
 
 export interface TexteSignal {
@@ -56,6 +57,22 @@ const depuis = (minutes: number | null): string => (minutes === null ? '' : ` de
 /** Restaurant puis le reste, sans morceau vide. */
 const lieu = (...parties: (string | null | undefined)[]): string => parties.filter(Boolean).join(' · ');
 
+/**
+ * Livraison annulée par le livreur (demande du 27/10) : « Koffi a annulé
+ * ORD-1 · Client absent », « Koffi a annulé ORD-1 et ORD-2 », « Le livreur
+ * a annulé ORD-1 », « Koffi a annulé une livraison ». Le motif, avec les
+ * mots du tiroir, seulement pour une seule commande et s'il est connu.
+ */
+function annuleeParLivreur(s: SignalLivraison): string {
+  if (s.commandes.length === 0) return `${sujet(s)} a annulé une livraison`;
+  const phrase = `${sujet(s)} a annulé ${enumerer(s.commandes)}`;
+  const motif =
+    s.commandes.length === 1 && s.motif && Object.hasOwn(DELIVERY_FAILURE_LABELS, s.motif)
+      ? DELIVERY_FAILURE_LABELS[s.motif]
+      : null;
+  return motif ? `${phrase} · ${motif}` : phrase;
+}
+
 function creneau(s: SignalLivraison): string {
   if (s.creneau === 'MORNING') return 'ce matin';
   if (s.creneau === 'EVENING') return 'ce soir';
@@ -77,6 +94,8 @@ export function situationCourse(s: SignalLivraison): string {
       return `${sujet(s)} attend au restaurant${depuis(s.minutes)}`;
     case 'COURSE_ANNULEE_A_RELANCER':
       return s.commandes.length > 0 ? `Annulée, ${enumerer(s.commandes)} à relancer` : 'Annulée, à relancer';
+    case 'LIVRAISON_ANNULEE_PAR_LIVREUR':
+      return annuleeParLivreur(s);
     default:
       return texteSignal(s).titre;
   }
@@ -121,6 +140,8 @@ export function texteSignal(s: SignalLivraison, contexte: ContexteTexte = {}): T
       };
     case 'ATTENTE_AU_RESTAURANT':
       return { titre: `${sujet(s)} attend au restaurant${depuis(s.minutes)}`, detail: lieu(resto, ref) };
+    case 'LIVRAISON_ANNULEE_PAR_LIVREUR':
+      return { titre: annuleeParLivreur(s), detail: lieu(resto, ref) };
     case 'APPLI_FERMEE_EN_COURSE': {
       const vue = contexte.maintenant ? vueIlYa(s.appli_vue_a, contexte.maintenant) : null;
       return { titre: `${nom(s)} : appli fermée pendant une course`, detail: lieu(resto, vue) };

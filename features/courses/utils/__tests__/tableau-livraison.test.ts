@@ -231,6 +231,36 @@ describe('alertes', () => {
   });
 });
 
+describe('livraison annulée par le livreur (demande du 27/10)', () => {
+  // Course terminée (dernier client annulé) ou encore en livraison : la ligne
+  // vit tant que la commande est en livraison (calcul du serveur).
+  const annulee = signal({
+    cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR',
+    gravite: 'rouge',
+    course: { id: 'c9', reference: 'CRS-271026-0009', statut: 'COMPLETED', expiree: false },
+    livreur: { id: 'l1', prenom: 'Koffi' },
+    commandes: ['ORD-1'],
+    motif: 'CLIENT_ABSENT',
+  });
+
+  test('dans « À traiter », course terminée ou en livraison', () => {
+    const enLivraison = { ...annulee, course: { ...annulee.course, id: 'c10', statut: 'IN_DELIVERY' } };
+    expect(signauxATraiter([annulee, enLivraison], null).map((s) => s.course.id)).toEqual(['c9', 'c10']);
+    expect(signauxATraiter([annulee], 'angre')).toHaveLength(1);
+    expect(signauxATraiter([annulee], 'marcory')).toEqual([]);
+  });
+
+  test('aucun geste proposé : la fiche de la course suffit', () => {
+    expect(actionsATraiter(annulee)).toEqual([]);
+    expect(actionsATraiter({ ...annulee, course: { ...annulee.course, statut: 'IN_DELIVERY' } })).toEqual([]);
+  });
+
+  test('compte dans la pastille rouge du menu', () => {
+    const signaux = [annulee, signal({ cle: 'SANS_LIVREUR' })];
+    expect(nombreAlertesRouges({ genere_a: '', restaurants: [], signaux })).toBe(1);
+  });
+});
+
 describe('état « En appel » du tableau (serveur du 24/10)', () => {
   test('connu de l’écran, jamais « Hors service »', () => {
     expect(etatAffichable('EN_APPEL')).toBe('EN_APPEL');

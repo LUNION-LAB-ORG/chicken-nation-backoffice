@@ -231,6 +231,7 @@ const CLES_A_TRAITER: ReadonlySet<CleSignal> = new Set<CleSignal>([
   'PARTI_SANS_SAC',
   'ATTENTE_AU_RESTAURANT',
   'COURSE_ANNULEE_A_RELANCER',
+  'LIVRAISON_ANNULEE_PAR_LIVREUR',
 ]);
 
 export function signauxATraiter(
@@ -253,7 +254,10 @@ export function estExpiree(s: SignalLivraison): boolean {
  *  - recherche en cours : « Forcer l'affectation », « Confier à Turbo » ;
  *  - recherche finie : « Relancer la recherche » ;
  *  - course annulée, commande à relancer : « Relancer la livraison » ;
- *  - les autres : rien, la fiche de la course suffit.
+ *  - les autres : rien, la fiche de la course suffit. Livraison annulée par
+ *    le livreur (27/10) : la commande est encore en livraison, « Relancer la
+ *    livraison » ne la prend pas ; l'admin l'annule au besoin depuis le
+ *    tiroir de la commande.
  */
 export function actionsATraiter(s: SignalLivraison): ActionATraiter[] {
   if (!s.course) return [];
