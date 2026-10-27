@@ -486,7 +486,8 @@ describe('code de retrait du client (demande du 26/10)', () => {
 /**
  * Demande du 27/10 : le livreur peut passer un client qui pose problème
  * (« Plus tard »), livrer les autres, puis y revenir. Le serveur garde l'état
- * d'arrêt d'avant (`a_livrer`) et ajoute `tournee[].reportee` et `reportee_a`.
+ * d'arrêt d'avant (`a_livrer`) et ajoute `tournee[].reportee` et
+ * `livraison.reportee_a`.
  */
 describe('livraison reportée (« Plus tard », 27/10)', () => {
   const livreur = (etat = 'vers_client') => ({ id: 'liv-1', nom: 'Koffi Yao', telephone: null, etat });
@@ -499,7 +500,7 @@ describe('livraison reportée (« Plus tard », 27/10)', () => {
   const course = { ...reponse().course, statut: 'IN_DELIVERY', nombre_commandes: 3, rang_arret: 3 };
 
   test('tournée : l\'arrêt reporté reste à sa place, « En attente · reportée »', () => {
-    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    const l = lue({ course, livreur: livreur(), tournee, livraison: { reportee_a: ISO('12:08') } });
     expect(l.tournee.map(texteArretTournee)).toEqual([
       'Arrêt 1 · CMD-A · Livrée 12 h 05',
       'Arrêt 2 · CMD-C · En route',
@@ -518,14 +519,14 @@ describe('livraison reportée (« Plus tard », 27/10)', () => {
   });
 
   test('pastille « Reportée à 12 h 08 » sous l\'état, qui reste « En route vers le client »', () => {
-    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    const l = lue({ course, livreur: livreur(), tournee, livraison: { reportee_a: ISO('12:08') } });
     expect(texteReportee(l)).toBe('Reportée à 12 h 08');
     expect(etatLivraison(l).libelle).toBe('En route vers le client');
     expect(l.reportee_a).toBe(ISO('12:08'));
   });
 
   test('pastille : seulement tant que la livraison de cette commande n\'est pas finie', () => {
-    const avec = (champs) => texteReportee(lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08'), ...champs }));
+    const avec = (champs) => texteReportee(lue({ course, livreur: livreur(), tournee, livraison: { reportee_a: ISO('12:08') }, ...champs }));
     // Livrée.
     expect(avec({ livreur: livreur('livree') })).toBeNull();
     expect(
@@ -537,9 +538,11 @@ describe('livraison reportée (« Plus tard », 27/10)', () => {
     // Course annulée.
     expect(avec({ course: { ...course, statut: 'CANCELLED' } })).toBeNull();
     // Pas reportée, ou heure illisible.
-    expect(avec({ reportee_a: null })).toBeNull();
-    expect(avec({ reportee_a: 'pas une date' })).toBeNull();
-    expect(avec({ reportee_a: 42 })).toBeNull();
+    expect(avec({ livraison: { reportee_a: null } })).toBeNull();
+    expect(avec({ livraison: { reportee_a: 'pas une date' } })).toBeNull();
+    expect(avec({ livraison: { reportee_a: 42 } })).toBeNull();
+    // Sans course, le serveur envoie `livraison: null`.
+    expect(avec({ livraison: null })).toBeNull();
   });
 
   test('serveur plus ancien (sans ces champs) : le rendu d\'aujourd\'hui', () => {
@@ -567,8 +570,53 @@ describe('livraison reportée (« Plus tard », 27/10)', () => {
     }
   });
 
+  test('réponse du serveur telle quelle (`suiviLivraison`) : pastille « Reportée à 12 h 08 »', () => {
+    // Forme exacte de `GET /orders/:id/livraison` (backend,
+    // `suivi-livraison.rules.ts`) : l'heure du report est sous `livraison`.
+    const serveur = {
+      service: 'CHICKEN_NATION',
+      course: {
+        id: 'k1',
+        reference: 'CRS-261027-0042',
+        code_retrait: '614',
+        nombre_commandes: 3,
+        rang_arret: 3,
+        statut: 'IN_DELIVERY',
+        fin_prevue: ISO('12:30'),
+        en_retard: false,
+        retard_min: null,
+      },
+      livreur: { id: 'liv-1', nom: 'Koffi Yao', telephone: '+2250102030405', etat: 'vers_client', appli_active: 'ACTIVE', appli_vue_a: ISO('12:08'), appli_connectee: true },
+      tournee: [
+        { reference: 'CMD-A', rang: 1, etat: 'livree', heure: ISO('12:05'), cette_commande: false, reportee: false },
+        { reference: 'CMD-C', rang: 2, etat: 'en_route', heure: ISO('12:08'), cette_commande: false, reportee: false },
+        { reference: 'CMD-B', rang: 3, etat: 'a_livrer', heure: null, cette_commande: true, reportee: true },
+      ],
+      livraison: { reportee_a: ISO('12:08') },
+      echec: null,
+      etapes: [
+        { cle: 'acceptee', heure: ISO('11:30'), prevue: null },
+        { cle: 'arrivee_restaurant', heure: ISO('11:36'), prevue: null },
+        { cle: 'recuperee', heure: ISO('11:38'), prevue: null },
+        { cle: 'depart', heure: ISO('11:40'), prevue: null },
+        { cle: 'arrivee_client', heure: null, prevue: null },
+        { cle: 'livree', heure: null, prevue: null },
+      ],
+      durees: { vers_restaurant_s: 360, attente_comptoir_s: 120, vers_client_s: null, pret_a_livre_s: null },
+    };
+    const l = lireLivraison(serveur);
+    expect(l.reportee_a).toBe(ISO('12:08'));
+    expect(texteReportee(l)).toBe('Reportée à 12 h 08');
+    expect(etatLivraison(l).libelle).toBe('En route vers le client');
+    expect(l.tournee.map(texteArretTournee)[2]).toBe('Arrêt 3 · CMD-B · En attente · reportée');
+    // Jamais reportée : `livraison.reportee_a` vaut null, pas de pastille.
+    const jamais = lireLivraison({ ...serveur, livraison: { reportee_a: null } });
+    expect(jamais.reportee_a).toBeNull();
+    expect(texteReportee(jamais)).toBeNull();
+  });
+
   test('aucun tiret cadratin', () => {
-    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    const l = lue({ course, livreur: livreur(), tournee, livraison: { reportee_a: ISO('12:08') } });
     for (const t of [...l.tournee.map(texteArretTournee), texteReportee(l)]) expect(t).not.toContain('—');
   });
 });

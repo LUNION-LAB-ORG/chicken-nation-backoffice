@@ -30,8 +30,8 @@
  * Ajout du 27/10 (« Plus tard ») : le livreur peut passer un client qui pose
  * problème, livrer les autres et y revenir. Le serveur garde l'état d'arrêt
  * d'avant (`a_livrer`, sinon l'arrêt disparaîtrait d'un backoffice plus
- * ancien) et ajoute `tournee[].reportee` et `reportee_a`. Absents d'un
- * serveur plus ancien : rien ne change.
+ * ancien) et ajoute `tournee[].reportee` et `livraison.reportee_a` (lu
+ * dans `reportee_a`). Absents d'un serveur plus ancien : rien ne change.
  *
  * Fichier pur : testé par `bun test`.
  */
@@ -278,6 +278,8 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
   }
   etapes.sort((a, b) => ORDRE_ETAPES.indexOf(a.cle) - ORDRE_ETAPES.indexOf(b.cle));
 
+  const lv = objet(r.livraison);
+
   const d = objet(r.durees);
   const duree = (v: unknown) => {
     const n = nombre(v);
@@ -300,7 +302,9 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
     durees,
     // Champ absent (rôle non autorisé, serveur plus ancien) : il reste absent.
     ...('code_client' in r ? { code_client: texte(r.code_client) } : {}),
-    ...('reportee_a' in r ? { reportee_a: iso(r.reportee_a) } : {}),
+    // Le serveur l'envoie sous `livraison` (`livraison: { reportee_a }`, null
+    // sans course) ; sans `livraison` (serveur plus ancien), il reste absent.
+    ...(lv && 'reportee_a' in lv ? { reportee_a: iso(lv.reportee_a) } : {}),
   };
 }
 
