@@ -18,7 +18,7 @@ import { useAuthStore } from "../../../users/hook/authStore";
 import { peutConfirmerRecuperation } from "../../utils/code-retrait";
 import { courseDeLaPrete, quelquUnARemettre } from "../../utils/group-orders";
 import { courseDeCommande, type CommandeOperations, type CourseOperations } from "../../utils/suivi-course";
-import { ligneRetenue } from "../../utils/ligne-retenue";
+import { ligneDepart, ligneRetenue } from "../../utils/ligne-retenue";
 import { BoutonConfirmerRecuperation } from "../course/BandeauCourse";
 import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 import { PickupValidationModal } from "../PickupValidationModal";
@@ -129,7 +129,9 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   if (order.status === OrderStatus.READY && course) {
     // Planificateur v2 : livreur et son état, retenue en une ligne, code.
     // Demande du 24/10 (« reste simple ») : plus de phrase d'ajout à la course.
+    // Demande du 27/10 : l'heure limite du départ en seconde ligne, comme le groupe.
     const retenue = ligneRetenue(course, maintenant);
+    const depart = ligneDepart(course, maintenant);
     // Mêmes conditions que le bouton du groupe : rôle admis par le serveur,
     // quelqu'un pour prendre les sacs, commande encore dans cette course.
     const aConfirmer = courseDeLaPrete(suivie as unknown as Order);
@@ -144,9 +146,10 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
           maintenant={maintenant}
         />
         {retenue && (
-          <p className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
-            {retenue}
-          </p>
+          <div className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            <p className="font-semibold">{retenue}</p>
+            {depart && <p>{depart}</p>}
+          </div>
         )}
         {pickup && (
           <p className="text-xs text-gray-600">

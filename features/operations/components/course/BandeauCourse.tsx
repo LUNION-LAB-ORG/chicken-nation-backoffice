@@ -4,7 +4,7 @@ import React from "react";
 import { Hourglass, Package } from "lucide-react";
 
 import type { IOrderGroup } from "../../types/operations.types";
-import { ligneRetenue } from "../../utils/ligne-retenue";
+import { ligneDepart, ligneRetenue } from "../../utils/ligne-retenue";
 import {
   courseDeCommande,
   etiquetteMotif,
@@ -31,6 +31,11 @@ interface Props {
  * remettre, code de retrait en grand, livreur et son état, et la retenue en
  * une ligne courte quand il y en a une.
  *
+ * Demande du 27/10 : sous la retenue, l'attente du livreur avant son départ
+ * (« Départ au plus tard 12 h 44 »). Pas de liste des commandes en plus : celles
+ * de la course sont les cartes du groupe, celles qui la rejoindront sont
+ * nommées par la ligne de la retenue.
+ *
  * Demande du 24/10 (« reste simple ») : plus de phrase d'ajout (« CMD-C
  * ajoutée à la course de Koffi : remettre avec le code 123 ») ni de fusion
  * (« Courses CRS-A et CRS-B fusionnées ») : la carte montre déjà les
@@ -48,6 +53,7 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant, o
   const n = group.orders.length;
   const motif = etiquetteMotif(course.motif_regroupement);
   const retenue = ligneRetenue(course, maintenant);
+  const depart = ligneDepart(course, maintenant);
 
   return (
     <div className="space-y-2 px-1 pt-1">
@@ -82,9 +88,12 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant, o
       />
 
       {retenue && (
-        <div className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-2 text-amber-900">
-          <Hourglass className="h-4 w-4 shrink-0" aria-hidden />
-          <p className="text-[12px] font-semibold leading-snug">{retenue}</p>
+        <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-2.5 py-2 text-amber-900">
+          <Hourglass className="mt-px h-4 w-4 shrink-0" aria-hidden />
+          <div className="min-w-0">
+            <p className="text-[12px] font-semibold leading-snug">{retenue}</p>
+            {depart && <p className="text-[12px] leading-snug">{depart}</p>}
+          </div>
         </div>
       )}
 
