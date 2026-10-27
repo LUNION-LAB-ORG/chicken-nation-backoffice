@@ -18,6 +18,7 @@ import {
   texteDuree,
   texteEchec,
   texteHeure,
+  texteReportee,
   texteTotal,
   tourneeAAfficher,
 } from '../suivi-livraison';
@@ -479,6 +480,96 @@ describe('code de retrait du client (demande du 26/10)', () => {
     expect(l.course.code_retrait).toBe('614');
     expect(codeClientAAfficher(lue({ code_client: null }))).toBeNull();
     expect(lue({ code_client: null }).course.code_retrait).toBe('614');
+  });
+});
+
+/**
+ * Demande du 27/10 : le livreur peut passer un client qui pose problème
+ * (« Plus tard »), livrer les autres, puis y revenir. Le serveur garde l'état
+ * d'arrêt d'avant (`a_livrer`) et ajoute `tournee[].reportee` et `reportee_a`.
+ */
+describe('livraison reportée (« Plus tard », 27/10)', () => {
+  const livreur = (etat = 'vers_client') => ({ id: 'liv-1', nom: 'Koffi Yao', telephone: null, etat });
+  // A, B, C ; B reportée pendant que le livreur était chez elle : A, C, B.
+  const tournee = [
+    { reference: 'CMD-A', rang: 1, etat: 'livree', heure: ISO('12:05'), cette_commande: false },
+    { reference: 'CMD-C', rang: 2, etat: 'en_route', heure: ISO('12:08'), cette_commande: false },
+    { reference: 'CMD-B', rang: 3, etat: 'a_livrer', heure: null, cette_commande: true, reportee: true },
+  ];
+  const course = { ...reponse().course, statut: 'IN_DELIVERY', nombre_commandes: 3, rang_arret: 3 };
+
+  test('tournée : l\'arrêt reporté reste à sa place, « En attente · reportée »', () => {
+    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    expect(l.tournee.map(texteArretTournee)).toEqual([
+      'Arrêt 1 · CMD-A · Livrée 12 h 05',
+      'Arrêt 2 · CMD-C · En route',
+      'Arrêt 3 · CMD-B · En attente · reportée',
+    ]);
+    // En-tête inchangé : il suit le rang du serveur.
+    expect(texteArret(l.course.rang_arret, l.course.nombre_commandes)).toBe('Arrêt 3 sur 3');
+  });
+
+  test('2e passage : le suffixe reste ; livrée ou en échec, il s\'efface', () => {
+    const arret = (etat, heure = null) => ({ reference: 'CMD-B', rang: 3, etat, heure, cette_commande: true, reportee: true });
+    expect(texteArretTournee(arret('en_route'))).toBe('Arrêt 3 · CMD-B · En route · reportée');
+    expect(texteArretTournee(arret('chez_le_client'))).toBe('Arrêt 3 · CMD-B · Arrivé · reportée');
+    expect(texteArretTournee(arret('livree', ISO('12:31')))).toBe('Arrêt 3 · CMD-B · Livrée 12 h 31');
+    expect(texteArretTournee(arret('echec'))).toBe('Arrêt 3 · CMD-B · Échec');
+  });
+
+  test('pastille « Reportée à 12 h 08 » sous l\'état, qui reste « En route vers le client »', () => {
+    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    expect(texteReportee(l)).toBe('Reportée à 12 h 08');
+    expect(etatLivraison(l).libelle).toBe('En route vers le client');
+    expect(l.reportee_a).toBe(ISO('12:08'));
+  });
+
+  test('pastille : seulement tant que la livraison de cette commande n\'est pas finie', () => {
+    const avec = (champs) => texteReportee(lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08'), ...champs }));
+    // Livrée.
+    expect(avec({ livreur: livreur('livree') })).toBeNull();
+    expect(
+      avec({ tournee: tournee.map((a) => (a.cette_commande ? { ...a, etat: 'livree', heure: ISO('12:31') } : a)) }),
+    ).toBeNull();
+    // En échec.
+    expect(avec({ echec: { motif: 'CLIENT_ABSENT', note: null } })).toBeNull();
+    expect(avec({ tournee: tournee.map((a) => (a.cette_commande ? { ...a, etat: 'echec', heure: ISO('12:31') } : a)) })).toBeNull();
+    // Course annulée.
+    expect(avec({ course: { ...course, statut: 'CANCELLED' } })).toBeNull();
+    // Pas reportée, ou heure illisible.
+    expect(avec({ reportee_a: null })).toBeNull();
+    expect(avec({ reportee_a: 'pas une date' })).toBeNull();
+    expect(avec({ reportee_a: 42 })).toBeNull();
+  });
+
+  test('serveur plus ancien (sans ces champs) : le rendu d\'aujourd\'hui', () => {
+    const ancienne = tournee.map((a) => {
+      const copie = { ...a };
+      delete copie.reportee;
+      return copie;
+    });
+    const l = lue({ course, livreur: livreur(), tournee: ancienne });
+    expect(l.tournee.map(texteArretTournee)).toEqual([
+      'Arrêt 1 · CMD-A · Livrée 12 h 05',
+      'Arrêt 2 · CMD-C · En route',
+      'Arrêt 3 · CMD-B · En attente',
+    ]);
+    expect(l.tournee.some((a) => 'reportee' in a)).toBe(false);
+    expect('reportee_a' in l).toBe(false);
+    expect(texteReportee(l)).toBeNull();
+    expect(texteReportee(null)).toBeNull();
+  });
+
+  test('valeurs mal typées : ignorées, jamais « reportée » sans preuve', () => {
+    for (const reportee of ['true', 1, null, false, {}]) {
+      const l = lue({ tournee: [{ ...tournee[2], reportee }, tournee[0]] });
+      expect(l.tournee.map(texteArretTournee)).toEqual(['Arrêt 1 · CMD-A · Livrée 12 h 05', 'Arrêt 3 · CMD-B · En attente']);
+    }
+  });
+
+  test('aucun tiret cadratin', () => {
+    const l = lue({ course, livreur: livreur(), tournee, reportee_a: ISO('12:08') });
+    for (const t of [...l.tournee.map(texteArretTournee), texteReportee(l)]) expect(t).not.toContain('—');
   });
 });
 

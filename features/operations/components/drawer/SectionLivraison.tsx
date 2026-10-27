@@ -26,6 +26,7 @@ import {
   texteArret,
   texteArretTournee,
   texteEchec,
+  texteReportee,
   texteTotal,
   tourneeAAfficher,
   type LigneFrise,
@@ -68,6 +69,10 @@ const TONS: Record<TonEtat, string> = {
  * dicte au livreur à la remise, en gros chiffres. Le serveur ne l'envoie qu'à
  * l'admin et au centre d'appels ; sans lui, la ligne n'apparaît pas.
  *
+ * Ajout du 27/10 (« Plus tard ») : livraison de cette commande passée à plus
+ * tard par le livreur : « Reportée à 12 h 08 » sous l'état (qui reste), et
+ * « · reportée » sur son arrêt de la tournée. Serveur plus ancien : rien.
+ *
  * Données : `GET /orders/:id/livraison`, relu en direct (socket) et toutes
  * les 20 s tant que la livraison n'est pas finie. Serveur pas encore à jour
  * ou erreur : la section ne s'affiche pas. Textes : `utils/suivi-livraison.ts`.
@@ -90,6 +95,7 @@ export function SectionLivraison({ commande }: Props) {
   const arret = course ? texteArret(course.rang_arret, course.nombre_commandes) : null;
   const etat = etatLivraison(livraison);
   const retard = retardLivraison(livraison);
+  const reportee = texteReportee(livraison);
   const livreur = livreurAffiche(livraison);
   const appli = appliLivreurLivraison(livraison, maintenant);
   // Livreur Chicken Nation sur la commande : on peut l'appeler dans son appli.
@@ -172,13 +178,17 @@ export function SectionLivraison({ commande }: Props) {
             <p className="text-sm font-semibold text-gray-700">{etat?.libelle ?? "Pas encore de livreur"}</p>
           )}
         </div>
-        {(livreur && (etat || retard)) || aAppeler ? (
+        {(livreur && (etat || retard || reportee)) || aAppeler ? (
           <div className="shrink-0 flex flex-col items-end gap-1.5">
             {/* L'état d'avant reste ; le retard s'ajoute dessous, sans le remplacer. */}
             {livreur && etat && (
               <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS[etat.ton]}`}>
                 {etat.libelle}
               </span>
+            )}
+            {/* « Plus tard » : le livreur livre d'abord les autres clients puis revient. */}
+            {livreur && reportee && (
+              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS.ambre}`}>{reportee}</span>
             )}
             {livreur && retard && (
               <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border ${TONS.rouge}`}>{retard}</span>

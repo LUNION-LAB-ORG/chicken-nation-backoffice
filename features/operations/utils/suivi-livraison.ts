@@ -27,6 +27,12 @@
  * Ajout du 26/10 : code de retrait du client (`code_client`), pour l'admin et
  * le centre d'appels seulement (le serveur ne l'envoie pas aux autres).
  *
+ * Ajout du 27/10 (« Plus tard ») : le livreur peut passer un client qui pose
+ * problème, livrer les autres et y revenir. Le serveur garde l'état d'arrêt
+ * d'avant (`a_livrer`, sinon l'arrêt disparaîtrait d'un backoffice plus
+ * ancien) et ajoute `tournee[].reportee` et `reportee_a`. Absents d'un
+ * serveur plus ancien : rien ne change.
+ *
  * Fichier pur : testé par `bun test`.
  */
 
@@ -102,6 +108,8 @@ export interface ArretTournee {
   heure: string | null;
   /** L'arrêt de la commande ouverte. */
   cette_commande: boolean;
+  /** Passé à plus tard par le livreur (27/10) ; absent d'un serveur plus ancien ou si non. */
+  reportee?: boolean;
 }
 
 export interface EchecLivraison {
@@ -134,6 +142,12 @@ export interface LivraisonCommande {
    * la course (`course.code_retrait`), que le livreur donne à la caisse.
    */
   code_client?: string | null;
+  /**
+   * Heure (ISO) à laquelle le livreur a passé la livraison de cette commande
+   * à plus tard (« Plus tard », 27/10) ; null : jamais reportée. Absent d'un
+   * serveur plus ancien.
+   */
+  reportee_a?: string | null;
 }
 
 // ============================================================
@@ -238,6 +252,8 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
       etat: etatArret as EtatArret,
       heure: iso(o.heure),
       cette_commande: o.cette_commande === true,
+      // Seulement un vrai booléen : jamais « reportée » sans preuve.
+      ...(o.reportee === true ? { reportee: true } : {}),
     });
   }
   tournee.sort((a, b) => a.rang - b.rang);
@@ -284,6 +300,7 @@ export function lireLivraison(brut: unknown): LivraisonCommande | null {
     durees,
     // Champ absent (rôle non autorisé, serveur plus ancien) : il reste absent.
     ...('code_client' in r ? { code_client: texte(r.code_client) } : {}),
+    ...('reportee_a' in r ? { reportee_a: iso(r.reportee_a) } : {}),
   };
 }
 
@@ -580,9 +597,29 @@ export function texteEtatArret(arret: Pick<ArretTournee, 'etat' | 'heure'>): str
   }
 }
 
-/** « Arrêt 2 · ORD-4819 · En route ». */
+/**
+ * « Arrêt 2 · ORD-4819 · En route ». Arrêt passé à plus tard par le livreur
+ * (27/10) : « Arrêt 3 · CMD-B · En attente · reportée », tant qu'il n'est ni
+ * livré ni en échec.
+ */
 export function texteArretTournee(arret: ArretTournee): string {
-  return `Arrêt ${arret.rang} · ${arret.reference} · ${texteEtatArret(arret)}`;
+  const base = `Arrêt ${arret.rang} · ${arret.reference} · ${texteEtatArret(arret)}`;
+  const fini = arret.etat === 'livree' || arret.etat === 'echec';
+  return arret.reportee === true && !fini ? `${base} · reportée` : base;
+}
+
+/**
+ * « Reportée à 12 h 08 » (27/10) : la livraison de CETTE commande a été
+ * passée à plus tard par le livreur et n'est pas encore finie (ni livrée, ni
+ * en échec, ni annulée). Sinon, ou sur un serveur plus ancien : null.
+ */
+export function texteReportee(livraison: LivraisonCommande | null | undefined): string | null {
+  if (!livraison) return null;
+  const heure = texteHeure(livraison.reportee_a);
+  if (!heure || livraison.echec || livraisonTerminee(livraison)) return null;
+  const arret = livraison.tournee.find((a) => a.cette_commande);
+  if (arret && (arret.etat === 'livree' || arret.etat === 'echec')) return null;
+  return `Reportée à ${heure}`;
 }
 
 /**
