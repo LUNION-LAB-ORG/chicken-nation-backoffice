@@ -1,4 +1,4 @@
-import type { Course, CourseStatut, DeliveryStatut, DeliveryFailureReason, CourseOfferStatus } from '../types/course.types';
+import type { Course, CourseStatut, Delivery, DeliveryStatut, DeliveryFailureReason, CourseOfferStatus } from '../types/course.types';
 
 /** Mots connus des équipes, ceux d'avant le 24/10 (demande du client du 25/10). */
 export const COURSE_STATUT_LABELS: Record<CourseStatut, string> = {
@@ -43,6 +43,18 @@ export const DELIVERY_STATUT_CLASSES: Record<DeliveryStatut, string> = {
   FAILED: 'bg-red-100 text-red-800',
   CANCELLED: 'bg-gray-200 text-gray-700',
 };
+
+/**
+ * Badge « Reportée » d'une livraison (« Plus tard », demande du 27/10) : le
+ * livreur l'a passée pour livrer d'abord les autres clients. Montré à côté
+ * du statut, qui garde ses mots, dès que le serveur a noté le report
+ * (`reportee_at`). Serveur plus ancien, jamais reportée, heure illisible :
+ * null.
+ */
+export function badgeReportee(delivery: Pick<Delivery, 'reportee_at'>): string | null {
+  const t = delivery.reportee_at;
+  return typeof t === 'string' && t.trim() && !Number.isNaN(Date.parse(t)) ? 'Reportée' : null;
+}
 
 export const DELIVERY_FAILURE_LABELS: Record<DeliveryFailureReason, string> = {
   CLIENT_ABSENT: 'Client absent',

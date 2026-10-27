@@ -1,7 +1,7 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
 
-import { COURSE_STATUT_LABELS, DELIVERY_STATUT_LABELS, dureeCourse } from '../course-labels';
+import { COURSE_STATUT_LABELS, DELIVERY_STATUT_LABELS, badgeReportee, dureeCourse } from '../course-labels';
 
 /** Tableau des courses (conception du 24/10, 10.1) : libellés et colonne « Durée ». */
 
@@ -52,5 +52,26 @@ describe('durée d’une course', () => {
       enRetard: false,
     });
     expect(dureeCourse({ statut: 'CANCELLED', picked_up_at: '2026-10-24T12:00:00Z' }, MAINTENANT).texte).toBe('');
+  });
+});
+
+/**
+ * Demande du 27/10 : le livreur peut passer un client (« Plus tard »). Fiche
+ * d'une course : badge « Reportée » à côté du statut, qui reste.
+ */
+describe('badge « Reportée » d’une livraison', () => {
+  test('report noté : « Reportée », quel que soit le statut', () => {
+    for (const statut of ['PENDING', 'IN_ROUTE', 'ARRIVED', 'DELIVERED', 'FAILED']) {
+      expect(badgeReportee({ statut, reportee_at: '2026-10-27T12:08:00Z' })).toBe('Reportée');
+    }
+    // Le statut garde ses mots d'avant.
+    expect(DELIVERY_STATUT_LABELS.PENDING).toBe('En attente');
+  });
+
+  test('serveur plus ancien, jamais reportée ou heure illisible : rien', () => {
+    expect(badgeReportee({ statut: 'PENDING' })).toBeNull();
+    expect(badgeReportee({ statut: 'PENDING', reportee_at: null })).toBeNull();
+    expect(badgeReportee({ statut: 'PENDING', reportee_at: '' })).toBeNull();
+    expect(badgeReportee({ statut: 'PENDING', reportee_at: 'pas une date' })).toBeNull();
   });
 });

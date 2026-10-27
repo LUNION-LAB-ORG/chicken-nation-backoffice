@@ -97,6 +97,12 @@ export interface Delivery {
   failed_at?: string | null;
   failure_reason?: DeliveryFailureReason | null;
   failure_note?: string | null;
+  /**
+   * Passée à plus tard par le livreur (« Plus tard », 27/10) : il livre
+   * d'abord les autres clients puis y revient. Une fois au plus ; reste noté
+   * après le redémarrage. Absent d'un serveur plus ancien.
+   */
+  reportee_at?: string | null;
   order: OrderForDelivery;
   /**
    * Code de récupération à 4 chiffres que LE CLIENT donne au livreur pour

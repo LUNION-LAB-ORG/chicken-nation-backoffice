@@ -13,6 +13,7 @@ export type CourseTimelineEventKind =
   | 'delivery_arrived'
   | 'delivery_delivered'
   | 'delivery_failed'
+  | 'delivery_reportee'
   | 'completed'
   | 'cancelled';
 
@@ -118,6 +119,15 @@ export function buildCourseTimeline(course: CourseWithAttempts): ICourseTimeline
         kind: 'delivery_arrived',
         at: d.arrived_at,
         title: `Arrivée chez le client #${d.sequence_order}`,
+        subtitle: d.order.reference,
+      });
+    }
+    // « Plus tard » (27/10) : le livreur a passé ce client pour livrer d'abord les autres.
+    if (d.reportee_at && !Number.isNaN(Date.parse(d.reportee_at))) {
+      events.push({
+        kind: 'delivery_reportee',
+        at: d.reportee_at,
+        title: `Livraison #${d.sequence_order} reportée`,
         subtitle: d.order.reference,
       });
     }

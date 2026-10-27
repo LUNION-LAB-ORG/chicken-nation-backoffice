@@ -4,7 +4,7 @@ import { KeyRound } from 'lucide-react';
 
 import { libelleAdresse } from '../../../orders/utils/adresse-commande';
 import type { Delivery } from '../../types/course.types';
-import { DELIVERY_FAILURE_LABELS } from '../../utils/course-labels';
+import { DELIVERY_FAILURE_LABELS, badgeReportee } from '../../utils/course-labels';
 import { DeliveryStatutBadge } from '../DeliveryStatutBadge';
 
 interface Props {
@@ -27,6 +27,8 @@ export function DeliveriesList({ deliveries }: Props) {
           .join(' ')
           .trim() || delivery.order.fullname || null;
         const terminalDate = delivery.delivered_at ?? delivery.failed_at;
+        // « Plus tard » (27/10) : à côté du statut, qui reste.
+        const reportee = badgeReportee(delivery);
         return (
           <div
             key={delivery.id}
@@ -39,7 +41,14 @@ export function DeliveriesList({ deliveries }: Props) {
                 </div>
                 {client && <div className="text-xs text-gray-500">{client}</div>}
               </div>
-              <DeliveryStatutBadge statut={delivery.statut} />
+              <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                <DeliveryStatutBadge statut={delivery.statut} />
+                {reportee && (
+                  <span className="inline-flex items-center rounded-full border border-orange-200 bg-orange-50 px-2.5 py-1 text-xs font-medium text-orange-700">
+                    {reportee}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="text-xs text-gray-600 space-y-0.5">
               {/* L'adresse arrive en texte JSON : `.address` lu tel quel affichait « — ». */}

@@ -9,6 +9,7 @@ import {
   CircleDot,
   Clock,
   Flag,
+  History,
   MapPin,
   MessageCircleX,
   Navigation,
@@ -43,6 +44,7 @@ const ICONS: Record<CourseTimelineEventKind, LucideIcon> = {
   delivery_arrived: Flag,
   delivery_delivered: CheckCircle2,
   delivery_failed: MessageCircleX,
+  delivery_reportee: History,
   completed: Check,
   cancelled: X,
 };
@@ -60,6 +62,7 @@ const COLORS: Record<CourseTimelineEventKind, { bg: string; ring: string; text: 
   delivery_arrived: { bg: "bg-teal-50", ring: "ring-teal-200", text: "text-teal-700" },
   delivery_delivered: { bg: "bg-emerald-50", ring: "ring-emerald-200", text: "text-emerald-700" },
   delivery_failed: { bg: "bg-red-50", ring: "ring-red-200", text: "text-red-700" },
+  delivery_reportee: { bg: "bg-orange-50", ring: "ring-orange-200", text: "text-orange-700" },
   completed: { bg: "bg-emerald-100", ring: "ring-emerald-300", text: "text-emerald-800" },
   cancelled: { bg: "bg-red-100", ring: "ring-red-300", text: "text-red-800" },
 };
