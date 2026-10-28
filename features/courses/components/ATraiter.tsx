@@ -16,12 +16,15 @@ import { useAuthStore } from '../../users/hook/authStore';
 import { courseDetailQueryOption } from '../queries/course-detail.query';
 import { useCourseRelancerMutation, useCourseVersTurboMutation } from '../queries/course-fleet.mutation';
 import { useCourseRetryMutation } from '../queries/course-retry.mutation';
+import { useRelanceLivraisonMutation } from '../queries/relance-livraison.mutation';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { SignalLivraison } from '../types/tableau-livraison.types';
+import { LIBELLE_RELANCER_LIVRAISON, peutRelancerLivraison } from '../utils/relance-livraison';
 import { situationCourse } from '../utils/textes-signaux';
 import {
   actionsATraiter,
   commandeDuSignal,
+  relanceLivraisonDuSignal,
   sacRapporteDuSignal,
   signauxATraiter,
   type ActionATraiter,
@@ -46,6 +49,12 @@ import {
  * absent » qui porte une seule commande, pour les rôles admis par le serveur
  * (dans les faits l'admin : les comptes de restaurant n'ont pas cet écran).
  * Un toucher, sans confirmation : la commande redevient prête.
+ *
+ * « Relancer la livraison » (28/10) sur la même ligne, à gauche de « Sac
+ * rapporté », pour qui pilote les courses (administrateur, centre d'appels) :
+ * la livraison repart avec le même livreur, sans passage au restaurant. Un
+ * toucher, sans confirmation. Même condition que « Sac rapporté » : une
+ * seule commande, avec son identifiant.
  *
  * Absente quand il n'y a rien, pendant le chargement, en erreur et avec un
  * serveur qui n'a pas la route.
@@ -72,7 +81,9 @@ export function ATraiter() {
   const openCourse = useDashboardStore((s) => s.openCourse);
   const setSelectedItem = useDashboardStore((s) => s.setSelectedItem);
   const toggleModal = useDashboardStore((s) => s.toggleModal);
-  const { piloterCourses } = useDroitsLivraison();
+  const droitsLivraison = useDroitsLivraison();
+  const { piloterCourses } = droitsLivraison;
+  const peutRelancer = peutRelancerLivraison(droitsLivraison);
   const ouvrirCommande = useOuvrirCommande();
   const queryClient = useQueryClient();
   const [tout, setTout] = useState(false);
@@ -87,6 +98,13 @@ export function ATraiter() {
   const membre = useAuthStore((s) => s.user);
   const peutRapporter = peutRapporterSac(peutChangerStatut, membre);
   const { mutate: rapporterSac, isPending: envoiSac, variables: sacEnvoye } = useSacRapporteMutation();
+  const {
+    mutate: relancerCommande,
+    isPending: envoiRelance,
+    variables: relanceEnvoyee,
+  } = useRelanceLivraisonMutation();
+  // Un seul envoi à la fois entre « Relancer la livraison » et « Sac rapporté ».
+  const envoiGeste = envoiSac || envoiRelance;
 
   if (!data || isError) return null;
   const signaux = signauxATraiter(data.signaux, selectedRestaurantId);
@@ -134,6 +152,7 @@ export function ATraiter() {
     const restaurant = selectedRestaurantId ? null : (nomsRestaurants.get(s.restaurant_id) ?? null);
     const commande = ouvrirCommande ? commandeDuSignal(s) : null;
     const sacId = peutRapporter ? sacRapporteDuSignal(s) : null;
+    const relanceId = peutRelancer ? relanceLivraisonDuSignal(s) : null;
     return (
       <li
         key={`${s.cle}-${course.id}-${index}`}
@@ -160,14 +179,14 @@ export function ATraiter() {
             {situation}
           </span>
         </span>
-        {(restaurant || actions.length > 0 || sacId) && (
+        {(restaurant || actions.length > 0 || relanceId || sacId) && (
           <span className="flex min-w-0 items-center gap-2 pl-5 @4xl:contents">
             {restaurant && (
               <span className="min-w-0 flex-1 truncate text-xs text-gray-600 @4xl:hidden" title={restaurant}>
                 {restaurant}
               </span>
             )}
-            {(actions.length > 0 || sacId) && (
+            {(actions.length > 0 || relanceId || sacId) && (
               <span className="ml-auto flex shrink-0 items-center gap-2">
                 {actions.map((action) => {
                   const Icone = ICONES[action];
@@ -194,10 +213,28 @@ export function ATraiter() {
                     </button>
                   );
                 })}
+                {relanceId && (
+                  <button
+                    type="button"
+                    disabled={envoiGeste}
+                    title={LIBELLE_RELANCER_LIVRAISON}
+                    aria-label={LIBELLE_RELANCER_LIVRAISON}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      relancerCommande({ orderId: relanceId, reference: s.commandes[0] ?? null });
+                    }}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#F17922] px-2 text-xs font-semibold text-[#F17922] transition hover:bg-orange-50 disabled:opacity-60 @xl:px-3"
+                  >
+                    <RotateCw
+                      className={`h-3.5 w-3.5 ${envoiRelance && relanceEnvoyee?.orderId === relanceId ? 'animate-spin' : ''}`}
+                    />
+                    <span className="hidden @xl:inline">{LIBELLE_RELANCER_LIVRAISON}</span>
+                  </button>
+                )}
                 {sacId && (
                   <button
                     type="button"
-                    disabled={envoiSac}
+                    disabled={envoiGeste}
                     title={LIBELLE_SAC_RAPPORTE}
                     aria-label={LIBELLE_SAC_RAPPORTE}
                     onClick={(e) => {

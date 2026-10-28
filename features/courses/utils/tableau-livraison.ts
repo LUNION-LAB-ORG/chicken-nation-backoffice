@@ -255,9 +255,10 @@ export function estExpiree(s: SignalLivraison): boolean {
  *  - recherche finie : « Relancer la recherche » ;
  *  - course annulée, commande à relancer : « Relancer la livraison » ;
  *  - les autres : rien, la fiche de la course suffit. Livraison annulée par
- *    le livreur (27/10) : la commande est encore en livraison, « Relancer la
- *    livraison » ne la prend pas ; l'admin l'annule au besoin depuis le
- *    tiroir de la commande.
+ *    le livreur (27/10) : la commande est encore en livraison ; ses gestes
+ *    portent la commande, pas la course, et sont à part :
+ *    `relanceLivraisonDuSignal` (« Relancer la livraison » de la commande,
+ *    28/10) et `sacRapporteDuSignal` (« Sac rapporté »).
  */
 export function actionsATraiter(s: SignalLivraison): ActionATraiter[] {
   if (!s.course) return [];
@@ -290,6 +291,21 @@ export function commandeDuSignal(s: SignalLivraison): string | null {
  * `actionsATraiter` ne change pas.
  */
 export function sacRapporteDuSignal(s: SignalLivraison): string | null {
+  return commandeUniqueAnnulee(s);
+}
+
+/**
+ * « Relancer la livraison » sur la même ligne (demande du 28/10), à gauche de
+ * « Sac rapporté » : même condition. La livraison annulée repart avec le même
+ * livreur, sans passage au restaurant. Plusieurs commandes, ids absents ou
+ * autre alerte : `null`, le tiroir de chaque commande porte le geste.
+ */
+export function relanceLivraisonDuSignal(s: SignalLivraison): string | null {
+  return commandeUniqueAnnulee(s);
+}
+
+/** Identifiant de LA commande d'une livraison annulée par le livreur, ou `null`. */
+function commandeUniqueAnnulee(s: SignalLivraison): string | null {
   if (s.cle !== 'LIVRAISON_ANNULEE_PAR_LIVREUR') return null;
   const ids = s.commandes_ids;
   if (s.commandes.length !== 1 || !Array.isArray(ids) || ids.length !== 1) return null;

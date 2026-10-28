@@ -2,6 +2,7 @@ import { api } from '@/services/api';
 import { getHumanReadableError } from '@/utils/errorMessages';
 
 import { messageErreurOperations } from '../../operations/utils/message-erreur';
+import type { ReponseRelanceLivraison } from '../utils/relance-livraison';
 
 import type {
   CancelCoursePayload,
@@ -118,6 +119,21 @@ export const relancerCourseAnnulee = (id: string) =>
   actionAvecRefusServeur(() =>
     api.patch<{ success: boolean; message: string; newCourseId?: string }>(
       `${ENDPOINT}/${id}/relancer`,
+      {},
+      true,
+    ),
+  );
+
+/**
+ * Relance la livraison qu'un livreur a annulée (demande du 28/10) : la même
+ * livraison repart avec le même livreur, sans passage au restaurant
+ * (`POST /courses/commandes/:orderId/relancer-livraison`, corps vide). Rejeu :
+ * 200 avec `deja: true`. Refus (404, 403, 409) : le texte du serveur.
+ */
+export const relancerLivraisonCommande = (orderId: string) =>
+  actionAvecRefusServeur(() =>
+    api.post<ReponseRelanceLivraison>(
+      `${ENDPOINT}/commandes/${encodeURIComponent(orderId)}/relancer-livraison`,
       {},
       true,
     ),

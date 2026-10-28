@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle, Info, PackageX, Truck, Undo2 } from "lucide-react";
+import { CheckCircle, Info, PackageX, RotateCw, Truck, Undo2 } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { format } from "date-fns";
@@ -21,6 +21,13 @@ import { courseDeCommande, type CommandeOperations, type CourseOperations } from
 import { ligneDepart, ligneRetenue } from "../../utils/ligne-retenue";
 import { LIBELLE_SAC_RAPPORTE, peutRapporterSac, sacARapporter, texteSacARapporter } from "../../utils/sac-a-rapporter";
 import { useSacRapporteMutation } from "../../queries/sac-rapporte.mutation";
+import { useDroitsLivraison } from "../../../livreurs/hook/use-droits-livraison";
+import { useRelanceLivraisonMutation } from "../../../courses/queries/relance-livraison.mutation";
+import {
+  LIBELLE_RELANCER_LIVRAISON,
+  gestesSacARapporter,
+  peutRelancerLivraison,
+} from "../../../courses/utils/relance-livraison";
 import { BoutonConfirmerRecuperation } from "../course/BandeauCourse";
 import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 import { PickupValidationModal } from "../PickupValidationModal";
@@ -50,6 +57,12 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   const commandesDeLaCourse = useCommandesDeLaCourse(aRemettre?.id);
   // « Sac rapporté » (28/10) : un toucher, sans fenêtre de confirmation.
   const { mutate: rapporterSac, isPending: envoiSac } = useSacRapporteMutation();
+  // « Relancer la livraison » (28/10), à côté : même livreur, sans passage au
+  // restaurant. Pour qui pilote les courses (administrateur, centre d'appels).
+  const droitsLivraison = useDroitsLivraison();
+  const { mutate: relancerLivraison, isPending: envoiRelance } = useRelanceLivraisonMutation();
+  // Un seul envoi à la fois entre les deux gestes.
+  const envoiGeste = envoiSac || envoiRelance;
 
   /*
     Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
@@ -217,9 +230,15 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
       champ absent (serveur ancien) : rien. Le bouton, pour les rôles admis
       par le serveur seulement, remet la commande « prête » : elle repart
       dans une nouvelle course. Le suivi et l'encadré bleu restent dessous.
+
+      « Relancer la livraison » (28/10) à gauche, contour orange : la même
+      livraison repart avec le même livreur, sans passage au restaurant. Les
+      deux gestes (administrateur) sur deux colonnes ; un seul (centre
+      d'appels : Relancer ; restaurant : Sac rapporté) en pleine largeur.
     */
     const sac = order.status === OrderStatus.PICKED_UP ? sacARapporter(enCours ?? order) : null;
     const peutRapporter = peutRapporterSac(peutChangerStatut, membre);
+    const { gestes, deuxColonnes } = gestesSacARapporter(peutRelancerLivraison(droitsLivraison), peutRapporter);
     return (
       <div className="space-y-2">
         {sac && (
@@ -228,16 +247,34 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
             <p className="text-sm font-semibold text-red-800">{texteSacARapporter(sac)}</p>
           </div>
         )}
-        {sac && peutRapporter && (
-          <button
-            type="button"
-            onClick={() => rapporterSac({ orderId: order.id, reference: order.reference })}
-            disabled={envoiSac}
-            className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
-          >
-            <Undo2 className="w-4 h-4" />
-            {envoiSac ? "…" : LIBELLE_SAC_RAPPORTE}
-          </button>
+        {sac && gestes.length > 0 && (
+          <div className={deuxColonnes ? "grid grid-cols-2 gap-2" : undefined}>
+            {gestes.map((geste) =>
+              geste === "RELANCER_LIVRAISON" ? (
+                <button
+                  key={geste}
+                  type="button"
+                  onClick={() => relancerLivraison({ orderId: order.id, reference: order.reference })}
+                  disabled={envoiGeste}
+                  className="w-full py-3 px-2 border border-[#F17922] text-[#F17922] bg-white hover:bg-orange-50 font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-60"
+                >
+                  <RotateCw className="w-4 h-4 shrink-0" />
+                  {envoiRelance ? "…" : LIBELLE_RELANCER_LIVRAISON}
+                </button>
+              ) : (
+                <button
+                  key={geste}
+                  type="button"
+                  onClick={() => rapporterSac({ orderId: order.id, reference: order.reference })}
+                  disabled={envoiGeste}
+                  className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
+                >
+                  <Undo2 className="w-4 h-4" />
+                  {envoiSac ? "…" : LIBELLE_SAC_RAPPORTE}
+                </button>
+              ),
+            )}
+          </div>
         )}
         {order.status === OrderStatus.PICKED_UP && course && (
           <EtatCourseLivreur

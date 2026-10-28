@@ -14,6 +14,7 @@ import {
   nombreAlertesRouges,
   peutLireTableau,
   piedCarte,
+  relanceLivraisonDuSignal,
   sacRapporteDuSignal,
   signauxATraiter,
   signauxDuRestaurant,
@@ -310,6 +311,64 @@ describe('« Sac rapporté » depuis « À traiter » (demande du 28/10)', () =>
 
   test('`actionsATraiter` et le clic sur la ligne ne changent pas', () => {
     expect(actionsATraiter(annulee)).toEqual([]);
+    expect(commandeDuSignal(annulee)).toBe('ORD-1');
+  });
+});
+
+describe('« Relancer la livraison » depuis « À traiter » (demande du 28/10)', () => {
+  const annulee = signal({
+    cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR',
+    gravite: 'rouge',
+    course: { id: 'c9', reference: 'CRS-281026-0009', statut: 'COMPLETED', expiree: false },
+    livreur: { id: 'l1', prenom: 'Koffi' },
+    commandes: ['ORD-1'],
+    commandes_ids: ['o1'],
+    motif: 'CLIENT_ABSENT',
+  });
+
+  test('une seule commande avec son identifiant : le bouton porte cette commande', () => {
+    expect(relanceLivraisonDuSignal(annulee)).toBe('o1');
+    expect(relanceLivraisonDuSignal({ ...annulee, course: { ...annulee.course, statut: 'IN_DELIVERY' } })).toBe('o1');
+  });
+
+  test('plusieurs commandes : rien, le tiroir de chaque commande porte le geste', () => {
+    expect(
+      relanceLivraisonDuSignal({ ...annulee, commandes: ['ORD-1', 'ORD-2'], commandes_ids: ['o1', 'o2'] }),
+    ).toBeNull();
+  });
+
+  test('identifiants absents (serveur ancien) ou incohérents : rien', () => {
+    const { commandes_ids, ...ancien } = annulee;
+    expect(commandes_ids).toEqual(['o1']);
+    expect(relanceLivraisonDuSignal(ancien)).toBeNull();
+    expect(relanceLivraisonDuSignal({ ...annulee, commandes_ids: [] })).toBeNull();
+    expect(relanceLivraisonDuSignal({ ...annulee, commandes_ids: [''] })).toBeNull();
+    expect(relanceLivraisonDuSignal({ ...annulee, commandes_ids: ['o1', 'o2'] })).toBeNull();
+    expect(relanceLivraisonDuSignal({ ...annulee, commandes: [] })).toBeNull();
+  });
+
+  test('autre alerte : rien (la course annulée garde son « Relancer la livraison » à elle)', () => {
+    expect(
+      relanceLivraisonDuSignal(signal({ cle: 'PARTI_SANS_SAC', commandes: ['ORD-3'], commandes_ids: ['o3'] })),
+    ).toBeNull();
+    expect(
+      relanceLivraisonDuSignal(signal({ cle: 'COURSE_ANNULEE_A_RELANCER', commandes: ['ORD-4'], commandes_ids: ['o4'] })),
+    ).toBeNull();
+  });
+
+  test('même condition que « Sac rapporté »', () => {
+    const cas = [
+      annulee,
+      { ...annulee, commandes: ['ORD-1', 'ORD-2'], commandes_ids: ['o1', 'o2'] },
+      { ...annulee, commandes_ids: undefined },
+      signal({ cle: 'SANS_LIVREUR', commandes: ['ORD-5'], commandes_ids: ['o5'] }),
+    ];
+    for (const s of cas) expect(relanceLivraisonDuSignal(s)).toBe(sacRapporteDuSignal(s));
+  });
+
+  test('`actionsATraiter` et le clic sur la ligne ne changent pas', () => {
+    expect(actionsATraiter(annulee)).toEqual([]);
+    expect(actionsATraiter({ ...annulee, course: { ...annulee.course, statut: 'IN_DELIVERY' } })).toEqual([]);
     expect(commandeDuSignal(annulee)).toBe('ORD-1');
   });
 });
