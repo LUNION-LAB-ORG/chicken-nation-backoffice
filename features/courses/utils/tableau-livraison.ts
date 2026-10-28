@@ -280,3 +280,18 @@ export function commandeDuSignal(s: SignalLivraison): string | null {
   if (s.cle !== 'LIVRAISON_ANNULEE_PAR_LIVREUR') return null;
   return s.commandes.length === 1 ? s.commandes[0] : null;
 }
+
+/**
+ * « Sac rapporté » sur la ligne « Koffi a annulé ORD-1 · Client absent »
+ * (demande du 28/10) : l'identifiant de LA commande, si l'alerte n'en porte
+ * qu'une et que le serveur envoie `commandes_ids`. Plusieurs commandes, ids
+ * absents (serveur ancien) ou autre alerte : `null`, pas de bouton ; la
+ * fiche de la course mène à chaque commande, dont le tiroir porte le geste.
+ * `actionsATraiter` ne change pas.
+ */
+export function sacRapporteDuSignal(s: SignalLivraison): string | null {
+  if (s.cle !== 'LIVRAISON_ANNULEE_PAR_LIVREUR') return null;
+  const ids = s.commandes_ids;
+  if (s.commandes.length !== 1 || !Array.isArray(ids) || ids.length !== 1) return null;
+  return typeof ids[0] === 'string' && ids[0] ? ids[0] : null;
+}

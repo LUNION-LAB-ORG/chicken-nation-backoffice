@@ -14,6 +14,7 @@ import {
   nombreAlertesRouges,
   peutLireTableau,
   piedCarte,
+  sacRapporteDuSignal,
   signauxATraiter,
   signauxDuRestaurant,
   tonSansLivreur,
@@ -268,6 +269,48 @@ describe('livraison annulée par le livreur (demande du 27/10)', () => {
     expect(commandeDuSignal({ ...annulee, commandes: [] })).toBeNull();
     expect(commandeDuSignal(signal({ cle: 'PARTI_SANS_SAC', commandes: ['ORD-3'] }))).toBeNull();
     expect(commandeDuSignal(signal({ cle: 'COURSE_ANNULEE_A_RELANCER', commandes: ['ORD-4'] }))).toBeNull();
+  });
+});
+
+describe('« Sac rapporté » depuis « À traiter » (demande du 28/10)', () => {
+  const annulee = signal({
+    cle: 'LIVRAISON_ANNULEE_PAR_LIVREUR',
+    gravite: 'rouge',
+    course: { id: 'c9', reference: 'CRS-281026-0009', statut: 'COMPLETED', expiree: false },
+    livreur: { id: 'l1', prenom: 'Koffi' },
+    commandes: ['ORD-1'],
+    commandes_ids: ['o1'],
+    motif: 'CLIENT_ABSENT',
+  });
+
+  test('une seule commande avec son identifiant : le bouton porte cette commande', () => {
+    expect(sacRapporteDuSignal(annulee)).toBe('o1');
+  });
+
+  test('plusieurs commandes : rien, la fiche de la course mène à chacune', () => {
+    expect(sacRapporteDuSignal({ ...annulee, commandes: ['ORD-1', 'ORD-2'], commandes_ids: ['o1', 'o2'] })).toBeNull();
+  });
+
+  test('identifiants absents (serveur ancien) ou incohérents : rien', () => {
+    const { commandes_ids, ...ancien } = annulee;
+    expect(commandes_ids).toEqual(['o1']);
+    expect(sacRapporteDuSignal(ancien)).toBeNull();
+    expect(sacRapporteDuSignal({ ...annulee, commandes_ids: [] })).toBeNull();
+    expect(sacRapporteDuSignal({ ...annulee, commandes_ids: [''] })).toBeNull();
+    expect(sacRapporteDuSignal({ ...annulee, commandes_ids: ['o1', 'o2'] })).toBeNull();
+    expect(sacRapporteDuSignal({ ...annulee, commandes: [] })).toBeNull();
+  });
+
+  test('autre alerte : rien', () => {
+    expect(sacRapporteDuSignal(signal({ cle: 'PARTI_SANS_SAC', commandes: ['ORD-3'], commandes_ids: ['o3'] }))).toBeNull();
+    expect(
+      sacRapporteDuSignal(signal({ cle: 'COURSE_ANNULEE_A_RELANCER', commandes: ['ORD-4'], commandes_ids: ['o4'] })),
+    ).toBeNull();
+  });
+
+  test('`actionsATraiter` et le clic sur la ligne ne changent pas', () => {
+    expect(actionsATraiter(annulee)).toEqual([]);
+    expect(commandeDuSignal(annulee)).toBe('ORD-1');
   });
 });
 

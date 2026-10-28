@@ -10,6 +10,7 @@ import { Restaurant } from "../../restaurants/types/restaurant.types";
 import { Paiement } from "./paiement.types";
 import type { CanalCommande } from "../utils/canal-commande";
 import type { SourceServeur } from "../utils/filtre-source";
+import type { SacARapporter } from "../../operations/utils/sac-a-rapporter";
 
 // ✅ ENUMS
 export enum OrderStatus {
@@ -122,6 +123,12 @@ export interface Order {
             cancelled_reason?: string | null;
         } | null;
     } | null;
+    /**
+     * `GET /orders/operations/active` (serveur du 28/10) : livraison annulée
+     * par le livreur, sac encore chez lui ; `null` sinon. Absent d'un serveur
+     * plus ancien : pas de geste « Sac rapporté ».
+     */
+    sac_a_rapporter?: SacARapporter | null;
     promotion_id: string | null;
     promotion?: Promotion | null;
     promotion_usages?: PromotionUsage[];

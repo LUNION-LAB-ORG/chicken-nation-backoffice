@@ -45,6 +45,12 @@ export interface SignalLivraison {
   livreur: { id: string; prenom: string | null } | null;
   /** Références des commandes concernées. */
   commandes: string[];
+  /**
+   * LIVRAISON_ANNULEE_PAR_LIVREUR (serveur du 28/10) : identifiants des
+   * commandes, même ordre que `commandes`. Absent d'un serveur plus ancien :
+   * pas de bouton « Sac rapporté ».
+   */
+  commandes_ids?: string[];
   /** PREVU_PAS_EN_SERVICE : créneau prévu. */
   creneau?: 'MORNING' | 'EVENING';
   /** APPLI_FERMEE_EN_COURSE : dernier signe de vie de l'appli (ISO). */

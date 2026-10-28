@@ -3,6 +3,7 @@ import { api } from '@/services/api';
 import type { Course } from '../../courses/types/course.types';
 import type { Order } from '../../orders/types/order.types';
 import { estRouteAbsente, messageErreurOperations } from '../utils/message-erreur';
+import type { ReponseSacRapporte } from '../utils/sac-a-rapporter';
 
 const BASE_ORDERS = '/orders';
 const BASE_OPERATIONS = '/courses/operations';
@@ -120,6 +121,25 @@ export async function recupererCourse(course: CourseARemettre, orderIds: readonl
     return validatePickup(course.pickup_code, course.restaurant_id ?? undefined);
   }
 }
+
+// ============================================================
+// SAC RAPPORTÉ (demande du 28/10)
+// ============================================================
+
+/**
+ * Le livreur a rapporté le sac d'une livraison qu'il a annulée
+ * (`POST /courses/operations/commandes/:orderId/sac-rapporte`, corps vide) :
+ * la commande redevient prête et repart dans une nouvelle course. Rejeu :
+ * 200 avec `deja: true`. Refus (404, 403, 409) : le texte du serveur.
+ */
+export const sacRapporte = (orderId: string) =>
+  safeCall(() =>
+    api.post<ReponseSacRapporte>(
+      `${BASE_OPERATIONS}/commandes/${encodeURIComponent(orderId)}/sac-rapporte`,
+      {},
+      true,
+    ),
+  );
 
 // ============================================================
 // MUTATIONS

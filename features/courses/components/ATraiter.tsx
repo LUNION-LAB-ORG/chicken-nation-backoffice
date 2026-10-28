@@ -1,21 +1,31 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { RotateCw, Send, UserPlus } from 'lucide-react';
+import { RotateCw, Send, Undo2, UserPlus } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import { useDashboardStore } from '@/store/dashboardStore';
 
 import { useDroitsLivraison } from '../../livreurs/hook/use-droits-livraison';
+import { useSacRapporteMutation } from '../../operations/queries/sac-rapporte.mutation';
+import { LIBELLE_SAC_RAPPORTE, peutRapporterSac } from '../../operations/utils/sac-a-rapporter';
+import { useDroitsCommande } from '../../orders/hooks/useDroitsCommande';
 import { useOuvrirCommande } from '../../orders/hooks/useOuvrirCommande';
+import { useAuthStore } from '../../users/hook/authStore';
 import { courseDetailQueryOption } from '../queries/course-detail.query';
 import { useCourseRelancerMutation, useCourseVersTurboMutation } from '../queries/course-fleet.mutation';
 import { useCourseRetryMutation } from '../queries/course-retry.mutation';
 import { useTableauLivraisonQuery } from '../queries/tableau-livraison.query';
 import type { SignalLivraison } from '../types/tableau-livraison.types';
 import { situationCourse } from '../utils/textes-signaux';
-import { actionsATraiter, commandeDuSignal, signauxATraiter, type ActionATraiter } from '../utils/tableau-livraison';
+import {
+  actionsATraiter,
+  commandeDuSignal,
+  sacRapporteDuSignal,
+  signauxATraiter,
+  type ActionATraiter,
+} from '../utils/tableau-livraison';
 
 /**
  * « À TRAITER » au-dessus du tableau des courses (conception du 24/10, 10.1).
@@ -31,6 +41,11 @@ import { actionsATraiter, commandeDuSignal, signauxATraiter, type ActionATraiter
  * « Forcer l'affectation » et « Confier à Turbo » sur une recherche en
  * cours, « Relancer la recherche » quand elle est finie, « Relancer la
  * livraison » sur une course annulée.
+ *
+ * « Sac rapporté » (28/10) sur la ligne « Koffi a annulé ORD-1 · Client
+ * absent » qui porte une seule commande, pour les rôles admis par le serveur
+ * (dans les faits l'admin : les comptes de restaurant n'ont pas cet écran).
+ * Un toucher, sans confirmation : la commande redevient prête.
  *
  * Absente quand il n'y a rien, pendant le chargement, en erreur et avec un
  * serveur qui n'a pas la route.
@@ -68,6 +83,10 @@ export function ATraiter() {
   const { mutate: relancerRecherche, isPending: relanceRecherche, variables: rechercheId } = useCourseRetryMutation();
   const { mutate: relancerLivraison, isPending: relanceLivraison, variables: livraisonId } =
     useCourseRelancerMutation();
+  const { peutChangerStatut } = useDroitsCommande();
+  const membre = useAuthStore((s) => s.user);
+  const peutRapporter = peutRapporterSac(peutChangerStatut, membre);
+  const { mutate: rapporterSac, isPending: envoiSac, variables: sacEnvoye } = useSacRapporteMutation();
 
   if (!data || isError) return null;
   const signaux = signauxATraiter(data.signaux, selectedRestaurantId);
@@ -114,6 +133,7 @@ export function ATraiter() {
     const situation = situationCourse(s);
     const restaurant = selectedRestaurantId ? null : (nomsRestaurants.get(s.restaurant_id) ?? null);
     const commande = ouvrirCommande ? commandeDuSignal(s) : null;
+    const sacId = peutRapporter ? sacRapporteDuSignal(s) : null;
     return (
       <li
         key={`${s.cle}-${course.id}-${index}`}
@@ -140,14 +160,14 @@ export function ATraiter() {
             {situation}
           </span>
         </span>
-        {(restaurant || actions.length > 0) && (
+        {(restaurant || actions.length > 0 || sacId) && (
           <span className="flex min-w-0 items-center gap-2 pl-5 @4xl:contents">
             {restaurant && (
               <span className="min-w-0 flex-1 truncate text-xs text-gray-600 @4xl:hidden" title={restaurant}>
                 {restaurant}
               </span>
             )}
-            {actions.length > 0 && (
+            {(actions.length > 0 || sacId) && (
               <span className="ml-auto flex shrink-0 items-center gap-2">
                 {actions.map((action) => {
                   const Icone = ICONES[action];
@@ -174,6 +194,24 @@ export function ATraiter() {
                     </button>
                   );
                 })}
+                {sacId && (
+                  <button
+                    type="button"
+                    disabled={envoiSac}
+                    title={LIBELLE_SAC_RAPPORTE}
+                    aria-label={LIBELLE_SAC_RAPPORTE}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      rapporterSac({ orderId: sacId, reference: s.commandes[0] ?? null });
+                    }}
+                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#F17922] px-2 text-xs font-semibold text-[#F17922] transition hover:bg-orange-50 disabled:opacity-60 @xl:px-3"
+                  >
+                    <Undo2
+                      className={`h-3.5 w-3.5 ${envoiSac && sacEnvoye?.orderId === sacId ? 'animate-pulse' : ''}`}
+                    />
+                    <span className="hidden @xl:inline">{LIBELLE_SAC_RAPPORTE}</span>
+                  </button>
+                )}
               </span>
             )}
           </span>

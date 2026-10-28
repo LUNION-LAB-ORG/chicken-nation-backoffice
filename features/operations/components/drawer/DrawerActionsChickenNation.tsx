@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { CheckCircle, Info, Truck } from "lucide-react";
+import { CheckCircle, Info, PackageX, Truck, Undo2 } from "lucide-react";
 
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
 import { format } from "date-fns";
@@ -19,6 +19,8 @@ import { peutConfirmerRecuperation } from "../../utils/code-retrait";
 import { courseDeLaPrete, quelquUnARemettre } from "../../utils/group-orders";
 import { courseDeCommande, type CommandeOperations, type CourseOperations } from "../../utils/suivi-course";
 import { ligneDepart, ligneRetenue } from "../../utils/ligne-retenue";
+import { LIBELLE_SAC_RAPPORTE, peutRapporterSac, sacARapporter, texteSacARapporter } from "../../utils/sac-a-rapporter";
+import { useSacRapporteMutation } from "../../queries/sac-rapporte.mutation";
 import { BoutonConfirmerRecuperation } from "../course/BandeauCourse";
 import { EtatCourseLivreur } from "../course/EtatCourseLivreur";
 import { PickupValidationModal } from "../PickupValidationModal";
@@ -46,6 +48,8 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   // caissière clique sur le groupe ou la commande »), même fenêtre que le groupe.
   const [aRemettre, setARemettre] = useState<CourseOperations | null>(null);
   const commandesDeLaCourse = useCommandesDeLaCourse(aRemettre?.id);
+  // « Sac rapporté » (28/10) : un toucher, sans fenêtre de confirmation.
+  const { mutate: rapporterSac, isPending: envoiSac } = useSacRapporteMutation();
 
   /*
     Un rôle de CONSULTATION ne doit pas voir ces boutons. Le tiroir masque déjà
@@ -207,8 +211,34 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
   }
 
   if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.COLLECTED) {
+    /*
+      Demande du 28/10 : livraison annulée par le livreur, le sac est chez
+      lui. L'encadré se lit sur la liste des Opérations (`sac_a_rapporter`) ;
+      champ absent (serveur ancien) : rien. Le bouton, pour les rôles admis
+      par le serveur seulement, remet la commande « prête » : elle repart
+      dans une nouvelle course. Le suivi et l'encadré bleu restent dessous.
+    */
+    const sac = order.status === OrderStatus.PICKED_UP ? sacARapporter(enCours ?? order) : null;
+    const peutRapporter = peutRapporterSac(peutChangerStatut, membre);
     return (
       <div className="space-y-2">
+        {sac && (
+          <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2">
+            <PackageX className="w-4 h-4 text-red-600 shrink-0" />
+            <p className="text-sm font-semibold text-red-800">{texteSacARapporter(sac)}</p>
+          </div>
+        )}
+        {sac && peutRapporter && (
+          <button
+            type="button"
+            onClick={() => rapporterSac({ orderId: order.id, reference: order.reference })}
+            disabled={envoiSac}
+            className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
+          >
+            <Undo2 className="w-4 h-4" />
+            {envoiSac ? "…" : LIBELLE_SAC_RAPPORTE}
+          </button>
+        )}
         {order.status === OrderStatus.PICKED_UP && course && (
           <EtatCourseLivreur
             course={course}
