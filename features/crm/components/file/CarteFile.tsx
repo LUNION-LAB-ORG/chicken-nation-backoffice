@@ -3,6 +3,7 @@ import { CreditCard, Megaphone, Phone } from "lucide-react";
 import { usePrendreMutation } from "../../queries/contact.mutation";
 import { IContactLigne } from "../../types/contact.type";
 import { depuis, fmtDate, fmtDateHeure, fmtTelephone, lienAppel, origine } from "../../utils/crm-ui";
+import { prendreEtAppeler } from "../../utils/prendre-et-appeler";
 import { PucePublic, PuceStatut } from "../commun/Puces";
 
 const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
@@ -77,13 +78,12 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
             type="button"
             disabled={prendre.isPending}
             onClick={() =>
-              prendre.mutate(p.id, {
-                // La fiche s'ouvre d'abord : l'agent y note l'appel sans aller
-                // la chercher dans « Hors campagne ».
-                onSuccess: () => {
-                  onOuvrir();
-                  if (appel) window.location.href = appel;
-                },
+              // La fiche s'ouvre d'abord : l'agent y note l'appel sans aller
+              // la chercher dans « Hors campagne ». Même si la carte a déjà
+              // quitté la file commune (voir prendreEtAppeler).
+              void prendreEtAppeler(prendre.mutateAsync, p.id, () => {
+                onOuvrir();
+                if (appel) window.location.href = appel;
               })
             }
             className={classeAppel}
