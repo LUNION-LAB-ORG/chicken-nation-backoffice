@@ -52,6 +52,19 @@ describe('campagne close sans avoir été lancée', () => {
   });
 });
 
+describe('choix d’une campagne au tableau de bord et au rapport (relecture du 02/11)', () => {
+  test('une campagne close sans avoir été lancée n’est pas proposée : elle donnerait un tableau vide', () => {
+    const toutes = [
+      { id: 'planifiee', status: 'PLANIFIED', started_at: null },
+      { id: 'close-sans-lancement', status: 'COMPLETED', started_at: null },
+      { id: 'en-cours', status: 'ACTIVE', started_at: '2026-10-20T08:00:00.000Z' },
+      { id: 'suspendue', status: 'SUSPENDED', started_at: '2026-10-10T08:00:00.000Z' },
+      { id: 'terminee', status: 'COMPLETED', started_at: '2026-10-01T08:00:00.000Z' },
+    ];
+    expect(toutes.filter(rapportDisponible).map((c) => c.id)).toEqual(['en-cours', 'suspendue', 'terminee']);
+  });
+});
+
 describe('lancement selon le mode de répartition', () => {
   test('automatique : les inscrits et inactifs à reprendre la rejoignent chaque jour', () => {
     expect(texteLancer('AUTOMATIQUE')).toBe(

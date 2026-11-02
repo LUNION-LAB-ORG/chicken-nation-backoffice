@@ -28,6 +28,7 @@ import { PassageAppli } from "./PassageAppli";
 import { Qualite } from "./Qualite";
 import { Tendance } from "./Tendance";
 import { Verbatims } from "./Verbatims";
+import { rapportDisponible } from "../../utils/textes-campagne";
 
 /** Une campagne compte pour le filtre si elle vise au moins un des publics choisis (tous : toutes). */
 const visePublics = (c: ICampagne, publics: Public[]) =>
@@ -61,7 +62,8 @@ export function TableauDeBord({
 
   const pointDeVente = usePointDeVente();
   const { data: toutesCampagnes = [] } = useCampagnesQuery({}, !pointDeVente);
-  const campagnes = toutesCampagnes.filter((c) => c.status !== "PLANIFIED" && visePublics(c, publics));
+  // Seulement celles qui ont tourné : une campagne close sans avoir été lancée donnerait un tableau vide.
+  const campagnes = toutesCampagnes.filter((c) => rapportDisponible(c) && visePublics(c, publics));
 
   const vue = useVueEnsembleQuery(periode);
   const pareto = useParetoQuery(periode);

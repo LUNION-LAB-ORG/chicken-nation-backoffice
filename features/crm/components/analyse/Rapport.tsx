@@ -31,6 +31,7 @@ import { CarteTaux, Chiffre, GrilleChiffres, Repere } from "./rapport/Chiffres";
 import { CourbeInscriptions } from "./rapport/CourbeInscriptions";
 import { EntonnoirBarres, etapesLevier } from "./rapport/EntonnoirBarres";
 import { Section, SectionHorsFiltre, Tableau } from "./rapport/Section";
+import { rapportDisponible } from "../../utils/textes-campagne";
 
 const ORANGE = "#F17922";
 const jj = (v: string) => v.split("-").reverse().join("/");
@@ -348,7 +349,8 @@ export function Rapport() {
   const pointDeVente = usePointDeVente();
   // Les campagnes se consultent au siège : un point de vente n'en demande aucune.
   const { data: toutesCampagnes = [] } = useCampagnesQuery({}, !pointDeVente);
-  const campagnes = toutesCampagnes.filter((c) => c.status !== "PLANIFIED" && visePublics(c, publics));
+  // Seulement celles qui ont tourné : une campagne close sans avoir été lancée donnerait un tableau vide.
+  const campagnes = toutesCampagnes.filter((c) => rapportDisponible(c) && visePublics(c, publics));
   const requete = useRapportQuery(periode);
   const r = requete.data;
 
