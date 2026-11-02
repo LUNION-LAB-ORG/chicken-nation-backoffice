@@ -11,6 +11,10 @@ export function SectionFile({
   onOuvrir,
   replieeParDefaut = false,
   commune = false,
+  total,
+  aDesSuivants = false,
+  onSuivants,
+  chargement = false,
 }: {
   titre: string;
   aide: string;
@@ -20,9 +24,16 @@ export function SectionFile({
   replieeParDefaut?: boolean;
   /** File commune Glovo/Yango : appeler prend d'abord le client. */
   commune?: boolean;
+  /** Vrai nombre de la rubrique, venu du serveur ; absent : les lignes reçues. */
+  total?: number;
+  /** Il reste des lignes au-delà de celles affichées. */
+  aDesSuivants?: boolean;
+  onSuivants?: () => void;
+  chargement?: boolean;
 }) {
   const [repliee, setRepliee] = useState(replieeParDefaut);
-  if (lignes.length === 0) return null;
+  const nombre = total ?? lignes.length;
+  if (lignes.length === 0 && nombre === 0) return null;
 
   return (
     <section>
@@ -36,7 +47,7 @@ export function SectionFile({
         </span>
         <span className="flex-1">
           <span className="text-sm font-semibold text-gray-900">
-            {titre} <span className="text-gray-400">({lignes.length})</span>
+            {titre} <span className="text-gray-400">({nombre})</span>
           </span>
           <span className="block text-xs text-gray-500">{aide}</span>
         </span>
@@ -47,6 +58,17 @@ export function SectionFile({
           {lignes.map((p) => (
             <CarteFile key={p.id} p={p} onOuvrir={() => onOuvrir(p.id)} commune={commune} />
           ))}
+          {lignes.length === 0 && chargement && <p className="text-xs text-gray-400 px-1">Chargement…</p>}
+          {aDesSuivants && onSuivants && lignes.length > 0 && (
+            <button
+              type="button"
+              onClick={onSuivants}
+              disabled={chargement}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+            >
+              {chargement ? "Chargement…" : "Voir les suivants"}
+            </button>
+          )}
         </div>
       )}
     </section>

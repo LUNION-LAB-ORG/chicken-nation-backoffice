@@ -1,9 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { BellRing, Inbox } from "lucide-react";
+import { useLignesFile } from "../../hooks/useLignesFile";
 import { useMaFileQuery } from "../../queries/contact.query";
-import { dossiersDeLaFile } from "../../utils/dossiers-file";
+import { IContactLigne } from "../../types/contact.type";
+import { dossiersDeLaFile, fileVide, totalRappels } from "../../utils/dossiers-file";
+import { phraseDossiers } from "../../utils/textes-file";
 import { CarteDossier } from "./CarteDossier";
 import { DossierFile } from "./DossierFile";
+import { SuiviCampagne } from "./SuiviCampagne";
 import { fmtNombre } from "../../utils/crm-ui";
 import { Chargement, Erreur, Vide } from "../commun/Etats";
 import { RechercheNumero } from "./RechercheNumero";
@@ -35,6 +39,37 @@ function Indicateur({
 }
 
 /**
+ * Rappels dus, toutes campagnes confondues. L'accueil en reçoit 50 ; avec le
+ * vrai nombre du serveur, « Voir les suivants » charge les autres.
+ */
+function RappelsDus({
+  lignes,
+  total,
+  serveur,
+  onOuvrir,
+}: {
+  lignes: IContactLigne[];
+  total: number;
+  serveur: boolean;
+  onOuvrir: (id: string) => void;
+}) {
+  const s = useLignesFile({ cle: "toutes", rubrique: "rappels", lignes, total, ouvrir: false });
+  return (
+    <SectionFile
+      titre="À faire maintenant"
+      aide="Ils ont demandé à être rappelés : c'est l'heure. Toutes campagnes confondues."
+      Icone={BellRing}
+      lignes={s.lignes}
+      total={s.total}
+      onOuvrir={onOuvrir}
+      aDesSuivants={serveur && s.aDesSuivants}
+      onSuivants={s.suivants}
+      chargement={s.chargement}
+    />
+  );
+}
+
+/**
  * La file de l'agent, dans l'ordre où il doit la traiter. Un client qui
  * commande en disparaît aussitôt (temps réel), inutile de l'appeler.
  *
@@ -51,10 +86,10 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
   if (!data) return <Chargement texte="Chargement de votre file…" />;
 
   const i = data.indicateurs;
-  const dossier = dossiers.find((d) => d.cle === ouvert) ?? null;
-  const aFaire = dossiers.reduce((n, d) => n + d.jamais_appeles + d.a_relancer, 0);
+  // Une campagne suspendue ne s'ouvre pas : sa carte reste grisée à l'accueil.
+  const dossier = dossiers.find((d) => d.cle === ouvert && d.genre !== "pause") ?? null;
   const rappelsDus = data.rappels ?? [];
-  const vide = dossiers.length === 0 && rappelsDus.length === 0;
+  const vide = fileVide(data, dossiers);
 
   return (
     <div className="space-y-6">
@@ -83,13 +118,20 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
         />
       </div>
 
-      {dossier ? (
-        <DossierFile dossier={dossier} onRetour={() => setOuvert(null)} onOuvrir={onOuvrir} />
+      {dossier?.suivi ? (
+        <SuiviCampagne s={dossier.suivi} onRetour={() => setOuvert(null)} />
+      ) : dossier ? (
+        <DossierFile key={dossier.cle} dossier={dossier} onRetour={() => setOuvert(null)} onOuvrir={onOuvrir} />
       ) : vide ? (
         <Vide
           Icone={Inbox}
           titre="Votre file est vide"
-          texte="Aucun contact ne vous est confié pour l'instant, la file commune Glovo/Yango est traitée, ou votre campagne est suspendue. Voyez avec votre pilote."
+          texte={
+            // Un serveur plus ancien ne montre pas les campagnes suspendues : l'ancienne phrase les évoque encore.
+            data.dossiers
+              ? "Aucun contact ne vous est confié pour l'instant, et la file commune Glovo/Yango est traitée. Voyez avec votre pilote."
+              : "Aucun contact ne vous est confié pour l'instant, la file commune Glovo/Yango est traitée, ou votre campagne est suspendue. Voyez avec votre pilote."
+          }
         />
       ) : (
         <>
@@ -98,21 +140,13 @@ export function MaFile({ onOuvrir }: { onOuvrir: (id: string, telephone?: string
             qui on a promis un appel à 14 h ne doit pas dépendre du dossier que
             l'agent ouvre ce jour-là : il le verrait le lendemain, ou jamais.
           */}
-          <SectionFile
-            titre="À faire maintenant"
-            aide="Ils ont demandé à être rappelés : c'est l'heure. Toutes campagnes confondues."
-            Icone={BellRing}
-            lignes={rappelsDus}
-            onOuvrir={onOuvrir}
-          />
+          <RappelsDus lignes={rappelsDus} total={totalRappels(data)} serveur={!!data.comptes} onOuvrir={onOuvrir} />
 
           <section>
             <p className="text-sm font-semibold text-gray-900">
               Mes dossiers <span className="text-gray-400">({dossiers.length})</span>
             </p>
-            <p className="text-xs text-gray-500 mb-3 tabular-nums">
-              {fmtNombre(aFaire)} contacts à appeler en tout. Ouvrez un dossier pour le traiter.
-            </p>
+            <p className="text-xs text-gray-500 mb-3 tabular-nums">{phraseDossiers(dossiers)}</p>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
               {dossiers.map((d) => (
                 <CarteDossier key={d.cle} dossier={d} onOuvrir={() => setOuvert(d.cle)} />

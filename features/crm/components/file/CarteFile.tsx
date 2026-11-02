@@ -12,7 +12,7 @@ const majuscule = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
  *
  * Dans la file commune Glovo/Yango, composer le numéro PREND d'abord le
  * client : si un collègue a été plus rapide, le numéro n'est pas composé et
- * la file se rafraîchit.
+ * la file se rafraîchit. Après la prise, sa fiche s'ouvre pour noter l'appel.
  */
 export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; onOuvrir: () => void; commune?: boolean }) {
   const prendre = usePrendreMutation();
@@ -78,7 +78,10 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
             disabled={prendre.isPending}
             onClick={() =>
               prendre.mutate(p.id, {
+                // La fiche s'ouvre d'abord : l'agent y note l'appel sans aller
+                // la chercher dans « Hors campagne ».
                 onSuccess: () => {
+                  onOuvrir();
                   if (appel) window.location.href = appel;
                 },
               })

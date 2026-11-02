@@ -3,6 +3,7 @@ import { PaginatedResponse } from "../../../types";
 import {
   IAgent,
   IAppelDTO,
+  IAssignation,
   IAssignerDTO,
   ICouponEnvoye,
   IExportLigne,
@@ -13,6 +14,7 @@ import {
   IContactFiltres,
   IContactLigne,
   IContactPage,
+  ILignesFileFiltres,
   IRepartition,
   IPrise,
   ContactStatut,
@@ -47,7 +49,7 @@ export const contactAPI = {
   renommer: (id: string, dto: IRenommerDTO) =>
     api.patch<IIdentiteMaj>(`${BASE}/contacts/${id}/identite`, dto),
 
-  assigner: (dto: IAssignerDTO) => api.patch<{ count: number }>(`${BASE}/contacts/assign`, dto),
+  assigner: (dto: IAssignerDTO) => api.patch<IAssignation>(`${BASE}/contacts/assign`, dto),
 
   appeler: (id: string, dto: IAppelDTO) =>
     api.post<{ statut: ContactStatut }>(`${BASE}/contacts/${id}/calls`, dto),
@@ -59,6 +61,10 @@ export const contactAPI = {
     api.post<Omit<ICouponEnvoye, "coupon">>(`${BASE}/contacts/${id}/coupons/resend`, {}),
 
   maFile: () => api.get<IFileAgent>(`${BASE}/my-queue`),
+
+  /** Lignes d'un dossier de « Ma file », une rubrique à la fois, page par page. */
+  lignesMaFile: (filtres: ILignesFileFiltres) =>
+    api.get<PaginatedResponse<IContactLigne>>(`${BASE}/my-queue/lignes${versQuery(filtres)}`),
 
   agents: () => api.get<IAgent[]>(`${BASE}/agents`),
 

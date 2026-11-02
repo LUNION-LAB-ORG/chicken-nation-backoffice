@@ -11,6 +11,7 @@ import { useCrmSocketSync } from "../../../../features/crm/hooks/useCrmSocketSyn
 import { useDroitsCrm } from "../../../../features/crm/hooks/useDroitsCrm";
 import { useCampagnesQuery } from "../../../../features/crm/queries/campagne.query";
 import { useMaFileQuery } from "../../../../features/crm/queries/contact.query";
+import { pastilleFile } from "../../../../features/crm/utils/dossiers-file";
 import { IContactFiltres, Public } from "../../../../features/crm/types/contact.type";
 import { Onglet, Onglets } from "../../../../features/crm/components/commun/Onglets";
 import { TableauDeBord } from "../../../../features/crm/components/analyse/TableauDeBord";
@@ -43,7 +44,8 @@ export default function Crm() {
   const voitContacts = peutTraiter || lecteur || annuaire;
 
   useCrmSocketSync();
-  const { data: file } = useMaFileQuery(peutTraiter && !estGestionnaire);
+  // La direction comprise : sa pastille s'affichait seulement après une première visite de l'onglet.
+  const { data: file } = useMaFileQuery(peutTraiter);
   // Les campagnes se consultent au siège : un point de vente n'en demande aucune.
   const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente);
   const pilote = peutTraiter && campagnes.some((c) => c.lead_agent.id === moi && c.status !== "COMPLETED");
@@ -57,7 +59,7 @@ export default function Crm() {
         label: "Ma file",
         Icone: Headset,
         visible: peutTraiter,
-        badge: file ? file.rappels.length + file.interesses.length : undefined,
+        badge: file ? pastilleFile(file) : undefined,
       },
       { cle: "contacts", label: "Contacts", Icone: Users, visible: voitContacts },
       { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: !pointDeVente && !annuaire },

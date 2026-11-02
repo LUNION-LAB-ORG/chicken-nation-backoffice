@@ -1,6 +1,6 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { contactAPI } from "../apis/contact.api";
-import { IContactFiltres } from "../types/contact.type";
+import { IContactFiltres, RubriqueFile } from "../types/contact.type";
 import { crmKeyQuery } from "./index.query";
 
 export const useContactsQuery = (filtres: IContactFiltres, actif = true) =>
@@ -37,6 +37,25 @@ export const useMaFileQuery = (actif = true) =>
   useQuery({
     queryKey: crmKeyQuery("ma-file"),
     queryFn: () => contactAPI.maFile(),
+    staleTime: 15_000,
+    refetchInterval: 60_000,
+    enabled: actif,
+  });
+
+/** Taille d'une page de lignes de « Ma file », celle des listes de l'accueil. */
+export const LIGNES_PAR_PAGE = 50;
+
+/**
+ * Lignes d'un dossier de « Ma file », une rubrique à la fois, 50 par page.
+ * Rangée sous « ma-file » : le temps réel, qui invalide la file, la relit aussi.
+ */
+export const useLignesFileQuery = (cle: string, rubrique: RubriqueFile, actif: boolean) =>
+  useInfiniteQuery({
+    queryKey: crmKeyQuery("ma-file", "lignes", cle, rubrique),
+    queryFn: ({ pageParam }) => contactAPI.lignesMaFile({ cle, rubrique, page: pageParam, limit: LIGNES_PAR_PAGE }),
+    initialPageParam: 1,
+    getNextPageParam: (derniere) =>
+      derniere.meta.page < derniere.meta.totalPages ? derniere.meta.page + 1 : undefined,
     staleTime: 15_000,
     refetchInterval: 60_000,
     enabled: actif,

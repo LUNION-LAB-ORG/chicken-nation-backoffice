@@ -1,4 +1,4 @@
-import { IContactLigne, IFileAgent } from "../types/contact.type";
+import { IContactLigne, IDossierFileServeur, IFileAgent, ISuiviCampagne } from "../types/contact.type";
 
 /**
  * La file de l'agent, RANGÉE PAR CAMPAGNE.
@@ -15,7 +15,15 @@ import { IContactLigne, IFileAgent } from "../types/contact.type";
  * ⚠️ Les compteurs portent sur CE QUE L'AGENT A EN MAIN, pas sur la campagne
  * entière. Les statistiques de campagne existent côté serveur et comptent tous
  * les agents : les afficher ici donnerait des nombres qui ne correspondent à
- * aucune des lignes visibles juste en dessous.
+ * aucune des lignes visibles juste en dessous. Seul le dossier de SUIVI, que
+ * voit le pilote, parle de toute l'équipe : c'est son objet.
+ *
+ * ⚠️ DEPUIS LE 02/11, LES NOMBRES VIENNENT DU SERVEUR (`file.dossiers`). Les
+ * listes reçues sont coupées à 50 lignes par rubrique : compter ces lignes
+ * faisait disparaître une campagne derrière 50 contacts plus récents, et
+ * annonçait « 50 au total » pour une file commune de 300. Un dossier charge
+ * ses lignes à l'ouverture. Face à un serveur plus ancien (pas de
+ * `dossiers`), l'ancien calcul sur les lignes reçues reste en place.
  */
 
 /** Les sections d'un dossier, dans l'ordre où l'agent doit les traiter. */
@@ -29,22 +37,50 @@ export interface SectionsDossier {
   commune: IContactLigne[];
 }
 
-export type GenreDossier = "campagne" | "commune" | "sans-campagne";
+export type RubriqueDossier = keyof SectionsDossier;
+
+/**
+ * « pause » : contacts confiés dans une campagne suspendue (carte grisée, qui
+ * ne s'ouvre pas). « suivi » : une campagne que l'utilisateur pilote, vue de
+ * toute l'équipe.
+ */
+export type GenreDossier = "campagne" | "commune" | "sans-campagne" | "pause" | "suivi";
 
 export interface Dossier {
   cle: string;
   nom: string;
   genre: GenreDossier;
+  /**
+   * Lignes déjà reçues avec l'accueil. Avec les comptes du serveur, elles
+   * s'affichent le temps que le dossier charge les siennes.
+   */
   sections: SectionsDossier;
   /** Contacts du dossier, toutes sections confondues. */
   total: number;
   jamais_appeles: number;
   a_relancer: number;
   interesses: number;
+  /**
+   * Vrais nombres par rubrique, comptés par le serveur : le dossier charge
+   * alors ses lignes à l'ouverture. Absent : ancien calcul sur les lignes reçues.
+   */
+  comptes?: Record<RubriqueDossier, number>;
+  campaign_id: string | null;
+  /** Dossier de suivi du pilote. */
+  suivi?: ISuiviCampagne;
 }
 
 export const CLE_COMMUNE = "commune";
 export const CLE_SANS_CAMPAGNE = "sans-campagne";
+
+export const RUBRIQUES_DOSSIER: RubriqueDossier[] = [
+  "commune",
+  "interesses",
+  "nouveaux",
+  "relances",
+  "coupons",
+  "rappels_planifies",
+];
 
 const sectionsVides = (): SectionsDossier => ({
   interesses: [],
@@ -63,12 +99,13 @@ function dossierDe(ligne: IContactLigne): { cle: string; nom: string; genre: Gen
   return { cle: CLE_SANS_CAMPAGNE, nom: "Hors campagne", genre: "sans-campagne" };
 }
 
-export function dossiersDeLaFile(file: IFileAgent): Dossier[] {
+/** L'ancien calcul : les dossiers et leurs nombres tirés des lignes reçues. */
+function dossiersDesLignes(file: IFileAgent): Dossier[] {
   const par = new Map<string, Dossier>();
 
   const ajouter = (
     ligne: IContactLigne,
-    section: keyof SectionsDossier,
+    section: RubriqueDossier,
     force?: { cle: string; nom: string; genre: GenreDossier },
   ) => {
     const { cle, nom, genre } = force ?? dossierDe(ligne);
@@ -83,6 +120,7 @@ export function dossiersDeLaFile(file: IFileAgent): Dossier[] {
         jamais_appeles: 0,
         a_relancer: 0,
         interesses: 0,
+        campaign_id: genre === "campagne" ? cle : null,
       };
       par.set(cle, dossier);
     }
@@ -109,16 +147,115 @@ export function dossiersDeLaFile(file: IFileAgent): Dossier[] {
       genre: "commune",
     });
   }
+  return [...par.values()];
+}
 
-  /*
-    Ordre : les campagnes d'abord, par nom, puisque c'est ce qu'on vient
-    travailler. Puis la file commune, qui est périssable (le premier agent qui
-    appelle prend le client) et ne doit pas finir en bas de page. « Hors
-    campagne » ferme la marche : c'est le reste.
-  */
-  const rang = (g: GenreDossier) => (g === "campagne" ? 0 : g === "commune" ? 1 : 2);
+const GENRES_SERVEUR = new Set<IDossierFileServeur["genre"]>(["campagne", "sans-campagne", "commune", "pause"]);
 
-  return [...par.values()].sort(
-    (a, b) => rang(a.genre) - rang(b.genre) || a.nom.localeCompare(b.nom, "fr"),
-  );
+/** Les dossiers comptés par le serveur, avec les lignes déjà reçues qui leur reviennent. */
+function dossiersDuServeur(file: IFileAgent, liste: IDossierFileServeur[]): Dossier[] {
+  return liste
+    .filter((d) => GENRES_SERVEUR.has(d.genre))
+    .map((d) => {
+      const sections = sectionsVides();
+      if (d.genre === "commune") {
+        sections.commune = [...(file.commune ?? [])];
+      } else if (d.genre !== "pause") {
+        const lesSiennes = (lignes?: IContactLigne[]) => (lignes ?? []).filter((l) => dossierDe(l).cle === d.cle);
+        sections.interesses = lesSiennes(file.interesses);
+        sections.nouveaux = lesSiennes(file.nouveaux);
+        sections.relances = lesSiennes(file.relances);
+        sections.coupons = lesSiennes(file.coupons);
+        sections.rappels_planifies = lesSiennes(file.rappels_planifies);
+      }
+      const c = d.comptes;
+      return {
+        cle: d.cle,
+        nom: d.nom,
+        genre: d.genre,
+        sections,
+        total: c.total,
+        jamais_appeles: c.jamais_appeles,
+        a_relancer: c.a_relancer,
+        interesses: c.interesses,
+        comptes: {
+          interesses: c.interesses,
+          nouveaux: c.nouveaux,
+          relances: c.relances,
+          coupons: c.coupons,
+          rappels_planifies: c.rappels_planifies,
+          commune: c.commune,
+        },
+        campaign_id: d.campaign_id,
+      };
+    });
+}
+
+/** Une campagne que l'utilisateur pilote : ses nombres sont ceux de toute l'équipe. */
+function dossierDeSuivi(s: ISuiviCampagne): Dossier {
+  return {
+    cle: `suivi-${s.campaign_id}`,
+    nom: s.nom,
+    genre: "suivi",
+    sections: sectionsVides(),
+    total: s.restants,
+    jamais_appeles: s.jamais_appeles,
+    a_relancer: 0,
+    interesses: 0,
+    campaign_id: s.campaign_id,
+    suivi: s,
+  };
+}
+
+/*
+  Ordre : les campagnes d'abord, par nom, puisque c'est ce qu'on vient
+  travailler, puis le suivi de celles qu'on pilote. Puis la file commune, qui
+  est périssable (le premier agent qui appelle prend le client) et ne doit pas
+  finir en bas de page. « Hors campagne » est le reste. Les campagnes en pause
+  ferment la marche : rien à y faire avant la reprise.
+*/
+const RANG: Record<GenreDossier, number> = { campagne: 0, suivi: 1, commune: 2, "sans-campagne": 3, pause: 4 };
+
+export function dossiersDeLaFile(file: IFileAgent): Dossier[] {
+  const dossiers = Array.isArray(file.dossiers) ? dossiersDuServeur(file, file.dossiers) : dossiersDesLignes(file);
+  const suivis = (file.suivi ?? []).map(dossierDeSuivi);
+  return [...dossiers, ...suivis].sort((a, b) => RANG[a.genre] - RANG[b.genre] || a.nom.localeCompare(b.nom, "fr"));
+}
+
+/**
+ * Ce que l'accueil annonce sous « Mes dossiers ». La file commune n'est à
+ * personne : elle est annoncée à part, sans se mêler à son propre travail.
+ */
+export function resumeDossiers(dossiers: Dossier[]): { aAppeler: number; commune: number | null } {
+  const aAppeler = dossiers
+    .filter((d) => d.genre === "campagne" || d.genre === "sans-campagne")
+    .reduce((n, d) => n + d.jamais_appeles + d.a_relancer, 0);
+  const commune = dossiers.find((d) => d.genre === "commune");
+  return { aAppeler, commune: commune ? (commune.comptes?.commune ?? commune.total) : null };
+}
+
+/** Rappels dus : le vrai nombre quand le serveur le donne, sinon les lignes reçues. */
+export const totalRappels = (file: IFileAgent) => file.comptes?.rappels ?? (file.rappels ?? []).length;
+
+/** Pastille de l'onglet « Ma file » : rappels dus et intéressés qui attendent leur coupon. */
+export function pastilleFile(file: IFileAgent): number {
+  if (file.comptes) return (file.comptes.rappels ?? 0) + (file.comptes.interesses ?? 0);
+  return (file.rappels ?? []).length + (file.interesses ?? []).length;
+}
+
+/** Rien à montrer : ni dossier (suivi compris), ni rappel dû. */
+export const fileVide = (file: IFileAgent, dossiers: Dossier[]) => dossiers.length === 0 && totalRappels(file) === 0;
+
+/** Pages d'une rubrique mises bout à bout, sans doublon (un contact peut glisser d'une page à l'autre entre deux lectures). */
+export function lignesDesPages(pages: { data: IContactLigne[] }[]): IContactLigne[] {
+  const vus = new Set<string>();
+  const lignes: IContactLigne[] = [];
+  for (const page of pages) {
+    for (const l of page.data) {
+      if (vus.has(l.id)) continue;
+      vus.add(l.id);
+      lignes.push(l);
+    }
+  }
+  return lignes;
 }

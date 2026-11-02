@@ -219,6 +219,8 @@ export interface IContactFiltres {
   last_call_to?: string;
   never_called?: "true";
   abandoned?: "true";
+  /** Inscrits et inactifs ouverts, sans agent ni campagne en cours : personne ne les appelle. */
+  a_reprendre?: "true";
   sort?:
     | "entree_desc"
     | "inscription_desc"
@@ -240,7 +242,57 @@ export interface IAgent {
   portefeuille: number;
 }
 
+/** Rubrique de « Ma file » : une section de l'accueil ou d'un dossier. */
+export type RubriqueFile =
+  | "rappels"
+  | "interesses"
+  | "nouveaux"
+  | "relances"
+  | "coupons"
+  | "rappels_planifies"
+  | "commune";
+
+/** Comptes d'un dossier, faits en base par le serveur (jamais sur les lignes coupées). */
+export interface IComptesDossierFile {
+  interesses: number;
+  nouveaux: number;
+  relances: number;
+  coupons: number;
+  rappels_planifies: number;
+  commune: number;
+  /** Somme des rubriques du dossier, rappels dus exclus. */
+  total: number;
+  jamais_appeles: number;
+  a_relancer: number;
+}
+
+/** Un dossier de « Ma file » tel que le serveur le compte. */
+export interface IDossierFileServeur {
+  /** Id de campagne, « sans-campagne » ou « commune ». */
+  cle: string;
+  /** « pause » : contacts confiés dans une campagne suspendue, en attente de la reprise. */
+  genre: "campagne" | "sans-campagne" | "commune" | "pause";
+  nom: string;
+  campaign_id: string | null;
+  comptes: IComptesDossierFile;
+}
+
+/** Où en est l'équipe d'une campagne que l'utilisateur pilote. */
+export interface ISuiviCampagne {
+  campaign_id: string;
+  nom: string;
+  statut: "ACTIVE" | "SUSPENDED";
+  mode: "AUTOMATIQUE" | "MANUEL";
+  /** Contacts ouverts de la campagne. */
+  restants: number;
+  jamais_appeles: number;
+  sans_agent: number;
+  /** Les plus chargés d'abord. */
+  par_agent: { agent_id: string; nom: string; restants: number; jamais_appeles: number }[];
+}
+
 export interface IFileAgent {
+  /** Listes coupées (50 lignes, 20 pour les rappels planifiés) : les vrais nombres sont dans `comptes`. */
   rappels: IContactLigne[];
   interesses: IContactLigne[];
   nouveaux: IContactLigne[];
@@ -258,6 +310,29 @@ export interface IFileAgent {
     /** Confiés encore ouverts que personne n'a appelés : le reste à faire. */
     jamais_appeles?: number;
   };
+  /**
+   * Vrais totaux, dossiers comptés et suivi du pilote (02/11). Absents d'un
+   * serveur plus ancien : l'écran retombe alors sur l'ancien calcul.
+   */
+  comptes?: Record<RubriqueFile, number>;
+  dossiers?: IDossierFileServeur[];
+  suivi?: ISuiviCampagne[];
+}
+
+/** Lignes d'un dossier, une rubrique à la fois. `cle` : id de campagne, « sans-campagne », « commune » ou « toutes ». */
+export interface ILignesFileFiltres {
+  cle: string;
+  rubrique: RubriqueFile;
+  page?: number;
+  limit?: number;
+}
+
+/** Réponse de l'assignation en masse ; `message` dit ce qui a été écarté ou confié hors équipe. */
+export interface IAssignation {
+  count: number;
+  ecartes?: number;
+  hors_equipe?: number;
+  message?: string | null;
 }
 
 export interface IAppelDTO {
