@@ -65,6 +65,7 @@ function RappelsDus({
       aDesSuivants={serveur && s.aDesSuivants}
       onSuivants={s.suivants}
       chargement={s.chargement}
+      erreur={s.erreur}
     />
   );
 }

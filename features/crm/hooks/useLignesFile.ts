@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { LIGNES_PAR_PAGE, useLignesFileQuery } from "../queries/contact.query";
 import { IContactLigne, RubriqueFile } from "../types/contact.type";
-import { lignesDesPages } from "../utils/dossiers-file";
+import { demanderLaSuivante, lignesDesPages } from "../utils/dossiers-file";
 
 /**
  * Les lignes d'une rubrique de « Ma file », page par page.
@@ -32,14 +32,25 @@ export function useLignesFile({
   const requete = useLignesFileQuery(cle, rubrique, actif);
   // Une requête coupée garde son cache, que le temps réel ne relit plus : on ne s'y fie pas.
   const data = actif ? requete.data : undefined;
-  const { hasNextPage, isFetching, isFetchingNextPage, fetchNextPage } = requete;
+  const { hasNextPage, isFetching, isFetchingNextPage, isError, fetchNextPage } = requete;
   const chargees = data?.pages.length ?? 0;
 
   // « Voir les suivants » avant la toute première lecture : la page 1 arrive,
-  // puis la suivante est demandée d'elle-même.
+  // puis la suivante est demandée d'elle-même. Jamais seule après un échec.
   useEffect(() => {
-    if (data && voulues > chargees && hasNextPage && !isFetching) void fetchNextPage();
-  }, [data, voulues, chargees, hasNextPage, isFetching, fetchNextPage]);
+    if (
+      demanderLaSuivante({
+        aDesDonnees: !!data,
+        voulues,
+        chargees,
+        aUneSuivante: !!hasNextPage,
+        enCours: isFetching,
+        enEchec: isError,
+      })
+    ) {
+      void fetchNextPage();
+    }
+  }, [data, voulues, chargees, hasNextPage, isFetching, isError, fetchNextPage]);
 
   const lignes = data ? lignesDesPages(data.pages) : recues;
   const total = data ? data.pages[data.pages.length - 1].meta.total : annonce;
@@ -50,7 +61,16 @@ export function useLignesFile({
     total,
     aDesSuivants,
     chargement: isFetchingNextPage || (voulues > chargees && isFetching),
-    // Les lignes reçues avec l'accueil valent déjà une page : le premier clic va à la suivante.
-    suivants: () => setDemandees(Math.max(voulues, chargees, Math.ceil(recues.length / LIGNES_PAR_PAGE)) + 1),
+    /** Les lignes demandées n'ont pas pu être chargées : un clic sur « Voir les suivants » réessaie. */
+    erreur: !!data && isError && !isFetching && voulues > chargees,
+    suivants: () => {
+      // Après un échec, le clic réessaie la page qui manque.
+      if (data && isError) {
+        if (!isFetching) void fetchNextPage();
+        return;
+      }
+      // Les lignes reçues avec l'accueil valent déjà une page : le premier clic va à la suivante.
+      setDemandees(Math.max(voulues, chargees, Math.ceil(recues.length / LIGNES_PAR_PAGE)) + 1);
+    },
   };
 }

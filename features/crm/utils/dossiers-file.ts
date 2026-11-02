@@ -259,3 +259,22 @@ export function lignesDesPages(pages: { data: IContactLigne[] }[]): IContactLign
   }
   return lignes;
 }
+
+/**
+ * « Voir les suivants » : faut-il demander la page suivante maintenant ?
+ *
+ * Jamais d'elle-même après un échec : une page en panne (erreur du serveur,
+ * délai dépassé, droit retiré) était sinon redemandée à chaque fin de lecture,
+ * deux fois par seconde, sans rien dire. Après un échec, c'est le clic sur
+ * « Voir les suivants » qui réessaie.
+ */
+export function demanderLaSuivante(etat: {
+  aDesDonnees: boolean;
+  voulues: number;
+  chargees: number;
+  aUneSuivante: boolean;
+  enCours: boolean;
+  enEchec: boolean;
+}): boolean {
+  return etat.aDesDonnees && etat.voulues > etat.chargees && etat.aUneSuivante && !etat.enCours && !etat.enEchec;
+}

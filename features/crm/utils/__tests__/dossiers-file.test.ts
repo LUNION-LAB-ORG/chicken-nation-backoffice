@@ -1,8 +1,17 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment -- tests bun : leurs types ne sont pas installés dans le backoffice. */
 // @ts-nocheck
 import { describe, expect, test } from 'bun:test';
+import { InfiniteQueryObserver, QueryClient } from '@tanstack/query-core';
 
-import { dossiersDeLaFile, fileVide, lignesDesPages, pastilleFile, resumeDossiers, totalRappels } from '../dossiers-file';
+import {
+  demanderLaSuivante,
+  dossiersDeLaFile,
+  fileVide,
+  lignesDesPages,
+  pastilleFile,
+  resumeDossiers,
+  totalRappels,
+} from '../dossiers-file';
 import { lignePause, ligneSuivi, motRestants, phraseDossiers } from '../textes-file';
 
 /**
@@ -223,5 +232,52 @@ describe('pages d’une rubrique', () => {
     const b = ligne();
     const c = ligne();
     expect(lignesDesPages([{ data: [a, b] }, { data: [b, c] }]).map((l) => l.id)).toEqual([a.id, b.id, c.id]);
+  });
+});
+
+describe('« Voir les suivants » quand la page suivante est en panne (relecture du 02/11)', () => {
+  test('la règle : rien d’elle-même après un échec, ni pendant une lecture', () => {
+    const base = { aDesDonnees: true, voulues: 2, chargees: 1, aUneSuivante: true, enCours: false, enEchec: false };
+    expect(demanderLaSuivante(base)).toBe(true);
+    expect(demanderLaSuivante({ ...base, enEchec: true })).toBe(false);
+    expect(demanderLaSuivante({ ...base, enCours: true })).toBe(false);
+    expect(demanderLaSuivante({ ...base, voulues: 1 })).toBe(false);
+    expect(demanderLaSuivante({ ...base, aUneSuivante: false })).toBe(false);
+    expect(demanderLaSuivante({ ...base, aDesDonnees: false })).toBe(false);
+  });
+
+  test('avec le vrai moteur de TanStack Query : la page en panne est demandée une fois, pas en boucle', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    let demandesPage2 = 0;
+    const observateur = new InfiniteQueryObserver(client, {
+      queryKey: ['crm', 'ma-file', 'lignes', 'C1', 'nouveaux'],
+      queryFn: async ({ pageParam }) => {
+        if (pageParam === 2) {
+          demandesPage2++;
+          throw new Error('Erreur du serveur');
+        }
+        return { data: [ligne()], meta: { page: pageParam, totalPages: 3, total: 120, limit: 50 } };
+      },
+      initialPageParam: 1,
+      getNextPageParam: (d) => (d.meta.page < d.meta.totalPages ? d.meta.page + 1 : undefined),
+    });
+    // L'agent a cliqué « Voir les suivants » : deux pages voulues. Chaque
+    // nouvel état passe par la même décision que l'effet de useLignesFile.
+    const desabonner = observateur.subscribe((r) => {
+      const etat = {
+        aDesDonnees: !!r.data,
+        voulues: 2,
+        chargees: r.data?.pages.length ?? 0,
+        aUneSuivante: r.hasNextPage,
+        enCours: r.isFetching,
+        enEchec: r.isError,
+      };
+      // Borne de sécurité du test : avec l'ancienne règle, la boucle ne s'arrêtait jamais.
+      if (demandesPage2 < 20 && demanderLaSuivante(etat)) void observateur.fetchNextPage();
+    });
+    await new Promise((r) => setTimeout(r, 300));
+    desabonner();
+    expect(demandesPage2).toBe(1);
+    expect(observateur.getCurrentResult().isFetchNextPageError).toBe(true);
   });
 });

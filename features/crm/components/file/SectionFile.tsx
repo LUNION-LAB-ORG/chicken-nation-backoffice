@@ -15,6 +15,7 @@ export function SectionFile({
   aDesSuivants = false,
   onSuivants,
   chargement = false,
+  erreur = false,
 }: {
   titre: string;
   aide: string;
@@ -30,6 +31,8 @@ export function SectionFile({
   aDesSuivants?: boolean;
   onSuivants?: () => void;
   chargement?: boolean;
+  /** Les suivants n'ont pas pu être chargés : « Voir les suivants » réessaie. */
+  erreur?: boolean;
 }) {
   const [repliee, setRepliee] = useState(replieeParDefaut);
   const nombre = total ?? lignes.length;
@@ -59,6 +62,7 @@ export function SectionFile({
             <CarteFile key={p.id} p={p} onOuvrir={() => onOuvrir(p.id)} commune={commune} />
           ))}
           {lignes.length === 0 && chargement && <p className="text-xs text-gray-400 px-1">Chargement…</p>}
+          {erreur && <p className="text-xs text-rose-600 px-1">Les suivants n&apos;ont pas pu être chargés : réessayez.</p>}
           {aDesSuivants && onSuivants && lignes.length > 0 && (
             <button
               type="button"

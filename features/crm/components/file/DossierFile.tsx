@@ -42,6 +42,7 @@ function SectionDossier({
       aDesSuivants={!!dossier.comptes && s.aDesSuivants}
       onSuivants={s.suivants}
       chargement={s.chargement}
+      erreur={s.erreur}
     />
   );
 }
