@@ -5,11 +5,19 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 import {
+  AVERTISSEMENT_FICHE,
+  AVERTISSEMENT_LISTE,
   cibleNotificationAvis,
+  cleCloture,
   comparerAvis,
+  corpsAgent,
+  corpsCommande,
+  corpsTicket,
   COMPTEURS,
   COULEUR_RESSENTI,
   COULEUR_STATUT,
+  etatFiche,
+  etatListe,
   FILTRES_DEFAUT,
   filtresDuCompteur,
   formatEcheance,
@@ -24,6 +32,7 @@ import {
   libelleSource,
   lienWhatsApp,
   lireFiltres,
+  MESSAGE_CONFLIT,
   messageErreurAvis,
   NON_ASSIGNE,
   optionsCloture,
@@ -185,7 +194,25 @@ describe('compteurs', () => {
       periode: 'tout',
       page: 1,
     });
-    expect(filtresDuCompteur('resolus_7j', avant)).toMatchObject({ statut: 'RESOLU', periode: '7j', store: 'resto-1' });
+    // « Résolus sur 7 jours » compte sur la date de RÉSOLUTION : le clic pose le
+    // filtre du serveur du même nom, période Tout (la période « 7 derniers
+    // jours » porte sur la date de réception et cacherait un avis reçu il y a
+    // 13 jours et résolu hier, pourtant compté).
+    expect(filtresDuCompteur('resolus_7j', avant)).toEqual({
+      ...FILTRES_DEFAUT,
+      store: 'resto-1',
+      resolus_7j: true,
+      periode: 'tout',
+    });
+    expect(requeteDepuisFiltres(filtresDuCompteur('resolus_7j', avant))).toEqual({
+      page: 1,
+      limit: 20,
+      resolus_7j: 'true',
+      restaurantId: 'resto-1',
+      periode: 'tout',
+    });
+    // Un autre compteur retire ce filtre.
+    expect(filtresDuCompteur('nouveaux', filtresDuCompteur('resolus_7j', avant)).resolus_7j).toBe(false);
   });
 
   test("pastille de l'onglet : masquée à 0", () => {
@@ -225,6 +252,7 @@ describe('compteurs', () => {
   test('filtres gardés : un ancien état incomplet est complété', () => {
     expect(lireFiltres(undefined)).toEqual(FILTRES_DEFAUT);
     expect(lireFiltres({ statut: 'INCONNU', periode: '90j', page: 0 })).toEqual(FILTRES_DEFAUT);
+    expect(lireFiltres({ resolus_7j: true, periode: 'tout' })).toEqual({ ...FILTRES_DEFAUT, resolus_7j: true, periode: 'tout' });
   });
 });
 
@@ -248,8 +276,8 @@ describe('clôture', () => {
 
   test('Incident ouvert et Nouveau refusés à la main ; sans accord, ni À rappeler ni Injoignable', () => {
     expect(avecAccord('INCIDENT_OUVERT').message).toBe('Passer par Créer un incident.');
-    expect(avecAccord('NOUVEAU').message).toBe('Choisis le statut.');
-    expect(avecAccord('').message).toBe('Choisis le statut.');
+    expect(avecAccord('NOUVEAU').message).toBe('Choisissez le statut.');
+    expect(avecAccord('').message).toBe('Choisissez le statut.');
     const sansAccord = (statut) => schema.verifierCloture({ statut, solution: '', accord_rappel: false }, 'NOUVEAU');
     expect(sansAccord('A_RAPPELER').ok).toBe(false);
     expect(sansAccord('INJOIGNABLE').ok).toBe(false);
@@ -269,7 +297,7 @@ describe('journal', () => {
     schema.verifierJournal({ action, resultat, note, accord_rappel });
 
   test('appel : résultat obligatoire, note facultative', () => {
-    expect(saisie('APPEL')).toEqual({ ok: false, message: 'Choisis le résultat.' });
+    expect(saisie('APPEL')).toEqual({ ok: false, message: 'Choisissez le résultat.' });
     expect(saisie('APPEL', 'JOINT')).toEqual({ ok: true, dto: { action: 'APPEL', resultat: 'JOINT', note: null } });
     expect(saisie('APPEL', 'MESSAGERIE', '  rappeler demain  ')).toEqual({
       ok: true,
@@ -283,7 +311,7 @@ describe('journal', () => {
   });
 
   test('note interne : note obligatoire, résultat ignoré', () => {
-    expect(saisie('NOTE', '', '   ')).toEqual({ ok: false, message: 'Écris la note.' });
+    expect(saisie('NOTE', '', '   ')).toEqual({ ok: false, message: 'Écrivez la note.' });
     expect(saisie('NOTE', 'JOINT', 'vu', false)).toEqual({ ok: true, dto: { action: 'NOTE', note: 'vu' } });
     expect(saisie('NOTE', '', 'x'.repeat(2001)).message).toBe('La note ne doit pas dépasser 2 000 caractères.');
   });
@@ -341,14 +369,72 @@ describe('cloche', () => {
 
 describe('erreurs', () => {
   test('409 : message du conflit ; 404 et 500 : message du serveur ; 400 : tableau lu', () => {
-    expect(messageErreurAvis({ status: 409, message: 'x' })).toBe("L'avis a changé entre-temps. Recharge la fiche.");
+    expect(messageErreurAvis({ status: 409, message: 'x' })).toBe("L'avis a changé entre-temps. Rechargez la fiche.");
     expect(messageErreurAvis({ status: 404, message: 'Ressource non trouvée.', messageServeur: 'Catégorie de ticket introuvable.' })).toBe(
       'Catégorie de ticket introuvable.',
     );
     expect(messageErreurAvis({ status: 500, message: 'Erreur temporaire du serveur. Réessayez plus tard.', messageServeur: 'Internal server error' })).toBe(
       'Erreur temporaire du serveur. Réessayez plus tard.',
     );
-    expect(messageErreurAvis({ status: 400, message: ['Choisis le résultat.'] })).toBe('Choisis le résultat.');
+    expect(messageErreurAvis({ status: 400, message: ['Choisissez le résultat.'] })).toBe('Choisissez le résultat.');
+  });
+
+  test('messages au personnel : vouvoiement, comme le reste du back-office', () => {
+    const messages = [MESSAGE_CONFLIT, ...Object.values(schema).filter((v) => typeof v === 'string')];
+    for (const m of messages) {
+      expect({ m, tutoie: /\b(Choisis|Écris|Recharge|Saisis|Coche|Sélectionne)\b/.test(m) }).toEqual({ m, tutoie: false });
+    }
+  });
+});
+
+describe('gestes : la valeur lue part avec (claim du serveur)', () => {
+  const avis = { id: 'a1', order_id: 'o-1', agent: { id: 'u-cc', fullname: 'Agent' } };
+
+  test('commande : la commande cochée vue à l’écran part avec', () => {
+    expect(corpsCommande(avis, 'o-2')).toEqual({ order_id: 'o-2', order_id_lu: 'o-1' });
+    expect(corpsCommande(avis, null)).toEqual({ order_id: null, order_id_lu: 'o-1' });
+    expect(corpsCommande({ order_id: null }, 'o-2')).toEqual({ order_id: 'o-2', order_id_lu: null });
+  });
+
+  test('agent : l’agent vu à l’écran part avec (Non assigné : null)', () => {
+    expect(corpsAgent(avis, 'u-cc2')).toEqual({ agent_id: 'u-cc2', agent_lu: 'u-cc' });
+    expect(corpsAgent({ agent: null }, 'u-cc2')).toEqual({ agent_id: 'u-cc2', agent_lu: null });
+  });
+
+  test('incident : la commande montrée dans la fenêtre part avec ; rien sans commande cochée', () => {
+    expect(corpsTicket(avis, 'cat-1')).toEqual({ categoryId: 'cat-1', order_id: 'o-1' });
+    expect(corpsTicket({ order_id: null }, 'cat-1')).toBeNull();
+  });
+});
+
+describe('fiche et liste : un autre avis, un rafraîchissement raté', () => {
+  const fiche = { id: 'a1', statut: 'A_RAPPELER', solution: null };
+
+  test('formulaire Clôture : deux avis au même statut ne partagent jamais leur saisie', () => {
+    expect(cleCloture(fiche)).not.toBe(cleCloture({ ...fiche, id: 'a2' }));
+    expect(cleCloture(fiche)).not.toBe(cleCloture({ ...fiche, statut: 'EN_COURS' }));
+    expect(cleCloture(fiche)).not.toBe(cleCloture({ ...fiche, solution: 'EXCUSES' }));
+    expect(cleCloture(fiche)).toBe(cleCloture({ ...fiche }));
+  });
+
+  test('fiche déjà chargée et rafraîchissement raté : la fiche reste, avec un avertissement', () => {
+    const panne = { status: 500, message: 'Erreur temporaire du serveur. Réessayez plus tard.' };
+    expect(etatFiche({ avis: fiche, isLoading: false, isError: true, error: panne })).toEqual({ etat: 'fiche', avertissement: true });
+    expect(etatFiche({ avis: fiche, isLoading: false, isError: false, error: null })).toEqual({ etat: 'fiche', avertissement: false });
+    // Sans fiche : chargement, puis l'écran d'erreur.
+    expect(etatFiche({ avis: undefined, isLoading: true, isError: false, error: null }).etat).toBe('chargement');
+    expect(etatFiche({ avis: undefined, isLoading: false, isError: true, error: panne }).etat).toBe('erreur');
+    // Avis supprimé entre-temps : « Cet avis n'existe plus. », même avec une copie en cache.
+    expect(etatFiche({ avis: fiche, isLoading: false, isError: true, error: { status: 404 } }).etat).toBe('introuvable');
+    expect(AVERTISSEMENT_FICHE).toContain('plus à jour');
+  });
+
+  test('liste déjà chargée et rafraîchissement raté : le tableau reste, avec un avertissement', () => {
+    expect(etatListe({ lignes: [{ id: 'a1' }], isLoading: false, isError: true })).toEqual({ etat: 'table', avertissement: true });
+    expect(etatListe({ lignes: [], isLoading: false, isError: false })).toEqual({ etat: 'vide', avertissement: false });
+    expect(etatListe({ lignes: undefined, isLoading: true, isError: false }).etat).toBe('chargement');
+    expect(etatListe({ lignes: undefined, isLoading: false, isError: true }).etat).toBe('erreur');
+    expect(AVERTISSEMENT_LISTE).toContain('plus à jour');
   });
 });
 
@@ -427,8 +513,9 @@ describe.skipIf(!existsSync(regles) || !existsSync(roles))('fidèles au serveur'
     expect(tableServeur(source, 'SOURCES')).toEqual(SOURCES);
   });
 
-  test('messages des formulaires', () => {
+  test('messages des formulaires et du conflit', () => {
     const messages = {
+      MESSAGE_CONFLIT,
       MESSAGE_SOLUTION: schema.MESSAGE_SOLUTION,
       MESSAGE_INCIDENT_MANUEL: schema.MESSAGE_INCIDENT_MANUEL,
       MESSAGE_SANS_ACCORD: schema.MESSAGE_SANS_ACCORD,

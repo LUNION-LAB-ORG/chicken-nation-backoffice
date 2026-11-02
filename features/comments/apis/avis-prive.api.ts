@@ -2,12 +2,15 @@ import { api } from "@/services/api";
 import { telecharger, versQuery } from "../../crm/utils/requete";
 import type {
   AgentAvis,
+  AgentAvisDTO,
   AvisFiche,
+  CommandeAvisDTO,
   CompteursAvis,
   JournalAvisDTO,
   PageAvis,
   RequeteAvis,
   StatutAvisDTO,
+  TicketAvisDTO,
 } from "../types/avis-prive.types";
 
 const BASE = "/avis-prives";
@@ -28,12 +31,14 @@ export const avisPriveAPI = {
 
   statut: (id: string, dto: StatutAvisDTO) => api.patch<AvisFiche>(`${BASE}/${id}/statut`, dto),
 
-  commande: (id: string, orderId: string | null) =>
-    api.patch<AvisFiche>(`${BASE}/${id}/commande`, { order_id: orderId }),
+  /** Corps fait par `corpsCommande` : la commande lue part avec (409 si elle a changé). */
+  commande: (id: string, dto: CommandeAvisDTO) => api.patch<AvisFiche>(`${BASE}/${id}/commande`, dto),
 
-  agent: (id: string, agentId: string | null) => api.patch<AvisFiche>(`${BASE}/${id}/agent`, { agent_id: agentId }),
+  /** Corps fait par `corpsAgent` : l'agent lu part avec (409 s'il a changé). */
+  agent: (id: string, dto: AgentAvisDTO) => api.patch<AvisFiche>(`${BASE}/${id}/agent`, dto),
 
-  ticket: (id: string, categoryId: string) => api.post<AvisFiche>(`${BASE}/${id}/ticket`, { categoryId }),
+  /** Corps fait par `corpsTicket` : la commande vue dans la fenêtre part avec. */
+  ticket: (id: string, dto: TicketAvisDTO) => api.post<AvisFiche>(`${BASE}/${id}/ticket`, dto),
 
   supprimer: (id: string) => api.delete<void>(`${BASE}/${id}`),
 

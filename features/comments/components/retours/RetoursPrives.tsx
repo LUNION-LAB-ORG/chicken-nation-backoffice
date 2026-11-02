@@ -9,7 +9,14 @@ import { avisPriveAPI } from "../../apis/avis-prive.api";
 import { useDroitsAvis } from "../../hooks/useDroitsAvis";
 import { useCompteursAvisQuery, useListeAvisQuery } from "../../queries/avis-prive.query";
 import type { FiltresAvis } from "../../types/avis-prive.types";
-import { filtresDuCompteur, lireFiltres, messageErreurAvis, requeteDepuisFiltres } from "../../utils/avis-prive";
+import {
+  AVERTISSEMENT_LISTE,
+  etatListe,
+  filtresDuCompteur,
+  lireFiltres,
+  messageErreurAvis,
+  requeteDepuisFiltres,
+} from "../../utils/avis-prive";
 import { CompteursRetours } from "./CompteursRetours";
 import { FiltresRetours } from "./FiltresRetours";
 import { TableRetours } from "./TableRetours";
@@ -71,6 +78,8 @@ export function RetoursPrives({ onOuvrir }: { onOuvrir: (id: string) => void }) 
   };
 
   const lignes = data?.data ?? [];
+  // Un rafraîchissement raté garde le tableau déjà chargé, avec un avertissement.
+  const { etat, avertissement } = etatListe({ lignes: data?.data, isLoading, isError });
 
   return (
     <div className="flex flex-col gap-4">
@@ -101,15 +110,21 @@ export function RetoursPrives({ onOuvrir }: { onOuvrir: (id: string) => void }) 
         pointDeVente={pointDeVente}
       />
 
-      {isLoading ? (
+      {avertissement && (
+        <p role="status" className="rounded-lg bg-amber-50 px-4 py-2 text-[13px] text-amber-800">
+          {AVERTISSEMENT_LISTE}
+        </p>
+      )}
+
+      {etat === "chargement" ? (
         <div className="flex justify-center rounded-xl border border-slate-100 bg-white py-16">
           <Loader2 className="h-6 w-6 animate-spin text-[#F17922]" />
         </div>
-      ) : isError ? (
+      ) : etat === "erreur" ? (
         <div className="rounded-xl border border-slate-100 bg-white py-12 text-center text-sm text-red-600">
           {messageErreurAvis(error)}
         </div>
-      ) : lignes.length === 0 ? (
+      ) : etat === "vide" ? (
         <div className="rounded-xl border border-slate-100 bg-white py-12 text-center text-sm text-gray-500">
           Aucun avis sur cette période.
         </div>

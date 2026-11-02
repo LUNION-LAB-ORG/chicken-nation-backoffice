@@ -13,15 +13,18 @@
 
 import type {
   ActionJournal,
+  AgentAvisDTO,
   AvisCanal,
   AvisFiche,
   AvisResultat,
   AvisRessenti,
   AvisSolution,
   AvisStatut,
+  CommandeAvisDTO,
   FiltresAvis,
   PeriodeAvis,
   RequeteAvis,
+  TicketAvisDTO,
 } from "../types/avis-prive.types";
 
 // ─── Mots (contrat 3.1) ─────────────────────────────────────────────────────
@@ -178,6 +181,36 @@ export function optionsCloture(accordRappel: boolean): { valeur: AvisStatut; lib
 /** La solution ne compte que pour Résolu (obligatoire) et Classé (facultative). */
 export const solutionPossible = (statut: AvisStatut | "") => statut === "RESOLU" || statut === "CLASSE";
 
+/**
+ * Clé de montage du formulaire Clôture : l'avis, son statut et sa solution.
+ * Un autre avis (cloche, liste) ou une fiche relue repart de ses valeurs à
+ * lui, jamais du choix laissé en plan sur l'avis d'avant.
+ */
+export const cleCloture = (avis: Pick<AvisFiche, "id" | "statut" | "solution">) =>
+  `${avis.id}-${avis.statut}-${avis.solution ?? ""}`;
+
+// ─── Corps des gestes : la valeur LUE part avec (claim du serveur) ─────────
+
+/** Cocher ou décocher : la commande cochée vue à l'écran part avec. */
+export const corpsCommande = (avis: Pick<AvisFiche, "order_id">, orderId: string | null): CommandeAvisDTO => ({
+  order_id: orderId,
+  order_id_lu: avis.order_id ?? null,
+});
+
+/** Changer d'agent : l'agent vu à l'écran part avec. */
+export const corpsAgent = (avis: Pick<AvisFiche, "agent">, agentId: string | null): AgentAvisDTO => ({
+  agent_id: agentId,
+  agent_lu: avis.agent?.id ?? null,
+});
+
+/**
+ * Créer un incident : la commande que la fenêtre montre part avec. Un
+ * collègue qui en a coché une autre entre-temps donne un 409, jamais un
+ * ticket sur une commande que l'agent n'a pas vue. `null` sans commande cochée.
+ */
+export const corpsTicket = (avis: Pick<AvisFiche, "order_id">, categoryId: string): TicketAvisDTO | null =>
+  avis.order_id ? { categoryId, order_id: avis.order_id } : null;
+
 /** Pourquoi « Créer un incident » est grisé, ou `null` s'il est possible. */
 export function raisonIncidentImpossible(avis: Pick<AvisFiche, "rapproche" | "order_id">): string | null {
   if (!avis.rapproche) return "Client non rapproché.";
@@ -289,6 +322,7 @@ export const FILTRES_DEFAUT: FiltresAvis = {
   ressenti: "",
   statut: "",
   en_retard: false,
+  resolus_7j: false,
   store: "",
   periode: "7j",
   page: 1,
@@ -304,6 +338,7 @@ export function lireFiltres(brut: unknown): FiltresAvis {
     ressenti: RESSENTIS.includes(f.ressenti as AvisRessenti) ? (f.ressenti as AvisRessenti) : "",
     statut: STATUTS.includes(f.statut as AvisStatut) ? (f.statut as AvisStatut) : "",
     en_retard: f.en_retard === true,
+    resolus_7j: f.resolus_7j === true,
     store: typeof f.store === "string" ? f.store : "",
     periode: PERIODES.some((p) => p.valeur === f.periode) ? (f.periode as PeriodeAvis) : "7j",
     page: typeof f.page === "number" && f.page >= 1 ? f.page : 1,
@@ -323,6 +358,7 @@ export function requeteDepuisFiltres(f: FiltresAvis, pointDeVente = false): Requ
     ...(f.ressenti ? { ressenti: f.ressenti } : {}),
     ...(f.statut ? { statut: f.statut } : {}),
     ...(f.en_retard ? { en_retard: "true" as const } : {}),
+    ...(f.resolus_7j ? { resolus_7j: "true" as const } : {}),
     ...(!pointDeVente && f.store ? { restaurantId: f.store } : {}),
     periode: f.periode,
   };
@@ -340,10 +376,12 @@ export const COMPTEURS: { cle: CleCompteur; libelle: string }[] = [
 /**
  * Filtres posés par un clic sur un compteur. Les compteurs ne suivent que le
  * store : ressenti et recherche sont donc retirés, pour que la liste montre
- * ce que le chiffre compte.
+ * ce que le chiffre compte. « Résolus sur 7 jours » compte sur la date de
+ * RÉSOLUTION : son filtre est celui du serveur (`resolus_7j`), période Tout,
+ * et non la période « 7 derniers jours » qui porte sur la date de réception.
  */
 export function filtresDuCompteur(cle: CleCompteur, f: FiltresAvis): FiltresAvis {
-  const base: FiltresAvis = { ...f, recherche: "", ressenti: "", page: 1, en_retard: false };
+  const base: FiltresAvis = { ...f, recherche: "", ressenti: "", page: 1, en_retard: false, resolus_7j: false };
   switch (cle) {
     case "nouveaux":
       return { ...base, statut: "NOUVEAU", periode: "tout" };
@@ -352,7 +390,7 @@ export function filtresDuCompteur(cle: CleCompteur, f: FiltresAvis): FiltresAvis
     case "echeance_depassee":
       return { ...base, statut: "", en_retard: true, periode: "tout" };
     case "resolus_7j":
-      return { ...base, statut: "RESOLU", periode: "7j" };
+      return { ...base, statut: "", resolus_7j: true, periode: "tout" };
   }
 }
 
@@ -376,7 +414,44 @@ export function cibleNotificationAvis(data: unknown): string | null {
 
 // ─── Erreurs ────────────────────────────────────────────────────────────────
 
-export const MESSAGE_CONFLIT = "L'avis a changé entre-temps. Recharge la fiche.";
+export const MESSAGE_CONFLIT = "L'avis a changé entre-temps. Rechargez la fiche.";
+
+// ─── Affichage pendant un rafraîchissement raté ─────────────────────────────
+
+export const AVERTISSEMENT_FICHE = "Mise à jour impossible pour le moment : la fiche n'est peut-être plus à jour.";
+export const AVERTISSEMENT_LISTE = "Mise à jour impossible pour le moment : la liste n'est peut-être plus à jour.";
+
+const estIntrouvable = (e: unknown) => (e as { status?: unknown } | null)?.status === 404;
+
+/**
+ * Ce que montre la fiche. Un rafraîchissement raté (serveur redémarré,
+ * réseau coupé) garde la fiche déjà chargée, avec un avertissement : sinon
+ * le journal et la clôture seraient démontés et la note en cours perdue.
+ * L'écran d'erreur seulement sans fiche ; « introuvable » dès un 404 (avis
+ * supprimé entre-temps), même s'il en reste une copie.
+ */
+export function etatFiche(q: {
+  avis: AvisFiche | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  error: unknown;
+}): { etat: "chargement" | "introuvable" | "erreur" | "fiche"; avertissement: boolean } {
+  if (q.isError && estIntrouvable(q.error)) return { etat: "introuvable", avertissement: false };
+  if (q.avis) return { etat: "fiche", avertissement: q.isError };
+  if (q.isLoading) return { etat: "chargement", avertissement: false };
+  return { etat: "erreur", avertissement: false };
+}
+
+/** Ce que montre la liste : même règle, le tableau déjà chargé reste. */
+export function etatListe(q: {
+  lignes: unknown[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+}): { etat: "chargement" | "erreur" | "vide" | "table"; avertissement: boolean } {
+  if (q.lignes) return { etat: q.lignes.length ? "table" : "vide", avertissement: q.isError };
+  if (q.isLoading) return { etat: "chargement", avertissement: false };
+  return { etat: q.isError ? "erreur" : "vide", avertissement: false };
+}
 
 /** Textes par défaut du cadriciel du serveur, en anglais : jamais montrés. */
 const TEXTES_PAR_DEFAUT_SERVEUR = new Set(["Internal server error", "Not Found", "Forbidden resource", "Too Many Requests"]);

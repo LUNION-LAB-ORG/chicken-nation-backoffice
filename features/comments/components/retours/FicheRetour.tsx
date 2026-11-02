@@ -9,6 +9,10 @@ import { useAgentAvisMutation, useSupprimerAvisMutation } from "../../queries/av
 import { useAgentsAvisQuery, useFicheAvisQuery } from "../../queries/avis-prive.query";
 import type { AvisFiche } from "../../types/avis-prive.types";
 import {
+  AVERTISSEMENT_FICHE,
+  cleCloture,
+  corpsAgent,
+  etatFiche,
   formatRecu,
   JE_NE_SAIS_PAS,
   LIBELLE_CANAL,
@@ -47,7 +51,7 @@ function ChoixAgent({ avis, peutTraiter }: { avis: AvisFiche; peutTraiter: boole
     <ChampListe
       label="Agent"
       valeur={avis.agent?.id ?? ""}
-      onChange={(v) => mutation.mutate({ id: avis.id, valeur: v || null })}
+      onChange={(v) => mutation.mutate({ id: avis.id, valeur: corpsAgent(avis, v || null) })}
       vide={NON_ASSIGNE}
       options={options.map((a) => ({ valeur: a.id, libelle: a.fullname }))}
       desactive={mutation.isPending}
@@ -60,6 +64,9 @@ function ChoixAgent({ avis, peutTraiter }: { avis: AvisFiche; peutTraiter: boole
  * Fiche d'un retour privé (maquette BO-Fiche) : commentaire, journal,
  * clôture à gauche ; client et dernières commandes à droite, comme les
  * autres fiches du back-office.
+ *
+ * Le parent la monte avec `key={id}` : un autre avis (cloche, liste) repart
+ * d'une fiche neuve, sans le geste laissé en plan sur le précédent.
  */
 export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void }) {
   const droits = useDroitsAvis();
@@ -68,7 +75,9 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
   const [suppression, setSuppression] = useState(false);
   const supprimer = useSupprimerAvisMutation();
 
-  if (isLoading) {
+  const { etat, avertissement } = etatFiche({ avis, isLoading, isError, error });
+
+  if (etat === "chargement") {
     return (
       <div className="flex justify-center rounded-xl bg-white py-16">
         <Loader2 className="h-6 w-6 animate-spin text-[#F17922]" />
@@ -76,12 +85,13 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
     );
   }
 
-  if (isError || !avis) {
-    const introuvable = (error as { status?: number } | null)?.status === 404;
+  // Un rafraîchissement raté garde la fiche (et ce que l'agent est en train
+  // d'écrire) : l'écran d'erreur seulement quand aucune fiche n'est chargée.
+  if (etat !== "fiche" || !avis) {
     return (
       <div className="flex flex-col gap-4 rounded-xl bg-white p-6">
         <LienRetour onRetour={onRetour} />
-        <p className="text-sm text-gray-600">{introuvable ? "Cet avis n'existe plus." : messageErreurAvis(error)}</p>
+        <p className="text-sm text-gray-600">{etat === "introuvable" ? "Cet avis n'existe plus." : messageErreurAvis(error)}</p>
       </div>
     );
   }
@@ -91,6 +101,12 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
   return (
     <div className="flex flex-col gap-4">
       <LienRetour onRetour={onRetour} />
+
+      {avertissement && (
+        <p role="status" className="rounded-lg bg-amber-50 px-4 py-2 text-[13px] text-amber-800">
+          {AVERTISSEMENT_FICHE}
+        </p>
+      )}
 
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -143,7 +159,7 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
 
             <JournalSuivi avis={avis} peutTraiter={droits.peutTraiter} />
 
-            {droits.peutTraiter && <ClotureAvis key={`${avis.statut}-${avis.solution ?? ""}`} avis={avis} />}
+            {droits.peutTraiter && <ClotureAvis key={cleCloture(avis)} avis={avis} />}
           </div>
 
           <div className="flex flex-col gap-4 rounded-b-xl bg-[#FBFBFB] p-4 sm:p-6 md:w-2/5 md:rounded-r-xl md:rounded-bl-none">

@@ -6,16 +6,16 @@ import { solutionPossible } from "../utils/avis-prive";
  * Formulaires de la fiche d'un avis (Journal de suivi, Clôture). Mêmes règles
  * et mêmes messages que le serveur (`verifierEntreeJournal`,
  * `changementStatut`) : l'agent lit l'erreur avant l'envoi, le serveur reste
- * juge.
+ * juge. Messages au personnel : vouvoiement, comme le reste du back-office.
  */
 
 export const NOTE_MAX = 2000;
 
-export const MESSAGE_RESULTAT = "Choisis le résultat.";
+export const MESSAGE_RESULTAT = "Choisissez le résultat.";
 export const MESSAGE_RESULTAT_WHATSAPP = "Un message WhatsApp est Joint ou Injoignable.";
-export const MESSAGE_NOTE = "Écris la note.";
+export const MESSAGE_NOTE = "Écrivez la note.";
 export const MESSAGE_NOTE_LONGUE = "La note ne doit pas dépasser 2 000 caractères.";
-export const MESSAGE_STATUT = "Choisis le statut.";
+export const MESSAGE_STATUT = "Choisissez le statut.";
 export const MESSAGE_SOLUTION = "La solution est obligatoire pour Résolu.";
 export const MESSAGE_INCIDENT_MANUEL = "Passer par Créer un incident.";
 export const MESSAGE_SANS_ACCORD = "Pas d'accord de rappel : ni appel ni WhatsApp.";

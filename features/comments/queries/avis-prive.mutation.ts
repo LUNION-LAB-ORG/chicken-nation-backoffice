@@ -1,7 +1,14 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { avisPriveAPI } from "../apis/avis-prive.api";
-import type { AvisFiche, JournalAvisDTO, StatutAvisDTO } from "../types/avis-prive.types";
+import type {
+  AgentAvisDTO,
+  AvisFiche,
+  CommandeAvisDTO,
+  JournalAvisDTO,
+  StatutAvisDTO,
+  TicketAvisDTO,
+} from "../types/avis-prive.types";
 import { messageErreurAvis } from "../utils/avis-prive";
 import { avisKeys } from "./avis-prive.query";
 
@@ -38,17 +45,17 @@ export const useStatutAvisMutation = () =>
   useGesteAvis<StatutAvisDTO>((id, dto) => avisPriveAPI.statut(id, dto), () => "Statut enregistré");
 
 export const useCommandeAvisMutation = () =>
-  useGesteAvis<string | null>(
-    (id, orderId) => avisPriveAPI.commande(id, orderId),
-    (_f, orderId) => (orderId ? "Commande cochée" : "Commande décochée"),
+  useGesteAvis<CommandeAvisDTO>(
+    (id, dto) => avisPriveAPI.commande(id, dto),
+    (_f, dto) => (dto.order_id ? "Commande cochée" : "Commande décochée"),
   );
 
 export const useAgentAvisMutation = () =>
-  useGesteAvis<string | null>((id, agentId) => avisPriveAPI.agent(id, agentId), () => "Agent enregistré");
+  useGesteAvis<AgentAvisDTO>((id, dto) => avisPriveAPI.agent(id, dto), () => "Agent enregistré");
 
 export const useTicketAvisMutation = () =>
-  useGesteAvis<string>(
-    (id, categoryId) => avisPriveAPI.ticket(id, categoryId),
+  useGesteAvis<TicketAvisDTO>(
+    (id, dto) => avisPriveAPI.ticket(id, dto),
     (fiche) => (fiche.ticket ? `Ticket ${fiche.ticket.code} créé` : "Ticket créé"),
   );
 

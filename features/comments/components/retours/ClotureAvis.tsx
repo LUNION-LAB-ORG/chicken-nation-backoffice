@@ -12,8 +12,8 @@ import { Carte, ChampListe } from "./Elements";
  * ouvert se pose par « Créer un incident ». Le statut lu part avec la
  * demande : un collègue qui l'a changé entre-temps donne un 409.
  *
- * Le parent le monte avec une clé faite du statut et de la solution : une
- * fiche relue repart de ses valeurs.
+ * Le parent le monte avec `cleCloture(avis)` (avis, statut, solution) : une
+ * fiche relue ou un autre avis repart de ses valeurs à lui.
  */
 export function ClotureAvis({ avis }: { avis: AvisFiche }) {
   const [statut, setStatut] = useState<string>(STATUTS_CLOTURE.includes(avis.statut) ? avis.statut : "");

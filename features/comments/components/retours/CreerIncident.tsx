@@ -5,7 +5,7 @@ import { useTicketCategoriesQuery } from "@/hooks/useTicketCategoriesQuery";
 import type { TicketCategory } from "@/services/ticketCategoryService";
 import { useTicketAvisMutation } from "../../queries/avis-prive.mutation";
 import type { AvisFiche } from "../../types/avis-prive.types";
-import { formatRecu } from "../../utils/avis-prive";
+import { corpsTicket, formatRecu } from "../../utils/avis-prive";
 import { ChampListe } from "./Elements";
 
 /**
@@ -27,9 +27,13 @@ export function CreerIncident({ avis, ouvert, onFermer }: { avis: AvisFiche; ouv
 
   const commande = avis.dernieres_commandes?.find((c) => c.id === avis.order_id) ?? null;
 
+  // La commande montrée ci-dessous part avec la demande : si un collègue en a
+  // coché une autre entre-temps, le serveur refuse (409) au lieu d'ouvrir le
+  // ticket sur une commande que l'agent n'a pas vue.
   const creer = () => {
-    if (!categorie) return;
-    mutation.mutate({ id: avis.id, valeur: categorie }, { onSuccess: onFermer });
+    const dto = categorie ? corpsTicket(avis, categorie) : null;
+    if (!dto) return;
+    mutation.mutate({ id: avis.id, valeur: dto }, { onSuccess: onFermer });
   };
 
   return (

@@ -102,7 +102,9 @@ export default function Reviews() {
           <GlobalReviews />
         </div>
       ) : avisId ? (
-        <FicheRetour id={avisId} onRetour={retourListe} />
+        // Une fiche neuve par avis : la cloche qui ouvre un autre avis ne
+        // garde rien du geste laissé en plan sur le précédent.
+        <FicheRetour key={avisId} id={avisId} onRetour={retourListe} />
       ) : (
         <RetoursPrives onOuvrir={ouvrirAvis} />
       )}

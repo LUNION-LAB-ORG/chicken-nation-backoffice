@@ -7,7 +7,7 @@ import { ouvrirCommandeParReference } from "../../../orders/utils/ouvrir-command
 import { nomCourtRestaurant } from "../../../restaurants/utils/nom-court";
 import { useCommandeAvisMutation } from "../../queries/avis-prive.mutation";
 import type { AvisFiche, CommandeRecente } from "../../types/avis-prive.types";
-import { formatRecu } from "../../utils/avis-prive";
+import { corpsCommande, formatRecu } from "../../utils/avis-prive";
 import { Carte } from "./Elements";
 
 /** « Yopougon · Manuel · Gbonhi Max · Terminée » */
@@ -43,7 +43,7 @@ export function DernieresCommandes({
   if (avis.dernieres_commandes === null) return null;
   const commandes = avis.dernieres_commandes;
 
-  const cocher = (orderId: string | null) => mutation.mutate({ id: avis.id, valeur: orderId });
+  const cocher = (orderId: string | null) => mutation.mutate({ id: avis.id, valeur: corpsCommande(avis, orderId) });
 
   return (
     <Carte

@@ -133,6 +133,8 @@ export interface FiltresAvis {
   ressenti: AvisRessenti | "";
   statut: AvisStatut | "";
   en_retard: boolean;
+  /** Passés en Résolu depuis 7 jours (clic sur le compteur « Résolus sur 7 jours »). */
+  resolus_7j: boolean;
   /** Restaurant, `aucun` ou "" (tous). */
   store: string;
   periode: PeriodeAvis;
@@ -147,6 +149,8 @@ export interface RequeteAvis {
   ressenti?: AvisRessenti;
   statut?: AvisStatut;
   en_retard?: "true";
+  /** Résolus depuis 7 jours, sur la date de résolution (même règle que le compteur). */
+  resolus_7j?: "true";
   restaurantId?: string;
   periode?: PeriodeAvis;
 }
@@ -160,6 +164,24 @@ export interface JournalAvisDTO {
   action: ActionJournal;
   resultat?: AvisResultat | null;
   note?: string | null;
+}
+
+/** Corps de `PATCH /avis-prives/:id/commande` : la commande lue part avec (409 si elle a changé). */
+export interface CommandeAvisDTO {
+  order_id: string | null;
+  order_id_lu: string | null;
+}
+
+/** Corps de `PATCH /avis-prives/:id/agent` : l'agent lu part avec (409 s'il a changé). */
+export interface AgentAvisDTO {
+  agent_id: string | null;
+  agent_lu: string | null;
+}
+
+/** Corps de `POST /avis-prives/:id/ticket` : la commande vue dans la fenêtre part avec (409 si elle a changé). */
+export interface TicketAvisDTO {
+  categoryId: string;
+  order_id: string;
 }
 
 export interface StatutAvisDTO {

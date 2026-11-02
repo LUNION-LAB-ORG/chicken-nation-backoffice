@@ -32,7 +32,8 @@ export function JournalSuivi({ avis, peutTraiter }: { avis: AvisFiche; peutTrait
           ))}
         </ol>
       )}
-      {peutTraiter && <AjoutJournal avis={avis} />}
+      {/* Clé de l'avis : un autre avis repart d'un formulaire vide. */}
+      {peutTraiter && <AjoutJournal key={avis.id} avis={avis} />}
     </Carte>
   );
 }
