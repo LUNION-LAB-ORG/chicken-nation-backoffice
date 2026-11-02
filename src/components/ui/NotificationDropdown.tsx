@@ -11,6 +11,7 @@ import NotificationModal from "./NotificationModal";
 import { useNotificationsQuery } from "@/hooks/useNotificationsQuery";
 import { useNotificationStatsQuery } from "@/hooks/useNotificationStatsQuery";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { cibleNotificationAvis } from "../../../features/comments/utils/avis-prive";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -96,6 +97,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     (s) => s.openInboxConversation
   );
   const openTicket = useDashboardStore((s) => s.openTicket);
+  const openAvis = useDashboardStore((s) => s.openAvis);
   const setActiveTab = useDashboardStore((s) => s.setActiveTab);
   const setFilter = useDashboardStore((s) => s.setFilter);
 
@@ -136,6 +138,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     // Ticket → ouvrir le ticket directement
     if (data?.ticketId) {
       openTicket(data.ticketId);
+      return;
+    }
+
+    // Retour privé « Ton avis compte » (client pas content, avis en retard)
+    // → sa fiche dans Notes et avis, onglet « Retours privés ».
+    const avisId = cibleNotificationAvis(data);
+    if (avisId) {
+      openAvis(avisId);
       return;
     }
 

@@ -158,6 +158,8 @@ export interface DashboardState {
   /** Ouvre En direct sur ce livreur (carte centrée, sa fenêtre ouverte). */
   openEnDirect: (livreurId: string) => void;
   clearPendingEnDirect: () => void;
+  /** Ouvre Notes et avis, onglet « Retours privés », sur la fiche de cet avis (cloche). */
+  openAvis: (avisId: string) => void;
   setLastConversation: (id: string | null) => void;
   setLastTicket: (id: string | null) => void;
   openInboxConversation: (conversationId: string, messageId?: string | null) => void;
@@ -337,6 +339,12 @@ export const useDashboardStore = create<DashboardState>()(
       }),
       clearPendingEnDirect: () => set((state) => {
         state.pendingEnDirectLivreurId = null;
+      }),
+      openAvis: (avisId) => set((state) => {
+        state.activeTab = 'reviews';
+        state.reviews.filters = { ...(state.reviews.filters ?? {}), vue: 'retours' };
+        state.reviews.view = 'view';
+        state.reviews.selectedItem = avisId;
       }),
       setLastConversation: (id) => set((state) => {
         state.lastConversationId = id;
