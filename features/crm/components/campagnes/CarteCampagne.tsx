@@ -3,6 +3,7 @@ import { CalendarDays, ChevronRight, UserRound } from "lucide-react";
 import { ICampagne } from "../../types/campagne.type";
 import { Public } from "../../types/contact.type";
 import { PUBLICS, accord, fmtDate, fmtNombre } from "../../utils/crm-ui";
+import { closeSansLancement, ligneDateDebut } from "../../utils/textes-campagne";
 import { PuceCampagne, PucePublic } from "../commun/Puces";
 
 function Barre({ valeur, total }: { valeur: number; total: number }) {
@@ -25,6 +26,7 @@ export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => v
   const r = c.resume ?? { cibles: 0, traites: 0, conversions: 0, coupons: 0 };
   const parPublic = [...(r.par_public ?? [])].sort((a, b) => PUBLICS.indexOf(a.segment) - PUBLICS.indexOf(b.segment));
   const publics = publicsVises(c);
+  const dateDebut = ligneDateDebut(c);
 
   return (
     <button
@@ -54,7 +56,12 @@ export function CarteCampagne({ c, onOuvrir }: { c: ICampagne; onOuvrir: () => v
       </p>
 
       {c.status === "PLANIFIED" ? (
-        <p className="text-sm text-gray-500 mt-3">Pas encore lancée.</p>
+        <>
+          <p className="text-sm text-gray-500 mt-3">Pas encore lancée.</p>
+          {dateDebut && <p className="text-xs font-semibold text-[#F17922] mt-1">{dateDebut}</p>}
+        </>
+      ) : closeSansLancement(c) ? (
+        <p className="text-sm text-gray-500 mt-3">Close sans avoir été lancée.</p>
       ) : (
         <div className="mt-3 space-y-2">
           <div className="flex justify-between text-xs text-gray-600">

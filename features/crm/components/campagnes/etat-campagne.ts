@@ -32,6 +32,12 @@ export interface EtatForm {
   target_contacts_count: string;
   lead_agent_id: string;
   agent_ids: string[];
+  /**
+   * Le pilote fait partie de l'équipe : coché par défaut. Sert tant qu'aucun
+   * pilote n'est choisi ; ensuite, la case suit la présence du pilote dans
+   * `agent_ids`, qui est la seule vérité envoyée au serveur.
+   */
+  pilote_dans_equipe: boolean;
   offer_id: string;
   distribution_mode: ModeRepartition;
   publics: EtatPublic[];
@@ -90,22 +96,63 @@ export const trier = (publics: EtatPublic[]) =>
   [...publics].sort((a, b) => PUBLICS.indexOf(a.segment) - PUBLICS.indexOf(b.segment));
 
 export function etatInitial(c?: ICampagne | null): EtatForm {
+  const agentIds = c?.assigned_agents?.map((a) => a.agent.id) ?? [];
   return {
     name: c?.name ?? "",
     description: c?.description ?? "",
     start_date: jour(c?.start_date) || aujourdhuiISO(),
-    fin: "date",
+    // « Après N jours » se garde : la fin se calcule au lancement (serveur du 02/11).
+    fin: c?.duration_days ? "duree" : "date",
     end_date: jour(c?.end_date),
-    duration_days: "15",
+    duration_days: c?.duration_days ? String(c.duration_days) : "15",
     target_conversion_rate: c?.target_conversion_rate?.toString() ?? "",
     target_contacts_count: c?.target_contacts_count?.toString() ?? "",
     lead_agent_id: c?.lead_agent?.id ?? "",
-    agent_ids: c?.assigned_agents?.map((a) => a.agent.id) ?? [],
+    agent_ids: agentIds,
+    pilote_dans_equipe: c ? agentIds.includes(c.lead_agent?.id ?? "") : true,
     offer_id: c?.offer?.id ?? "",
     distribution_mode: c?.distribution_mode ?? "AUTOMATIQUE",
     publics: publicsInitiaux(c),
   };
 }
+
+/* ------------------------------------------------------------------ */
+/* Le pilote dans l'équipe                                               */
+/* ------------------------------------------------------------------ */
+
+/** La case « Le pilote fait partie de l'équipe » est-elle cochée ? */
+export const piloteDansEquipe = (f: Pick<EtatForm, "lead_agent_id" | "agent_ids" | "pilote_dans_equipe">) =>
+  f.lead_agent_id ? f.agent_ids.includes(f.lead_agent_id) : f.pilote_dans_equipe;
+
+/** Cocher ou décocher la case : le pilote entre dans l'équipe, ou en sort. */
+export function basculerPiloteEquipe(
+  f: Pick<EtatForm, "lead_agent_id" | "agent_ids" | "pilote_dans_equipe">,
+): Pick<EtatForm, "agent_ids" | "pilote_dans_equipe"> {
+  const dedans = !piloteDansEquipe(f);
+  const sans = f.agent_ids.filter((id) => id !== f.lead_agent_id);
+  return {
+    pilote_dans_equipe: dedans,
+    agent_ids: !f.lead_agent_id ? f.agent_ids : dedans ? [...sans, f.lead_agent_id] : sans,
+  };
+}
+
+/** Changer de pilote : case cochée, le nouveau remplace l'ancien dans l'équipe. */
+export function choisirPilote(
+  f: Pick<EtatForm, "lead_agent_id" | "agent_ids" | "pilote_dans_equipe">,
+  nouveau: string,
+): Pick<EtatForm, "lead_agent_id" | "agent_ids" | "pilote_dans_equipe"> {
+  const dedans = piloteDansEquipe(f);
+  if (!dedans) return { lead_agent_id: nouveau, agent_ids: f.agent_ids, pilote_dans_equipe: false };
+  const sans = f.agent_ids.filter((id) => id !== f.lead_agent_id && id !== nouveau);
+  return { lead_agent_id: nouveau, agent_ids: nouveau ? [...sans, nouveau] : sans, pilote_dans_equipe: true };
+}
+
+/**
+ * Date de fin vidée en modification, mode « À une date » : la fin est effacée
+ * (`end_date: null`). Avant, le champ vide n'envoyait rien et la fin restait.
+ */
+export const finEffacee = (f: Pick<EtatForm, "fin" | "end_date">, modification: boolean) =>
+  modification && f.fin === "date" && f.end_date.trim() === "";
 
 /** Critères de ciblage seuls (aperçu, création, campagne planifiée). */
 export function criteresSaisis(p: EtatPublic): ICampagnePublicInput {

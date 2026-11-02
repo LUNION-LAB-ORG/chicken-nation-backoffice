@@ -6,7 +6,7 @@ import { campagneSchema } from "../../schemas/campagne.schema";
 import { ICampagne, ICampagneDTO } from "../../types/campagne.type";
 import { Bouton } from "../commun/Champs";
 import { ChampsCampagne } from "./ChampsCampagne";
-import { EtatForm, etatInitial, publicSaisi, versNombre } from "./etat-campagne";
+import { EtatForm, etatInitial, finEffacee, publicSaisi, versNombre } from "./etat-campagne";
 
 /** Création et modification d'une campagne (cahier §6.1, lot 3 : publics et critères). */
 export function FormCampagne({ ouvert, campagne, onFermer }: { ouvert: boolean; campagne?: ICampagne | null; onFermer: () => void }) {
@@ -48,7 +48,8 @@ export function FormCampagne({ ouvert, campagne, onFermer }: { ouvert: boolean; 
       : brut.publics;
     const communs = {
       name: v.name,
-      end_date: v.end_date,
+      // Date de fin vidée en modification : `null` l'efface (et la durée avec).
+      end_date: finEffacee(f, !!campagne) ? null : v.end_date,
       duration_days: v.duration_days,
       target_conversion_rate: effacable(v.target_conversion_rate),
       target_contacts_count: effacable(v.target_contacts_count),

@@ -4,6 +4,7 @@ import Modal from "@/components/ui/Modal";
 import { useAgentsQuery } from "../../queries/contact.query";
 import { useDistribuerMutation, useEquipeMutation } from "../../queries/campagne.query";
 import { ICampagne } from "../../types/campagne.type";
+import { texteEquipe } from "../../utils/textes-campagne";
 import { Bouton, ChampSelect } from "../commun/Champs";
 import { ChoixEquipe } from "./ChoixEquipe";
 
@@ -37,9 +38,7 @@ export function EquipeCampagne({
           <ChampSelect label="Pilote" valeur={pilote} onChange={setPilote} options={tous.map((a) => ({ value: a.id, label: a.fullname }))} />
         )}
         <ChoixEquipe choisis={agents} onChange={setAgents} />
-        <p className="text-xs text-gray-500">
-          Un agent retiré rend ses contacts. En répartition automatique, ils sont aussitôt confiés aux autres agents.
-        </p>
+        <p className="text-xs text-gray-500">{texteEquipe(c.distribution_mode)}</p>
         <div className="flex justify-end">
           <Bouton
             variante="primaire"

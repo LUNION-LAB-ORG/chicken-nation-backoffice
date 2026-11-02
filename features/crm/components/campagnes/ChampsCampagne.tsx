@@ -7,7 +7,16 @@ import { ChampSelect, ChampTexte, Libelle, classeChamp } from "../commun/Champs"
 import { ApercuPopulation } from "./ApercuPopulation";
 import { ChoixEquipe } from "./ChoixEquipe";
 import { CriteresPublic } from "./CriteresPublic";
-import { EtatForm, EtatPublic, criteresSaisis, nouveauPublic, trier } from "./etat-campagne";
+import {
+  EtatForm,
+  EtatPublic,
+  basculerPiloteEquipe,
+  choisirPilote,
+  criteresSaisis,
+  nouveauPublic,
+  piloteDansEquipe,
+  trier,
+} from "./etat-campagne";
 
 export type { EtatForm } from "./etat-campagne";
 
@@ -52,9 +61,15 @@ export function ChampsCampagne({ f, maj, lancee }: { f: EtatForm; maj: (p: Parti
         {f.fin === "date" ? (
           <ChampTexte label="Date de fin" type="date" valeur={f.end_date} onChange={(v) => maj({ end_date: v })} min={f.start_date} />
         ) : (
-          <ChampTexte label="Nombre de jours" type="number" valeur={f.duration_days} onChange={(v) => maj({ duration_days: v })} min={1} />
+          <div>
+            <ChampTexte label="Nombre de jours" type="number" valeur={f.duration_days} onChange={(v) => maj({ duration_days: v })} min={1} />
+            <p className="text-xs text-gray-500 mt-1">Les jours comptent à partir du lancement.</p>
+          </div>
         )}
       </div>
+      {!lancee && (
+        <p className="text-xs text-gray-500 -mt-2">Elle se lance seule le jour du début. Le bouton « Lancer » la démarre plus tôt.</p>
+      )}
 
       <div>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -99,13 +114,32 @@ export function ChampsCampagne({ f, maj, lancee }: { f: EtatForm; maj: (p: Parti
 
       <fieldset disabled={lancee} className="space-y-3 disabled:opacity-60">
         <div className="grid sm:grid-cols-2 gap-3">
-          <ChampSelect
-            label="Répartition"
-            valeur={f.distribution_mode}
-            onChange={(v) => maj({ distribution_mode: v as EtatForm["distribution_mode"] })}
-            options={[{ value: "AUTOMATIQUE", label: "Automatique et équilibrée" }, { value: "MANUEL", label: "Manuelle, par le pilote" }]}
-          />
-          <ChampSelect label="Pilote" requis valeur={f.lead_agent_id} onChange={(v) => maj({ lead_agent_id: v })} vide="Choisir…" options={agents.map((a) => ({ value: a.id, label: a.fullname }))} />
+          <div>
+            <ChampSelect
+              label="Répartition"
+              valeur={f.distribution_mode}
+              onChange={(v) => maj({ distribution_mode: v as EtatForm["distribution_mode"] })}
+              options={[{ value: "AUTOMATIQUE", label: "Automatique et équilibrée" }, { value: "MANUEL", label: "Manuelle, par le pilote" }]}
+            />
+            {f.distribution_mode === "MANUEL" && (
+              <p className="text-xs text-gray-500 mt-1">Au lancement, les contacts sont confiés au pilote, qui les répartit.</p>
+            )}
+          </div>
+          <div>
+            <ChampSelect label="Pilote" requis valeur={f.lead_agent_id} onChange={(v) => maj(choisirPilote(f, v))} vide="Choisir…" options={agents.map((a) => ({ value: a.id, label: a.fullname }))} />
+            <label className="flex items-start gap-2 mt-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={piloteDansEquipe(f)}
+                onChange={() => maj(basculerPiloteEquipe(f))}
+                className="mt-0.5 w-4 h-4 accent-[#F17922]"
+              />
+              <span>
+                <span className="block">Le pilote fait partie de l&apos;équipe</span>
+                <span className="block text-xs text-gray-500">Décochez s&apos;il ne doit pas recevoir de contacts.</span>
+              </span>
+            </label>
+          </div>
         </div>
         <ChoixEquipe choisis={f.agent_ids} onChange={(ids) => maj({ agent_ids: ids })} />
       </fieldset>

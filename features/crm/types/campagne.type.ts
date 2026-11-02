@@ -54,6 +54,8 @@ export interface IResumeCampagne {
   coupons: number;
   /** Publics ayant des membres. */
   par_public?: { segment: Public; cibles: number; traites: number; conversions: number }[];
+  /** Contacts ouverts de la campagne sans agent (0 pour une campagne planifiée). Absent d'un serveur plus ancien. */
+  sans_agent?: number;
 }
 
 export interface ICampagne {
@@ -75,6 +77,14 @@ export interface ICampagne {
   started_at: string | null;
   completed_at: string | null;
   targeted_count: number;
+  /** « Après N jours » : la fin se calcule au lancement. Absent d'un serveur plus ancien. */
+  duration_days?: number | null;
+  /** Début de la suspension en cours. */
+  suspended_at?: string | null;
+  /** Pourquoi le lancement automatique n'a pas pu se faire. */
+  launch_error?: string | null;
+  /** Planifiée et date de début atteinte : pas encore lancée. */
+  date_debut_passee?: boolean;
   created_at: string;
   lead_agent: IRef;
   created_by: IRef | null;
@@ -89,7 +99,8 @@ export interface ICampagneDTO {
   name: string;
   description?: string;
   start_date: string;
-  end_date?: string;
+  /** null efface la date de fin (modification). */
+  end_date?: string | null;
   duration_days?: number;
   /** null efface l'objectif (modification). */
   target_conversion_rate?: number | null;
@@ -145,6 +156,8 @@ export interface IApercu {
 export interface ILancement {
   cibles: number;
   repartis: number;
+  /** Répartition manuelle : contacts confiés au pilote, à répartir dans l'équipe. */
+  au_pilote?: number;
   /** Un par public visé, 0 compris. */
   par_public: { segment: Public; cibles: number }[];
   avertissements: string[];

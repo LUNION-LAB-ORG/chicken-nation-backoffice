@@ -6,6 +6,13 @@ import { campagneAPI } from "../../apis/campagne.api";
 import { ResultatGeste, useGesteCampagneMutation } from "../../queries/campagne.query";
 import { ICampagne, ICampagneStats } from "../../types/campagne.type";
 import { PUBLICS, accord, estCapte, fmtNombre } from "../../utils/crm-ui";
+import {
+  SUSPENDRE_EN_PAUSE,
+  TERMINER_A_REPRENDRE,
+  ligneAuPilote,
+  rapportDisponible,
+  texteLancer,
+} from "../../utils/textes-campagne";
 import { Bouton } from "../commun/Champs";
 import { PucePublic } from "../commun/Puces";
 
@@ -16,12 +23,15 @@ function captesOuverts(s?: ICampagneStats): number {
   return (s?.par_public ?? []).filter((p) => estCapte(p.segment)).reduce((n, p) => n + (p.ouverts ?? 0), 0);
 }
 
-function textes(confirmer: Confirmation, s?: ICampagneStats): { titre: string; texte: React.ReactNode; bouton: string } {
+function textes(
+  confirmer: Confirmation,
+  c: ICampagne,
+  s?: ICampagneStats,
+): { titre: string; texte: React.ReactNode; bouton: string } {
   if (confirmer === "lancer") {
     return {
       titre: "Lancer la campagne ?",
-      texte:
-        "Elle prend les contacts disponibles de chaque public, selon ses critères, et les répartit dans l'équipe. La population ne pourra plus changer. Estimez-la d'abord si besoin.",
+      texte: texteLancer(c.distribution_mode),
       bouton: "Lancer",
     };
   }
@@ -31,7 +41,7 @@ function textes(confirmer: Confirmation, s?: ICampagneStats): { titre: string; t
       titre: "Suspendre la campagne ?",
       texte: (
         <>
-          <span className="block">Ses contacts sortent des files des agents jusqu&apos;à la reprise.</span>
+          <span className="block">{SUSPENDRE_EN_PAUSE}</span>
           {n > 0 && (
             <span className="block mt-2 font-semibold text-gray-800">
               {fmtNombre(n)} {accord(n, "contact Glovo/Yango sera mis", "contacts Glovo/Yango seront mis")} en pause : ils ne
@@ -45,8 +55,16 @@ function textes(confirmer: Confirmation, s?: ICampagneStats): { titre: string; t
   }
   return {
     titre: "Terminer la campagne ?",
-    texte:
-      "Ses chiffres sont figés dans le rapport. Les contacts intéressés, ceux qui ont un coupon encore valable et ceux qui ont un rappel prévu à venir restent à leur agent, s'il est toujours actif ; les autres sont libérés, et les clients Glovo/Yango encore à traiter retournent dans la file commune.",
+    texte: (
+      <>
+        <span className="block">
+          Ses chiffres sont figés dans le rapport. Les contacts intéressés, ceux qui ont un coupon encore valable et ceux qui
+          ont un rappel prévu à venir restent à leur agent, s&apos;il est toujours actif ; les autres sont libérés, et les
+          clients Glovo/Yango encore à traiter retournent dans la file commune.
+        </span>
+        <span className="block mt-2">{TERMINER_A_REPRENDRE}</span>
+      </>
+    ),
     bouton: "Terminer",
   };
 }
@@ -65,6 +83,7 @@ function CompteRendu({ r, onFermer }: { r: ResultatGeste; onFermer: () => void }
             Campagne lancée : {fmtNombre(r.lancement.cibles)} {accord(r.lancement.cibles, "contact ciblé", "contacts ciblés")},{" "}
             {fmtNombre(r.lancement.repartis)} {accord(r.lancement.repartis, "confié", "confiés")} à un agent.
           </p>
+          {ligneAuPilote(r.lancement) && <p>{ligneAuPilote(r.lancement)}</p>}
           {r.lancement.par_public.length > 0 && (
             <ul className="flex flex-wrap gap-x-4 gap-y-1">
               {[...r.lancement.par_public]
@@ -123,7 +142,7 @@ export function ActionsCampagne({
   const rapport = (format: "xlsx" | "pdf") =>
     campagneAPI.rapport(c.id, format).catch((e: Error) => toast.error(e.message));
 
-  const t = confirmer ? textes(confirmer, s) : null;
+  const t = confirmer ? textes(confirmer, c, s) : null;
 
   return (
     <div className="space-y-3">
@@ -163,7 +182,8 @@ export function ActionsCampagne({
             <CheckCircle2 className="w-4 h-4" /> Terminer
           </Bouton>
         )}
-        {c.status !== "PLANIFIED" && peutExporter && (
+        {/* Une campagne close sans avoir été lancée n'a rien à rapporter. */}
+        {rapportDisponible(c) && peutExporter && (
           <>
             <Bouton variante="discret" onClick={() => rapport("xlsx")}>
               <FileSpreadsheet className="w-4 h-4" /> Rapport Excel

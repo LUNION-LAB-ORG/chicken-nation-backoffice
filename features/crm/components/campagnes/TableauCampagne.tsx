@@ -6,6 +6,7 @@ import { ICampagne, ICampagnePublic, ICampagneStats } from "../../types/campagne
 import { Public } from "../../types/contact.type";
 import { PUBLICS, PUBLIC_META, accord, estCapte, fmtDate, fmtNombre, fmtPct, libelleStatut } from "../../utils/crm-ui";
 import { DEF_PUBLICS_VISES, DEF_RAISONS, DEF_STATUT, definitionStatuts } from "../../utils/definitions-campagne";
+import { ligneDateDebut, ligneMode, ligneSansAgent } from "../../utils/textes-campagne";
 import { BarresRepartition } from "../commun/BarresRepartition";
 import { Chargement, Erreur } from "../commun/Etats";
 import { InfoBulle } from "../commun/InfoBulle";
@@ -141,6 +142,8 @@ export function TableauCampagne({
     section.scrollIntoView({ behavior: "smooth", block: "start" });
     section.focus({ preventScroll: true });
   };
+  const dateDebut = ligneDateDebut(c);
+  const sansAgent = ligneSansAgent(c);
   const plusieursPublics = (s?.par_public ?? []).length > 1;
   const montrerPublics = !!s && (plusieursPublics || (s.par_public ?? []).some((p) => p.segment === "GLOVO" || p.segment === "YANGO"));
 
@@ -159,8 +162,10 @@ export function TableauCampagne({
             </div>
             <p className="text-sm text-gray-500">
               {c.end_date ? `Du ${fmtDate(c.start_date)} au ${fmtDate(c.end_date)}` : `Depuis le ${fmtDate(c.start_date)}, sans fin prévue`} · pilote {c.lead_agent.fullname} ·{" "}
-              {c.assigned_agents.map((a) => a.agent.fullname).join(", ")}
+              {c.assigned_agents.map((a) => a.agent.fullname).join(", ")} · {ligneMode(c.distribution_mode)}
             </p>
+            {dateDebut && <p className="text-xs font-semibold text-[#F17922] mt-1">{dateDebut}</p>}
+            {sansAgent && <p className="text-xs font-semibold text-[#F17922] mt-1">{sansAgent}</p>}
             {c.description && <p className="text-sm text-gray-600 mt-1">{c.description}</p>}
           </div>
         </div>
