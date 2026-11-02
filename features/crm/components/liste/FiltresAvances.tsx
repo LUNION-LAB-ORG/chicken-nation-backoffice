@@ -132,6 +132,12 @@ export function FiltresAvances({
           coche={filtres.abandoned === "true"}
           onChange={(v) => onChange({ abandoned: v ? "true" : undefined })}
         />
+        {/* Inscrits et inactifs que personne n'appelle : sans agent, hors de toute campagne en cours. */}
+        <Case
+          label="À reprendre (sans agent ni campagne)"
+          coche={filtres.a_reprendre === "true"}
+          onChange={(v) => onChange({ a_reprendre: v ? "true" : undefined })}
+        />
       </div>
     </div>
   );

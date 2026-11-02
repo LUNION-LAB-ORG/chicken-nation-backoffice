@@ -35,6 +35,10 @@ export function ReglagesGeneraux({ initial, lectureSeule = false }: { initial: I
       <div className="grid sm:grid-cols-2 gap-3">
         <ChampTexte label="Tentatives sans réponse avant « injoignable »" type="number" valeur={String(r.max_attempts)} onChange={(v) => maj({ max_attempts: Number(v) })} min={1} max={20} desactive={lectureSeule} />
         <ChampTexte label="Alerte si pas appelé après (heures)" type="number" valeur={String(r.alert_delay_hours)} onChange={(v) => maj({ alert_delay_hours: Number(v) })} min={1} desactive={lectureSeule} />
+        {/* Absent d'un serveur plus ancien : le champ n'apparaît pas. */}
+        {initial.suspension_alert_days !== undefined && (
+          <ChampTexte label="Alerte si campagne suspendue depuis (jours)" type="number" valeur={String(r.suspension_alert_days ?? "")} onChange={(v) => maj({ suspension_alert_days: Number(v) })} min={1} max={60} desactive={lectureSeule} />
+        )}
         <ChampTexte label="Client inactif après (jours sans commande)" type="number" valeur={String(r.inactive_days)} onChange={(v) => maj({ inactive_days: Number(v) })} min={7} max={365} desactive={lectureSeule} />
         <ChampSelect label="Offre par défaut" valeur={r.default_offer_id} onChange={(v) => maj({ default_offer_id: v })} vide="La première de la liste" options={offres.filter((o) => o.is_active).map((o) => ({ value: o.id, label: o.label }))} desactive={lectureSeule} />
         <ChampTexte label="Lien de commande" type="url" valeur={r.app_link} onChange={(v) => maj({ app_link: v })} desactive={lectureSeule} />

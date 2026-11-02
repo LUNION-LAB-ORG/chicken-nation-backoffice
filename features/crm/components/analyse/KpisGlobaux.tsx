@@ -48,6 +48,15 @@ export function KpisGlobaux({ v, publics }: { v: IVueEnsemble; publics?: Public[
           }
           color={captesSeuls ? "orange" : p.non_assignes > 0 ? "red" : "green"}
         />
+        {/* Inscrits et inactifs que personne n'appelle : sans agent, hors de toute campagne en cours. */}
+        {p.a_reprendre != null && (
+          <StatsCard
+            title="À reprendre"
+            value={fmtNombre(p.a_reprendre)}
+            subtitle="inscrits et inactifs sans agent ni campagne"
+            color={p.a_reprendre > 0 ? "orange" : "green"}
+          />
+        )}
         {captes && (
           <StatsCard title="File commune Glovo/Yango" value={fmtNombre(p.file_commune)} subtitle="pris par le premier agent libre" color="blue" />
         )}

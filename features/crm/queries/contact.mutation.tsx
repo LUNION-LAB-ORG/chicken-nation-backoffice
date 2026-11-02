@@ -16,6 +16,8 @@ export const useAssignerMutation = () => {
           ? `${r.count} contact${r.count > 1 ? "s" : ""} assigné${r.count > 1 ? "s" : ""}`
           : `${r.count} contact${r.count > 1 ? "s" : ""} sans agent`,
       );
+      // Clients déjà convertis laissés de côté, contacts confiés hors de l'équipe de leur campagne.
+      if (r.message) toast(r.message, { duration: 8000 });
     },
     onError: (e: Error) => toast.error(e.message),
   });

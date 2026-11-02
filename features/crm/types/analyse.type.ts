@@ -173,6 +173,12 @@ export interface IVueEnsemble {
     non_interesses: number;
     injoignables: number;
     abandons: number;
+    /**
+     * Inscrits et inactifs ouverts, sans agent ni campagne en cours : personne
+     * ne les appelle. null quand les publics choisis n'en contiennent pas ;
+     * absent d'un serveur plus ancien.
+     */
+    a_reprendre?: number | null;
   };
   entonnoir: IEtapeEntonnoir[];
   hors_entonnoir: { commandes: number; sans_contact: number; repris: number };

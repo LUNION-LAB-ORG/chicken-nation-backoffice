@@ -39,6 +39,8 @@ export interface IReglages {
   message_template: string;
   app_link: string;
   default_offer_id: string;
+  /** Alerte à la direction quand une campagne reste suspendue ce nombre de jours. Absent d'un serveur plus ancien. */
+  suspension_alert_days?: number;
 }
 
 export type IStatutAppelDTO = Partial<Pick<IStatutAppel, "label" | "outcome" | "is_active">>;

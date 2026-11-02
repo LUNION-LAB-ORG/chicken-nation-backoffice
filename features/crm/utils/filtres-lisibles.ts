@@ -16,6 +16,7 @@ const LIBELLES: Record<string, string> = {
   last_call_to: "Appelés jusqu'au",
   never_called: "Jamais appelés",
   abandoned: "Paiement abandonné",
+  a_reprendre: "À reprendre",
 };
 
 function valeurLisible(cle: string, valeur: string): string {

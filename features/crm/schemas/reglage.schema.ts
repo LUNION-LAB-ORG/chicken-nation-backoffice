@@ -25,4 +25,11 @@ export const reglagesSchema = z.object({
   message_template: z.string().trim().min(20, "Le message est trop court").max(700, "700 caractères au plus"),
   app_link: z.string().trim().url("Lien invalide"),
   default_offer_id: z.string(),
+  /** Absent d'un serveur plus ancien : rien n'est envoyé. */
+  suspension_alert_days: z
+    .number({ invalid_type_error: "Indiquez un nombre de jours" })
+    .int("Un nombre entier de jours")
+    .min(1, "1 jour au moins")
+    .max(60, "60 jours au plus")
+    .optional(),
 });
