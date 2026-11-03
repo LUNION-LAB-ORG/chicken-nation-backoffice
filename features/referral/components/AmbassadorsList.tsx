@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { Pagination } from "@/components/ui/pagination";
-import { Eye, Loader2, Search, Users, Wallet } from "lucide-react";
+import { Eye, Loader2, Search, UserPlus, Users, Wallet } from "lucide-react";
 import { useAmbassadorsQuery } from "../queries/referral.queries";
 import { Ambassador } from "../types/referral.types";
 import { fcfa } from "../utils/format";
 import AmbassadorPayoutModal from "./AmbassadorPayoutModal";
+import NouveauParrainModal from "./NouveauParrainModal";
 import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
 
@@ -67,6 +68,7 @@ export default function AmbassadorsList() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [ajout, setAjout] = useState(false);
   const peutVerser = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
 
   const { data, isLoading, isError, error, isFetching } = useAmbassadorsQuery({
@@ -91,7 +93,7 @@ export default function AmbassadorsList() {
             <Users size={18} /> Ambassadeurs
           </h2>
           <p className="text-sm text-[#9796A1]">
-            Parrains rémunérés : filleuls, ventes générées, solde à verser.
+            Tous les parrains : filleuls, ventes générées, solde à verser.
           </p>
         </div>
         <form onSubmit={submitSearch} className="flex items-center gap-2">
@@ -113,6 +115,15 @@ export default function AmbassadorsList() {
           >
             Chercher
           </button>
+          {peutVerser && (
+            <button
+              type="button"
+              onClick={() => setAjout(true)}
+              className="h-10 flex items-center gap-1.5 px-4 rounded-lg border border-[#F17922]/30 text-[#F17922] text-sm font-medium hover:bg-[#FFF6E9] cursor-pointer"
+            >
+              <UserPlus size={15} /> Ajouter un parrain
+            </button>
+          )}
         </form>
       </div>
 
@@ -147,7 +158,9 @@ export default function AmbassadorsList() {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-sm text-[#9796A1]">
-                    Aucun ambassadeur pour le moment.
+                    {search
+                      ? "Aucun parrain ne correspond à cette recherche."
+                      : "Aucun ambassadeur pour le moment."}
                   </td>
                 </tr>
               ) : (
@@ -175,9 +188,20 @@ export default function AmbassadorsList() {
       )}
 
       <AmbassadorPayoutModal
+        key={openId ?? "aucun"}
         ambassadorId={openId}
         isOpen={openId !== null}
         onClose={() => setOpenId(null)}
+      />
+
+      <NouveauParrainModal
+        key={ajout ? "ouverte" : "fermee"}
+        isOpen={ajout}
+        onClose={() => setAjout(false)}
+        onCreated={(id) => {
+          setAjout(false);
+          setOpenId(id);
+        }}
       />
     </div>
   );

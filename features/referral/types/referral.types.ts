@@ -53,11 +53,13 @@ export interface Ambassador {
   fullname: string | null;
   phone: string | null;
   referral_code: string | null;
-  /** Nombre total de filleuls rattachés. */
+  /** Code d'avant le 03/11 (CNABC23), toujours valable. */
+  referral_code_ancien: string | null;
+  /** Nombre de filleuls rattachés (parrainages annulés exclus). */
   referees_count: number;
   /** Filleuls ayant passé leur 1re commande qualifiante. */
   qualified_referees_count: number;
-  /** Chiffre d'affaires généré par les filleuls dans les fenêtres (FCFA). */
+  /** Ventes des filleuls : commandes payées et terminées (FCFA). */
   generated_sales: number;
   /** Cumul des gains (prime + commission) toutes catégories (FCFA). */
   total_earned: number;
@@ -101,14 +103,44 @@ export interface ReferralPayout {
   created_at: string;
 }
 
-/** Détail d'un ambassadeur (soldes + gains + historique versements). */
+export type ReferralStatus = "PENDING" | "REWARDED" | "CANCELLED";
+
+/** Filleul d'un parrain. */
+export interface AmbassadorFilleul {
+  /** Identifiant du parrainage (pour l'annuler). */
+  id: string;
+  customer_id: string;
+  fullname: string | null;
+  phone: string | null;
+  /** PENDING = inscrit, REWARDED = qualifié (prime versée au parrain). */
+  status: ReferralStatus;
+  joined_at: string;
+  qualified_at: string | null;
+  sales: number;
+  orders_count: number;
+}
+
+/** Détail d'un ambassadeur (soldes + filleuls + gains + historique versements). */
 export interface AmbassadorDetail extends Ambassador {
+  filleuls: AmbassadorFilleul[];
   earnings: ReferralEarning[];
   payouts: ReferralPayout[];
 }
 
+/** Client proposé pour devenir parrain ou filleul. */
+export interface ReferralClientCandidat {
+  customer_id: string;
+  fullname: string | null;
+  phone: string | null;
+  /** Son code s'il est déjà parrain. */
+  referral_code: string | null;
+  /** Code de son parrain s'il est déjà filleul. */
+  sponsor_code: string | null;
+  has_paid_order: boolean;
+}
+
 export interface MarkPaidPayload {
-  /** Montant versé (défaut = solde payable courant). */
+  /** Montant versé : tout le solde payable. */
   amount: number;
   note?: string;
 }

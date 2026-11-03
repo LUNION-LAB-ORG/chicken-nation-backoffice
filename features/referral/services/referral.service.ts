@@ -4,6 +4,7 @@ import {
   Ambassador,
   AmbassadorDetail,
   MarkPaidPayload,
+  ReferralClientCandidat,
   ReferralConfig,
   ReferralGlobalStats,
   ReferralPayout,
@@ -147,10 +148,49 @@ export const getAmbassadorDetail = async (
   }
 };
 
-/**
- * Bascule les gains éligibles (PENDING au-dessus du seuil) en PAYABLE, prêts
- * à être versés hors-système.
- */
+/** Requête JSON vers l'administration du parrainage, erreurs lisibles. */
+const envoyer = async <T>(chemin: string, method: string, body?: unknown): Promise<T> => {
+  try {
+    const res = await fetch(`${BASE_URL}${chemin}`, {
+      method,
+      headers: headers(),
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    if (!res.ok) return throwHttp(res);
+    return (await res.json()) as T;
+  } catch (error) {
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
+/** Clients à faire parrain ou filleul (2 caractères au moins). */
+export const searchReferralClients = (search: string): Promise<ReferralClientCandidat[]> =>
+  envoyer(`/clients?search=${encodeURIComponent(search.trim())}`, "GET");
+
+/** Fait d'un client un parrain : code choisi, sinon CN-PRENOM. */
+export const createAmbassador = (data: {
+  customer_id: string;
+  code?: string;
+}): Promise<AmbassadorDetail> => envoyer("/ambassadors", "POST", data);
+
+/** Change le code d'un parrain. */
+export const changeAmbassadorCode = (
+  ambassadorId: string,
+  code: string
+): Promise<AmbassadorDetail> => envoyer(`/ambassadors/${ambassadorId}/code`, "PATCH", { code });
+
+/** Rattache un filleul qui a oublié le code à l'inscription. */
+export const addAmbassadorFilleul = (
+  ambassadorId: string,
+  customerId: string
+): Promise<AmbassadorDetail> =>
+  envoyer(`/ambassadors/${ambassadorId}/filleuls`, "POST", { customer_id: customerId });
+
+/** Annule un parrainage : les gains non versés sont annulés. */
+export const cancelReferral = (referralId: string): Promise<AmbassadorDetail> =>
+  envoyer(`/referrals/${referralId}/annuler`, "POST");
+
+/** Bascule tous les gains en attente du parrain en PAYABLE. */
 export const markAmbassadorPayable = async (
   ambassadorId: string
 ): Promise<AmbassadorDetail> => {
@@ -167,8 +207,8 @@ export const markAmbassadorPayable = async (
 };
 
 /**
- * Marque un versement effectué (V1 = marquage manuel). Le serveur solde les
- * gains PAYABLE à hauteur du montant et journalise le versement.
+ * Marque un versement effectué hors du système : le serveur solde tous les
+ * gains PAYABLE. Le montant envoyé doit être ce solde.
  */
 export const markAmbassadorPaid = async (
   ambassadorId: string,

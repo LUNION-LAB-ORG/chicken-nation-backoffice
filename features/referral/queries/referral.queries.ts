@@ -7,15 +7,20 @@ import {
 import toast from "react-hot-toast";
 import {
   AmbassadorsListParams,
+  addAmbassadorFilleul,
+  cancelReferral,
+  changeAmbassadorCode,
+  createAmbassador,
   getAmbassadorDetail,
   getAmbassadors,
   getReferralConfig,
   getReferralStats,
   markAmbassadorPaid,
   markAmbassadorPayable,
+  searchReferralClients,
   updateReferralConfig,
 } from "../services/referral.service";
-import { MarkPaidPayload } from "../types/referral.types";
+import { AmbassadorDetail, MarkPaidPayload } from "../types/referral.types";
 
 export const referralKeys = {
   all: ["referral"] as const,
@@ -24,6 +29,7 @@ export const referralKeys = {
   ambassadors: (params: AmbassadorsListParams) =>
     [...referralKeys.all, "ambassadors", params] as const,
   ambassador: (id: string) => [...referralKeys.all, "ambassador", id] as const,
+  clients: (search: string) => [...referralKeys.all, "clients", search] as const,
 };
 
 /** Stats globales de parrainage. */
@@ -100,3 +106,50 @@ export const useMarkPaidMutation = (ambassadorId: string) => {
     onError: (e: Error) => toast.error(e.message),
   });
 };
+
+/** Clients à faire parrain ou filleul. */
+export const useReferralClientsQuery = (search: string) =>
+  useQuery({
+    queryKey: referralKeys.clients(search.trim()),
+    queryFn: () => searchReferralClients(search),
+    enabled: search.trim().length >= 2,
+    placeholderData: keepPreviousData,
+    staleTime: 30 * 1000,
+  });
+
+/** Fiche reçue après un geste : posée en cache, liste rafraîchie. */
+const useGesteParrain = <V,>(
+  geste: (v: V) => Promise<AmbassadorDetail>,
+  message: string
+) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: geste,
+    onSuccess: (fiche) => {
+      toast.success(message);
+      qc.setQueryData(referralKeys.ambassador(fiche.customer_id), fiche);
+      qc.invalidateQueries({ queryKey: [...referralKeys.all, "ambassadors"] });
+      qc.invalidateQueries({ queryKey: [...referralKeys.all, "clients"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+/** Fait d'un client un parrain. */
+export const useCreateAmbassadorMutation = () =>
+  useGesteParrain(createAmbassador, "Parrain ajouté");
+
+/** Change le code d'un parrain. */
+export const useChangeAmbassadorCodeMutation = (ambassadorId: string) =>
+  useGesteParrain((code: string) => changeAmbassadorCode(ambassadorId, code), "Code modifié");
+
+/** Rattache un filleul. */
+export const useAddFilleulMutation = (ambassadorId: string) =>
+  useGesteParrain(
+    (customerId: string) => addAmbassadorFilleul(ambassadorId, customerId),
+    "Filleul rattaché"
+  );
+
+/** Annule un parrainage. */
+export const useCancelReferralMutation = () =>
+  useGesteParrain(cancelReferral, "Parrainage annulé");

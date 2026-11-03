@@ -9,9 +9,9 @@ import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
 /**
- * Module « Parrainage » (menu Fidélisation) — vue OPÉRATIONNELLE : ambassadeurs,
- * gains, versements. La CONFIGURATION du programme (cadeaux filleul/parrain,
- * primes, commissions, bon de bienvenue) vit dans Paramètres → Parrainage.
+ * Module « Parrainage » (menu Fidélisation) — vue OPÉRATIONNELLE : parrains,
+ * codes, filleuls, gains, versements. La CONFIGURATION du programme (cadeau du
+ * filleul, prime, commission) vit dans Paramètres → Parrainage.
  */
 export default function ReferralModule() {
   const { setActiveTab } = useDashboardStore();
@@ -41,7 +41,7 @@ export default function ReferralModule() {
       {peutParametrer && (
         <div className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
           <SlidersHorizontal className="h-4 w-4 shrink-0 text-[#F17922]" />
-          Cadeaux filleul/parrain, primes et commissions se règlent dans
+          Cadeau du filleul, prime et commission se règlent dans
           <span className="font-medium text-slate-700">Paramètres → Parrainage</span>.
         </div>
       )}

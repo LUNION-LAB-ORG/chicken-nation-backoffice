@@ -1,17 +1,24 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Modal from "@/components/ui/Modal";
-import { Loader2, Wallet, CheckCircle2, BadgeCheck } from "lucide-react";
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { Loader2, Wallet, CheckCircle2, BadgeCheck, Pencil, UserPlus } from "lucide-react";
 import {
+  useAddFilleulMutation,
   useAmbassadorDetailQuery,
+  useCancelReferralMutation,
+  useChangeAmbassadorCodeMutation,
   useMarkPaidMutation,
   useMarkPayableMutation,
 } from "../queries/referral.queries";
 import {
+  AmbassadorFilleul,
   ReferralEarning,
   ReferralEarningStatus,
+  ReferralStatus,
 } from "../types/referral.types";
+import ReferralClientPicker from "./ReferralClientPicker";
 import { fcfa, shortDate } from "../utils/format";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../users/hook/authStore";
@@ -21,6 +28,12 @@ const STATUS_STYLE: Record<ReferralEarningStatus, { label: string; cls: string }
   PENDING: { label: "En attente", cls: "bg-[#FFF6E9] text-[#B45309]" },
   PAYABLE: { label: "Payable", cls: "bg-[#EAF6FF] text-[#0369A1]" },
   PAID: { label: "Payé", cls: "bg-[#E7F7EE] text-[#1E8E5A]" },
+  CANCELLED: { label: "Annulé", cls: "bg-[#F3F3F3] text-[#71717A]" },
+};
+
+const FILLEUL_STYLE: Record<ReferralStatus, { label: string; cls: string }> = {
+  PENDING: { label: "En attente", cls: "bg-[#FFF6E9] text-[#B45309]" },
+  REWARDED: { label: "Qualifié", cls: "bg-[#E7F7EE] text-[#1E8E5A]" },
   CANCELLED: { label: "Annulé", cls: "bg-[#F3F3F3] text-[#71717A]" },
 };
 
@@ -87,19 +100,21 @@ export default function AmbassadorPayoutModal({
   const detailQuery = useAmbassadorDetailQuery(isOpen ? ambassadorId : null);
   const markPayable = useMarkPayableMutation(ambassadorId ?? "");
   const markPaid = useMarkPaidMutation(ambassadorId ?? "");
-  // Passer en payable et marquer payé : FIDELITE UPDATE côté serveur.
+  const changerCode = useChangeAmbassadorCodeMutation(ambassadorId ?? "");
+  const ajouterFilleul = useAddFilleulMutation(ambassadorId ?? "");
+  const annuler = useCancelReferralMutation();
+  // Tous les gestes de la fiche : FIDELITE UPDATE côté serveur.
   const peutVerser = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
 
   const detail = detailQuery.data;
   const payable = detail?.payable_amount ?? 0;
 
-  const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
-
-  useEffect(() => {
-    setAmount(payable ? String(payable) : "");
-    setNote("");
-  }, [payable, ambassadorId]);
+  const [code, setCode] = useState<string | null>(null);
+  const [ajout, setAjout] = useState(false);
+  // Saisies remises à zéro d'un parrain à l'autre : la liste remonte la
+  // fenêtre (clé = parrain).
+  const [aAnnuler, setAAnnuler] = useState<AmbassadorFilleul | null>(null);
 
   const sortedEarnings = useMemo(() => {
     return (detail?.earnings ?? []).slice().sort((a, b) => {
@@ -114,14 +129,16 @@ export default function AmbassadorPayoutModal({
   }, [detail?.earnings]);
 
   const doPay = () => {
-    const a = Number(amount);
-    if (!(a > 0)) return toast.error("Montant du versement invalide.");
-    if (a > payable)
-      return toast.error("Le montant dépasse le solde payable.");
+    if (!(payable > 0)) return toast.error("Aucun gain payable à verser.");
     markPaid.mutate(
-      { amount: a, note: note.trim() || undefined },
+      { amount: payable, note: note.trim() || undefined },
       { onSuccess: () => setNote("") }
     );
+  };
+
+  const enregistrerCode = () => {
+    if (!code?.trim()) return toast.error("Saisissez un code, par exemple CN-AWA.");
+    changerCode.mutate(code, { onSuccess: () => setCode(null) });
   };
 
   return (
@@ -143,19 +160,70 @@ export default function AmbassadorPayoutModal({
         ) : detail ? (
           <>
             {/* Identité */}
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-              <span className="text-[#71717A]">
-                {detail.phone ?? "—"}
-              </span>
-              {detail.referral_code && (
-                <span className="inline-flex items-center gap-1 text-[#F17922] font-semibold">
-                  <BadgeCheck size={14} /> {detail.referral_code}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                <span className="text-[#71717A]">
+                  {detail.phone ?? "—"}
                 </span>
+                {code === null ? (
+                  <span className="inline-flex items-center gap-2">
+                    {detail.referral_code && (
+                      <span className="inline-flex items-center gap-1 text-[#F17922] font-semibold">
+                        <BadgeCheck size={14} /> {detail.referral_code}
+                      </span>
+                    )}
+                    {peutVerser && (
+                      <button
+                        type="button"
+                        onClick={() => setCode(detail.referral_code ?? "")}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#71717A] hover:text-[#F17922] cursor-pointer"
+                      >
+                        <Pencil size={12} /> Modifier le code
+                      </button>
+                    )}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-2">
+                    <input
+                      autoFocus
+                      value={code}
+                      onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && enregistrerCode()}
+                      maxLength={24}
+                      className="h-9 w-44 rounded-lg border border-[#E4E4E7] px-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={enregistrerCode}
+                      disabled={changerCode.isPending}
+                      className="h-9 px-3 rounded-lg bg-[#F17922] text-white text-xs font-semibold hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
+                    >
+                      {changerCode.isPending ? <Loader2 size={14} className="animate-spin" /> : "Enregistrer"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCode(null)}
+                      className="text-xs text-[#71717A] hover:underline cursor-pointer"
+                    >
+                      Annuler
+                    </button>
+                  </span>
+                )}
+                <span className="text-[#9796A1]">
+                  {detail.qualified_referees_count}/{detail.referees_count} filleuls
+                  qualifiés · {fcfa(detail.generated_sales)} de ventes
+                </span>
+              </div>
+              {code !== null && detail.referral_code && (
+                <p className="text-[11px] text-[#9796A1]">
+                  Le code {detail.referral_code} ne marchera plus.
+                </p>
               )}
-              <span className="text-[#9796A1]">
-                {detail.qualified_referees_count}/{detail.referees_count} filleuls
-                qualifiés · {fcfa(detail.generated_sales)} de ventes
-              </span>
+              {detail.referral_code_ancien && (
+                <p className="text-[11px] text-[#9796A1]">
+                  Ancien code toujours valable : {detail.referral_code_ancien}
+                </p>
+              )}
             </div>
 
             {/* Soldes */}
@@ -194,15 +262,9 @@ export default function AmbassadorPayoutModal({
                     <label className="block text-xs font-medium text-[#71717A] mb-1.5">
                       Montant versé (FCFA)
                     </label>
-                    <input
-                      type="number"
-                      min={1}
-                      max={payable || undefined}
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
-                      placeholder="0"
-                    />
+                    <div className="w-full h-11 flex items-center rounded-lg border border-[#E4E4E7] bg-white px-3 text-sm font-semibold text-[#18181B]">
+                      {fcfa(payable)}
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-[#71717A] mb-1.5">
@@ -231,11 +293,119 @@ export default function AmbassadorPayoutModal({
                   </button>
                 </div>
                 <p className="text-[11px] text-[#9796A1]">
-                  Le versement est effectué hors-système (V1 = marquage manuel). Seuls
-                  les gains « payable » peuvent être soldés.
+                  Le versement se fait hors du système (Wave, espèces). « Marquer payé »
+                  solde tous les gains « payable ».
                 </p>
               </div>
             )}
+
+            {/* Filleuls */}
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-2">
+                <h4 className="text-sm font-semibold text-[#18181B]">
+                  Filleuls ({detail.filleuls?.length ?? 0})
+                </h4>
+                {peutVerser && !ajout && (
+                  <button
+                    type="button"
+                    onClick={() => setAjout(true)}
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:underline cursor-pointer"
+                  >
+                    <UserPlus size={15} /> Ajouter un filleul
+                  </button>
+                )}
+              </div>
+
+              {ajout && (
+                <div className="mb-3 rounded-xl border border-[#E4E4E7] bg-[#FAFAFA] p-3 space-y-2">
+                  <p className="text-xs text-[#71717A]">
+                    Pour un nouveau client qui a oublié le code à l&apos;inscription. Il reçoit
+                    son cadeau de bienvenue.
+                  </p>
+                  {ajouterFilleul.isPending ? (
+                    <div className="flex items-center gap-2 text-sm text-[#9796A1] py-2">
+                      <Loader2 size={16} className="animate-spin" /> Rattachement…
+                    </div>
+                  ) : (
+                    <ReferralClientPicker
+                      pour="filleul"
+                      onPick={(c) =>
+                        ajouterFilleul.mutate(c.customer_id, { onSuccess: () => setAjout(false) })
+                      }
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setAjout(false)}
+                    className="text-xs text-[#71717A] hover:underline cursor-pointer"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              )}
+
+              <div className="border border-[#E4E4E7] rounded-xl overflow-x-auto">
+                <table className="w-full min-w-[560px]">
+                  <thead>
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA]">
+                      <th className="py-2 px-3 font-medium">Filleul</th>
+                      <th className="py-2 px-3 font-medium">Inscrit le</th>
+                      <th className="py-2 px-3 font-medium">Statut</th>
+                      <th className="py-2 px-3 font-medium text-right">Ventes</th>
+                      {peutVerser && <th className="py-2 px-3 font-medium text-right">Action</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(detail.filleuls?.length ?? 0) === 0 ? (
+                      <tr>
+                        <td colSpan={peutVerser ? 5 : 4} className="py-6 text-center text-sm text-[#9796A1]">
+                          Aucun filleul pour le moment.
+                        </td>
+                      </tr>
+                    ) : (
+                      detail.filleuls.map((f) => {
+                        const st = FILLEUL_STYLE[f.status] ?? FILLEUL_STYLE.PENDING;
+                        return (
+                          <tr key={f.id} className="border-b border-[#F2F2F4] last:border-0">
+                            <td className="py-2.5 px-3">
+                              <div className="text-sm text-[#18181B]">{f.fullname ?? "—"}</div>
+                              <div className="text-xs text-[#9796A1]">{f.phone ?? "—"}</div>
+                            </td>
+                            <td className="py-2.5 px-3 text-xs text-[#71717A] whitespace-nowrap">
+                              {shortDate(f.joined_at)}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={"text-[10px] font-semibold rounded-full px-2 py-0.5 " + st.cls}>
+                                {st.label}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-right text-sm text-[#18181B] whitespace-nowrap">
+                              {fcfa(f.sales)}
+                              <span className="text-xs text-[#9796A1]">
+                                {" "}· {f.orders_count} commande{f.orders_count > 1 ? "s" : ""}
+                              </span>
+                            </td>
+                            {peutVerser && (
+                              <td className="py-2.5 px-3 text-right">
+                                {f.status !== "CANCELLED" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAAnnuler(f)}
+                                    className="text-xs font-medium text-red-600 hover:underline cursor-pointer"
+                                  >
+                                    Annuler
+                                  </button>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             {/* Gains détaillés */}
             <div>
@@ -305,6 +475,27 @@ export default function AmbassadorPayoutModal({
           </>
         ) : null}
       </div>
+
+      <ConfirmDialog
+        isOpen={aAnnuler !== null}
+        onClose={() => setAAnnuler(null)}
+        onConfirm={() =>
+          aAnnuler &&
+          annuler.mutate(aAnnuler.id, { onSettled: () => setAAnnuler(null) })
+        }
+        title="Annuler ce parrainage ?"
+        description={
+          <p>
+            <b>{aAnnuler?.fullname ?? "Ce filleul"}</b> ne rapportera plus ni prime ni
+            commission. Les gains non versés sont annulés, ceux déjà versés restent. Il ne
+            pourra plus être rattaché à un autre parrain.
+          </p>
+        }
+        confirmLabel="Annuler le parrainage"
+        cancelLabel="Garder"
+        variant="danger"
+        isLoading={annuler.isPending}
+      />
     </Modal>
   );
 }
