@@ -2,7 +2,6 @@
 
 import React from "react";
 import { BadgeCheck, CircleDollarSign, Clock, HandCoins, Users, UserPlus, Wallet, Wallet2 } from "lucide-react";
-import StatsPeriodFilter from "@/components/gestion/Statistiques/shared/StatsPeriodFilter";
 import { StatsFilters } from "../../statistics/filters/statistics.filters";
 import { useReferralTableauQuery } from "../queries/referral.queries";
 import { nombre, pluriel, tendance } from "../utils/format";
@@ -15,27 +14,20 @@ const GrilleCartes: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 );
 
 /**
- * Chiffres du programme : filleuls et ventes sur la période choisie, soldes à
- * ce jour (la période ne les change pas). Chaque carte ouvre sa liste.
+ * Onglet « Tableau de bord » : filleuls et ventes sur la période choisie, soldes
+ * à ce jour (la période ne les change pas). Chaque carte ouvre sa liste.
  */
 export default function ReferralTableau({
   filtres,
-  onChangeFiltres,
   onVoir,
 }: {
   filtres: StatsFilters;
-  onChangeFiltres: (filtres: StatsFilters) => void;
   onVoir: (vue: VueListe) => void;
 }) {
   const { data, isLoading, isError, error, isPlaceholderData } = useReferralTableauQuery(filtres);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h2 className="text-[18px] font-semibold text-[#F17922]">Sur la période</h2>
-        <StatsPeriodFilter filters={filtres} onChange={onChangeFiltres} avecTout />
-      </div>
-
       {isError ? (
         <p className="py-8 text-center text-sm text-red-500">
           {(error as Error)?.message ?? "Les chiffres n'ont pas pu être chargés."}

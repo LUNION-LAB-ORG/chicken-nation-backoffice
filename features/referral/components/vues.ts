@@ -5,3 +5,6 @@ export type VueListe =
   | { onglet: "parrains"; etat?: EtatParrain; tri?: TriParrain }
   | { onglet: "filleuls"; etat?: EtatFilleul }
   | { onglet: "gains"; statut?: ReferralEarningStatus };
+
+/** Onglet affiché par le module Parrainage. */
+export type VueReferral = { onglet: "tableau" } | VueListe;

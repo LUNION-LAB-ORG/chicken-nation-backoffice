@@ -1,32 +1,35 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { HandCoins, SlidersHorizontal, UserPlus, Users } from "lucide-react";
+import React, { useState } from "react";
+import { HandCoins, LayoutDashboard, SlidersHorizontal, UserPlus, Users } from "lucide-react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import StatsPeriodFilter from "@/components/gestion/Statistiques/shared/StatsPeriodFilter";
 import { useDashboardStore } from "@/store/dashboardStore";
 import AmbassadorPayoutModal from "../../../../features/referral/components/AmbassadorPayoutModal";
 import AmbassadorsList from "../../../../features/referral/components/AmbassadorsList";
 import FilleulsList from "../../../../features/referral/components/FilleulsList";
 import GainsList from "../../../../features/referral/components/GainsList";
 import ReferralTableau from "../../../../features/referral/components/ReferralTableau";
-import { VueListe } from "../../../../features/referral/components/vues";
+import { VueReferral } from "../../../../features/referral/components/vues";
 import { Onglet, Onglets } from "../../../../features/crm/components/commun/Onglets";
 import { StatsFilters } from "../../../../features/statistics/filters/statistics.filters";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
-type Cle = VueListe["onglet"];
+type Cle = VueReferral["onglet"];
 
 const ONGLETS: Onglet<Cle>[] = [
+  { cle: "tableau", label: "Tableau de bord", Icone: LayoutDashboard },
   { cle: "parrains", label: "Ambassadeurs", Icone: Users },
   { cle: "filleuls", label: "Filleuls", Icone: UserPlus },
   { cle: "gains", label: "Gains", Icone: HandCoins },
 ];
 
 /**
- * Module « Parrainage » (menu Fidélisation) : chiffres du programme, puis
- * parrains, filleuls et gains filtrés sur la même période. La CONFIGURATION
- * (cadeau du filleul, prime, commission) vit dans Paramètres → Parrainage.
+ * Module « Parrainage » (menu Fidélisation) : un onglet de chiffres et un
+ * onglet par liste (parrains, filleuls, gains), sur la même période. La
+ * CONFIGURATION (cadeau du filleul, prime, commission) vit dans
+ * Paramètres → Parrainage.
  */
 export default function ReferralModule() {
   const { setActiveTab } = useDashboardStore();
@@ -36,17 +39,8 @@ export default function ReferralModule() {
 
   // Tout le programme par défaut : sur un seul mois, la plupart des parrains seraient à zéro.
   const [filtres, setFiltres] = useState<StatsFilters>({});
-  const [vue, setVue] = useState<VueListe>({ onglet: "parrains" });
-  // Une carte cliquée repart de son filtre : la liste est remontée.
-  const [cleVue, setCleVue] = useState(0);
+  const [vue, setVue] = useState<VueReferral>({ onglet: "tableau" });
   const [ficheId, setFicheId] = useState<string | null>(null);
-  const listes = useRef<HTMLDivElement>(null);
-
-  const voir = (suivante: VueListe) => {
-    setVue(suivante);
-    setCleVue((c) => c + 1);
-    listes.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   return (
     <div className="flex-1 overflow-auto p-4 space-y-4">
@@ -75,41 +69,32 @@ export default function ReferralModule() {
         </div>
       )}
 
-      <ReferralTableau filtres={filtres} onChangeFiltres={setFiltres} onVoir={voir} />
-
-      <div ref={listes} className="space-y-4 pt-2 scroll-mt-2">
-        <Onglets<Cle>
-          onglets={ONGLETS}
-          actif={vue.onglet}
-          onChange={(onglet) => setVue({ onglet })}
-        />
-
-        {vue.onglet === "parrains" && (
-          <AmbassadorsList
-            key={cleVue}
-            filtres={filtres}
-            etatInitial={vue.etat}
-            triInitial={vue.tri}
-            onOuvrirFiche={setFicheId}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="min-w-0 max-w-full">
+          <Onglets<Cle>
+            onglets={ONGLETS}
+            actif={vue.onglet}
+            onChange={(onglet) => setVue({ onglet })}
           />
-        )}
-        {vue.onglet === "filleuls" && (
-          <FilleulsList
-            key={cleVue}
-            filtres={filtres}
-            etatInitial={vue.etat}
-            onOuvrirFiche={setFicheId}
-          />
-        )}
-        {vue.onglet === "gains" && (
-          <GainsList
-            key={cleVue}
-            filtres={filtres}
-            statutInitial={vue.statut}
-            onOuvrirFiche={setFicheId}
-          />
-        )}
+        </div>
+        <StatsPeriodFilter filters={filtres} onChange={setFiltres} avecTout />
       </div>
+
+      {vue.onglet === "tableau" && <ReferralTableau filtres={filtres} onVoir={setVue} />}
+      {vue.onglet === "parrains" && (
+        <AmbassadorsList
+          filtres={filtres}
+          etatInitial={vue.etat}
+          triInitial={vue.tri}
+          onOuvrirFiche={setFicheId}
+        />
+      )}
+      {vue.onglet === "filleuls" && (
+        <FilleulsList filtres={filtres} etatInitial={vue.etat} onOuvrirFiche={setFicheId} />
+      )}
+      {vue.onglet === "gains" && (
+        <GainsList filtres={filtres} statutInitial={vue.statut} onOuvrirFiche={setFicheId} />
+      )}
 
       <AmbassadorPayoutModal
         key={ficheId ?? "aucun"}
