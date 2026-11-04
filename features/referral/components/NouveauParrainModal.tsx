@@ -42,8 +42,8 @@ export default function NouveauParrainModal({
           <>
             <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E4E4E7] px-3 py-2.5">
               <span>
-                <span className="block text-sm font-medium text-[#18181B]">{client.fullname ?? "—"}</span>
-                <span className="block text-xs text-[#9796A1]">{client.phone ?? "—"}</span>
+                <span className="block text-sm font-medium text-[#18181B]">{client.fullname ?? "Sans nom"}</span>
+                <span className="block text-xs text-[#9796A1]">{client.phone}</span>
               </span>
               <button
                 type="button"

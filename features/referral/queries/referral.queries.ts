@@ -5,16 +5,23 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { StatsFilters } from "../../statistics/filters/statistics.filters";
 import {
   AmbassadorsListParams,
+  FilleulsListParams,
+  GainsListParams,
   addAmbassadorFilleul,
+  applyPayoutThreshold,
   cancelReferral,
   changeAmbassadorCode,
   createAmbassador,
   getAmbassadorDetail,
   getAmbassadors,
   getReferralConfig,
+  getReferralFilleuls,
+  getReferralGains,
   getReferralStats,
+  getReferralTableau,
   markAmbassadorPaid,
   markAmbassadorPayable,
   searchReferralClients,
@@ -30,6 +37,9 @@ export const referralKeys = {
     [...referralKeys.all, "ambassadors", params] as const,
   ambassador: (id: string) => [...referralKeys.all, "ambassador", id] as const,
   clients: (search: string) => [...referralKeys.all, "clients", search] as const,
+  tableau: (filtres: StatsFilters) => [...referralKeys.all, "tableau", filtres] as const,
+  filleuls: (params: FilleulsListParams) => [...referralKeys.all, "filleuls", params] as const,
+  gains: (params: GainsListParams) => [...referralKeys.all, "gains", params] as const,
 };
 
 /** Stats globales de parrainage. */
@@ -61,6 +71,33 @@ export const useUpdateReferralConfigMutation = () => {
   });
 };
 
+/** Chiffres du programme sur la période. */
+export const useReferralTableauQuery = (filtres: StatsFilters) =>
+  useQuery({
+    queryKey: referralKeys.tableau(filtres),
+    queryFn: () => getReferralTableau(filtres),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+
+/** Tous les filleuls. */
+export const useReferralFilleulsQuery = (params: FilleulsListParams) =>
+  useQuery({
+    queryKey: referralKeys.filleuls(params),
+    queryFn: () => getReferralFilleuls(params),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+
+/** Tous les gains. */
+export const useReferralGainsQuery = (params: GainsListParams) =>
+  useQuery({
+    queryKey: referralKeys.gains(params),
+    queryFn: () => getReferralGains(params),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+
 /** Liste paginée des ambassadeurs. */
 export const useAmbassadorsQuery = (params: AmbassadorsListParams) =>
   useQuery({
@@ -86,8 +123,7 @@ export const useMarkPayableMutation = (ambassadorId: string) => {
     mutationFn: () => markAmbassadorPayable(ambassadorId),
     onSuccess: () => {
       toast.success("Gains basculés en payable");
-      qc.invalidateQueries({ queryKey: referralKeys.ambassador(ambassadorId) });
-      qc.invalidateQueries({ queryKey: [...referralKeys.all, "ambassadors"] });
+      qc.invalidateQueries({ queryKey: referralKeys.all });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -100,8 +136,7 @@ export const useMarkPaidMutation = (ambassadorId: string) => {
     mutationFn: (data: MarkPaidPayload) => markAmbassadorPaid(ambassadorId, data),
     onSuccess: () => {
       toast.success("Versement enregistré");
-      qc.invalidateQueries({ queryKey: referralKeys.ambassador(ambassadorId) });
-      qc.invalidateQueries({ queryKey: [...referralKeys.all, "ambassadors"] });
+      qc.invalidateQueries({ queryKey: referralKeys.all });
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -128,8 +163,24 @@ const useGesteParrain = <V,>(
     onSuccess: (fiche) => {
       toast.success(message);
       qc.setQueryData(referralKeys.ambassador(fiche.customer_id), fiche);
-      qc.invalidateQueries({ queryKey: [...referralKeys.all, "ambassadors"] });
-      qc.invalidateQueries({ queryKey: [...referralKeys.all, "clients"] });
+      qc.invalidateQueries({ queryKey: referralKeys.all });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+};
+
+/** Passe en payable tous les parrains qui ont atteint le seuil. */
+export const useApplyThresholdMutation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: applyPayoutThreshold,
+    onSuccess: ({ promoted_referrers }) => {
+      toast.success(
+        promoted_referrers > 1
+          ? `${promoted_referrers} parrains passés en payable`
+          : `${promoted_referrers} parrain passé en payable`
+      );
+      qc.invalidateQueries({ queryKey: referralKeys.all });
     },
     onError: (e: Error) => toast.error(e.message),
   });

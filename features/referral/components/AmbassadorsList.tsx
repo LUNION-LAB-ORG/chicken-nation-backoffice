@@ -2,16 +2,30 @@
 
 import React, { useState } from "react";
 import { Pagination } from "@/components/ui/pagination";
-import { Eye, Loader2, Search, UserPlus, Users, Wallet } from "lucide-react";
+import SimpleSelect from "@/components/ui/SimpleSelect";
+import { Eye, Loader2, UserPlus, Wallet } from "lucide-react";
+import { StatsFilters } from "../../statistics/filters/statistics.filters";
+import { usePageSelonFiltres } from "../hooks/usePageSelonFiltres";
 import { useAmbassadorsQuery } from "../queries/referral.queries";
-import { Ambassador } from "../types/referral.types";
-import { fcfa } from "../utils/format";
-import AmbassadorPayoutModal from "./AmbassadorPayoutModal";
+import { Ambassador, EtatParrain, TriParrain } from "../types/referral.types";
+import { fcfa, shortDate } from "../utils/format";
 import NouveauParrainModal from "./NouveauParrainModal";
+import ReferralPastilles from "./ReferralPastilles";
+import ReferralRecherche from "./ReferralRecherche";
 import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
 
 const LIMIT = 10;
+
+const TRIS: { value: TriParrain; label: string }[] = [
+  { value: "filleuls", label: "Filleuls" },
+  { value: "qualifies", label: "Filleuls qualifiés" },
+  { value: "dernier_filleul", label: "Dernier filleul" },
+  { value: "ventes", label: "Ventes générées" },
+  { value: "en_attente", label: "En attente" },
+  { value: "payable", label: "Payable" },
+  { value: "paye", label: "Déjà payé" },
+];
 
 const Row: React.FC<{
   a: Ambassador;
@@ -20,8 +34,8 @@ const Row: React.FC<{
 }> = ({ a, onOpen, peutVerser }) => (
   <tr className="border-b border-[#F2F2F4] last:border-0 hover:bg-[#FAFAFA]">
     <td className="py-3 px-3">
-      <div className="text-sm font-medium text-[#18181B]">{a.fullname ?? "—"}</div>
-      <div className="text-xs text-[#9796A1]">{a.phone ?? "—"}</div>
+      <div className="text-sm font-medium text-[#18181B]">{a.fullname ?? "Sans nom"}</div>
+      <div className="text-xs text-[#9796A1]">{a.phone}</div>
       {a.referral_code && (
         <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#F17922]">
           {a.referral_code}
@@ -31,9 +45,17 @@ const Row: React.FC<{
     <td className="py-3 px-3 text-center text-sm text-[#18181B]">
       {a.qualified_referees_count}
       <span className="text-[#9796A1]">/{a.referees_count}</span>
+      {a.last_referee_at && (
+        <div className="text-[11px] text-[#9796A1] whitespace-nowrap">
+          dernier le {shortDate(a.last_referee_at)}
+        </div>
+      )}
     </td>
     <td className="py-3 px-3 text-right text-sm text-[#18181B] whitespace-nowrap">
       {fcfa(a.generated_sales)}
+    </td>
+    <td className="py-3 px-3 text-right text-sm text-[#B45309] whitespace-nowrap">
+      {fcfa(a.pending_amount)}
     </td>
     <td className="py-3 px-3 text-right text-sm font-semibold text-[#0369A1] whitespace-nowrap">
       {fcfa(a.payable_amount)}
@@ -63,58 +85,44 @@ const Row: React.FC<{
   </tr>
 );
 
-export default function AmbassadorsList() {
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
+export default function AmbassadorsList({
+  filtres,
+  etatInitial,
+  triInitial,
+  onOuvrirFiche,
+}: {
+  filtres: StatsFilters;
+  etatInitial?: EtatParrain;
+  triInitial?: TriParrain;
+  onOuvrirFiche: (id: string) => void;
+}) {
   const [search, setSearch] = useState("");
-  const [openId, setOpenId] = useState<string | null>(null);
+  const [etat, setEtat] = useState<EtatParrain | null>(etatInitial ?? null);
+  const [tri, setTri] = useState<TriParrain>(triInitial ?? "filleuls");
   const [ajout, setAjout] = useState(false);
+  const [page, setPage] = usePageSelonFiltres({ filtres, search, etat, tri });
   const peutVerser = useAuthStore((s) => s.can(Modules.FIDELITE, Action.UPDATE));
 
-  const { data, isLoading, isError, error, isFetching } = useAmbassadorsQuery({
+  const { data, isLoading, isError, error, isFetching, isPlaceholderData } = useAmbassadorsQuery({
     page,
     limit: LIMIT,
     search: search || undefined,
+    etat: etat ?? undefined,
+    tri,
+    filtres,
   });
 
-  const submitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    setSearch(searchInput.trim());
-  };
-
   const items = data?.items ?? [];
+  const n = data?.compteurs;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h2 className="text-[18px] font-semibold text-[#F17922] flex items-center gap-2">
-            <Users size={18} /> Ambassadeurs
-          </h2>
-          <p className="text-sm text-[#9796A1]">
-            Tous les parrains : filleuls, ventes générées, solde à verser.
-          </p>
-        </div>
-        <form onSubmit={submitSearch} className="flex items-center gap-2">
-          <div className="relative">
-            <Search
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9796A1]"
-            />
-            <input
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Nom, téléphone, code…"
-              className="h-10 w-56 rounded-lg border border-[#E4E4E7] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-10 px-4 rounded-lg bg-[#F17922] text-white text-sm font-medium hover:bg-[#e06816] cursor-pointer"
-          >
-            Chercher
-          </button>
+        <p className="text-sm text-[#9796A1]">
+          Tous les parrains : filleuls, ventes générées, solde à verser.
+        </p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <ReferralRecherche placeholder="Nom, téléphone, code…" onChercher={setSearch} />
           {peutVerser && (
             <button
               type="button"
@@ -124,17 +132,44 @@ export default function AmbassadorsList() {
               <UserPlus size={15} /> Ajouter un parrain
             </button>
           )}
-        </form>
+        </div>
       </div>
 
-      <div className="bg-white border border-[#E4E4E7] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <ReferralPastilles<EtatParrain>
+          valeur={etat}
+          onChange={setEtat}
+          pastilles={[
+            { valeur: null, label: "Tous", nombre: n?.tous },
+            { valeur: "avec_filleuls", label: "Avec filleuls", nombre: n?.avec_filleuls },
+            { valeur: "sans_filleul", label: "Sans filleul", nombre: n?.sans_filleul },
+            { valeur: "qualifies", label: "Avec qualifiés", nombre: n?.qualifies },
+            { valeur: "en_attente", label: "En attente", nombre: n?.en_attente },
+            { valeur: "payable", label: "Payable", nombre: n?.payable },
+            { valeur: "paye", label: "Déjà payé", nombre: n?.paye },
+          ]}
+        />
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-[#71717A] whitespace-nowrap">Trier par</span>
+          <div className="w-48">
+            <SimpleSelect options={TRIS} value={tri} onChange={(v) => setTri(v as TriParrain)} />
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`bg-white border border-[#E4E4E7] rounded-xl overflow-hidden transition-opacity ${
+          isPlaceholderData ? "opacity-50" : ""
+        }`}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px]">
+          <table className="w-full min-w-[820px]">
             <thead>
               <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA] text-left">
                 <th className="py-2.5 px-3 font-medium">Ambassadeur</th>
                 <th className="py-2.5 px-3 font-medium text-center">Filleuls qualifiés</th>
                 <th className="py-2.5 px-3 font-medium text-right">Ventes générées</th>
+                <th className="py-2.5 px-3 font-medium text-right">En attente</th>
                 <th className="py-2.5 px-3 font-medium text-right">Payable</th>
                 <th className="py-2.5 px-3 font-medium text-right">Déjà payé</th>
                 <th className="py-2.5 px-3 font-medium text-right">Action</th>
@@ -143,7 +178,7 @@ export default function AmbassadorsList() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center">
+                  <td colSpan={7} className="py-10 text-center">
                     <span className="inline-flex items-center gap-2 text-sm text-[#9796A1]">
                       <Loader2 size={16} className="animate-spin" /> Chargement…
                     </span>
@@ -151,15 +186,15 @@ export default function AmbassadorsList() {
                 </tr>
               ) : isError ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-red-500">
+                  <td colSpan={7} className="py-10 text-center text-sm text-red-500">
                     {(error as Error)?.message ?? "Erreur de chargement"}
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-sm text-[#9796A1]">
-                    {search
-                      ? "Aucun parrain ne correspond à cette recherche."
+                  <td colSpan={7} className="py-10 text-center text-sm text-[#9796A1]">
+                    {search || etat
+                      ? "Aucun parrain ne correspond à ces filtres."
                       : "Aucun ambassadeur pour le moment."}
                   </td>
                 </tr>
@@ -168,7 +203,7 @@ export default function AmbassadorsList() {
                   <Row
                     key={a.customer_id}
                     a={a}
-                    onOpen={setOpenId}
+                    onOpen={onOuvrirFiche}
                     peutVerser={peutVerser}
                   />
                 ))
@@ -180,19 +215,12 @@ export default function AmbassadorsList() {
 
       {data && data.totalPages > 1 && (
         <Pagination
-          currentPage={data.page}
+          currentPage={page}
           totalPages={data.totalPages}
           onPageChange={setPage}
           isLoading={isFetching}
         />
       )}
-
-      <AmbassadorPayoutModal
-        key={openId ?? "aucun"}
-        ambassadorId={openId}
-        isOpen={openId !== null}
-        onClose={() => setOpenId(null)}
-      />
 
       <NouveauParrainModal
         key={ajout ? "ouverte" : "fermee"}
@@ -200,7 +228,7 @@ export default function AmbassadorsList() {
         onClose={() => setAjout(false)}
         onCreated={(id) => {
           setAjout(false);
-          setOpenId(id);
+          onOuvrirFiche(id);
         }}
       />
     </div>

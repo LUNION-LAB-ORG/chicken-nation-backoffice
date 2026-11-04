@@ -16,26 +16,13 @@ import {
   AmbassadorFilleul,
   ReferralEarning,
   ReferralEarningStatus,
-  ReferralStatus,
 } from "../types/referral.types";
 import ReferralClientPicker from "./ReferralClientPicker";
 import { fcfa, shortDate } from "../utils/format";
+import { STATUT_FILLEUL, STATUT_GAIN } from "../utils/statuts";
 import toast from "react-hot-toast";
 import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
-
-const STATUS_STYLE: Record<ReferralEarningStatus, { label: string; cls: string }> = {
-  PENDING: { label: "En attente", cls: "bg-[#FFF6E9] text-[#B45309]" },
-  PAYABLE: { label: "Payable", cls: "bg-[#EAF6FF] text-[#0369A1]" },
-  PAID: { label: "Payé", cls: "bg-[#E7F7EE] text-[#1E8E5A]" },
-  CANCELLED: { label: "Annulé", cls: "bg-[#F3F3F3] text-[#71717A]" },
-};
-
-const FILLEUL_STYLE: Record<ReferralStatus, { label: string; cls: string }> = {
-  PENDING: { label: "En attente", cls: "bg-[#FFF6E9] text-[#B45309]" },
-  REWARDED: { label: "Qualifié", cls: "bg-[#E7F7EE] text-[#1E8E5A]" },
-  CANCELLED: { label: "Annulé", cls: "bg-[#F3F3F3] text-[#71717A]" },
-};
 
 const SoldeCard: React.FC<{ label: string; value: number; color: string }> = ({
   label,
@@ -51,7 +38,7 @@ const SoldeCard: React.FC<{ label: string; value: number; color: string }> = ({
 );
 
 const EarningRow: React.FC<{ e: ReferralEarning }> = ({ e }) => {
-  const st = STATUS_STYLE[e.status] ?? STATUS_STYLE.PENDING;
+  const st = STATUT_GAIN[e.status] ?? STATUT_GAIN.PENDING;
   return (
     <tr className="border-b border-[#F2F2F4] last:border-0">
       <td className="py-2.5 px-3">
@@ -66,9 +53,9 @@ const EarningRow: React.FC<{ e: ReferralEarning }> = ({ e }) => {
           {e.kind === "PRIME" ? "Prime" : "Commission"}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-sm text-[#18181B]">{e.referee_name ?? "—"}</td>
+      <td className="py-2.5 px-3 text-sm text-[#18181B]">{e.referee_name ?? "Sans nom"}</td>
       <td className="py-2.5 px-3 text-xs text-[#71717A]">
-        {e.order_number ? `#${e.order_number}` : "—"}
+        {e.order_number ? `#${e.order_number}` : ""}
         {e.order_amount != null && (
           <span className="text-[#9796A1]"> · {fcfa(e.order_amount)}</span>
         )}
@@ -162,9 +149,7 @@ export default function AmbassadorPayoutModal({
             {/* Identité */}
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                <span className="text-[#71717A]">
-                  {detail.phone ?? "—"}
-                </span>
+                {detail.phone && <span className="text-[#71717A]">{detail.phone}</span>}
                 {code === null ? (
                   <span className="inline-flex items-center gap-2">
                     {detail.referral_code && (
@@ -364,12 +349,12 @@ export default function AmbassadorPayoutModal({
                       </tr>
                     ) : (
                       detail.filleuls.map((f) => {
-                        const st = FILLEUL_STYLE[f.status] ?? FILLEUL_STYLE.PENDING;
+                        const st = STATUT_FILLEUL[f.status] ?? STATUT_FILLEUL.PENDING;
                         return (
                           <tr key={f.id} className="border-b border-[#F2F2F4] last:border-0">
                             <td className="py-2.5 px-3">
-                              <div className="text-sm text-[#18181B]">{f.fullname ?? "—"}</div>
-                              <div className="text-xs text-[#9796A1]">{f.phone ?? "—"}</div>
+                              <div className="text-sm text-[#18181B]">{f.fullname ?? "Sans nom"}</div>
+                              <div className="text-xs text-[#9796A1]">{f.phone}</div>
                             </td>
                             <td className="py-2.5 px-3 text-xs text-[#71717A] whitespace-nowrap">
                               {shortDate(f.joined_at)}

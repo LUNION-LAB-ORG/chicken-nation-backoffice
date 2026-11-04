@@ -1,14 +1,23 @@
 import { getAuthToken } from "@/utils/authUtils";
 import { getHumanReadableError } from "@/utils/errorMessages";
+import { filtersToQueryParams, StatsFilters } from "../../statistics/filters/statistics.filters";
 import {
   Ambassador,
   AmbassadorDetail,
+  EtatFilleul,
+  EtatParrain,
   MarkPaidPayload,
   ReferralClientCandidat,
   ReferralConfig,
+  ReferralEarningKind,
+  ReferralEarningStatus,
+  ReferralFilleulLigne,
+  ReferralGainLigne,
   ReferralGlobalStats,
   ReferralPayout,
+  ReferralTableau,
   SetReferralConfigPayload,
+  TriParrain,
 } from "../types/referral.types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
@@ -72,10 +81,18 @@ export const updateReferralConfig = async (
 /* Ambassadeurs & versements                                                  */
 /* -------------------------------------------------------------------------- */
 
-export interface AmbassadorsListParams {
+/** Filtres communs des listes. */
+interface ListeParams {
   page?: number;
   limit?: number;
   search?: string;
+  /** Période : rien = tout le programme. */
+  filtres?: StatsFilters;
+}
+
+export interface AmbassadorsListParams extends ListeParams {
+  etat?: EtatParrain;
+  tri?: TriParrain;
 }
 
 export interface AmbassadorsListResult {
@@ -83,7 +100,44 @@ export interface AmbassadorsListResult {
   total: number;
   page: number;
   totalPages: number;
+  compteurs?: Record<EtatParrain | "tous", number>;
 }
+
+export interface FilleulsListParams extends ListeParams {
+  etat?: EtatFilleul;
+}
+
+export interface FilleulsListResult {
+  items: ReferralFilleulLigne[];
+  total: number;
+  page: number;
+  totalPages: number;
+  compteurs?: Record<EtatFilleul | "tous", number>;
+}
+
+export interface GainsListParams extends ListeParams {
+  status?: ReferralEarningStatus;
+  type?: ReferralEarningKind;
+}
+
+export interface GainsListResult {
+  items: ReferralGainLigne[];
+  total: number;
+  page: number;
+  totalPages: number;
+  compteurs?: Record<ReferralEarningStatus | "tous", number>;
+  /** Total des gains filtrés (FCFA). */
+  montant?: number;
+}
+
+/** Paramètres d'URL : période et filtres renseignés. */
+const lireParams = ({ filtres, ...reste }: ListeParams & Record<string, unknown>): string => {
+  const qs = new URLSearchParams(filtersToQueryParams(filtres ?? {}));
+  for (const [cle, valeur] of Object.entries(reste)) {
+    if (valeur !== undefined && valeur !== null && valeur !== "") qs.set(cle, String(valeur));
+  }
+  return qs.toString();
+};
 
 /**
  * Normalise une réponse paginée : tolère les deux formes backoffice
@@ -115,18 +169,15 @@ const normalizeList = <T>(
 export const getAmbassadors = async (
   params: AmbassadorsListParams = {}
 ): Promise<AmbassadorsListResult> => {
-  const { page = 1, limit = 10, search } = params;
+  const { page = 1, limit = 10 } = params;
   try {
-    const qs = new URLSearchParams();
-    qs.set("page", String(page));
-    qs.set("limit", String(limit));
-    if (search) qs.set("search", search.trim());
-    const res = await fetch(`${BASE_URL}/ambassadors?${qs.toString()}`, {
+    const res = await fetch(`${BASE_URL}/ambassadors?${lireParams({ ...params, page, limit })}`, {
       method: "GET",
       headers: headers(),
     });
     if (!res.ok) return throwHttp(res);
-    return normalizeList<Ambassador>(await res.json(), page, limit);
+    const brut = await res.json();
+    return { ...normalizeList<Ambassador>(brut, page, limit), compteurs: brut?.compteurs };
   } catch (error) {
     throw new Error(getHumanReadableError(error));
   }
@@ -162,6 +213,30 @@ const envoyer = async <T>(chemin: string, method: string, body?: unknown): Promi
     throw new Error(getHumanReadableError(error));
   }
 };
+
+/** Chiffres du programme sur la période, soldes à ce jour, courbes. */
+export const getReferralTableau = (filtres: StatsFilters): Promise<ReferralTableau> =>
+  envoyer(`/tableau?${lireParams({ filtres })}`, "GET");
+
+/** Tous les filleuls. */
+export const getReferralFilleuls = ({
+  page = 1,
+  limit = 10,
+  ...reste
+}: FilleulsListParams): Promise<FilleulsListResult> =>
+  envoyer(`/filleuls?${lireParams({ ...reste, page, limit })}`, "GET");
+
+/** Tous les gains. */
+export const getReferralGains = ({
+  page = 1,
+  limit = 10,
+  ...reste
+}: GainsListParams): Promise<GainsListResult> =>
+  envoyer(`/earnings?${lireParams({ ...reste, page, limit })}`, "GET");
+
+/** Passe en payable les gains en attente des parrains qui ont atteint le seuil. */
+export const applyPayoutThreshold = (): Promise<{ promoted_referrers: number; updated: number }> =>
+  envoyer("/earnings/apply-threshold", "POST");
 
 /** Clients à faire parrain ou filleul (2 caractères au moins). */
 export const searchReferralClients = (search: string): Promise<ReferralClientCandidat[]> =>

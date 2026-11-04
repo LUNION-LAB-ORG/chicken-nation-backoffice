@@ -59,6 +59,8 @@ export interface Ambassador {
   referees_count: number;
   /** Filleuls ayant passé leur 1re commande qualifiante. */
   qualified_referees_count: number;
+  /** Inscription du dernier filleul (liste seulement). */
+  last_referee_at?: string | null;
   /** Ventes des filleuls : commandes payées et terminées (FCFA). */
   generated_sales: number;
   /** Cumul des gains (prime + commission) toutes catégories (FCFA). */
@@ -143,4 +145,84 @@ export interface MarkPaidPayload {
   /** Montant versé : tout le solde payable. */
   amount: number;
   note?: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Pilotage : chiffres et listes filtrées                                     */
+/* -------------------------------------------------------------------------- */
+
+export type EtatParrain =
+  | "avec_filleuls"
+  | "sans_filleul"
+  | "qualifies"
+  | "en_attente"
+  | "payable"
+  | "paye";
+
+export type TriParrain =
+  | "filleuls"
+  | "qualifies"
+  | "ventes"
+  | "en_attente"
+  | "payable"
+  | "paye"
+  | "dernier_filleul";
+
+export type EtatFilleul = "en_attente" | "a_commande" | "qualifie" | "annule";
+
+export type EtatCadeau = "A_GRATTER" | "GRATTE" | "UTILISE" | "EXPIRE" | "RETIRE";
+
+export interface ReferralCourbePoint {
+  /** AAAA-MM-JJ, ou AAAA-MM quand la courbe va au mois. */
+  date: string;
+  qualifies: number;
+  en_attente: number;
+  ventes: number;
+}
+
+/** Chiffres du programme : filleuls et ventes sur la période, soldes à ce jour. */
+export interface ReferralTableau {
+  parrains: { codes: number; actifs: number };
+  filleuls: {
+    inscrits: number;
+    ont_commande: number;
+    qualifies: number;
+    en_attente: number;
+    annules: number;
+  };
+  ventes: { montant: number; commandes: number };
+  /** Période précédente de même durée ; `null` sur tout le programme. */
+  precedent: { inscrits: number; qualifies: number; ventes: number } | null;
+  soldes: {
+    en_attente: number;
+    parrains_en_attente: number;
+    payable: number;
+    parrains_payable: number;
+    paye: number;
+    parrains_paye: number;
+    primes: number;
+    commissions: number;
+    /** Solde en attente à partir duquel un parrain passe en payable. */
+    seuil: number;
+    parrains_au_seuil: number;
+  };
+  courbe: { pas: "jour" | "mois"; points: ReferralCourbePoint[] };
+}
+
+/** Ligne de la liste de tous les filleuls. */
+export interface ReferralFilleulLigne extends AmbassadorFilleul {
+  /** `null` pour les filleuls d'avant le cadeau à gratter. */
+  gift: EtatCadeau | null;
+  referrer_id: string;
+  referrer_name: string | null;
+  referrer_code: string | null;
+}
+
+/** Ligne de la liste de tous les gains. */
+export interface ReferralGainLigne extends ReferralEarning {
+  referrer_id: string;
+  referrer_name: string | null;
+  referrer_code: string | null;
+  paid_at: string | null;
+  note: string | null;
 }

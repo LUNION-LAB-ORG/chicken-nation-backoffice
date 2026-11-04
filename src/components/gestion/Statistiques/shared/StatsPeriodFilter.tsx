@@ -8,9 +8,11 @@ import DateRangePicker from "@/components/ui/DateRangePicker";
 interface StatsPeriodFilterProps {
   filters: StatsFilters;
   onChange: (filters: StatsFilters) => void;
+  /** Ajoute « Tout » : ni période ni dates. */
+  avecTout?: boolean;
 }
 
-export default function StatsPeriodFilter({ filters, onChange }: StatsPeriodFilterProps) {
+export default function StatsPeriodFilter({ filters, onChange, avecTout }: StatsPeriodFilterProps) {
   const [showCalendar, setShowCalendar] = useState(false);
   const isCustomActive = !filters.period && (filters.startDate || filters.endDate);
 
@@ -38,7 +40,7 @@ export default function StatsPeriodFilter({ filters, onChange }: StatsPeriodFilt
         endDate: formatDate(range.end),
       });
     } else {
-      onChange({ ...filters, period: "month", startDate: undefined, endDate: undefined });
+      onChange({ ...filters, period: avecTout ? undefined : "month", startDate: undefined, endDate: undefined });
     }
     setShowCalendar(false);
   };
@@ -51,7 +53,22 @@ export default function StatsPeriodFilter({ filters, onChange }: StatsPeriodFilt
 
   return (
     <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+      <div className="flex flex-wrap items-center gap-1 bg-gray-100 rounded-xl p-1">
+        {avecTout && (
+          <button
+            onClick={() => {
+              setShowCalendar(false);
+              onChange({ ...filters, period: undefined, startDate: undefined, endDate: undefined });
+            }}
+            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-150 ${
+              !filters.period && !isCustomActive
+                ? "bg-white shadow-sm text-[#F17922] font-semibold"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            Tout
+          </button>
+        )}
         {PERIOD_OPTIONS.map((opt) => (
           <button
             key={opt.value}

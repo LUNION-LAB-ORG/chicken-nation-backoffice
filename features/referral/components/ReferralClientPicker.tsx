@@ -61,8 +61,8 @@ export default function ReferralClientPicker({
                     className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-[#FFF6E9] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent cursor-pointer"
                   >
                     <span>
-                      <span className="block text-sm font-medium text-[#18181B]">{c.fullname ?? "—"}</span>
-                      <span className="block text-xs text-[#9796A1]">{c.phone ?? "—"}</span>
+                      <span className="block text-sm font-medium text-[#18181B]">{c.fullname ?? "Sans nom"}</span>
+                      <span className="block text-xs text-[#9796A1]">{c.phone}</span>
                     </span>
                     {bloque && <span className="text-xs text-[#71717A] whitespace-nowrap">{bloque}</span>}
                   </button>
