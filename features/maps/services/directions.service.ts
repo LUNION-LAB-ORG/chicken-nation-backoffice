@@ -38,6 +38,9 @@ export async function getRoute(params: IGetRouteParams): Promise<IRouteResult> {
       originLng: String(params.origin.lng),
       destLat: String(params.destination.lat),
       destLng: String(params.destination.lng),
+      // Ces cartes partent du restaurant, sans livreur à suivre : tracé sans
+      // trafic, deux fois moins cher. Ignoré par le serveur avec des arrêts.
+      sans_trafic: "1",
     });
 
     if (params.waypoints && params.waypoints.length > 0) {
