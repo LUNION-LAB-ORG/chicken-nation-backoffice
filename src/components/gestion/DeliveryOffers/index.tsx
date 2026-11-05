@@ -35,6 +35,10 @@ import {
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 import { toast } from "react-hot-toast";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
+import ProductTargetSelector from "@/components/gestion/Promos/ProductTargetSelector";
+import { getAllMenus } from "@/services/menuService";
+import { getAllCategories, type Category } from "@/services/categoryService";
+import type { MenuItem } from "@/types";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 
@@ -58,6 +62,17 @@ const DAYS: { key: string; label: string }[] = [
   { key: "saturday", label: "Sam" },
   { key: "sunday", label: "Dim" },
 ];
+
+/** Qui et quoi une offre vise, quand elle ne vise pas tout le monde ni tout le menu. */
+function describeCiblage(o: DeliveryOffer): string {
+  const parties: string[] = [];
+  if (o.target_etudiant) parties.push("Étudiants");
+  const menus = o.dish_ids?.length ?? 0;
+  const categories = o.category_ids?.length ?? 0;
+  if (menus > 0) parties.push(`${menus} menu${menus > 1 ? "s" : ""}`);
+  if (categories > 0) parties.push(`${categories} catégorie${categories > 1 ? "s" : ""}`);
+  return parties.join(" · ");
+}
 
 function describeOffer(o: DeliveryOffer): string {
   if (o.type === "FREE_DELIVERY") return "Gratuite";
@@ -217,7 +232,12 @@ export default function DeliveryOffers() {
                       isFetching ? "opacity-60" : ""
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium text-gray-900">{o.name}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {o.name}
+                      {describeCiblage(o) && (
+                        <div className="mt-0.5 text-xs font-normal text-gray-400">{describeCiblage(o)}</div>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
                       <span className="inline-block px-2 py-0.5 rounded-full bg-orange-50 text-[#F17922] font-semibold text-xs">
                         {describeOffer(o)}
@@ -381,6 +401,10 @@ interface FormData {
   target_standard: boolean;
   target_premium: boolean;
   target_gold: boolean;
+  target_etudiant: boolean;
+  product_target: "all" | "specific" | "categories";
+  dish_ids: string[];
+  category_ids: string[];
   days_of_week: string[];
   time_start: string;
   time_end: string;
@@ -537,6 +561,30 @@ function OfferFormModal({
     [restaurantsResp],
   );
 
+  const [menus, setMenus] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [chargementProduits, setChargementProduits] = useState(true);
+
+  useEffect(() => {
+    let annule = false;
+    // Large : un menu absent de la liste ne pourrait pas être choisi.
+    Promise.all([getAllMenus({ page: 1, limit: 500 }), getAllCategories()])
+      .then(([listeMenus, listeCategories]) => {
+        if (annule) return;
+        setMenus(listeMenus.filter((m) => m.isAvailable) as unknown as MenuItem[]);
+        setCategories(listeCategories);
+      })
+      .catch(() => {
+        if (!annule) toast.error("Impossible de charger les menus et les catégories");
+      })
+      .finally(() => {
+        if (!annule) setChargementProduits(false);
+      });
+    return () => {
+      annule = true;
+    };
+  }, []);
+
   const [form, setForm] = useState<FormData>(() => {
     if (offer) {
       return {
@@ -550,6 +598,14 @@ function OfferFormModal({
         target_standard: offer.target_standard,
         target_premium: offer.target_premium,
         target_gold: offer.target_gold,
+        target_etudiant: offer.target_etudiant ?? false,
+        product_target: offer.dish_ids?.length
+          ? "specific"
+          : offer.category_ids?.length
+            ? "categories"
+            : "all",
+        dish_ids: offer.dish_ids ?? [],
+        category_ids: offer.category_ids ?? [],
         days_of_week: offer.days_of_week,
         time_start: offer.time_start ?? "",
         time_end: offer.time_end ?? "",
@@ -573,6 +629,10 @@ function OfferFormModal({
       target_standard: false,
       target_premium: false,
       target_gold: false,
+      target_etudiant: false,
+      product_target: "all",
+      dish_ids: [],
+      category_ids: [],
       days_of_week: [],
       time_start: "",
       time_end: "",
@@ -596,6 +656,9 @@ function OfferFormModal({
           offer.target_standard ||
           offer.target_premium ||
           offer.target_gold ||
+          offer.target_etudiant ||
+          offer.dish_ids?.length ||
+          offer.category_ids?.length ||
           offer.restaurant_ids.length ||
           offer.max_usage ||
           offer.max_usage_per_user ||
@@ -627,19 +690,35 @@ function OfferFormModal({
       form.min_order_amount > 0
         ? ` dès ${form.min_order_amount.toLocaleString()} F d'achat`
         : "";
+    const pourQui = form.target_etudiant ? " pour les cartes étudiantes" : "";
+    const nbChoisis =
+      form.product_target === "specific"
+        ? form.dish_ids.length
+        : form.product_target === "categories"
+          ? form.category_ids.length
+          : 0;
+    const pourQuoi =
+      nbChoisis > 0
+        ? form.product_target === "specific"
+          ? `, si le panier contient au moins un des ${nbChoisis} menus choisis`
+          : `, si le panier contient au moins un plat des ${nbChoisis} catégories choisies`
+        : "";
     const when =
       form.start_date && form.expiration_date
         ? ` · du ${new Date(form.start_date).toLocaleDateString()} au ${new Date(
             form.expiration_date,
           ).toLocaleDateString()}`
         : "";
-    return `${what} ${where}${cond}${when}.`;
+    return `${what} ${where}${pourQui}${cond}${pourQuoi}${when}.`;
   }, [form]);
 
   const set = <K extends keyof FormData>(key: K, value: FormData[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
 
-  const toggleArray = (key: "restaurant_ids" | "days_of_week", v: string) =>
+  const toggleArray = (
+    key: "restaurant_ids" | "days_of_week" | "dish_ids" | "category_ids",
+    v: string,
+  ) =>
     setForm((f) => ({
       ...f,
       [key]: f[key].includes(v) ? f[key].filter((x) => x !== v) : [...f[key], v],
@@ -671,6 +750,11 @@ function OfferFormModal({
           "Un palier plus lointain ne peut pas coûter moins cher qu'un palier plus proche",
         );
     }
+    // Sans ce contrôle, l'offre partirait sur tout le menu sans que personne le voie.
+    if (form.product_target === "specific" && form.dish_ids.length === 0)
+      return toast.error("Choisissez au moins un menu, ou « Tous les produits »");
+    if (form.product_target === "categories" && form.category_ids.length === 0)
+      return toast.error("Choisissez au moins une catégorie, ou « Tous les produits »");
     if (!form.start_date || !form.expiration_date)
       return toast.error("Les dates de début et de fin sont requises");
     if (new Date(form.expiration_date) <= new Date(form.start_date))
@@ -687,6 +771,9 @@ function OfferFormModal({
       target_standard: form.target_standard,
       target_premium: form.target_premium,
       target_gold: form.target_gold,
+      target_etudiant: form.target_etudiant,
+      dish_ids: form.product_target === "specific" ? form.dish_ids : [],
+      category_ids: form.product_target === "categories" ? form.category_ids : [],
       days_of_week: form.days_of_week,
       time_start: form.time_start || undefined,
       time_end: form.time_end || undefined,
@@ -862,6 +949,34 @@ function OfferFormModal({
                     </div>
                   </div>
 
+                  {/* Menus et catégories */}
+                  <div>
+                    <ProductTargetSelector
+                      activeProductTarget={form.product_target}
+                      onProductTargetChange={(cible) => set("product_target", cible)}
+                      menus={menus}
+                      categories={categories}
+                      loadingMenus={chargementProduits}
+                      loadingCategories={chargementProduits}
+                      selectedMenus={form.dish_ids}
+                      selectedCategories={form.category_ids}
+                      onMenuToggle={(id) => toggleArray("dish_ids", id)}
+                      onCategoryToggle={(id) => toggleArray("category_ids", id)}
+                      onSelectAllMenus={() =>
+                        set("dish_ids", form.dish_ids.length === menus.length ? [] : menus.map((m) => m.id))
+                      }
+                      onSelectAllCategories={() =>
+                        set("category_ids", form.category_ids.length === categories.length ? [] : categories.map((c) => c.id))
+                      }
+                      getSelectedItemsDisplay={() => null}
+                    />
+                    {form.product_target !== "all" && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        L&apos;offre s&apos;applique dès que le panier contient au moins un de ces produits.
+                      </p>
+                    )}
+                  </div>
+
                   {/* Jours */}
                   <div>
                     <label className={label}>Jours concernés (vide = tous)</label>
@@ -895,14 +1010,15 @@ function OfferFormModal({
                     </div>
                   </div>
 
-                  {/* Ciblage fidélité */}
+                  {/* Ciblage clients */}
                   <div>
-                    <label className={label}>Niveaux fidélité ciblés (aucun = tous)</label>
-                    <div className="flex gap-4">
+                    <label className={label}>Clients ciblés (aucun = tous)</label>
+                    <div className="flex flex-wrap gap-4">
                       {([
                         ["target_standard", "Standard"],
                         ["target_premium", "VIP"],
                         ["target_gold", "VVIP"],
+                        ["target_etudiant", "Carte étudiante"],
                       ] as const).map(([key, lbl]) => (
                         <label key={key} className="flex items-center gap-1.5 text-sm text-gray-700">
                           <input type="checkbox" checked={form[key]} onChange={(e) => set(key, e.target.checked)} />

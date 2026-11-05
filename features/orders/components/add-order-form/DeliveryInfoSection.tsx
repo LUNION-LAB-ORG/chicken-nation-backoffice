@@ -103,6 +103,11 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           restaurant_id: formData.restaurant_id || undefined,
           // Sous-total → le backend applique les offres à montant minimum dès l'aperçu.
           order_amount: orderAmount,
+          // Client et plats : sans eux, une offre réservée aux étudiants ou à
+          // des menus serait sautée, et le frais plein remplirait le formulaire
+          // puis écraserait l'offre à l'enregistrement.
+          customer_id: formData.customer_id || undefined,
+          dish_ids: [...new Set(formData.items.map((i) => i.dish_id))].sort().join(",") || undefined,
         }
       : undefined
   );

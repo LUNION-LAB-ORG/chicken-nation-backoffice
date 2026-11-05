@@ -189,7 +189,18 @@ export const addOrder = async (formData: OrderFormData) => {
     }
 };
 
-export const getDeliveryFee = async (query?: { lat: number, long: number, restaurant_id?: string, order_amount?: number }) => {
+export interface DeliveryFeeQuery {
+    lat: number;
+    long: number;
+    restaurant_id?: string;
+    order_amount?: number;
+    /** Client de la commande : pour les offres réservées aux étudiants ou à un niveau. */
+    customer_id?: string;
+    /** Plats du panier, séparés par des virgules : pour les offres limitées à des menus. */
+    dish_ids?: string;
+}
+
+export const getDeliveryFee = async (query?: DeliveryFeeQuery) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/frais-livraison', query);
 

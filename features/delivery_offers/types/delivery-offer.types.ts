@@ -28,6 +28,11 @@ export interface DeliveryOffer {
   target_standard: boolean;
   target_premium: boolean;
   target_gold: boolean;
+  /** Clients avec une Carte de la Nation étudiante active. */
+  target_etudiant: boolean;
+  /** Menus et catégories concernés. Tous deux vides = tout le menu. */
+  dish_ids: string[];
+  category_ids: string[];
   days_of_week: string[];
   time_start: string | null;
   time_end: string | null;
@@ -55,6 +60,9 @@ export interface CreateDeliveryOfferDto {
   target_standard?: boolean;
   target_premium?: boolean;
   target_gold?: boolean;
+  target_etudiant?: boolean;
+  dish_ids?: string[];
+  category_ids?: string[];
   days_of_week?: string[];
   time_start?: string;
   time_end?: string;

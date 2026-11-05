@@ -104,11 +104,10 @@ export interface LivraisonFormulaire {
  * (`apresBascule` donne `site`), avec la livraison et les frais de la
  * commande. Le client a accepté ces frais sur le site : tant que l'adresse,
  * le restaurant et le type restent ceux de la commande, ils restent, comme
- * le serveur les garde (`OrderService.update`). L'aperçu ne connaît pas le
- * client : une offre de livraison réservée à son niveau, ou limitée par
- * client, y est sautée, et l'écran aurait affiché d'autres frais que ceux
- * enregistrés. Livraison changée par l'agent, ou toute autre commande : les
- * frais de l'aperçu.
+ * le serveur les garde (`OrderService.update`). L'aperçu, lui, calcule pour
+ * maintenant : une offre finie ou épuisée depuis y serait sautée, et l'écran
+ * aurait affiché d'autres frais que ceux enregistrés. Livraison changée par
+ * l'agent, ou toute autre commande : les frais de l'aperçu.
  */
 export function fraisLivraisonRetenus(
   livraison: LivraisonFormulaire,

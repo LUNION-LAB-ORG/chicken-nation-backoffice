@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import { toast } from "react-hot-toast";
-import { getDeliveryFee } from "../services/order-service";
+import { getDeliveryFee, type DeliveryFeeQuery } from "../services/order-service";
 import { orderKeyQuery } from "./index.query";
 
 // Option de requête
-export const deliveryFeeQueryOption = (query?: { lat: number, long: number, restaurant_id?: string, order_amount?: number }) => {
+export const deliveryFeeQueryOption = (query?: DeliveryFeeQuery) => {
 	return {
 		queryKey: orderKeyQuery("delivery-fee", query),
 		queryFn: async () => {
@@ -19,7 +19,7 @@ export const deliveryFeeQueryOption = (query?: { lat: number, long: number, rest
 }
 
 // Hook pour récupérer les clients
-export const useDeliveryFeeQuery = (query?: { lat: number, long: number, restaurant_id?: string, order_amount?: number }) => {
+export const useDeliveryFeeQuery = (query?: DeliveryFeeQuery) => {
 	const result = useQuery(deliveryFeeQueryOption(query));
 
 	React.useEffect(() => {
