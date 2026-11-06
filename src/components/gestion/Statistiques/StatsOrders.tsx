@@ -71,7 +71,7 @@ import StatsErrorState from "./shared/StatsErrorState";
 
 // === Types ===
 type GranularityType = "day" | "week" | "month";
-type MetricType = "count" | "revenue" | "avgBasket" | "onTimeRate";
+type MetricType = "count" | "expectedRevenue" | "revenue" | "avgBasket" | "onTimeRate";
 
 
 const METRIC_CONFIG: Record<MetricType, { label: string; format: (v: number) => string; yAxisFormat?: (v: number) => string }> = {
@@ -79,6 +79,11 @@ const METRIC_CONFIG: Record<MetricType, { label: string; format: (v: number) => 
     label: "Total Commandes",
     format: (v) => `${formatNumber(v)} cmd.`,
     yAxisFormat: (v) => formatNumber(v),
+  },
+  expectedRevenue: {
+    label: "CA escompté",
+    format: (v) => formatCurrencyXOF(v),
+    yAxisFormat: (v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${(v / 1000).toFixed(0)}k` : `${v}`,
   },
   revenue: {
     label: "Chiffre d'affaires",
@@ -271,11 +276,11 @@ export default function StatsOrders() {
 
   // ---- Donnees derivees ----
 
-  // Trend CA
-  const evolution = overview.data?.evolution ?? "";
-  const trendData = evolution
-    ? formatTrend(evolution.replace("%", ""), !evolution.startsWith("-"))
-    : undefined;
+  // Tendances : les commandes et le CA, chacun sur sa carte
+  const tendance = (evolution?: string) =>
+    evolution
+      ? formatTrend(evolution.replace("%", ""), !evolution.startsWith("-"))
+      : undefined;
 
   // Ponctualite livraison
   const onTimeRate = lateOrders.data ? 100 - (lateOrders.data.lateRate ?? 0) : 0;
@@ -425,19 +430,29 @@ export default function StatsOrders() {
           {/* ========================================== */}
           {/* SECTION 2 : KPI Cards (cliquables)        */}
           {/* ========================================== */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             <StatsCard
               title="Total Commandes"
               value={formatNumber(overview.data?.totalOrders ?? 0)}
-              subtitle="sur la periode"
-              trend={trendData}
+              subtitle={`dont ${formatNumber(overview.data?.completedOrders ?? 0)} terminées et payées`}
+              trend={tendance(overview.data?.acceptedEvolution)}
               color="orange"
               onClick={() => setSelectedMetric("count")}
               active={selectedMetric === "count"}
             />
             <StatsCard
+              title="CA escompté"
+              value={formatCurrencyXOF(overview.data?.expectedRevenue ?? 0)}
+              subtitle="commandes acceptées, hors annulées"
+              color="purple"
+              onClick={() => setSelectedMetric("expectedRevenue")}
+              active={selectedMetric === "expectedRevenue"}
+            />
+            <StatsCard
               title="Chiffre d'affaires"
               value={formatCurrencyXOF(overview.data?.totalRevenue ?? 0)}
+              subtitle="commandes terminées et payées"
+              trend={tendance(overview.data?.evolution)}
               color="green"
               onClick={() => setSelectedMetric("revenue")}
               active={selectedMetric === "revenue"}

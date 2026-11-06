@@ -31,7 +31,15 @@ export interface OrderByTypeItem {
 }
 
 export interface OrdersOverviewResponse {
+  /** Commandes acceptées et non annulées, sur l'écran Statistiques Commandes. */
   totalOrders: number;
+  /** Commandes terminées et payées (ventes). */
+  completedOrders: number;
+  /** CA escompté : somme des commandes acceptées et non annulées. */
+  expectedRevenue: number;
+  /** Évolution des commandes acceptées par rapport à la période précédente. */
+  acceptedEvolution: string;
+  /** Chiffre d'affaires des ventes. */
   totalRevenue: number;
   totalRevenueFormatted: string;
   averageBasket: number;
@@ -199,6 +207,7 @@ export interface OrdersDailyTrendResponse {
 export interface RestaurantMetrics {
   count: number;
   revenue: number;
+  expectedRevenue: number;
   avgBasket: number;
   onTimeRate: number;
 }
