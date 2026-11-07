@@ -130,6 +130,29 @@ export const relancerCourseAnnulee = (id: string) =>
  * (`POST /courses/commandes/:orderId/relancer-livraison`, corps vide). Rejeu :
  * 200 avec `deja: true`. Refus (404, 403, 409) : le texte du serveur.
  */
+/** Réponse de « Retirer de la course » et de « Affecter à un livreur » : le texte vient du serveur. */
+export interface ReponseGesteCommande {
+  message: string;
+  /** `false` : le livreur n'est prévenu que par notification. */
+  appli_connectee?: boolean | null;
+}
+
+/** La commande quitte sa course et repart dans le circuit normal. */
+export const retirerCommandeDeSaCourse = (orderId: string) =>
+  actionAvecRefusServeur(() =>
+    api.post<ReponseGesteCommande>(`${ENDPOINT}/commandes/${encodeURIComponent(orderId)}/retirer`, {}, true),
+  );
+
+/** La commande prête est donnée à ce livreur, même en course. */
+export const affecterCommande = (orderId: string, delivererId: string) =>
+  actionAvecRefusServeur(() =>
+    api.post<ReponseGesteCommande>(
+      `${ENDPOINT}/commandes/${encodeURIComponent(orderId)}/affecter`,
+      { deliverer_id: delivererId },
+      true,
+    ),
+  );
+
 export const relancerLivraisonCommande = (orderId: string) =>
   actionAvecRefusServeur(() =>
     api.post<ReponseRelanceLivraison>(

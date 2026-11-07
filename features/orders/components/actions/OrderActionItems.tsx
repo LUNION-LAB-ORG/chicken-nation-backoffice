@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, Edit2, Eye, Printer, Trash2, X } from "lucide-react";
+import { Bike, CheckCircle2, Edit2, Eye, Printer, Trash2, Unlink, X } from "lucide-react";
 
 import type { ActionCommande } from "../../utils/order-actions-rules";
 
@@ -33,6 +33,21 @@ const PRESENTATION: Record<
   modifier: {
     libelle: "Modifier",
     Icone: Edit2,
+    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+  },
+  terminer: {
+    libelle: "Terminer la commande",
+    Icone: CheckCircle2,
+    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+  },
+  affecter: {
+    libelle: "Affecter à un livreur",
+    Icone: Bike,
+    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+  },
+  retirer: {
+    libelle: "Retirer de la course",
+    Icone: Unlink,
     classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   annuler: {

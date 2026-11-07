@@ -3,6 +3,9 @@
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { MoreVertical } from "lucide-react";
 
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
+
+import { useDroitsLivraison } from "../../../livreurs/hook/use-droits-livraison";
 import { OrderActionItems } from "../../../orders/components/actions/OrderActionItems";
 import { useDroitsCommande } from "../../../orders/hooks/useDroitsCommande";
 import { useOrderActions } from "../../../orders/hooks/useOrderActions";
@@ -10,6 +13,13 @@ import type { Order } from "../../../orders/types/order.types";
 import type { OrderTable } from "../../../orders/types/ordersTable.types";
 import { actionsCommande, type ActionCommande } from "../../../orders/utils/order-actions-rules";
 import { mapApiOrderToUiOrder } from "../../../orders/utils/orderMapper";
+import { useLivraisonCommandeQuery } from "../../queries/livraison-commande.query";
+import {
+  useRetirerDeLaCourseMutation,
+  useTerminerCommandeMutation,
+} from "../../queries/gestes-commande.mutation";
+import { livraisonTerminee } from "../../utils/suivi-livraison";
+import { AffecterCommandeModal } from "./AffecterCommandeModal";
 
 interface Props {
   order: Order;
@@ -36,9 +46,21 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
 
   const droits = useDroitsCommande();
   const { handleDeleteOrder, handleToggleOrderModal } = useOrderActions();
+  const { piloterCourses } = useDroitsLivraison();
+  const aLivrer = order.type === "DELIVERY";
+  // Même clé que la section « Livraison » du tiroir : aucune requête de plus.
+  const { data: livraison } = useLivraisonCommandeQuery(order.id, aLivrer);
+  const [aConfirmer, setAConfirmer] = useState<"terminer" | "retirer" | null>(null);
+  const [choixLivreur, setChoixLivreur] = useState(false);
+  const terminer = useTerminerCommandeMutation();
+  const retirer = useRetirerDeLaCourseMutation();
 
   const actions = actionsCommande(order.status, droits, "tiroir", {
     dejaSupprimee: order.entity_status === "DELETED",
+    aLivrer,
+    payee: order.paied === true,
+    surUneCourse: !!livraison?.course && !livraisonTerminee(livraison),
+    piloterCourses,
   }).filter(
     (action) => action !== "modifier" || !!onEdit,
   );
@@ -122,6 +144,13 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
       case "supprimer":
         handleDeleteOrder(commande);
         return;
+      case "terminer":
+      case "retirer":
+        setAConfirmer(action);
+        return;
+      case "affecter":
+        setChoixLivreur(true);
+        return;
       default:
         // « tiroir » ne propose pas les autres actions (voir le module de règles).
         return;
@@ -163,6 +192,36 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
             <OrderActionItems actions={actions} onAction={surAction} role="menuitem" />
           </div>
         </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={aConfirmer === "terminer"}
+        onClose={() => setAConfirmer(null)}
+        onConfirm={() => terminer.mutate(order.id, { onSettled: () => setAConfirmer(null) })}
+        title="Terminer la commande ?"
+        description={
+          order.paied
+            ? `${order.reference} sera terminée. Sa livraison se ferme.`
+            : `${order.reference} n'est pas encore payée : elle passera « Récupérée », à encaisser, et se terminera à l'encaissement.`
+        }
+        confirmLabel="Terminer"
+        isLoading={terminer.isPending}
+      />
+      <ConfirmDialog
+        isOpen={aConfirmer === "retirer"}
+        onClose={() => setAConfirmer(null)}
+        onConfirm={() => retirer.mutate(order.id, { onSettled: () => setAConfirmer(null) })}
+        title="Retirer de la course ?"
+        description={
+          order.delivery_service === "TURBO"
+            ? `${order.reference} quitte Turbo : leur course est annulée et la commande passe à vos livreurs.`
+            : `${order.reference} quitte sa course et repart en recherche d'un livreur.`
+        }
+        confirmLabel="Retirer"
+        isLoading={retirer.isPending}
+      />
+      {choixLivreur && (
+        <AffecterCommandeModal order={order} onClose={() => setChoixLivreur(false)} />
       )}
     </div>
   );

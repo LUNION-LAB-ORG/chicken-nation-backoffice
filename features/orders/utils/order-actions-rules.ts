@@ -18,7 +18,10 @@ export type ActionCommande =
   | "voir"
   | "modifier"
   | "annuler"
-  | "supprimer";
+  | "supprimer"
+  | "terminer"
+  | "affecter"
+  | "retirer";
 
 /** Droits de l'utilisateur connecté, lus par `useDroitsCommande()`. */
 export interface DroitsCommande {
@@ -43,6 +46,41 @@ export const STATUTS_ANNULABLES_EN_BAS_DU_TIROIR: ReadonlySet<OrderStatus> = new
   OrderStatus.IN_PROGRESS,
   OrderStatus.READY,
 ]);
+
+/** Ce que les gestes du siège regardent en plus du statut (menu ⋮ du tiroir). */
+export interface ContexteGestes {
+  /** Commande à livrer. */
+  aLivrer?: boolean;
+  /** Payée : « Récupérée » suffit alors à la terminer. */
+  payee?: boolean;
+  /** Dans une course encore en cours. */
+  surUneCourse?: boolean;
+  /** `piloterCourses` : miroir de `ROLES_ACTIONS_COURSES` du serveur. */
+  piloterCourses?: boolean;
+}
+
+/**
+ * « Terminer », « Affecter à un livreur » et « Retirer de la course » (demande
+ * du 06/11). Miroir des refus du serveur : `terminerParAdmin`,
+ * `refusCommandeAAffecter` et `deciderDetachement`.
+ */
+const gestesDuSiege = (
+  status: OrderStatus | undefined,
+  isAdmin: boolean,
+  c: ContexteGestes,
+): ActionCommande[] => {
+  const gestes: ActionCommande[] = [];
+  const auRestaurant = !!status && STATUTS_ANNULABLES_EN_BAS_DU_TIROIR.has(status);
+  const enLivraison = status === OrderStatus.PICKED_UP;
+  if (isAdmin && (auRestaurant || enLivraison || (status === OrderStatus.COLLECTED && c.payee))) {
+    gestes.push("terminer");
+  }
+  if (c.piloterCourses && c.aLivrer) {
+    if (status === OrderStatus.READY) gestes.push("affecter");
+    if (auRestaurant && c.surUneCourse) gestes.push("retirer");
+  }
+  return gestes;
+};
 
 /**
  * Le STATUT permet-il à ce rôle de modifier la commande ?
@@ -82,7 +120,7 @@ export const actionsCommande = (
   status: OrderStatus | undefined,
   droits: DroitsCommande,
   ou: "liste" | "tiroir" = "liste",
-  contexte: { dejaSupprimee?: boolean } = {},
+  contexte: { dejaSupprimee?: boolean } & ContexteGestes = {},
 ): ActionCommande[] => {
   const isAdmin = droits.role === UserRole.ADMIN;
   // « NOUVELLE » à l'écran = ACCEPTED côté serveur (libellé historique).
@@ -113,7 +151,7 @@ export const actionsCommande = (
 
   if (ou === "liste") return actions;
 
-  return actions.filter((action) => {
+  const tiroir = actions.filter((action) => {
     if (action === "voir" || action === "imprimer") return false;
     if (action === "accepter" || action === "refuser") return false;
     if (action === "annuler" && status && STATUTS_ANNULABLES_EN_BAS_DU_TIROIR.has(status)) {
@@ -121,4 +159,8 @@ export const actionsCommande = (
     }
     return true;
   });
+  // Après « Modifier », avant ce qui détruit (« Annuler », « Supprimer »).
+  const apresModifier = tiroir[0] === "modifier" ? 1 : 0;
+  tiroir.splice(apresModifier, 0, ...gestesDuSiege(status, isAdmin, contexte));
+  return tiroir;
 };

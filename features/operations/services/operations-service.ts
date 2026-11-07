@@ -61,6 +61,10 @@ export const getCourseByPickupCode = (code: string, restaurantId?: string) =>
  * durées), `GET /orders/:id/livraison`. Réponse brute : elle est rendue sûre
  * par `lireLivraison` (`utils/suivi-livraison.ts`).
  */
+/** « Terminer la commande » (administrateur) : payée, terminée ; sinon récupérée, à encaisser. */
+export const terminerCommande = (orderId: string) =>
+  safeCall(() => api.patch<Order>(`${BASE_ORDERS}/${encodeURIComponent(orderId)}/terminer`, {}, true));
+
 export const getLivraisonCommande = (orderId: string) =>
   safeCall(() => api.get<unknown>(`${BASE_ORDERS}/${encodeURIComponent(orderId)}/livraison`, true));
 
