@@ -95,6 +95,11 @@ export interface IDelivererLive extends PresenceAppliServeur {
   disponibilite?: DisponibiliteLivreur;
   /** Connexion temps réel de l'appli (voir `Livreur.appli_connectee`). */
   appli_connectee?: boolean | null;
+  /**
+   * Renfort entre restaurants (09/11) : libre, plus près de ce restaurant que
+   * du sien, il en reçoit aussi les courses. Null ou absent : rien à signaler.
+   */
+  renfort?: { restaurant_id: string; restaurant_name: string | null } | null;
   active_course: IDelivererLiveCourse | null;
   // Avec `jour=true` seulement (vue Livreurs « Aujourd'hui »), absents sur un serveur plus ancien.
   creneau_du_jour?: CreneauDuJour;

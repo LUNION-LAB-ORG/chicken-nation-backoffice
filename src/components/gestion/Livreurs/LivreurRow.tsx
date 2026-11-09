@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { MoreHorizontal } from "lucide-react";
 
+import AssignRestaurantModal from "./AssignRestaurantModal";
 import LivreurContextMenu from "./LivreurContextMenu";
 import StatutBadge from "./StatutBadge";
 import { formatImageUrl } from "@/utils/imageHelpers";
@@ -53,6 +54,8 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
   // Menu ⋮ (valider, réactiver) : seulement pour qui gère les livreurs (l'admin).
   const { gererLivreurs } = useDroitsLivraison();
   const [menuOpen, setMenuOpen] = useState(false);
+  // « Valider le livreur » du menu : choix du restaurant, validation en un geste (09/11).
+  const [valideOuvert, setValideOuvert] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
@@ -78,6 +81,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
           onViewDetails={onView}
+          onValidate={() => setValideOuvert(true)}
         />
       </div>,
       portalContainer,
@@ -246,6 +250,21 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
           )}
         </div>
         {gererLivreurs && renderMenu()}
+        {gererLivreurs && (
+          // La fenêtre vit hors de la ligne (portail), mais ses clics remontent l'arbre React jusqu'à elle.
+          <span onClick={(e) => e.stopPropagation()}>
+            <AssignRestaurantModal
+              isOpen={valideOuvert}
+              onClose={() => setValideOuvert(false)}
+              livreurId={livreur.id}
+              livreurNom={nomComplet}
+              currentRestaurantId={livreur.restaurant_id}
+              currentRestaurantName={livreur.restaurant?.name}
+              domicile={livreur.home_location}
+              geste="valider"
+            />
+          </span>
+        )}
       </td>
     </tr>
   );

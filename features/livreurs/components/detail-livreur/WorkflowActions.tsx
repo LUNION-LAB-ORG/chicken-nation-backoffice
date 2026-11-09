@@ -3,12 +3,7 @@
 import React from "react";
 import { Ban, Check, RefreshCw, ShieldAlert, Store, Trash2, XCircle } from "lucide-react";
 
-import {
-  useDeleteLivreur,
-  useForceActivateLivreur,
-  useReactivateLivreur,
-  useValidateLivreur,
-} from "../../hook/use-livreurs";
+import { useDeleteLivreur, useReactivateLivreur } from "../../hook/use-livreurs";
 import type { Livreur } from "../../types/livreur.types";
 
 interface WorkflowActionsProps {
@@ -17,6 +12,10 @@ interface WorkflowActionsProps {
   onReject: () => void;
   onSuspend: () => void;
   onAssignRestaurant: () => void;
+  /** Valider avec le restaurant, en un geste (09/11) : ouvre le choix du restaurant. */
+  onValidate: () => void;
+  /** Activer sans documents, avec le restaurant : même fenêtre. */
+  onForceActivate: () => void;
   /** Valider, refuser, suspendre, réactiver, affecter (droit `gererLivreurs`). */
   gerer?: boolean;
   /** Supprimer définitivement (droit `supprimerLivreur`). */
@@ -29,11 +28,11 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
   onReject,
   onSuspend,
   onAssignRestaurant,
+  onValidate,
+  onForceActivate,
   gerer = true,
   supprimer = true,
 }) => {
-  const { mutate: validate, isPending: isValidating } = useValidateLivreur();
-  const { mutate: forceActivate, isPending: isForcing } = useForceActivateLivreur();
   const { mutate: reactivate, isPending: isReactivating } = useReactivateLivreur();
   const { mutate: deleteLivreur, isPending: isDeleting } = useDeleteLivreur();
 
@@ -68,38 +67,25 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
         {(isPending || isRejected) && (
           <button
             type="button"
-            onClick={() => validate(livreur.id)}
-            disabled={!canValidate || isValidating}
+            onClick={onValidate}
+            disabled={!canValidate}
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed"
             title={!canValidate ? "Documents obligatoires manquants" : undefined}
           >
             <Check className="w-4 h-4" />
-            {isValidating
-              ? "Validation…"
-              : isRejected
-                ? "Accepter le livreur"
-                : "Valider le livreur"}
+            {isRejected ? "Accepter le livreur" : "Valider le livreur"}
           </button>
         )}
 
         {canForceActivate && (
           <button
             type="button"
-            onClick={() => {
-              if (
-                confirm(
-                  "⚠️ Activer sans documents ?\n\nLe livreur sera marqué ACTIF même si ses pièces justificatives sont manquantes. Utilise cette option uniquement si tu as vérifié son identité par un autre moyen."
-                )
-              ) {
-                forceActivate(livreur.id);
-              }
-            }}
-            disabled={isForcing}
+            onClick={onForceActivate}
             className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-amber-700 bg-amber-100 border border-amber-300 rounded-lg hover:bg-amber-200 disabled:opacity-50"
             title="Activer sans vérification des documents (admin override)"
           >
             <ShieldAlert className="w-4 h-4" />
-            {isForcing ? "Activation…" : "Forcer l'activation"}
+            Forcer l&apos;activation
           </button>
         )}
 

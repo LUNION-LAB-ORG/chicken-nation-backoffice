@@ -3,10 +3,7 @@
 import { CheckCircle2, Eye, RefreshCw } from "lucide-react";
 import React from "react";
 
-import {
-  useReactivateLivreur,
-  useValidateLivreur,
-} from "../../../../features/livreurs/hook/use-livreurs";
+import { useReactivateLivreur } from "../../../../features/livreurs/hook/use-livreurs";
 import type { Livreur } from "../../../../features/livreurs/types/livreur.types";
 
 interface LivreurContextMenuProps {
@@ -15,13 +12,15 @@ interface LivreurContextMenuProps {
   onClose: () => void;
   /** Ouvre la page détail (où vivent les actions à motif : refuser / suspendre). */
   onViewDetails: () => void;
+  /** Valider avec le restaurant (09/11) : ouvre le choix du restaurant. */
+  onValidate: () => void;
 }
 
 /**
  * Menu contextuel du 3-points dans la liste livreurs.
  *
- * Actions DIRECTES (sans motif) : Accepter (PENDING **ou REJECTED** → validate),
- * Réactiver (SUSPENDED). Les actions à motif (Refuser / Suspendre) restent dans
+ * Actions : Accepter (PENDING **ou REJECTED**), qui ouvre le choix du
+ * restaurant (validation avec le restaurant, 09/11), Réactiver (SUSPENDED). Les actions à motif (Refuser / Suspendre) restent dans
  * la page détail. Mirror de OrderContextMenu (même mécanique click-outside).
  */
 const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
@@ -29,8 +28,8 @@ const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
   isOpen,
   onClose,
   onViewDetails,
+  onValidate,
 }) => {
-  const { mutate: validate, isPending: isValidating } = useValidateLivreur();
   const { mutate: reactivate, isPending: isReactivating } = useReactivateLivreur();
 
   const canAccept =
@@ -71,10 +70,9 @@ const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
         {canAccept && (
           <button
             type="button"
-            disabled={isValidating}
             className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#22C55E] font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-50"
             onClick={() => {
-              validate(livreur.id);
+              onValidate();
               onClose();
             }}
           >

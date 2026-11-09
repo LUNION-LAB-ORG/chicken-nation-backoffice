@@ -18,6 +18,7 @@ import type {
   RejectLivreurPayload,
   SuspendLivreurPayload,
 } from '../types/livreur.types';
+import { messageChangement, messageValidation } from '../utils/rattachement';
 
 // ---- Query Key Factory ----
 export const livreursKeys = {
@@ -60,19 +61,34 @@ export const useLivreurDetail = (id: string | null, enabled = true) =>
 /** Hook interne : factorise invalidation des listes + détail après mutation */
 const useInvalidateLivreurs = () => {
   const qc = useQueryClient();
-  return (id?: string) => {
+  return (id?: string, plannings = false) => {
     qc.invalidateQueries({ queryKey: livreursKeys.all() });
     if (id) qc.invalidateQueries({ queryKey: livreursKeys.detail(id) });
+    // Validation et changement de restaurant déplacent le livreur dans les plannings (09/11).
+    if (plannings) qc.invalidateQueries({ queryKey: ['schedule'] });
   };
 };
+
+/**
+ * Validation, activation, changement de restaurant (09/11) : le livreur, le
+ * restaurant choisi et les noms pour le message (« ajouté au planning de ZONE 4 »).
+ * Un identifiant seul : le geste d'avant, sans restaurant choisi.
+ */
+export interface GesteRattachement {
+  id: string;
+  restaurantId?: string;
+  nomRestaurant?: string | null;
+}
+
+const enGeste = (v: string | GesteRattachement): GesteRattachement => (typeof v === 'string' ? { id: v } : v);
 
 export const useValidateLivreur = () => {
   const invalidate = useInvalidateLivreurs();
   return useMutation({
-    mutationFn: (id: string) => validateLivreur(id),
-    onSuccess: (_data, id) => {
-      invalidate(id);
-      toast.success('Livreur validé avec succès');
+    mutationFn: (v: string | GesteRattachement) => validateLivreur(enGeste(v).id, enGeste(v).restaurantId),
+    onSuccess: (data, v) => {
+      invalidate(enGeste(v).id, true);
+      toast.success(messageValidation(data?.plannings, enGeste(v).nomRestaurant ?? data?.restaurant?.name));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -119,10 +135,12 @@ export const useReactivateLivreur = () => {
 export const useForceActivateLivreur = () => {
   const invalidate = useInvalidateLivreurs();
   return useMutation({
-    mutationFn: (id: string) => forceActivateLivreur(id),
-    onSuccess: (_data, id) => {
-      invalidate(id);
-      toast.success('Livreur activé (sans documents)');
+    mutationFn: (v: string | GesteRattachement) => forceActivateLivreur(enGeste(v).id, enGeste(v).restaurantId),
+    onSuccess: (data, v) => {
+      invalidate(enGeste(v).id, true);
+      toast.success(
+        messageValidation(data?.plannings, enGeste(v).nomRestaurant ?? data?.restaurant?.name, 'Livreur activé (sans documents)'),
+      );
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -131,11 +149,19 @@ export const useForceActivateLivreur = () => {
 export const useAssignRestaurant = () => {
   const invalidate = useInvalidateLivreurs();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: AssignRestaurantPayload }) =>
-      assignRestaurantToLivreur(id, payload),
-    onSuccess: (_data, vars) => {
-      invalidate(vars.id);
-      toast.success('Restaurant affecté au livreur');
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: AssignRestaurantPayload;
+      /** Noms pour le message : « retiré du planning de FAYA, ajouté à celui de ZONE 4 ». */
+      ancienNom?: string | null;
+      nouveauNom?: string | null;
+    }) => assignRestaurantToLivreur(id, payload),
+    onSuccess: (data, vars) => {
+      invalidate(vars.id, true);
+      toast.success(messageChangement(data?.plannings, vars.ancienNom, vars.nouveauNom ?? data?.restaurant?.name));
     },
     onError: (e: Error) => toast.error(e.message),
   });

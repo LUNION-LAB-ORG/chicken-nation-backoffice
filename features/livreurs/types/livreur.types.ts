@@ -1,3 +1,5 @@
+import type { PlanningsSuivis } from '../utils/rattachement';
+
 /**
  * Types du module Livreurs — alignés sur le modèle Prisma `Deliverer`
  * et les réponses du backend `deliverers` module.
@@ -177,3 +179,9 @@ export interface SuspendLivreurPayload {
 export interface AssignRestaurantPayload {
   restaurant_id: string;
 }
+
+/**
+ * Réponse de la validation, de l'activation et du changement de restaurant
+ * (09/11) : le livreur, et ce que le serveur a fait de ses plannings.
+ */
+export type LivreurAvecPlannings = Livreur & { plannings?: PlanningsSuivis | null };

@@ -125,6 +125,7 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
             appli_vue_a: appliVueADe(live),
             rang,
             prevuAuCreneau: prevu,
+            renfort: live.renfort,
           },
           maintenant,
         ),

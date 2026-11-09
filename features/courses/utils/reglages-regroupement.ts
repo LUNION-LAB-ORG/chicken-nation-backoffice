@@ -483,6 +483,33 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
       },
     ],
   },
+  // Demande du 09/11 : un livreur libre près d'un autre restaurant en reçoit aussi les courses.
+  {
+    titre: 'Renfort entre restaurants',
+    description:
+      "Un livreur libre, plus près d'un autre restaurant que du sien, reçoit aussi les courses de cet autre restaurant. Il reste rattaché au sien. Le plus rapide passe d'abord : un livreur déjà au comptoir du restaurant reste prioritaire.",
+    reglages: [
+      {
+        cle: 'course.renfort',
+        libelle: "Proposer à un livreur libre les courses du restaurant le plus proche de lui",
+        type: 'oui_non',
+        defaut: '1',
+        lecture: 'planificateur',
+      },
+      {
+        cle: 'course.renfort_rayon_m',
+        libelle: "Jusqu'à",
+        unite: metres,
+        aide: "Distance à vol d'oiseau entre le livreur et l'autre restaurant.",
+        type: 'nombre',
+        defaut: '3000',
+        lecture: 'planificateur',
+        min: 100,
+        max: 20000,
+        pas: '100',
+      },
+    ],
+  },
   {
     titre: 'Préparation en cuisine',
     description:

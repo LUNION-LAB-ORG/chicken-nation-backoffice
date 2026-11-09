@@ -12,7 +12,7 @@ import ProfilSection from "./ProfilSection";
 import ScoringQueueSection from "./ScoringQueueSection";
 import WorkflowActions from "./WorkflowActions";
 
-import AssignRestaurantModal from "@/components/gestion/Livreurs/AssignRestaurantModal";
+import AssignRestaurantModal, { type GesteRestaurant } from "@/components/gestion/Livreurs/AssignRestaurantModal";
 import RejectLivreurModal from "@/components/gestion/Livreurs/RejectLivreurModal";
 import SuspendLivreurModal from "@/components/gestion/Livreurs/SuspendLivreurModal";
 import { useDroitsLivraison } from "../../hook/use-droits-livraison";
@@ -43,7 +43,8 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
 
   const [rejectOpen, setRejectOpen] = useState(false);
   const [suspendOpen, setSuspendOpen] = useState(false);
-  const [assignOpen, setAssignOpen] = useState(false);
+  // Fenêtre du restaurant : changer, valider ou activer avec le restaurant (09/11).
+  const [gesteRestaurant, setGesteRestaurant] = useState<GesteRestaurant | null>(null);
 
   const livreurNom =
     `${livreur.first_name ?? ""} ${livreur.last_name ?? ""}`.trim() || livreur.phone;
@@ -63,7 +64,7 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
           <div className="md:w-2/5 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto overflow-y-auto md:overflow-visible">
             <AffectationSection
               livreur={livreur}
-              onAssignRestaurant={gererLivreurs ? () => setAssignOpen(true) : undefined}
+              onAssignRestaurant={gererLivreurs ? () => setGesteRestaurant("affecter") : undefined}
             />
             <ProximiteSection livreur={livreur} />
             <ScoringQueueSection livreurId={livreur.id} />
@@ -73,7 +74,9 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
                 onBack={backToList}
                 onReject={() => setRejectOpen(true)}
                 onSuspend={() => setSuspendOpen(true)}
-                onAssignRestaurant={() => setAssignOpen(true)}
+                onAssignRestaurant={() => setGesteRestaurant("affecter")}
+                onValidate={() => setGesteRestaurant("valider")}
+                onForceActivate={() => setGesteRestaurant("forcer")}
                 gerer={gererLivreurs}
                 supprimer={supprimerLivreur}
               />
@@ -98,11 +101,14 @@ const LivreurDetails: React.FC<LivreurDetailsProps> = ({ selectedItem }) => {
             livreurNom={livreurNom}
           />
           <AssignRestaurantModal
-            isOpen={assignOpen}
-            onClose={() => setAssignOpen(false)}
+            isOpen={gesteRestaurant !== null}
+            onClose={() => setGesteRestaurant(null)}
             livreurId={livreur.id}
             livreurNom={livreurNom}
             currentRestaurantId={livreur.restaurant_id}
+            currentRestaurantName={livreur.restaurant?.name}
+            domicile={livreur.home_location}
+            geste={gesteRestaurant ?? "affecter"}
           />
         </>
       )}

@@ -16,6 +16,7 @@
 import { dureeLisible } from '../../courses/utils/tableau-livraison';
 import type { CreneauDuJour, IDelivererLive, IDelivererLiveCourse, ReponseCreneau } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
+import { nomCourtRestaurant } from '../../restaurants/utils/nom-court';
 import { depuisLisible, estPauseSansFin, heureLisible, rangEtat, vueIlYa } from './disponibilite';
 
 // ============================================================
@@ -80,6 +81,15 @@ export interface EntreeDetail {
   rang: number | null;
   /** Créneau où il est prévu sans être en service (alerte du serveur), sinon null. */
   prevuAuCreneau?: 'MORNING' | 'EVENING' | null;
+  /** Restaurant voisin dont il reçoit aussi les courses (renfort, 09/11). */
+  renfort?: { restaurant_name: string | null } | null;
+}
+
+/** « En renfort près de ZONE 4 » ; null sans renfort. */
+export function renfortLisible(renfort: { restaurant_name: string | null } | null | undefined): string | null {
+  if (!renfort) return null;
+  const nom = nomCourtRestaurant(renfort.restaurant_name);
+  return nom ? `En renfort près de ${nom}` : 'En renfort près d’un autre restaurant';
 }
 
 const RIEN: DetailEtat = { texte: null, retard: null, ambre: false };
@@ -87,8 +97,10 @@ const RIEN: DetailEtat = { texte: null, retard: null, ambre: false };
 /** Ce que la ligne dit après la pastille d'état. */
 export function detailEtatDuJour(etat: EtatDisponibilite, l: EntreeDetail, maintenant: Date): DetailEtat {
   switch (etat) {
-    case 'DISPONIBLE':
-      return { ...RIEN, texte: placeDansLaFile(l.rang) };
+    case 'DISPONIBLE': {
+      const morceaux = [placeDansLaFile(l.rang), renfortLisible(l.renfort)].filter(Boolean);
+      return { ...RIEN, texte: morceaux.length ? morceaux.join(' · ') : null };
+    }
     case 'EN_COURSE': {
       const c = l.course;
       if (!c) return RIEN;

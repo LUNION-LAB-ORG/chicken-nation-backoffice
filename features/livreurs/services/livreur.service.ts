@@ -4,6 +4,7 @@ import { getHumanReadableError } from '@/utils/errorMessages';
 import type {
   AssignRestaurantPayload,
   Livreur,
+  LivreurAvecPlannings,
   LivreursListResponse,
   LivreursQueryFilters,
   RejectLivreurPayload,
@@ -45,8 +46,11 @@ export const getLivreurById = (id: string) =>
 // CYCLE DE VIE (transitions de statut)
 // ============================================================
 
-export const validateLivreur = (id: string) =>
-  safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/validate`, {}, true));
+/** Restaurant choisi dans la fenêtre de validation (09/11) : rattaché et ajouté à ses plannings. */
+const corpsRestaurant = (restaurantId?: string) => (restaurantId ? { restaurant_id: restaurantId } : {});
+
+export const validateLivreur = (id: string, restaurantId?: string) =>
+  safeCall(() => api.patch<LivreurAvecPlannings>(`${ENDPOINT}/${id}/validate`, corpsRestaurant(restaurantId), true));
 
 export const rejectLivreur = (id: string, payload: RejectLivreurPayload) =>
   safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/reject`, payload, true));
@@ -57,15 +61,15 @@ export const suspendLivreur = (id: string, payload: SuspendLivreurPayload) =>
 export const reactivateLivreur = (id: string) =>
   safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/reactivate`, {}, true));
 
-export const forceActivateLivreur = (id: string) =>
-  safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/force-activate`, {}, true));
+export const forceActivateLivreur = (id: string, restaurantId?: string) =>
+  safeCall(() => api.patch<LivreurAvecPlannings>(`${ENDPOINT}/${id}/force-activate`, corpsRestaurant(restaurantId), true));
 
 // ============================================================
 // AFFECTATION & SUPPRESSION
 // ============================================================
 
 export const assignRestaurantToLivreur = (id: string, payload: AssignRestaurantPayload) =>
-  safeCall(() => api.patch<Livreur>(`${ENDPOINT}/${id}/assign-restaurant`, payload, true));
+  safeCall(() => api.patch<LivreurAvecPlannings>(`${ENDPOINT}/${id}/assign-restaurant`, payload, true));
 
 export const softDeleteLivreur = (id: string) =>
   safeCall(() => api.delete<{ id: string; deleted: boolean }>(`${ENDPOINT}/${id}`, true));
