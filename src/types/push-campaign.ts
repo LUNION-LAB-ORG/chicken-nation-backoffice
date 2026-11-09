@@ -106,6 +106,9 @@ export interface SegmentPreviewPayload {
 
 // ── Custom Segments ──────────────────────────────────────────────────────
 
+/** Mêmes niveaux que l'audience d'un menu. Étudiant : quel que soit le niveau. */
+export type NiveauSegment = "ETUDIANT" | "STANDARD" | "VIP" | "VVIP";
+
 export interface SegmentFilters {
   name_contains?: string;
   phone_contains?: string;
@@ -114,7 +117,10 @@ export interface SegmentFilters {
   max_orders?: number;
   min_spent?: number;
   max_spent?: number;
+  /** Ancien critère à un seul niveau, encore lu pour les segments enregistrés. */
   loyalty_level?: string;
+  /** Niveaux visés, comme l'audience d'un menu : l'un d'eux suffit, vide = tous. */
+  audiences?: NiveauSegment[];
   city?: string;
   min_points?: number;
   max_points?: number;

@@ -7,7 +7,7 @@ import {
   useUpdateSegmentMutation,
   usePreviewCustomFiltersMutation,
 } from "@/hooks/usePushCampaignQuery";
-import type { PushSegment, SegmentFilters } from "@/types/push-campaign";
+import type { NiveauSegment, PushSegment, SegmentFilters } from "@/types/push-campaign";
 import { Loader2, Users, Eye } from "lucide-react";
 import { useAuthStore } from "../../../../../features/users/hook/authStore";
 import { Action, Modules } from "../../../../../features/users/types/auth.type";
@@ -18,12 +18,20 @@ interface Props {
   editSegment?: PushSegment | null;
 }
 
-const LOYALTY_LEVELS = [
-  { value: "", label: "Tous" },
-  { value: "STANDARD", label: "Standard" },
-  { value: "VVIP", label: "VVIP" },
-  { value: "VIP", label: "VIP" },
+/** Mêmes boutons que l'audience d'un menu (09/11). */
+const NIVEAUX: readonly (readonly [NiveauSegment, string])[] = [
+  ["ETUDIANT", "Étudiant"],
+  ["STANDARD", "Standard"],
+  ["VIP", "VIP"],
+  ["VVIP", "VVIP"],
 ];
+
+/** Niveaux d'un segment enregistré ; un ancien segment n'en porte qu'un. */
+function niveauxDuSegment(filters: SegmentFilters): NiveauSegment[] {
+  if (filters.audiences?.length) return filters.audiences;
+  const ancien = NIVEAUX.find(([valeur]) => valeur === filters.loyalty_level);
+  return ancien ? [ancien[0]] : [];
+}
 
 export default function CreateSegmentModal({
   isOpen,
@@ -50,7 +58,7 @@ export default function CreateSegmentModal({
   const [maxOrders, setMaxOrders] = useState("");
   const [minSpent, setMinSpent] = useState("");
   const [maxSpent, setMaxSpent] = useState("");
-  const [loyaltyLevel, setLoyaltyLevel] = useState("");
+  const [niveaux, setNiveaux] = useState<NiveauSegment[]>([]);
   const [city, setCity] = useState("");
   const [minPoints, setMinPoints] = useState("");
   const [maxPoints, setMaxPoints] = useState("");
@@ -71,7 +79,7 @@ export default function CreateSegmentModal({
       setMaxOrders(filters.max_orders?.toString() ?? "");
       setMinSpent(filters.min_spent?.toString() ?? "");
       setMaxSpent(filters.max_spent?.toString() ?? "");
-      setLoyaltyLevel(filters.loyalty_level ?? "");
+      setNiveaux(niveauxDuSegment(filters));
       setCity(filters.city ?? "");
       setMinPoints(filters.min_points?.toString() ?? "");
       setMaxPoints(filters.max_points?.toString() ?? "");
@@ -92,7 +100,7 @@ export default function CreateSegmentModal({
     setMaxOrders("");
     setMinSpent("");
     setMaxSpent("");
-    setLoyaltyLevel("");
+    setNiveaux([]);
     setCity("");
     setMinPoints("");
     setMaxPoints("");
@@ -110,7 +118,7 @@ export default function CreateSegmentModal({
     if (maxOrders) filters.max_orders = Number(maxOrders);
     if (minSpent) filters.min_spent = Number(minSpent);
     if (maxSpent) filters.max_spent = Number(maxSpent);
-    if (loyaltyLevel) filters.loyalty_level = loyaltyLevel;
+    if (niveaux.length > 0) filters.audiences = niveaux;
     if (city) filters.city = city;
     if (minPoints) filters.min_points = Number(minPoints);
     if (maxPoints) filters.max_points = Number(maxPoints);
@@ -162,7 +170,7 @@ export default function CreateSegmentModal({
     maxOrders ||
     minSpent ||
     maxSpent ||
-    loyaltyLevel ||
+    niveaux.length > 0 ||
     city ||
     minPoints ||
     maxPoints ||
@@ -340,17 +348,33 @@ export default function CreateSegmentModal({
               <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Fidélité
               </h4>
-              <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                value={loyaltyLevel}
-                onChange={(e) => setLoyaltyLevel(e.target.value)}
-              >
-                {LOYALTY_LEVELS.map((l) => (
-                  <option key={l.value} value={l.value}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
+              <div className="flex flex-wrap gap-2">
+                {NIVEAUX.map(([valeur, libelle]) => {
+                  const actif = niveaux.includes(valeur);
+                  return (
+                    <button
+                      key={valeur}
+                      type="button"
+                      aria-pressed={actif}
+                      onClick={() =>
+                        setNiveaux((avant) =>
+                          avant.includes(valeur) ? avant.filter((n) => n !== valeur) : [...avant, valeur],
+                        )
+                      }
+                      className={`flex-1 min-w-[70px] text-xs font-semibold px-2 py-2 rounded-lg border transition-colors ${
+                        actif
+                          ? "bg-[#F17922] text-white border-[#F17922]"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-[#F17922]"
+                      }`}
+                    >
+                      {libelle}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-400">
+                Vide = tous les clients. Un seul niveau suffit. Étudiant : quel que soit son niveau.
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">
