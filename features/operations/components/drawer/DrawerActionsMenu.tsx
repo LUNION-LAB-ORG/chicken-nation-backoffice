@@ -46,7 +46,7 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
 
   const droits = useDroitsCommande();
   const { handleDeleteOrder, handleToggleOrderModal } = useOrderActions();
-  const { piloterCourses } = useDroitsLivraison();
+  const { agirSurCommandeALivrer } = useDroitsLivraison();
   const aLivrer = order.type === "DELIVERY";
   // Même clé que la section « Livraison » du tiroir : aucune requête de plus.
   const { data: livraison } = useLivraisonCommandeQuery(order.id, aLivrer);
@@ -60,7 +60,7 @@ export const DrawerActionsMenu: React.FC<Props> = ({ order, onEdit }) => {
     aLivrer,
     payee: order.paied === true,
     surUneCourse: !!livraison?.course && !livraisonTerminee(livraison),
-    piloterCourses,
+    agirSurLivraison: agirSurCommandeALivrer(order.restaurant_id),
   }).filter(
     (action) => action !== "modifier" || !!onEdit,
   );

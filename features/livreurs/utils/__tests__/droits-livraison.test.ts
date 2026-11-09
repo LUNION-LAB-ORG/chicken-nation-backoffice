@@ -302,3 +302,26 @@ describe('peutAgirSurRestaurant', () => {
     expect(peutAgirSurRestaurant({ type: 'RESTAURANT', role: 'ADMIN', restaurant_id: ANGRE }, MARCORY)).toBe(false);
   });
 });
+
+describe('agirSurCommandeALivrer (09/11) : affecter et retirer une commande', () => {
+  test('siège : tous les restaurants', () => {
+    expect(droits(ADMIN, { role: 'ADMIN', type: 'BACKOFFICE' }).agirSurCommandeALivrer(MARCORY)).toBe(true);
+    expect(droits(CALL_CENTER, { role: 'CALL_CENTER', type: 'BACKOFFICE' }).agirSurCommandeALivrer(MARCORY)).toBe(true);
+  });
+
+  test('manager et assistant manager : leur restaurant seulement', () => {
+    for (const role of ['MANAGER', 'ASSISTANT_MANAGER']) {
+      const d = droits(MANAGER, { role, type: 'RESTAURANT', restaurant_id: ANGRE });
+      expect([role, d.agirSurCommandeALivrer(ANGRE), d.agirSurCommandeALivrer(MARCORY)]).toEqual([role, true, false]);
+      expect(d.piloterCourses).toBe(false);
+    }
+    const sansRestaurant = droits(MANAGER, { role: 'MANAGER', type: 'RESTAURANT', restaurant_id: null });
+    expect(sansRestaurant.agirSurCommandeALivrer(null)).toBe(false);
+  });
+
+  test('caissière, cuisine, suivi des livraisons : jamais', () => {
+    expect(droits(CAISSIER, { role: 'CAISSIER', type: 'RESTAURANT', restaurant_id: ANGRE }).agirSurCommandeALivrer(ANGRE)).toBe(false);
+    expect(droits(CUISINE, { role: 'CUISINE', type: 'RESTAURANT', restaurant_id: ANGRE }).agirSurCommandeALivrer(ANGRE)).toBe(false);
+    expect(droits(LIVRAISON_OPS, { role: 'LIVRAISON_OPS', type: 'BACKOFFICE' }).agirSurCommandeALivrer(ANGRE)).toBe(false);
+  });
+});

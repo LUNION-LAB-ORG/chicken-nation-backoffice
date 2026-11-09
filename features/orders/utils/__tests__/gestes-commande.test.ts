@@ -19,7 +19,7 @@ const gestes = (status: OrderStatus, role: UserRole, contexte: ContexteGestes = 
     ["terminer", "affecter", "retirer"].includes(a),
   );
 
-const SIEGE: ContexteGestes = { aLivrer: true, piloterCourses: true, surUneCourse: true };
+const SIEGE: ContexteGestes = { aLivrer: true, agirSurLivraison: true, surUneCourse: true };
 
 describe("Terminer la commande : l'administrateur seul", () => {
   it.each([OrderStatus.ACCEPTED, OrderStatus.IN_PROGRESS, OrderStatus.READY, OrderStatus.PICKED_UP])(
@@ -59,7 +59,7 @@ describe("Affecter et retirer : administrateur et call center", () => {
   });
 
   it("sans le droit, ou commande à emporter : rien", () => {
-    expect(gestes(OrderStatus.READY, UserRole.CAISSIER, { ...SIEGE, piloterCourses: false })).toEqual([]);
+    expect(gestes(OrderStatus.READY, UserRole.CAISSIER, { ...SIEGE, agirSurLivraison: false })).toEqual([]);
     expect(gestes(OrderStatus.READY, UserRole.CALL_CENTER, { ...SIEGE, aLivrer: false })).toEqual([]);
   });
 
@@ -67,6 +67,10 @@ describe("Affecter et retirer : administrateur et call center", () => {
     const liste = actionsCommande(OrderStatus.READY, droits(UserRole.ADMIN), "liste", SIEGE);
     expect(liste).not.toContain("terminer");
     expect(liste).not.toContain("affecter");
+  });
+
+  it("manager de ce restaurant : affecter et retirer, jamais terminer", () => {
+    expect(gestes(OrderStatus.READY, UserRole.MANAGER, SIEGE)).toEqual(["affecter", "retirer"]);
   });
 
   it("dans le menu : après Modifier, avant ce qui détruit", () => {

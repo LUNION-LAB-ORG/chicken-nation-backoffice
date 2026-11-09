@@ -13,6 +13,11 @@
  *    (`ROLES_ACTIONS_COURSES` : ADMIN et, depuis le 26/10, CALL_CENTER) pour
  *    forcer, relancer, réessayer, confier à Turbo, reprendre en interne,
  *    annuler ;
+ *  - `agirSurCommandeALivrer` : « Affecter à un livreur » et « Retirer de la
+ *    course » du tiroir d'une commande (`ROLES_GESTES_COMMANDE_A_LIVRER` et
+ *    `peutAgirSurCommande` du serveur) : ceux qui pilotent les courses, et
+ *    depuis le 09/11 le manager et l'assistant manager, sur les commandes de
+ *    leur restaurant seulement ;
  *  - `gererLivreurs`, `supprimerLivreur` : `@UserRoles(ADMIN)` de
  *    `deliverers-admin.controller.ts`, l'administrateur seul ;
  *  - `modifierPlanning`, `supprimerPlanning` : droit PLANNING et
@@ -60,6 +65,9 @@ export interface MembreLivraison {
  */
 const ROLES_LECTURE_SEULE: readonly string[] = ['LIVRAISON_OPS'];
 
+/** Rôles de restaurant qui affectent et retirent les commandes de LEUR restaurant (09/11). */
+const ROLES_GESTES_DU_RESTAURANT: readonly string[] = ['MANAGER', 'ASSISTANT_MANAGER'];
+
 /** Compte qui voit la livraison sans aucun bouton d'action. */
 export function lectureSeuleLivraison(membre: MembreLivraison | null | undefined): boolean {
   return ROLES_LECTURE_SEULE.includes(membre?.role ?? '');
@@ -72,6 +80,8 @@ export interface DroitsLivraison {
   voirPlanning: boolean;
   /** Forcer l'affectation, relancer, réessayer, confier à Turbo, reprendre en interne, annuler une course. */
   piloterCourses: boolean;
+  /** « Affecter à un livreur » et « Retirer de la course » sur une commande de ce restaurant. */
+  agirSurCommandeALivrer: (restaurantId: string | null | undefined) => boolean;
   /** Valider, refuser, forcer l'activation, suspendre, réactiver, changer le restaurant d'un livreur. */
   gererLivreurs: boolean;
   /** Supprimer un livreur. */
@@ -118,11 +128,16 @@ export function droitsLivraison({
   // Centre d'appels : les gestes des courses, dès que le serveur lui ouvre
   // l'écriture (le planning en écriture arrive avec elle).
   const centreAppelsAgit = role === 'CALL_CENTER' && lireLivraison && modifierPlannings;
+  const piloterCourses = gererComptes || centreAppelsAgit;
 
   return {
     voirLivraison: lireLivraison,
     voirPlanning: can(Modules.PLANNING, Action.READ),
-    piloterCourses: gererComptes || centreAppelsAgit,
+    piloterCourses,
+    // Le restaurant du compte, quel que soit son type : même règle que le serveur.
+    agirSurCommandeALivrer: (restaurantId) =>
+      piloterCourses ||
+      (ROLES_GESTES_DU_RESTAURANT.includes(role) && !!restaurantId && membre?.restaurant_id === restaurantId),
     gererLivreurs: gererComptes,
     supprimerLivreur: administrateur && can(Modules.LIVREURS, Action.DELETE),
     creerPlanning: agir(Modules.PLANNING, Action.CREATE),

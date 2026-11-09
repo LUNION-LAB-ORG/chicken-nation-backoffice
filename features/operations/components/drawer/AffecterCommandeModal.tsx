@@ -4,7 +4,6 @@ import React, { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { formatDelivererName } from "../../../courses/utils/course-labels";
-import { useLivreursList } from "../../../livreurs/hook/use-livreurs";
 import { useMaintenant } from "../../../livreurs/hook/use-maintenant";
 import {
   COULEURS_ETAT,
@@ -15,6 +14,7 @@ import {
 } from "../../../livreurs/utils/disponibilite";
 import type { Order } from "../../../orders/types/order.types";
 import { useAffecterCommandeMutation } from "../../queries/gestes-commande.mutation";
+import { useLivreursAffectationQuery } from "../../queries/livreurs-affectation.query";
 import { peutRecevoirCommande } from "../../utils/affectation-commande";
 
 interface Props {
@@ -30,11 +30,7 @@ interface Props {
 export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
   const [choisiId, setChoisiId] = useState<string | null>(null);
   const maintenant = useMaintenant(10 * 1000, true);
-  const { data, isLoading } = useLivreursList(
-    { status: "ACTIVE", restaurant_id: order.restaurant_id, limit: 50 },
-    true,
-    { staleTime: 0, refetchInterval: 15 * 1000 },
-  );
+  const { data, isLoading } = useLivreursAffectationQuery(order.id);
   const affecter = useAffecterCommandeMutation();
 
   const lignes = useMemo(

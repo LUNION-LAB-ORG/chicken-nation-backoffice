@@ -1,6 +1,7 @@
 import { api } from '@/services/api';
 import { getHumanReadableError } from '@/utils/errorMessages';
 
+import type { Livreur } from '../../livreurs/types/livreur.types';
 import { messageErreurOperations } from '../../operations/utils/message-erreur';
 import type { ReponseRelanceLivraison } from '../utils/relance-livraison';
 
@@ -141,6 +142,30 @@ export interface ReponseGesteCommande {
 export const retirerCommandeDeSaCourse = (orderId: string) =>
   actionAvecRefusServeur(() =>
     api.post<ReponseGesteCommande>(`${ENDPOINT}/commandes/${encodeURIComponent(orderId)}/retirer`, {}, true),
+  );
+
+/**
+ * Livreurs proposés dans « Affecter à un livreur » : ceux du restaurant de la
+ * commande, avec leur état. Lisible par le manager (09/11), qui n'a pas la
+ * liste des livreurs ; seulement le nom, le téléphone et les états.
+ */
+export type LivreurAffectation = Pick<
+  Livreur,
+  | 'id'
+  | 'first_name'
+  | 'last_name'
+  | 'phone'
+  | 'restaurant_id'
+  | 'disponibilite'
+  | 'appli_connectee'
+  | 'appli_active'
+  | 'appli_vue_a'
+  | 'appli_etat'
+>;
+
+export const getLivreursPourAffectation = (orderId: string) =>
+  safeCall(() =>
+    api.get<{ items: LivreurAffectation[] }>(`${ENDPOINT}/commandes/${encodeURIComponent(orderId)}/livreurs`, true),
   );
 
 /** La commande prête est donnée à ce livreur, même en course. */

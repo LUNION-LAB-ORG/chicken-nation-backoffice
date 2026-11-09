@@ -55,8 +55,8 @@ export interface ContexteGestes {
   payee?: boolean;
   /** Dans une course encore en cours. */
   surUneCourse?: boolean;
-  /** `piloterCourses` : miroir de `ROLES_ACTIONS_COURSES` du serveur. */
-  piloterCourses?: boolean;
+  /** Affecter et retirer : `agirSurCommandeALivrer` des droits de la livraison, pour cette commande. */
+  agirSurLivraison?: boolean;
 }
 
 /**
@@ -75,7 +75,7 @@ const gestesDuSiege = (
   if (isAdmin && (auRestaurant || enLivraison || (status === OrderStatus.COLLECTED && c.payee))) {
     gestes.push("terminer");
   }
-  if (c.piloterCourses && c.aLivrer) {
+  if (c.agirSurLivraison && c.aLivrer) {
     if (status === OrderStatus.READY) gestes.push("affecter");
     if (auRestaurant && c.surUneCourse) gestes.push("retirer");
   }
