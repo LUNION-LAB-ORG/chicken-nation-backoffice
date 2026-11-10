@@ -3,6 +3,7 @@ import { getHumanReadableError } from '@/utils/errorMessages';
 
 import type { Livreur } from '../../livreurs/types/livreur.types';
 import { messageErreurOperations } from '../../operations/utils/message-erreur';
+import type { RenfortAffectation } from '../../operations/utils/affectation-commande';
 import type { ReponseRelanceLivraison } from '../utils/relance-livraison';
 
 import type {
@@ -146,8 +147,10 @@ export const retirerCommandeDeSaCourse = (orderId: string) =>
 
 /**
  * Livreurs proposés dans « Affecter à un livreur » : ceux du restaurant de la
- * commande, avec leur état. Lisible par le manager (09/11), qui n'a pas la
- * liste des livreurs ; seulement le nom, le téléphone et les états.
+ * commande, puis ceux d'un autre restaurant qui peuvent la livrer (10/11 :
+ * détectés près de lui ou déjà en course pour lui), avec leur état. Lisible
+ * par le manager (09/11), qui n'a pas la liste des livreurs ; seulement le
+ * nom, le téléphone, les états et `renfort`.
  */
 export type LivreurAffectation = Pick<
   Livreur,
@@ -161,7 +164,10 @@ export type LivreurAffectation = Pick<
   | 'appli_active'
   | 'appli_vue_a'
   | 'appli_etat'
->;
+> & {
+  /** Livreur d'un autre restaurant ; `null` (ou absent, serveur plus ancien) pour ceux du restaurant. */
+  renfort?: RenfortAffectation | null;
+};
 
 export const getLivreursPourAffectation = (orderId: string) =>
   safeCall(() =>

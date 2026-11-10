@@ -15,7 +15,7 @@ import {
 import type { Order } from "../../../orders/types/order.types";
 import { useAffecterCommandeMutation } from "../../queries/gestes-commande.mutation";
 import { useLivreursAffectationQuery } from "../../queries/livreurs-affectation.query";
-import { peutRecevoirCommande } from "../../utils/affectation-commande";
+import { peutRecevoirCommande, sousTitreAffectation } from "../../utils/affectation-commande";
 
 interface Props {
   order: Order;
@@ -23,9 +23,12 @@ interface Props {
 }
 
 /**
- * « Affecter à un livreur » : les livreurs du restaurant de la commande, avec
- * leur état. Un livreur en course peut être choisi : la commande rejoint sa
- * course. Le refus du serveur est affiché tel quel, l'état est relu toutes les 15 s.
+ * « Affecter à un livreur » : les livreurs qui peuvent livrer la commande,
+ * avec leur état. Ceux du restaurant, puis (10/11) ceux d'un autre restaurant
+ * détectés près de lui ou déjà en course pour lui : leur seconde ligne dit
+ * d'où ils viennent. Un livreur en course peut être choisi : la commande
+ * rejoint sa course. Le refus du serveur est affiché tel quel, l'état est
+ * relu toutes les 15 s.
  */
 export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
   const [choisiId, setChoisiId] = useState<string | null>(null);
@@ -45,14 +48,23 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
             appliEtatDe(livreur),
           );
           const selectionnable = peutRecevoirCommande(livreur.disponibilite);
+          const enCourse = livreur.disponibilite?.en_course === true;
           return {
             livreur,
             nom: formatDelivererName(livreur),
             choix: { ...etat, selectionnable },
-            enCourse: livreur.disponibilite?.en_course === true,
+            enCourse,
+            sousTitre: sousTitreAffectation(livreur, enCourse),
           };
         })
-        .sort(comparerPourAffectation),
+        // À état égal, ceux du restaurant avant ceux d'ailleurs.
+        .sort((a, b) =>
+          a.choix.selectionnable === b.choix.selectionnable && a.choix.etat === b.choix.etat && !a.livreur.renfort !== !b.livreur.renfort
+            ? a.livreur.renfort
+              ? 1
+              : -1
+            : comparerPourAffectation(a, b),
+        ),
     [data, order.id, maintenant],
   );
 
@@ -79,10 +91,10 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
           {isLoading ? (
             <p className="p-4 text-sm text-gray-500">Chargement des livreurs…</p>
           ) : lignes.length === 0 ? (
-            <p className="p-4 text-sm text-gray-500">Aucun livreur actif rattaché à ce restaurant.</p>
+            <p className="p-4 text-sm text-gray-500">Aucun livreur actif rattaché à ce restaurant ni à proximité.</p>
           ) : (
             <ul>
-              {lignes.map(({ livreur, nom, choix, enCourse }) => {
+              {lignes.map(({ livreur, nom, choix, sousTitre }) => {
                 const couleurs = choix.etat ? COULEURS_ETAT[choix.etat] : null;
                 const selectionne = choisi?.livreur.id === livreur.id;
                 return (
@@ -106,9 +118,7 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
                     >
                       <div className={`flex-1 min-w-0 ${choix.selectionnable ? "" : "opacity-50"}`}>
                         <div className="text-sm font-medium text-gray-900 truncate">{nom}</div>
-                        <div className="text-xs text-gray-500 truncate">
-                          {enCourse ? "La commande rejoint sa course" : livreur.phone}
-                        </div>
+                        <div className="text-xs text-gray-500 truncate">{sousTitre}</div>
                       </div>
                       {choix.libelle && couleurs && (
                         <span

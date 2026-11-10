@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { peutRecevoirCommande } from "../../../operations/utils/affectation-commande";
+import {
+  distanceAuRestaurant,
+  peutRecevoirCommande,
+  sousTitreAffectation,
+} from "../../../operations/utils/affectation-commande";
 import type { DisponibiliteLivreur } from "../../../livreurs/types/livreur.types";
 import { UserRole } from "../../../users/types/user.types";
 import { OrderStatus } from "../../types/order.types";
@@ -111,5 +115,39 @@ describe("Qui peut recevoir la commande", () => {
 
   it("état inconnu (serveur plus ancien) : le serveur tranche", () => {
     expect(peutRecevoirCommande(null)).toBe(true);
+  });
+});
+
+describe("Affecter à un livreur : livreur d'un autre restaurant (10/11)", () => {
+  const TEL = "+2250556440504";
+  const faya = (distance_m: number | null) => ({
+    phone: TEL,
+    renfort: { restaurant_id: "r-faya", restaurant_name: "CHICKEN NATION FAYA", distance_m },
+  });
+
+  it("du restaurant : son téléphone, ou « La commande rejoint sa course »", () => {
+    expect(sousTitreAffectation({ phone: TEL, renfort: null }, false)).toBe(TEL);
+    expect(sousTitreAffectation({ phone: TEL }, true)).toBe("La commande rejoint sa course");
+  });
+
+  it("libre près du restaurant : son restaurant, sa distance et son téléphone", () => {
+    expect(sousTitreAffectation(faya(480), false)).toBe(`Livreur de FAYA, à 500 m du restaurant · ${TEL}`);
+    expect(sousTitreAffectation(faya(2340), false)).toBe(`Livreur de FAYA, à 2,3 km du restaurant · ${TEL}`);
+  });
+
+  it("déjà en course pour ce restaurant : la commande rejoint sa course", () => {
+    expect(sousTitreAffectation(faya(null), true)).toBe("Livreur de FAYA · la commande rejoint sa course");
+  });
+
+  it("sans nom de restaurant, sans distance ni téléphone : rien d'inventé", () => {
+    const anonyme = { phone: null, renfort: { restaurant_id: null, restaurant_name: null, distance_m: null } };
+    expect(sousTitreAffectation(anonyme, false)).toBe("Livreur d'un autre restaurant");
+  });
+
+  it("distance lisible : arrondie à 100 m, au moins 100 m ; illisible : rien", () => {
+    expect(distanceAuRestaurant(30)).toBe("à 100 m du restaurant");
+    expect(distanceAuRestaurant(1000)).toBe("à 1,0 km du restaurant");
+    expect(distanceAuRestaurant(null)).toBeNull();
+    expect(distanceAuRestaurant(Number.NaN)).toBeNull();
   });
 });
