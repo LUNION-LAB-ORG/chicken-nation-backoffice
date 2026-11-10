@@ -31,8 +31,10 @@ const modulesMap: Record<string, any> = {
   historique: dynamic(() => import("@/components/gestion/Operations"), {
     loading: () => <LoadingSpinner />,
   }),
-  // ---- Livraison : En direct, Courses, Livreurs, Planning ----
-  en_direct: dynamic(() => import("@/components/gestion/EnDirect"), {
+  // ---- Livraison : Courses (vues En direct, Carte, Historique), Livreurs, Planning ----
+  // Alias rétro-compat : « Carte live » (10/11) est la vue Carte de Courses ;
+  // un ancien activeTab "en_direct" mémorisé y mène (Courses le redirige).
+  en_direct: dynamic(() => import("@/components/gestion/Courses"), {
     loading: () => <LoadingSpinner />,
   }),
   courses: dynamic(() => import("@/components/gestion/Courses"), {

@@ -45,9 +45,14 @@ interface SectionState<T = unknown> {
   modals: Record<string, boolean>;
 }
 
+/** Vues de l'écran Courses (10/11) : kanban, carte (l'ancienne « Carte live »), tableau. */
+export type OngletCourses = 'en_direct' | 'carte' | 'historique';
+
 export interface DashboardState {
   // Navigation & Global Context
   activeTab: TabKey | null;
+  /** Vue ouverte dans l'écran Courses ; mémorisée. */
+  ongletCourses: OngletCourses;
   // Conversation à ouvrir dans l'inbox (deep-link email / clic notification/toast).
   // Transient : non persisté, consommé par l'InboxModule puis remis à null.
   pendingConversationId: string | null;
@@ -155,8 +160,9 @@ export interface DashboardState {
   /** Ouvre l'écran Livreurs sur la fiche de ce livreur. */
   openLivreur: (livreurId: string) => void;
   clearPendingLivreur: () => void;
-  /** Ouvre En direct sur ce livreur (carte centrée, sa fenêtre ouverte). */
+  /** Ouvre la vue Carte de Courses sur ce livreur (carte centrée, sa fenêtre ouverte). */
   openEnDirect: (livreurId: string) => void;
+  setOngletCourses: (onglet: OngletCourses) => void;
   clearPendingEnDirect: () => void;
   /** Ouvre Notes et avis, onglet « Retours privés », sur la fiche de cet avis (cloche). */
   openAvis: (avisId: string) => void;
@@ -211,6 +217,7 @@ export const useDashboardStore = create<DashboardState>()(
     immer((set) => ({
       // État Initial
       activeTab: null,
+      ongletCourses: 'en_direct',
       pendingConversationId: null,
       pendingMessageId: null,
       pendingCrmSegment: null,
@@ -334,8 +341,14 @@ export const useDashboardStore = create<DashboardState>()(
         state.pendingLivreurId = null;
       }),
       openEnDirect: (livreurId) => set((state) => {
-        state.activeTab = 'en_direct';
+        // « Carte live » est devenue la vue Carte de Courses (10/11).
+        state.activeTab = 'courses';
+        state.ongletCourses = 'carte';
+        state.courses.view = 'list';
         state.pendingEnDirectLivreurId = livreurId;
+      }),
+      setOngletCourses: (onglet) => set((state) => {
+        state.ongletCourses = onglet;
       }),
       clearPendingEnDirect: () => set((state) => {
         state.pendingEnDirectLivreurId = null;
@@ -406,6 +419,7 @@ export const useDashboardStore = create<DashboardState>()(
 
         return {
           activeTab: state.activeTab,
+          ongletCourses: state.ongletCourses,
           selectedRestaurantId: state.selectedRestaurantId,
           selectedPeriod: state.selectedPeriod,
           // Reprendre où on s'était arrêté dans le support.

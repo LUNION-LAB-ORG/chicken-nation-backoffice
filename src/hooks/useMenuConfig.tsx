@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Newspaper,
   Package,
-  Radar,
   Star,
   Store,
   BadgePercent,
@@ -114,18 +113,13 @@ export const useGetMenuConfig = (): {
       canAccess: () => can(Modules.LIVREURS, Action.READ) || can(Modules.PLANNING, Action.READ),
       badge: alertesRouges > 0 ? alertesRouges : undefined,
       items: [
-        {
-          id: "livraison-en_direct",
-          label: "Carte live",
-          icon: Radar,
-          canAccess: () => can(Modules.LIVREURS, Action.READ),
-          badge: alertesRouges > 0 ? alertesRouges : undefined,
-        },
+        // « Carte live » est devenue la vue Carte de Courses (10/11) : un seul écran de suivi.
         {
           id: "livraison-courses",
           label: "Courses",
           icon: Package,
           canAccess: () => can(Modules.LIVREURS, Action.READ),
+          badge: alertesRouges > 0 ? alertesRouges : undefined,
         },
         {
           id: "livraison-livreurs",

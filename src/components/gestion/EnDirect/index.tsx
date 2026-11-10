@@ -75,7 +75,11 @@ function useGrandEcran(): boolean {
   return grand;
 }
 
-export default function EnDirect() {
+/**
+ * `integre` (10/11) : vue « Carte » de l'écran Courses, qui porte déjà le
+ * titre, le bandeau des restaurants et la fenêtre « Forcer l'affectation ».
+ */
+export default function EnDirect({ integre = false }: { integre?: boolean } = {}) {
   // Positions en direct : chaque position reçue déplace le marqueur sans relire la liste.
   useDelivererLiveSync();
 
@@ -206,9 +210,15 @@ export default function EnDirect() {
   const carteMontee = grandEcran || carteOuverte;
 
   return (
-    <div className="flex flex-col gap-4 p-4 lg:h-[calc(100dvh-3.5rem)]">
-      <DashboardPageHeader mode="list" title="Carte live" />
-      <BandeauRestaurants className="shrink-0" />
+    <div
+      className={
+        integre
+          ? "flex flex-col gap-4 lg:h-[calc(100dvh-17rem)] lg:min-h-[560px]"
+          : "flex flex-col gap-4 p-4 lg:h-[calc(100dvh-3.5rem)]"
+      }
+    >
+      {!integre && <DashboardPageHeader mode="list" title="Carte live" />}
+      {!integre && <BandeauRestaurants className="shrink-0" />}
 
       <div className="flex flex-col gap-4 lg:grid lg:min-h-[520px] lg:flex-1 lg:grid-cols-[380px_minmax(0,1fr)]">
         <div className="min-w-0 overflow-hidden rounded-xl border border-[#E4E4E7] bg-white lg:min-h-0 lg:overflow-y-auto">
@@ -271,7 +281,7 @@ export default function EnDirect() {
       </div>
 
       {/* « Forcer l'affectation » d'une alerte : même fenêtre que l'écran Courses. */}
-      {fenetresCourses?.force_assign && courseChoisie && <ForceAssignModal isOpen course={courseChoisie} />}
+      {!integre && fenetresCourses?.force_assign && courseChoisie && <ForceAssignModal isOpen course={courseChoisie} />}
     </div>
   );
 }

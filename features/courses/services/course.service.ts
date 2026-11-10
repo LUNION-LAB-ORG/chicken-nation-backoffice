@@ -4,6 +4,7 @@ import { getHumanReadableError } from '@/utils/errorMessages';
 import type { Livreur } from '../../livreurs/types/livreur.types';
 import { messageErreurOperations } from '../../operations/utils/message-erreur';
 import type { RenfortAffectation } from '../../operations/utils/affectation-commande';
+import type { CoursesEnDirect } from '../types/en-direct.types';
 import type { ReponseRelanceLivraison } from '../utils/relance-livraison';
 
 import type {
@@ -92,6 +93,31 @@ export const forceAssignCourse = (id: string, payload: ForceAssignPayload) =>
 /** Annulation d'une course par l'admin */
 export const cancelCourseAdmin = (id: string, payload: CancelCoursePayload) =>
   actionAvecRefusServeur(() => api.patch<Course>(`${ENDPOINT}/${id}/cancel`, payload, true));
+
+/** Courses « En direct » (kanban, 10/11) : tout le réseau, ou un restaurant. */
+export const getCoursesEnDirect = (restaurantId?: string | null) =>
+  safeCall(() =>
+    api.get<CoursesEnDirect>(
+      `${ENDPOINT}/en-direct${restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''}`,
+      true,
+    ),
+  );
+
+/** Livreurs proposés pour changer le livreur d'une course (mêmes que « Affecter à un livreur »). */
+export const getLivreursPourCourse = (courseId: string) =>
+  safeCall(() =>
+    api.get<{ items: LivreurAffectation[] }>(`${ENDPOINT}/${encodeURIComponent(courseId)}/livreurs`, true),
+  );
+
+/** Changer le livreur d'une course, d'office, avant le départ (10/11). Refus : le texte du serveur. */
+export const changerLivreurCourse = (courseId: string, delivererId: string) =>
+  actionAvecRefusServeur(() =>
+    api.post<{ course_id: string; reference: string; appli_connectee: boolean | null; message: string }>(
+      `${ENDPOINT}/${encodeURIComponent(courseId)}/livreur`,
+      { deliverer_id: delivererId },
+      true,
+    ),
+  );
 
 /** Réponse de « Les fermer » : le texte vient du serveur. */
 export interface ReponseFermetureAnciennes {

@@ -9,11 +9,14 @@ import { useDashboardStore } from '../dashboardStore';
  * La demande est à part de celle de la fiche (`pendingLivreurId`), que
  * l'écran Livreurs consommerait à sa prochaine ouverture.
  */
-describe('ouvrir En direct sur un livreur', () => {
-  test('onglet En direct, livreur demandé, fiche de Livreurs pas touchée', () => {
+describe('ouvrir la carte sur un livreur', () => {
+  test('écran Courses, vue Carte (ex « Carte live », 10/11), livreur demandé, fiche de Livreurs pas touchée', () => {
+    useDashboardStore.getState().setSectionView('courses', 'view');
     useDashboardStore.getState().openEnDirect('liv-koffi');
     const s = useDashboardStore.getState();
-    expect(s.activeTab).toBe('en_direct');
+    expect(s.activeTab).toBe('courses');
+    expect(s.ongletCourses).toBe('carte');
+    expect(s.courses.view).toBe('list');
     expect(s.pendingEnDirectLivreurId).toBe('liv-koffi');
     expect(s.pendingLivreurId).toBeNull();
   });

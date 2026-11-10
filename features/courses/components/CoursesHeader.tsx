@@ -7,8 +7,12 @@ import toast from 'react-hot-toast';
 
 import { courseKeyQuery } from '../queries/index.query';
 
-/** Header du module Courses — titre + recherche + refresh. */
-export function CoursesHeader() {
+/**
+ * Header du module Courses — titre + recherche + refresh. La recherche (par
+ * référence ou code) ne vaut que pour la vue « Historique » (10/11) : le
+ * kanban et la carte montrent tout le jour d'un coup.
+ */
+export function CoursesHeader({ avecRecherche = true }: { avecRecherche?: boolean } = {}) {
   const {
     courses: { view, filters },
     setFilter,
@@ -32,13 +36,13 @@ export function CoursesHeader() {
       <DashboardPageHeader
         mode="list"
         title="Courses"
-        searchConfig={{
+        searchConfig={avecRecherche ? {
           placeholder: 'Rechercher par référence ou code retrait…',
           buttonText: 'Chercher',
           value: filters?.search as string,
           onSearch: handleSearch,
           realTimeSearch: true,
-        }}
+        } : undefined}
         actions={[
           {
             label: 'Actualiser',
