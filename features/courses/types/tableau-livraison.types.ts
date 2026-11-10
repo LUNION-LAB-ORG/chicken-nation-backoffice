@@ -66,6 +66,11 @@ export interface SignalLivraison {
 export interface LivreurDuTableau {
   id: string;
   prenom: string | null;
+  /** Nom et téléphone (10/11, liste dépliée du bandeau) ; absents d'un serveur plus ancien. */
+  nom?: string | null;
+  telephone?: string | null;
+  /** « En pause jusqu'à 14 h 32 »… ; absent d'un serveur plus ancien. */
+  libelle?: string | null;
   /**
    * État par la règle unique du serveur. Il peut en envoyer un que cet écran
    * ne connaît pas (serveur plus récent) : `etatAffichable` le range.

@@ -13,7 +13,13 @@
 
 import type { EtatDisponibilite } from '../../livreurs/types/livreur.types';
 import { etatConnu } from '../../livreurs/utils/disponibilite';
-import type { CleSignal, RestaurantDuTableau, SignalLivraison, TableauLivraison } from '../types/tableau-livraison.types';
+import type {
+  CleSignal,
+  LivreurDuTableau,
+  RestaurantDuTableau,
+  SignalLivraison,
+  TableauLivraison,
+} from '../types/tableau-livraison.types';
 
 // ============================================================
 // QUI LIT, SERVEUR PAS À JOUR
@@ -216,6 +222,54 @@ export function motsDesChiffres(r: RestaurantDuTableau): {
     enPause: 'en pause',
     nonAssignees: r.sans_livreur.courses > 1 ? 'non assignées' : 'non assignée',
   };
+}
+
+/**
+ * Chiffres du bandeau qui se déplient (10/11 : « consulter les livreurs
+ * selon les statuts en restant sur la même page ») : mêmes états que le
+ * compte du serveur.
+ */
+export type GroupeChiffre = 'DISPONIBLES' | 'EN_COURSE' | 'EN_PAUSE';
+
+export const ETATS_DU_GROUPE: Record<GroupeChiffre, readonly string[]> = {
+  DISPONIBLES: ['DISPONIBLE', 'OFFRE_EN_ATTENTE', 'EN_APPEL'],
+  EN_COURSE: ['EN_COURSE'],
+  EN_PAUSE: ['EN_PAUSE', 'PAUSE_AUTO'],
+};
+
+export interface LivreurDuChiffre extends LivreurDuTableau {
+  restaurant: { id: string; nom: string };
+}
+
+/** Livreurs d'un chiffre, du restaurant choisi ou de tous, dans l'ordre du serveur. */
+export function livreursDuChiffre(
+  restaurants: readonly RestaurantDuTableau[],
+  restaurantId: string | null | undefined,
+  groupe: GroupeChiffre,
+): LivreurDuChiffre[] {
+  const etats = ETATS_DU_GROUPE[groupe];
+  return restaurants
+    .filter((r) => !restaurantId || r.id === restaurantId)
+    .flatMap((r) =>
+      r.liste.filter((l) => etats.includes(l.etat)).map((l) => ({ ...l, restaurant: { id: r.id, nom: r.nom } })),
+    );
+}
+
+/** « 16 livreurs en pause », « 1 livreur disponible », « Aucun livreur en course ». */
+export function titreListeChiffre(groupe: GroupeChiffre, n: number): string {
+  const etat = groupe === 'DISPONIBLES' ? (n > 1 ? 'disponibles' : 'disponible') : groupe === 'EN_COURSE' ? 'en course' : 'en pause';
+  if (n === 0) return `Aucun livreur ${etat}`;
+  return `${n} ${n > 1 ? 'livreurs' : 'livreur'} ${etat}`;
+}
+
+/**
+ * Seconde ligne d'un livreur dans la liste dépliée : sa course, sa place
+ * dans la file, ou le détail de son état (« En pause jusqu'à 14 h 32 »).
+ */
+export function detailDuLivreurDuChiffre(l: Pick<LivreurDuTableau, 'etat' | 'libelle' | 'course' | 'rang_file'>): string | null {
+  if (l.course) return l.course.reference;
+  if (l.rang_file) return l.rang_file === 1 ? '1er de la file' : `${l.rang_file}e de la file`;
+  return l.libelle?.trim() || null;
 }
 
 // ============================================================

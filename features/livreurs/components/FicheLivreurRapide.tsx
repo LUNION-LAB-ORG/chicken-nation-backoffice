@@ -9,6 +9,7 @@ import { useDashboardStore } from '@/store/dashboardStore';
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import BoutonAppelerLivreur from '../../calls/components/BoutonAppelerLivreur';
+import { useDroitsLivraison } from '../hook/use-droits-livraison';
 import { lienAppel, lienWhatsApp, telephoneLisible } from '../utils/telephone';
 
 export interface LivreurRapide {
@@ -41,6 +42,8 @@ export function FicheLivreurRapide({
 }) {
   const openEnDirect = useDashboardStore((s) => s.openEnDirect);
   const openLivreur = useDashboardStore((s) => s.openLivreur);
+  // Carte et fiche : écrans du suivi des livraisons (un compte de restaurant ne les a pas).
+  const { voirLivraison } = useDroitsLivraison();
   const nom = [livreur.prenom, livreur.nom].filter((x) => !!x && x.trim()).join(' ') || 'Livreur';
   const numero = telephoneLisible(livreur.telephone);
   const appel = lienAppel(livreur.telephone);
@@ -141,28 +144,32 @@ export function FicheLivreurRapide({
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <BoutonAppelerLivreur delivererId={livreur.id} nom={nom} detail={contexte ?? null} />
-          <button
-            type="button"
-            onClick={() => {
-              onFermer();
-              openEnDirect(livreur.id);
-            }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
-          >
-            <MapPin className="h-4 w-4 text-[#F17922]" />
-            Voir sur la carte
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              onFermer();
-              openLivreur(livreur.id);
-            }}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
-          >
-            <ExternalLink className="h-4 w-4 text-[#71717A]" />
-            Voir sa fiche
-          </button>
+          {voirLivraison && (
+            <button
+              type="button"
+              onClick={() => {
+                onFermer();
+                openEnDirect(livreur.id);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+            >
+              <MapPin className="h-4 w-4 text-[#F17922]" />
+              Voir sur la carte
+            </button>
+          )}
+          {voirLivraison && (
+            <button
+              type="button"
+              onClick={() => {
+                onFermer();
+                openLivreur(livreur.id);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+            >
+              <ExternalLink className="h-4 w-4 text-[#71717A]" />
+              Voir sa fiche
+            </button>
+          )}
         </div>
       </div>
     </div>,

@@ -10,8 +10,11 @@ import {
   etatAffichable,
   libelleAlertes,
   lignesPiedCarte,
+  detailDuLivreurDuChiffre,
+  livreursDuChiffre,
   minutesDepuis,
   motsDesChiffres,
+  titreListeChiffre,
   nombreAlertesRouges,
   peutLireTableau,
   piedCarte,
@@ -393,5 +396,30 @@ describe('bandeau compact (10/11) : chiffres en mots entiers, accordés', () => 
       sans_livreur: { courses: 2, plus_ancienne_depuis: null },
     });
     expect(motsDesChiffres(un)).toMatchObject({ disponibles: 'disponible', nonAssignees: 'non assignées' });
+  });
+});
+
+describe('chiffres du bandeau qui se déplient (10/11)', () => {
+  const l = (id, etat, p = {}) => ({ id, prenom: id, nom: null, telephone: null, etat, rang_file: null, course: null, libelle: null, ...p });
+  const restos = [
+    restaurant({ id: 'angre', nom: 'CHICKEN NATION ANGRE', liste: [l('awa', 'DISPONIBLE', { rang_file: 1 }), l('koffi', 'EN_PAUSE'), l('yao', 'PAUSE_AUTO')] }),
+    restaurant({ id: 'faya', nom: 'CHICKEN NATION FAYA', liste: [l('ines', 'EN_PAUSE'), l('yann', 'EN_COURSE', { course: { reference: 'CRS-1', statut: 'IN_DELIVERY' } })] }),
+  ];
+
+  test('livreurs d’un chiffre : mêmes états que le compte, tous les restaurants ou le choisi', () => {
+    expect(livreursDuChiffre(restos, null, 'EN_PAUSE').map((x) => x.id)).toEqual(['koffi', 'yao', 'ines']);
+    expect(livreursDuChiffre(restos, 'faya', 'EN_PAUSE').map((x) => [x.id, x.restaurant.nom])).toEqual([['ines', 'CHICKEN NATION FAYA']]);
+    expect(livreursDuChiffre(restos, null, 'DISPONIBLES').map((x) => x.id)).toEqual(['awa']);
+  });
+
+  test('titre et seconde ligne', () => {
+    expect(titreListeChiffre('EN_PAUSE', 16)).toBe('16 livreurs en pause');
+    expect(titreListeChiffre('DISPONIBLES', 1)).toBe('1 livreur disponible');
+    expect(titreListeChiffre('EN_COURSE', 0)).toBe('Aucun livreur en course');
+    expect(detailDuLivreurDuChiffre(l('yann', 'EN_COURSE', { course: { reference: 'CRS-1', statut: 'IN_DELIVERY' } }))).toBe('CRS-1');
+    expect(detailDuLivreurDuChiffre(l('awa', 'DISPONIBLE', { rang_file: 1 }))).toBe('1er de la file');
+    expect(detailDuLivreurDuChiffre(l('awa', 'DISPONIBLE', { rang_file: 3 }))).toBe('3e de la file');
+    expect(detailDuLivreurDuChiffre(l('koffi', 'EN_PAUSE', { libelle: "En pause jusqu'à 14 h 32" }))).toBe("En pause jusqu'à 14 h 32");
+    expect(detailDuLivreurDuChiffre(l('koffi', 'EN_PAUSE'))).toBeNull();
   });
 });
