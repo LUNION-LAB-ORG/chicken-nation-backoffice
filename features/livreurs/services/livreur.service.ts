@@ -64,6 +64,23 @@ export const reactivateLivreur = (id: string) =>
 export const forceActivateLivreur = (id: string, restaurantId?: string) =>
   safeCall(() => api.patch<LivreurAvecPlannings>(`${ENDPOINT}/${id}/force-activate`, corpsRestaurant(restaurantId), true));
 
+/** Réponse de « Débloquer » : le texte vient du serveur. */
+export interface ReponseDeblocage {
+  /** La pause automatique a été levée par ce geste. */
+  debloque: boolean;
+  /** Il est dans la file : il reçoit de nouveau des courses. */
+  disponible: boolean;
+  message: string;
+}
+
+/**
+ * « Débloquer » (10/11, administrateur et centre d'appels) : lève la pause
+ * automatique d'un livreur (refus répétés) avant son heure ; libre, il
+ * reçoit de nouveau des courses sans rien faire sur son téléphone.
+ */
+export const debloquerLivreur = (id: string) =>
+  safeCall(() => api.patch<ReponseDeblocage>(`${ENDPOINT}/${id}/debloquer`, {}, true));
+
 // ============================================================
 // AFFECTATION & SUPPRESSION
 // ============================================================

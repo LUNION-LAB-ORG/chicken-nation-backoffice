@@ -31,6 +31,7 @@ import {
   textesArrets,
   type LivreurEnDirect,
 } from '../utils/groupes-en-direct';
+import { BoutonDebloquer } from './BoutonDebloquer';
 import { PastilleEtat, initialesLivreur } from './PastilleEtat';
 import { ICONE_PRESENCE } from './PresenceAppliLigne';
 
@@ -219,6 +220,8 @@ function FenetreLivreur({ ligne, maintenant }: { ligne: LivreurEnDirect; mainten
           className="ml-auto"
         />
       </div>
+      {/* Pause automatique : « Débloquer » pour le siège (10/11). */}
+      {etat === 'PAUSE_AUTO' && <BoutonDebloquer livreurId={live.id} className="mt-2" />}
     </div>
   );
 }

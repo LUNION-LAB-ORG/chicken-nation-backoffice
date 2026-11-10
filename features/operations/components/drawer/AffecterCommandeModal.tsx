@@ -4,6 +4,7 @@ import React, { useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 
 import { formatDelivererName } from "../../../courses/utils/course-labels";
+import { BoutonDebloquer } from "../../../livreurs/components/BoutonDebloquer";
 import { useMaintenant } from "../../../livreurs/hook/use-maintenant";
 import {
   COULEURS_ETAT,
@@ -98,7 +99,7 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
                 const couleurs = choix.etat ? COULEURS_ETAT[choix.etat] : null;
                 const selectionne = choisi?.livreur.id === livreur.id;
                 return (
-                  <li key={livreur.id}>
+                  <li key={livreur.id} className="flex items-center border-b last:border-b-0">
                     <button
                       type="button"
                       disabled={!choix.selectionnable}
@@ -108,7 +109,7 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
                         setChoisiId(livreur.id);
                         affecter.reset();
                       }}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 transition flex items-center gap-3 ${
+                      className={`min-w-0 flex-1 text-left px-4 py-3 transition flex items-center gap-3 ${
                         !choix.selectionnable
                           ? "bg-gray-50 cursor-not-allowed"
                           : selectionne
@@ -129,6 +130,8 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
                         </span>
                       )}
                     </button>
+                    {/* Pause automatique : « Débloquer » pour le siège (10/11), puis il devient choisissable. */}
+                    {choix.etat === "PAUSE_AUTO" && <BoutonDebloquer livreurId={livreur.id} className="mr-3" />}
                   </li>
                 );
               })}

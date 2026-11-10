@@ -18,6 +18,7 @@ import { useDelivererScoringInfoQuery } from "../../queries/deliverer-scoring.qu
 import type { IDelivererScoringInfo } from "../../types/deliverer-scoring.type";
 import { LIBELLE_CLASSEMENT, LIBELLE_FILE_SCORE, PAS_CLASSE, rangLisible } from "../../utils/classement";
 import { estPauseSansFin } from "../../utils/disponibilite";
+import { BoutonDebloquer } from '../BoutonDebloquer';
 
 interface ScoringQueueSectionProps {
   livreurId: string;
@@ -76,7 +77,7 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
       <RankingCard data={data} />
       <ScoringCard data={data} />
       <RefusalsCard data={data} />
-      <PauseCard data={data} />
+      <PauseCard data={data} livreurId={livreurId} />
       <ReasonsCard data={data} />
     </div>
   );
@@ -312,7 +313,7 @@ const RefusalsCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
   );
 };
 
-const PauseCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
+const PauseCard: React.FC<{ data: IDelivererScoringInfo; livreurId: string }> = ({ data, livreurId }) => {
   const { pauses, queuePenalty } = data;
   const hasAnyPause =
     pauses.isPaused || pauses.isAutoPaused || queuePenalty.active;
@@ -334,6 +335,8 @@ const PauseCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
               tone="auto"
             />
           )}
+          {/* « Débloquer » (10/11) : le siège lève la pause automatique avant son heure. */}
+          {pauses.isAutoPaused && pauses.autoPauseUntil && <BoutonDebloquer livreurId={livreurId} />}
           {pauses.isPaused && pauses.pauseUntil && (
             <PauseLine
               icon={<Pause className="w-3.5 h-3.5" />}

@@ -10,6 +10,7 @@ import { nomLivreur, sousTitreLivreur } from '../../calls/utils/appel-livreur';
 import type { IDelivererLive } from '../types/deliverer-live.type';
 import type { EtatDisponibilite } from '../types/livreur.types';
 import type { DetailEtat, MorceauPlanning } from '../utils/livreurs-du-jour';
+import { BoutonDebloquer } from './BoutonDebloquer';
 import { PastilleEtat } from './PastilleEtat';
 
 /**
@@ -110,9 +111,12 @@ export function LigneLivreurDuJour({
         </div>
       </div>
 
-      {/* État */}
+      {/* État ; pause automatique : « Débloquer » pour le siège (10/11). */}
       <div className="min-w-0">
-        <PastilleEtat etat={etat} title={libelleEtat} />
+        <span className="flex items-center gap-2">
+          <PastilleEtat etat={etat} title={libelleEtat} />
+          {etat === 'PAUSE_AUTO' && <BoutonDebloquer livreurId={live.id} className="h-6" />}
+        </span>
         {/* Le retard reste entier en bout de ligne : à 768 px, « +1 h 02 » était coupé
             derrière la référence de la course, coupée à sa place. */}
         <p className="mt-0.5 flex h-4 min-w-0 text-[11px]" title={texteDetail || undefined}>
