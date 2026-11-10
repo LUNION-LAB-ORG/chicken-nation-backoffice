@@ -32,9 +32,9 @@ import {
  *
  * Depuis le 10/11, le seul écran de suivi des livraisons, en trois vues sous
  * le bandeau des restaurants (qui sert de filtre) :
- *  - « En direct » : le kanban des courses de la journée (À affecter, Vers le
- *    restaurant, Au restaurant, En livraison, Terminées), le livreur changé
- *    d'un menu sur la carte ;
+ *  - « En direct » : le kanban des courses en cours de la journée (À
+ *    affecter, Livreur affecté, En livraison, Turbo), le livreur changé d'un
+ *    menu, le badge Turbo qui bascule, le nom qui ouvre la fiche rapide ;
  *  - « Carte » : l'ancienne Carte live, avec « À traiter » et ses gestes ;
  *  - « Historique » : filtres et tableau.
  * La vue est mémorisée ; un ancien lien « Carte live » ouvre la vue Carte. Les gestes
@@ -78,7 +78,7 @@ export default function Courses() {
   // Nombres des onglets : mêmes lectures (même cache) que le kanban et le bandeau.
   const enDirectQuery = useCoursesEnDirectQuery(selectedRestaurantId);
   const { data: tableau } = useTableauLivraisonQuery();
-  const enCours = enDirectQuery.data ? enDirectQuery.data.courses.filter((c) => c.colonne !== 'TERMINEE').length : null;
+  const enCours = enDirectQuery.data ? enDirectQuery.data.courses.length : null;
   const alertes = useMemo(
     () =>
       (tableau?.signaux ?? []).filter(
@@ -139,7 +139,7 @@ export default function Courses() {
         <>
           <BandeauRestaurants />
           <OngletsCourses onglet={onglet} onChange={setOnglet} enCours={enCours} alertes={alertes} />
-          {onglet === 'en_direct' && <TableauEnDirect onVoirHistorique={() => setOnglet('historique')} />}
+          {onglet === 'en_direct' && <TableauEnDirect />}
           {onglet === 'carte' && <EnDirect integre />}
           {onglet === 'historique' && (
             <>

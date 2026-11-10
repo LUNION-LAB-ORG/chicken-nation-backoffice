@@ -3,7 +3,11 @@
  * kanban de l'écran Courses. Une carte par course de la journée de service.
  */
 
-export type ColonneEnDirect = 'A_AFFECTER' | 'VERS_RESTAURANT' | 'AU_RESTAURANT' | 'EN_LIVRAISON' | 'TERMINEE';
+/** Retour du 10/11 : sans les terminées, trois étapes, Turbo à part. */
+export type ColonneEnDirect = 'A_AFFECTER' | 'LIVREUR_AFFECTE' | 'EN_LIVRAISON' | 'TURBO';
+
+/** Où en est la course, quelle que soit sa colonne. */
+export type EtapeEnDirect = 'RECHERCHE' | 'AUCUN_LIVREUR' | 'VERS_RESTAURANT' | 'AU_RESTAURANT' | 'EN_LIVRAISON';
 
 export interface CourseEnDirect {
   id: string;
@@ -12,6 +16,7 @@ export interface CourseEnDirect {
   code: string | null;
   statut: string;
   colonne: ColonneEnDirect;
+  etape: EtapeEnDirect;
   restaurant: { id: string; nom: string | null };
   livreur: { id: string; prenom: string | null; nom: string | null; telephone: string | null } | null;
   /** Confiée à Turbo : le livreur ne se change pas ici. */
@@ -33,5 +38,4 @@ export interface CourseEnDirect {
 export interface CoursesEnDirect {
   genere_a: string;
   courses: CourseEnDirect[];
-  terminees_total: number;
 }

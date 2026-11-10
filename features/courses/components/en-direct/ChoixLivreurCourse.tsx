@@ -1,12 +1,13 @@
 'use client';
 
-import { Check, ChevronDown, Search, UserRound, X } from 'lucide-react';
+import { Check, ChevronDown, Phone, Search, UserRound, X } from 'lucide-react';
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import BoutonAppelerLivreur from '../../../calls/components/BoutonAppelerLivreur';
 import { BoutonDebloquer } from '../../../livreurs/components/BoutonDebloquer';
+import { FicheLivreurRapide } from '../../../livreurs/components/FicheLivreurRapide';
 import { PastilleEtat } from '../../../livreurs/components/PastilleEtat';
 import { useDroitsLivraison } from '../../../livreurs/hook/use-droits-livraison';
 import { useMaintenant } from '../../../livreurs/hook/use-maintenant';
@@ -17,63 +18,85 @@ import {
   comparerPourAffectation,
 } from '../../../livreurs/utils/disponibilite';
 import { sousTitreAffectation } from '../../../operations/utils/affectation-commande';
+import { nomCourtRestaurant } from '../../../restaurants/utils/nom-court';
 import { useChangerLivreurMutation } from '../../queries/changer-livreur.mutation';
 import { useLivreursPourCourseQuery } from '../../queries/courses-en-direct.query';
 import type { CourseEnDirect } from '../../types/en-direct.types';
 import { correspondRecherche, nomDuLivreur, peutPrendreCourse } from '../../utils/en-direct';
 
 /**
- * MENU « LIVREUR » D'UNE CARTE DU KANBAN (demande du 10/11) : changer le
- * livreur d'une course d'office, avant le départ du restaurant.
+ * LIVREUR D'UNE CARTE DU KANBAN (demande du 10/11).
  *
- *  - Bouton : le livreur actuel (ou « Choisir un livreur »).
- *  - Liste : ceux qui peuvent prendre la course d'abord (ceux du restaurant,
- *    puis les renforts, avec leur restaurant et leur distance), les autres
- *    grisés avec la raison ; recherche par nom ou téléphone ; « Débloquer »
- *    à côté d'un livreur en pause automatique.
- *  - Un toucher sur un livreur suffit : le serveur confie la course et dit
- *    ce qu'il a fait (« CRS-… confiée à Koffi. »).
+ *  - Son nom : un clic ouvre sa fiche rapide (numéro pour l'appeler hors de
+ *    l'appli, WhatsApp, appel dans l'appli, carte, fiche).
+ *  - « Changer » (ou « Choisir un livreur » sans livreur) : la liste des
+ *    livreurs, pour confier la course d'office avant le départ du restaurant.
+ *    Ceux qui peuvent la prendre d'abord (ceux du restaurant, puis les
+ *    renforts avec leur restaurant et leur distance), les autres grisés avec
+ *    la raison ; recherche ; « Débloquer » à côté d'une pause automatique.
+ *    Un toucher sur un livreur suffit : le serveur dit ce qu'il a fait.
  *
  * Sur grand écran, la liste s'ouvre sous le bouton (hors de la colonne, qui
  * défile) ; sur téléphone, en feuille au bas de l'écran.
  *
  * Course partie, confiée à Turbo, ou compte qui ne pilote pas les courses :
- * le nom du livreur seul, avec le bouton d'appel.
+ * pas de « Changer », le bouton d'appel dans l'appli à la place.
  */
 export function ChoixLivreurCourse({ course }: { course: CourseEnDirect }) {
   const { piloterCourses } = useDroitsLivraison();
+  const [fiche, setFiche] = useState(false);
   const modifiable = piloterCourses && course.livreur_modifiable;
 
-  if (!modifiable) {
-    if (!course.livreur) {
-      return (
-        <p className="flex h-8 items-center gap-1.5 text-xs text-[#71717A]">
-          <UserRound className="h-3.5 w-3.5" />
-          {course.turbo ? 'Livreur Turbo' : 'Aucun livreur'}
-        </p>
-      );
-    }
-    const nom = nomDuLivreur(course.livreur);
+  if (!course.livreur) {
+    if (modifiable) return <MenuLivreur course={course} />;
     return (
-      <div className="flex h-8 items-center gap-2">
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-[10px] font-bold text-[#52525B]">
-          {(course.livreur.prenom ?? 'L').trim().charAt(0).toUpperCase()}
-        </span>
-        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#18181B]" title={nom}>
-          {nom}
-        </span>
-        <span onClick={(e) => e.stopPropagation()}>
-          <BoutonAppelerLivreur variante="icone" delivererId={course.livreur.id} nom={nom} detail={course.restaurant.nom} />
-        </span>
-      </div>
+      <p className="flex h-8 items-center gap-1.5 text-xs text-[#71717A]">
+        <UserRound className="h-3.5 w-3.5" />
+        {course.turbo ? 'Livreur Turbo' : 'Aucun livreur'}
+      </p>
     );
   }
-  return <MenuLivreur course={course} />;
+
+  const nom = nomDuLivreur(course.livreur);
+  const contexte = [nomCourtRestaurant(course.restaurant.nom) ?? course.restaurant.nom, course.reference]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <div className="flex h-8 items-center gap-1.5">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setFiche(true);
+        }}
+        onKeyDown={(e) => e.stopPropagation()}
+        title="Numéro et gestes du livreur"
+        className="group/livreur flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg px-1 text-left transition-colors hover:bg-[#F4F4F5]"
+      >
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-[10px] font-bold text-[#52525B] group-hover/livreur:bg-white">
+          {(course.livreur.prenom ?? 'L').trim().charAt(0).toUpperCase()}
+        </span>
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#18181B] underline-offset-2 group-hover/livreur:underline">
+          {nom}
+        </span>
+        <Phone className="h-3.5 w-3.5 shrink-0 text-[#A1A1AA] group-hover/livreur:text-[#F17922]" />
+      </button>
+      {modifiable ? (
+        <MenuLivreur course={course} compact />
+      ) : (
+        <span onClick={(e) => e.stopPropagation()}>
+          <BoutonAppelerLivreur variante="icone" delivererId={course.livreur.id} nom={nom} detail={contexte} />
+        </span>
+      )}
+      {fiche && <FicheLivreurRapide livreur={course.livreur} contexte={contexte} onFermer={() => setFiche(false)} />}
+    </div>
+  );
 }
 
 const LARGEUR_LISTE = 300;
 
-function MenuLivreur({ course }: { course: CourseEnDirect }) {
+/** `compact` : bouton « Changer » à côté du nom ; sinon « Choisir un livreur » sur toute la largeur. */
+function MenuLivreur({ course, compact = false }: { course: CourseEnDirect; compact?: boolean }) {
   const [ouvert, setOuvert] = useState(false);
   const [recherche, setRecherche] = useState('');
   const [place, setPlace] = useState<{ haut: number; gauche: number; versLeHaut: boolean } | null>(null);
@@ -165,8 +188,6 @@ function MenuLivreur({ course }: { course: CourseEnDirect }) {
         },
       },
     );
-
-  const libelle = course.livreur ? nomDuLivreur(course.livreur) : 'Choisir un livreur';
 
   const liste = (
     <div
@@ -271,20 +292,20 @@ function MenuLivreur({ course }: { course: CourseEnDirect }) {
           setOuvert((v) => !v);
         }}
         onKeyDown={(e) => e.stopPropagation()}
-        className={`flex h-8 w-full items-center gap-2 rounded-lg border px-2 text-left text-xs transition-colors disabled:opacity-60 ${
-          course.livreur
-            ? 'border-[#E4E4E7] bg-white text-[#18181B] hover:border-[#F17922]/60'
-            : 'border-dashed border-[#F17922] bg-orange-50/60 font-semibold text-[#C2410C] hover:bg-orange-50'
-        }`}
+        className={
+          compact
+            ? 'inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-[#E4E4E7] bg-white px-2 text-xs font-semibold text-[#52525B] transition-colors hover:border-[#F17922]/60 hover:text-[#F17922] disabled:opacity-60'
+            : 'flex h-8 w-full items-center gap-2 rounded-lg border border-dashed border-[#F17922] bg-orange-50/60 px-2 text-left text-xs font-semibold text-[#C2410C] transition-colors hover:bg-orange-50 disabled:opacity-60'
+        }
       >
-        <span
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-            course.livreur ? 'bg-[#F4F4F5] text-[#52525B]' : 'bg-white text-[#F17922]'
-          }`}
-        >
-          {course.livreur ? (course.livreur.prenom ?? 'L').trim().charAt(0).toUpperCase() : <UserRound className="h-3 w-3" />}
+        {!compact && (
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white text-[#F17922]">
+            <UserRound className="h-3 w-3" />
+          </span>
+        )}
+        <span className={compact ? '' : 'min-w-0 flex-1 truncate'}>
+          {changer.isPending ? 'Envoi…' : compact ? 'Changer' : 'Choisir un livreur'}
         </span>
-        <span className="min-w-0 flex-1 truncate">{changer.isPending ? 'Envoi…' : libelle}</span>
         <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${ouvert ? 'rotate-180' : ''}`} />
       </button>
       {ouvert && typeof document !== 'undefined' && (petitEcran || place) && createPortal(

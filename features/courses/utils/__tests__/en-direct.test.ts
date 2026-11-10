@@ -6,18 +6,21 @@ import { join } from 'node:path';
 import {
   COLONNES,
   alerteDeCarte,
+  basculeFlotte,
   colonneParDefaut,
   colonneVoisine,
   correspondRecherche,
-  heureLisible,
-  nombreDeLaColonne,
   nomDuLivreur,
   parColonne,
   peutPrendreCourse,
+  heureLisible,
+  ligneDeLaCarte,
   signauxParCourse,
-  tempsDeLaCarte,
   texteCommandes,
+  texteEtape,
+  texteTemps,
 } from '../en-direct';
+import { lienAppel, lienWhatsApp, telephoneLisible } from '../../../livreurs/utils/telephone';
 
 /** Kanban « En direct » de l'écran Courses (demande du 10/11). */
 
@@ -28,6 +31,7 @@ const carte = (p = {}) => ({
   code: '305',
   statut: 'PENDING_ASSIGNMENT',
   colonne: 'A_AFFECTER',
+  etape: 'RECHERCHE',
   restaurant: { id: 'r', nom: 'CHICKEN NATION ZONE 4' },
   livreur: null,
   turbo: false,
@@ -42,49 +46,65 @@ const carte = (p = {}) => ({
   ...p,
 });
 
-describe('colonnes', () => {
-  test('cinq, dans l’ordre du trajet', () => {
-    expect(COLONNES.map((c) => c.titre)).toEqual([
-      'À affecter',
-      'Vers le restaurant',
-      'Au restaurant',
-      'En livraison',
-      'Terminées',
-    ]);
+describe('colonnes (retour du 10/11)', () => {
+  test('quatre : trois étapes et Turbo à part, plus de terminées', () => {
+    expect(COLONNES.map((c) => c.titre)).toEqual(['À affecter', 'Livreur affecté', 'En livraison', 'Turbo']);
   });
 
-  test('regroupement, nombre des terminées de la journée, colonne ouverte sur téléphone', () => {
+  test('regroupement, colonne inconnue laissée de côté, colonne ouverte sur téléphone', () => {
     const g = parColonne([carte(), carte({ id: 'c2', colonne: 'EN_LIVRAISON' }), carte({ id: 'c3', colonne: 'TERMINEE' })]);
     expect(g.A_AFFECTER.map((c) => c.id)).toEqual(['c1']);
-    expect(nombreDeLaColonne('TERMINEE', g, 33)).toBe(33);
+    expect(Object.keys(g)).toEqual(['A_AFFECTER', 'LIVREUR_AFFECTE', 'EN_LIVRAISON', 'TURBO']);
     expect(colonneParDefaut(g)).toBe('A_AFFECTER');
-    expect(colonneParDefaut(parColonne([carte({ colonne: 'EN_LIVRAISON' })]))).toBe('EN_LIVRAISON');
+    expect(colonneParDefaut(parColonne([carte({ colonne: 'TURBO' }), carte({ colonne: 'EN_LIVRAISON' })]))).toBe('EN_LIVRAISON');
     expect(colonneParDefaut(parColonne([]))).toBe('A_AFFECTER');
   });
 
-  test('glisser : colonne voisine, sans sortir des cinq', () => {
-    expect(colonneVoisine('A_AFFECTER', 1)).toBe('VERS_RESTAURANT');
+  test('glisser : colonne voisine, sans sortir des quatre', () => {
+    expect(colonneVoisine('A_AFFECTER', 1)).toBe('LIVREUR_AFFECTE');
     expect(colonneVoisine('A_AFFECTER', -1)).toBe('A_AFFECTER');
-    expect(colonneVoisine('TERMINEE', 1)).toBe('TERMINEE');
+    expect(colonneVoisine('TURBO', 1)).toBe('TURBO');
+  });
+
+  test('étape d’une course Turbo écrite sur sa carte, nulle part ailleurs', () => {
+    expect(texteEtape(carte())).toBeNull();
+    expect(texteEtape(carte({ colonne: 'LIVREUR_AFFECTE', etape: 'AU_RESTAURANT' }))).toBeNull();
+    expect(texteEtape(carte({ colonne: 'TURBO', etape: 'RECHERCHE', turbo: true }))).toBe('Turbo cherche un livreur');
+    expect(texteEtape(carte({ colonne: 'TURBO', etape: 'EN_LIVRAISON', turbo: true }))).toBe('Livreur Turbo en livraison');
+  });
+
+  test('badge Turbo qui agit : seulement tant que personne n’a pris la course', () => {
+    expect(basculeFlotte(carte())).toBe('VERS_TURBO');
+    expect(basculeFlotte(carte({ turbo: true }))).toBe('VERS_INTERNE');
+    expect(basculeFlotte(carte({ turbo: true, etape: 'VERS_RESTAURANT' }))).toBeNull();
+    expect(basculeFlotte(carte({ etape: 'AUCUN_LIVREUR' }))).toBeNull();
   });
 });
 
 describe('carte', () => {
-  test('commandes : nombre, puis livrées en livraison et terminée', () => {
+  test('commandes : nombre, puis livrées en livraison (Turbo compris)', () => {
     expect(texteCommandes(carte())).toBe('1 commande');
     expect(texteCommandes(carte({ commandes: { total: 2, livrees: 0, references: [] } }))).toBe('2 commandes');
-    expect(texteCommandes(carte({ colonne: 'EN_LIVRAISON', commandes: { total: 2, livrees: 1, references: [] } }))).toBe(
+    expect(texteCommandes(carte({ etape: 'EN_LIVRAISON', commandes: { total: 2, livrees: 1, references: [] } }))).toBe(
       '1 sur 2 livrée',
     );
-    expect(texteCommandes(carte({ colonne: 'TERMINEE', commandes: { total: 2, livrees: 2, references: [] } }))).toBe('2 livrées');
+    expect(
+      texteCommandes(carte({ colonne: 'TURBO', etape: 'EN_LIVRAISON', commandes: { total: 2, livrees: 2, references: [] } })),
+    ).toBe('2 sur 2 livrées');
   });
 
-  test('temps dans l’étape ; terminée : son heure', () => {
-    expect(tempsDeLaCarte(carte(), M)).toBe('12 min');
-    expect(tempsDeLaCarte(carte({ depuis: null }), M)).toBeNull();
-    const fin = new Date(2026, 10, 10, 20, 5).toISOString();
-    expect(tempsDeLaCarte(carte({ colonne: 'TERMINEE', depuis: fin }), M)).toBe('20 h 05');
+  test('temps en toutes lettres (retour du 10/11 : « 45 min » seul ne disait pas ce qu’il comptait)', () => {
+    expect(texteTemps(carte(), M)).toBe('attend depuis 12 min');
+    expect(texteTemps(carte({ etape: 'VERS_RESTAURANT' }), M)).toBe('en route depuis 12 min');
+    expect(texteTemps(carte({ etape: 'AU_RESTAURANT' }), M)).toBe('au restaurant depuis 12 min');
+    const depart = new Date(2026, 10, 10, 21, 46).toISOString();
+    expect(texteTemps(carte({ etape: 'EN_LIVRAISON', depuis: depart }), M)).toBe('parti à 21 h 46');
+    expect(texteTemps(carte({ depuis: null }), M)).toBeNull();
     expect(heureLisible('pas une date')).toBeNull();
+    expect(ligneDeLaCarte(carte({ etape: 'AU_RESTAURANT' }), M)).toBe('1 commande · au restaurant depuis 12 min');
+    expect(
+      ligneDeLaCarte(carte({ etape: 'EN_LIVRAISON', depuis: depart, commandes: { total: 3, livrees: 2, references: [] } }), M),
+    ).toBe('2 sur 3 livrées · parti à 21 h 46');
   });
 
   test('alerte : celle du tableau (rouge d’abord), sinon aucun livreur trouvé ou retard', () => {
@@ -95,7 +115,7 @@ describe('carte', () => {
     expect(alerteDeCarte(carte(), signaux)).toEqual({ ton: 'rouge', texte: "En attente d'affectation depuis 50 min" });
     const vide = new Map();
     expect(alerteDeCarte(carte({ expiree: true }), vide)).toEqual({ ton: 'rouge', texte: 'Aucun livreur trouvé' });
-    expect(alerteDeCarte(carte({ colonne: 'EN_LIVRAISON', retard_min: 29 }), vide)).toEqual({
+    expect(alerteDeCarte(carte({ colonne: 'EN_LIVRAISON', etape: 'EN_LIVRAISON', retard_min: 29 }), vide)).toEqual({
       ton: 'rouge',
       texte: 'En retard de 29 min',
     });
@@ -129,6 +149,18 @@ describe('menu « Livreur »', () => {
   });
 });
 
+describe('fiche rapide du livreur : son numéro pour l’appeler hors de l’appli', () => {
+  test('numéro lisible par paires, liens d’appel et WhatsApp', () => {
+    expect(telephoneLisible('+2250556440504')).toBe('+225 05 56 44 05 04');
+    expect(telephoneLisible('0556440504')).toBe('0556440504');
+    expect(telephoneLisible('  ')).toBeNull();
+    expect(lienAppel('+225 05 56 44 05 04')).toBe('tel:+2250556440504');
+    expect(lienAppel(null)).toBeNull();
+    expect(lienWhatsApp('+2250556440504')).toBe('https://wa.me/2250556440504');
+    expect(lienWhatsApp('12')).toBeNull();
+  });
+});
+
 describe('écran', () => {
   const lire = (chemin) => readFileSync(join(import.meta.dir, chemin), 'utf8');
   test('Courses : trois vues ; « Carte live » quitte le menu et y mène', () => {
@@ -148,5 +180,23 @@ describe('écran', () => {
     expect(menu).toContain('createPortal(');
     expect(menu).toContain('e.stopPropagation();');
     expect(menu).not.toMatch(/\bconfirm\(/);
+  });
+
+  test('le nom ouvre la fiche rapide ; « Changer » ouvre la liste', () => {
+    const menu = lire('../../components/en-direct/ChoixLivreurCourse.tsx');
+    expect(menu).toContain('<FicheLivreurRapide livreur={course.livreur}');
+    expect(menu).toContain("compact ? 'Changer' : 'Choisir un livreur'");
+    const fiche = lire('../../../livreurs/components/FicheLivreurRapide.tsx');
+    expect(fiche).toContain('href={appel}');
+    expect(fiche).toContain('href={whatsapp}');
+    expect(fiche).toContain('Copier');
+  });
+
+  test('badge Turbo : mêmes routes que la fiche de la course, une question avant', () => {
+    const badge = lire('../../components/en-direct/BadgeFlotte.tsx');
+    expect(badge).toContain('useCourseVersInterneMutation');
+    expect(badge).toContain('useCourseVersTurboMutation');
+    expect(badge).toContain("'Turbo · Reprendre en interne'");
+    expect(badge).not.toMatch(/\bconfirm\(/);
   });
 });

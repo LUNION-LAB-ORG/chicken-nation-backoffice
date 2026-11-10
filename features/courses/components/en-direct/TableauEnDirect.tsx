@@ -12,20 +12,20 @@ import { useTableauLivraisonQuery } from '../../queries/tableau-livraison.query'
 import type { ColonneEnDirect, CourseEnDirect } from '../../types/en-direct.types';
 import {
   COLONNES,
-  TERMINEES_VISIBLES,
   alerteDeCarte,
   colonneParDefaut,
   colonneVoisine,
-  nombreDeLaColonne,
   parColonne,
   signauxParCourse,
 } from '../../utils/en-direct';
 import { CarteCourseEnDirect } from './CarteCourseEnDirect';
 
 /**
- * KANBAN « EN DIRECT » DE L'ÉCRAN COURSES (demande du 10/11).
+ * KANBAN « EN DIRECT » DE L'ÉCRAN COURSES (demande du 10/11 ; retour du même
+ * jour : « À affecter », « Livreur affecté », « En livraison », « Turbo »,
+ * sans les terminées, qui sont dans l'historique).
  *
- * Grand écran : les cinq colonnes côte à côte, chacune défile seule.
+ * Grand écran : les quatre colonnes côte à côte, chacune défile seule.
  * Téléphone et tablette : une colonne à la fois ; les colonnes en boutons
  * avec leur nombre en haut, et on glisse à gauche ou à droite pour passer à
  * la voisine.
@@ -34,19 +34,17 @@ import { CarteCourseEnDirect } from './CarteCourseEnDirect';
  * toutes les 15 s) ; alertes des cartes : le tableau de la livraison, déjà lu
  * par le bandeau. Restaurant : celui du bandeau.
  */
-export function TableauEnDirect({ onVoirHistorique }: { onVoirHistorique: () => void }) {
+export function TableauEnDirect() {
   const restaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const { data, isPending, isError, refetch, isFetching } = useCoursesEnDirectQuery(restaurantId);
   const { data: tableau } = useTableauLivraisonQuery();
   const maintenant = useMaintenant(30_000);
   const [colonneChoisie, setColonneChoisie] = useState<ColonneEnDirect | null>(null);
-  const [toutesTerminees, setToutesTerminees] = useState(false);
   const depart = useRef<{ x: number; y: number } | null>(null);
 
   const groupes = useMemo(() => parColonne(data?.courses ?? []), [data]);
   const signaux = useMemo(() => signauxParCourse(tableau?.signaux), [tableau]);
   const colonneMobile = colonneChoisie ?? colonneParDefaut(groupes);
-  const termineesTotal = data?.terminees_total ?? 0;
   const avecRestaurant = !restaurantId;
 
   if (isPending) return <Squelette />;
@@ -68,56 +66,36 @@ export function TableauEnDirect({ onVoirHistorique }: { onVoirHistorique: () => 
     );
   }
 
-  const cartes = (cle: ColonneEnDirect, liste: CourseEnDirect[]) => {
-    const terminee = cle === 'TERMINEE';
-    const visibles = terminee && !toutesTerminees ? liste.slice(0, TERMINEES_VISIBLES) : liste;
-    const reste = liste.length - visibles.length;
-    return (
-      <>
-        {visibles.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-[#E4E4E7] px-3 py-6 text-center text-xs text-[#A1A1AA]">
-            Aucune course
-          </p>
-        ) : (
-          visibles.map((c) => (
-            <CarteCourseEnDirect
-              key={c.id}
-              course={c}
-              alerte={terminee ? null : alerteDeCarte(c, signaux)}
-              maintenant={maintenant}
-              avecRestaurant={avecRestaurant}
-            />
-          ))
-        )}
-        {terminee && (reste > 0 || toutesTerminees) && liste.length > TERMINEES_VISIBLES && (
-          <button
-            type="button"
-            onClick={() => setToutesTerminees((v) => !v)}
-            className="w-full rounded-lg px-2 py-1.5 text-left text-xs font-semibold text-[#F17922] hover:bg-orange-50"
-          >
-            {toutesTerminees ? 'Réduire' : reste === 1 ? "Voir l'autre" : `Voir les ${reste} autres`}
-          </button>
-        )}
-        {terminee && termineesTotal > liste.length && (
-          <button
-            type="button"
-            onClick={onVoirHistorique}
-            className="w-full rounded-lg px-2 py-1.5 text-left text-xs font-semibold text-[#F17922] hover:bg-orange-50"
-          >
-            Toutes dans l&apos;historique
-          </button>
-        )}
-      </>
+  const cartes = (cle: ColonneEnDirect, liste: CourseEnDirect[]) =>
+    liste.length === 0 ? (
+      <p className="rounded-xl border border-dashed border-[#E4E4E7] px-3 py-6 text-center text-xs text-[#A1A1AA]">
+        {cle === 'A_AFFECTER' ? 'Rien à affecter' : 'Aucune course'}
+      </p>
+    ) : (
+      liste.map((c) => (
+        <CarteCourseEnDirect
+          key={c.id}
+          course={c}
+          alerte={alerteDeCarte(c, signaux)}
+          maintenant={maintenant}
+          avecRestaurant={avecRestaurant}
+        />
+      ))
     );
-  };
 
   const pastille = (cle: ColonneEnDirect, choisie = false) => {
-    const n = nombreDeLaColonne(cle, groupes, termineesTotal);
+    const n = groupes[cle].length;
     const urgent = cle === 'A_AFFECTER' && n > 0;
     return (
       <span
         className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none ${
-          choisie ? 'bg-white text-[#F17922]' : urgent ? 'bg-red-100 text-red-700' : 'bg-[#F4F4F5] text-[#52525B]'
+          choisie
+            ? 'bg-white text-[#F17922]'
+            : urgent
+              ? 'bg-red-100 text-red-700'
+              : cle === 'TURBO'
+                ? 'bg-violet-100 text-violet-700'
+                : 'bg-white text-[#52525B]'
         }`}
       >
         {n}
@@ -127,13 +105,13 @@ export function TableauEnDirect({ onVoirHistorique }: { onVoirHistorique: () => 
 
   return (
     <>
-      {/* Grand écran : les cinq colonnes. */}
-      <div className="hidden gap-3 lg:grid lg:grid-cols-5">
+      {/* Grand écran : les quatre colonnes. */}
+      <div className="hidden gap-3 lg:grid lg:grid-cols-4">
         {COLONNES.map(({ cle, titre }) => (
           <section
             key={cle}
             aria-label={titre}
-            className="flex min-w-0 flex-col rounded-2xl bg-[#F4F4F5]/70 p-2"
+            className={`flex min-w-0 flex-col rounded-2xl p-2 ${cle === 'TURBO' ? 'bg-violet-50/60' : 'bg-[#F4F4F5]/70'}`}
           >
             <h3 className="flex items-center justify-between gap-2 px-1.5 pb-2 pt-1 text-[13px] font-semibold text-[#18181B]">
               <span className="truncate">{titre}</span>
@@ -202,8 +180,8 @@ export function TableauEnDirect({ onVoirHistorique }: { onVoirHistorique: () => 
 
 function Squelette() {
   return (
-    <div aria-hidden className="grid gap-3 lg:grid-cols-5">
-      {[0, 1, 2, 3, 4].map((i) => (
+    <div aria-hidden className="grid gap-3 lg:grid-cols-4">
+      {[0, 1, 2, 3].map((i) => (
         <div key={i} className={`space-y-2 rounded-2xl bg-[#F4F4F5]/70 p-2 ${i > 0 ? 'hidden lg:block' : ''}`}>
           <div className="h-4 w-24 animate-pulse rounded-full bg-[#E4E4E7]" />
           {[0, 1].map((j) => (
