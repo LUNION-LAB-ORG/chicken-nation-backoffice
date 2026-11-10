@@ -96,6 +96,11 @@ export interface RestaurantDuTableau {
   jour: { livrees: number; duree_moyenne_s: number | null };
   /** Signaux rouges du restaurant. */
   alertes: number;
+  /**
+   * Courses restées ouvertes d'une journée passée (10/11) : ni alerte, ni
+   * pastille. Absent d'un serveur plus ancien.
+   */
+  courses_anciennes?: number;
   /** Livreurs actifs et opérationnels, rangés par état puis place dans la file. */
   liste: LivreurDuTableau[];
 }
@@ -105,4 +110,6 @@ export interface TableauLivraison {
   restaurants: RestaurantDuTableau[];
   /** Rouges d'abord, puis le plus ancien. */
   signaux: SignalLivraison[];
+  /** Total des `courses_anciennes` des restaurants (10/11). Absent d'un serveur plus ancien. */
+  courses_anciennes?: number;
 }

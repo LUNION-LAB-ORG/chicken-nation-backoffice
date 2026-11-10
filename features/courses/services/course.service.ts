@@ -93,6 +93,27 @@ export const forceAssignCourse = (id: string, payload: ForceAssignPayload) =>
 export const cancelCourseAdmin = (id: string, payload: CancelCoursePayload) =>
   actionAvecRefusServeur(() => api.patch<Course>(`${ENDPOINT}/${id}/cancel`, payload, true));
 
+/** Réponse de « Les fermer » : le texte vient du serveur. */
+export interface ReponseFermetureAnciennes {
+  fermees: number;
+  gardees: number;
+  message: string;
+}
+
+/**
+ * Ferme les courses restées ouvertes d'une journée passée (10/11,
+ * administrateur) : seules celles dont toutes les commandes sont servies ou
+ * annulées. Aucune commande ne change.
+ */
+export const fermerCoursesAnciennes = (restaurantId?: string | null) =>
+  actionAvecRefusServeur(() =>
+    api.post<ReponseFermetureAnciennes>(
+      `${ENDPOINT}/anciennes/fermer${restaurantId ? `?restaurantId=${encodeURIComponent(restaurantId)}` : ''}`,
+      {},
+      true,
+    ),
+  );
+
 /** Relance une course EXPIRED : reset tentatives + recherche nouveau livreur */
 export const retryExpiredCourse = (id: string) =>
   actionAvecRefusServeur(() =>

@@ -200,6 +200,24 @@ export function lignesPiedCarte(r: RestaurantDuTableau): { activite: string; ser
   return { activite: parties.join(' · '), service };
 }
 
+/**
+ * Mots des chiffres du bandeau compact (10/11), entiers et accordés : sur
+ * l'ancienne carte de 260 px, « Disponibles » devenait « Disponibl… ».
+ */
+export function motsDesChiffres(r: RestaurantDuTableau): {
+  disponibles: string;
+  enCourse: string;
+  enPause: string;
+  nonAssignees: string;
+} {
+  return {
+    disponibles: r.livreurs.disponibles > 1 ? 'disponibles' : 'disponible',
+    enCourse: 'en course',
+    enPause: 'en pause',
+    nonAssignees: r.sans_livreur.courses > 1 ? 'non assignées' : 'non assignée',
+  };
+}
+
 // ============================================================
 // ALERTES
 // ============================================================

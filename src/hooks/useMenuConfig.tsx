@@ -129,7 +129,7 @@ export const useGetMenuConfig = (): {
         },
         {
           id: "livraison-livreurs",
-          label: "Liste des livreurs",
+          label: "Livreurs",
           icon: Bike,
           canAccess: () => can(Modules.LIVREURS, Action.READ),
         },

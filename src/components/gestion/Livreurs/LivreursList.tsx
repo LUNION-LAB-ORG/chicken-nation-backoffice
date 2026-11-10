@@ -22,7 +22,6 @@ const HEADERS = [
   "Véhicule",
   "Disponibilité",
   "File",
-  "GPS",
   "Statut",
   "Actions",
 ] as const;
@@ -54,10 +53,6 @@ const SkeletonRow: React.FC = () => (
     {/* File */}
     <td className="py-3 px-4">
       <div className="h-3 w-8 rounded-full bg-[#F4F4F5] animate-pulse" />
-    </td>
-    {/* GPS */}
-    <td className="py-3 px-4">
-      <div className="h-3 w-16 rounded-full bg-[#F4F4F5] animate-pulse" />
     </td>
     {/* Statut */}
     <td className="py-3 px-4">

@@ -11,6 +11,7 @@ import {
   libelleAlertes,
   lignesPiedCarte,
   minutesDepuis,
+  motsDesChiffres,
   nombreAlertesRouges,
   peutLireTableau,
   piedCarte,
@@ -376,5 +377,21 @@ describe('« Relancer la livraison » depuis « À traiter » (demande du 28/10)
 describe('état « En appel » du tableau (serveur du 24/10)', () => {
   test('connu de l’écran, jamais « Hors service »', () => {
     expect(etatAffichable('EN_APPEL')).toBe('EN_APPEL');
+  });
+});
+
+describe('bandeau compact (10/11) : chiffres en mots entiers, accordés', () => {
+  test('pluriel au-delà de 1, singulier à 0 et 1', () => {
+    expect(motsDesChiffres(restaurant())).toEqual({
+      disponibles: 'disponibles',
+      enCourse: 'en course',
+      enPause: 'en pause',
+      nonAssignees: 'non assignée',
+    });
+    const un = restaurant({
+      livreurs: { disponibles: 1, en_course: 0, en_pause: 0, appli_fermee: 0, en_service: 1, prevus: null },
+      sans_livreur: { courses: 2, plus_ancienne_depuis: null },
+    });
+    expect(motsDesChiffres(un)).toMatchObject({ disponibles: 'disponible', nonAssignees: 'non assignées' });
   });
 });

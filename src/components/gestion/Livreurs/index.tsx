@@ -28,7 +28,7 @@ import type {
  * Deux vues sous le titre :
  *  - « Aujourd'hui » : par restaurant, l'état de chaque livreur, sa place
  *    dans la file, son planning du jour, son temps en ligne et ses courses ;
- *  - « Liste des livreurs » : le tableau des comptes (Tous, En attente, Actifs,
+ *  - « Tous » (« Liste des livreurs » jusqu'au 10/11) : le tableau des comptes (Tous, En attente, Actifs,
  *    Suspendus, Refusés).
  * Le bandeau des restaurants sert de filtre aux deux (le même que Courses et
  * Commandes).
@@ -43,7 +43,7 @@ type Vue = "AUJOURDHUI" | "COMPTES";
 
 const VUES: { cle: Vue; libelle: string }[] = [
   { cle: "AUJOURDHUI", libelle: "Aujourd'hui" },
-  { cle: "COMPTES", libelle: "Liste des livreurs" },
+  { cle: "COMPTES", libelle: "Tous" },
 ];
 
 export default function Livreurs() {

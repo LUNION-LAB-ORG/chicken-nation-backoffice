@@ -424,6 +424,36 @@ export function libelleVoirPlus(total: number, ouvert: boolean, visibles = ALERT
   return reste === 1 ? "Voir l'autre" : `Voir les ${reste} autres`;
 }
 
+/**
+ * Courses restées ouvertes d'une journée passée (10/11) : une seule ligne
+ * sous « À traiter », jamais une alerte. Nombre du restaurant choisi, ou de
+ * tous ; 0 avec un serveur plus ancien.
+ */
+export function nombreCoursesAnciennes(
+  tableau: { courses_anciennes?: number; restaurants: Array<{ id: string; courses_anciennes?: number }> } | null | undefined,
+  restaurantId: string | null | undefined,
+): number {
+  if (!tableau) return 0;
+  const n = restaurantId
+    ? tableau.restaurants.find((r) => r.id === restaurantId)?.courses_anciennes
+    : tableau.courses_anciennes;
+  return typeof n === 'number' && n > 0 ? n : 0;
+}
+
+/** « 40 courses des jours passés sont restées ouvertes » ; null sans course. */
+export function texteCoursesAnciennes(n: number): string | null {
+  if (!(n > 0)) return null;
+  return n === 1
+    ? "1 course d'un jour passé est restée ouverte"
+    : `${n} courses des jours passés sont restées ouvertes`;
+}
+
+/** Question avant de fermer : rien ne part sans ce second toucher. */
+export function confirmationCoursesAnciennes(n: number): string {
+  const quoi = n === 1 ? 'cette course' : `ces ${n} courses`;
+  return `Fermer ${quoi} ? Celles dont une commande n'est pas terminée restent ouvertes. Aucune commande ne change.`;
+}
+
 export type CibleSignal =
   | { type: 'livreur'; id: string }
   | { type: 'course'; id: string }

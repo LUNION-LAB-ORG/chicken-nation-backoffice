@@ -6,7 +6,6 @@ import { toast } from 'react-hot-toast';
 
 import { useDashboardStore } from '@/store/dashboardStore';
 
-import { ATraiter } from '../../../../features/courses/components/ATraiter';
 import { BandeauRestaurants } from '../../../../features/courses/components/BandeauRestaurants';
 import { CoursesHeader } from '../../../../features/courses/components/CoursesHeader';
 import { CourseDetails } from '../../../../features/courses/components/detail-course';
@@ -26,8 +25,9 @@ import {
 /**
  * Page Courses (backoffice admin) — vue 100 % opérationnelle.
  *
- * Bandeau des restaurants (qui sert de filtre), « À traiter » (alertes du
- * serveur qui portent une course), filtres, tableau, fiche. Les gestes
+ * Bandeau des restaurants (qui sert de filtre), filtres, tableau, fiche.
+ * « À traiter » vit sur la Carte live depuis le 10/11 (un seul endroit pour
+ * les alertes), avec ses gestes. Les gestes
  * (forcer, relancer, Turbo, annuler) ne sont montrés qu'à qui pilote les
  * courses ; le suivi des livraisons lit seulement.
  *
@@ -103,7 +103,6 @@ export default function Courses() {
       {view === 'list' && (
         <>
           <BandeauRestaurants />
-          <ATraiter />
           <CoursesFilters />
           <CoursesTable
             courses={listQuery.data}

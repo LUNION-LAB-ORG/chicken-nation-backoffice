@@ -129,7 +129,8 @@ describe('texte du toast', () => {
     for (const fichier of [
       '../relance-livraison.ts',
       '../../queries/relance-livraison.mutation.ts',
-      '../../components/ATraiter.tsx',
+      '../../hooks/use-gestes-alerte.ts',
+      '../../../livreurs/components/ListeAlertes.tsx',
     ]) {
       expect(lire(fichier)).not.toContain('—');
     }
@@ -290,17 +291,19 @@ describe('écrans', () => {
     expect(tiroir).not.toMatch(/\bconfirm\(/);
   });
 
-  test('« À traiter » : le bouton sur la ligne d’une seule commande, à gauche de « Sac rapporté »', () => {
-    const ligne = lire('../../components/ATraiter.tsx');
-    expect(ligne).toContain('const relanceId = peutRelancer ? relanceLivraisonDuSignal(s) : null;');
-    expect(ligne).toContain('title={LIBELLE_RELANCER_LIVRAISON}');
-    expect(ligne).toContain('aria-label={LIBELLE_RELANCER_LIVRAISON}');
-    expect(ligne).toContain('<span className="hidden @xl:inline">{LIBELLE_RELANCER_LIVRAISON}</span>');
-    expect(ligne.indexOf('{relanceId && (')).toBeGreaterThan(-1);
-    expect(ligne.indexOf('{relanceId && (')).toBeLessThan(ligne.indexOf('{sacId && ('));
-    // Le geste ne doit pas ouvrir la commande (clic de la ligne).
-    expect(ligne).toMatch(/\{relanceId && \([\s\S]*?e\.stopPropagation\(\);[\s\S]*?relancerCommande\(/);
-    expect(ligne).not.toMatch(/\bconfirm\(/);
+  test('« À traiter » (Carte live depuis le 10/11) : le bouton sur la ligne d’une seule commande, avant « Sac rapporté »', () => {
+    const gestes = lire('../../hooks/use-gestes-alerte.ts');
+    expect(gestes).toContain('const relanceId = peutRelancer ? relanceLivraisonDuSignal(s) : null;');
+    expect(gestes).toContain('libelle: LIBELLE_RELANCER_LIVRAISON,');
+    expect(gestes).toContain('agir: () => relancerCommande({ orderId: relanceId, reference }),');
+    expect(gestes.indexOf("cle: 'RELANCER_COMMANDE'")).toBeGreaterThan(-1);
+    expect(gestes.indexOf("cle: 'RELANCER_COMMANDE'")).toBeLessThan(gestes.indexOf("cle: 'SAC_RAPPORTE'"));
+    // Bouton à part du toucher de la ligne (jamais un bouton dans un bouton), sans confirmation.
+    const liste = lire('../../../livreurs/components/ListeAlertes.tsx');
+    expect(liste).toContain('onClick={agir}');
+    expect(liste).toContain('{libelle}');
+    expect(gestes).not.toMatch(/\bconfirm\(/);
+    expect(liste).not.toMatch(/\bconfirm\(/);
   });
 
   test('après le geste : Opérations, commande, courses et tableau de la livraison relus', () => {

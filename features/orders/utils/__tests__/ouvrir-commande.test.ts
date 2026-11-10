@@ -49,9 +49,11 @@ describe('ouvrir une commande par sa référence', () => {
     expect(liste).toContain('title="Voir le détail de la commande"');
   });
 
-  test('« À traiter » : une livraison annulée pour une seule commande mène à elle, sinon la fiche de la course', () => {
-    const ligne = lire('../../../courses/components/ATraiter.tsx');
-    expect(ligne).toContain('const commande = ouvrirCommande ? commandeDuSignal(s) : null;');
-    expect(ligne).toContain('commande && ouvrirCommande ? ouvrirCommande(commande) : openCourse(course.id)');
+  test('« À traiter » (Carte live depuis le 10/11) : une livraison annulée pour une seule commande mène à elle', () => {
+    const ecran = lire('../../../../src/components/gestion/EnDirect/index.tsx');
+    expect(ecran).toContain('const commande = ouvrirCommande ? commandeDuSignal(s) : null;');
+    expect(ecran).toMatch(/if \(commande && ouvrirCommande\) \{\s*ouvrirCommande\(commande\);\s*return;/);
+    // Sinon, comme avant : livreur choisi sur la carte, ou fiche de la course.
+    expect(ecran).toContain('const cible = cibleDuSignal(s, presents);');
   });
 });

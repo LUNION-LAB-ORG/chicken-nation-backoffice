@@ -39,17 +39,6 @@ const vehiculeLabel: Record<string, string> = {
 /** « #1 », « #2 » : place dans la file (colonne « File »). */
 const place = (rang: number): string => `#${rang}`;
 
-/** Âge de la dernière position (colonne « GPS ») : « Il y a 6m », « Il y a 2h ». */
-function formatGpsAge(locationAt: string): string {
-  const diffMs = Date.now() - new Date(locationAt).getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  if (diffMin < 60) {
-    return `Il y a ${diffMin}m`;
-  }
-  const diffH = Math.floor(diffMin / 60);
-  return `Il y a ${diffH}h`;
-}
-
 const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRestaurant = false }) => {
   // Menu ⋮ (valider, réactiver) : seulement pour qui gère les livreurs (l'admin).
   const { gererLivreurs } = useDroitsLivraison();
@@ -148,24 +137,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
     return <span className="text-sm font-bold text-[#18181B]">{place(rang)}</span>;
   };
 
-  /* ── Colonne GPS : âge de la dernière position, ou « Expiré » ── */
-  const renderGps = () => {
-    if (!live || !live.location_at) return null;
-    if (!live.location_fresh) {
-      return (
-        <span
-          className="inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold"
-          style={{ color: "#EF4444", backgroundColor: "rgba(239,68,68,0.15)" }}
-          title={`Dernier GPS : ${formatGpsAge(live.location_at)}`}
-        >
-          Expiré
-        </span>
-      );
-    }
-    return (
-      <span className="text-xs text-[#52525B]">{formatGpsAge(live.location_at)}</span>
-    );
-  };
+  // Colonne GPS retirée le 10/11 : « Expiré » partout, la position est sur la Carte live.
 
   return (
     <tr
@@ -215,15 +187,12 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
       {/* 5. File */}
       <td className="py-3 px-4">{renderFile()}</td>
 
-      {/* 6. GPS */}
-      <td className="py-3 px-4">{renderGps()}</td>
-
-      {/* 7. Statut compte */}
+      {/* 6. Statut compte */}
       <td className="py-3 px-4">
         <StatutBadge status={livreur.status} isOperational={livreur.is_operational} />
       </td>
 
-      {/* 8. Actions : appeler dans l'appli (service client, admin), menu */}
+      {/* 7. Actions : appeler dans l'appli (service client, admin), menu */}
       <td className="py-3 px-4 text-right">
         <div className="inline-flex items-center gap-1.5">
           {livreurAppelable(livreur.entity_status) && (

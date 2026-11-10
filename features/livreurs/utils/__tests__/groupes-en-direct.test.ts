@@ -16,6 +16,9 @@ import {
   texteDernierePosition,
   texteFinTournee,
   textesArrets,
+  confirmationCoursesAnciennes,
+  nombreCoursesAnciennes,
+  texteCoursesAnciennes,
 } from '../groupes-en-direct';
 
 /**
@@ -469,5 +472,35 @@ describe('livreur en appel avec le call center (serveur du 24/10)', () => {
       UN,
     );
     expect(sections.map((s) => [s.titre, s.lignes.map((l) => l.nom)])).toEqual([['Disponibles', ['Un', 'Offre', 'Appel']]]);
+  });
+});
+
+describe("courses restées ouvertes d'une journée passée (10/11)", () => {
+  const tableau = {
+    courses_anciennes: 40,
+    restaurants: [
+      { id: 'angre', courses_anciennes: 6 },
+      { id: 'faya', courses_anciennes: 0 },
+      { id: 'vieux-serveur' },
+    ],
+  };
+
+  test('nombre du restaurant choisi, ou de tous ; 0 sans tableau ou serveur ancien', () => {
+    expect(nombreCoursesAnciennes(tableau, null)).toBe(40);
+    expect(nombreCoursesAnciennes(tableau, 'angre')).toBe(6);
+    expect(nombreCoursesAnciennes(tableau, 'faya')).toBe(0);
+    expect(nombreCoursesAnciennes(tableau, 'vieux-serveur')).toBe(0);
+    expect(nombreCoursesAnciennes({ restaurants: [] }, null)).toBe(0);
+    expect(nombreCoursesAnciennes(null, null)).toBe(0);
+  });
+
+  test('une ligne, jamais une alerte ; question avant de fermer', () => {
+    expect(texteCoursesAnciennes(0)).toBeNull();
+    expect(texteCoursesAnciennes(1)).toBe("1 course d'un jour passé est restée ouverte");
+    expect(texteCoursesAnciennes(40)).toBe('40 courses des jours passés sont restées ouvertes');
+    expect(confirmationCoursesAnciennes(40)).toBe(
+      "Fermer ces 40 courses ? Celles dont une commande n'est pas terminée restent ouvertes. Aucune commande ne change.",
+    );
+    expect(confirmationCoursesAnciennes(1)).toMatch(/^Fermer cette course \?/);
   });
 });

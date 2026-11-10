@@ -7,9 +7,12 @@ import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
 
 import { BandeauRestaurants } from "../../../../features/courses/components/BandeauRestaurants";
+import { ForceAssignModal } from "../../../../features/courses/components/modals/ForceAssignModal";
+import { useGestesAlerte } from "../../../../features/courses/hooks/use-gestes-alerte";
+import { useFermerCoursesAnciennesMutation } from "../../../../features/courses/queries/courses-anciennes.mutation";
 import { useTableauLivraisonQuery } from "../../../../features/courses/queries/tableau-livraison.query";
 import type { SignalLivraison } from "../../../../features/courses/types/tableau-livraison.types";
-import { estRouteAbsente, peutLireTableau } from "../../../../features/courses/utils/tableau-livraison";
+import { commandeDuSignal, estRouteAbsente, peutLireTableau } from "../../../../features/courses/utils/tableau-livraison";
 import { CarteEnDirect, type RestaurantSurCarte } from "../../../../features/livreurs/components/CarteEnDirect";
 import { ListeAlertes } from "../../../../features/livreurs/components/ListeAlertes";
 import { ListeEnDirect } from "../../../../features/livreurs/components/ListeEnDirect";
@@ -19,22 +22,27 @@ import {
   alertesEnDirect,
   cibleDuSignal,
   groupesEnDirect,
+  nombreCoursesAnciennes,
   positionValable,
 } from "../../../../features/livreurs/utils/groupes-en-direct";
 import { useDelivererLiveSync } from "../../../../features/maps/hooks/use-deliverer-live-socket";
 import type { PositionGps } from "../../../../features/operations/utils/suivi-course";
+import { useOuvrirCommande } from "../../../../features/orders/hooks/useOuvrirCommande";
 import { useRestaurantListQuery } from "../../../../features/restaurants/queries/restaurant-list.query";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
 
 /**
  * En direct (conception du 24/10, section 9) : qu'est-ce qui ne va pas en ce
  * moment, et où sont les livreurs ? Admin et suivi des livraisons (droit
- * LIVREURS READ, menu Livraison). Aucun geste ici : les gestes sont dans les
- * fiches (course, livreur).
+ * LIVREURS READ, menu Livraison). Depuis le 10/11, seul « À traiter » du
+ * réseau : il porte les gestes de l'ancien bloc de l'écran Courses (Forcer,
+ * Turbo, Relancer, Sac rapporté) et la ligne des courses restées ouvertes
+ * d'une journée passée (« Les fermer », administrateur). Les autres gestes
+ * sont dans les fiches (course, livreur).
  *
  *  - bandeau des restaurants, qui sert de filtre (le même que Commandes,
  *    Courses et Livreurs) ;
- *  - à gauche (380 px) : « À surveiller », les alertes du serveur, puis
+ *  - à gauche (380 px) : « À traiter », les alertes du serveur, puis
  *    « Livreurs », groupés par état ;
  *  - à droite : la carte, sur toute la hauteur de la fenêtre. Sous `lg`, elle
  *    passe sous la liste, derrière « Voir la carte ».
@@ -74,6 +82,11 @@ export default function EnDirect() {
   const selectedRestaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const openCourse = useDashboardStore((s) => s.openCourse);
   const openLivreur = useDashboardStore((s) => s.openLivreur);
+  const fenetresCourses = useDashboardStore((s) => s.courses.modals);
+  const courseChoisie = useDashboardStore((s) => s.courses.selectedItem);
+  const gestes = useGestesAlerte();
+  const ouvrirCommande = useOuvrirCommande();
+  const fermerAnciennes = useFermerCoursesAnciennesMutation();
   const clearPendingEnDirect = useDashboardStore((s) => s.clearPendingEnDirect);
   const membre = useAuthStore((s) => s.user);
   const maintenant = useMaintenant(30_000);
@@ -130,7 +143,7 @@ export default function EnDirect() {
   const lignes = useMemo(() => sections.flatMap((s) => s.lignes), [sections]);
   const presents = useMemo(() => new Set(lignes.map((l) => l.id)), [lignes]);
 
-  // « À surveiller » : absent pour un compte que la route refuserait, et
+  // « À traiter » : absent pour un compte que la route refuserait, et
   // tant que le serveur n'a pas la route (404) ou qu'il ne répond pas.
   const tableau = tableauQuery.data;
   const avecAlertes =
@@ -139,6 +152,7 @@ export default function EnDirect() {
     () => (tableau ? alertesEnDirect(tableau.signaux, selectedRestaurantId) : null),
     [tableau, selectedRestaurantId],
   );
+  const anciennes = nombreCoursesAnciennes(tableau, selectedRestaurantId);
   const nomsRestaurants = useMemo(
     () =>
       selectedRestaurantId
@@ -170,13 +184,19 @@ export default function EnDirect() {
 
   const toucherAlerte = useCallback(
     (s: SignalLivraison) => {
+      // Livraison annulée par le livreur pour une seule commande : c'est elle qu'il faut reprendre.
+      const commande = ouvrirCommande ? commandeDuSignal(s) : null;
+      if (commande && ouvrirCommande) {
+        ouvrirCommande(commande);
+        return;
+      }
       const cible = cibleDuSignal(s, presents);
       if (!cible) return;
       if (cible.type === "livreur") choisir(cible.id);
       else if (cible.type === "course") openCourse(cible.id);
       else openLivreur(cible.id);
     },
-    [presents, choisir, openCourse, openLivreur],
+    [presents, choisir, openCourse, openLivreur, ouvrirCommande],
   );
 
   const centreRestaurant = selectedRestaurantId ? (coordonneesRestaurants.get(selectedRestaurantId) ?? null) : null;
@@ -199,6 +219,17 @@ export default function EnDirect() {
                 nomsRestaurants={nomsRestaurants}
                 maintenant={maintenant}
                 onToucher={toucherAlerte}
+                gestes={gestes}
+                anciennes={
+                  anciennes > 0
+                    ? {
+                        nombre: anciennes,
+                        peutFermer: membre?.role === "ADMIN",
+                        enCours: fermerAnciennes.isPending,
+                        onFermer: () => fermerAnciennes.mutate(selectedRestaurantId ?? null),
+                      }
+                    : null
+                }
               />
             </div>
           )}
@@ -238,6 +269,9 @@ export default function EnDirect() {
           )}
         </div>
       </div>
+
+      {/* « Forcer l'affectation » d'une alerte : même fenêtre que l'écran Courses. */}
+      {fenetresCourses?.force_assign && courseChoisie && <ForceAssignModal isOpen course={courseChoisie} />}
     </div>
   );
 }

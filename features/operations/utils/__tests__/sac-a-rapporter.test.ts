@@ -192,10 +192,10 @@ describe('écrans', () => {
     expect(tiroir).not.toMatch(/\bconfirm\(/);
   });
 
-  test('« À traiter » : le bouton sur la ligne d’une seule commande, pour les rôles admis', () => {
-    const ligne = lire('../../../courses/components/ATraiter.tsx');
-    expect(ligne).toContain('const sacId = peutRapporter ? sacRapporteDuSignal(s) : null;');
-    expect(ligne).toContain('<Undo2');
-    expect(ligne).not.toMatch(/\bconfirm\(/);
+  test('« À traiter » (Carte live depuis le 10/11) : le bouton sur la ligne d’une seule commande, pour les rôles admis', () => {
+    const gestes = lire('../../../courses/hooks/use-gestes-alerte.ts');
+    expect(gestes).toContain('const sacId = peutRapporter ? sacRapporteDuSignal(s) : null;');
+    expect(gestes).toContain('Icone: Undo2,');
+    expect(gestes).not.toMatch(/\bconfirm\(/);
   });
 });
