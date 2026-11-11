@@ -25,7 +25,13 @@ export interface CourseEnDirect {
   expiree: boolean;
   /** Offre en attente chez ce livreur (prénom). */
   proposee_a: string | null;
-  commandes: { total: number; livrees: number; references: string[] };
+  commandes: {
+    total: number;
+    livrees: number;
+    references: string[];
+    /** Détail déplié sur la carte (11/11) ; absent d'un serveur plus ancien. */
+    liste?: CommandeDeLaCourse[];
+  };
   /** Début de l'étape de la colonne (ISO). */
   depuis: string | null;
   fin_prevue: string | null;
@@ -33,6 +39,17 @@ export interface CourseEnDirect {
   frais: number;
   /** Avant le départ du restaurant, sans Turbo. */
   livreur_modifiable: boolean;
+}
+
+export interface CommandeDeLaCourse {
+  id: string | null;
+  reference: string;
+  /** Tous frais compris. */
+  montant: number;
+  /** Prénom et nom du client, sinon le nom saisi ; null sans nom. */
+  client: string | null;
+  livree: boolean;
+  annulee: boolean;
 }
 
 export interface CoursesEnDirect {

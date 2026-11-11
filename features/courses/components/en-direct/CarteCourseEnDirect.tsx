@@ -1,16 +1,18 @@
 'use client';
 
-import { AlertTriangle } from 'lucide-react';
-import React from 'react';
+import { AlertTriangle, Check, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
 
 import { useDashboardStore } from '@/store/dashboardStore';
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import { useDroitsLivraison } from '../../../livreurs/hook/use-droits-livraison';
+import { formatPrix } from '../../../operations/utils/carte-operations';
+import { useOuvrirCommande } from '../../../orders/hooks/useOuvrirCommande';
 import { nomCourtRestaurant } from '../../../restaurants/utils/nom-court';
 import type { CourseEnDirect } from '../../types/en-direct.types';
 import type { TonCarte } from '../../utils/en-direct';
-import { basculeFlotte, ligneDeLaCarte, texteEtape } from '../../utils/en-direct';
+import { basculeFlotte, finDeReference, ligneDeLaCarte, texteEtape } from '../../utils/en-direct';
 import { BadgeFlotte } from './BadgeFlotte';
 import { ChoixLivreurCourse } from './ChoixLivreurCourse';
 
@@ -32,7 +34,9 @@ const TEXTE_ALERTE: Record<TonCarte, string> = {
  *  - dessous, les commandes et le temps EN TOUTES LETTRES (retour du 10/11 :
  *    « 45 min » seul ne disait pas ce qu'il comptait) : « attend depuis
  *    12 min », « en route depuis 5 min », « au restaurant depuis 8 min »,
- *    « parti à 21 h 46 » ;
+ *    « parti à 21 h 46 ». Un clic sur cette ligne déplie les commandes
+ *    (11/11) : fin de la référence, montant, client, livrée ; la référence
+ *    mène à la commande. Un second clic replie ;
  *  - l'étape d'une course Turbo (« Turbo cherche un livreur ») ;
  *  - l'alerte du tableau de la livraison, s'il y en a une, bord gauche de sa
  *    couleur ;
@@ -61,6 +65,11 @@ export function CarteCourseEnDirect({
   const avecBadges = course.turbo || !!course.proposee_a || (piloterCourses && basculeFlotte(course) !== null);
   const titre = avecRestaurant ? (nomCourtRestaurant(course.restaurant.nom) ?? course.restaurant.nom ?? course.reference) : course.reference;
   const ouvrir = () => openCourse(course.id);
+  const [details, setDetails] = useState(false);
+  const commandes = course.commandes.liste ?? [];
+  const ouvrirCommande = useOuvrirCommande();
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
+  const couleurLigne = course.etape === 'AU_RESTAURANT' ? 'font-medium text-sky-800' : 'text-[#52525B]';
 
   return (
     <article
@@ -91,15 +100,60 @@ export function CarteCourseEnDirect({
           <p className="truncate text-[13px] font-semibold text-[#18181B]" title={titre}>
             {titre}
           </p>
-          <p
-            className={`truncate text-[11px] ${course.etape === 'AU_RESTAURANT' ? 'font-medium text-sky-800' : 'text-[#52525B]'}`}
-            title={ligne}
-          >
-            {ligne}
-          </p>
+          {commandes.length > 0 ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDetails((v) => !v);
+              }}
+              onKeyDown={stop}
+              aria-expanded={details}
+              title={details ? 'Masquer les commandes' : 'Voir les commandes'}
+              className={`-mx-1 flex max-w-full items-center gap-1 rounded px-1 text-left text-[11px] transition-colors hover:bg-[#F4F4F5] ${couleurLigne}`}
+            >
+              <span className="truncate">{ligne}</span>
+              <ChevronDown className={`h-3 w-3 shrink-0 text-[#A1A1AA] transition-transform ${details ? 'rotate-180' : ''}`} />
+            </button>
+          ) : (
+            <p className={`truncate text-[11px] ${couleurLigne}`} title={ligne}>
+              {ligne}
+            </p>
+          )}
           {avecRestaurant && <p className="truncate text-[10px] text-[#A1A1AA]">{course.reference}</p>}
         </div>
       </div>
+
+      {details && commandes.length > 0 && (
+        <ul onClick={stop} onKeyDown={stop} className="mt-2 cursor-default space-y-1 rounded-lg bg-[#FAFAFA] px-2 py-1.5">
+          {commandes.map((c) => (
+            <li
+              key={c.reference}
+              className={`flex items-center gap-2 text-[11px] ${c.annulee ? 'text-[#A1A1AA] line-through' : 'text-[#52525B]'}`}
+            >
+              {ouvrirCommande ? (
+                <button
+                  type="button"
+                  onClick={() => ouvrirCommande(c.reference)}
+                  title={`Voir la commande ${c.reference}`}
+                  className="shrink-0 font-mono font-semibold text-[#18181B] underline-offset-2 hover:text-[#F17922] hover:underline"
+                >
+                  {finDeReference(c.reference)}
+                </button>
+              ) : (
+                <span className="shrink-0 font-mono font-semibold text-[#18181B]" title={c.reference}>
+                  {finDeReference(c.reference)}
+                </span>
+              )}
+              <span className="shrink-0 font-semibold tabular-nums">{formatPrix(c.montant)}</span>
+              <span className="min-w-0 flex-1 truncate" title={c.client ?? undefined}>
+                {c.client ?? 'Client'}
+              </span>
+              {c.livree && <Check className="h-3 w-3 shrink-0 text-green-600" aria-label="Livrée" />}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {etape && (
         <p className="mt-2 inline-flex rounded-md bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-800">{etape}</p>

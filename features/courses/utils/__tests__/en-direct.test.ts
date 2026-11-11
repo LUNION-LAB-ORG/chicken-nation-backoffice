@@ -10,6 +10,7 @@ import {
   colonneParDefaut,
   colonneVoisine,
   correspondRecherche,
+  finDeReference,
   nomDuLivreur,
   parColonne,
   peutPrendreCourse,
@@ -146,6 +147,21 @@ describe('menu « Livreur »', () => {
     expect(correspondRecherche(l, '0707')).toBe(true);
     expect(correspondRecherche(l, 'yann')).toBe(false);
     expect(correspondRecherche(l, '  ')).toBe(true);
+  });
+});
+
+describe('commandes dépliées sur la carte (11/11)', () => {
+  test('fin de la référence, assez pour la reconnaître', () => {
+    expect(finDeReference('ORD-261110-50950')).toBe('…50950');
+    expect(finDeReference('SANSTIRET')).toBe('SANSTIRET');
+  });
+
+  test('un clic sur la ligne déplie, la référence mène à la commande, le reste ne remonte pas à la carte', () => {
+    const carte = readFileSync(join(import.meta.dir, '../../components/en-direct/CarteCourseEnDirect.tsx'), 'utf8');
+    expect(carte).toContain('aria-expanded={details}');
+    expect(carte).toContain('onClick={() => ouvrirCommande(c.reference)}');
+    expect(carte).toContain('{formatPrix(c.montant)}');
+    expect(carte).toMatch(/<ul onClick=\{stop\}/);
   });
 });
 

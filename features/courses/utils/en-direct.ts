@@ -154,6 +154,12 @@ export function alerteDeCarte(
   return null;
 }
 
+/** Fin d'une référence de commande, assez pour la reconnaître : « ORD-261110-50950 » → « …50950 ». */
+export function finDeReference(reference: string): string {
+  const fin = reference.split('-').pop()?.trim();
+  return fin && fin !== reference ? `…${fin}` : reference;
+}
+
 /** « Koffi Kouassi », sinon « Livreur ». */
 export function nomDuLivreur(l: CourseEnDirect['livreur']): string {
   const nom = [l?.prenom, l?.nom].filter((x) => !!x && x.trim()).join(' ').trim();
