@@ -12,6 +12,8 @@ import { useNotificationsQuery } from "@/hooks/useNotificationsQuery";
 import { useNotificationStatsQuery } from "@/hooks/useNotificationStatsQuery";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { cibleNotificationAvis } from "../../../features/comments/utils/avis-prive";
+import { useIncidentsUi } from "../../../features/incidents/stores/incident-ui.store";
+import { cibleNotificationIncident } from "../../../features/incidents/utils/incident";
 
 interface NotificationDropdownProps {
   className?: string;
@@ -98,6 +100,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   );
   const openTicket = useDashboardStore((s) => s.openTicket);
   const openAvis = useDashboardStore((s) => s.openAvis);
+  const ouvrirIncident = useIncidentsUi((s) => s.ouvrirFiche);
   const setActiveTab = useDashboardStore((s) => s.setActiveTab);
   const setFilter = useDashboardStore((s) => s.setFilter);
 
@@ -146,6 +149,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     const avisId = cibleNotificationAvis(data);
     if (avisId) {
       openAvis(avisId);
+      return;
+    }
+
+    // Incident sur commande (à traiter, résolu, en retard) → sa fiche,
+    // par-dessus l'écran en cours.
+    const incidentId = cibleNotificationIncident(data);
+    if (incidentId) {
+      ouvrirIncident(incidentId);
       return;
     }
 

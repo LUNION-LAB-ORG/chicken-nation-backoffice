@@ -22,6 +22,7 @@ import { ticketKeyQuery, ticketStatsKeyQuery } from '../../../../../features/mes
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
+import { IncidentsCommande } from '../../../../../features/incidents/components/IncidentsCommande';
 
 interface TicketViewProps {
   ticketId: string | null;
@@ -297,6 +298,15 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                 >
                   Voir la conversation d'origine
                 </button>
+              )}
+              {/* Pont avec les incidents (11/11) : ceux de la commande, et « Signaler un incident » à partir de ce ticket. */}
+              {(ticket.order as { id?: string } | null | undefined)?.id && (
+                <div className="mt-2">
+                  <IncidentsCommande
+                    orderId={(ticket.order as { id?: string }).id}
+                    demande={{ ticketId: ticket.id }}
+                  />
+                </div>
               )}
             </div>
           </div>

@@ -12,7 +12,6 @@ import {
   comparerAvis,
   corpsAgent,
   corpsCommande,
-  corpsTicket,
   COMPTEURS,
   COULEUR_RESSENTI,
   COULEUR_STATUT,
@@ -399,11 +398,6 @@ describe('gestes : la valeur lue part avec (claim du serveur)', () => {
   test('agent : l’agent vu à l’écran part avec (Non assigné : null)', () => {
     expect(corpsAgent(avis, 'u-cc2')).toEqual({ agent_id: 'u-cc2', agent_lu: 'u-cc' });
     expect(corpsAgent({ agent: null }, 'u-cc2')).toEqual({ agent_id: 'u-cc2', agent_lu: null });
-  });
-
-  test('incident : la commande montrée dans la fenêtre part avec ; rien sans commande cochée', () => {
-    expect(corpsTicket(avis, 'cat-1')).toEqual({ categoryId: 'cat-1', order_id: 'o-1' });
-    expect(corpsTicket({ order_id: null }, 'cat-1')).toBeNull();
   });
 });
 

@@ -7,7 +7,6 @@ import type {
   CommandeAvisDTO,
   JournalAvisDTO,
   StatutAvisDTO,
-  TicketAvisDTO,
 } from "../types/avis-prive.types";
 import { messageErreurAvis } from "../utils/avis-prive";
 import { avisKeys } from "./avis-prive.query";
@@ -52,12 +51,6 @@ export const useCommandeAvisMutation = () =>
 
 export const useAgentAvisMutation = () =>
   useGesteAvis<AgentAvisDTO>((id, dto) => avisPriveAPI.agent(id, dto), () => "Agent enregistré");
-
-export const useTicketAvisMutation = () =>
-  useGesteAvis<TicketAvisDTO>(
-    (id, dto) => avisPriveAPI.ticket(id, dto),
-    (fiche) => (fiche.ticket ? `Ticket ${fiche.ticket.code} créé` : "Ticket créé"),
-  );
 
 /** Suppression (administrateur) : le contenu personnel est effacé, l'avis quitte toutes les listes. */
 export const useSupprimerAvisMutation = () => {

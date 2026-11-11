@@ -107,7 +107,10 @@ export interface AvisFiche extends AvisLigne {
   };
   /** Commande cochée. */
   order_id: string | null;
+  /** Ticket ouvert par « Créer un incident » avant le 11/11. */
   ticket: { id: string; code: string; status: string } | null;
+  /** Incident ouvert à partir de cet avis (depuis le 11/11) ; absent d'un serveur plus ancien. */
+  incident?: { id: string; code: string; statut: string } | null;
   /** `null` pour le marketing ; `[]` quand l'avis n'est pas rapproché. */
   dernieres_commandes: CommandeRecente[] | null;
   journal: LigneJournal[];
@@ -176,12 +179,6 @@ export interface CommandeAvisDTO {
 export interface AgentAvisDTO {
   agent_id: string | null;
   agent_lu: string | null;
-}
-
-/** Corps de `POST /avis-prives/:id/ticket` : la commande vue dans la fenêtre part avec (409 si elle a changé). */
-export interface TicketAvisDTO {
-  categoryId: string;
-  order_id: string;
 }
 
 export interface StatutAvisDTO {

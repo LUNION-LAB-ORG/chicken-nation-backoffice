@@ -1,16 +1,23 @@
-import React, { useState } from "react";
-import { MessageCircle, Phone, Ticket } from "lucide-react";
+import React from "react";
+import { AlertTriangle, MessageCircle, Phone, Ticket } from "lucide-react";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { lienAppel } from "../../../crm/utils/crm-ui";
 import type { AvisFiche } from "../../types/avis-prive.types";
 import { lienWhatsApp, nomAffiche, raisonIncidentImpossible, telephoneComplet } from "../../utils/avis-prive";
-import { CreerIncident } from "./CreerIncident";
+import { useIncidentsUi } from "../../../incidents/stores/incident-ui.store";
+import { LIBELLE_STATUT, graviteDepuisRessenti } from "../../../incidents/utils/incident";
+import type { IncidentStatut } from "../../../incidents/types/incident.types";
 import { Carte, Rapprochement } from "./Elements";
 
 /**
  * Colonne Client de la fiche : rapprochement, nom, numéro, fiche CRM, Appeler
  * et WhatsApp (qui traite, avec accord de rappel et numéro composable), puis
- * « Créer un incident » ou le lien du ticket déjà ouvert.
+ * l'incident de l'avis ou « Créer un incident ».
+ *
+ * Depuis le 11/11, « Créer un incident » ouvre la fenêtre commune « Signaler
+ * un incident » (catégorie, gravité, description reprise du commentaire) :
+ * l'incident se traite dans le CRM, onglet Incidents, et l'avis est résolu
+ * quand il est clôturé. Un avis plus ancien garde le lien de son ticket.
  */
 export function BlocClient({
   avis,
@@ -26,7 +33,8 @@ export function BlocClient({
   onOuvrirCrm: () => void;
 }) {
   const openTicket = useDashboardStore((s) => s.openTicket);
-  const [incident, setIncident] = useState(false);
+  const ouvrirIncident = useIncidentsUi((s) => s.ouvrirFiche);
+  const signaler = useIncidentsUi((s) => s.signaler);
 
   const appel = peutTraiter && avis.accord_rappel ? lienAppel(avis.telephone) : undefined;
   const whatsapp = peutTraiter && avis.accord_rappel ? lienWhatsApp(avis.telephone) : undefined;
@@ -73,8 +81,22 @@ export function BlocClient({
         )
       )}
 
-      {avis.ticket ? (
-        peutVoirTickets ? (
+      {avis.incident && (
+        <button
+          type="button"
+          onClick={() => ouvrirIncident(avis.incident!.id)}
+          className="inline-flex items-center gap-2 self-start text-sm font-semibold text-[#F17922] hover:underline"
+        >
+          <AlertTriangle className="h-4 w-4" />
+          Incident {avis.incident.code}
+          <span className="font-normal text-gray-500">
+            · {(LIBELLE_STATUT[avis.incident.statut as IncidentStatut] ?? avis.incident.statut).toLowerCase()}
+          </span>
+        </button>
+      )}
+
+      {avis.ticket &&
+        (peutVoirTickets ? (
           <button
             type="button"
             onClick={() => openTicket(avis.ticket!.id)}
@@ -88,22 +110,28 @@ export function BlocClient({
             <Ticket className="h-4 w-4" />
             Ticket {avis.ticket.code}
           </span>
-        )
-      ) : (
-        peutTraiter && (
-          <div className="flex flex-col gap-1">
-            <button
-              type="button"
-              onClick={() => setIncident(true)}
-              disabled={!!raison}
-              className="h-11 rounded-lg border-2 border-[#C2410C] bg-white text-sm font-bold text-[#9A3412] hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
-            >
-              Créer un incident
-            </button>
-            {raison && <p className="text-xs text-gray-500">{raison}</p>}
-            {!raison && <CreerIncident avis={avis} ouvert={incident} onFermer={() => setIncident(false)} />}
-          </div>
-        )
+        ))}
+
+      {/* Un incident déjà ouvert (ou un ticket d'avant le 11/11) : rien à créer de plus. */}
+      {!avis.incident && !avis.ticket && peutTraiter && (
+        <div className="flex flex-col gap-1">
+          <button
+            type="button"
+            onClick={() =>
+              signaler({
+                orderId: avis.order_id ?? undefined,
+                avisId: avis.id,
+                gravite: graviteDepuisRessenti(avis.ressenti),
+                description: avis.commentaire,
+              })
+            }
+            disabled={!!raison}
+            className="h-11 rounded-lg border-2 border-[#C2410C] bg-white text-sm font-bold text-[#9A3412] hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
+          >
+            Créer un incident
+          </button>
+          {raison && <p className="text-xs text-gray-500">{raison}</p>}
+        </div>
       )}
     </Carte>
   );

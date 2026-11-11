@@ -13,6 +13,7 @@ import { useCommentsQuery } from '@/hooks/useCommentsQuery';
 import { CommentService } from '@/services/commentService';
 import { useAuthStore } from '../../users/hook/authStore';
 import { UserType } from '../../users/types/user.types';
+import { IncidentNote } from '../../incidents/components/IncidentNote';
 import { getAllRestaurants, Restaurant } from '@/services/restaurantService';
 
 // ✅ Composant Dropdown Custom
@@ -529,6 +530,18 @@ export function GlobalReviews() {
                       visible={comment.site_visible === true}
                     />
                   </HasPermission>
+
+                  {/* Pont avec les incidents (11/11) : l'incident ouvert à partir
+                      de cette note, ou « Créer un incident » sous une mauvaise note. */}
+                  <div>
+                    <IncidentNote
+                      commentId={comment.id}
+                      orderId={comment.order_id}
+                      note={comment.rating}
+                      message={comment.message}
+                      incident={(comment as { incident?: { id: string; code: string; statut: string } | null }).incident}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

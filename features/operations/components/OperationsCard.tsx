@@ -38,6 +38,7 @@ import {
   restaurantDeLaCarte,
 } from "../utils/carte-operations";
 import { getStatusBadgeClasses, getTypeMeta } from "../utils/status-colors";
+import { EtiquetteIncident } from "../../incidents/components/EtiquetteIncident";
 import {
   COULEURS_CANAL,
   libelleCanal,
@@ -206,6 +207,8 @@ export const OperationsCard: React.FC<Props> = ({
                 {warningLabel ?? "Attention"}
               </span>
             )}
+            {/* Incident non clôturé sur cette commande (11/11) : sa catégorie, qui ouvre sa fiche. */}
+            <EtiquetteIncident orderId={order.id} />
           </div>
 
           {/* Ligne de suivi (course qui l'attend, livreur), seulement si elle a un contenu */}

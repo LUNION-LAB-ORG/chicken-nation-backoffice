@@ -10,7 +10,6 @@ import type {
   PageAvis,
   RequeteAvis,
   StatutAvisDTO,
-  TicketAvisDTO,
 } from "../types/avis-prive.types";
 
 const BASE = "/avis-prives";
@@ -36,9 +35,6 @@ export const avisPriveAPI = {
 
   /** Corps fait par `corpsAgent` : l'agent lu part avec (409 s'il a changé). */
   agent: (id: string, dto: AgentAvisDTO) => api.patch<AvisFiche>(`${BASE}/${id}/agent`, dto),
-
-  /** Corps fait par `corpsTicket` : la commande vue dans la fenêtre part avec. */
-  ticket: (id: string, dto: TicketAvisDTO) => api.post<AvisFiche>(`${BASE}/${id}/ticket`, dto),
 
   supprimer: (id: string) => api.delete<void>(`${BASE}/${id}`),
 

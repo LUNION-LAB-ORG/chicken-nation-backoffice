@@ -24,7 +24,6 @@ import type {
   FiltresAvis,
   PeriodeAvis,
   RequeteAvis,
-  TicketAvisDTO,
 } from "../types/avis-prive.types";
 
 // ─── Mots (contrat 3.1) ─────────────────────────────────────────────────────
@@ -202,14 +201,6 @@ export const corpsAgent = (avis: Pick<AvisFiche, "agent">, agentId: string | nul
   agent_id: agentId,
   agent_lu: avis.agent?.id ?? null,
 });
-
-/**
- * Créer un incident : la commande que la fenêtre montre part avec. Un
- * collègue qui en a coché une autre entre-temps donne un 409, jamais un
- * ticket sur une commande que l'agent n'a pas vue. `null` sans commande cochée.
- */
-export const corpsTicket = (avis: Pick<AvisFiche, "order_id">, categoryId: string): TicketAvisDTO | null =>
-  avis.order_id ? { categoryId, order_id: avis.order_id } : null;
 
 /** Pourquoi « Créer un incident » est grisé, ou `null` s'il est possible. */
 export function raisonIncidentImpossible(avis: Pick<AvisFiche, "rapproche" | "order_id">): string | null {

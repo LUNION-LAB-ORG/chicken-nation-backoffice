@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import DynamicModuleLoader from "@/components/gestion/DynamicModuleLoader";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { HoteIncidents } from "../../../features/incidents/components/HoteIncidents";
 
 export default function GestionPage() {
   const openInboxConversation = useDashboardStore((s) => s.openInboxConversation);
@@ -37,6 +38,8 @@ export default function GestionPage() {
       }
     >
       <DynamicModuleLoader />
+      {/* Fiche d'un incident et « Signaler un incident » : par-dessus n'importe quel écran. */}
+      <HoteIncidents />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { BarChart3, FileText, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users } from "lucide-react";
+import { AlertTriangle, BarChart3, FileText, Headset, Megaphone, Receipt, Settings, Store, Ticket, Users } from "lucide-react";
 
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import { useDashboardStore } from "@/store/dashboardStore";
@@ -23,8 +23,12 @@ import { Campagnes } from "../../../../features/crm/components/campagnes/Campagn
 import { Rapport } from "../../../../features/crm/components/analyse/Rapport";
 import { Reglages } from "../../../../features/crm/components/reglages/Reglages";
 import { FicheContact } from "../../../../features/crm/components/fiche/FicheContact";
+import { Incidents } from "../../../../features/incidents/components/Incidents";
+import { useDroitsIncidents } from "../../../../features/incidents/hooks/useDroitsIncidents";
+import { useCompteursIncidentsQuery } from "../../../../features/incidents/queries/incident.query";
+import { pastilleIncidents } from "../../../../features/incidents/utils/incident";
 
-type Cle = "tableau" | "rapport" | "file" | "contacts" | "campagnes" | "coupons" | "ventes" | "reglages";
+type Cle = "tableau" | "rapport" | "file" | "contacts" | "incidents" | "campagnes" | "coupons" | "ventes" | "reglages";
 
 /**
  * CRM : relance des inscrits qui n'ont jamais commandé, des anciens clients
@@ -37,6 +41,10 @@ type Cle = "tableau" | "rapport" | "file" | "contacts" | "campagnes" | "coupons"
  * téléphones compris, sans aucun geste ni export. Un compte de point de
  * vente ne voit que les clients de son restaurant et jamais les campagnes.
  * Le serveur applique les mêmes règles.
+ *
+ * Onglet « Incidents » (11/11) : le suivi des problèmes signalés sur les
+ * commandes, pont entre le CRM, les tickets et les avis. Ses droits sont à
+ * lui (listes de rôles du serveur), pas ceux du CRM.
  */
 export default function Crm() {
   const moi = useAuthStore((s) => s.user?.id);
@@ -49,6 +57,8 @@ export default function Crm() {
   // Les campagnes se consultent au siège : un point de vente n'en demande aucune.
   const { data: campagnes = [] } = useCampagnesQuery({}, !pointDeVente);
   const pilote = peutTraiter && campagnes.some((c) => c.lead_agent.id === moi && c.status !== "COMPLETED");
+  const { voir: voitIncidents } = useDroitsIncidents();
+  const { data: compteursIncidents } = useCompteursIncidentsQuery(undefined, voitIncidents);
 
   const onglets = useMemo(() => {
     const liste: (Onglet<Cle> & { visible: boolean })[] = [
@@ -62,6 +72,13 @@ export default function Crm() {
         badge: file ? pastilleFile(file) : undefined,
       },
       { cle: "contacts", label: "Contacts", Icone: Users, visible: voitContacts },
+      {
+        cle: "incidents",
+        label: "Incidents",
+        Icone: AlertTriangle,
+        visible: voitIncidents,
+        badge: pastilleIncidents(compteursIncidents),
+      },
       { cle: "campagnes", label: "Campagnes", Icone: Megaphone, visible: !pointDeVente && !annuaire },
       { cle: "coupons", label: "Coupons", Icone: Ticket, visible: peutAnalyser },
       { cle: "ventes", label: "Ventes", Icone: Receipt, visible: peutAnalyser },
@@ -69,7 +86,7 @@ export default function Crm() {
       { cle: "reglages", label: "Réglages", Icone: Settings, visible: estGestionnaire || (lecteur && !pointDeVente) },
     ];
     return liste.filter((o) => o.visible);
-  }, [peutAnalyser, peutTraiter, voitContacts, pointDeVente, estGestionnaire, lecteur, annuaire, file]);
+  }, [peutAnalyser, peutTraiter, voitContacts, pointDeVente, estGestionnaire, lecteur, annuaire, file, voitIncidents, compteursIncidents]);
 
   const [cle, setCle] = useState<Cle>(estGestionnaire || !peutTraiter ? onglets[0]?.cle ?? "contacts" : "file");
   const [filtresListe, setFiltresListe] = useState<IContactFiltres>(FILTRES_DEFAUT);
@@ -139,7 +156,7 @@ export default function Crm() {
           <Onglets<Cle> onglets={onglets} actif={actif ?? "contacts"} onChange={(k) => setCle(k)} />
         </div>
 
-        {pointDeVente && actif !== "reglages" && (
+        {pointDeVente && actif !== "reglages" && actif !== "incidents" && (
           <div className="flex items-start gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 mb-4 text-sm text-gray-600">
             <Store className="w-4 h-4 mt-0.5 shrink-0 text-gray-400" />
             <p>
@@ -165,6 +182,7 @@ export default function Crm() {
             onOuvrir={setFicheId}
           />
         )}
+        {actif === "incidents" && voitIncidents && <Incidents />}
         {actif === "campagnes" && !pointDeVente && (
           <Campagnes estGestionnaire={estGestionnaire} peutTraiter={peutTraiter} peutExporter={peutExporter} peutAnalyser={peutAnalyser} />
         )}

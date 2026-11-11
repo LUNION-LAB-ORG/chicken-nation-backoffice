@@ -11,6 +11,7 @@ import { fmtDate, fmtMontant } from "../../utils/crm-ui";
 import { Chargement, Erreur } from "../commun/Etats";
 import { FicheContexte } from "./FicheContexte";
 import { FicheEntete } from "./FicheEntete";
+import { IncidentsClient } from "../../../incidents/components/IncidentsClient";
 import { FicheHistorique } from "./FicheHistorique";
 import { PanneauAgent } from "./PanneauAgent";
 import { PanneauAnnuaire } from "./PanneauAnnuaire";
@@ -121,6 +122,8 @@ export function FicheContact({
         */
         <div className="space-y-5 md:min-h-[58vh]">
           <FicheEntete p={p} />
+          {/* Pont avec les incidents (11/11) : ce qui s'est mal passé pour ce client, et où en est le traitement. */}
+          <IncidentsClient customerId={compteId} />
 
           {/*
             L'ANNUAIRE garde ses onglets, sans « Suivi CRM ».

@@ -58,6 +58,7 @@ import { getStatusBadgeClasses, getTypeMeta } from "../../utils/status-colors";
 import { estDuSite, libelleCanal } from "../../../orders/utils/canal-commande";
 import { libellePaiement } from "../../../orders/utils/libelle-paiement";
 import { SectionLivraison } from "./SectionLivraison";
+import { IncidentsCommande } from "../../../incidents/components/IncidentsCommande";
 
 interface Props {
   order: Order;
@@ -108,6 +109,8 @@ export function DrawerDetailsTab({ order }: Props) {
       <PriceBlock ui={ui} />
       <ProgressBlock ui={ui} />
       <SectionLivraison commande={source} />
+      {/* Incidents signalés sur cette commande, et « Signaler un incident » (11/11). */}
+      <IncidentsCommande orderId={source.id} cadre="carte" />
       <InfoBlock ui={ui} source={source} />
     </div>
   );
