@@ -30,6 +30,9 @@ export interface Paiement {
     failure_code: string | null;
     failure_message: string | null;
     order_id: string | null;
+    /** Remboursement KKiaPay (12/11) : quand et par qui. */
+    rembourse_at?: string | null;
+    rembourse_par_nom?: string | null;
     // Relations
     order?: Order | null;
     // Metadata

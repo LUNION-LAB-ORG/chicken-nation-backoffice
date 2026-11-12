@@ -11,6 +11,7 @@ import {
   Receipt,
   Smartphone,
   Trash2,
+  Undo2,
   Wallet,
   X,
   XCircle,
@@ -28,6 +29,9 @@ import { useIsAdmin } from "../../../users/hook/useIsAdmin";
 import ConfirmPaymentAction from "../../../orders/components/detail-order/ConfirmPaymentAction";
 import PendingCollectionAction from "../../../orders/components/detail-order/PendingCollectionAction";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
+import { RembourserPaiement } from "../../../orders/components/remboursement/RembourserPaiement";
+import { estRemboursable, peutRembourser, texteRembourse } from "../../../orders/utils/remboursement";
+import { useAuthStore } from "../../../users/hook/authStore";
 
 interface Props {
   order: Order;
@@ -63,7 +67,8 @@ const MODE_META: Record<PaiementMode, { label: string; color: string; bg: string
 const STATUS_META: Record<PaiementStatus, { label: string; color: string; Icon: React.FC<{ className?: string }> }> = {
   SUCCESS: { label: "Réussi", color: "#166534", Icon: CheckCircle },
   FAILED: { label: "Échec", color: "#991B1B", Icon: XCircle },
-  REVERTED: { label: "Annulé", color: "#52525B", Icon: XCircle },
+  // Seul le remboursement KKiaPay mène à cet état (12/11).
+  REVERTED: { label: "Remboursé", color: "#52525B", Icon: Undo2 },
   // Encaissement livreur déclaré à la livraison — à confirmer (bloc dédié).
   PENDING: { label: "À confirmer", color: "#92400E", Icon: CheckCircle },
 };
@@ -91,6 +96,8 @@ export function DrawerPaymentTab({ order }: Props) {
   const uiOrder = useMemo(() => mapApiOrderToUiOrder(order), [order]);
   // ADMIN : accès aux contrôles d'édition / suppression de l'historique.
   const isAdmin = useIsAdmin();
+  // Remboursement KKiaPay (12/11) : administrateur, et manager de CE restaurant.
+  const rembourser = useAuthStore((s) => peutRembourser(s.user, order.restaurant_id));
 
   /**
    * ENCAISSER À LA MAIN UNE COMMANDE EN LIGNE.
@@ -118,6 +125,14 @@ export function DrawerPaymentTab({ order }: Props) {
     [order.paiements],
   );
   const totalEncaisse = successPaiements.reduce((sum, p) => sum + p.amount, 0);
+  // Historique : les paiements réussis, et ceux remboursés (la trace reste visible).
+  const historique = useMemo(
+    () =>
+      (order.paiements ?? [])
+        .filter((p) => p.status === PaiementStatus.SUCCESS || p.status === PaiementStatus.REVERTED)
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+    [order.paiements],
+  );
   const remainingDu = Math.max(0, order.amount - totalEncaisse);
 
   // Sélection par pastilles : Espèces pré-sélectionné au reste dû (le cas
@@ -251,7 +266,7 @@ export function DrawerPaymentTab({ order }: Props) {
         {/* Réconciliation admin d'une commande en ligne restée PENDING
             (webhook KKiaPay perdu). S'auto-masque hors PENDING. */}
         {isAdmin && <ConfirmPaymentAction order={uiOrder} />}
-        <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
+        <PaiementsHistory paiements={historique} canEdit={isAdmin} peutRembourser={rembourser} />
       </div>
     );
   }
@@ -282,7 +297,7 @@ export function DrawerPaymentTab({ order }: Props) {
       <PendingCollectionAction order={uiOrder} />
 
       {/* Historique : uniquement s'il y a des paiements (aucun bloc vide). */}
-      <PaiementsHistory paiements={successPaiements} canEdit={isAdmin} />
+      <PaiementsHistory paiements={historique} canEdit={isAdmin} peutRembourser={rembourser} />
 
       {/* ── ENCAISSER : pastilles de moyens + un bouton ── */}
       {!isFullyPaid && (
@@ -379,9 +394,10 @@ export function DrawerPaymentTab({ order }: Props) {
 // HISTORIQUE DES PAIEMENTS
 // ============================================================
 
-const PaiementsHistory: React.FC<{ paiements: Paiement[]; canEdit: boolean }> = ({
+const PaiementsHistory: React.FC<{ paiements: Paiement[]; canEdit: boolean; peutRembourser: boolean }> = ({
   paiements,
   canEdit,
+  peutRembourser,
 }) => {
   // Aucun paiement → RIEN (l'ancien bloc « Aucun paiement enregistré »
   // n'apportait que du bruit : le formulaire en dessous dit déjà tout).
@@ -402,17 +418,21 @@ const PaiementsHistory: React.FC<{ paiements: Paiement[]; canEdit: boolean }> = 
       </div>
       <div className="space-y-2">
         {paiements.map((p) => (
-          <PaiementRow key={p.id} paiement={p} canEdit={canEdit} />
+          <PaiementRow key={p.id} paiement={p} canEdit={canEdit} peutRembourser={peutRembourser} />
         ))}
       </div>
     </div>
   );
 };
 
-const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean }> = ({
+const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembourser: boolean }> = ({
   paiement,
   canEdit,
+  peutRembourser,
 }) => {
+  const rembourse = paiement.status === PaiementStatus.REVERTED;
+  // Un paiement remboursé ne se corrige plus : sa trace reste telle quelle.
+  const modifiable = canEdit && !rembourse;
   const modeMeta = MODE_META[paiement.mode] ?? MODE_META.CASH;
   const statusMeta = STATUS_META[paiement.status];
 
@@ -507,7 +527,8 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean }> = ({
                   <statusMeta.Icon className="w-2.5 h-2.5" />
                   {statusMeta.label}
                 </span>
-                {canEdit && (
+                {peutRembourser && estRemboursable(paiement) && <RembourserPaiement paiementId={paiement.id} />}
+                {modifiable && (
                   <>
                     <button
                       onClick={startEdit}
@@ -554,6 +575,13 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean }> = ({
         {paiement.fees > 0 && (
           <p className="text-[10px] text-gray-400 mt-0.5">
             Frais : {formatPrix(paiement.fees)} · Total {formatPrix(paiement.total)}
+          </p>
+        )}
+
+        {rembourse && (
+          <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-gray-600">
+            <Undo2 className="h-3 w-3" />
+            {texteRembourse(paiement)}
           </p>
         )}
       </div>
