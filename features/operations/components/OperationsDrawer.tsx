@@ -53,6 +53,8 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
   const [tab, setTab] = useState<DrawerTabKey>(initialTab ?? "details");
   const { handlePrintOrder, isLoading } = useOrderActions();
   const isAdmin = useIsAdmin();
+  // Le centre d'appels encaisse aussi une commande en ligne restée en attente (14/11).
+  const estCentreAppels = String(useAuthStore((s) => s.user?.role)) === "CALL_CENTER";
 
   // Live : on récupère la version fraîche de la commande (invalidée par socket).
   // Fallback sur la prop tant que le fetch n'a pas encore résolu.
@@ -81,9 +83,9 @@ export const OperationsDrawer: React.FC<Props> = ({ order, onClose, initialTab, 
       ["PICKED_UP", "COLLECTED", "COMPLETED"].includes(live.status)) ||
       (live.paiements?.length ?? 0) > 0 ||
       // ONLINE encore PENDING (paiement web non enregistré, ex. webhook KKiaPay
-      // perdu) → tab Paiement accessible à l'ADMIN pour réconcilier via la
-      // référence de transaction KKiaPay.
-      (isAdmin &&
+      // perdu) → tab Paiement accessible à l'ADMIN et au centre d'appels :
+      // l'encaissement la confirme (14/11).
+      ((isAdmin || estCentreAppels) &&
         live.payment_method !== PaymentMethod.OFFLINE &&
         live.status === OrderStatus.PENDING));
 

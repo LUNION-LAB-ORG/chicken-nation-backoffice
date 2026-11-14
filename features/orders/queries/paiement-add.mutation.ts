@@ -49,7 +49,7 @@ export const usePaiementAddMutation = () => {
 
 			return paiementResult;
 		},
-		onSuccess: async () => {
+		onSuccess: async (resultat) => {
 			// FIX TEMPS RÉEL OPS : un paiement change le statut de l'Order côté
 			// backend (paied=true → potentiellement COMPLETED), ce qui doit
 			// retirer la card de la liste « Opérations actives ». Sans cette
@@ -60,7 +60,12 @@ export const usePaiementAddMutation = () => {
 				queryClient.invalidateQueries({ queryKey: ["operations"] }),
 				queryClient.invalidateQueries({ queryKey: ["courses"] }),
 			]);
-			toast.success("Paiement ajouté avec succès");
+			// Commande en attente soldée : le serveur l'a confirmée (14/11).
+			toast.success(
+				resultat?.confirmee
+					? "Paiement ajouté : la commande est confirmée et part au restaurant."
+					: "Paiement ajouté avec succès",
+			);
 		},
 		onError: async (e) => {
 			toast.error(e.message);

@@ -98,6 +98,7 @@ export function DrawerPaymentTab({ order }: Props) {
   const isAdmin = useIsAdmin();
   // Remboursement KKiaPay (12/11) : administrateur, et manager de CE restaurant.
   const rembourser = useAuthStore((s) => peutRembourser(s.user, order.restaurant_id));
+  const estCentreAppels = String(useAuthStore((s) => s.user?.role)) === "CALL_CENTER";
 
   /**
    * ENCAISSER À LA MAIN UNE COMMANDE EN LIGNE.
@@ -106,12 +107,14 @@ export function DrawerPaymentTab({ order }: Props) {
    * (webhook perdu), ou client qui finit par régler le livreur en espèces.
    * L'argent est là, la commande restait « non payée » et rien à l'écran ne
    * permettait de le dire — alors que le serveur, lui, accepte parfaitement
-   * l'enregistrement.
+   * l'enregistrement. En attente, elle se confirme à l'encaissement (14/11).
    *
-   * Réservé à l'administrateur : contourner le moyen de paiement déclaré doit
-   * rester un geste de correction, pas la routine d'un poste de caisse.
+   * Administrateur et centre d'appels (14/11 : c'est lui qui rappelle, depuis
+   * « À relancer », le client qui a payé). Pas un poste de caisse : contourner
+   * le moyen de paiement déclaré reste un geste de correction.
    */
   const enLigne = order.payment_method !== PaymentMethod.OFFLINE;
+  const encaisseEnLigne = isAdmin || estCentreAppels;
 
   // Déjà encaissé (paiements réussis existants) → reste réellement dû.
   const successPaiements = useMemo(
@@ -253,7 +256,7 @@ export function DrawerPaymentTab({ order }: Props) {
   );
 
   // ── ONLINE : pas d'encaissement manuel, contexte + historique seulement ───
-  if (enLigne && !isAdmin) {
+  if (enLigne && !encaisseEnLigne) {
     return (
       <div className="p-4 space-y-4">
         {header}
@@ -271,7 +274,7 @@ export function DrawerPaymentTab({ order }: Props) {
     );
   }
 
-  // ── OFFLINE, ou EN LIGNE repris par un administrateur ────────────────────
+  // ── OFFLINE, ou EN LIGNE repris par un administrateur ou le centre d'appels ──
   return (
     <div className="p-4 space-y-4">
       {header}
@@ -290,8 +293,9 @@ export function DrawerPaymentTab({ order }: Props) {
         </p>
       )}
 
-      {/* Réconciliation par référence de transaction, quand elle s'applique. */}
-      {enLigne && <ConfirmPaymentAction order={uiOrder} />}
+      {/* Réconciliation par référence de transaction, quand elle s'applique.
+          Route réservée à l'administrateur : le centre d'appels encaisse. */}
+      {enLigne && isAdmin && <ConfirmPaymentAction order={uiOrder} />}
 
       {/* Encaissement livreur déclaré à la livraison — prioritaire, 1 clic. */}
       <PendingCollectionAction order={uiOrder} />

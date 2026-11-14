@@ -175,6 +175,8 @@ export const addPaiement = async (formData: PaiementFormData) => {
         return await response.json() as {
             success: boolean,
             message: string,
+            /** La commande était en attente : soldée, elle vient d'être confirmée (14/11). */
+            confirmee?: boolean,
         };
     } catch (error) {
         throw new Error(error.message);
