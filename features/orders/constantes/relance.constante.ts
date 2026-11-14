@@ -60,3 +60,19 @@ export const LIBELLE_TYPE: Record<string, string> = {
   PICKUP: "À emporter",
   TABLE: "Sur place",
 };
+
+/** Moyen de paiement KKiaPay annoncé par le webhook (PaiementMode du serveur). */
+export const LIBELLE_MOYEN: Record<string, string> = {
+  MOBILE_MONEY: "Mobile Money",
+  CARD: "Carte bancaire",
+  WALLET: "Portefeuille",
+};
+
+/**
+ * Identifiant de transaction KKiaPay lisible, même règle que le serveur
+ * (TRANSACTION_KKIAPAY, backend/src/modules/order/helpers/confirmation-paiement.rules.ts).
+ */
+export const TRANSACTION_KKIAPAY = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$/;
+
+export const MESSAGE_TRANSACTION_ILLISIBLE =
+  "Saisissez l'identifiant de la transaction KKiaPay : lettres et chiffres, sans espace.";

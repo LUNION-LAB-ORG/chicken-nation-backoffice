@@ -1,5 +1,5 @@
 import { accord, fmtMontant } from "../../crm/utils/crm-ui";
-import { REGLES_PAR_DEFAUT } from "../constantes/relance.constante";
+import { LIBELLE_MOYEN, REGLES_PAR_DEFAUT } from "../constantes/relance.constante";
 import {
   CompteursRelance,
   GroupeRelance,
@@ -133,6 +133,24 @@ export function textePaiementEnLigne(
 }
 
 /**
+ * Pastille d'un paiement KKiaPay que le webhook a apporté sans confirmer la
+ * commande (14/11) : « Paiement KKiaPay reçu à 14 h 32 : 8 780 F par Mobile
+ * Money, non confirmé ». Le panier est cité s'il n'est pas la tête. Null sans
+ * signal (serveur plus ancien compris).
+ */
+export function textePaiementSignale(
+  g: Pick<GroupeRelance, "tete" | "signaux">,
+  maintenant: number,
+): string | null {
+  const s = g.signaux.paiement_signale ?? null;
+  if (!s) return null;
+  const panier = s.order_id !== g.tete.id ? ` sur ${s.reference}` : "";
+  const montant = typeof s.montant === "number" ? ` : ${fmtMontant(s.montant)}` : "";
+  const moyen = s.moyen ? ` par ${LIBELLE_MOYEN[s.moyen] ?? s.moyen}` : "";
+  return `Paiement KKiaPay reçu ${aLHeure(s.le, maintenant)}${panier}${montant}${moyen}, non confirmé`;
+}
+
+/**
  * Boîte « Le client confirme sa commande ? » d'une commande à confirmer dont
  * un autre panier se paie peut-être en ligne : ce qu'il faut demander avant
  * de la transmettre. Null sans ce signal.
@@ -167,10 +185,13 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   // Serveur plus ancien : signal absent, lu comme « non annulée ». Groupe à
   // confirmer : c'est une commande précédente qui est annulée, pas celle-ci.
   const annulees = aRelancer.filter((g) => !g.a_confirmer && !!g.signaux.annulee_par_client).length;
+  // Serveur plus ancien : signal absent, lu comme « aucun paiement signalé ».
+  const signales = aRelancer.filter((g) => !!g.signaux.paiement_signale).length;
   const parts = [
     aConfirmer ? `${aConfirmer} à confirmer` : "",
     refuses ? `${refuses} ${accord(refuses, "paiement refusé", "paiements refusés")}` : "",
     annulees ? `${annulees} ${accord(annulees, "annulée", "annulées")} par le client` : "",
+    signales ? `${signales} ${accord(signales, "paiement reçu non confirmé", "paiements reçus non confirmés")}` : "",
   ].filter(Boolean);
   const suffixe = parts.length ? `, dont ${parts.join(" et ")}` : "";
 
@@ -181,6 +202,7 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
       textePaiementEnLigne(aRelancer[0], maintenant) ? "paiement en ligne en cours" : "",
       !a_confirmer && signaux.annulee_par_client ? "annulée par le client" : "",
       signaux.paiement_refuse ? "paiement refusé" : "",
+      signaux.paiement_signale ? "paiement KKiaPay reçu, non confirmé" : "",
     ].filter(Boolean);
     return `1 commande à relancer : ${tete.client_nom}, ${fmtMontant(tete.amount)}, ${depuis(tete.created_at, maintenant)}${motif.length ? `, ${motif.join(", ")}` : ""}`;
   }
@@ -202,3 +224,13 @@ export function texteInfobulle(c?: CompteursRelance | null): string {
 
 /** Message d'un refus prêt à recevoir une suite : « Déjà prise par Koffi Yao » (sans point final). */
 export const sansPointFinal = (message: string) => message.trim().replace(/[.\s]+$/, "");
+
+/**
+ * Message d'un refus de « Confirmer le paiement ». Le client HTTP remplace le
+ * texte d'un 5xx par un message générique : celui du serveur (« KKiaPay ne
+ * répond pas… ») dit mieux quoi faire. Les autres refus (400, 409) portent
+ * déjà le texte du serveur.
+ */
+export function messageErreurConfirmation(e: Error & { status?: number; messageServeur?: string }): string {
+  return (!!e.status && e.status >= 500 && e.messageServeur) || e.message || "Confirmation impossible.";
+}

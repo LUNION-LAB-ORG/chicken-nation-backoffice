@@ -113,6 +113,28 @@ export interface SignauxRelance {
    * serveur plus ancien.
    */
   paiement_en_ligne_en_cours?: { reference: string; jusqua: string } | null;
+  /**
+   * Le webhook a apporté une transaction KKiaPay réussie pour un panier du
+   * groupe sans confirmer la commande : le client a sans doute payé. La tête
+   * d'abord, sinon le premier autre panier qui en a une. Absent d'un serveur
+   * plus ancien.
+   */
+  paiement_signale?: PaiementSignale | null;
+}
+
+/** Transaction KKiaPay réussie restée sans confirmation (journal du webhook). */
+export interface PaiementSignale {
+  /** Panier visé : la tête ou l'un des autres paniers du groupe. */
+  order_id: string;
+  reference: string;
+  transaction_id: string;
+  /** Annoncé par le webhook ; seul KKiaPay fait foi, à la confirmation. */
+  montant: number | null;
+  /** MOBILE_MONEY, CARD, WALLET. */
+  moyen: string | null;
+  le: string;
+  /** Pourquoi le webhook n'a rien confirmé, tel que le journal le dit. */
+  motif: string | null;
 }
 
 /** Les paniers d'un même client (même compte ou même numéro) : une alerte, un appel. */
@@ -172,6 +194,20 @@ export interface IgnorerRelanceDTO {
 
 /** « Annuler la commande » (commande à confirmer) : mêmes raisons qu'« Ignorer ». */
 export type AnnulerRelanceDTO = IgnorerRelanceDTO;
+
+/** « Confirmer le paiement » : la transaction KKiaPay, revérifiée par le serveur. */
+export interface ConfirmerPaiementRelanceDTO {
+  transaction_id: string;
+}
+
+export interface ConfirmerPaiementRelanceReponse {
+  ok: true;
+  reference: string;
+  /** La commande était déjà confirmée (le webhook est passé entre-temps). */
+  deja_confirmee: boolean;
+  /** Ce paiement arrive sur une commande déjà réglée : à rembourser. */
+  en_double: boolean;
+}
 
 /** Charge de l'événement `relance:changed` : aucune donnée personnelle. */
 export interface RelanceChangeeEvenement {

@@ -1,7 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, Ban, Banknote, ChevronDown, ChevronUp, CreditCard, Globe, Loader2, Phone, PhoneForwarded } from "lucide-react";
+import {
+  AlertTriangle,
+  BadgeCheck,
+  Ban,
+  Banknote,
+  ChevronDown,
+  ChevronUp,
+  CreditCard,
+  Globe,
+  Loader2,
+  Phone,
+  PhoneForwarded,
+} from "lucide-react";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { numeroACopier } from "@/utils/telephone";
 import { fmtMontant, lienAppel } from "../../../crm/utils/crm-ui";
@@ -10,7 +22,15 @@ import { demanderPermissionNotifications } from "../../hooks/useSonRelances";
 import { useLibererRelance, usePrendreRelance } from "../../queries/relance.mutation";
 import { BrouillonLigne, GroupeRelance } from "../../types/relance.types";
 import { estDuSite } from "../../utils/canal-commande";
-import { aLHeure, depuis, pastilleAnnulation, reste, texteCommandeRecente, textePaiementEnLigne } from "../../utils/relance";
+import {
+  aLHeure,
+  depuis,
+  pastilleAnnulation,
+  reste,
+  texteCommandeRecente,
+  textePaiementEnLigne,
+  textePaiementSignale,
+} from "../../utils/relance";
 import { actionsRelance } from "../../utils/relance-actions";
 
 interface Props {
@@ -23,6 +43,8 @@ interface Props {
   /** « Annuler la commande » : commande du site à payer à la livraison, à confirmer. */
   onAnnuler: (groupe: GroupeRelance) => void;
   onReprendre: (groupe: GroupeRelance) => void;
+  /** « Confirmer le paiement » : le client a payé en ligne, le webhook n'a rien confirmé. */
+  onConfirmerPaiement: (groupe: GroupeRelance) => void;
   /** Une reprise est en cours sur ce groupe : ses boutons attendent. */
   repriseEnCours?: boolean;
 }
@@ -37,7 +59,7 @@ const Pastille = ({
   ton,
 }: {
   children: React.ReactNode;
-  ton: "rouge" | "ambre" | "gris" | "bleu" | "sarcelle";
+  ton: "rouge" | "ambre" | "gris" | "bleu" | "sarcelle" | "vert";
 }) => (
   <span
     className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${
@@ -48,6 +70,8 @@ const Pastille = ({
         bleu: "bg-sky-100 text-sky-700",
         // Panier du site : sarcelle, comme partout ailleurs (utils/canal-commande).
         sarcelle: "bg-teal-100 text-teal-800",
+        // Paiement KKiaPay reçu, à confirmer : l'argent est là.
+        vert: "bg-emerald-100 text-emerald-800",
       }[ton]
     }`}
   >
@@ -108,6 +132,7 @@ export function LigneRelance({
   onIgnorer,
   onAnnuler,
   onReprendre,
+  onConfirmerPaiement,
   repriseEnCours,
 }: Props) {
   const [deplie, setDeplie] = useState(false);
@@ -127,6 +152,8 @@ export function LigneRelance({
   const suivante = signaux.commande_suivante ?? null;
   // « A déjà payé » seulement si cette commande est payée.
   const recente = texteCommandeRecente(groupe, maintenant);
+  // Le webhook a apporté un paiement réussi sans confirmer : à confirmer en premier.
+  const paye = textePaiementSignale(groupe, maintenant);
   const actions = actionsRelance(groupe, { estAdmin });
 
   return (
@@ -193,8 +220,14 @@ export function LigneRelance({
       </div>
 
       {/* Signaux */}
-      {(annulee || enLigne || signaux.paiement_refuse || partiel || recente || suivante || groupe.crm) && (
+      {(paye || annulee || enLigne || signaux.paiement_refuse || partiel || recente || suivante || groupe.crm) && (
         <div className="mt-3 flex flex-wrap gap-1.5">
+          {paye && (
+            <Pastille ton="vert">
+              <BadgeCheck className="w-3 h-3" />
+              {paye}
+            </Pastille>
+          )}
           {enLigne && (
             <Pastille ton="ambre">
               <CreditCard className="w-3 h-3" />
@@ -261,6 +294,20 @@ export function LigneRelance({
                   <button key={action} type="button" disabled={occupe} onClick={() => onReprendre(groupe)} className={principal}>
                     {repriseEnCours ? <Loader2 className="w-4 h-4 animate-spin" /> : <PhoneForwarded className="w-4 h-4" />}
                     Reprendre au téléphone
+                  </button>
+                );
+              case "confirmer_paiement":
+                return (
+                  <button
+                    key={action}
+                    type="button"
+                    disabled={occupe}
+                    onClick={() => onConfirmerPaiement(groupe)}
+                    // Paiement signalé : c'est LE geste de la carte.
+                    className={paye ? principal : secondaire}
+                  >
+                    <BadgeCheck className="w-4 h-4" />
+                    Confirmer le paiement
                   </button>
                 );
               case "liberer":

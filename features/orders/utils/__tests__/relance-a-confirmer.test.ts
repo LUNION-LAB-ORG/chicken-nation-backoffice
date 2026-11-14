@@ -109,7 +109,14 @@ describe('relance : boutons d’une commande à confirmer', () => {
   test('panier en ligne : boutons d’avant, « Ignorer » et jamais « Annuler »', () => {
     const en = (o) => actionsRelance(groupe({ aConfirmer: false, ...o }), { estAdmin: false });
     expect(en({})).toEqual(['prendre', 'ignorer', 'ouvrir']);
-    expect(en({ etat: 'PRIS', prise: prise(true) })).toEqual(['reprendre', 'liberer', 'ignorer', 'ouvrir']);
+    // En main : le client peut dire qu'il a payé (« Confirmer le paiement », 14/11).
+    expect(en({ etat: 'PRIS', prise: prise(true) })).toEqual([
+      'reprendre',
+      'confirmer_paiement',
+      'liberer',
+      'ignorer',
+      'ouvrir',
+    ]);
     expect(en({ etat: 'PRIS', prise: prise(false) })).toEqual(['ouvrir']);
     expect(en({ etat: 'EN_COURS' })).toEqual(['ignorer', 'ouvrir']);
     expect(

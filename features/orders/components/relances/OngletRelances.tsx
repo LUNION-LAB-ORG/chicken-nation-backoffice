@@ -21,6 +21,7 @@ import { repriseALaLivraison } from "../../utils/relance-actions";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
 import { LigneRelance } from "./LigneRelance";
 import { ListeIgnorees } from "./ListeIgnorees";
+import { ModaleConfirmerPaiement } from "./ModaleConfirmerPaiement";
 import { ModaleIgnorerRelance } from "./ModaleIgnorerRelance";
 
 interface Props {
@@ -69,6 +70,8 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const [aEcarter, setAEcarter] = useState<{ groupe: GroupeRelance; mode: "ignorer" | "annuler" } | null>(null);
   const [aReprendre, setAReprendre] = useState<GroupeRelance | null>(null);
   const [repriseCle, setRepriseCle] = useState<string | null>(null);
+  // « Confirmer le paiement » : le client a payé en ligne, le webhook n'a rien confirmé.
+  const [paiementAConfirmer, setPaiementAConfirmer] = useState<GroupeRelance | null>(null);
   const prendre = usePrendreRelance();
 
   const regles = reglesDe(data);
@@ -90,9 +93,11 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
    * vers le call center, à l'enregistrement, qui sort la commande des
    * relances.
    *
-   * Limite connue : un paiement accepté par l'opérateur mais jamais signalé
-   * (ni webhook ni retour de l'application) est invisible ici. Seul le
-   * client peut dire s'il a été débité, d'où la confirmation.
+   * Un paiement accepté par l'opérateur mais jamais confirmé par le webhook
+   * ne se voit ici que si le webhook l'a signalé (pastille « Paiement KKiaPay
+   * reçu »). Sinon, seul le client peut dire s'il a été débité, d'où la
+   * question ; s'il l'a été, on ne reprend pas : « Confirmer le paiement »
+   * rattache sa transaction, vérifiée auprès de KKiaPay.
    *
    * Commande du site à payer à la livraison : personne n'a payé en ligne. La
    * confirmation porte sur la commande elle-même, et c'est l'enregistrement
@@ -140,6 +145,7 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
       onIgnorer={(groupe) => setAEcarter({ groupe, mode: "ignorer" })}
       onAnnuler={(groupe) => setAEcarter({ groupe, mode: "annuler" })}
       onReprendre={setAReprendre}
+      onConfirmerPaiement={setPaiementAConfirmer}
       repriseEnCours={repriseCle === g.cle}
     />
   );
@@ -220,6 +226,12 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
 
       <ModaleIgnorerRelance groupe={aEcarter?.groupe ?? null} mode={aEcarter?.mode} onClose={() => setAEcarter(null)} />
 
+      <ModaleConfirmerPaiement
+        groupe={paiementAConfirmer}
+        maintenant={maintenant}
+        onClose={() => setPaiementAConfirmer(null)}
+      />
+
       <ConfirmDialog
         isOpen={!!aReprendre}
         onClose={() => setAReprendre(null)}
@@ -241,8 +253,8 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
                 {aReprendre?.tete.reference}.
               </p>
               <p className="mt-2">
-                Un paiement accepté par l&apos;opérateur mais jamais signalé à l&apos;application ne se voit pas ici :
-                s&apos;il a été débité, ne reprenez pas la commande et prévenez un administrateur.
+                Un paiement accepté par l&apos;opérateur mais jamais signalé à l&apos;application ne se voit pas
+                toujours ici : s&apos;il a été débité, ne reprenez pas la commande, utilisez « Confirmer le paiement ».
               </p>
             </>
           )

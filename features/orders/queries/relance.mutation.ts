@@ -1,12 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import { relanceAPI } from "../apis/relance.api";
-import { AnnulerRelanceDTO, IgnorerRelanceDTO, RelancesReponse } from "../types/relance.types";
+import {
+  AnnulerRelanceDTO,
+  ConfirmerPaiementRelanceDTO,
+  IgnorerRelanceDTO,
+  RelancesReponse,
+} from "../types/relance.types";
 import { reglesDe, sansPointFinal } from "../utils/relance";
 import { orderKeyQuery } from "./index.query";
 import { RELANCES_CLE, useInvalidateRelances } from "./relance.query";
 
-type ErreurApi = Error & { status?: number };
+type ErreurApi = Error & { status?: number; messageServeur?: string };
 
 /**
  * « Je m'en occupe ». Un collègue plus rapide l'a déjà prise, ou le client
@@ -81,6 +86,40 @@ export const useAnnulerRelance = () => {
     onError: (e: ErreurApi) => {
       toast.error(e.message);
       void invalider();
+    },
+  });
+};
+
+/**
+ * « Confirmer le paiement » : le client a payé en ligne, le webhook n'a pas
+ * confirmé la commande. Le serveur interroge KKiaPay avant tout ; confirmée,
+ * la commande part au restaurant : toutes les listes de commandes sont
+ * relues (la relance en fait partie). Le refus reste affiché dans la
+ * fenêtre, qui le lit sur `error` : l'agent corrige l'identifiant sans
+ * tout ressaisir.
+ */
+export const useConfirmerPaiementRelance = () => {
+  const queryClient = useQueryClient();
+  const invalider = () => queryClient.invalidateQueries({ queryKey: orderKeyQuery(), exact: false });
+  return useMutation({
+    mutationFn: ({ orderId, dto }: { orderId: string; dto: ConfirmerPaiementRelanceDTO }) =>
+      relanceAPI.confirmerPaiement(orderId, dto),
+    onSuccess: (r) => {
+      void invalider();
+      if (r.en_double) {
+        toast(`Paiement rattaché à ${r.reference}, mais la commande était déjà réglée : un administrateur doit le rembourser.`, {
+          icon: "⚠️",
+          duration: 10000,
+        });
+      } else if (r.deja_confirmee) {
+        toast.success(`${r.reference} était déjà confirmée : le paiement y est rattaché.`);
+      } else {
+        toast.success(`Paiement confirmé : ${r.reference} part au restaurant, le client est prévenu.`);
+      }
+    },
+    onError: (e: ErreurApi) => {
+      // Collègue, commande sortie entre-temps : la liste a changé.
+      if (e.status === 409) void invalider();
     },
   });
 };

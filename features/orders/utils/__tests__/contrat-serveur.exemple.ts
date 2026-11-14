@@ -49,6 +49,8 @@ const SIGNAUX_VIDES = {
   annulee_par_client: null,
   commande_suivante: null,
   paiement_en_ligne_en_cours: null,
+  // Paiement KKiaPay signalé par le webhook sans confirmation (14/11).
+  paiement_signale: null,
 };
 
 export const REPONSE_RELANCES = {

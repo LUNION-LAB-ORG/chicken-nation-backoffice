@@ -1,6 +1,8 @@
 import { api } from "@/services/api";
 import {
   AnnulerRelanceDTO,
+  ConfirmerPaiementRelanceDTO,
+  ConfirmerPaiementRelanceReponse,
   GroupeRelance,
   IgnoreesReponse,
   IgnorerRelanceDTO,
@@ -52,4 +54,13 @@ export const relanceAPI = {
    */
   annuler: (orderId: string, dto: AnnulerRelanceDTO) =>
     avecIntrouvable(api.post<{ ok: true }>(chemin(orderId, "annuler"), dto)),
+
+  /**
+   * « Confirmer le paiement » d'un panier payé en ligne que le webhook n'a pas
+   * confirmé. Le serveur interroge KKiaPay : 400 si le paiement n'a pas abouti
+   * ou ne couvre pas la commande, 409 si la transaction paie déjà une autre
+   * commande ou si un collègue s'en occupe, 503 si KKiaPay ne répond pas.
+   */
+  confirmerPaiement: (orderId: string, dto: ConfirmerPaiementRelanceDTO) =>
+    avecIntrouvable(api.post<ConfirmerPaiementRelanceReponse>(chemin(orderId, "confirmer-paiement"), dto)),
 };
