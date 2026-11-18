@@ -159,6 +159,31 @@ export async function confirmerEncaissement(
     }
 }
 
+/**
+ * PATCH /paiements/:id/refuser-encaissement — refuse un encaissement déclaré
+ * par le livreur (18/11) : le paiement passe en échec, ne compte plus dans ce
+ * que la commande a reçu, et la commande ne bouge pas.
+ */
+export async function refuserEncaissement(
+    id: string,
+): Promise<{ success: boolean; message: string }> {
+    try {
+        const { url, headers } = await prepareRequest(BASE_URL, `/${id}/refuser-encaissement`);
+
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers,
+        });
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        }
+        return await response.json() as { success: boolean; message: string };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
 export const addPaiement = async (formData: PaiementFormData) => {
     try {
         const { url, headers } = await prepareRequest(BASE_URL, '/add');

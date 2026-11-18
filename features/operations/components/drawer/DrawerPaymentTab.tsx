@@ -31,6 +31,7 @@ import PendingCollectionAction from "../../../orders/components/detail-order/Pen
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { RembourserPaiement } from "../../../orders/components/remboursement/RembourserPaiement";
 import { estRemboursable, peutRembourser, texteRembourse } from "../../../orders/utils/remboursement";
+import { cumulPaiements, estRefuse } from "../../../orders/utils/encaissement-livreur";
 import { useAuthStore } from "../../../users/hook/authStore";
 
 interface Props {
@@ -72,6 +73,9 @@ const STATUS_META: Record<PaiementStatus, { label: string; color: string; Icon: 
   // Encaissement livreur déclaré à la livraison — à confirmer (bloc dédié).
   PENDING: { label: "À confirmer", color: "#92400E", Icon: CheckCircle },
 };
+
+/** Déclaration du livreur refusée par la caisse, ou d'office après un paiement en ligne (18/11). */
+const STATUT_REFUSE = { label: "Refusé", color: "#52525B", Icon: XCircle };
 
 /**
  * Tab Paiement du drawer Opérations — REFONTE « 3 blocs maximum ».
@@ -128,26 +132,42 @@ export function DrawerPaymentTab({ order }: Props) {
     [order.paiements],
   );
   const totalEncaisse = successPaiements.reduce((sum, p) => sum + p.amount, 0);
-  // Historique : les paiements réussis, et ceux remboursés (la trace reste visible).
+  // Historique : les paiements réussis, ceux remboursés et les déclarations du
+  // livreur refusées (la trace reste visible).
   const historique = useMemo(
     () =>
       (order.paiements ?? [])
-        .filter((p) => p.status === PaiementStatus.SUCCESS || p.status === PaiementStatus.REVERTED)
+        .filter((p) => p.status === PaiementStatus.SUCCESS || p.status === PaiementStatus.REVERTED || estRefuse(p))
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
     [order.paiements],
   );
   const remainingDu = Math.max(0, order.amount - totalEncaisse);
+  /**
+   * PAIEMENTS DE TROP (18/11) : ce que la caisse peut encore encaisser. Ce que
+   * le livreur a déclaré, en attente, en est retiré : la caissière le confirme
+   * ou le refuse au-dessus, au lieu d'encaisser une seconde fois le même
+   * argent. Le serveur applique la même règle.
+   */
+  const { enAttente } = cumulPaiements(order.paiements ?? []);
+  const aEncaisser = Math.max(0, remainingDu - enAttente);
 
   // Sélection par pastilles : Espèces pré-sélectionné au reste dû (le cas
   // majoritaire se règle donc en UN clic sur « Encaisser »).
   const [lignes, setLignes] = useState<IPaiementLine[]>(() => [
-    { mode: PaiementMode.CASH, source: "cash", amount: remainingDu },
+    { mode: PaiementMode.CASH, source: "cash", amount: aEncaisser },
   ]);
+  // Le reste a changé (paiement ajouté, déclaration refusée ou confirmée) :
+  // le formulaire repart du nouveau reste, sinon il proposait l'ancien.
+  const [resteVu, setResteVu] = useState(aEncaisser);
+  if (resteVu !== aEncaisser) {
+    setResteVu(aEncaisser);
+    setLignes([{ mode: PaiementMode.CASH, source: "cash", amount: aEncaisser }]);
+  }
 
   const totalAmount = lignes.reduce((sum, p) => sum + (p.amount || 0), 0);
   // Avec la répartition automatique, la somme ne dépasse jamais le reste dû ;
   // un écart ne subsiste que si l'unique ligne a été réduite à la main.
-  const remainingAmount = Math.max(0, remainingDu - totalAmount);
+  const remainingAmount = Math.max(0, aEncaisser - totalAmount);
 
   /**
    * Tap sur une pastille : ajoute ou retire le moyen. La somme des lignes est
@@ -159,7 +179,7 @@ export function DrawerPaymentTab({ order }: Props) {
       if (prev.some((l) => l.source === source)) {
         const restantes = prev.filter((l) => l.source !== source).map((l) => ({ ...l }));
         if (restantes.length > 0) {
-          const deficit = remainingDu - restantes.reduce((s, l) => s + (l.amount || 0), 0);
+          const deficit = aEncaisser - restantes.reduce((s, l) => s + (l.amount || 0), 0);
           restantes[0].amount = Math.max(0, (restantes[0].amount || 0) + deficit);
         }
         return restantes;
@@ -167,7 +187,7 @@ export function DrawerPaymentTab({ order }: Props) {
       // Nouveau moyen : il démarre à 0 — la caissière tape SON montant et les
       // autres lignes se réduisent automatiquement (cf. setMontant). Premier
       // moyen sélectionné = tout le reste dû.
-      return [...prev, { mode, source, amount: prev.length === 0 ? remainingDu : 0 }];
+      return [...prev, { mode, source, amount: prev.length === 0 ? aEncaisser : 0 }];
     });
   };
 
@@ -180,11 +200,11 @@ export function DrawerPaymentTab({ order }: Props) {
    */
   const setMontant = (source: string, montantBrut: number) => {
     setLignes((prev) => {
-      const montant = Math.max(0, Math.min(montantBrut, remainingDu));
+      const montant = Math.max(0, Math.min(montantBrut, aEncaisser));
       const lignes = prev.map((l) =>
         l.source === source ? { ...l, amount: montant } : { ...l },
       );
-      let reste = remainingDu - lignes.reduce((s, l) => s + (l.amount || 0), 0);
+      let reste = aEncaisser - lignes.reduce((s, l) => s + (l.amount || 0), 0);
       for (const l of lignes) {
         if (l.source === source || reste === 0) continue;
         const nouveau = Math.max(0, (l.amount || 0) + reste);
@@ -201,13 +221,16 @@ export function DrawerPaymentTab({ order }: Props) {
     addPaiement({
       items: lignes.filter((l) => (l.amount || 0) > 0),
       order: uiOrder,
-      amountDue: remainingDu,
+      amountDue: aEncaisser,
     });
   };
 
   const isFullyPaid = order.paied || remainingDu === 0;
   const canSave =
-    lignes.some((l) => (l.amount || 0) > 0) && totalAmount >= remainingDu && !isPending;
+    lignes.some((l) => (l.amount || 0) > 0) &&
+    // Ni moins (le reste doit être réparti), ni plus (paiement de trop, 18/11).
+    Math.round(totalAmount) === Math.round(aEncaisser) &&
+    !isPending;
 
   // ── EN-TÊTE unique : montant + contexte en UNE carte ──────────────────────
   const header = isFullyPaid ? (
@@ -303,8 +326,10 @@ export function DrawerPaymentTab({ order }: Props) {
       {/* Historique : uniquement s'il y a des paiements (aucun bloc vide). */}
       <PaiementsHistory paiements={historique} canEdit={isAdmin} peutRembourser={rembourser} />
 
-      {/* ── ENCAISSER : pastilles de moyens + un bouton ── */}
-      {!isFullyPaid && (
+      {/* ── ENCAISSER : pastilles de moyens + un bouton ──
+          Masqué quand la déclaration du livreur couvre le reste : il faut
+          d'abord la confirmer ou la refuser (bloc au-dessus). */}
+      {!isFullyPaid && aEncaisser > 0 && (
         <div className="bg-white border border-gray-200 rounded-2xl p-4 space-y-3.5">
           <p className="text-[11px] font-bold uppercase tracking-wider text-gray-600">
             Comment le client paie-t-il ?
@@ -435,10 +460,12 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
   peutRembourser,
 }) => {
   const rembourse = paiement.status === PaiementStatus.REVERTED;
-  // Un paiement remboursé ne se corrige plus : sa trace reste telle quelle.
-  const modifiable = canEdit && !rembourse;
+  // Déclaration du livreur refusée (18/11) : trace seulement.
+  const refuse = estRefuse(paiement);
+  // Un paiement remboursé ou refusé ne se corrige plus : sa trace reste telle quelle.
+  const modifiable = canEdit && !rembourse && !refuse;
   const modeMeta = MODE_META[paiement.mode] ?? MODE_META.CASH;
-  const statusMeta = STATUS_META[paiement.status];
+  const statusMeta = refuse ? STATUT_REFUSE : STATUS_META[paiement.status];
 
   const { mutate: updatePaiement, isPending: isUpdating } = usePaiementUpdateMutation();
   const { mutate: removePaiement, isPending: isRemoving } = usePaiementRemoveMutation();
@@ -580,6 +607,10 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
           <p className="text-[10px] text-gray-400 mt-0.5">
             Frais : {formatPrix(paiement.fees)} · Total {formatPrix(paiement.total)}
           </p>
+        )}
+
+        {refuse && paiement.failure_message && (
+          <p className="mt-1 text-[11px] font-semibold text-gray-600">{paiement.failure_message}</p>
         )}
 
         {rembourse && (

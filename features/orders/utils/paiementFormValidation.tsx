@@ -40,6 +40,15 @@ export const validatePaiementForm = (
       );
       return false;
     }
+
+    // Paiements de trop (18/11) : jamais plus que ce qui reste à encaisser.
+    // Le serveur refuse aussi ; on évite l'aller-retour.
+    if (Math.round(totalSaisi) > Math.round(totalToPay)) {
+      toast.error(
+        `Paiement de trop : il reste ${totalToPay.toLocaleString()} FCFA à encaisser`
+      );
+      return false;
+    }
   }
 
   return true;
