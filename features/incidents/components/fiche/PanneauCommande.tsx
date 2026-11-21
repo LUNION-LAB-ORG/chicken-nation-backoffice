@@ -2,6 +2,7 @@ import React from "react";
 import { Copy, MessageCircle, Phone } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { numeroACopier } from "@/utils/telephone";
 import { useOuvrirCommande } from "../../../orders/hooks/useOuvrirCommande";
 import { useDroitsIncidents } from "../../hooks/useDroitsIncidents";
 import { useIncidentsUi } from "../../stores/incident-ui.store";
@@ -44,7 +45,7 @@ export function PanneauCommande({ incident }: { incident: IncidentFiche }) {
   const copier = async () => {
     if (!client.telephone) return;
     try {
-      await navigator.clipboard.writeText(client.telephone);
+      await navigator.clipboard.writeText(numeroACopier(client.telephone));
       toast.success("Numéro copié");
     } catch {
       toast.error("Copie impossible");

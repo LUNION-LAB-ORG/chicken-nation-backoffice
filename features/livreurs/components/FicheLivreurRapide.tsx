@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'react-hot-toast';
 
 import { useDashboardStore } from '@/store/dashboardStore';
+import { numeroACopier } from '@/utils/telephone';
 
 // ⚠️ Import RELATIF entre features : `@/` pointe sur src/, `features/` est à la racine.
 import BoutonAppelerLivreur from '../../calls/components/BoutonAppelerLivreur';
@@ -58,7 +59,8 @@ export function FicheLivreurRapide({
   const copier = async () => {
     if (!livreur.telephone) return;
     try {
-      await navigator.clipboard.writeText(livreur.telephone);
+      // Comme le numéro d'un client : dix chiffres, sans espaces ni +225.
+      await navigator.clipboard.writeText(numeroACopier(livreur.telephone));
       toast.success('Numéro copié');
     } catch {
       toast.error('Copie impossible : notez le numéro à la main.');
