@@ -5,7 +5,9 @@ import { AlertCircle, Bike, Check, ChevronRight, Phone, Timer } from "lucide-rea
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 
+import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { useDashboardStore } from "@/store/dashboardStore";
+import { numeroACopier } from "@/utils/telephone";
 import BoutonAppelerLivreur from "../../../calls/components/BoutonAppelerLivreur";
 import { detailLivreur, livreurAAppeler } from "../../../calls/utils/appel-livreur";
 import { courseDetailQueryOption } from "../../../courses/queries/course-detail.query";
@@ -160,13 +162,25 @@ export function SectionLivraison({ commande }: Props) {
               <p className="text-sm font-bold text-gray-900 truncate">{livreur.nom}</p>
               {livreur.telephone &&
                 (livreur.lienAppel ? (
-                  // Coupé plutôt que glissé sous « Appeler » quand la place manque (écran étroit).
-                  <a
-                    href={livreur.lienAppel}
-                    className="flex max-w-full items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
-                  >
-                    <Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{livreur.telephone}</span>
-                  </a>
+                  <div className="flex max-w-full items-center gap-1.5">
+                    {/* Coupé plutôt que glissé sous « Appeler » quand la place manque (écran étroit). */}
+                    <a
+                      href={livreur.lienAppel}
+                      className="flex min-w-0 items-center gap-1.5 text-xs text-[#F17922] font-semibold hover:underline"
+                    >
+                      <Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{livreur.telephone}</span>
+                    </a>
+                    {/*
+                      Comme le numéro du client : copié en dix chiffres, sans
+                      espaces ni +225. Seulement pour un numéro complet : un
+                      numéro masqué ne se copie pas.
+                    */}
+                    <BoutonCopier
+                      valeur={numeroACopier(livreur.telephone)}
+                      titre="Copier le numéro"
+                      className="!px-1.5 !py-1 !text-[11px] shrink-0"
+                    />
+                  </div>
                 ) : (
                   <p className="flex max-w-full items-center gap-1.5 text-xs text-gray-500">
                     <Phone className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{livreur.telephone}</span>
