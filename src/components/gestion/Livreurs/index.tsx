@@ -158,7 +158,7 @@ export default function Livreurs() {
         <div className="space-y-4">
           <div
             role="tablist"
-            className="flex w-fit items-center rounded-[12px] bg-[#f4f4f5] px-2"
+            className="flex w-fit items-center rounded-[12px] bg-hex-f4f4f5 px-2"
             style={{ minHeight: 40 }}
           >
             {VUES.map((v, idx) => {
@@ -171,7 +171,7 @@ export default function Livreurs() {
                   aria-selected={actif}
                   onClick={() => setFilter("livreurs", "vue", v.cle)}
                   className={`inline-flex items-center whitespace-nowrap rounded-[12px] px-5 py-1 text-[11px] font-bold transition-colors focus:outline-none lg:text-[14px] ${
-                    actif ? "bg-[#F17922] text-white" : "bg-transparent font-normal text-[#71717A]"
+                    actif ? "bg-[#F17922] text-blanc" : "bg-transparent font-normal text-hex-71717a"
                   } ${idx === 0 ? "" : "ml-1"}`}
                   style={{ minWidth: 75, height: 30 }}
                 >

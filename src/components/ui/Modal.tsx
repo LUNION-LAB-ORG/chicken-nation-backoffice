@@ -43,7 +43,7 @@ export default function Modal({
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} className={widthCls}>
-      <div className="sticky top-0 z-10 flex items-center px-6 py-2.5 bg-[#FDEDD3]">
+      <div className="sticky top-0 z-10 flex items-center px-6 py-2.5 bg-hex-fdedd3">
         <div className="flex-1 text-center">
           <h3 className="text-[#F17922] font-medium">{title}</h3>
         </div>

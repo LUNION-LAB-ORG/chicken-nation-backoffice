@@ -84,14 +84,14 @@ export function FicheEntete({ p }: { p: IContactFiche }) {
             type="button"
             disabled={prendre.isPending}
             onClick={() => prendre.mutate(p.id, { onSuccess: () => { if (appel) window.location.href = appel; } })}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-blanc px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60"
           >
             <Phone className="w-4 h-4" /> {prendre.isPending ? "Un instant…" : `Prendre et appeler ${fmtTelephone(p.telephone)}`}
           </button>
         ) : appel ? (
           <a
             href={appel}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] text-blanc px-3 py-2 text-sm font-semibold hover:bg-[#e06a15]"
           >
             <Phone className="w-4 h-4" /> {fmtTelephone(p.telephone)}
           </a>

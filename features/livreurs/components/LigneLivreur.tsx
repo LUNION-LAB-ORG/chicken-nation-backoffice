@@ -38,7 +38,7 @@ export function LigneLivreur({ ligne, choisi, onChoisir }: LigneLivreurProps) {
       onClick={() => onChoisir(ligne.id)}
       aria-pressed={choisi}
       className={`flex h-14 w-full items-center gap-2.5 px-3 text-left transition-colors ${
-        choisi ? 'bg-orange-50' : 'hover:bg-[#FAFAFA]'
+        choisi ? 'bg-orange-50' : 'hover:bg-hex-fafafa'
       }`}
     >
       <PastilleEtat
@@ -53,7 +53,7 @@ export function LigneLivreur({ ligne, choisi, onChoisir }: LigneLivreurProps) {
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span
-            className={`min-w-0 truncate text-[13px] font-semibold ${choisi ? 'text-[#F17922]' : 'text-[#18181B]'}`}
+            className={`min-w-0 truncate text-[13px] font-semibold ${choisi ? 'text-[#F17922]' : 'text-hex-18181b'}`}
             title={nom}
           >
             {nom}
@@ -62,7 +62,7 @@ export function LigneLivreur({ ligne, choisi, onChoisir }: LigneLivreurProps) {
           {heure && (
             <span
               className={`ml-auto shrink-0 text-xs tabular-nums ${
-                heure.retard ? 'font-semibold text-red-600' : 'text-[#52525B]'
+                heure.retard ? 'font-semibold text-red-600' : 'text-hex-52525b'
               }`}
               title={heure.titre}
             >
@@ -70,7 +70,7 @@ export function LigneLivreur({ ligne, choisi, onChoisir }: LigneLivreurProps) {
             </span>
           )}
         </span>
-        <span className="mt-0.5 block h-4 truncate text-[11px] leading-4 text-[#71717A]" title={detail || undefined}>
+        <span className="mt-0.5 block h-4 truncate text-[11px] leading-4 text-hex-71717a" title={detail || undefined}>
           {detail}
         </span>
       </span>

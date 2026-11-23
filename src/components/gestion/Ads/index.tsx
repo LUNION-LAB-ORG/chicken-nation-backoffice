@@ -119,7 +119,7 @@ export default function Ads() {
                 <div>
                   <button
                     type="button"
-                    className={`flex items-center gap-2 px-4 py-2 text-[14px] ${activeTab === 'programmes' ? 'text-[#424242] font-medium' : 'text-[#424242]'}`}
+                    className={`flex items-center gap-2 px-4 py-2 text-[14px] ${activeTab === 'programmes' ? 'text-hex-424242 font-medium' : 'text-hex-424242'}`}
                     onClick={() => setActiveTab('programmes')}>
                     <Image src='/icons/calendar-outline.png' alt='programme' width={20} height={36} />
                     Programmes (0)
@@ -134,7 +134,7 @@ export default function Ads() {
                 <div className='items-center justify-center'>
                   <button
                     type="button"
-                    className={`flex items-center gap-2 px-4 ml-4 py-2 text-[14px] ${activeTab === 'publicites' ? 'text-[#424242] font-medium' : 'text-[#424242]'}`}
+                    className={`flex items-center gap-2 px-4 ml-4 py-2 text-[14px] ${activeTab === 'publicites' ? 'text-hex-424242 font-medium' : 'text-hex-424242'}`}
                     onClick={() => setActiveTab('publicites')}>
                     <Image src='/icons/send.png' alt='programme' width={20} height={36} />
                     Publiées ({allAds.filter(a => a.status === 'published').length})
@@ -153,26 +153,26 @@ export default function Ads() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-[#E4E4E7]">
+              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-hex-e4e4e7">
                 <div className="gap-2 mb-2">
                   <Image src={'/icons/social.png'} alt='social' width={224} height={36} />
-                  <h3 className="font-medium text-[#52525B]">Social media CRM</h3>
+                  <h3 className="font-medium text-hex-52525b">Social media CRM</h3>
                 </div>
                 <p className="text-xs text-gray-500 mb-1">Gérez les intéractions de vos réseaux sociaux</p>
               </div>
 
-              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-[#E4E4E7]">
+              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-hex-e4e4e7">
                 <div className="gap-2 mb-2">
                   <Image src={'/icons/htag.png'} alt='social' width={224} height={36} />
-                  <h3 className="font-medium text-[#52525B]">Hashtag</h3>
+                  <h3 className="font-medium text-hex-52525b">Hashtag</h3>
                 </div>
                 <p className="text-xs text-gray-500 mb-1">Gérez les tendances des <br /> hashtags</p>
               </div>
 
-              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-[#E4E4E7]">
+              <div className="bg-white cursor-pointer hover:scale-102 rounded-2xl p-2 border-2 border-hex-e4e4e7">
                 <div className="gap-2 mb-2">
                   <Image src={'/icons/htag.png'} alt='social' width={224} height={36} />
-                  <h3 className="font-medium text-[#52525B]">analytiques</h3>
+                  <h3 className="font-medium text-hex-52525b">analytiques</h3>
                 </div>
                 <p className="text-xs text-gray-500 mb-1">Gérer les tendances des <br /> hashtags</p>
               </div>
@@ -222,7 +222,7 @@ export default function Ads() {
 
         {/* Vue création */}
         {adsState.view === 'create' && (
-          <div className="flex flex-col bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30 mt-4">
+          <div className="flex flex-col bg-white rounded-xl p-4 lg:p-6 border-2 border-hex-d8d8d8/30 mt-4">
             <CreateAd
               onCancel={handleBackToList}
               onSuccess={handleAdCreated}

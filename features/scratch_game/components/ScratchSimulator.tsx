@@ -12,7 +12,7 @@ import {
 } from "../utils/scratch.utils";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 const LEVELS: { key: ScratchLevel | ""; label: string }[] = [
   { key: "", label: "Tous niveaux" },
@@ -27,7 +27,7 @@ const KpiCard: React.FC<{
   sub?: string;
   accent?: string;
 }> = ({ label, value, sub, accent = "#18181B" }) => (
-  <div className="rounded-xl border border-[#E4E4E7] bg-white px-4 py-3">
+  <div className="rounded-xl border border-hex-e4e4e7 bg-white px-4 py-3">
     <div className="text-[11px] uppercase tracking-wide text-[#9796A1]">
       {label}
     </div>
@@ -64,17 +64,17 @@ export default function ScratchSimulator() {
   return (
     <div className="space-y-6">
       {/* Saisie */}
-      <div className="bg-white rounded-2xl border border-[#E4E4E7] p-5 sm:p-6">
+      <div className="bg-white rounded-2xl border border-hex-e4e4e7 p-5 sm:p-6">
         <h2 className="text-[18px] font-semibold text-[#F17922] mb-4 flex items-center gap-2">
           <Calculator size={18} /> Simulateur de tirage
         </h2>
-        <p className="text-sm text-[#71717A] mb-4">
+        <p className="text-sm text-hex-71717a mb-4">
           Estimez le surcoût et la distribution des probabilités pour un panier
           donné, afin de calibrer les lots avant activation.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
           <div>
-            <label className="block text-sm font-medium text-[#71717A] mb-1.5">
+            <label className="block text-sm font-medium text-hex-71717a mb-1.5">
               Montant du panier (FCFA)
             </label>
             <input
@@ -88,7 +88,7 @@ export default function ScratchSimulator() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#71717A] mb-1.5">
+            <label className="block text-sm font-medium text-hex-71717a mb-1.5">
               Niveau client (optionnel)
             </label>
             <select
@@ -107,7 +107,7 @@ export default function ScratchSimulator() {
             type="button"
             onClick={run}
             disabled={query.isFetching}
-            className="h-11 px-6 rounded-lg bg-[#F17922] text-white font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
+            className="h-11 px-6 rounded-lg bg-[#F17922] text-blanc font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer flex items-center justify-center gap-2"
           >
             {query.isFetching ? (
               <Loader2 size={16} className="animate-spin" />
@@ -144,8 +144,8 @@ export default function ScratchSimulator() {
           </div>
 
           {/* Distribution des probabilités effectives */}
-          <div className="bg-white rounded-2xl border border-[#E4E4E7] p-5 sm:p-6">
-            <h3 className="text-base font-semibold text-[#595959] mb-4">
+          <div className="bg-white rounded-2xl border border-hex-e4e4e7 p-5 sm:p-6">
+            <h3 className="text-base font-semibold text-hex-595959 mb-4">
               Distribution des probabilités effectives
             </h3>
             <div className="space-y-3">
@@ -155,7 +155,7 @@ export default function ScratchSimulator() {
                   <div key={lot.id} className="space-y-1">
                     <div className="flex items-center justify-between gap-3 text-sm">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium text-[#18181B] truncate">
+                        <span className="font-medium text-hex-18181b truncate">
                           {lot.label}
                         </span>
                         <span
@@ -167,7 +167,7 @@ export default function ScratchSimulator() {
                         </span>
                         {!lot.eligible && (
                           <span
-                            className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#FDECEA] text-[#C0392B]"
+                            className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-hex-fdecea text-hex-c0392b"
                             title={lot.reason}
                           >
                             inéligible
@@ -175,7 +175,7 @@ export default function ScratchSimulator() {
                         )}
                       </div>
                       <div className="shrink-0 text-right">
-                        <span className="font-bold text-[#18181B]">
+                        <span className="font-bold text-hex-18181b">
                           {probaFmt(p)}
                         </span>
                         <span className="text-[11px] text-[#9796A1]">
@@ -184,10 +184,10 @@ export default function ScratchSimulator() {
                         </span>
                       </div>
                     </div>
-                    <div className="h-2.5 w-full rounded-full bg-[#F1F3F5] overflow-hidden">
+                    <div className="h-2.5 w-full rounded-full bg-hex-f1f3f5 overflow-hidden">
                       <div
                         className={`h-full rounded-full ${
-                          lot.eligible ? "bg-[#F17922]" : "bg-[#D9D9D9]"
+                          lot.eligible ? "bg-[#F17922]" : "bg-hex-d9d9d9"
                         }`}
                         style={{
                           width: `${Math.min(100, p * 100).toFixed(2)}%`,
@@ -195,7 +195,7 @@ export default function ScratchSimulator() {
                       />
                     </div>
                     {!lot.eligible && lot.reason && (
-                      <div className="text-[11px] text-[#C0392B]">
+                      <div className="text-[11px] text-hex-c0392b">
                         {lot.reason}
                       </div>
                     )}
@@ -213,7 +213,7 @@ export default function ScratchSimulator() {
       )}
 
       {query.isError && (
-        <div className="rounded-lg bg-[#FDECEA] text-[#C0392B] text-sm px-4 py-3">
+        <div className="rounded-lg bg-hex-fdecea text-hex-c0392b text-sm px-4 py-3">
           {query.error instanceof Error
             ? query.error.message
             : "Erreur lors de la simulation"}

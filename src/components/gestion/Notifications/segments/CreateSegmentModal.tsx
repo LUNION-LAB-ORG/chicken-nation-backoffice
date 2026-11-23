@@ -363,7 +363,7 @@ export default function CreateSegmentModal({
                       }
                       className={`flex-1 min-w-[70px] text-xs font-semibold px-2 py-2 rounded-lg border transition-colors ${
                         actif
-                          ? "bg-[#F17922] text-white border-[#F17922]"
+                          ? "bg-[#F17922] text-blanc border-[#F17922]"
                           : "bg-white text-gray-600 border-gray-300 hover:border-[#F17922]"
                       }`}
                     >
@@ -473,7 +473,7 @@ export default function CreateSegmentModal({
               Prévisualiser
             </button>
             {previewMutation.data && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-[#FFF3E8] rounded-xl">
+              <div className="flex items-center gap-2 px-3 py-2 bg-hex-fff3e8 rounded-xl">
                 <Users size={14} className="text-[#F17922]" />
                 <span className="text-sm font-semibold text-[#F17922]">
                   {previewMutation.data.count.toLocaleString("fr-FR")}{" "}
@@ -496,7 +496,7 @@ export default function CreateSegmentModal({
           <button
             type="submit"
             disabled={isPending || !name}
-            className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
             {isEdit ? "Enregistrer" : "Créer le segment"}

@@ -41,12 +41,12 @@ const SuspendLivreurModal: React.FC<SuspendLivreurModalProps> = ({
       title="Suspendre le livreur"
       icon={<Ban className="w-5 h-5 text-[#EF4444]" />}
     >
-      <p className="text-sm text-[#52525B] mb-4">
+      <p className="text-sm text-hex-52525b mb-4">
         <strong>{livreurNom}</strong> ne pourra plus recevoir de courses. Vous pourrez
         le réactiver à tout moment. Le motif est facultatif.
       </p>
 
-      <label className="block text-sm font-medium text-[#18181B] mb-1.5">
+      <label className="block text-sm font-medium text-hex-18181b mb-1.5">
         Motif <span className="text-[#A1A1AA] font-normal">(facultatif)</span>
       </label>
       <textarea
@@ -55,7 +55,7 @@ const SuspendLivreurModal: React.FC<SuspendLivreurModalProps> = ({
         placeholder="Ex. Non-respect répété des horaires…"
         rows={3}
         maxLength={500}
-        className="w-full rounded-lg border border-[#E4E4E7] px-3 py-2 text-sm focus:outline-none focus:border-[#F17922] focus:ring-1 focus:ring-[#F17922]"
+        className="w-full rounded-lg border border-hex-e4e4e7 px-3 py-2 text-sm focus:outline-none focus:border-[#F17922] focus:ring-1 focus:ring-[#F17922]"
       />
 
       <div className="flex justify-end gap-2 mt-6">
@@ -63,7 +63,7 @@ const SuspendLivreurModal: React.FC<SuspendLivreurModalProps> = ({
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="px-4 py-2 text-sm font-medium text-[#52525B] rounded-lg hover:bg-[#F4F4F5] disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-hex-52525b rounded-lg hover:bg-hex-f4f4f5 disabled:opacity-50"
         >
           Annuler
         </button>
@@ -71,7 +71,7 @@ const SuspendLivreurModal: React.FC<SuspendLivreurModalProps> = ({
           type="button"
           onClick={handleConfirm}
           disabled={isPending}
-          className="px-4 py-2 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50"
+          className="px-4 py-2 text-sm font-semibold text-blanc bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50"
         >
           {isPending ? "Envoi…" : "Suspendre"}
         </button>

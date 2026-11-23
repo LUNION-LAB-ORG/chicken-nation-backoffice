@@ -27,8 +27,8 @@ export function CompteursRetours({
               alerte ? "border-2 border-[#C2410C]" : "border border-slate-100"
             }`}
           >
-            <div className={`text-[13px] ${alerte ? "font-semibold text-[#9A3412]" : "text-gray-500"}`}>{libelle}</div>
-            <div className={`text-2xl font-bold ${alerte ? "text-[#9A3412]" : "text-gray-900"}`}>
+            <div className={`text-[13px] ${alerte ? "font-semibold text-hex-9a3412" : "text-gray-500"}`}>{libelle}</div>
+            <div className={`text-2xl font-bold ${alerte ? "text-hex-9a3412" : "text-gray-900"}`}>
               {valeur === undefined ? "…" : valeur}
             </div>
           </button>

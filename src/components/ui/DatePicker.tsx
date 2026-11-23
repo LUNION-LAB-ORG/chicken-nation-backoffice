@@ -266,7 +266,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
                   ${day.isToday ? "bg-orange-100 text-orange-700" : ""}
                   ${
                     isSelectedDate(day.date)
-                      ? "bg-[#F17922] text-white"
+                      ? "bg-[#F17922] text-blanc"
                       : "hover:bg-gray-100"
                   }
                 `}
@@ -291,7 +291,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
                 ${month.isCurrentMonth ? "bg-orange-100 text-orange-700" : ""}
                 ${
                   month.isSelected
-                    ? "bg-[#F17922] text-white"
+                    ? "bg-[#F17922] text-blanc"
                     : "hover:bg-gray-100 text-gray-700"
                 }
               `}

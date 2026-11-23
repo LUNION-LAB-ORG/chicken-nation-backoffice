@@ -62,7 +62,7 @@ export function TableRetours({ lignes, onOuvrir }: { lignes: AvisLigne[]; onOuvr
                   <PastilleStatut statut={a.statut} />
                 </td>
                 <td
-                  className={`whitespace-nowrap px-3.5 py-3 ${echeance.depassee ? "font-bold text-[#9A3412]" : "text-gray-700"}`}
+                  className={`whitespace-nowrap px-3.5 py-3 ${echeance.depassee ? "font-bold text-hex-9a3412" : "text-gray-700"}`}
                 >
                   {echeance.texte}
                 </td>

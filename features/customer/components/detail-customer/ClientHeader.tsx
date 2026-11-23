@@ -21,7 +21,7 @@ const STATUT = {
  * ⚠️ PLUS DE BANNIÈRE. L'ancienne version empilait une bande orange de 128 px
  * et un avatar de 128 px qui débordait dessus, soit un tiers de la fenêtre
  * avant la première information utile — dans une MODALE, qui plus est. Pire :
- * le nom et les coordonnées étaient en `text-white`, donc l'email et le
+ * le nom et les coordonnées étaient en `text-blanc`, donc l'email et le
  * téléphone passaient en blanc sur blanc dès qu'ils tombaient sous la bande.
  * Ils étaient invisibles.
  *
@@ -53,7 +53,7 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-[#F17922] text-lg font-bold text-white">
+              <div className="flex h-full w-full items-center justify-center bg-[#F17922] text-lg font-bold text-blanc">
                 {initiales}
               </div>
             )}
@@ -72,10 +72,10 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
               >
                 {customerData.status}
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F17922]/30 bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-[#8A4B00]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#F17922]/30 bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-hex-8a4b00">
                 <Award className="h-3.5 w-3.5" />
                 {customerData.loyaltyLevel}
-                <span className="font-normal text-[#A9683A]">
+                <span className="font-normal text-hex-a9683a">
                   · {customerData.stats.loyaltyPoints} pts
                 </span>
               </span>

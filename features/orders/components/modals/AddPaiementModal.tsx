@@ -53,7 +53,7 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="bg-linear-to-r from-[#F17922] to-orange-600 px-6 py-5">
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold text-blanc">
             Ajouter des paiements
           </h2>
           <p className="text-orange-100 text-sm mt-1">
@@ -206,12 +206,12 @@ export function AddPaiementModal({ isOpen, order }: AddPaiementModalProps) {
             disabled={
               paiements.length === 0 || isPending || totalAmount > order.amount
             }
-            className="flex-1 py-3 bg-linear-to-r from-[#F17922] to-orange-600 text-white font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-orange-500/30 flex items-center justify-center"
+            className="flex-1 py-3 bg-linear-to-r from-[#F17922] to-orange-600 text-blanc font-semibold rounded-xl disabled:opacity-50 shadow-lg shadow-orange-500/30 flex items-center justify-center"
           >
             {isPending ? (
               <>
                 <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-blanc"
                   fill="none"
                   viewBox="0 0 24 24"
                 >

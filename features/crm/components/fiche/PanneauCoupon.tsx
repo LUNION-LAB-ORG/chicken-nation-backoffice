@@ -45,11 +45,11 @@ export function PanneauCoupon({
       {actif ? (
         <div className="rounded-xl border border-orange-200 bg-orange-50 p-3">
           <div className="flex items-center justify-between gap-2">
-            <p className="font-mono text-lg font-bold tracking-wider text-[#C2410C]">{actif.code}</p>
+            <p className="font-mono text-lg font-bold tracking-wider text-hex-c2410c">{actif.code}</p>
             {/* En consultation, le serveur masque le code : rien à copier. */}
             {!consultation && (
               <button type="button" onClick={() => copier(actif.code)} className="p-1.5 rounded hover:bg-white" aria-label="Copier le code">
-                <Copy className="w-4 h-4 text-[#C2410C]" />
+                <Copy className="w-4 h-4 text-hex-c2410c" />
               </button>
             )}
           </div>

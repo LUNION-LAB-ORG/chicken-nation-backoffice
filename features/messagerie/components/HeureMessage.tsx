@@ -8,9 +8,9 @@ export type VarianteBulle = 'orange' | 'blanc' | 'alerte';
 
 const COULEUR: Record<VarianteBulle, string> = {
   // Blanc à 85 % : en dessous, l'heure devient illisible sur l'orange #F17922.
-  orange: 'text-white/85',
+  orange: 'text-blanc/85',
   blanc: 'text-gray-400',
-  alerte: 'text-[#8A4B00]/70',
+  alerte: 'text-hex-8a4b00/70',
 };
 
 interface HeureMessageProps {
@@ -43,7 +43,7 @@ function HeureMessage({ iso, maintenant, variante, position }: HeureMessageProps
   const base = 'text-[11px] leading-none tabular-nums whitespace-nowrap select-none';
   const classes =
     position === 'pastille'
-      ? `${base} absolute bottom-1.5 right-2 rounded bg-black/45 px-1.5 py-0.5 text-white`
+      ? `${base} absolute bottom-1.5 right-2 rounded bg-black/45 px-1.5 py-0.5 text-blanc`
       : position === 'coin'
         ? `${base} absolute bottom-1.5 right-2.5 ${COULEUR[variante]}`
         : `${base} block px-3 pb-1.5 text-right ${COULEUR[variante]}`;

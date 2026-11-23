@@ -76,7 +76,7 @@ export default function FicheSupplement({
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
-        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#FFF6E9]">
+        <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-hex-fff6e9">
           <Image
             src={produit.image ? formatImageUrl(produit.image) : "/images/plat.png"}
             alt={produit.name || "Image du produit"}
@@ -85,7 +85,7 @@ export default function FicheSupplement({
             className="h-full w-full object-cover"
           />
         </div>
-        <p className="text-[16px] font-semibold text-[#595959]">
+        <p className="text-[16px] font-semibold text-hex-595959">
           {produit.name}
         </p>
       </div>
@@ -103,7 +103,7 @@ export default function FicheSupplement({
         <button
           type="button"
           onClick={onClose}
-          className="h-[32px] min-w-[160px] cursor-pointer rounded-[10px] bg-[#ECECEC] px-12 text-[13px] text-[#9796A1] hover:bg-gray-100"
+          className="h-[32px] min-w-[160px] cursor-pointer rounded-[10px] bg-hex-ececec px-12 text-[13px] text-[#9796A1] hover:bg-gray-100"
         >
           Fermer
         </button>

@@ -15,13 +15,13 @@ import {
 import { fromLocalInput, toLocalInput } from "../utils/combo.utils";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 const Label: React.FC<{ children: React.ReactNode; hint?: string }> = ({
   children,
   hint,
 }) => (
-  <label className="block text-sm font-medium text-[#71717A] mb-1.5">
+  <label className="block text-sm font-medium text-hex-71717a mb-1.5">
     {children}
     {hint && <span className="text-[#9796A1] font-normal">, {hint}</span>}
   </label>
@@ -200,7 +200,7 @@ export default function ComboGameForm({
         <div>
           <Label hint="optionnel">Description</Label>
           <textarea
-            className="w-full rounded-lg border border-[#E4E4E7] px-3 py-2.5 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30 min-h-[80px]"
+            className="w-full rounded-lg border border-hex-e4e4e7 px-3 py-2.5 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30 min-h-[80px]"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Règle du jeu, contexte…"
@@ -214,7 +214,7 @@ export default function ComboGameForm({
         <div className="space-y-2">
           {hints.map((h, index) => (
             <div key={index} className="flex items-center gap-2">
-              <Lightbulb size={16} className="text-[#F5B301] shrink-0" />
+              <Lightbulb size={16} className="text-hex-f5b301 shrink-0" />
               <input
                 className={inputCls}
                 value={h}
@@ -224,7 +224,7 @@ export default function ComboGameForm({
               <button
                 type="button"
                 onClick={() => removeHint(index)}
-                className="p-2 rounded-lg text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer shrink-0"
+                className="p-2 rounded-lg text-hex-c0392b hover:bg-hex-fdecea cursor-pointer shrink-0"
                 title="Retirer l'indice"
               >
                 <Trash2 size={16} />
@@ -253,8 +253,8 @@ export default function ComboGameForm({
       </div>
 
       {/* Paramètres du jeu */}
-      <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-[#595959]">
+      <div className="border-2 border-hex-d9d9d9/50 rounded-2xl p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-hex-595959">
           Paramètres de la partie
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -306,10 +306,10 @@ export default function ComboGameForm({
       </div>
 
       {/* Lot = plat offert (GIFT) */}
-      <div className="border-2 border-[#F5D8AE] bg-[#FFFBF5] rounded-2xl p-6 space-y-4">
+      <div className="border-2 border-hex-f5d8ae bg-hex-fffbf5 rounded-2xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Gift size={18} className="text-[#F17922]" />
-          <h3 className="text-lg font-semibold text-[#595959]">
+          <h3 className="text-lg font-semibold text-hex-595959">
             Lot mis en jeu
           </h3>
         </div>
@@ -358,7 +358,7 @@ export default function ComboGameForm({
       </label>
 
       {error && (
-        <div className="rounded-lg bg-[#FDECEA] text-[#C0392B] text-sm px-4 py-2.5">
+        <div className="rounded-lg bg-hex-fdecea text-hex-c0392b text-sm px-4 py-2.5">
           {error}
         </div>
       )}
@@ -367,7 +367,7 @@ export default function ComboGameForm({
         <motion.button
           type="button"
           onClick={onCancel}
-          className="px-8 py-3 rounded-xl bg-[#ECECEC] text-[#9796A1] min-w-[160px]"
+          className="px-8 py-3 rounded-xl bg-hex-ececec text-[#9796A1] min-w-[160px]"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}
@@ -376,7 +376,7 @@ export default function ComboGameForm({
         </motion.button>
         <motion.button
           type="submit"
-          className="px-8 py-3 rounded-xl bg-[#F17922] text-white min-w-[170px] disabled:opacity-50 flex items-center justify-center gap-2"
+          className="px-8 py-3 rounded-xl bg-[#F17922] text-blanc min-w-[170px] disabled:opacity-50 flex items-center justify-center gap-2"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}

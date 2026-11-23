@@ -10,13 +10,13 @@ export const LevelCard = ({
   color: string;
 }) => (
   <motion.div
-    className="p-4 bg-white border-2 border-[#D9D9D9]/50 rounded-xl text-center"
+    className="p-4 bg-white border-2 border-hex-d9d9d9/50 rounded-xl text-center"
     whileHover={{ scale: 1.05 }}
   >
     <div
       className={`w-12 h-12 ${color} rounded-full mx-auto mb-2 flex items-center justify-center`}
     >
-      <span className="text-white text-xl font-bold">
+      <span className="text-blanc text-xl font-bold">
         {level === "VVIP" ? "👑" : level === "VIP" ? "⭐" : "🥉"}
       </span>
     </div>

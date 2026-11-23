@@ -19,7 +19,7 @@ interface EnTeteSectionProps {
 const EnTeteSection: React.FC<EnTeteSectionProps> = ({ Icone, titre, sousTitre, droite }) => (
   <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-3.5">
     <div className="flex min-w-0 items-center gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F17922] text-white">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#F17922] text-blanc">
         <Icone className="h-[18px] w-[18px]" />
       </span>
       <div className="min-w-0">

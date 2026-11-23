@@ -43,8 +43,8 @@ const ScoringQueueSection: React.FC<ScoringQueueSectionProps> = ({ livreurId }) 
     return (
       <div className="mb-6">
         <p className="text-[18px] font-medium text-[#F17922] mb-3">Scoring & File d&apos;attente</p>
-        <div className="rounded-xl border border-[#E4E4E7] bg-white p-6 text-center">
-          <p className="text-sm text-[#71717A]">Chargement…</p>
+        <div className="rounded-xl border border-hex-e4e4e7 bg-white p-6 text-center">
+          <p className="text-sm text-hex-71717a">Chargement…</p>
         </div>
       </div>
     );
@@ -96,23 +96,23 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
     : null;
 
   return (
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-4 mb-3">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4 mb-3">
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-lg bg-[#F17922]/10 flex items-center justify-center flex-shrink-0">
           <Users className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">{LIBELLE_CLASSEMENT}</p>
+          <p className="text-xs text-hex-71717a">{LIBELLE_CLASSEMENT}</p>
           {ranking && ranking.position !== null ? (
             <>
-              <p className="text-2xl font-bold text-[#18181B] mt-1">
+              <p className="text-2xl font-bold text-hex-18181b mt-1">
                 {rangLisible(ranking.position)}{" "}
-                <span className="text-sm font-normal text-[#71717A]">
+                <span className="text-sm font-normal text-hex-71717a">
                   / {ranking.totalCandidates} candidat{ranking.totalCandidates > 1 ? "s" : ""}
                 </span>
               </p>
               {ranking.rankInQueue !== null && ranking.rankInQueue !== ranking.position && (
-                <p className="text-xs text-[#71717A] mt-1">
+                <p className="text-xs text-hex-71717a mt-1">
                   Rang FIFO pur : {rangLisible(ranking.rankInQueue)}{" "}
                   <span className="text-[#A1A1AA]">
                     (le score composite a modifié l&apos;ordre)
@@ -120,7 +120,7 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
                 </p>
               )}
               {lastSeen && (
-                <p className="text-xs text-[#71717A] mt-1">Dispo depuis {lastSeen}</p>
+                <p className="text-xs text-hex-71717a mt-1">Dispo depuis {lastSeen}</p>
               )}
             </>
           ) : (
@@ -135,13 +135,13 @@ const RankingCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
 const ScoringCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
   if (!data.scoring) {
     return (
-      <div className="rounded-xl border border-[#E4E4E7] bg-white p-4 mb-3">
+      <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4 mb-3">
         <div className="flex items-start gap-3">
           <div className="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
             <Award className="w-5 h-5 text-gray-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-[#71717A]">Score composite</p>
+            <p className="text-xs text-hex-71717a">Score composite</p>
             <p className="text-sm text-[#A1A1AA] italic mt-1">Non calculable</p>
           </div>
         </div>
@@ -161,20 +161,20 @@ const ScoringCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
   const max = Math.max(positiveTotal, 0.01);
 
   return (
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-4 mb-3">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4 mb-3">
       <div className="flex items-start gap-3 mb-3">
         <div className="h-10 w-10 rounded-lg bg-[#F17922]/10 flex items-center justify-center flex-shrink-0">
           <Award className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">Score composite</p>
-          <p className="text-2xl font-bold text-[#18181B] mt-1">
+          <p className="text-xs text-hex-71717a">Score composite</p>
+          <p className="text-2xl font-bold text-hex-18181b mt-1">
             {currentScore.toFixed(3)}
           </p>
           {distanceMeters !== null && (
-            <p className="text-xs text-[#71717A] mt-1">
+            <p className="text-xs text-hex-71717a mt-1">
               Distance restaurant :{" "}
-              <span className="font-medium text-[#18181B]">
+              <span className="font-medium text-hex-18181b">
                 {(distanceMeters / 1000).toFixed(2)} km
               </span>
             </p>
@@ -216,7 +216,7 @@ const ScoringCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
           color="bg-orange-500"
         />
         {components.penalty > 0 && (
-          <div className="pt-2 border-t border-[#F4F4F5] mt-2">
+          <div className="pt-2 border-t border-hex-f4f4f5 mt-2">
             <div className="flex items-center justify-between text-xs">
               <span className="flex items-center gap-1.5 text-red-600">
                 <TrendingDown className="w-3.5 h-3.5" />
@@ -245,17 +245,17 @@ const ScoreBar: React.FC<{
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-[#71717A]">
+        <span className="text-hex-71717a">
           {label}{" "}
           <span className="text-[#A1A1AA]">
             (poids {(weight * 100).toFixed(0)}%)
           </span>
         </span>
-        <span className="font-medium text-[#18181B]">
+        <span className="font-medium text-hex-18181b">
           {rawValue.toFixed(2)} → {weightedValue.toFixed(3)}
         </span>
       </div>
-      <div className="h-1.5 bg-[#F4F4F5] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-hex-f4f4f5 rounded-full overflow-hidden">
         <div className={`${color} h-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -268,16 +268,16 @@ const RefusalsCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
   const color = pct >= 100 ? "bg-red-500" : pct >= 66 ? "bg-orange-500" : "bg-yellow-500";
 
   return (
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-4 mb-3">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4 mb-3">
       <div className="flex items-start gap-3 mb-2">
         <div className="h-10 w-10 rounded-lg bg-[#F17922]/10 flex items-center justify-center flex-shrink-0">
           <TrendingDown className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">Refus récents</p>
-          <p className="text-lg font-bold text-[#18181B] mt-0.5">
+          <p className="text-xs text-hex-71717a">Refus récents</p>
+          <p className="text-lg font-bold text-hex-18181b mt-0.5">
             {refusals.countInWindow}{" "}
-            <span className="text-sm font-normal text-[#71717A]">
+            <span className="text-sm font-normal text-hex-71717a">
               / {refusals.threshold} avant auto-pause
             </span>
           </p>
@@ -287,18 +287,18 @@ const RefusalsCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
         </div>
       </div>
 
-      <div className="h-2 bg-[#F4F4F5] rounded-full overflow-hidden mb-2">
+      <div className="h-2 bg-hex-f4f4f5 rounded-full overflow-hidden mb-2">
         <div className={`${color} h-full transition-all`} style={{ width: `${pct}%` }} />
       </div>
 
       {refusals.timestamps.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-[#F4F4F5]">
+        <div className="mt-2 pt-2 border-t border-hex-f4f4f5">
           <p className="text-[10px] uppercase tracking-wider text-[#A1A1AA] mb-1">
             Derniers refus
           </p>
           <div className="space-y-0.5 max-h-24 overflow-y-auto">
             {refusals.timestamps.slice(0, 5).map((ts) => (
-              <p key={ts} className="text-xs text-[#71717A]">
+              <p key={ts} className="text-xs text-hex-71717a">
                 •{" "}
                 {formatDistanceToNow(new Date(ts), {
                   addSuffix: true,
@@ -381,7 +381,7 @@ const PauseLine: React.FC<{
         {icon}
         {label}
       </span>
-      <span className="text-[#71717A]">{detail}</span>
+      <span className="text-hex-71717a">{detail}</span>
     </div>
   );
 };
@@ -390,29 +390,29 @@ const ReasonsCard: React.FC<{ data: IDelivererScoringInfo }> = ({ data }) => {
   if (data.reasons.length === 0) return null;
 
   return (
-    <div className="rounded-xl border border-[#E4E4E7] bg-[#FAFAFA] p-4">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-hex-fafafa p-4">
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
           <Activity className="w-5 h-5 text-blue-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A] mb-2">Raisons / contexte</p>
+          <p className="text-xs text-hex-71717a mb-2">Raisons / contexte</p>
           <ul className="space-y-1">
             {data.reasons.map((reason) => (
               <li
                 key={reason}
-                className="text-xs text-[#52525B] flex items-start gap-1.5"
+                className="text-xs text-hex-52525b flex items-start gap-1.5"
               >
                 <Clock className="w-3 h-3 mt-0.5 text-[#A1A1AA] flex-shrink-0" />
                 <span>{reason}</span>
               </li>
             ))}
             {data.isInActiveCourse && data.activeCourse && (
-              <li className="text-xs text-[#52525B] flex items-start gap-1.5">
+              <li className="text-xs text-hex-52525b flex items-start gap-1.5">
                 <TrendingUp className="w-3 h-3 mt-0.5 text-emerald-600 flex-shrink-0" />
                 <span>
                   Course active :{" "}
-                  <span className="font-mono text-[#18181B]">
+                  <span className="font-mono text-hex-18181b">
                     {data.activeCourse.reference}
                   </span>{" "}
                   (statut {data.activeCourse.statut})

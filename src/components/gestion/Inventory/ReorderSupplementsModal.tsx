@@ -221,7 +221,7 @@ export default function ReorderSupplementsModal({
             type="button"
             onClick={enregistrer}
             disabled={!modifie || enregistrement}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2 text-[13px] font-semibold text-blanc hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
           >
             {enregistrement && <Loader2 size={14} className="animate-spin" />}
             Enregistrer l&apos;ordre

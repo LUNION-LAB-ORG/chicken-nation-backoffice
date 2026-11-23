@@ -42,7 +42,7 @@ export function LoyaltyStatCard({
       }`}
     >
       <div
-        className="absolute top-0 left-4 py-[3px] px-4 text-white text-sm font-medium rounded-b-xl"
+        className="absolute top-0 left-4 py-[3px] px-4 text-blanc text-sm font-medium rounded-b-xl"
         style={{ backgroundColor: badgeColor }}
       >
         {badgeText}
@@ -70,7 +70,7 @@ export function LoyaltyStatCard({
       </div>
 
       {progress !== undefined && (
-        <div className="bg-[#FFF8EE] px-4 py-2 flex items-center justify-between">
+        <div className="bg-hex-fff8ee px-4 py-2 flex items-center justify-between">
           <span className="text-xs text-gray-700">{progressLabel ?? "Taux"}</span>
           <MiniCircle percentage={Math.max(0, Math.min(100, progress))} color={badgeColor} />
         </div>

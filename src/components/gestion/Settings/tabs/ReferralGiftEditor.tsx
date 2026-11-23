@@ -101,7 +101,7 @@ export default function ReferralGiftEditor({
             onClick={() => onChange({ ...value, mode: m.key, items })}
             className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
               value.mode === m.key
-                ? "bg-[#F17922] text-white"
+                ? "bg-[#F17922] text-blanc"
                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
             }`}
           >

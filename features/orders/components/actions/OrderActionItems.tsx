@@ -23,32 +23,32 @@ const PRESENTATION: Record<
   imprimer: {
     libelle: "Imprimer",
     Icone: Printer,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   voir: {
     libelle: "Voir les détails",
     Icone: Eye,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   modifier: {
     libelle: "Modifier",
     Icone: Edit2,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   terminer: {
     libelle: "Terminer la commande",
     Icone: CheckCircle2,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   affecter: {
     libelle: "Affecter à un livreur",
     Icone: Bike,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   retirer: {
     libelle: "Retirer de la course",
     Icone: Unlink,
-    classe: "text-[#595959] hover:bg-orange-50 focus-visible:bg-orange-50",
+    classe: "text-hex-595959 hover:bg-orange-50 focus-visible:bg-orange-50",
   },
   annuler: {
     libelle: "Annuler la commande",

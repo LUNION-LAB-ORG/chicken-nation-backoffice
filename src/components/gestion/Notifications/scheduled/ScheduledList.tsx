@@ -87,7 +87,7 @@ export default function ScheduledList({ searchQuery, onEdit, onCreate }: Props) 
         {peutCreer && (
           <button
             onClick={onCreate}
-            className="px-4 py-2 bg-[#F17922] text-white rounded-xl text-sm font-medium hover:bg-[#e06816] transition-all cursor-pointer"
+            className="px-4 py-2 bg-[#F17922] text-blanc rounded-xl text-sm font-medium hover:bg-[#e06816] transition-all cursor-pointer"
           >
             Créer une notification planifiée
           </button>

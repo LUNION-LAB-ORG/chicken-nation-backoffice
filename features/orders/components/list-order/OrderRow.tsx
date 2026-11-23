@@ -106,7 +106,7 @@ export function OrderRow({
           <div className="flex-1">
             <div className="flex justify-between items-start mb-3">
               <div>
-                <div className="font-medium text-black">{order.reference}</div>
+                <div className="font-medium text-noir">{order.reference}</div>
                 <div className="text-xs text-gray-500">
                   {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
                 </div>
@@ -114,7 +114,7 @@ export function OrderRow({
               <OrderTypeBadge type={order.orderType} />
             </div>
             <div className="mb-3">
-              <div className="font-medium text-black">{order.clientName}</div>
+              <div className="font-medium text-noir">{order.clientName}</div>
               <div className="text-xs text-gray-500">
                 {order.restaurantName}
               </div>
@@ -132,7 +132,7 @@ export function OrderRow({
                   {paidAmount.toLocaleString()}
                 </span>
                 <span className="text-gray-400 font-medium"> / </span>
-                <span className="tabular-nums text-black">
+                <span className="tabular-nums text-noir">
                   {(order.amount || 0).toLocaleString()} F
                 </span>
               </div>
@@ -179,7 +179,7 @@ export function OrderRow({
 
   return (
     <tr
-      className="hover:bg-[#FDEDD3] cursor-pointer"
+      className="hover:bg-hex-fdedd3 cursor-pointer"
       onClick={() => onRowClick ? onRowClick(order) : undefined}
       onDoubleClick={() => !onRowClick && handleViewOrderDetails(order)}
     >
@@ -192,7 +192,7 @@ export function OrderRow({
         </td>
       )}
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium text-black">
+        <span className="text-sm font-medium text-noir">
           {order.reference}
         </span>
       </td>
@@ -202,7 +202,7 @@ export function OrderRow({
         </span>
       </td>
       <td className="whitespace-nowrap py-3 px-3 sm:px-4">
-        <span className="text-sm font-medium text-black">
+        <span className="text-sm font-medium text-noir">
           {order.clientName}
         </span>
       </td>
@@ -230,7 +230,7 @@ export function OrderRow({
             {paidAmount.toLocaleString()}
           </span>
           <span className="text-gray-400"> / </span>
-          <span className="tabular-nums text-black">
+          <span className="tabular-nums text-noir">
             {(order.amount || 0).toLocaleString()} F
           </span>
         </span>
@@ -263,7 +263,7 @@ export function OrderRow({
       <td className="whitespace-nowrap py-3 px-3 sm:px-4 text-center relative">
         <button
           ref={buttonRef}
-          className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
+          className="p-1 text-hex-71717a cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
           onClick={(e) => {
             e.stopPropagation();
             setMenuOpen(!menuOpen);

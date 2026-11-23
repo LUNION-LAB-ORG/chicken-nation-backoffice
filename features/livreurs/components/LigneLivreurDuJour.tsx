@@ -47,7 +47,7 @@ function Planning({ morceaux }: { morceaux: MorceauPlanning[] | null }) {
   if (!morceaux) return <span />;
   const titre = morceaux.map((m) => m.texte).join(' · ');
   return (
-    <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-[#52525B]" title={titre}>
+    <span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-hex-52525b" title={titre}>
       {morceaux.map((m, i) => (
         <span
           key={m.texte}
@@ -88,7 +88,7 @@ export function LigneLivreurDuJour({
           onOuvrir(live.id);
         }
       }}
-      className={`grid h-14 cursor-pointer items-center gap-3 border-t border-[#F4F4F5] px-3 transition-colors hover:bg-[#FFF7F2] ${
+      className={`grid h-14 cursor-pointer items-center gap-3 border-t border-hex-f4f4f5 px-3 transition-colors hover:bg-hex-fff7f2 ${
         avecJour ? COLONNES_AVEC_JOUR : COLONNES_SANS_JOUR
       }`}
     >
@@ -104,10 +104,10 @@ export function LigneLivreurDuJour({
           taille={36}
         />
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#18181B]" title={nom}>
+          <p className="truncate text-sm font-semibold text-hex-18181b" title={nom}>
             {nom}
           </p>
-          <p className="h-4 truncate text-[11px] text-[#71717A]">{vehicule}</p>
+          <p className="h-4 truncate text-[11px] text-hex-71717a">{vehicule}</p>
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export function LigneLivreurDuJour({
             derrière la référence de la course, coupée à sa place. */}
         <p className="mt-0.5 flex h-4 min-w-0 text-[11px]" title={texteDetail || undefined}>
           {detail.texte && (
-            <span className={`truncate ${detail.ambre ? 'font-semibold text-amber-700' : 'text-[#52525B]'}`}>
+            <span className={`truncate ${detail.ambre ? 'font-semibold text-amber-700' : 'text-hex-52525b'}`}>
               {detail.texte}
             </span>
           )}
@@ -137,8 +137,8 @@ export function LigneLivreurDuJour({
       {avecJour && (
         <>
           <Planning morceaux={planning} />
-          <span className="text-sm tabular-nums text-[#18181B]">{enLigne}</span>
-          <span className="text-sm tabular-nums text-[#18181B]">{live.courses_du_jour ?? ''}</span>
+          <span className="text-sm tabular-nums text-hex-18181b">{enLigne}</span>
+          <span className="text-sm tabular-nums text-hex-18181b">{live.courses_du_jour ?? ''}</span>
         </>
       )}
 

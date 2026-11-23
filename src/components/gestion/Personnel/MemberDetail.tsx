@@ -57,9 +57,9 @@ const Row: React.FC<{ label: string; value: React.ReactNode }> = ({
   label,
   value,
 }) => (
-  <div className="flex flex-row items-start justify-between py-2 border-b border-[#F4F4F5] last:border-b-0">
-    <p className="text-sm text-[#71717A]">{label}</p>
-    <p className="text-sm text-[#18181B] font-semibold text-right max-w-[60%] break-words">
+  <div className="flex flex-row items-start justify-between py-2 border-b border-hex-f4f4f5 last:border-b-0">
+    <p className="text-sm text-hex-71717a">{label}</p>
+    <p className="text-sm text-hex-18181b font-semibold text-right max-w-[60%] break-words">
       {value}
     </p>
   </div>
@@ -134,32 +134,32 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                     alt={member.fullname}
                     width={112}
                     height={112}
-                    className="w-28 h-28 rounded-full object-cover bg-[#FFF6E9] border border-[#F17922]/20"
+                    className="w-28 h-28 rounded-full object-cover bg-hex-fff6e9 border border-[#F17922]/20"
                     unoptimized={!member.image || member.image.startsWith("/icons/")}
                   />
                 </div>
                 <div className="flex-1 min-w-0 pt-2">
-                  <h1 className="text-2xl font-semibold text-[#18181B]">
+                  <h1 className="text-2xl font-semibold text-hex-18181b">
                     {member.fullname}
                   </h1>
-                  <p className="text-sm text-[#71717A] mt-1 break-words">
+                  <p className="text-sm text-hex-71717a mt-1 break-words">
                     {member.email}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#7A3502] bg-[#FBDBA7]">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-hex-7a3502 bg-hex-fbdba7">
                       {ROLE_LABELS[member.role] ?? member.role}
                     </span>
                     <span
                       className={
                         isSuspended
                           ? "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#EF4444] bg-[#EF4444]/15"
-                          : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#22C55E] bg-[#22C55E]/15"
+                          : "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold text-hex-22c55e bg-[#22C55E]/15"
                       }
                     >
                       {isSuspended ? "Suspendu" : "Actif"}
                     </span>
                     {member.isPrincipal && (
-                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold text-[#9A7008] bg-[#FDF3D6]">
+                      <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold text-hex-9a7008 bg-hex-fdf3d6">
                         <Star size={12} /> Manager principal
                       </span>
                     )}
@@ -180,7 +180,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
           </div>
 
           {/* Colonne droite : Affectation + Actions */}
-          <div className="md:w-2/5 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto">
+          <div className="md:w-2/5 p-4 sm:p-6 pb-20 md:pb-6 bg-hex-fbfbfb h-auto">
             {/* Affectation */}
             <div className="mb-6">
               <p className="text-[18px] font-medium text-[#F17922] mb-2">
@@ -210,7 +210,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                     type="button"
                     onClick={onEdit}
                     disabled={busy}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#F17922] rounded-lg hover:bg-[#e06816] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#F17922] rounded-lg hover:bg-[#e06816] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <Pencil className="w-4 h-4" />
                     Modifier
@@ -232,7 +232,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                         )
                       }
                       disabled={busy}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-[#9A7008] border border-[#E5C55B] rounded-lg hover:bg-[#FDF3D6]/60 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-hex-9a7008 border border-[#E5C55B] rounded-lg hover:bg-hex-fdf3d6/60 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       <Star className="w-4 h-4" />
                       Définir comme manager principal
@@ -246,7 +246,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                         run(() => restoreUser(member.id), "Utilisateur restauré")
                       }
                       disabled={busy}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       <RotateCcw className="w-4 h-4" />
                       Restaurer le compte
@@ -269,7 +269,7 @@ const MemberDetail: React.FC<MemberDetailProps> = ({
                       type="button"
                       onClick={() => setConfirm("delete")}
                       disabled={busy}
-                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       <Trash2 className="w-4 h-4" />
                       Supprimer définitivement

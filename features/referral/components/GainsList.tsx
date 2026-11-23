@@ -29,9 +29,9 @@ const Ligne: React.FC<{ g: ReferralGainLigne; onOuvrirFiche: (id: string) => voi
 }) => {
   const st = STATUT_GAIN[g.status] ?? STATUT_GAIN.PENDING;
   return (
-    <tr className="border-b border-[#F2F2F4] last:border-0 hover:bg-[#FAFAFA]">
+    <tr className="border-b border-hex-f2f2f4 last:border-0 hover:bg-hex-fafafa">
       <td className="py-3 px-3">
-        <div className="text-sm font-medium text-[#18181B]">{g.referrer_name ?? "Sans nom"}</div>
+        <div className="text-sm font-medium text-hex-18181b">{g.referrer_name ?? "Sans nom"}</div>
         {g.referrer_code && (
           <span className="text-[10px] font-semibold text-[#F17922]">{g.referrer_code}</span>
         )}
@@ -40,18 +40,18 @@ const Ligne: React.FC<{ g: ReferralGainLigne; onOuvrirFiche: (id: string) => voi
         <span
           className={
             "inline-block text-[10px] font-semibold rounded-full px-2 py-0.5 " +
-            (g.kind === "PRIME" ? "bg-[#FDEDD3] text-[#B45309]" : "bg-[#EEF2FF] text-[#4338CA]")
+            (g.kind === "PRIME" ? "bg-hex-fdedd3 text-hex-b45309" : "bg-hex-eef2ff text-[#4338CA]")
           }
         >
           {g.kind === "PRIME" ? "Prime" : "Commission"}
         </span>
       </td>
-      <td className="py-3 px-3 text-sm text-[#18181B]">{g.referee_name ?? "Sans nom"}</td>
-      <td className="py-3 px-3 text-xs text-[#71717A]">
+      <td className="py-3 px-3 text-sm text-hex-18181b">{g.referee_name ?? "Sans nom"}</td>
+      <td className="py-3 px-3 text-xs text-hex-71717a">
         {g.order_number && <div>#{g.order_number}</div>}
         {g.order_amount != null && <div className="text-[#9796A1]">{fcfa(g.order_amount)}</div>}
       </td>
-      <td className="py-3 px-3 text-right text-sm font-semibold text-[#18181B] whitespace-nowrap">
+      <td className="py-3 px-3 text-right text-sm font-semibold text-hex-18181b whitespace-nowrap">
         {fcfa(g.amount)}
       </td>
       <td className="py-3 px-3">
@@ -66,7 +66,7 @@ const Ligne: React.FC<{ g: ReferralGainLigne; onOuvrirFiche: (id: string) => voi
         <button
           type="button"
           onClick={() => onOuvrirFiche(g.referrer_id)}
-          className="text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-[#FFF6E9] cursor-pointer whitespace-nowrap"
+          className="text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-hex-fff6e9 cursor-pointer whitespace-nowrap"
         >
           Voir le parrain
         </button>
@@ -138,14 +138,14 @@ export default function GainsList({
       </div>
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <p className="text-sm text-[#71717A]">
-          Total : <span className="font-semibold text-[#18181B]">{fcfa(data?.montant)}</span>
+        <p className="text-sm text-hex-71717a">
+          Total : <span className="font-semibold text-hex-18181b">{fcfa(data?.montant)}</span>
         </p>
         {peutVerser && parrainsAuSeuil > 0 && (
           <button
             type="button"
             onClick={() => setConfirmer(true)}
-            className="h-10 flex items-center gap-2 text-sm font-medium text-[#0369A1] border border-[#0369A1]/30 bg-white rounded-lg px-3 hover:bg-[#EAF6FF] cursor-pointer"
+            className="h-10 flex items-center gap-2 text-sm font-medium text-hex-0369a1 border border-[#0369A1]/30 bg-white rounded-lg px-3 hover:bg-hex-eaf6ff cursor-pointer"
           >
             <CheckCircle2 size={16} />
             Passer en payable au seuil ({pluriel(parrainsAuSeuil, "parrain")})
@@ -154,14 +154,14 @@ export default function GainsList({
       </div>
 
       <div
-        className={`bg-white border border-[#E4E4E7] rounded-xl overflow-hidden transition-opacity ${
+        className={`bg-white border border-hex-e4e4e7 rounded-xl overflow-hidden transition-opacity ${
           isPlaceholderData ? "opacity-50" : ""
         }`}
       >
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA] text-left">
+              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa text-left">
                 <th className="py-2.5 px-3 font-medium">Parrain</th>
                 <th className="py-2.5 px-3 font-medium">Type</th>
                 <th className="py-2.5 px-3 font-medium">Filleul</th>

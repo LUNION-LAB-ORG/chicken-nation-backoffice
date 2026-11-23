@@ -33,7 +33,7 @@ export function CustomerLoyaltyCard({ customerId }: CustomerLoyaltyCardProps) {
   }
 
   return (
-    <div className="bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg p-6 text-white">
+    <div className="bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg p-6 text-blanc">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

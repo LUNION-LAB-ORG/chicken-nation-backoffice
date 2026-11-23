@@ -25,7 +25,7 @@ export default function AdDetail({ ad, onBack, onEdit, onResend }: AdDetailProps
   };
 
   return (
-    <div className="flex flex-col bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30 mt-4">
+    <div className="flex flex-col bg-white rounded-xl p-4 lg:p-6 border-2 border-hex-d8d8d8/30 mt-4">
      
       <div className="mt-4">
         <div className="border border-gray-200 rounded-lg p-6">
@@ -79,7 +79,7 @@ export default function AdDetail({ ad, onBack, onEdit, onResend }: AdDetailProps
                   <button
                     type="button"
                     onClick={handleResend}
-                    className="px-4 py-2 bg-[#F17922] text-white rounded-md hover:bg-orange-600"
+                    className="px-4 py-2 bg-[#F17922] text-blanc rounded-md hover:bg-orange-600"
                   >
                     Relancer
                   </button>

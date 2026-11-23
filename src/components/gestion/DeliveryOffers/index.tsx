@@ -322,7 +322,7 @@ export default function DeliveryOffers() {
                     key={pageNum}
                     onClick={() => setQuery((p) => ({ ...p, page: pageNum }))}
                     className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      pageNum === meta.page ? "bg-[#F17922] text-white" : "hover:bg-gray-200 text-gray-600"
+                      pageNum === meta.page ? "bg-[#F17922] text-blanc" : "hover:bg-gray-200 text-gray-600"
                     }`}
                   >
                     {pageNum}
@@ -374,7 +374,7 @@ export default function DeliveryOffers() {
               <button
                 onClick={() => deleteM.mutate(deleting.id, { onSuccess: () => setDeleting(null) })}
                 disabled={deleteM.isPending}
-                className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-red-500 text-blanc rounded-lg disabled:opacity-50"
               >
                 Supprimer
               </button>
@@ -815,7 +815,7 @@ function OfferFormModal({
         <form onSubmit={handleSubmit} className="max-h-[74vh] overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Résumé en clair */}
-            <div className="rounded-xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm text-[#9a4d12]">
+            <div className="rounded-xl bg-orange-50 border border-orange-100 px-4 py-3 text-sm text-hex-9a4d12">
               {summary}
             </div>
 
@@ -988,7 +988,7 @@ function OfferFormModal({
                           onClick={() => toggleArray("days_of_week", d.key)}
                           className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${
                             form.days_of_week.includes(d.key)
-                              ? "bg-[#F17922] text-white border-[#F17922]"
+                              ? "bg-[#F17922] text-blanc border-[#F17922]"
                               : "bg-white text-gray-600 border-gray-200"
                           }`}
                         >
@@ -1067,7 +1067,7 @@ function OfferFormModal({
           <button onClick={onClose} disabled={isLoading} className="px-4 py-2 text-sm bg-gray-100 rounded-lg">
             Annuler
           </button>
-          <button onClick={handleSubmit as unknown as () => void} disabled={isLoading} className="px-4 py-2 text-sm text-white bg-[#F17922] rounded-lg disabled:opacity-50 flex items-center gap-2">
+          <button onClick={handleSubmit as unknown as () => void} disabled={isLoading} className="px-4 py-2 text-sm text-blanc bg-[#F17922] rounded-lg disabled:opacity-50 flex items-center gap-2">
             {isLoading && <RefreshCw size={14} className="animate-spin" />}
             {offer ? "Mettre à jour" : "Créer"}
           </button>

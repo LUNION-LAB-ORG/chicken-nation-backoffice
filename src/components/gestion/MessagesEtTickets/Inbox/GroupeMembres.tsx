@@ -137,7 +137,7 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
                 type="button"
                 onClick={confirmerRenommage}
                 disabled={renommer.isPending || !renommage.trim()}
-                className="shrink-0 rounded-lg bg-[#F17922] p-1.5 text-white disabled:opacity-50 cursor-pointer"
+                className="shrink-0 rounded-lg bg-[#F17922] p-1.5 text-blanc disabled:opacity-50 cursor-pointer"
                 aria-label="Enregistrer le nom"
               >
                 {renommer.isPending ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
@@ -248,7 +248,7 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
                   type="button"
                   onClick={confirmerAjout}
                   disabled={ajouter.isPending || selection.length === 0}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-[12px] font-semibold text-blanc disabled:opacity-50 cursor-pointer"
                 >
                   {ajouter.isPending && <Loader2 size={13} className="animate-spin" />}
                   Ajouter
@@ -274,8 +274,8 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
                   disabled={enCours === membre.id}
                   className={`shrink-0 rounded-lg border px-2 py-1 text-[11px] font-medium disabled:opacity-50 cursor-pointer ${
                     aConfirmer === membre.id
-                      ? 'border-[#C0392B] bg-[#FDECEA] text-[#C0392B]'
-                      : 'border-gray-200 text-[#C0392B] hover:border-[#C0392B]/50'
+                      ? 'border-[#C0392B] bg-hex-fdecea text-hex-c0392b'
+                      : 'border-gray-200 text-hex-c0392b hover:border-[#C0392B]/50'
                   }`}
                 >
                   {enCours === membre.id
@@ -298,7 +298,7 @@ function GroupeMembres({ conversationId, membres, nomGroupe, recoitAlertes = fal
         }}
         onBlur={() => setAConfirmer((v) => (v === user?.id ? null : v))}
         disabled={enCours === user?.id || !membres.some((m) => m.id === user?.id)}
-        className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[#C0392B] hover:underline disabled:opacity-50 cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-[12px] font-medium text-hex-c0392b hover:underline disabled:opacity-50 cursor-pointer"
       >
         <LogOut size={13} />
         {enCours === user?.id

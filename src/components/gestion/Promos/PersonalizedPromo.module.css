@@ -210,3 +210,11 @@
   margin: 0; 
   padding: 0; 
 }
+
+/* Thème sombre (voir src/app/theme.css). */
+:global(html.dark) .colorPickerWrapper {
+  border-color: #2d323c;
+}
+:global(html.dark) .colorPickerWrapper:hover {
+  border-color: #3b414d;
+}

@@ -16,7 +16,7 @@ interface ResetPasswordButtonProps {
 
 export default function ResetPasswordButton({
     userId,
-    className = "px-6 py-2 bg-[#F17922] cursor-pointer text-white text-sm font-medium rounded-xl hover:bg-[#F17922]/80 transition-colors duration-200",
+    className = "px-6 py-2 bg-[#F17922] cursor-pointer text-blanc text-sm font-medium rounded-xl hover:bg-[#F17922]/80 transition-colors duration-200",
     label = "Réinitialiser mon mot de passe",
 }: ResetPasswordButtonProps) {
     const [showWarningModal, setShowWarningModal] = useState(false);
@@ -89,7 +89,7 @@ export default function ResetPasswordButton({
                                 <button
                                     onClick={handleResetPassword}
                                     disabled={enCours}
-                                    className="flex-1 bg-red-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="flex-1 bg-red-600 text-blanc font-semibold py-3 px-6 rounded-lg hover:bg-red-700 dark:hover:bg-red-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {enCours ? "Réinitialisation..." : "Continuer"}
                                 </button>

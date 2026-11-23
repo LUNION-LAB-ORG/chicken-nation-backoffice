@@ -13,11 +13,11 @@ import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
-  scheduled: { label: "Programmée", cls: "bg-[#E7F0FB] text-[#2B6CB0]" },
-  sending: { label: "Envoi…", cls: "bg-[#FEF3C7] text-[#92400E]" },
-  sent: { label: "Envoyée", cls: "bg-[#E6F4EC] text-[#1E8E5A]" },
-  cancelled: { label: "Annulée", cls: "bg-[#EEF1F4] text-[#6C757D]" },
-  failed: { label: "Échec", cls: "bg-[#FDECEA] text-[#C0392B]" },
+  scheduled: { label: "Programmée", cls: "bg-hex-e7f0fb text-hex-2b6cb0" },
+  sending: { label: "Envoi…", cls: "bg-hex-fef3c7 text-hex-92400e" },
+  sent: { label: "Envoyée", cls: "bg-hex-e6f4ec text-hex-1e8e5a" },
+  cancelled: { label: "Annulée", cls: "bg-hex-eef1f4 text-hex-6c757d" },
+  failed: { label: "Échec", cls: "bg-hex-fdecea text-hex-c0392b" },
 };
 
 const TYPE_META: Record<RewardCampaignType, { label: string; icon: React.ElementType }> = {
@@ -41,7 +41,7 @@ const Stat = ({
   sub?: string | null;
   color?: string;
 }) => (
-  <div className="rounded-lg bg-[#FAFAFA] py-2 px-2 text-center">
+  <div className="rounded-lg bg-hex-fafafa py-2 px-2 text-center">
     <div className="text-[10px] uppercase tracking-wide text-[#9796A1]">{label}</div>
     <div className="text-base font-bold" style={{ color }}>
       {value}
@@ -84,7 +84,7 @@ export default function GiftCampaignList({
   const campaigns = campaignsQuery.data ?? [];
 
   return (
-    <div className="bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
+    <div className="bg-white border border-hex-e4e4e7 rounded-xl p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3 mb-5">
         <div>
           <h2 className="text-[18px] font-semibold text-[#F17922]">Campagnes de cadeaux</h2>
@@ -96,7 +96,7 @@ export default function GiftCampaignList({
           <button
             type="button"
             onClick={onCreate}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer shrink-0"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-blanc hover:bg-[#d96a1c] cursor-pointer shrink-0"
           >
             <Plus size={16} /> Envoyer un cadeau
           </button>
@@ -113,7 +113,7 @@ export default function GiftCampaignList({
             <button
               type="button"
               onClick={onCreate}
-              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#d96a1c] cursor-pointer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-4 py-2.5 text-sm font-semibold text-blanc hover:bg-[#d96a1c] cursor-pointer"
             >
               <Plus size={16} /> Envoyer un premier cadeau
             </button>
@@ -133,15 +133,15 @@ export default function GiftCampaignList({
                 key={c.id}
                 type="button"
                 onClick={() => onOpen(c)}
-                className="text-left border border-[#F1F3F5] rounded-xl p-4 hover:border-[#F17922]/40 hover:shadow-sm transition-all cursor-pointer"
+                className="text-left border border-hex-f1f3f5 rounded-xl p-4 hover:border-[#F17922]/40 hover:shadow-sm transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-[#FFF6E9] flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-lg bg-hex-fff6e9 flex items-center justify-center shrink-0">
                       <Icon size={18} className="text-[#F17922]" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-[#18181B] truncate">{c.name}</div>
+                      <div className="text-sm font-semibold text-hex-18181b truncate">{c.name}</div>
                       <div className="text-[11px] text-[#9796A1] truncate">
                         {meta.label}
                         {itemName ? ` · ${itemName}` : ""}
@@ -175,20 +175,20 @@ export default function GiftCampaignList({
                 </div>
 
                 {c.revenue != null && (
-                  <div className="flex items-center justify-between rounded-lg bg-[#F4FAF6] px-2.5 py-1.5 mt-2 text-[11px]">
-                    <span className="text-[#71717A]">
-                      CA généré : <strong className="text-[#1E8E5A]">{money(c.revenue)}</strong>
+                  <div className="flex items-center justify-between rounded-lg bg-hex-f4faf6 px-2.5 py-1.5 mt-2 text-[11px]">
+                    <span className="text-hex-71717a">
+                      CA généré : <strong className="text-hex-1e8e5a">{money(c.revenue)}</strong>
                     </span>
-                    <span className="text-[#71717A]">
+                    <span className="text-hex-71717a">
                       Coût :{" "}
-                      <strong className="text-[#C0392B]">{money(c.discount_cost ?? 0)}</strong>
+                      <strong className="text-hex-c0392b">{money(c.discount_cost ?? 0)}</strong>
                     </span>
                   </div>
                 )}
 
                 {/* Capping : l'explication la plus fréquente d'un « rien reçu ». */}
                 {c.target_config?.skipped_capping ? (
-                  <div className="mt-2 rounded-lg bg-[#FFF7ED] px-2.5 py-1.5 text-[10px] text-[#9A5B12]">
+                  <div className="mt-2 rounded-lg bg-hex-fff7ed px-2.5 py-1.5 text-[10px] text-hex-9a5b12">
                     {c.target_config.skipped_capping} client(s) écarté(s) par le capping anti-fatigue
                     (déjà gâtés récemment)
                   </div>
@@ -196,7 +196,7 @@ export default function GiftCampaignList({
 
                 {c.status === "scheduled" && c.scheduled_at && (
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-[11px] text-[#2B6CB0]">
+                    <span className="text-[11px] text-hex-2b6cb0">
                       Prévu le {new Date(c.scheduled_at).toLocaleString("fr-FR")}
                     </span>
                     {peutAnnuler && (
@@ -213,7 +213,7 @@ export default function GiftCampaignList({
                             cancelMut.mutate(c.id);
                           }
                         }}
-                        className="inline-flex items-center gap-1 text-[11px] font-medium text-[#C0392B] hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-hex-c0392b hover:underline cursor-pointer"
                       >
                         <Ban size={12} /> Annuler
                       </span>

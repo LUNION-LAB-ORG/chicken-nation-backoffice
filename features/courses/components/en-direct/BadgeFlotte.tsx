@@ -42,7 +42,7 @@ export function BadgeFlotte({ course }: { course: CourseEnDirect }) {
 
   if (question) {
     return (
-      <div onClick={stop} onKeyDown={stop} className="w-full rounded-lg bg-[#FAFAFA] p-2 text-[11px] leading-4 text-[#52525B]">
+      <div onClick={stop} onKeyDown={stop} className="w-full rounded-lg bg-hex-fafafa p-2 text-[11px] leading-4 text-hex-52525b">
         <p>
           {versInterneDemande
             ? 'Reprendre pour nos livreurs ? Turbo arrête sa recherche.'
@@ -55,14 +55,14 @@ export function BadgeFlotte({ course }: { course: CourseEnDirect }) {
             onClick={() =>
               (versInterneDemande ? versInterne : versTurbo).mutate(course.id, { onSettled: () => setQuestion(false) })
             }
-            className="h-7 rounded-lg bg-[#F17922] px-2.5 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            className="h-7 rounded-lg bg-[#F17922] px-2.5 font-semibold text-blanc hover:opacity-90 disabled:opacity-60"
           >
             {envoi ? 'Envoi…' : 'Oui'}
           </button>
           <button
             type="button"
             onClick={() => setQuestion(false)}
-            className="h-7 rounded-lg border border-[#E4E4E7] bg-white px-2.5 font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+            className="h-7 rounded-lg border border-hex-e4e4e7 bg-white px-2.5 font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
           >
             Annuler
           </button>

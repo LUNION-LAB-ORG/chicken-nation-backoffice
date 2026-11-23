@@ -86,7 +86,7 @@ export function DeliveryMapCanvas({
         height={height}
       />
       {!client && (
-        <p className="mt-2 text-[11px] text-[#C0392B]">
+        <p className="mt-2 text-[11px] text-hex-c0392b">
           Adresse du client sans coordonnées GPS.
         </p>
       )}

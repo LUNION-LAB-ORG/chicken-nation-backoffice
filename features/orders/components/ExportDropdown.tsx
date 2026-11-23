@@ -200,8 +200,8 @@ const ExportDropdown: React.FC<ExportDropdownProps> = ({
           w-11 h-11 sm:w-auto sm:h-auto sm:px-3 sm:py-1 sm:min-w-[120px]
           ${
             isExporting
-              ? "text-white bg-orange-400 cursor-wait"
-              : "text-white bg-[#F17922] hover:bg-[#e06816] hover:shadow-md"
+              ? "text-blanc bg-orange-400 cursor-wait"
+              : "text-blanc bg-[#F17922] hover:bg-[#e06816] hover:shadow-md"
           }
         `}
       >

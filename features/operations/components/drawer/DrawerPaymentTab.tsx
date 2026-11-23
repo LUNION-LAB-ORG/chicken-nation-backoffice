@@ -58,24 +58,26 @@ function formatDateTime(iso: string): string {
   });
 }
 
-const MODE_META: Record<PaiementMode, { label: string; color: string; bg: string; Icon: React.FC<{ className?: string }> }> = {
-  CASH: { label: "Espèces", color: "#166534", bg: "#DCFCE7", Icon: Banknote },
-  MOBILE_MONEY: { label: "Mobile Money", color: "#1E40AF", bg: "#DBEAFE", Icon: Smartphone },
-  WALLET: { label: "Wallet", color: "#92400E", bg: "#FEF3C7", Icon: Wallet },
-  CARD: { label: "Carte", color: "#7C3AED", bg: "#EDE9FE", Icon: CreditCard },
+// Couleurs en classes du thème (mêmes codes qu'avant) : en sombre, le texte
+// s'éclaircit et le fond pâle devient une teinte sombre (src/app/theme.css).
+const MODE_META: Record<PaiementMode, { label: string; texte: string; fond: string; Icon: React.FC<{ className?: string }> }> = {
+  CASH: { label: "Espèces", texte: "text-hex-166534", fond: "bg-hex-dcfce7", Icon: Banknote },
+  MOBILE_MONEY: { label: "Mobile Money", texte: "text-hex-1e40af", fond: "bg-hex-dbeafe", Icon: Smartphone },
+  WALLET: { label: "Wallet", texte: "text-hex-92400e", fond: "bg-hex-fef3c7", Icon: Wallet },
+  CARD: { label: "Carte", texte: "text-[#7C3AED]", fond: "bg-hex-ede9fe", Icon: CreditCard },
 };
 
-const STATUS_META: Record<PaiementStatus, { label: string; color: string; Icon: React.FC<{ className?: string }> }> = {
-  SUCCESS: { label: "Réussi", color: "#166534", Icon: CheckCircle },
-  FAILED: { label: "Échec", color: "#991B1B", Icon: XCircle },
+const STATUS_META: Record<PaiementStatus, { label: string; classe: string; Icon: React.FC<{ className?: string }> }> = {
+  SUCCESS: { label: "Réussi", classe: "text-hex-166534 bg-hex-166534/10", Icon: CheckCircle },
+  FAILED: { label: "Échec", classe: "text-hex-991b1b bg-hex-991b1b/10", Icon: XCircle },
   // Seul le remboursement KKiaPay mène à cet état (12/11).
-  REVERTED: { label: "Remboursé", color: "#52525B", Icon: Undo2 },
+  REVERTED: { label: "Remboursé", classe: "text-hex-52525b bg-hex-52525b/10", Icon: Undo2 },
   // Encaissement livreur déclaré à la livraison — à confirmer (bloc dédié).
-  PENDING: { label: "À confirmer", color: "#92400E", Icon: CheckCircle },
+  PENDING: { label: "À confirmer", classe: "text-hex-92400e bg-hex-92400e/10", Icon: CheckCircle },
 };
 
 /** Déclaration du livreur refusée par la caisse, ou d'office après un paiement en ligne (18/11). */
-const STATUT_REFUSE = { label: "Refusé", color: "#52525B", Icon: XCircle };
+const STATUT_REFUSE = { label: "Refusé", classe: "text-hex-52525b bg-hex-52525b/10", Icon: XCircle };
 
 /**
  * Tab Paiement du drawer Opérations — REFONTE « 3 blocs maximum ».
@@ -252,7 +254,7 @@ export function DrawerPaymentTab({ order }: Props) {
       </p>
     </div>
   ) : (
-    <div className="bg-gradient-to-br from-[#FFF0E4] to-amber-50 border border-[#F17922]/20 rounded-2xl p-4">
+    <div className="bg-gradient-to-br from-hex-fff0e4 to-amber-50 border border-[#F17922]/20 rounded-2xl p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase font-bold text-[#F17922] tracking-wider">
@@ -404,7 +406,7 @@ export function DrawerPaymentTab({ order }: Props) {
           <button
             onClick={handleSave}
             disabled={!canSave}
-            className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+            className="w-full py-3 bg-green-600 hover:bg-green-700 dark:hover:bg-green-500 text-blanc font-semibold rounded-xl disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
           >
             <CheckCircle className="w-4 h-4" />
             {isPending
@@ -509,10 +511,9 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
     >
       {/* Icône mode */}
       <div
-        className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0"
-        style={{ backgroundColor: modeMeta.bg }}
+        className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${modeMeta.fond}`}
       >
-        <modeMeta.Icon className="w-4 h-4" style={{ color: modeMeta.color }} />
+        <modeMeta.Icon className={`w-4 h-4 ${modeMeta.texte}`} />
       </div>
 
       {/* Détails */}
@@ -531,7 +532,7 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
               <button
                 onClick={saveEdit}
                 disabled={!draftAmount || draftAmount <= 0 || isUpdating}
-                className="p-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 transition"
+                className="p-1.5 bg-green-500 text-blanc rounded-md hover:bg-green-600 disabled:bg-gray-300 transition"
                 aria-label="Valider"
               >
                 <Check className="w-3.5 h-3.5" />
@@ -552,8 +553,7 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
               </p>
               <div className="flex items-center gap-1 shrink-0">
                 <span
-                  className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
-                  style={{ color: statusMeta.color, backgroundColor: `${statusMeta.color}15` }}
+                  className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${statusMeta.classe}`}
                 >
                   <statusMeta.Icon className="w-2.5 h-2.5" />
                   {statusMeta.label}
@@ -584,8 +584,7 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
 
         <div className="flex items-center gap-2 mt-0.5">
           <span
-            className="text-[11px] font-semibold"
-            style={{ color: modeMeta.color }}
+            className={`text-[11px] font-semibold ${modeMeta.texte}`}
           >
             {modeMeta.label}
           </span>

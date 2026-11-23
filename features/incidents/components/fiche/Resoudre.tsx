@@ -86,7 +86,7 @@ export function Resoudre({ incident }: { incident: IncidentFiche }) {
           type="button"
           onClick={envoyer}
           disabled={!!manque || resoudre.isPending}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {resoudre.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Marquer résolu

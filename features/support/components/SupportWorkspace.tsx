@@ -337,7 +337,7 @@ export default function SupportWorkspace() {
           onClick={() =>
             assigner.mutate({ ticketId: ticket.id, assigneeId: user.id })
           }
-          className="h-8 rounded-lg bg-stone-900 px-2.5 text-xs font-medium text-white hover:bg-stone-800 cursor-pointer"
+          className="h-8 rounded-lg bg-stone-900 dark:bg-[#0e1014] px-2.5 text-xs font-medium text-blanc hover:bg-stone-800 dark:hover:bg-[#2a2f38] cursor-pointer"
         >
           Prendre en charge
         </button>

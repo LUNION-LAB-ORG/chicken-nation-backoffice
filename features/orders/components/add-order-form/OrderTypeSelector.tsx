@@ -63,7 +63,7 @@ const OrderTypeSelector: React.FC<OrderTypeSelectorProps> = ({
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition ${
                   selected
-                    ? "bg-[#F17922] text-white"
+                    ? "bg-[#F17922] text-blanc"
                     : "bg-gray-100 text-gray-500"
                 }`}
               >

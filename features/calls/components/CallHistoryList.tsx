@@ -113,7 +113,7 @@ export default function CallHistoryList() {
             <PhoneMissed className="h-3 w-3" />
             Manqués
             {missed.length > 0 && (
-              <span className="rounded-full bg-red-500 px-1.5 py-px text-[10px] font-semibold text-white">
+              <span className="rounded-full bg-red-500 px-1.5 py-px text-[10px] font-semibold text-blanc">
                 {missed.length}
               </span>
             )}

@@ -10,7 +10,7 @@ import SatisfactionClient from './SatisfactionClient';
 
 function RapportModule() {
   return (
-    <div className="p-6 bg-[#FBFBFB] min-h-screen">
+    <div className="p-6 bg-hex-fbfbfb min-h-screen">
       <RapportHeader />
       <StatsCards />
       <div className="flex-row md:flex w-full gap-6">

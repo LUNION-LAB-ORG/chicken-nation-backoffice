@@ -406,7 +406,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         : "bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[95vh] md:max-h-[90vh] overflow-hidden flex flex-col"}>
         {/* Header — en mode page, le titre + retour vivent dans DashboardPageHeader. */}
         {!asPage && (
-          <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
+          <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-hex-fff3e3 rounded-t-2xl h-[40px]">
             <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">Modifier votre profil</h2>
             <Image src="/icons/close.png" width={20} height={20} alt="Fermer" onClick={onCancel}
               className="absolute cursor-pointer right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-4xl font-bold" />
@@ -416,7 +416,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         <form onSubmit={handleSubmit} className="block md:hidden w-full flex-1 overflow-y-auto">
           <div className="px-4 pt-4 pb-6 flex flex-col gap-3">
             <div className="flex flex-col items-center gap-2">
-              <div className="w-[96px] h-[96px] rounded-full bg-[#F4F4F5] flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => document.getElementById('edit-image-upload')?.click()}>
+              <div className="w-[96px] h-[96px] rounded-full bg-hex-f4f4f5 flex items-center justify-center overflow-hidden cursor-pointer" onClick={() => document.getElementById('edit-image-upload')?.click()}>
                 <Image
                   src={selectedImagePreview || formatImageUrl(currentUser?.image || undefined) || "/icons/header/default-avatar.png"}
                   alt="Aperçu du membre"
@@ -437,35 +437,35 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
               <button type="button" className="text-[#F17922] text-xs font-semibold mt-1" onClick={() => document.getElementById('edit-image-upload')?.click()}>Changer la photo</button>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[#71717A] text-sm">Nom et prénom(s)</label>
+              <label className="text-hex-71717a text-sm">Nom et prénom(s)</label>
               <Input name="fullname" value={formData.fullname} onChange={handleChange}
-                className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700"
+                className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700"
                 error={formErrors.fullname} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[#71717A] text-sm">E-mail</label>
+              <label className="text-hex-71717a text-sm">E-mail</label>
               <Input name="email" value={formData.email} onChange={handleChange}
-                className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700"
+                className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700"
                 error={formErrors.email} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[#71717A] text-sm">Téléphone</label>
+              <label className="text-hex-71717a text-sm">Téléphone</label>
               <Input name="phone" value={formData.phone} onChange={handleChange}
-                className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700"
+                className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700"
                 error={formErrors.phone} />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[#71717A] text-sm">Adresse</label>
+              <label className="text-hex-71717a text-sm">Adresse</label>
               <Input name="address" value={formData.address} onChange={handleChange}
-                className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700" />
+                className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700" />
             </div>
             <div className="relative" ref={roleDropdownRef}>
-              <div className="text-[#595959] text-[15px] mb-1">Rôle</div>
+              <div className="text-hex-595959 text-[15px] mb-1">Rôle</div>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 disabled={roleOptions.length === 0}
-                className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] font-semibold disabled:bg-gray-50"
+                className="w-full h-[44px] rounded-lg border border-hex-ececec bg-white px-4 text-[15px] text-hex-71717a font-semibold disabled:bg-gray-50"
               >
                 {role && !roleOptions.some((o) => o.value === role) && (
                   <option value={role}>{role}</option>
@@ -477,11 +477,11 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             </div>
             {needsRestaurantPicker && (
               <div>
-                <div className="text-[#595959] text-[15px] mb-1">Restaurant</div>
+                <div className="text-hex-595959 text-[15px] mb-1">Restaurant</div>
                 <select
                   value={restaurantId}
                   onChange={(e) => setRestaurantId(e.target.value)}
-                  className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] font-semibold"
+                  className="w-full h-[44px] rounded-lg border border-hex-ececec bg-white px-4 text-[15px] text-hex-71717a font-semibold"
                 >
                   <option value="">Choisissez un restaurant</option>
                   {restaurants.map((r) => (
@@ -495,11 +495,11 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             <div className="mt-3 border-t border-gray-200 pt-3">
               <div className="text-[13px] text-[#F17922] font-semibold mb-2">Notifications</div>
               <div className="flex items-center justify-between py-1.5">
-                <span className="text-[15px] text-[#71717A]">Alertes par e-mail</span>
+                <span className="text-[15px] text-hex-71717a">Alertes par e-mail</span>
                 <Toggle checked={emailNotif} onChange={setEmailNotif} />
               </div>
               <div className="flex items-center justify-between py-1.5">
-                <span className="text-[15px] text-[#71717A]">Notifications in-app</span>
+                <span className="text-[15px] text-hex-71717a">Notifications in-app</span>
                 <Toggle checked={inAppNotif} onChange={setInAppNotif} />
               </div>
             </div>
@@ -525,25 +525,25 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                 <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
                   <div className="flex flex-col gap-3">
                     <div className="flex flex-col gap-2">
-                      <label className="text-[#71717A] text-sm">Nouveau mot de passe</label>
+                      <label className="text-hex-71717a text-sm">Nouveau mot de passe</label>
                       <Input 
                         type="password"
                         name="password" 
                         value={passwordData.password} 
                         onChange={handlePasswordChange}
-                        className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700"
+                        className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700"
                         error={passwordErrors.password}
                         placeholder="Minimum 8 caractères"
                       />
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="text-[#71717A] text-sm">Confirmer le nouveau mot de passe</label>
+                      <label className="text-hex-71717a text-sm">Confirmer le nouveau mot de passe</label>
                       <Input 
                         type="password"
                         name="confirmPassword" 
                         value={passwordData.confirmPassword} 
                         onChange={handlePasswordChange}
-                        className="h-[40px] rounded-lg border-[#ECECEC] bg-white text-[15px] text-slate-700"
+                        className="h-[40px] rounded-lg border-hex-ececec bg-white text-[15px] text-slate-700"
                         error={passwordErrors.confirmPassword}
                         placeholder="Retapez le nouveau mot de passe"
                       />
@@ -552,7 +552,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                       type="button"
                       onClick={handlePasswordSubmit}
                       disabled={isLoading}
-                      className="w-full bg-[#F17922] text-white hover:bg-[#F17922]/90 border-0 mt-2"
+                      className="w-full bg-[#F17922] text-blanc hover:bg-[#F17922]/90 border-0 mt-2"
                     >
                       {isLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
                     </Button>
@@ -563,8 +563,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             )}
             
             <div className="flex gap-2 mt-3">
-              <Button type="button" onClick={onCancel} className="flex-1 bg-[#ECECEC]">Annuler</Button>
-              <Button type="submit" disabled={isLoading} className="flex-1 bg-[#F17922] text-white">{isLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
+              <Button type="button" onClick={onCancel} className="flex-1 bg-hex-ececec">Annuler</Button>
+              <Button type="submit" disabled={isLoading} className="flex-1 bg-[#F17922] text-blanc">{isLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
             </div>
           </div>
         </form>
@@ -572,10 +572,10 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
         <form onSubmit={handleSubmit} className="hidden md:block w-full min-w-[600px] flex-1 overflow-y-auto">
           <div className="px-12 pt-5"><span className="text-xs text-[#F17922] font-semibold">Informations basiques</span></div>
           <div className="flex flex-row items-center justify-between px-12 pt-3 pb-2 gap-3">
-            <span className="text-[15px] text-[#71717A] font-medium">Photo de profil</span>
+            <span className="text-[15px] text-hex-71717a font-medium">Photo de profil</span>
             <div className="flex items-center gap-3">
               <div
-                className="w-[88px] h-[88px] bg-[#F4F4F5] rounded-full flex flex-col items-center justify-center
+                className="w-[88px] h-[88px] bg-hex-f4f4f5 rounded-full flex flex-col items-center justify-center
                 cursor-pointer hover:bg-gray-50 transition-colors overflow-hidden"
                 onClick={() => document.getElementById('edit-image-upload-desktop')?.click()}
               >
@@ -602,34 +602,34 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             <div className="w-32" />
           </div>
           <div className="flex flex-col gap-0 px-12">
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Nom et prénom(s)</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Nom et prénom(s)</label>
               <Input name="fullname" value={formData.fullname} onChange={handleChange}
               className="h-[40px] border-none bg-transparent font-bold ml-2  text-slate-700 " style={{width:'520px'}} error={formErrors.fullname}
               />
               </div>
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">E-mail</label><Input name="email" value={formData.email} onChange={handleChange}
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">E-mail</label><Input name="email" value={formData.email} onChange={handleChange}
               className="h-[40px] border-none bg-transparent font-bold ml-2 text-slate-700"
               style={{width:'520px'}} error={formErrors.email} />
 
             </div>
 
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Téléphone</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Téléphone</label>
               <Input name="phone" value={formData.phone} onChange={handleChange}
               className="h-[40px] border-none bg-transparent font-bold ml-2  text-slate-700 "  style={{width:'520px'}}
                error={formErrors.phone} />
                </div>
 
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Adresse</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Adresse</label>
               <Input name="address" value={formData.address} onChange={handleChange}
               className="h-[40px] border-none bg-transparent font-bold ml-2 text-slate-700" style={{width:'520px'}} />
             </div>
 
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[157px] text-[15px] font-normal">Rôle</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[157px] text-[15px] font-normal">Rôle</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
@@ -645,8 +645,8 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
               </select>
             </div>
             {needsRestaurantPicker && (
-              <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-                <label className="text-[#71717A] w-[157px] text-[15px] font-normal">Restaurant</label>
+              <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+                <label className="text-hex-71717a w-[157px] text-[15px] font-normal">Restaurant</label>
                 <select
                   value={restaurantId}
                   onChange={(e) => setRestaurantId(e.target.value)}
@@ -661,12 +661,12 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             )}
 
             {/* Préférences de notification */}
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Alertes e-mail</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Alertes e-mail</label>
               <Toggle checked={emailNotif} onChange={setEmailNotif} />
             </div>
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Notifications in-app</label>
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Notifications in-app</label>
               <Toggle checked={inAppNotif} onChange={setInAppNotif} />
             </div>
 
@@ -691,26 +691,26 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                 <div className="p-4 bg-orange-50 rounded-lg border border-orange-200">
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-row items-center h-[54px]">
-                      <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Nouveau mot de passe</label>
+                      <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Nouveau mot de passe</label>
                       <Input 
                         type="password"
                         name="password" 
                         value={passwordData.password} 
                         onChange={handlePasswordChange}
-                        className="h-[40px] border border-[#ECECEC] rounded-lg bg-white font-normal ml-2 text-slate-700"
+                        className="h-[40px] border border-hex-ececec rounded-lg bg-white font-normal ml-2 text-slate-700"
                         style={{width:'520px'}}
                         error={passwordErrors.password}
                         placeholder="Minimum 8 caractères"
                       />
                     </div>
                     <div className="flex flex-row items-center h-[54px]">
-                      <label className="text-[#71717A] w-[160px] text-[15px] font-normal">Confirmer mot de passe</label>
+                      <label className="text-hex-71717a w-[160px] text-[15px] font-normal">Confirmer mot de passe</label>
                       <Input 
                         type="password"
                         name="confirmPassword" 
                         value={passwordData.confirmPassword} 
                         onChange={handlePasswordChange}
-                        className="h-[40px] border border-[#ECECEC] rounded-lg bg-white font-normal ml-2 text-slate-700"
+                        className="h-[40px] border border-hex-ececec rounded-lg bg-white font-normal ml-2 text-slate-700"
                         style={{width:'520px'}}
                         error={passwordErrors.confirmPassword}
                         placeholder="Retapez le nouveau mot de passe"
@@ -721,7 +721,7 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
                         type="button" 
                         onClick={handlePasswordSubmit}
                         disabled={isLoading}
-                        className="h-[32px] cursor-pointer px-6 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="h-[32px] cursor-pointer px-6 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] min-w-[200px] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
                       </Button>
@@ -733,10 +733,10 @@ export default function EditMember({ onCancel, onSuccess, existingMember, asPage
             )}
 
             <div className="flex justify-end gap-3 mt-6 px-12 pb-6">
-              <Button type="button" onClick={onCancel}  className="h-[32px] cursor-pointer text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center
+              <Button type="button" onClick={onCancel}  className="h-[32px] cursor-pointer text-[#9796A1] px-12 rounded-[10px] bg-hex-ececec text-[13px] items-center
               justify-center hover:bg-gray-100 min-w-[120px]">Annuler</Button>
 
-              <Button type="submit" disabled={isLoading}   className="h-[32px] cursor-pointer px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white
+              <Button type="submit" disabled={isLoading}   className="h-[32px] cursor-pointer px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc
               text-[13px] min-w-[230px] disabled:opacity-50 disabled:cursor-not-allowed">
                 {isLoading ? 'Enregistrement...' : 'Enregistrer'}</Button>
             </div>

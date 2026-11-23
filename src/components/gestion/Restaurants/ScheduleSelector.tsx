@@ -317,7 +317,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
             updateValue();
             onClose();
           }}
-          className="text-xs bg-[#F17922] text-white py-1 px-3 rounded hover:bg-[#F17922]/90"
+          className="text-xs bg-[#F17922] text-blanc py-1 px-3 rounded hover:bg-[#F17922]/90"
         >
           Appliquer
         </button>
@@ -414,7 +414,7 @@ export default function ScheduleSelector({
                   onChange={(e) => handleScheduleChange(day.id, e.target.value)}
                   onClick={() => setActiveTimePickerDay(day.id)}
                   placeholder="08:00-22:00"
-                  className="w-full h-[30px] rounded-lg bg-white border border-[#D8D8D8] dark:text-gray-700 px-2 text-xs cursor-pointer"
+                  className="w-full h-[30px] rounded-lg bg-white border border-hex-d8d8d8 dark:text-gray-700 px-2 text-xs cursor-pointer"
                 />
                 {getScheduleForDay(day.id) === "Fermé" && (
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-red-500">

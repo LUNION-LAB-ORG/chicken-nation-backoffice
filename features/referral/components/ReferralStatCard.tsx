@@ -37,7 +37,7 @@ export default function ReferralStatCard({
       }`}
     >
       <span
-        className="absolute top-0 left-4 py-[3px] px-4 text-white text-sm font-medium rounded-b-xl"
+        className="absolute top-0 left-4 py-[3px] px-4 text-blanc text-sm font-medium rounded-b-xl"
         style={{ backgroundColor: couleur }}
       >
         {titre}
@@ -54,7 +54,7 @@ export default function ReferralStatCard({
               <span
                 className={`font-semibold ${
                   evolution.startsWith("+")
-                    ? "text-[#1E8E5A]"
+                    ? "text-hex-1e8e5a"
                     : evolution.startsWith("-")
                       ? "text-red-600"
                       : ""

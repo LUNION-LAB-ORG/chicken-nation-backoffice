@@ -108,7 +108,7 @@ export function CustomDropdown({
                 w-full px-3 py-2 text-left flex items-center justify-between gap-2 
                 hover:bg-gray-50 transition-colors duration-150
                 ${option.value === value 
-                  ? 'bg-[#FFF8EE] text-[#F17922] font-medium' 
+                  ? 'bg-hex-fff8ee text-[#F17922] font-medium' 
                   : 'text-gray-700'
                 }
                 ${option === options[0] ? 'rounded-t-lg' : ''}

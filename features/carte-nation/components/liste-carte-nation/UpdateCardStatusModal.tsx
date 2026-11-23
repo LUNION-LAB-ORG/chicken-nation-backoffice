@@ -112,13 +112,13 @@ export function UpdateCardStatusModal({
           <button
             onClick={handleConfirm}
             disabled={isPending}
-            className={`w-full py-3 rounded-lg font-semibold text-white transition-colors flex items-center justify-center gap-2
+            className={`w-full py-3 rounded-lg font-semibold text-blanc transition-colors flex items-center justify-center gap-2
               ${
                 action === "activate"
-                  ? "bg-emerald-600 hover:bg-emerald-700"
+                  ? "bg-emerald-600 hover:bg-emerald-700 dark:hover:bg-emerald-500"
                   : action === "suspend"
-                  ? "bg-amber-600 hover:bg-amber-700"
-                  : "bg-red-600 hover:bg-red-700"
+                  ? "bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-500"
+                  : "bg-red-600 hover:bg-red-700 dark:hover:bg-red-500"
               }
             `}
           >

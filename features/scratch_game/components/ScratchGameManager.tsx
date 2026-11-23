@@ -100,7 +100,7 @@ export default function ScratchGameManager() {
       >
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-[#595959]">
+            <h1 className="text-2xl font-bold text-hex-595959">
               Gratte &amp; Gagne
             </h1>
             <p className="text-sm text-[#9796A1]">
@@ -110,7 +110,7 @@ export default function ScratchGameManager() {
           {ongletActif === "lots" && !formulaireOuvert && peutCreer && (
             <motion.button
               onClick={openCreate}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-white rounded-xl"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-blanc rounded-xl"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -121,7 +121,7 @@ export default function ScratchGameManager() {
 
         {/* Onglets internes (masqués pendant l'édition d'un lot) */}
         {!formulaireOuvert && (
-          <div className="flex items-center gap-1.5 border-b border-[#F1F3F5] mb-6 overflow-x-auto">
+          <div className="flex items-center gap-1.5 border-b border-hex-f1f3f5 mb-6 overflow-x-auto">
             {onglets.map((t) => {
               const Icon = t.icon;
               const active = ongletActif === t.key;
@@ -133,7 +133,7 @@ export default function ScratchGameManager() {
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap cursor-pointer ${
                     active
                       ? "border-[#F17922] text-[#F17922]"
-                      : "border-transparent text-[#71717A] hover:text-[#18181B]"
+                      : "border-transparent text-hex-71717a hover:text-hex-18181b"
                   }`}
                 >
                   <Icon size={16} /> {t.label}
@@ -152,7 +152,7 @@ export default function ScratchGameManager() {
               exit={{ opacity: 0 }}
             >
               <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[#595959]">
+                <h2 className="text-lg font-semibold text-hex-595959">
                   {formMode === "edit"
                     ? "Modifier le lot"
                     : "Nouveau lot"}

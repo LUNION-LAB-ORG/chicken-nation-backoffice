@@ -154,7 +154,7 @@ const EmailSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
+          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
         >
           {isPending ? "Enregistrement..." : "Enregistrer"}
         </button>

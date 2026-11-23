@@ -120,7 +120,7 @@ export default function SupportList({
                 onClick={() => onFiltre(o.cle)}
                 className={`flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer ${
                   actif
-                    ? "bg-stone-900 text-white"
+                    ? "bg-stone-900 dark:bg-[#0e1014] text-blanc"
                     : "text-stone-500 hover:bg-stone-100"
                 }`}
               >
@@ -128,7 +128,7 @@ export default function SupportList({
                 {n > 0 && (
                   <span
                     className={`text-[11px] font-semibold ${
-                      actif ? "text-white/60" : "text-stone-400"
+                      actif ? "text-blanc/60" : "text-stone-400"
                     }`}
                   >
                     {n}
@@ -222,7 +222,7 @@ export default function SupportList({
                           {el.apercu || "Pièce jointe"}
                         </span>
                         {nonLu && (
-                          <span className="ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#F17922] px-1 text-[10px] font-bold text-white">
+                          <span className="ml-auto flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-[#F17922] px-1 text-[10px] font-bold text-blanc">
                             {el.nonLus > 9 ? "9+" : el.nonLus}
                           </span>
                         )}

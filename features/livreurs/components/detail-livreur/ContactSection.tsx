@@ -22,9 +22,9 @@ const formatDate = (iso?: string | null): string => {
 };
 
 const Row: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-  <div className="flex flex-row items-start justify-between py-2 border-b border-[#F4F4F5] last:border-b-0">
-    <p className="text-sm text-[#71717A]">{label}</p>
-    <p className="text-sm text-[#18181B] font-semibold text-right max-w-[60%] break-words">
+  <div className="flex flex-row items-start justify-between py-2 border-b border-hex-f4f4f5 last:border-b-0">
+    <p className="text-sm text-hex-71717a">{label}</p>
+    <p className="text-sm text-hex-18181b font-semibold text-right max-w-[60%] break-words">
       {value}
     </p>
   </div>

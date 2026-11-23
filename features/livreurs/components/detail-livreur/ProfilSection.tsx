@@ -36,7 +36,7 @@ const ProfilSection: React.FC<ProfilSectionProps> = ({ livreur }) => {
 
         {/* Infos principales */}
         <div className="flex-1 min-w-0 pt-2">
-          <h1 className="text-2xl font-semibold text-[#18181B]">{nomComplet}</h1>
+          <h1 className="text-2xl font-semibold text-hex-18181b">{nomComplet}</h1>
           {/* Référence métier — affichée en évidence */}
           <p className="text-sm text-[#F17922] font-mono font-semibold mt-1">
             {livreur.reference}

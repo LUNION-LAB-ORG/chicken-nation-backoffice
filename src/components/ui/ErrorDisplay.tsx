@@ -33,19 +33,19 @@ export function ErrorDisplay({
   const baseClasses = {
     inline: 'bg-red-50 border border-red-200 rounded-lg p-4',
     modal: 'bg-white border border-red-200 rounded-xl p-6 shadow-lg',
-    toast: 'bg-red-500 text-white rounded-lg p-4 shadow-lg'
+    toast: 'bg-red-500 text-blanc rounded-lg p-4 shadow-lg'
   };
 
   const textClasses = {
     inline: 'text-red-800',
     modal: 'text-red-800',
-    toast: 'text-white'
+    toast: 'text-blanc'
   };
 
   const iconClasses = {
     inline: 'text-red-500',
     modal: 'text-red-500',
-    toast: 'text-white'
+    toast: 'text-blanc'
   };
 
   return (
@@ -81,7 +81,7 @@ export function ErrorDisplay({
                 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
                 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2
                 ${variant === 'toast' 
-                  ? 'bg-white/20 hover:bg-white/30 text-white focus:ring-white' 
+                  ? 'bg-white/20 hover:bg-white/30 text-blanc focus:ring-white' 
                   : 'bg-red-100 hover:bg-red-200 text-red-800 focus:ring-red-500'
                 }
               `}
@@ -100,7 +100,7 @@ export function ErrorDisplay({
                 p-1 rounded-md transition-colors duration-200
                 focus:outline-none focus:ring-2 focus:ring-offset-2
                 ${variant === 'toast'
-                  ? 'hover:bg-white/20 text-white focus:ring-white'
+                  ? 'hover:bg-white/20 text-blanc focus:ring-white'
                   : 'hover:bg-red-100 text-red-500 focus:ring-red-500'
                 }
               `}
@@ -204,7 +204,7 @@ export function PageError({
           {onRetry && (
             <button
               onClick={onRetry}
-              className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-red-600 text-blanc text-sm font-medium rounded-lg hover:bg-red-700 dark:hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
               type="button"
             >
               <RefreshCw className="w-4 h-4 mr-2" />

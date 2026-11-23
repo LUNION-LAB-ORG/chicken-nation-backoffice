@@ -324,7 +324,7 @@ export default function MessageDetail({ campaign: initialCampaign, onBack }: Pro
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
                       <div className="flex items-start gap-2.5">
                         <div className="w-8 h-8 bg-[#F17922] rounded-lg flex items-center justify-center flex-shrink-0">
-                          <Bell size={14} className="text-white" />
+                          <Bell size={14} className="text-blanc" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold text-gray-900 truncate">

@@ -41,14 +41,14 @@ export function FiltrePeriode({ valeur, onChange }: { valeur: IPeriode; onChange
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1">
+      <div className="flex items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1">
         {PRESETS.map((p) => (
           <button
             key={p.cle}
             type="button"
             onClick={() => choisir(p.cle)}
             className={`text-[13px] font-semibold px-3 py-1 rounded-lg whitespace-nowrap ${
-              preset === p.cle ? "bg-white text-[#F17922] shadow-sm" : "text-[#71717A] hover:text-gray-700"
+              preset === p.cle ? "bg-white text-[#F17922] shadow-sm" : "text-hex-71717a hover:text-gray-700"
             }`}
           >
             {p.cle === "libre" && <CalendarRange className="inline w-3.5 h-3.5 mr-1 -mt-0.5" />}

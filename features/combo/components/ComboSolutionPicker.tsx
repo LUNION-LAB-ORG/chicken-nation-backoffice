@@ -10,7 +10,7 @@ import { ComboSolutionItem } from "../types/combo.types";
 import { ITEM_TYPE_BADGE, ITEM_TYPE_LABEL, money } from "../utils/combo.utils";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 interface MenuOption {
   item_type: "DISH" | "SUPPLEMENT";
@@ -115,7 +115,7 @@ export default function ComboSolutionPicker({
           {value.map((it, index) => (
             <div
               key={`${it.item_type}:${it.item_id}`}
-              className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5"
+              className="flex items-center gap-3 rounded-lg border border-hex-e4e4e7 p-2.5"
             >
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
@@ -125,7 +125,7 @@ export default function ComboSolutionPicker({
                 {ITEM_TYPE_LABEL[it.item_type]}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-[#18181B] truncate">
+                <div className="text-sm font-semibold text-hex-18181b truncate">
                   {it.name || it.item_id}
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default function ComboSolutionPicker({
                 <button
                   type="button"
                   onClick={() => setQty(index, (it.quantity ?? 1) - 1)}
-                  className="p-1 rounded-md text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
+                  className="p-1 rounded-md text-hex-71717a hover:bg-hex-f1f3f5 cursor-pointer"
                 >
                   <Minus size={14} />
                 </button>
@@ -143,7 +143,7 @@ export default function ComboSolutionPicker({
                 <button
                   type="button"
                   onClick={() => setQty(index, (it.quantity ?? 1) + 1)}
-                  className="p-1 rounded-md text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
+                  className="p-1 rounded-md text-hex-71717a hover:bg-hex-f1f3f5 cursor-pointer"
                 >
                   <Plus size={14} />
                 </button>
@@ -151,7 +151,7 @@ export default function ComboSolutionPicker({
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer shrink-0"
+                className="text-[#9796A1] hover:text-hex-c0392b cursor-pointer shrink-0"
               >
                 <X size={16} />
               </button>
@@ -174,7 +174,7 @@ export default function ComboSolutionPicker({
         />
       </div>
       {search.trim().length >= 1 && (
-        <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+        <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
           {results.length === 0 ? (
             <div className="px-3 py-2 text-sm text-[#9796A1]">
               {isLoading ? "Chargement…" : "Aucun item"}
@@ -185,7 +185,7 @@ export default function ComboSolutionPicker({
                 key={`${o.item_type}:${o.item_id}`}
                 type="button"
                 onClick={() => add(o)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
               >
                 <span className="flex items-center gap-2 min-w-0">
                   <span

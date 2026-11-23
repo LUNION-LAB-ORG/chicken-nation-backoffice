@@ -60,3 +60,16 @@
   .date-option:hover {
     background-color: #f5f5f5;
   }
+/* Thème sombre (voir src/app/theme.css). */
+html.dark .weekly-orders-chart {
+  background-color: #1b1e25;
+  border-color: #2d323c;
+}
+html.dark .date-selector-button,
+html.dark .date-option:hover {
+  background-color: #23272f;
+  color: #b0b6c3;
+}
+html.dark .date-selector-dropdown {
+  background-color: #1b1e25;
+}

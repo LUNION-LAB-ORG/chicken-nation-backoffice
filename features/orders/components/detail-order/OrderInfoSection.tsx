@@ -30,7 +30,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
         </h2>
         <div className="flex items-center space-x-2">
           {badgeText && (
-            <span className="px-3 py-1.5 border-1 border-[#FBD2B5] font-bold text-[#FF3B30] text-[10px] lg:text-xs rounded-lg">
+            <span className="px-3 py-1.5 border-1 border-hex-fbd2b5 font-bold text-[#FF3B30] text-[10px] lg:text-xs rounded-lg">
               {badgeText}
             </span>
           )}
@@ -39,7 +39,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
 
       <div className="mt-3 md:mt-4 space-y-3 md:space-y-4">
         <div className="flex gap-40 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Restaurant
           </p>
           <p className="font-bold text-[#F17922] lg:text-sm text-xs">
@@ -48,10 +48,10 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
         </div>
 
         <div className="flex gap-26 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Type de commande
           </p>
-          <div className="inline-flex items-center rounded-[10px] px-3 py-[4px] text-xs font-medium bg-[#FBDBA7] text-[#71717A]">
+          <div className="inline-flex items-center rounded-[10px] px-3 py-[4px] text-xs font-medium bg-hex-fbdba7 text-hex-71717a">
             {order.orderType}
             <SafeImage
               className="ml-2"
@@ -64,16 +64,16 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
         </div>
 
         <div className="flex gap-22 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Date de la commande
           </p>
-          <p className="font-bold text-xs lg:text-sm text-[#71717A]">
+          <p className="font-bold text-xs lg:text-sm text-hex-71717a">
             {format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}
           </p>
         </div>
 
         <div className="flex gap-32 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Canal de paiement
           </p>
           <div className="flex items-center">
@@ -91,11 +91,11 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
 
         {order.paymentMethod && (
           <div className="flex gap-32 items-center">
-            <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            <p className="lg:text-sm text-xs font-medium text-hex-71717a">
               Mode paiement
             </p>
             <div className="flex items-center">
-              <p className="font-bold text-xs lg:text-sm text-[#71717A]">
+              <p className="font-bold text-xs lg:text-sm text-hex-71717a">
                 {order.paymentMethod}
               </p>
             </div>
@@ -103,7 +103,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
         )}
 
         <div className="flex gap-32 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Statut paiement
           </p>
           <div className="flex items-center gap-2">
@@ -115,7 +115,7 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
         </div>
 
         <div className="flex gap-32 items-center">
-          <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+          <p className="lg:text-sm text-xs font-medium text-hex-71717a">
             Source
           </p>
           <div className="flex items-center gap-2">
@@ -129,11 +129,11 @@ const OrderInfoSection: React.FC<OrderInfoSectionProps> = ({ order }) => {
 
         {order.note && (
           <div className="flex gap-32 items-center">
-            <p className="lg:text-sm text-xs font-medium text-[#71717A]">
+            <p className="lg:text-sm text-xs font-medium text-hex-71717a">
               Note
             </p>
             <div className="flex items-center">
-              <p className="font-bold text-xs lg:text-sm text-[#71717A]">
+              <p className="font-bold text-xs lg:text-sm text-hex-71717a">
                 {order.note}
               </p>
             </div>

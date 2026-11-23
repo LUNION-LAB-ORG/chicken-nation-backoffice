@@ -146,7 +146,7 @@ function CallPanelInner({ call }: { call: ActiveCall }) {
       <div className="fixed bottom-3 inset-x-3 sm:inset-x-auto sm:bottom-6 sm:right-6 z-[190] animate-[cn-panel-in_.25s_ease-out]">
         <style>{KEYFRAMES}</style>
         {audioTags}
-        <div className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full bg-slate-900 text-white pl-4 pr-2 py-2 shadow-2xl border border-white/10">
+        <div className="mx-auto flex w-fit max-w-full items-center gap-3 rounded-full bg-slate-900 dark:bg-[#0e1014] text-blanc pl-4 pr-2 py-2 shadow-2xl border border-white/10">
           <span className={`h-2 w-2 rounded-full ${connected ? "bg-green-400" : "bg-amber-400 animate-pulse"}`} />
           <span className="text-sm font-medium truncate max-w-36">{call.peerLabel}</span>
           <span className="text-xs text-slate-400 tabular-nums">{statusLabel}</span>
@@ -177,7 +177,7 @@ function CallPanelInner({ call }: { call: ActiveCall }) {
     <div className="fixed bottom-0 inset-x-0 sm:inset-x-auto sm:bottom-6 sm:right-6 z-[190] sm:w-80 animate-[cn-panel-in_.3s_cubic-bezier(.16,1,.3,1)]">
       <style>{KEYFRAMES}</style>
       {audioTags}
-      <div className="rounded-t-3xl sm:rounded-3xl bg-slate-900 text-white shadow-2xl border border-white/10 p-5 pb-7 sm:pb-5">
+      <div className="rounded-t-3xl sm:rounded-3xl bg-slate-900 dark:bg-[#0e1014] text-blanc shadow-2xl border border-white/10 p-5 pb-7 sm:pb-5">
         {/* Header : statut + réduire */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 text-xs text-slate-400">
@@ -217,7 +217,7 @@ function CallPanelInner({ call }: { call: ActiveCall }) {
             {[0, 1, 2, 3, 4].map((i) => (
               <span
                 key={i}
-                className={`w-1 rounded-full ${connected ? "bg-emerald-400/90 animate-[cn-eq_1s_ease-in-out_infinite]" : "bg-slate-700"}`}
+                className={`w-1 rounded-full ${connected ? "bg-emerald-400/90 animate-[cn-eq_1s_ease-in-out_infinite]" : "bg-slate-700 dark:bg-[#3a404c]"}`}
                 style={connected ? { animationDelay: `${i * 130}ms` } : { height: "30%" }}
               />
             ))}

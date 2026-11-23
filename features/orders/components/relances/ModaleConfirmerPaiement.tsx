@@ -194,7 +194,7 @@ function Formulaire({ groupe, maintenant, onClose }: { groupe: GroupeRelance; ma
           <button
             type="submit"
             disabled={enCours || !panier}
-            className="h-11 sm:h-10 px-4 rounded-xl bg-[#F17922] text-sm font-semibold text-white hover:bg-[#e06816] disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2"
+            className="h-11 sm:h-10 px-4 rounded-xl bg-[#F17922] text-sm font-semibold text-blanc hover:bg-[#e06816] disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2"
           >
             {enCours && <Loader2 className="w-4 h-4 animate-spin" />}
             {enCours ? "Vérification auprès de KKiaPay…" : "Confirmer le paiement"}

@@ -87,7 +87,7 @@ export default function ComboGameManager() {
       >
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-[#595959]">
+            <h1 className="text-2xl font-bold text-hex-595959">
               Combo Mystère
             </h1>
             <p className="text-sm text-[#9796A1]">
@@ -98,7 +98,7 @@ export default function ComboGameManager() {
           {!mode && peutCreer && (
             <motion.button
               onClick={openCreate}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-white rounded-xl"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#F17922] text-blanc rounded-xl"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -116,7 +116,7 @@ export default function ComboGameManager() {
               exit={{ opacity: 0 }}
             >
               <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[#595959]">
+                <h2 className="text-lg font-semibold text-hex-595959">
                   {mode === "edit" ? "Modifier le jeu" : "Nouveau jeu"}
                 </h2>
               </div>

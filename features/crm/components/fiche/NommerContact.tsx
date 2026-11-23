@@ -97,7 +97,7 @@ export function NommerContact({ id }: { id: string }) {
         onClick={enregistrer}
         disabled={renommer.isPending || !prenom.trim()}
         aria-label="Enregistrer le nom"
-        className="shrink-0 rounded-lg bg-[#F17922] p-1.5 text-white disabled:opacity-50 cursor-pointer"
+        className="shrink-0 rounded-lg bg-[#F17922] p-1.5 text-blanc disabled:opacity-50 cursor-pointer"
       >
         {renommer.isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" />

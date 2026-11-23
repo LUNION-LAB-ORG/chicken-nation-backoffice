@@ -84,7 +84,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-[600px] mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
+        <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-hex-fff3e3 rounded-t-2xl h-[40px]">
           <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">Détails de la notification</h2>
           <Image
             src="/icons/close.png"
@@ -183,14 +183,14 @@ const NotificationModal: React.FC<NotificationModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 h-[44px] bg-[#ECECEC] text-[#71717A] rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            className="flex-1 h-[44px] bg-hex-ececec text-hex-71717a rounded-lg hover:bg-gray-300 transition-colors font-medium"
           >
             Fermer
           </button>
           <button
             type="button"
             onClick={handleToggleRead}
-            className="flex-1 h-[44px] bg-[#F17922] text-white rounded-lg hover:bg-[#F17922]/90 transition-colors font-medium flex items-center justify-center gap-2"
+            className="flex-1 h-[44px] bg-[#F17922] text-blanc rounded-lg hover:bg-[#F17922]/90 transition-colors font-medium flex items-center justify-center gap-2"
           >
             {notification.is_read ? (
               <>

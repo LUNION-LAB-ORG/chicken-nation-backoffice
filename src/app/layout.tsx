@@ -6,6 +6,8 @@ import { GoogleMapsProvider } from "@/contexts/GoogleMapsContext";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import OneSignalProvider from "@/providers/OneSignalProvider";
+import ThemeSync from "@/components/ThemeSync";
+import { SCRIPT_THEME } from "@/utils/theme";
 
 // Métadonnées de l'application
 export const metadata: Metadata = {
@@ -45,7 +47,12 @@ export default function RootLayout({
       className={`${urbanist.variable} ${blocklynCondensed.variable} ${blocklynGrunge.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Thème sombre posé avant l'affichage : pas d'éclair blanc. */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_THEME }} />
+      </head>
       <body suppressHydrationWarning>
+        <ThemeSync />
         <OneSignalProvider />
         <Toaster
           position="top-right"

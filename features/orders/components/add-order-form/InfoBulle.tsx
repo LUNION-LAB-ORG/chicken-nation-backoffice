@@ -85,7 +85,7 @@ const InfoBulle: React.FC<InfoBulleProps> = ({ contenu, children, className }) =
               top: dessus ? cadre.top - MARGE : cadre.bottom + MARGE,
               transform: dessus ? "translateY(-100%)" : undefined,
             }}
-            className="pointer-events-none z-[70] rounded-xl bg-gray-900 px-3.5 py-2.5 text-xs leading-relaxed text-white shadow-xl"
+            className="pointer-events-none z-[70] rounded-xl bg-gray-900 dark:bg-[#0e1014] px-3.5 py-2.5 text-xs leading-relaxed text-blanc shadow-xl"
           >
             {contenu}
           </div>,

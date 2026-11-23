@@ -37,14 +37,14 @@ export const DashboardPeriodFilter: React.FC = () => {
         className="flex justify-center items-center gap-2 px-4 py-1 cursor-pointer bg-[#F17922] border border-white rounded-xl hover:bg-[#f17522] transition-colors shadow-xs"
       >
         <div className="flex flex-col items-start">
-          <span className="text-sm font-medium text-white">
+          <span className="text-sm font-medium text-blanc">
             {currentOption.label}
           </span>
 
         </div>
         <ChevronDown
           size={16}
-          className={`text-white transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`text-blanc transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 

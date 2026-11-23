@@ -96,7 +96,7 @@ const DashboardPageHeader = ({
     if (!searchConfig) return null;
 
     return (
-      <div className="flex w-full -mt-2 sm:mt-0 sm:w-auto sm:flex-1 max-w-full sm:max-w-[280px] md:max-w-md py-1.5 rounded-xl sm:rounded-2xl bg-[#F5F5F5] pr-2">
+      <div className="flex w-full -mt-2 sm:mt-0 sm:w-auto sm:flex-1 max-w-full sm:max-w-[280px] md:max-w-md py-1.5 rounded-xl sm:rounded-2xl bg-hex-f5f5f5 pr-2">
         <div className="flex items-center w-full">
           <Search className="text-[#9E9E9E] ml-3 sm:ml-4" size={18} />
           <input
@@ -110,7 +110,7 @@ const DashboardPageHeader = ({
         </div>
         <button
           onClick={handleSearch}
-          className="px-2 sm:px-3 py-1 text-xs cursor-pointer hover:opacity-90 text-white bg-[#F17922] rounded-lg sm:rounded-xl whitespace-nowrap"
+          className="px-2 sm:px-3 py-1 text-xs cursor-pointer hover:opacity-90 text-blanc bg-[#F17922] rounded-lg sm:rounded-xl whitespace-nowrap"
         >
           {searchConfig.buttonText || "Chercher"}
         </button>
@@ -157,7 +157,7 @@ const DashboardPageHeader = ({
             action.className ||
             (action.variant === "secondary"
               ? "text-gray-700 bg-gray-100 hover:bg-gray-200"
-              : "text-white bg-[#F17922] hover:bg-[#e06816]")
+              : "text-blanc bg-[#F17922] hover:bg-[#e06816]")
           }
           ${mode === "list" ? "w-full sm:w-auto" : ""}
         `}

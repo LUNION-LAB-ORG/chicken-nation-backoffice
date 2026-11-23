@@ -29,7 +29,7 @@ export function OngletsCourses({
     { cle: 'historique', libelle: 'Historique', Icone: History, nombre: null, rouge: false },
   ];
   return (
-    <div role="tablist" aria-label="Vues des courses" className="flex w-full gap-1 rounded-xl bg-[#F4F4F5] p-1 sm:w-fit">
+    <div role="tablist" aria-label="Vues des courses" className="flex w-full gap-1 rounded-xl bg-hex-f4f4f5 p-1 sm:w-fit">
       {onglets.map(({ cle, libelle, Icone, nombre, rouge }) => {
         const choisi = cle === onglet;
         return (
@@ -40,7 +40,7 @@ export function OngletsCourses({
             aria-selected={choisi}
             onClick={() => onChange(cle)}
             className={`inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition-colors sm:flex-none sm:px-4 ${
-              choisi ? 'bg-white text-[#18181B] shadow-sm' : 'text-[#71717A] hover:text-[#18181B]'
+              choisi ? 'bg-white text-hex-18181b shadow-sm' : 'text-hex-71717a hover:text-hex-18181b'
             }`}
           >
             <Icone className={`h-4 w-4 ${choisi ? 'text-[#F17922]' : ''}`} />
@@ -48,7 +48,7 @@ export function OngletsCourses({
             {nombre !== null && (
               <span
                 className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                  rouge ? 'bg-red-100 text-red-700' : choisi ? 'bg-orange-50 text-[#F17922]' : 'bg-white text-[#52525B]'
+                  rouge ? 'bg-red-100 text-red-700' : choisi ? 'bg-orange-50 text-[#F17922]' : 'bg-white text-hex-52525b'
                 }`}
               >
                 {nombre}

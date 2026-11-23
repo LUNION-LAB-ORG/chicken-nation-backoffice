@@ -37,12 +37,12 @@ const StatCard: React.FC<{
   value: React.ReactNode;
   tone?: string;
 }> = ({ icon: Icon, label, value, tone = "text-[#F17922]" }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-[#E4E4E7] bg-white px-4 py-3">
+  <div className="flex items-center gap-3 rounded-xl border border-hex-e4e4e7 bg-white px-4 py-3">
     <div className={`shrink-0 ${tone}`}>
       <Icon size={22} />
     </div>
     <div className="min-w-0">
-      <div className="text-xl font-bold text-[#18181B] leading-none">
+      <div className="text-xl font-bold text-hex-18181b leading-none">
         {value}
       </div>
       <div className="text-[12px] text-[#9796A1] mt-1">{label}</div>
@@ -70,7 +70,7 @@ const Avatar: React.FC<{ name: string | null; image?: string | null }> = ({
       className="w-8 h-8 rounded-full object-cover shrink-0"
     />
   ) : (
-    <div className="w-8 h-8 rounded-full bg-[#FFF6E9] text-[#F17922] text-[11px] font-bold flex items-center justify-center shrink-0">
+    <div className="w-8 h-8 rounded-full bg-hex-fff6e9 text-[#F17922] text-[11px] font-bold flex items-center justify-center shrink-0">
       {initials}
     </div>
   );
@@ -101,7 +101,7 @@ const Td: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = "",
 }) => (
-  <td className={`px-4 py-3 text-sm text-[#18181B] ${className}`}>{children}</td>
+  <td className={`px-4 py-3 text-sm text-hex-18181b ${className}`}>{children}</td>
 );
 
 export default function ComboTrackingPanel({
@@ -159,7 +159,7 @@ export default function ComboTrackingPanel({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#71717A] hover:text-[#18181B] cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-hex-71717a hover:text-hex-18181b cursor-pointer"
       >
         <ArrowLeft size={16} /> Retour à la liste
       </button>
@@ -168,7 +168,7 @@ export default function ComboTrackingPanel({
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-lg font-semibold text-[#595959]">
+            <h2 className="text-lg font-semibold text-hex-595959">
               {game.title}
             </h2>
             <span
@@ -189,7 +189,7 @@ export default function ComboTrackingPanel({
           <motion.button
             onClick={handleDraw}
             disabled={drawMut.isPending}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#7C3AED] text-white rounded-xl disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#7C3AED] text-blanc rounded-xl disabled:opacity-50"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -207,7 +207,7 @@ export default function ComboTrackingPanel({
               type="button"
               disabled
               title="Le tirage sera disponible une fois la fenêtre de jeu terminée."
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#EEEBF5] text-[#9B8FBF] rounded-xl cursor-not-allowed"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-hex-eeebf5 text-[#9B8FBF] rounded-xl cursor-not-allowed"
             >
               <Dices size={16} />
               Tirage indisponible
@@ -218,7 +218,7 @@ export default function ComboTrackingPanel({
           </div>
         )}
         {game.winners_drawn && (
-          <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#7C3AED] bg-[#F3E8FF] px-3 py-2 rounded-lg">
+          <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#7C3AED] bg-hex-f3e8ff px-3 py-2 rounded-lg">
             <Trophy size={15} /> Tirage déjà effectué
           </span>
         )}
@@ -235,7 +235,7 @@ export default function ComboTrackingPanel({
           icon={CheckCircle2}
           label="Bonnes réponses (pool du tirage)"
           value={correctCount}
-          tone="text-[#1E8E5A]"
+          tone="text-hex-1e8e5a"
         />
         <StatCard
           icon={Trophy}
@@ -247,13 +247,13 @@ export default function ComboTrackingPanel({
 
       {/* Gagnants tirés */}
       <div>
-        <h3 className="text-sm font-semibold text-[#595959] mb-2 flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold text-hex-595959 mb-2 flex items-center gap-1.5">
           <Trophy size={15} className="text-[#7C3AED]" /> Gagnants tirés au sort
         </h3>
-        <div className="bg-white rounded-2xl border border-[#E4E4E7] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-hex-e4e4e7 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse">
-              <thead className="bg-[#FAFAFA] border-b border-[#F1F3F5]">
+              <thead className="bg-hex-fafafa border-b border-hex-f1f3f5">
                 <tr>
                   <Th>Client</Th>
                   <Th>Téléphone</Th>
@@ -261,7 +261,7 @@ export default function ComboTrackingPanel({
                   <Th>Tiré le</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F1F3F5]">
+              <tbody className="divide-y divide-hex-f1f3f5">
                 {loadingW ? (
                   <tr>
                     <Td className="text-[#9796A1]">Chargement…</Td>
@@ -280,14 +280,14 @@ export default function ComboTrackingPanel({
                   </tr>
                 ) : (
                   winners.map((w) => (
-                    <tr key={w.id} className="hover:bg-[#FBF7FF]">
+                    <tr key={w.id} className="hover:bg-hex-fbf7ff">
                       <Td>
                         <ClientCell name={w.customer_name} image={w.customer_image} />
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {w.customer_phone || "—"}
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {w.reward_id ? (
                           <span className="text-[12px] font-mono">
                             {w.reward_id.slice(0, 8)}…
@@ -296,7 +296,7 @@ export default function ComboTrackingPanel({
                           "—"
                         )}
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {dateTimeFmt(w.drawn_at)}
                       </Td>
                     </tr>
@@ -310,13 +310,13 @@ export default function ComboTrackingPanel({
 
       {/* Participations */}
       <div>
-        <h3 className="text-sm font-semibold text-[#595959] mb-2 flex items-center gap-1.5">
-          <Users size={15} className="text-[#71717A]" /> Participations
+        <h3 className="text-sm font-semibold text-hex-595959 mb-2 flex items-center gap-1.5">
+          <Users size={15} className="text-hex-71717a" /> Participations
         </h3>
-        <div className="bg-white rounded-2xl border border-[#E4E4E7] overflow-hidden">
+        <div className="bg-white rounded-2xl border border-hex-e4e4e7 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] border-collapse">
-              <thead className="bg-[#FAFAFA] border-b border-[#F1F3F5]">
+              <thead className="bg-hex-fafafa border-b border-hex-f1f3f5">
                 <tr>
                   <Th>Client</Th>
                   <Th>Téléphone</Th>
@@ -326,7 +326,7 @@ export default function ComboTrackingPanel({
                   <Th>Dernier essai</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F1F3F5]">
+              <tbody className="divide-y divide-hex-f1f3f5">
                 {loadingP ? (
                   <tr>
                     <td
@@ -347,11 +347,11 @@ export default function ComboTrackingPanel({
                   </tr>
                 ) : (
                   participations.map((p) => (
-                    <tr key={p.id} className="hover:bg-[#FFF9F2]">
+                    <tr key={p.id} className="hover:bg-hex-fff9f2">
                       <Td>
                         <ClientCell name={p.customer_name} image={p.customer_image} />
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {p.customer_phone || "—"}
                       </Td>
                       <Td className="text-right">
@@ -363,19 +363,19 @@ export default function ComboTrackingPanel({
                       </Td>
                       <Td>
                         {p.is_correct ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#E6F4EC] text-[#1E8E5A]">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-hex-e6f4ec text-hex-1e8e5a">
                             <CheckCircle2 size={12} /> Bonne réponse
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EEF1F4] text-[#6C757D]">
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-hex-eef1f4 text-hex-6c757d">
                             En cours / échec
                           </span>
                         )}
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {dateTimeFmt(p.answered_at)}
                       </Td>
-                      <Td className="text-[#71717A]">
+                      <Td className="text-hex-71717a">
                         {dateTimeFmt(p.last_attempt_at)}
                       </Td>
                     </tr>

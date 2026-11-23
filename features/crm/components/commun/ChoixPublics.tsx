@@ -18,10 +18,10 @@ export function ChoixPublics({ valeur = [], onChange }: { valeur?: Public[]; onC
   };
   const classe = (actif: boolean) =>
     `text-[13px] font-semibold px-3 py-1 rounded-lg whitespace-nowrap ${
-      actif ? "bg-white text-[#F17922] shadow-sm" : "text-[#71717A] hover:text-gray-700"
+      actif ? "bg-white text-[#F17922] shadow-sm" : "text-hex-71717a hover:text-gray-700"
     }`;
   return (
-    <div className="flex flex-wrap items-center gap-1 bg-[#f4f4f5] rounded-xl p-1" role="group" aria-label="Publics">
+    <div className="flex flex-wrap items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1" role="group" aria-label="Publics">
       <button type="button" onClick={() => onChange([])} className={classe(valeur.length === 0)} aria-pressed={valeur.length === 0}>
         Tous les publics
       </button>

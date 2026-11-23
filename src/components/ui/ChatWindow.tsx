@@ -236,7 +236,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
                   max-w-xs lg:max-w-md px-4 py-2 rounded-2xl
                   ${isFromClient 
                     ? 'bg-white text-gray-900 rounded-bl-sm' 
-                    : 'bg-[#F17922] text-white rounded-br-sm'
+                    : 'bg-[#F17922] text-blanc rounded-br-sm'
                   }
                   shadow-sm
                 `}>
@@ -341,7 +341,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversation, onBack }) => {
             `}
             aria-label="Envoyer le message"
           >
-            <Send className="w-5 h-5 text-white" />
+            <Send className="w-5 h-5 text-blanc" />
           </button>
         </div>
       </div>

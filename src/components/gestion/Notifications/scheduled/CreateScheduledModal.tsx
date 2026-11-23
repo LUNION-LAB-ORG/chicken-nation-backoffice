@@ -412,7 +412,7 @@ export default function CreateScheduledModal({
               onClick={() => setTargetType("all")}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 targetType === "all"
-                  ? "bg-[#FFF3E8] text-[#F17922] border border-[#F17922]"
+                  ? "bg-hex-fff3e8 text-[#F17922] border border-[#F17922]"
                   : "border border-gray-200 text-gray-600"
               }`}
             >
@@ -423,7 +423,7 @@ export default function CreateScheduledModal({
               onClick={() => setTargetType("segment")}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                 targetType === "segment"
-                  ? "bg-[#FFF3E8] text-[#F17922] border border-[#F17922]"
+                  ? "bg-hex-fff3e8 text-[#F17922] border border-[#F17922]"
                   : "border border-gray-200 text-gray-600"
               }`}
             >
@@ -440,7 +440,7 @@ export default function CreateScheduledModal({
                   onClick={() => setSelectedSegment(seg.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                     selectedSegment === seg.key
-                      ? "bg-[#F17922] text-white"
+                      ? "bg-[#F17922] text-blanc"
                       : "bg-gray-100 text-gray-600"
                   }`}
                 >
@@ -468,7 +468,7 @@ export default function CreateScheduledModal({
                 onClick={() => setScheduleType(st.id)}
                 className={`flex flex-col items-center gap-1 p-3 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   scheduleType === st.id
-                    ? "border-[#F17922] bg-[#FFF3E8] text-[#F17922]"
+                    ? "border-[#F17922] bg-hex-fff3e8 text-[#F17922]"
                     : "border-gray-200 text-gray-500 hover:border-gray-300"
                 }`}
               >
@@ -511,7 +511,7 @@ export default function CreateScheduledModal({
                   type="button"
                   onClick={addMultiDate}
                   disabled={!newMultiDate}
-                  className="px-4 py-2.5 bg-[#F17922] text-white rounded-lg text-sm font-medium hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2.5 bg-[#F17922] text-blanc rounded-lg text-sm font-medium hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
                 >
                   Ajouter
                 </button>
@@ -586,7 +586,7 @@ export default function CreateScheduledModal({
                       onClick={() => toggleDay(day.value)}
                       className={`w-10 h-10 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                         selectedDays.includes(day.value)
-                          ? "bg-[#F17922] text-white"
+                          ? "bg-[#F17922] text-blanc"
                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       }`}
                     >
@@ -680,7 +680,7 @@ export default function CreateScheduledModal({
 
           {/* CRON Preview */}
           {scheduleType !== "once" && scheduleType !== "multi_dates" && (
-            <div className="mt-3 bg-[#FFF3E8] rounded-xl px-3 py-2 text-xs text-[#F17922] flex items-center gap-2">
+            <div className="mt-3 bg-hex-fff3e8 rounded-xl px-3 py-2 text-xs text-[#F17922] flex items-center gap-2">
               <Repeat size={14} />
               CRON :{" "}
               <code className="font-mono bg-white/60 px-1.5 py-0.5 rounded">
@@ -709,7 +709,7 @@ export default function CreateScheduledModal({
           <button
             type="submit"
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
             {isEdit ? "Enregistrer" : "Créer la planification"}

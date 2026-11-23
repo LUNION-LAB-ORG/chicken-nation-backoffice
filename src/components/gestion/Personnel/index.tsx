@@ -253,7 +253,7 @@ export default function Personnel() {
             />
           </div>
           <div className="flex-1 overflow-y-auto">
-            <div className="bg-white border border-[#E4E4E7] rounded-xl p-2">
+            <div className="bg-white border border-hex-e4e4e7 rounded-xl p-2">
               <PersonnelTabs
                 tabs={tabs}
                 selected={selectedTab}

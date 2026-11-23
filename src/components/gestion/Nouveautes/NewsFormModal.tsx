@@ -123,7 +123,7 @@ export default function NewsFormModal({ isOpen, onClose, editItem }: Props) {
               <button
                 type="button"
                 onClick={removeImage}
-                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 cursor-pointer"
+                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/50 text-blanc flex items-center justify-center hover:bg-black/70 cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -234,7 +234,7 @@ export default function NewsFormModal({ isOpen, onClose, editItem }: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
             {isEdit ? "Enregistrer" : "Créer"}

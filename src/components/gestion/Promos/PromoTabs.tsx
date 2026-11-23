@@ -37,7 +37,7 @@ const PromoTabs = ({
         {canAddPromo && (
           <button
             type="button"
-            className="lg:px-6 p-2 lg:py-2 bg-[#F17922] cursor-pointer text-white font-medium rounded-2xl hover:bg-[#F17922] text-xs lg:text-sm transition-colors"
+            className="lg:px-6 p-2 lg:py-2 bg-[#F17922] cursor-pointer text-blanc font-medium rounded-2xl hover:bg-[#F17922] text-xs lg:text-sm transition-colors"
             onClick={onCreatePromo}
           >
             Ajouter une promo
@@ -56,7 +56,7 @@ const PromoTabs = ({
               lg:px-4 p-2 py-1 cursor-pointer rounded-xl text-xs font-medium transition-all duration-200
               ${
                 activeTab === tab.id
-                  ? "bg-linear-to-r from-[#F17922] to-[#FA6345] text-white"
+                  ? "bg-linear-to-r from-[#F17922] to-[#FA6345] text-blanc"
                   : "bg-white border-slate-200 border text-gray-500 hover:bg-gray-200"
               }
             `}

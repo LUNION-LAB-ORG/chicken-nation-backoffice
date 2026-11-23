@@ -165,7 +165,7 @@ export default function DetailsMenu({
         {/* En-tête avec titre et prix */}
         <div className="flex flex-col xs:flex-row justify-between items-start gap-2 xs:gap-4 sm:gap-0 mb-4">
           <div className="w-full xs:w-auto">
-            <h1 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold text-[#595959] mb-2">
+            <h1 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-semibold text-hex-595959 mb-2">
               {menu.name}
             </h1>
             <div className="inline-block px-2 py-1 bg-orange-50 rounded-md">
@@ -366,7 +366,7 @@ export default function DetailsMenu({
               <button
                 type="button"
                 onClick={onEdit}
-                className="w-full mt-4 sm:mt-6 py-2 bg-[#F17922] text-white rounded-lg text-sm font-medium hover:bg-[#e06816] transition-colors"
+                className="w-full mt-4 sm:mt-6 py-2 bg-[#F17922] text-blanc rounded-lg text-sm font-medium hover:bg-[#e06816] transition-colors"
               >
                 Modifier le menu
               </button>

@@ -35,7 +35,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ selectedItem }) => {
             </div>
 
             {/* Partie droite */}
-            <div className="md:w-3/6 p-4 sm:p-6 pb-20 md:pb-6 bg-[#FBFBFB] h-auto overflow-y-auto md:overflow-visible">
+            <div className="md:w-3/6 p-4 sm:p-6 pb-20 md:pb-6 bg-hex-fbfbfb h-auto overflow-y-auto md:overflow-visible">
               <CustomerInfoSection order={order} />
 
               <DeliveryProgressSection order={order} />

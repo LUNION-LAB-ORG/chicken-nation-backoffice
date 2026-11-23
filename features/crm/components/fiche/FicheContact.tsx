@@ -183,7 +183,7 @@ export function FicheContact({
             </div>
           )}
           {p.mode === "commune" && !converti && (
-            <div className="flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-[#C2410C]">
+            <div className="flex items-start gap-2 rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-hex-c2410c">
               <Store className="w-4 h-4 mt-0.5 shrink-0" />
               <p>Client de la file commune Glovo/Yango : il devient le vôtre dès que vous enregistrez un appel ou envoyez un coupon.</p>
             </div>
@@ -195,7 +195,7 @@ export function FicheContact({
               <FicheContexte p={p} />
             </div>
 
-            <div className="md:col-span-2 space-y-5 bg-[#FBFBFB] rounded-2xl p-4 h-fit order-1 md:order-2">
+            <div className="md:col-span-2 space-y-5 bg-hex-fbfbfb rounded-2xl p-4 h-fit order-1 md:order-2">
               {converti ? (
                 <div className="text-center py-6">
                   <PartyPopper className="w-8 h-8 text-emerald-600 mx-auto" />

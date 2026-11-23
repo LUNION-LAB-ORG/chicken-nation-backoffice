@@ -112,12 +112,12 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
               ? `Commande programmée : la préparation s'ouvre à ${format(ouverture, "HH'h'mm")}`
               : undefined
           }
-          className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl transition disabled:bg-gray-300"
+          className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-blanc font-semibold rounded-xl transition disabled:bg-gray-300"
         >
           {isLoading ? "…" : "Commencer la préparation"}
         </button>
         {tropTot && ouverture && (
-          <p className="text-[11px] text-[#8A4B00] text-center">
+          <p className="text-[11px] text-hex-8a4b00 text-center">
             Commande programmée pour {format(moment!, "HH'h'mm")} · préparation à partir de{" "}
             {format(ouverture, "HH'h'mm")}
           </p>
@@ -133,7 +133,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
         <button
           onClick={() => handleOrderUpdateStatus(order.id, OrderStatus.READY)}
           disabled={isLoading}
-          className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
+          className="w-full py-3 bg-green-600 hover:bg-green-700 dark:hover:bg-green-500 text-blanc font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
         >
           <CheckCircle className="w-4 h-4" />
           {isLoading ? "…" : "Marquer comme prête"}
@@ -267,7 +267,7 @@ export const DrawerActionsChickenNation: React.FC<Props> = ({ order }) => {
                   type="button"
                   onClick={() => rapporterSac({ orderId: order.id, reference: order.reference })}
                   disabled={envoiGeste}
-                  className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
+                  className="w-full py-3 bg-[#F17922] hover:bg-[#e06816] text-blanc font-semibold rounded-xl flex items-center justify-center gap-2 transition disabled:bg-gray-300"
                 >
                   <Undo2 className="w-4 h-4" />
                   {envoiSac ? "…" : LIBELLE_SAC_RAPPORTE}

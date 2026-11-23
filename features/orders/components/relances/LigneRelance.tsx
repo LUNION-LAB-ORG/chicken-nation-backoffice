@@ -51,7 +51,7 @@ interface Props {
 
 const bouton =
   "inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 px-3.5 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap";
-const principal = `${bouton} bg-[#F17922] text-white hover:bg-[#e06816]`;
+const principal = `${bouton} bg-[#F17922] text-blanc hover:bg-[#e06816]`;
 const secondaire = `${bouton} border border-gray-200 bg-white text-gray-700 hover:bg-gray-50`;
 
 const Pastille = ({
@@ -172,7 +172,7 @@ export function LigneRelance({
                 type="button"
                 onClick={() => setDeplie((d) => !d)}
                 aria-expanded={deplie}
-                className="inline-flex items-center gap-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-[#c55a10] cursor-pointer"
+                className="inline-flex items-center gap-0.5 rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-hex-c55a10 cursor-pointer"
               >
                 {autres.length + 1} paniers
                 {deplie ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}

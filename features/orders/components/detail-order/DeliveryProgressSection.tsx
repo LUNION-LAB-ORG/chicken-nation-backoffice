@@ -51,7 +51,7 @@ const DeliveryProgressSection: React.FC<{ order: OrderTable }> = ({
 
                 {/* DATE */}
                 {step.date && (
-                  <p className="mt-1 text-[11px] text-center text-[#71717A]">
+                  <p className="mt-1 text-[11px] text-center text-hex-71717a">
                     {step.date}
                   </p>
                 )}
@@ -70,7 +70,7 @@ const DeliveryProgressSection: React.FC<{ order: OrderTable }> = ({
 
                   {/* DURATION */}
                   {step.duration && (
-                    <p className="mt-1 text-[10px] text-[#71717A] whitespace-nowrap">
+                    <p className="mt-1 text-[10px] text-hex-71717a whitespace-nowrap">
                       {step.duration}
                     </p>
                   )}

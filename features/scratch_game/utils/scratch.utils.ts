@@ -18,10 +18,10 @@ export const REWARD_TYPE_LABEL: Record<ScratchRewardType, string> = {
 };
 
 export const REWARD_TYPE_BADGE: Record<ScratchRewardType, string> = {
-  POINTS: "bg-[#EEF1F4] text-[#6C757D]",
-  GIFT: "bg-[#FFF6E9] text-[#B25A00]",
-  VOUCHER: "bg-[#E7F0FB] text-[#2B6CB0]",
-  PROMO_CODE: "bg-[#F3E8FF] text-[#7C3AED]",
+  POINTS: "bg-hex-eef1f4 text-hex-6c757d",
+  GIFT: "bg-hex-fff6e9 text-hex-b25a00",
+  VOUCHER: "bg-hex-e7f0fb text-hex-2b6cb0",
+  PROMO_CODE: "bg-hex-f3e8ff text-[#7C3AED]",
 };
 
 export const LEVEL_LABEL: Record<string, string> = {

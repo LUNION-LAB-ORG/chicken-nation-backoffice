@@ -10,11 +10,11 @@ const StatCard: React.FC<{
   value: React.ReactNode;
   sub?: string;
 }> = ({ label, value, sub }) => (
-  <div className="rounded-xl border border-[#E4E4E7] bg-white px-4 py-3">
+  <div className="rounded-xl border border-hex-e4e4e7 bg-white px-4 py-3">
     <div className="text-[11px] uppercase tracking-wide text-[#9796A1]">
       {label}
     </div>
-    <div className="text-xl font-bold text-[#18181B] mt-0.5">{value}</div>
+    <div className="text-xl font-bold text-hex-18181b mt-0.5">{value}</div>
     {sub && <div className="text-[11px] text-[#9796A1] mt-0.5">{sub}</div>}
   </div>
 );
@@ -33,7 +33,7 @@ export default function ScratchEnvelopeMonitor() {
 
   if (isError) {
     return (
-      <div className="rounded-lg bg-[#FDECEA] text-[#C0392B] text-sm px-4 py-3">
+      <div className="rounded-lg bg-hex-fdecea text-hex-c0392b text-sm px-4 py-3">
         {error instanceof Error
           ? error.message
           : "Erreur de chargement de l'enveloppe"}
@@ -59,7 +59,7 @@ export default function ScratchEnvelopeMonitor() {
           type="button"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="inline-flex items-center gap-1.5 text-sm text-[#71717A] hover:text-[#F17922] cursor-pointer disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 text-sm text-hex-71717a hover:text-[#F17922] cursor-pointer disabled:opacity-60"
         >
           <RefreshCw
             size={14}
@@ -73,31 +73,31 @@ export default function ScratchEnvelopeMonitor() {
       <div
         className={`rounded-2xl border p-5 sm:p-6 ${
           within
-            ? "border-[#B7E4C7] bg-[#F4FAF6]"
-            : "border-[#F5C6C0] bg-[#FDF4F3]"
+            ? "border-hex-b7e4c7 bg-hex-f4faf6"
+            : "border-hex-f5c6c0 bg-hex-fdf4f3"
         }`}
       >
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2">
               {within ? (
-                <CheckCircle2 size={20} className="text-[#1E8E5A]" />
+                <CheckCircle2 size={20} className="text-hex-1e8e5a" />
               ) : (
-                <AlertTriangle size={20} className="text-[#C0392B]" />
+                <AlertTriangle size={20} className="text-hex-c0392b" />
               )}
               <span
                 className={`text-sm font-bold ${
-                  within ? "text-[#1E8E5A]" : "text-[#C0392B]"
+                  within ? "text-hex-1e8e5a" : "text-hex-c0392b"
                 }`}
               >
                 {within ? "Dans la cible" : "Hors cible"}
               </span>
             </div>
             <div className="mt-2 flex items-end gap-3">
-              <div className="text-3xl font-bold text-[#18181B]">
+              <div className="text-3xl font-bold text-hex-18181b">
                 {pctFmt(env.realized_pct)}
               </div>
-              <div className="text-sm text-[#71717A] mb-1">
+              <div className="text-sm text-hex-71717a mb-1">
                 réalisé / cible {pctFmt(env.envelope_pct_target)}
               </div>
             </div>
@@ -106,7 +106,7 @@ export default function ScratchEnvelopeMonitor() {
             <div className="text-[11px] uppercase tracking-wide text-[#9796A1]">
               Fenêtre d&apos;analyse
             </div>
-            <div className="text-lg font-semibold text-[#18181B]">
+            <div className="text-lg font-semibold text-hex-18181b">
               {env.window_days} jours
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function ScratchEnvelopeMonitor() {
 
         {/* Jauge */}
         <div className="mt-4">
-          <div className="h-3 w-full rounded-full bg-white border border-[#E4E4E7] overflow-hidden relative">
+          <div className="h-3 w-full rounded-full bg-white border border-hex-e4e4e7 overflow-hidden relative">
             <div
               className={`h-full rounded-full ${
                 within ? "bg-[#1E8E5A]" : "bg-[#C0392B]"

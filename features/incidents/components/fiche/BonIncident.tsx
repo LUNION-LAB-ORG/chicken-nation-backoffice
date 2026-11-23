@@ -58,7 +58,7 @@ export function BonIncident({ incident }: { incident: IncidentFiche }) {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <TicketPercent className="h-4 w-4 shrink-0 text-[#F17922]" />
         <span className="text-sm font-bold text-gray-900">Bon de {formatMontant(bon.montant)}</span>
-        <span className="font-mono text-sm font-semibold tracking-wider text-[#B45309]">{bon.code}</span>
+        <span className="font-mono text-sm font-semibold tracking-wider text-hex-b45309">{bon.code}</span>
         {droits.traiter && utilisable && (
           <button type="button" onClick={copier} title="Copier le code" className="rounded p-1 text-gray-500 hover:bg-white hover:text-[#F17922]">
             <Copy className="h-3.5 w-3.5" />
@@ -77,7 +77,7 @@ export function BonIncident({ incident }: { incident: IncidentFiche }) {
           type="button"
           disabled={renvoyer.isPending}
           onClick={() => renvoyer.mutate({ id: incident.id, valeur: undefined })}
-          className="inline-flex h-8 items-center gap-1.5 self-start rounded-lg border border-orange-200 bg-white px-3 text-xs font-semibold text-[#B45309] hover:bg-orange-50 disabled:opacity-50"
+          className="inline-flex h-8 items-center gap-1.5 self-start rounded-lg border border-orange-200 bg-white px-3 text-xs font-semibold text-hex-b45309 hover:bg-orange-50 disabled:opacity-50"
         >
           {renvoyer.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           Renvoyer le SMS

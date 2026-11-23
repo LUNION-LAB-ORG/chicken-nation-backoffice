@@ -27,7 +27,7 @@ function AppClickListTable() {
   return (
     <div className="px-5 pb-5 pt-3 flex flex-col">
       <div className="overflow-x-auto">
-        <Table className="bg-white text-black">
+        <Table className="bg-white text-noir">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

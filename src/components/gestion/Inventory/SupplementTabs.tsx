@@ -30,14 +30,14 @@ export default function SupplementTabs({
   };
 
   return (
-    <div className="flex bg-[#F4F4F5] rounded-[10px] items-center gap-2">
+    <div className="flex bg-hex-f4f4f5 rounded-[10px] items-center gap-2">
       {tabs.map(tab => (
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           className={`px-4 py-1.5 rounded-[10px] cursor-pointer ${
             selectedTab === tab.id
-              ? 'bg-[#F17922] font-bold text-white'
+              ? 'bg-[#F17922] font-bold text-blanc'
               : 'text-[#9796A1] hover:bg-gray-50'
           }`}
         >

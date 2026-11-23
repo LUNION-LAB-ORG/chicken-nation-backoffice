@@ -36,7 +36,7 @@ const Th: React.FC<{ children: React.ReactNode; className?: string }> = ({
 const Td: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = "",
-}) => <td className={`px-4 py-3 text-sm text-[#18181B] ${className}`}>{children}</td>;
+}) => <td className={`px-4 py-3 text-sm text-hex-18181b ${className}`}>{children}</td>;
 
 export default function ScratchLotsList({
   lots,
@@ -58,7 +58,7 @@ export default function ScratchLotsList({
 
   if (!lots || lots.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-2xl border border-[#E4E4E7]">
+      <div className="text-center py-16 bg-white rounded-2xl border border-hex-e4e4e7">
         <div className="text-5xl mb-3">🎰</div>
         <h3 className="text-lg font-semibold text-gray-700">Aucun lot</h3>
         <p className="text-gray-500">
@@ -71,10 +71,10 @@ export default function ScratchLotsList({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E4E4E7] overflow-hidden">
+    <div className="bg-white rounded-2xl border border-hex-e4e4e7 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] border-collapse">
-          <thead className="bg-[#FAFAFA] border-b border-[#F1F3F5]">
+          <thead className="bg-hex-fafafa border-b border-hex-f1f3f5">
             <tr>
               <Th>Lot</Th>
               <Th>Type</Th>
@@ -89,18 +89,18 @@ export default function ScratchLotsList({
               {avecActions && <Th className="text-right">Actions</Th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F1F3F5]">
+          <tbody className="divide-y divide-hex-f1f3f5">
             {lots.map((lot) => (
               <tr
                 key={lot.id}
-                className={`hover:bg-[#FFF9F2] transition-colors ${
-                  lot.is_floor ? "bg-[#FFFBF5]" : ""
+                className={`hover:bg-hex-fff9f2 transition-colors ${
+                  lot.is_floor ? "bg-hex-fffbf5" : ""
                 }`}
               >
                 <Td>
                   <div className="flex items-center gap-2">
                     {lot.is_floor && (
-                      <span className="inline-flex items-center gap-1 bg-[#FFF6E9] text-[#B25A00] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <span className="inline-flex items-center gap-1 bg-hex-fff6e9 text-hex-b25a00 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         <Star size={11} /> PLANCHER
                       </span>
                     )}
@@ -116,7 +116,7 @@ export default function ScratchLotsList({
                     {REWARD_TYPE_LABEL[lot.reward_type]}
                   </span>
                 </Td>
-                <Td className="text-[#71717A]">
+                <Td className="text-hex-71717a">
                   {describePayload(
                     lot.reward_type,
                     lot.payload as Record<string, unknown>
@@ -146,7 +146,7 @@ export default function ScratchLotsList({
                 </Td>
                 <Td>
                   {lot.level_min ? (
-                    <span className="text-[11px] font-medium text-[#71717A]">
+                    <span className="text-[11px] font-medium text-hex-71717a">
                       {LEVEL_LABEL[lot.level_min] ?? lot.level_min}+
                     </span>
                   ) : (
@@ -157,8 +157,8 @@ export default function ScratchLotsList({
                   <span
                     className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                       lot.active
-                        ? "bg-[#E6F4EC] text-[#1E8E5A]"
-                        : "bg-[#EEF1F4] text-[#6C757D]"
+                        ? "bg-hex-e6f4ec text-hex-1e8e5a"
+                        : "bg-hex-eef1f4 text-hex-6c757d"
                     }`}
                   >
                     <span
@@ -177,7 +177,7 @@ export default function ScratchLotsList({
                           type="button"
                           title={lot.active ? "Désactiver" : "Activer"}
                           onClick={() => onToggleActive(lot)}
-                          className="p-1.5 rounded-lg text-[#71717A] hover:bg-[#F1F3F5] cursor-pointer"
+                          className="p-1.5 rounded-lg text-hex-71717a hover:bg-hex-f1f3f5 cursor-pointer"
                         >
                           {lot.active ? (
                             <PowerOff size={16} />
@@ -191,7 +191,7 @@ export default function ScratchLotsList({
                           type="button"
                           title="Éditer"
                           onClick={() => onEdit(lot)}
-                          className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
+                          className="p-1.5 rounded-lg text-hex-2b6cb0 hover:bg-hex-e7f0fb cursor-pointer"
                         >
                           <Pencil size={16} />
                         </button>
@@ -209,7 +209,7 @@ export default function ScratchLotsList({
                           className={`p-1.5 rounded-lg ${
                             lot.is_floor
                               ? "text-[#D9D9D9] cursor-not-allowed"
-                              : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                              : "text-hex-c0392b hover:bg-hex-fdecea cursor-pointer"
                           }`}
                         >
                           <Trash2 size={16} />

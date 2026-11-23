@@ -29,7 +29,7 @@ const SoldeCard: React.FC<{ label: string; value: number; color: string }> = ({
   value,
   color,
 }) => (
-  <div className="flex-1 min-w-[130px] bg-white border border-[#E4E4E7] rounded-xl p-3">
+  <div className="flex-1 min-w-[130px] bg-white border border-hex-e4e4e7 rounded-xl p-3">
     <div className="text-[11px] uppercase tracking-wide text-[#9796A1]">{label}</div>
     <div className="text-lg font-bold mt-1" style={{ color }}>
       {fcfa(value)}
@@ -40,27 +40,27 @@ const SoldeCard: React.FC<{ label: string; value: number; color: string }> = ({
 const EarningRow: React.FC<{ e: ReferralEarning }> = ({ e }) => {
   const st = STATUT_GAIN[e.status] ?? STATUT_GAIN.PENDING;
   return (
-    <tr className="border-b border-[#F2F2F4] last:border-0">
+    <tr className="border-b border-hex-f2f2f4 last:border-0">
       <td className="py-2.5 px-3">
         <span
           className={
             "inline-block text-[10px] font-semibold rounded-full px-2 py-0.5 " +
             (e.kind === "PRIME"
-              ? "bg-[#FDEDD3] text-[#B45309]"
-              : "bg-[#EEF2FF] text-[#4338CA]")
+              ? "bg-hex-fdedd3 text-hex-b45309"
+              : "bg-hex-eef2ff text-[#4338CA]")
           }
         >
           {e.kind === "PRIME" ? "Prime" : "Commission"}
         </span>
       </td>
-      <td className="py-2.5 px-3 text-sm text-[#18181B]">{e.referee_name ?? "Sans nom"}</td>
-      <td className="py-2.5 px-3 text-xs text-[#71717A]">
+      <td className="py-2.5 px-3 text-sm text-hex-18181b">{e.referee_name ?? "Sans nom"}</td>
+      <td className="py-2.5 px-3 text-xs text-hex-71717a">
         {e.order_number ? `#${e.order_number}` : ""}
         {e.order_amount != null && (
           <span className="text-[#9796A1]"> · {fcfa(e.order_amount)}</span>
         )}
       </td>
-      <td className="py-2.5 px-3 text-sm font-semibold text-[#18181B] whitespace-nowrap">
+      <td className="py-2.5 px-3 text-sm font-semibold text-hex-18181b whitespace-nowrap">
         {fcfa(e.amount)}
       </td>
       <td className="py-2.5 px-3">
@@ -149,7 +149,7 @@ export default function AmbassadorPayoutModal({
             {/* Identité */}
             <div className="space-y-1">
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                {detail.phone && <span className="text-[#71717A]">{detail.phone}</span>}
+                {detail.phone && <span className="text-hex-71717a">{detail.phone}</span>}
                 {code === null ? (
                   <span className="inline-flex items-center gap-2">
                     {detail.referral_code && (
@@ -161,7 +161,7 @@ export default function AmbassadorPayoutModal({
                       <button
                         type="button"
                         onClick={() => setCode(detail.referral_code ?? "")}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-[#71717A] hover:text-[#F17922] cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-hex-71717a hover:text-[#F17922] cursor-pointer"
                       >
                         <Pencil size={12} /> Modifier le code
                       </button>
@@ -175,20 +175,20 @@ export default function AmbassadorPayoutModal({
                       onChange={(e) => setCode(e.target.value.toUpperCase())}
                       onKeyDown={(e) => e.key === "Enter" && enregistrerCode()}
                       maxLength={24}
-                      className="h-9 w-44 rounded-lg border border-[#E4E4E7] px-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                      className="h-9 w-44 rounded-lg border border-hex-e4e4e7 px-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
                     />
                     <button
                       type="button"
                       onClick={enregistrerCode}
                       disabled={changerCode.isPending}
-                      className="h-9 px-3 rounded-lg bg-[#F17922] text-white text-xs font-semibold hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
+                      className="h-9 px-3 rounded-lg bg-[#F17922] text-blanc text-xs font-semibold hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
                     >
                       {changerCode.isPending ? <Loader2 size={14} className="animate-spin" /> : "Enregistrer"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setCode(null)}
-                      className="text-xs text-[#71717A] hover:underline cursor-pointer"
+                      className="text-xs text-hex-71717a hover:underline cursor-pointer"
                     >
                       Annuler
                     </button>
@@ -221,16 +221,16 @@ export default function AmbassadorPayoutModal({
 
             {/* Actions versement */}
             {peutVerser && (
-              <div className="bg-[#FAFAFA] border border-[#E4E4E7] rounded-xl p-4 space-y-4">
+              <div className="bg-hex-fafafa border border-hex-e4e4e7 rounded-xl p-4 space-y-4">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <div className="text-sm font-semibold text-[#18181B]">
+                  <div className="text-sm font-semibold text-hex-18181b">
                     Gérer le versement
                   </div>
                   <button
                     type="button"
                     onClick={() => markPayable.mutate()}
                     disabled={markPayable.isPending || detail.pending_amount <= 0}
-                    className="flex items-center gap-2 text-sm font-medium text-[#0369A1] border border-[#0369A1]/30 bg-white rounded-lg px-3 py-2 hover:bg-[#EAF6FF] disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-2 text-sm font-medium text-hex-0369a1 border border-[#0369A1]/30 bg-white rounded-lg px-3 py-2 hover:bg-hex-eaf6ff disabled:opacity-50 cursor-pointer"
                     title="Basculer les gains éligibles (en attente) en payable"
                   >
                     {markPayable.isPending ? (
@@ -244,22 +244,22 @@ export default function AmbassadorPayoutModal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr_auto] gap-3 items-end">
                   <div>
-                    <label className="block text-xs font-medium text-[#71717A] mb-1.5">
+                    <label className="block text-xs font-medium text-hex-71717a mb-1.5">
                       Montant versé (FCFA)
                     </label>
-                    <div className="w-full h-11 flex items-center rounded-lg border border-[#E4E4E7] bg-white px-3 text-sm font-semibold text-[#18181B]">
+                    <div className="w-full h-11 flex items-center rounded-lg border border-hex-e4e4e7 bg-white px-3 text-sm font-semibold text-hex-18181b">
                       {fcfa(payable)}
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#71717A] mb-1.5">
+                    <label className="block text-xs font-medium text-hex-71717a mb-1.5">
                       Note (réf. mobile money, remarque…)
                     </label>
                     <input
                       type="text"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      className="w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                      className="w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
                       placeholder="Ex. Wave 07xx, réf. 12345"
                     />
                   </div>
@@ -267,7 +267,7 @@ export default function AmbassadorPayoutModal({
                     type="button"
                     onClick={doPay}
                     disabled={markPaid.isPending || payable <= 0}
-                    className="h-11 flex items-center justify-center gap-2 bg-[#1E8E5A] text-white font-semibold px-5 rounded-lg hover:bg-[#177a4c] disabled:opacity-50 cursor-pointer"
+                    className="h-11 flex items-center justify-center gap-2 bg-[#1E8E5A] text-blanc font-semibold px-5 rounded-lg hover:bg-[#177a4c] disabled:opacity-50 cursor-pointer"
                   >
                     {markPaid.isPending ? (
                       <Loader2 size={16} className="animate-spin" />
@@ -287,7 +287,7 @@ export default function AmbassadorPayoutModal({
             {/* Filleuls */}
             <div>
               <div className="flex items-center justify-between gap-3 mb-2">
-                <h4 className="text-sm font-semibold text-[#18181B]">
+                <h4 className="text-sm font-semibold text-hex-18181b">
                   Filleuls ({detail.filleuls?.length ?? 0})
                 </h4>
                 {peutVerser && !ajout && (
@@ -302,8 +302,8 @@ export default function AmbassadorPayoutModal({
               </div>
 
               {ajout && (
-                <div className="mb-3 rounded-xl border border-[#E4E4E7] bg-[#FAFAFA] p-3 space-y-2">
-                  <p className="text-xs text-[#71717A]">
+                <div className="mb-3 rounded-xl border border-hex-e4e4e7 bg-hex-fafafa p-3 space-y-2">
+                  <p className="text-xs text-hex-71717a">
                     Pour un nouveau client qui a oublié le code à l&apos;inscription. Il reçoit
                     son cadeau de bienvenue.
                   </p>
@@ -322,17 +322,17 @@ export default function AmbassadorPayoutModal({
                   <button
                     type="button"
                     onClick={() => setAjout(false)}
-                    className="text-xs text-[#71717A] hover:underline cursor-pointer"
+                    className="text-xs text-hex-71717a hover:underline cursor-pointer"
                   >
                     Fermer
                   </button>
                 </div>
               )}
 
-              <div className="border border-[#E4E4E7] rounded-xl overflow-x-auto">
+              <div className="border border-hex-e4e4e7 rounded-xl overflow-x-auto">
                 <table className="w-full min-w-[560px]">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA]">
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa">
                       <th className="py-2 px-3 font-medium">Filleul</th>
                       <th className="py-2 px-3 font-medium">Inscrit le</th>
                       <th className="py-2 px-3 font-medium">Statut</th>
@@ -351,12 +351,12 @@ export default function AmbassadorPayoutModal({
                       detail.filleuls.map((f) => {
                         const st = STATUT_FILLEUL[f.status] ?? STATUT_FILLEUL.PENDING;
                         return (
-                          <tr key={f.id} className="border-b border-[#F2F2F4] last:border-0">
+                          <tr key={f.id} className="border-b border-hex-f2f2f4 last:border-0">
                             <td className="py-2.5 px-3">
-                              <div className="text-sm text-[#18181B]">{f.fullname ?? "Sans nom"}</div>
+                              <div className="text-sm text-hex-18181b">{f.fullname ?? "Sans nom"}</div>
                               <div className="text-xs text-[#9796A1]">{f.phone}</div>
                             </td>
-                            <td className="py-2.5 px-3 text-xs text-[#71717A] whitespace-nowrap">
+                            <td className="py-2.5 px-3 text-xs text-hex-71717a whitespace-nowrap">
                               {shortDate(f.joined_at)}
                             </td>
                             <td className="py-2.5 px-3">
@@ -364,7 +364,7 @@ export default function AmbassadorPayoutModal({
                                 {st.label}
                               </span>
                             </td>
-                            <td className="py-2.5 px-3 text-right text-sm text-[#18181B] whitespace-nowrap">
+                            <td className="py-2.5 px-3 text-right text-sm text-hex-18181b whitespace-nowrap">
                               {fcfa(f.sales)}
                               <span className="text-xs text-[#9796A1]">
                                 {" "}· {f.orders_count} commande{f.orders_count > 1 ? "s" : ""}
@@ -394,13 +394,13 @@ export default function AmbassadorPayoutModal({
 
             {/* Gains détaillés */}
             <div>
-              <h4 className="text-sm font-semibold text-[#18181B] mb-2">
+              <h4 className="text-sm font-semibold text-hex-18181b mb-2">
                 Gains ({sortedEarnings.length})
               </h4>
-              <div className="border border-[#E4E4E7] rounded-xl overflow-x-auto">
+              <div className="border border-hex-e4e4e7 rounded-xl overflow-x-auto">
                 <table className="w-full min-w-[560px]">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA]">
+                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa">
                       <th className="py-2 px-3 font-medium">Type</th>
                       <th className="py-2 px-3 font-medium">Filleul</th>
                       <th className="py-2 px-3 font-medium">Commande</th>
@@ -426,7 +426,7 @@ export default function AmbassadorPayoutModal({
 
             {/* Historique versements */}
             <div>
-              <h4 className="text-sm font-semibold text-[#18181B] mb-2">
+              <h4 className="text-sm font-semibold text-hex-18181b mb-2">
                 Historique des versements ({detail.payouts?.length ?? 0})
               </h4>
               {(detail.payouts?.length ?? 0) === 0 ? (
@@ -436,12 +436,12 @@ export default function AmbassadorPayoutModal({
                   {detail.payouts.map((p) => (
                     <li
                       key={p.id}
-                      className="flex items-start justify-between gap-3 border border-[#E4E4E7] rounded-lg px-3 py-2.5"
+                      className="flex items-start justify-between gap-3 border border-hex-e4e4e7 rounded-lg px-3 py-2.5"
                     >
                       <div className="text-sm">
-                        <div className="font-semibold text-[#1E8E5A]">{fcfa(p.amount)}</div>
+                        <div className="font-semibold text-hex-1e8e5a">{fcfa(p.amount)}</div>
                         {p.note && (
-                          <div className="text-xs text-[#71717A] mt-0.5">{p.note}</div>
+                          <div className="text-xs text-hex-71717a mt-0.5">{p.note}</div>
                         )}
                         {p.paid_by_name && (
                           <div className="text-[11px] text-[#9796A1] mt-0.5">

@@ -332,7 +332,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                         e.stopPropagation()
                         setSelectedImage(null)
                       }}
-                      className="px-3 py-1 bg-red-500 bg-opacity-90 text-white text-sm rounded-md hover:bg-opacity-100 transition-all"
+                      className="px-3 py-1 bg-red-500 bg-opacity-90 text-blanc text-sm rounded-md hover:bg-opacity-100 transition-all"
                       title="Supprimer l'image"
                       aria-label="Supprimer l'image"
                     >
@@ -458,9 +458,9 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                   aria-label="Alignement à gauche"
                 >
                   <div className="flex flex-col space-y-1">
-                    <div className="h-0.5 bg-gray-600 w-5"></div>
-                    <div className="h-0.5 bg-gray-600 w-4"></div>
-                    <div className="h-0.5 bg-gray-600 w-5"></div>
+                    <div className="h-0.5 bg-gray-600 dark:bg-[#4b5260] w-5"></div>
+                    <div className="h-0.5 bg-gray-600 dark:bg-[#4b5260] w-4"></div>
+                    <div className="h-0.5 bg-gray-600 dark:bg-[#4b5260] w-5"></div>
                   </div>
                 </button>
 
@@ -570,7 +570,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
                     <button
                       type="button"
                       onClick={applyLink}
-                      className="px-4 py-2 bg-[#F17922] text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
+                      className="px-4 py-2 bg-[#F17922] text-blanc text-sm rounded-lg hover:bg-orange-600 transition-colors"
                     >
                       Ajouter
                     </button>
@@ -645,7 +645,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
           <button
             type="button"
             onClick={handleSubmit}
-            className="flex-1 py-3 bg-[#F17922] text-white rounded-2xl font- cursor-pointer hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-offset-2 transition-colors"
+            className="flex-1 py-3 bg-[#F17922] text-blanc rounded-2xl font- cursor-pointer hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:ring-offset-2 transition-colors"
           >
             Envoyer la diffusion
           </button>
@@ -679,7 +679,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
           {/* Contour du téléphone avec bordure grise épaisse */}
           <div className="relative w-72 h-[600px] bg-white rounded-[40px] border-[6px] border-gray-400 shadow-xl overflow-hidden">
             {/* En-tête avec fond beige */}
-            <div className="bg-[#F5E6D3] px-4 py-6 text-center">
+            <div className="bg-hex-f5e6d3 px-4 py-6 text-center">
               <h4 className="text-gray-800 font-medium text-base">
                 {title || "Titre de l'événement"}
               </h4>
@@ -723,8 +723,8 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
       {notification && (
         <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transition-all duration-300 ${
           notification.type === 'error'
-            ? 'bg-red-500 text-white'
-            : 'bg-green-500 text-white'
+            ? 'bg-red-500 text-blanc'
+            : 'bg-green-500 text-blanc'
         }`}>
           <div className="flex items-center gap-2">
             {notification.type === 'error' ? (
@@ -740,7 +740,7 @@ export default function CreateAd({ onCancel, onSuccess }: CreateAdProps) {
             <button
               type="button"
               onClick={() => setNotification(null)}
-              className="ml-2 text-white hover:text-gray-200 transition-colors"
+              className="ml-2 text-blanc hover:text-gray-200 transition-colors"
               title="Fermer la notification"
               aria-label="Fermer la notification"
             >

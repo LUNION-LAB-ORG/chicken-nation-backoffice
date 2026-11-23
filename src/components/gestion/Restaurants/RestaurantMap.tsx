@@ -235,7 +235,7 @@ export default function RestaurantMap({
                 onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
                 onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
                 placeholder="Rechercher une adresse..."
-                className="w-full pl-10 pr-8 h-[42px] rounded-xl bg-white border dark:text-gray-700 border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                className="w-full pl-10 pr-8 h-[42px] rounded-xl bg-white border dark:text-gray-700 border-hex-d8d8d8 px-4 text-[13px] placeholder-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-[#F17922]"
               />
               {isSearching && (
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#F17922] border-t-transparent rounded-full animate-spin" />
@@ -261,7 +261,7 @@ export default function RestaurantMap({
                     onMouseDown={() => handleSelectPlace(item)}
                     className="w-full px-4 py-2.5 flex flex-col items-start hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-b-0"
                   >
-                    <span className="font-semibold text-[#595959] text-[13px] truncate w-full">
+                    <span className="font-semibold text-hex-595959 text-[13px] truncate w-full">
                       {item.mainText}
                     </span>
                     {item.secondaryText && (

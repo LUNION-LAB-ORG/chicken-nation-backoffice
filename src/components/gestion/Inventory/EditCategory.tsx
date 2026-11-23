@@ -190,7 +190,7 @@ export default function EditCategory({
               placeholder="Nom de la catégorie"
               required
               disabled={isLoading}
-              className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+              className="w-full h-[42px] rounded-xl bg-white border border-hex-d8d8d8 px-4 text-[13px] placeholder-gray-400"
             />
           </div>
 
@@ -205,7 +205,7 @@ export default function EditCategory({
               placeholder="À propos de cette catégorie"
               rows={4}
               disabled={isLoading}
-              className="w-full rounded-xl bg-white border border-[#D8D8D8] px-4 py-3 text-[13px] placeholder-gray-400 resize-none"
+              className="w-full rounded-xl bg-white border border-hex-d8d8d8 px-4 py-3 text-[13px] placeholder-gray-400 resize-none"
             />
           </div>
 
@@ -219,7 +219,7 @@ export default function EditCategory({
               onChange={handleChange}
               placeholder="Ex: CAT-001"
               disabled={isLoading}
-              className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+              className="w-full h-[42px] rounded-xl bg-white border border-hex-d8d8d8 px-4 text-[13px] placeholder-gray-400"
             />
           </div>
 
@@ -246,14 +246,14 @@ export default function EditCategory({
           type="button"
           onClick={onClose}
           disabled={isLoading}
-          className="h-[38px] text-[#9796A1] px-6 rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100"
+          className="h-[38px] text-[#9796A1] px-6 rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100"
         >
           Annuler
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-[38px] px-6 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] flex items-center justify-center"
+          className="h-[38px] px-6 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] flex items-center justify-center"
         >
           {isLoading ? (
             <>

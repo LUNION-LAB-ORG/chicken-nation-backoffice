@@ -65,7 +65,7 @@ const Select = ({
             }
           }}
           className={`relative w-full flex items-center justify-between px-2 xs:px-3 sm:px-4 py-1.5 
-            xs:py-2 sm:py-3 bg-white border border-[#D8D8D8] rounded-lg xs:rounded-xl sm:rounded-2xl text-left focus:outline-none cursor-pointer ${className}`}
+            xs:py-2 sm:py-3 bg-white border border-hex-d8d8d8 rounded-lg xs:rounded-xl sm:rounded-2xl text-left focus:outline-none cursor-pointer ${className}`}
           aria-haspopup="listbox"
           aria-expanded={isOpen}
         >
@@ -99,9 +99,9 @@ const Select = ({
                 }}
                 role="option"
                 aria-selected={option.value === value}
-                className={`px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 sm:py-3 text-xs xs:text-sm cursor-pointer hover:bg-[#FBD2B5] hover:text-[#F17922] transition-colors truncate ${
+                className={`px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 sm:py-3 text-xs xs:text-sm cursor-pointer hover:bg-hex-fbd2b5 hover:text-[#F17922] transition-colors truncate ${
                   option.value === value
-                    ? "bg-[#FBD2B5] text-[#F17922] font-medium"
+                    ? "bg-hex-fbd2b5 text-[#F17922] font-medium"
                     : "text-gray-900"
                 }`}
               >

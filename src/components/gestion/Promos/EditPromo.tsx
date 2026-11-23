@@ -660,7 +660,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
             className={`w-70 px-6 py-3 cursor-pointer rounded-xl transition-colors font-regular ${
               isSubmitting
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-gray-200 text-[#71717A] hover:bg-gray-300'
+                : 'bg-gray-200 text-hex-71717a hover:bg-gray-300'
             }`}
           >
             {isSubmitting ? 'Sauvegarde...' : 'Enregistrer comme brouillon'}
@@ -668,7 +668,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
           <button
             type="button"
             onClick={onCancel}
-            className="w-70 cursor-pointer px-6 py-3 bg-gray-200 text-[#71717A] rounded-xl hover:bg-gray-300 transition-colors font-regular"
+            className="w-70 cursor-pointer px-6 py-3 bg-gray-200 text-hex-71717a rounded-xl hover:bg-gray-300 transition-colors font-regular"
           >
             Annuler
           </button>
@@ -679,7 +679,7 @@ const EditPromo = ({ onSave, onSaveAsDraft, onCancel, className = '', initialDat
             className={`w-70 cursor-pointer px-6 py-3 rounded-xl font-medium transition-opacity ${
               isSubmitting
                 ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                : 'bg-gradient-to-r from-[#F17922] to-[#FA6345] text-white hover:opacity-90'
+                : 'bg-gradient-to-r from-[#F17922] to-[#FA6345] text-blanc hover:opacity-90'
             }`}
           >
             {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}

@@ -120,7 +120,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, isLoading = 
                 onClick={() => handlePageChange(page)}
                 disabled={isLoading}
                 className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all duration-200 border ${isActive
-                  ? 'bg-[#F17922] text-white shadow-md font-bold border-[#F17922] scale-110'
+                  ? 'bg-[#F17922] text-blanc shadow-md font-bold border-[#F17922] scale-110'
                   : 'text-gray-700 hover:bg-gray-100 border-gray-200 hover:border-[#F17922]'
                   } ${isLoading ? 'opacity-50 cursor-wait' : ''}`}
               >
@@ -187,7 +187,7 @@ export function Pagination({ currentPage, totalPages, onPageChange, isLoading = 
               type="button"
               onClick={handleJumpToPage}
               disabled={isLoading || !jumpPage}
-              className="px-3 py-1 text-xs font-medium text-white bg-[#F17922] rounded-md hover:bg-[#d96a1c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-3 py-1 text-xs font-medium text-blanc bg-[#F17922] rounded-md hover:bg-[#d96a1c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               OK
             </button>

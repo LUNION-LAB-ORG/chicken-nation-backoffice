@@ -314,7 +314,7 @@ export function CarteEnDirect({
   }
 
   return (
-    <div className="relative h-full min-h-[320px] overflow-hidden rounded-xl border border-[#E4E4E7] bg-white">
+    <div className="relative h-full min-h-[320px] overflow-hidden rounded-xl border border-hex-e4e4e7 bg-white">
       {/* Légende */}
       <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-5rem)] flex-wrap gap-2 rounded-xl border border-gray-100 bg-white/90 px-3 py-1.5 text-[11px] shadow-sm backdrop-blur-sm">
         {/* « Injoignable » a la couleur de « Connexion coupée » : une seule entrée. */}
@@ -340,7 +340,7 @@ export function CarteEnDirect({
         }
         className={`absolute bottom-6 right-[60px] z-10 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm transition-colors ${
           positionsAnciennes
-            ? 'border-gray-900 bg-gray-900 text-white'
+            ? 'border-gray-900 dark:border-[#0e1014] bg-gray-900 dark:bg-[#0e1014] text-blanc'
             : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
         }`}
       >

@@ -55,7 +55,7 @@ export default function MenuItem({ menu, onView }: MenuItemProps) {
               {menu.promotion_price} CFA
             </span>
             {/* Badge PROMO rouge */}
-            <span className="text-xs font-bold text-white bg-red-500 px-2 py-1 rounded-md">
+            <span className="text-xs font-bold text-blanc bg-red-500 px-2 py-1 rounded-md">
               PROMO
             </span>
           </>
@@ -71,7 +71,7 @@ export default function MenuItem({ menu, onView }: MenuItemProps) {
         <button
           type="button"
           onClick={() => onEdit?.(menu)}
-          className="mt-auto w-full sm:w-32 lg:w-36 py-1 sm:py-1.5 lg:py-1.5 px-2 bg-[#F17922] text-white rounded-lg text-xs sm:text-sm font-medium hover:bg-[#f17522] transition-colors cursor-pointer"
+          className="mt-auto w-full sm:w-32 lg:w-36 py-1 sm:py-1.5 lg:py-1.5 px-2 bg-[#F17922] text-blanc rounded-lg text-xs sm:text-sm font-medium hover:bg-[#f17522] transition-colors cursor-pointer"
         >
           Modifier le plat
         </button>

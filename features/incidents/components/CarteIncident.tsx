@@ -40,30 +40,30 @@ export function CarteIncident({
       type="button"
       onClick={() => onOuvrir(incident.id)}
       aria-label={`Incident ${incident.code}`}
-      className={`flex w-full flex-col gap-1 rounded-xl border border-l-4 border-[#E4E4E7] bg-white p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-[#F17922]/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922]/50 ${BORD[incident.gravite]}`}
+      className={`flex w-full flex-col gap-1 rounded-xl border border-l-4 border-hex-e4e4e7 bg-white p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-[#F17922]/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922]/50 ${BORD[incident.gravite]}`}
     >
       <span className="flex items-start justify-between gap-2">
-        <span className="min-w-0 truncate text-[13px] font-semibold text-[#18181B]">{incident.categorie.nom}</span>
+        <span className="min-w-0 truncate text-[13px] font-semibold text-hex-18181b">{incident.categorie.nom}</span>
         {incident.gravite === "HAUTE" && (
           <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Gravité haute</span>
         )}
       </span>
-      <span className="truncate text-[11px] text-[#52525B]">
+      <span className="truncate text-[11px] text-hex-52525b">
         {avecRestaurant ? `${incident.restaurant.name} · ` : ""}
         {incident.client.nom} · {finDeReference(incident.commande.reference)}
       </span>
       <span
-        className={`flex items-center gap-1 text-[11px] ${temps.retard ? "font-semibold text-red-700" : "text-[#71717A]"}`}
+        className={`flex items-center gap-1 text-[11px] ${temps.retard ? "font-semibold text-red-700" : "text-hex-71717a"}`}
       >
         {temps.retard && <AlertTriangle className="h-3 w-3 shrink-0" />}
         {temps.texte}
       </span>
       <span className="flex flex-wrap items-center gap-1.5 pt-0.5">
-        <span className="rounded-full bg-[#F4F4F5] px-2 py-0.5 text-[10px] font-medium text-[#52525B]">
+        <span className="rounded-full bg-hex-f4f4f5 px-2 py-0.5 text-[10px] font-medium text-hex-52525b">
           {incident.agent ? incident.agent.fullname : LIBELLE_POLE[incident.pole]}
         </span>
         {resolu && geste && (
-          <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-[#B45309]">{geste}</span>
+          <span className="rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-medium text-hex-b45309">{geste}</span>
         )}
       </span>
     </button>

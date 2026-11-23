@@ -49,7 +49,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order: initialOrder
             </div>
 
             {/* Right */}
-            <div className="md:w-2/5 p-6 bg-[#FBFBFB]">
+            <div className="md:w-2/5 p-6 bg-hex-fbfbfb">
               <CustomerInfoSection order={order} />
               <DeliveryProgressSection order={order} />
               <PriceSummarySection order={order} />

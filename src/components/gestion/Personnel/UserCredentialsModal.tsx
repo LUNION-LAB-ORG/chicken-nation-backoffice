@@ -15,9 +15,9 @@ const UserCredentialsModal: React.FC<UserCredentialsModalProps> = ({ open, email
       <div className="flex flex-col gap-5 items-center">
         <div className="w-full flex flex-col gap-4 px-4 sm:px-8 md:px-16 py-3">
           {/* Email Field */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-[#F7F7F7] rounded-xl px-4 py-3 gap-3 sm:gap-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-hex-f7f7f7 rounded-xl px-4 py-3 gap-3 sm:gap-0">
             <div className="flex items-center min-w-[120px]">
-              <span className="text-[#595959] text-sm sm:text-[13px]">Utilisateur</span>
+              <span className="text-hex-595959 text-sm sm:text-[13px]">Utilisateur</span>
             </div>
             
             <div className="flex-1 min-w-0 mx-2">
@@ -27,7 +27,7 @@ const UserCredentialsModal: React.FC<UserCredentialsModalProps> = ({ open, email
             </div>
             
             <button
-              className="bg-[#F17922] text-white text-xs px-4 py-2 sm:px-6 sm:py-1 cursor-pointer rounded-lg hover:bg-[#f18c3b] transition-colors w-full sm:w-auto mt-2 sm:mt-0"
+              className="bg-[#F17922] text-blanc text-xs px-4 py-2 sm:px-6 sm:py-1 cursor-pointer rounded-lg hover:bg-[#f18c3b] transition-colors w-full sm:w-auto mt-2 sm:mt-0"
               onClick={() => {
                 navigator.clipboard.writeText(email);
                 toast.success('Email copié !');
@@ -38,9 +38,9 @@ const UserCredentialsModal: React.FC<UserCredentialsModalProps> = ({ open, email
           </div>
 
           {/* Password Field */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-[#F7F7F7] rounded-xl px-4 py-3 gap-3 sm:gap-0">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-hex-f7f7f7 rounded-xl px-4 py-3 gap-3 sm:gap-0">
             <div className="flex items-center min-w-[120px]">
-              <span className="text-[#595959] text-sm sm:text-[13px]">Mot de passe</span>
+              <span className="text-hex-595959 text-sm sm:text-[13px]">Mot de passe</span>
             </div>
             
             <div className="flex-1 min-w-0 mx-2">
@@ -50,7 +50,7 @@ const UserCredentialsModal: React.FC<UserCredentialsModalProps> = ({ open, email
             </div>
             
             <button
-              className="bg-[#F17922] text-white text-xs px-4 py-2 sm:px-6 sm:py-1 cursor-pointer rounded-lg hover:bg-[#f18c3b] transition-colors w-full sm:w-auto mt-2 sm:mt-0"
+              className="bg-[#F17922] text-blanc text-xs px-4 py-2 sm:px-6 sm:py-1 cursor-pointer rounded-lg hover:bg-[#f18c3b] transition-colors w-full sm:w-auto mt-2 sm:mt-0"
               onClick={() => {
                 navigator.clipboard.writeText(password);
                 toast.success('Mot de passe copié !');

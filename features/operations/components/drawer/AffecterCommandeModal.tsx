@@ -161,7 +161,7 @@ export const AffecterCommandeModal: React.FC<Props> = ({ order, onClose }) => {
             type="button"
             onClick={confirmer}
             disabled={!choisi || affecter.isPending}
-            className="flex-1 py-2.5 rounded-lg bg-[#F17922] text-white text-sm font-semibold disabled:opacity-50"
+            className="flex-1 py-2.5 rounded-lg bg-[#F17922] text-blanc text-sm font-semibold disabled:opacity-50"
           >
             {affecter.isPending ? "Envoi…" : "Affecter"}
           </button>

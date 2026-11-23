@@ -132,7 +132,7 @@ export default function CarteNation() {
           >
             <button
               onClick={() => handleToggleCardModal(null, "viewCard")}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+              className="absolute -top-12 right-0 text-blanc hover:text-gray-300 transition-colors"
             >
               <XCircle className="w-8 h-8" />
             </button>

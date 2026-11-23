@@ -39,7 +39,7 @@ export const BoutonAjout: React.FC<BoutonAjoutProps> = ({ dish, onAjouter, onOuv
       }}
       title="Choisir les options"
       aria-label={`Choisir les options de ${dish.name}`}
-      className={`flex ${dimension} shrink-0 items-center justify-center rounded-full border-2 border-[#F17922] bg-white text-[#F17922] transition hover:bg-[#F17922] hover:text-white`}
+      className={`flex ${dimension} shrink-0 items-center justify-center rounded-full border-2 border-[#F17922] bg-white text-[#F17922] transition hover:bg-[#F17922] hover:text-blanc`}
     >
       <SlidersHorizontal className="h-4 w-4" />
     </button>
@@ -52,7 +52,7 @@ export const BoutonAjout: React.FC<BoutonAjoutProps> = ({ dish, onAjouter, onOuv
       }}
       title="Ajouter au panier, sans supplément"
       aria-label={`Ajouter ${dish.name} au panier`}
-      className={`flex ${dimension} shrink-0 items-center justify-center rounded-full bg-[#F17922] text-white shadow-sm transition hover:bg-[#F17922]/85`}
+      className={`flex ${dimension} shrink-0 items-center justify-center rounded-full bg-[#F17922] text-blanc shadow-sm transition hover:bg-[#F17922]/85`}
     >
       <Plus className="h-4 w-4" />
     </button>
@@ -117,7 +117,7 @@ const CartePlat: React.FC<CartePlatProps> = ({ dish, auPanier = 0, onOuvrir, onA
         />
         {auPanier > 0 && (
           <span
-            className="absolute left-2 top-2 rounded-full bg-[#F17922] px-2 py-0.5 text-[11px] font-bold text-white shadow-sm"
+            className="absolute left-2 top-2 rounded-full bg-[#F17922] px-2 py-0.5 text-[11px] font-bold text-blanc shadow-sm"
             title="Déjà au panier"
           >
             x{auPanier}

@@ -31,7 +31,7 @@ function Pastille({
       aria-pressed={actif}
       className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors cursor-pointer ${
         actif
-          ? "border-[#F17922] bg-[#FDF3E7] text-[#8A4B00]"
+          ? "border-[#F17922] bg-hex-fdf3e7 text-hex-8a4b00"
           : "border-gray-200 bg-white text-gray-600 hover:border-[#F17922]/50"
       }`}
     >

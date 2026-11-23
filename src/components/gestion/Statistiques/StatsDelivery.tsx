@@ -484,7 +484,7 @@ export default function StatsDelivery() {
                   <div className="flex flex-col justify-center space-y-2">
                     <div className="flex items-center gap-2 bg-green-50 rounded-xl p-2.5">
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-blanc font-bold text-xs"
                         style={{
                           backgroundColor: PUNCTUALITY_COLORS.onTime,
                         }}
@@ -503,7 +503,7 @@ export default function StatsDelivery() {
                     </div>
                     <div className="flex items-center gap-2 bg-red-50 rounded-xl p-2.5">
                       <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-blanc font-bold text-xs"
                         style={{ backgroundColor: PUNCTUALITY_COLORS.late }}
                       >
                         !

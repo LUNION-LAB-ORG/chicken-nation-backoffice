@@ -59,7 +59,7 @@ export function TableauIncidents({ pointDeVente }: { pointDeVente: boolean }) {
     const colonne = colonnes?.[statut];
     if (!colonne || colonne.incidents.length === 0) {
       return (
-        <p className="rounded-xl border border-dashed border-[#E4E4E7] px-3 py-6 text-center text-xs text-[#A1A1AA]">{VIDE[statut]}</p>
+        <p className="rounded-xl border border-dashed border-hex-e4e4e7 px-3 py-6 text-center text-xs text-[#A1A1AA]">{VIDE[statut]}</p>
       );
     }
     return (
@@ -81,7 +81,7 @@ export function TableauIncidents({ pointDeVente }: { pointDeVente: boolean }) {
     return (
       <span
         className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none ${
-          choisie ? "bg-white text-[#F17922]" : statut === "OUVERT" && n > 0 ? "bg-red-100 text-red-700" : "bg-white text-[#52525B]"
+          choisie ? "bg-white text-[#F17922]" : statut === "OUVERT" && n > 0 ? "bg-red-100 text-red-700" : "bg-white text-hex-52525b"
         }`}
       >
         {n}
@@ -119,8 +119,8 @@ export function TableauIncidents({ pointDeVente }: { pointDeVente: boolean }) {
       ) : isPending ? (
         <div aria-hidden className="grid gap-3 lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className={`space-y-2 rounded-2xl bg-[#F4F4F5]/70 p-2 ${i > 0 ? "hidden lg:block" : ""}`}>
-              <div className="h-4 w-24 animate-pulse rounded-full bg-[#E4E4E7]" />
+            <div key={i} className={`space-y-2 rounded-2xl bg-hex-f4f4f5/70 p-2 ${i > 0 ? "hidden lg:block" : ""}`}>
+              <div className="h-4 w-24 animate-pulse rounded-full bg-hex-e4e4e7" />
               {[0, 1].map((j) => (
                 <div key={j} className="h-24 animate-pulse rounded-xl bg-white" />
               ))}
@@ -132,8 +132,8 @@ export function TableauIncidents({ pointDeVente }: { pointDeVente: boolean }) {
           {/* Grand écran : les quatre colonnes. */}
           <div className="hidden gap-3 lg:grid lg:grid-cols-4">
             {STATUTS.map((statut) => (
-              <section key={statut} aria-label={LIBELLE_STATUT[statut]} className="flex min-w-0 flex-col rounded-2xl bg-[#F4F4F5]/70 p-2">
-                <h3 className="flex items-center justify-between gap-2 px-1.5 pt-1 text-[13px] font-semibold text-[#18181B]">
+              <section key={statut} aria-label={LIBELLE_STATUT[statut]} className="flex min-w-0 flex-col rounded-2xl bg-hex-f4f4f5/70 p-2">
+                <h3 className="flex items-center justify-between gap-2 px-1.5 pt-1 text-[13px] font-semibold text-hex-18181b">
                   <span className="truncate">{LIBELLE_STATUT[statut]}</span>
                   {nombre(statut)}
                 </h3>
@@ -158,7 +158,7 @@ export function TableauIncidents({ pointDeVente }: { pointDeVente: boolean }) {
                     aria-selected={choisie}
                     onClick={() => setColonneChoisie(statut)}
                     className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors ${
-                      choisie ? "border-[#F17922] bg-[#F17922] text-white" : "border-[#E4E4E7] bg-white text-[#18181B]"
+                      choisie ? "border-[#F17922] bg-[#F17922] text-blanc" : "border-hex-e4e4e7 bg-white text-hex-18181b"
                     }`}
                   >
                     {LIBELLE_STATUT[statut]}

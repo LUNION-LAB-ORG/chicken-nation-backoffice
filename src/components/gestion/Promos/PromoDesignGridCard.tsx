@@ -228,12 +228,12 @@ const PromoDesignGridCard = ({ promo, onClick, className = '' }: PromoDesignGrid
         {/* Indicateur de statut */}
         {promo.status === 'expired' && (
           <div className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center">
-            <span className="text-white font-bold text-xs sm:text-sm">EXPIRÉ</span>
+            <span className="text-blanc font-bold text-xs sm:text-sm">EXPIRÉ</span>
           </div>
         )}
         {promo.status === 'upcoming' && (
           <div className="absolute inset-0 bg-blue-500/50 rounded-3xl flex items-center justify-center">
-            <span className="text-white font-bold text-xs sm:text-sm">À VENIR</span>
+            <span className="text-blanc font-bold text-xs sm:text-sm">À VENIR</span>
           </div>
         )}
       </div>

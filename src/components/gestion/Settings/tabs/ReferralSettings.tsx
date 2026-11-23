@@ -58,7 +58,7 @@ function WelcomeGiftSetting() {
               { onSuccess: () => toast.success("Bon de bienvenue enregistré") },
             )
           }
-          className="h-11 rounded-xl bg-slate-800 px-5 text-sm font-medium text-white hover:bg-slate-900 disabled:opacity-50"
+          className="h-11 rounded-xl bg-slate-800 dark:bg-[#2a2f38] px-5 text-sm font-medium text-blanc hover:bg-slate-900 dark:hover:bg-[#0e1014] disabled:opacity-50"
         >
           {isPending ? "…" : "Enregistrer"}
         </button>
@@ -182,7 +182,7 @@ const ReferralSettings: React.FC = () => {
           type="button"
           onClick={() => save.mutate(config)}
           disabled={save.isPending}
-          className="h-11 rounded-xl bg-[#F17922] px-6 font-medium text-white transition-colors hover:bg-[#e06a15] disabled:opacity-50"
+          className="h-11 rounded-xl bg-[#F17922] px-6 font-medium text-blanc transition-colors hover:bg-[#e06a15] disabled:opacity-50"
         >
           {save.isPending ? "Enregistrement…" : "Enregistrer"}
         </button>

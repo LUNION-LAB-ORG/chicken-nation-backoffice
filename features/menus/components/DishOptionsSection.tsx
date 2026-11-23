@@ -132,7 +132,7 @@ function CadeauxBloquants({
                     onChange={(e) =>
                       setRemplacant((p) => ({ ...p, [r.id]: e.target.value }))
                     }
-                    className="h-[34px] min-w-[180px] rounded-lg border border-[#D8D8D8] bg-white px-2 text-[12px] text-[#595959]"
+                    className="h-[34px] min-w-[180px] rounded-lg border border-hex-d8d8d8 bg-white px-2 text-[12px] text-hex-595959"
                   >
                     <option value="">Offrir un autre plat</option>
                     {plats.map((p) => (
@@ -150,7 +150,7 @@ function CadeauxBloquants({
                         { onSuccess: onDebloque },
                       )
                     }
-                    className="h-[34px] rounded-lg bg-[#F17922] px-3 text-[12px] font-semibold text-white disabled:opacity-50 cursor-pointer"
+                    className="h-[34px] rounded-lg bg-[#F17922] px-3 text-[12px] font-semibold text-blanc disabled:opacity-50 cursor-pointer"
                   >
                     Repointer
                   </button>
@@ -366,7 +366,7 @@ const DishOptionsSection = React.forwardRef<
               <select
                 value={cible}
                 onChange={(e) => setCible(e.target.value)}
-                className="h-[42px] min-w-[220px] rounded-xl border border-[#D8D8D8] bg-white px-3 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                className="h-[42px] min-w-[220px] rounded-xl border border-hex-d8d8d8 bg-white px-3 text-[13px] text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
               >
                 <option value="">Choisir un plat</option>
                 {plats.map((p) => (
@@ -384,7 +384,7 @@ const DishOptionsSection = React.forwardRef<
                     { onSuccess: () => setCible("") },
                   )
                 }
-                className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#F17922]/90 disabled:opacity-50 cursor-pointer"
+                className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-4 text-[13px] font-semibold text-blanc transition-colors hover:bg-[#F17922]/90 disabled:opacity-50 cursor-pointer"
               >
                 <Copy size={15} />
                 {copier.isPending ? "Copie en cours" : "Copier"}

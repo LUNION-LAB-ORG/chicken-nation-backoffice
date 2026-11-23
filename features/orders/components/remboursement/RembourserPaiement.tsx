@@ -136,7 +136,7 @@ export function FenetreRemboursement({ paiementId, onFermer }: { paiementId: str
               type="button"
               onClick={() => agir(false)}
               disabled={mutation.isPending}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-red-600 px-4 text-sm font-semibold text-blanc hover:bg-red-700 dark:hover:bg-red-500 disabled:opacity-60"
             >
               {mutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Undo2 className="h-4 w-4" />}
               Rembourser {formatMontant(montant)}
@@ -147,7 +147,7 @@ export function FenetreRemboursement({ paiementId, onFermer }: { paiementId: str
               type="button"
               onClick={() => agir(true)}
               disabled={mutation.isPending}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:opacity-60"
             >
               {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Enregistrer le remboursement

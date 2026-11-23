@@ -92,7 +92,7 @@ export function Verbatims({ periode, onOuvrir }: { periode: IPeriode; onOuvrir: 
                 key={m.mot}
                 type="button"
                 onClick={() => setTexte(m.mot)}
-                className="rounded-full bg-orange-50 text-[#C2410C] px-2.5 py-0.5 text-xs font-semibold hover:bg-orange-100"
+                className="rounded-full bg-orange-50 text-hex-c2410c px-2.5 py-0.5 text-xs font-semibold hover:bg-orange-100"
               >
                 {m.mot} <span className="text-orange-400">{m.nombre}</span>
               </button>

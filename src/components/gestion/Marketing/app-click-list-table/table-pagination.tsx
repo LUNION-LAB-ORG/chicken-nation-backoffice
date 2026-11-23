@@ -9,7 +9,7 @@ interface DataTablePaginationProps {
 const TablePagination = ({ table }: DataTablePaginationProps) => {
 	return (
 		<div className="flex items-center justify-end py-4 px-10">
-			<div className="flex items-center gap-2 flex-none text-black">
+			<div className="flex items-center gap-2 flex-none text-noir">
 				<button
 					onClick={() => table.previousPage()}
 					disabled={!table.getCanPreviousPage()}

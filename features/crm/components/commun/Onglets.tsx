@@ -20,7 +20,7 @@ export function Onglets<K extends string>({
 }) {
   return (
     <div className="w-full overflow-x-auto">
-      <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
+      <div className="flex items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1 w-fit min-w-max">
         {onglets.map(({ cle, label, Icone, badge }) => {
           const choisi = actif === cle;
           return (
@@ -29,7 +29,7 @@ export function Onglets<K extends string>({
               type="button"
               onClick={() => onChange(cle)}
               className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-4 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
-                choisi ? "bg-[#F17922] text-white" : "text-[#71717A] hover:text-gray-700"
+                choisi ? "bg-[#F17922] text-blanc" : "text-hex-71717a hover:text-gray-700"
               }`}
             >
               <Icone className="w-3.5 h-3.5" />
@@ -37,7 +37,7 @@ export function Onglets<K extends string>({
               {!!badge && (
                 <span
                   className={`ml-0.5 rounded-full px-1.5 text-[11px] leading-5 ${
-                    choisi ? "bg-white/25 text-white" : "bg-orange-100 text-[#C2410C]"
+                    choisi ? "bg-white/25 text-blanc" : "bg-orange-100 text-hex-c2410c"
                   }`}
                 >
                   {badge}

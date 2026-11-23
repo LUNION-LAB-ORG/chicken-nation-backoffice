@@ -137,7 +137,7 @@ function SectionTitle({
 }) {
   return (
     <div className="flex items-center gap-2.5 mb-4">
-      <span className="w-8 h-8 rounded-xl bg-[#FFF0E4] text-[#F17922] flex items-center justify-center">
+      <span className="w-8 h-8 rounded-xl bg-hex-fff0e4 text-[#F17922] flex items-center justify-center">
         {icon}
       </span>
       <h3 className="text-[15px] font-bold text-gray-900">{title}</h3>
@@ -150,7 +150,7 @@ type ChipTone = "warm" | "blue" | "green" | "amber" | "yellow" | "gray" | "teal"
 
 function Chip({ children, tone }: { children: React.ReactNode; tone: ChipTone }) {
   const cls: Record<ChipTone, string> = {
-    warm: "bg-[#FFF0E4] text-[#F17922] border-[#F17922]/20",
+    warm: "bg-hex-fff0e4 text-[#F17922] border-[#F17922]/20",
     blue: "bg-blue-50 text-blue-700 border-blue-200",
     green: "bg-green-50 text-green-700 border-green-200",
     amber: "bg-amber-50 text-amber-700 border-amber-200",
@@ -176,7 +176,7 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const canal = libelleCanal(ui);
   return (
     <Card className="overflow-hidden">
-      <div className="relative bg-gradient-to-br from-[#FFF0E4] via-white to-amber-50/40 p-6 md:p-7">
+      <div className="relative bg-gradient-to-br from-hex-fff0e4 via-white to-amber-50/40 p-6 md:p-7">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="min-w-0">
             <p className="text-[10px] uppercase font-bold text-[#F17922] tracking-[0.18em]">
@@ -210,13 +210,13 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
                 <div
                   className={`mt-2.5 inline-flex flex-col gap-0.5 rounded-xl border px-3 py-2 ${
                     enAttente
-                      ? "border-[#F3D5B0] bg-[#FDF3E7]"
-                      : "border-[#CDEBD9] bg-[#EAF7F0]"
+                      ? "border-hex-f3d5b0 bg-hex-fdf3e7"
+                      : "border-hex-cdebd9 bg-hex-eaf7f0"
                   }`}
                 >
                   <span
                     className={`inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide ${
-                      enAttente ? "text-[#8A4B00]" : "text-[#1E8E5A]"
+                      enAttente ? "text-hex-8a4b00" : "text-hex-1e8e5a"
                     }`}
                   >
                     <Clock className="h-3.5 w-3.5" />
@@ -326,7 +326,7 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
     <Card className="p-5 md:p-6">
       <SectionTitle icon={<User className="w-4 h-4" />} title="Client" />
       <div className="flex items-start gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F17922] to-amber-500 flex items-center justify-center text-white font-black text-base shrink-0">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#F17922] to-amber-500 flex items-center justify-center text-blanc font-black text-base shrink-0">
           {initials || <User className="w-6 h-6" />}
         </div>
         <div className="flex-1 min-w-0 space-y-1.5">
@@ -468,7 +468,7 @@ function ItemRow({ item }: { item: OrderTableItem }) {
           className="object-cover w-full h-full"
         />
         {item.price === 0 && (
-          <span className="absolute bottom-0 inset-x-0 bg-[#F17922] text-white text-[9px] font-bold text-center py-0.5">
+          <span className="absolute bottom-0 inset-x-0 bg-[#F17922] text-blanc text-[9px] font-bold text-center py-0.5">
             Offert
           </span>
         )}
@@ -482,8 +482,8 @@ function ItemRow({ item }: { item: OrderTableItem }) {
         <span
           className={`absolute top-1.5 right-1.5 rounded-lg shadow-sm font-black tabular-nums ${
             multiple
-              ? "px-2 py-1 text-sm bg-[#F17922] text-white ring-2 ring-white"
-              : "px-1.5 py-0.5 text-[11px] bg-gray-900/85 text-white"
+              ? "px-2 py-1 text-sm bg-[#F17922] text-blanc ring-2 ring-white"
+              : "px-1.5 py-0.5 text-[11px] bg-gray-900/85 dark:bg-[#0e1014]/85 text-blanc"
           }`}
         >
           ×{item.quantity}
@@ -499,7 +499,7 @@ function ItemRow({ item }: { item: OrderTableItem }) {
             */}
             <h4 className="text-sm font-bold text-gray-900 flex items-baseline gap-1.5 min-w-0">
               {multiple && (
-                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-[#F17922] text-white text-xs font-black tabular-nums">
+                <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-[#F17922] text-blanc text-xs font-black tabular-nums">
                   ×{item.quantity}
                 </span>
               )}
@@ -565,7 +565,7 @@ function ItemRow({ item }: { item: OrderTableItem }) {
                     <li key={sup.id || i} className="flex items-center gap-2">
                       <span
                         className={`shrink-0 w-8 text-center px-1 py-0.5 rounded-md text-[11px] font-black tabular-nums ${
-                          qte > 1 ? "bg-[#F17922] text-white" : "bg-gray-200 text-gray-700"
+                          qte > 1 ? "bg-[#F17922] text-blanc" : "bg-gray-200 text-gray-700"
                         }`}
                       >
                         ×{qte}
@@ -717,7 +717,7 @@ function ProgressBlock({ ui }: { ui: OrderTable }) {
               <div
                 className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center ring-4 ring-white ${
                   reached
-                    ? "bg-[#F17922] text-white shadow-md shadow-[#F17922]/30"
+                    ? "bg-[#F17922] text-blanc shadow-md shadow-[#F17922]/30"
                     : "bg-gray-100 text-gray-400"
                 }`}
               >

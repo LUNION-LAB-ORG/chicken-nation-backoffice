@@ -189,7 +189,7 @@ export function ClientRow({
         <button
           ref={buttonRef}
           type="button"
-          className="p-1 text-[#71717A] cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
+          className="p-1 text-hex-71717a cursor-pointer hover:text-gray-700 rounded-lg hover:bg-orange-200 menu-button"
           onClick={(e) => {
             e.stopPropagation();
             setMenuOpen(!menuOpen);

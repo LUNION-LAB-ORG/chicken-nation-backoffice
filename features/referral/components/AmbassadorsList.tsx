@@ -32,9 +32,9 @@ const Row: React.FC<{
   onOpen: (id: string) => void;
   peutVerser: boolean;
 }> = ({ a, onOpen, peutVerser }) => (
-  <tr className="border-b border-[#F2F2F4] last:border-0 hover:bg-[#FAFAFA]">
+  <tr className="border-b border-hex-f2f2f4 last:border-0 hover:bg-hex-fafafa">
     <td className="py-3 px-3">
-      <div className="text-sm font-medium text-[#18181B]">{a.fullname ?? "Sans nom"}</div>
+      <div className="text-sm font-medium text-hex-18181b">{a.fullname ?? "Sans nom"}</div>
       <div className="text-xs text-[#9796A1]">{a.phone}</div>
       {a.referral_code && (
         <span className="inline-block mt-0.5 text-[10px] font-semibold text-[#F17922]">
@@ -42,7 +42,7 @@ const Row: React.FC<{
         </span>
       )}
     </td>
-    <td className="py-3 px-3 text-center text-sm text-[#18181B]">
+    <td className="py-3 px-3 text-center text-sm text-hex-18181b">
       {a.qualified_referees_count}
       <span className="text-[#9796A1]">/{a.referees_count}</span>
       {a.last_referee_at && (
@@ -51,23 +51,23 @@ const Row: React.FC<{
         </div>
       )}
     </td>
-    <td className="py-3 px-3 text-right text-sm text-[#18181B] whitespace-nowrap">
+    <td className="py-3 px-3 text-right text-sm text-hex-18181b whitespace-nowrap">
       {fcfa(a.generated_sales)}
     </td>
-    <td className="py-3 px-3 text-right text-sm text-[#B45309] whitespace-nowrap">
+    <td className="py-3 px-3 text-right text-sm text-hex-b45309 whitespace-nowrap">
       {fcfa(a.pending_amount)}
     </td>
-    <td className="py-3 px-3 text-right text-sm font-semibold text-[#0369A1] whitespace-nowrap">
+    <td className="py-3 px-3 text-right text-sm font-semibold text-hex-0369a1 whitespace-nowrap">
       {fcfa(a.payable_amount)}
     </td>
-    <td className="py-3 px-3 text-right text-sm text-[#1E8E5A] whitespace-nowrap">
+    <td className="py-3 px-3 text-right text-sm text-hex-1e8e5a whitespace-nowrap">
       {fcfa(a.paid_amount)}
     </td>
     <td className="py-3 px-3 text-right">
       <button
         type="button"
         onClick={() => onOpen(a.customer_id)}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-[#FFF6E9] cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-hex-fff6e9 cursor-pointer"
       >
         {/* Sans FIDELITE UPDATE, la fenêtre n'affiche que les soldes et
             l'historique : « Gérer » promettrait un geste impossible. */}
@@ -127,7 +127,7 @@ export default function AmbassadorsList({
             <button
               type="button"
               onClick={() => setAjout(true)}
-              className="h-10 flex items-center gap-1.5 px-4 rounded-lg border border-[#F17922]/30 text-[#F17922] text-sm font-medium hover:bg-[#FFF6E9] cursor-pointer"
+              className="h-10 flex items-center gap-1.5 px-4 rounded-lg border border-[#F17922]/30 text-[#F17922] text-sm font-medium hover:bg-hex-fff6e9 cursor-pointer"
             >
               <UserPlus size={15} /> Ajouter un parrain
             </button>
@@ -150,7 +150,7 @@ export default function AmbassadorsList({
           ]}
         />
         <div className="flex items-center gap-2">
-          <span className="text-sm text-[#71717A] whitespace-nowrap">Trier par</span>
+          <span className="text-sm text-hex-71717a whitespace-nowrap">Trier par</span>
           <div className="w-48">
             <SimpleSelect options={TRIS} value={tri} onChange={(v) => setTri(v as TriParrain)} />
           </div>
@@ -158,14 +158,14 @@ export default function AmbassadorsList({
       </div>
 
       <div
-        className={`bg-white border border-[#E4E4E7] rounded-xl overflow-hidden transition-opacity ${
+        className={`bg-white border border-hex-e4e4e7 rounded-xl overflow-hidden transition-opacity ${
           isPlaceholderData ? "opacity-50" : ""
         }`}
       >
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px]">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA] text-left">
+              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa text-left">
                 <th className="py-2.5 px-3 font-medium">Ambassadeur</th>
                 <th className="py-2.5 px-3 font-medium text-center">Filleuls qualifiés</th>
                 <th className="py-2.5 px-3 font-medium text-right">Ventes générées</th>

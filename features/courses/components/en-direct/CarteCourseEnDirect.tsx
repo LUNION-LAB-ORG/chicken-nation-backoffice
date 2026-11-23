@@ -69,7 +69,7 @@ export function CarteCourseEnDirect({
   const commandes = course.commandes.liste ?? [];
   const ouvrirCommande = useOuvrirCommande();
   const stop = (e: React.SyntheticEvent) => e.stopPropagation();
-  const couleurLigne = course.etape === 'AU_RESTAURANT' ? 'font-medium text-sky-800' : 'text-[#52525B]';
+  const couleurLigne = course.etape === 'AU_RESTAURANT' ? 'font-medium text-sky-800' : 'text-hex-52525b';
 
   return (
     <article
@@ -83,7 +83,7 @@ export function CarteCourseEnDirect({
         }
       }}
       aria-label={`Course ${course.reference}`}
-      className={`cursor-pointer rounded-xl border border-l-4 border-[#E4E4E7] bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-[#F17922]/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922]/50 ${
+      className={`cursor-pointer rounded-xl border border-l-4 border-hex-e4e4e7 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition hover:border-[#F17922]/40 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F17922]/50 ${
         BORDURE[alerte?.ton ?? 'aucun']
       }`}
     >
@@ -97,7 +97,7 @@ export function CarteCourseEnDirect({
           {course.code ?? '–'}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-[#18181B]" title={titre}>
+          <p className="truncate text-[13px] font-semibold text-hex-18181b" title={titre}>
             {titre}
           </p>
           {commandes.length > 0 ? (
@@ -110,7 +110,7 @@ export function CarteCourseEnDirect({
               onKeyDown={stop}
               aria-expanded={details}
               title={details ? 'Masquer les commandes' : 'Voir les commandes'}
-              className={`-mx-1 flex max-w-full items-center gap-1 rounded px-1 text-left text-[11px] transition-colors hover:bg-[#F4F4F5] ${couleurLigne}`}
+              className={`-mx-1 flex max-w-full items-center gap-1 rounded px-1 text-left text-[11px] transition-colors hover:bg-hex-f4f4f5 ${couleurLigne}`}
             >
               <span className="truncate">{ligne}</span>
               <ChevronDown className={`h-3 w-3 shrink-0 text-[#A1A1AA] transition-transform ${details ? 'rotate-180' : ''}`} />
@@ -125,23 +125,23 @@ export function CarteCourseEnDirect({
       </div>
 
       {details && commandes.length > 0 && (
-        <ul onClick={stop} onKeyDown={stop} className="mt-2 cursor-default space-y-1 rounded-lg bg-[#FAFAFA] px-2 py-1.5">
+        <ul onClick={stop} onKeyDown={stop} className="mt-2 cursor-default space-y-1 rounded-lg bg-hex-fafafa px-2 py-1.5">
           {commandes.map((c) => (
             <li
               key={c.reference}
-              className={`flex items-center gap-2 text-[11px] ${c.annulee ? 'text-[#A1A1AA] line-through' : 'text-[#52525B]'}`}
+              className={`flex items-center gap-2 text-[11px] ${c.annulee ? 'text-[#A1A1AA] line-through' : 'text-hex-52525b'}`}
             >
               {ouvrirCommande ? (
                 <button
                   type="button"
                   onClick={() => ouvrirCommande(c.reference)}
                   title={`Voir la commande ${c.reference}`}
-                  className="shrink-0 font-mono font-semibold text-[#18181B] underline-offset-2 hover:text-[#F17922] hover:underline"
+                  className="shrink-0 font-mono font-semibold text-hex-18181b underline-offset-2 hover:text-[#F17922] hover:underline"
                 >
                   {finDeReference(c.reference)}
                 </button>
               ) : (
-                <span className="shrink-0 font-mono font-semibold text-[#18181B]" title={c.reference}>
+                <span className="shrink-0 font-mono font-semibold text-hex-18181b" title={c.reference}>
                   {finDeReference(c.reference)}
                 </span>
               )}
@@ -170,7 +170,7 @@ export function CarteCourseEnDirect({
         <div className="mt-2 flex flex-wrap gap-1.5">
           <BadgeFlotte course={course} />
           {course.proposee_a && (
-            <span className="rounded-full bg-[#F4F4F5] px-2 py-0.5 text-[10px] font-medium text-[#52525B]">
+            <span className="rounded-full bg-hex-f4f4f5 px-2 py-0.5 text-[10px] font-medium text-hex-52525b">
               Proposée à {course.proposee_a}
             </span>
           )}

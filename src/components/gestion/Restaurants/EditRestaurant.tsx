@@ -173,12 +173,12 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
           <div className="space-y-6">
             {/* Informations générales */}
             <div>
-              <h3 className="text-lg font-semibold text-[#595959] mb-4">Informations générales</h3>
+              <h3 className="text-lg font-semibold text-hex-595959 mb-4">Informations générales</h3>
               
               <div className="space-y-4">
                 {/* Nom */}
                 <div>
-                  <label className="block text-sm text-[#595959] font-light mb-2">
+                  <label className="block text-sm text-hex-595959 font-light mb-2">
                     Nom du restaurant*
                   </label>
                   <Input
@@ -187,14 +187,14 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                     defaultValue={restaurant.name}
                     required
                     placeholder="Nom du restaurant"
-                    className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.name ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
+                    className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.name ? 'border-red-500' : 'border-hex-d8d8d8'} px-4 text-[13px] placeholder-gray-400`}
                   />
                   {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
                 </div>
                 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm text-[#595959] font-light mb-2">
+                  <label className="block text-sm text-hex-595959 font-light mb-2">
                     Description
                   </label>
                   <textarea
@@ -209,7 +209,7 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                
                 {/* Carte */}
                 <div>
-                  <label className="block text-sm text-[#595959] font-light mb-2">
+                  <label className="block text-sm text-hex-595959 font-light mb-2">
                     Localisation
                   </label>
                   <RestaurantMap
@@ -241,7 +241,7 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                 {/* Contact */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm text-[#595959] font-light mb-2">
+                    <label className="block text-sm text-hex-595959 font-light mb-2">
                       Téléphone*
                     </label>
                     <Input
@@ -250,12 +250,12 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                       defaultValue={restaurant.phone}
                       required
                       placeholder="+225 XX XX XX XX"
-                      className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.phone ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
+                      className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.phone ? 'border-red-500' : 'border-hex-d8d8d8'} px-4 text-[13px] placeholder-gray-400`}
                     />
                     {formErrors.phone && <p className="text-red-500 text-xs mt-1">{formErrors.phone}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm text-[#595959] font-light mb-2">
+                    <label className="block text-sm text-hex-595959 font-light mb-2">
                       Email*
                     </label>
                     <Input
@@ -264,7 +264,7 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                       defaultValue={restaurant.email}
                       required
                       placeholder="email@restaurant.com"
-                      className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.email ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
+                      className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.email ? 'border-red-500' : 'border-hex-d8d8d8'} px-4 text-[13px] placeholder-gray-400`}
                     />
                     {formErrors.email && <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>}
                   </div>
@@ -272,7 +272,7 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
                 
                 {/* Statut */}
                 <div className="flex items-center space-x-2">
-                  <label className="text-sm text-[#595959] font-light">
+                  <label className="text-sm text-hex-595959 font-light">
                     Actif
                   </label>
                   <Toggle
@@ -298,7 +298,7 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
             </div>
                 {/* Photo */}
                 <div>
-              <label className="block text-sm text-[#595959] font-light mb-2">
+              <label className="block text-sm text-hex-595959 font-light mb-2">
                 Photo du restaurant
               </label>
               <div 
@@ -341,14 +341,14 @@ export default function EditRestaurant({ restaurantId, onCancel, onSuccess }: Ed
         <Button
           type="button"
           onClick={onCancel}
-          className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
+          className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
         >
           Annuler
         </Button>
         <Button 
           type="submit"
           disabled={isSubmitting}
-          className="h-[32px] px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[32px] px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>

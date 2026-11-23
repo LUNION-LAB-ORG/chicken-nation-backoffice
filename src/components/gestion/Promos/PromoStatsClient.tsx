@@ -33,7 +33,7 @@ export function PromoStatsClient({
             className="bg-gray-400 hover:bg-[#F17200] cursor-pointer px-6 py-4 transition-colors rounded-b-2xl"
             onClick={onViewAllPromotions}
           >
-            <div className="w-full text-white text-sm font-medium text-center">
+            <div className="w-full text-blanc text-sm font-medium text-center">
               Voir tous
             </div>
           </div>

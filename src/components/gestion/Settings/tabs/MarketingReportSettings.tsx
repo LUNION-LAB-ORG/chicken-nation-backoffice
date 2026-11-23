@@ -111,7 +111,7 @@ const MarketingReportSettings: React.FC = () => {
           </div>
           <button
             onClick={addEmail}
-            className="px-4 py-2.5 bg-[#F17922] text-white rounded-lg hover:bg-[#e06816] transition-all flex items-center gap-2"
+            className="px-4 py-2.5 bg-[#F17922] text-blanc rounded-lg hover:bg-[#e06816] transition-all flex items-center gap-2"
           >
             <Plus size={16} />
             Ajouter
@@ -154,7 +154,7 @@ const MarketingReportSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2"
+          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2"
         >
           <Send size={16} />
           {isPending ? "Enregistrement..." : "Enregistrer"}

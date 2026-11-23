@@ -263,16 +263,16 @@ const MemberView: React.FC<MemberViewProps> = ({
       <table className="w-full bg-white border-separate border-spacing-0 hidden md:table">
         <thead>
           <tr className="text-[#9796A1] text-[14px]">
-            <th className="font-bold text-[#71717A]  px-0 py-2 text-left border-b pl-10 border-slate-100 w-[260px]">
+            <th className="font-bold text-hex-71717a  px-0 py-2 text-left border-b pl-10 border-slate-100 w-[260px]">
               Utilisateur
             </th>
-            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b border-slate-100 w-[260px]">
+            <th className="font-bold text-hex-71717a px-0 py-2 text-left border-b border-slate-100 w-[260px]">
               Rôle
             </th>
-            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b border-slate-100 w-[260px]">
+            <th className="font-bold text-hex-71717a px-0 py-2 text-left border-b border-slate-100 w-[260px]">
               Status
             </th>
-            <th className="font-bold text-[#71717A] px-0 py-2 text-left border-b border-slate-100 w-[260px]">
+            <th className="font-bold text-hex-71717a px-0 py-2 text-left border-b border-slate-100 w-[260px]">
               Email
             </th>
             <th className="px-4 py-2 w-10 border-b text-left border-slate-100 ">
@@ -285,7 +285,7 @@ const MemberView: React.FC<MemberViewProps> = ({
             const memberStatus = member.entity_status || "ACTIVE";
             const isDisabled =
               memberStatus === "DELETED" || memberStatus === "INACTIVE";
-            const rowClassName = `  hover:bg-[#FFF6E9]/60 transition cursor-pointer ${
+            const rowClassName = `  hover:bg-hex-fff6e9/60 transition cursor-pointer ${
               isDisabled ? "bg-gray-50" : ""
             }`;
             const contentOpacity = isDisabled ? "opacity-50" : "";
@@ -298,7 +298,7 @@ const MemberView: React.FC<MemberViewProps> = ({
               >
                 <td className={`px-0 py-2 ${contentOpacity}`}>
                   <div className="flex ml-10 items-center gap-2 min-w-[180px]">
-                    <div className="w-8 h-8 rounded-full bg-[#FFF6E9] flex items-center justify-center overflow-hidden ">
+                    <div className="w-8 h-8 rounded-full bg-hex-fff6e9 flex items-center justify-center overflow-hidden ">
                       <Image
                         src={getImageUrl(member)}
                         alt={member.fullname}
@@ -308,7 +308,7 @@ const MemberView: React.FC<MemberViewProps> = ({
                         unoptimized={getImageUrl(member).startsWith("/icons/")}
                       />
                     </div>
-                    <span className="text-sm lg:text-[15px] text-[#232323] font-normal">
+                    <span className="text-sm lg:text-[15px] text-hex-232323 font-normal">
                       {member.fullname}
                     </span>
                   </div>
@@ -318,14 +318,14 @@ const MemberView: React.FC<MemberViewProps> = ({
                     <span
                       className={
                         member.role === "SuperAdmin"
-                          ? "bg-[#E5F9EB] text-[#34C759] text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
-                          : "bg-[#FBDBA7] text-[#7A3502] text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
+                          ? "bg-hex-e5f9eb text-hex-34c759 text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
+                          : "bg-hex-fbdba7 text-hex-7a3502 text-[14px] font-bold px-4 py-1 rounded-full inline-block text-start"
                       }
                     >
                       {member.role}
                     </span>
                     {member.role === "MANAGER" && member.isPrincipal && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#F17922] bg-[#FFF0E4] border border-[#F17922]/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#F17922] bg-hex-fff0e4 border border-[#F17922]/20 px-2 py-0.5 rounded-full whitespace-nowrap">
                         ★ Principal
                       </span>
                     )}
@@ -335,7 +335,7 @@ const MemberView: React.FC<MemberViewProps> = ({
                   {renderStatus(member.entity_status)}
                 </td>
                 <td
-                  className={`px-0 py-2 text-[15px] text-[#232323] ${contentOpacity}`}
+                  className={`px-0 py-2 text-[15px] text-hex-232323 ${contentOpacity}`}
                 >
                   {member.email}
                 </td>
@@ -345,7 +345,7 @@ const MemberView: React.FC<MemberViewProps> = ({
                 >
                   {!isReadOnly && (
                     <span
-                      className="text-[#71717A] text-md lg:text-lg cursor-pointer select-none"
+                      className="text-hex-71717a text-md lg:text-lg cursor-pointer select-none"
                       ref={(el) => {
                         if (el) menuBtnRefs.current[member.id] = el;
                       }}
@@ -376,11 +376,11 @@ const MemberView: React.FC<MemberViewProps> = ({
           return (
             <div
               key={member.id}
-              className={`${cardBg} rounded-xl shadow-sm border border-[#ECECEC] p-4 flex items-center gap-4 cursor-pointer hover:bg-[#FFF6E9]/60 transition`}
+              className={`${cardBg} rounded-xl shadow-sm border border-hex-ececec p-4 flex items-center gap-4 cursor-pointer hover:bg-hex-fff6e9/60 transition`}
               onClick={() => onOpenDetail?.(member)}
             >
               <div
-                className={`w-14 h-14 rounded-full bg-[#FFF6E9] flex items-center justify-center overflow-hidden ${contentOpacity}`}
+                className={`w-14 h-14 rounded-full bg-hex-fff6e9 flex items-center justify-center overflow-hidden ${contentOpacity}`}
               >
                 <Image
                   src={getImageUrl(member)}
@@ -393,20 +393,20 @@ const MemberView: React.FC<MemberViewProps> = ({
               </div>
               <div className={`flex-1 min-w-0 ${contentOpacity}`}>
                 <div className="flex items-center flex-row justify-between gap-2">
-                  <span className="text-[13px] text-[#232323] font-semibold truncate">
+                  <span className="text-[13px] text-hex-232323 font-semibold truncate">
                     {member.fullname}
                   </span>
                   <span
                     className={
                       member.role === "SuperAdmin"
-                        ? "bg-[#E5F9EB] text-[#34C759] text-[10px] font-bold px-2 py-0.5 rounded-full"
-                        : "bg-[#FBDBA7] text-[#7A3502] text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        ? "bg-hex-e5f9eb text-hex-34c759 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                        : "bg-hex-fbdba7 text-hex-7a3502 text-[10px] font-bold px-2 py-0.5 rounded-full"
                     }
                   >
                     {member.role}
                   </span>
                 </div>
-                <div className="text-[12px] text-[#71717A] truncate">
+                <div className="text-[12px] text-hex-71717a truncate">
                   {member.email}
                 </div>
                 {member.restaurant && member.role !== "SuperAdmin" && (
@@ -421,7 +421,7 @@ const MemberView: React.FC<MemberViewProps> = ({
                 (currentUser.role === "ADMIN" ||
                   currentUser.role === "MANAGER") && (
                   <span
-                    className="text-[#71717A] text-lg cursor-pointer select-none px-2"
+                    className="text-hex-71717a text-lg cursor-pointer select-none px-2"
                     ref={(el) => {
                       if (el) menuBtnRefs.current[member.id] = el;
                     }}

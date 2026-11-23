@@ -8,7 +8,7 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import { money } from "../utils/scratch.utils";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 export interface PickedDish {
   id: string;
@@ -41,7 +41,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
 
   if (value) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
+      <div className="flex items-center gap-3 rounded-lg border border-hex-e4e4e7 p-2.5">
         {value.image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -51,7 +51,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
           />
         )}
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold text-[#18181B] truncate">
+          <div className="text-sm font-semibold text-hex-18181b truncate">
             {value.name}
           </div>
           <div className="text-[11px] text-[#9796A1]">
@@ -61,7 +61,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer"
+          className="text-[#9796A1] hover:text-hex-c0392b cursor-pointer"
         >
           <X size={16} />
         </button>
@@ -84,7 +84,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
         />
       </div>
       {search.trim().length >= 1 && (
-        <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+        <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
           {dishes.length === 0 ? (
             <div className="px-3 py-2 text-sm text-[#9796A1]">
               {dishesQuery.isLoading ? "Chargement…" : "Aucun plat"}
@@ -103,7 +103,7 @@ export default function DishPicker({ value, onChange }: DishPickerProps) {
                   });
                   setSearch("");
                 }}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
               >
                 <span className="truncate">{d.name}</span>
                 <span className="text-[#9796A1] shrink-0">{money(d.price)}</span>

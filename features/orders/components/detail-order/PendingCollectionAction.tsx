@@ -100,7 +100,7 @@ export default function PendingCollectionAction({
                         type="button"
                         disabled={occupe}
                         onClick={() => confirmer(p.id)}
-                        className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#F17922] px-4 text-xs font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex h-9 items-center gap-2 rounded-xl bg-[#F17922] px-4 text-xs font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {confirmation ? (
                           <>

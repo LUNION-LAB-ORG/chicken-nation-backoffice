@@ -11,7 +11,7 @@ export const STATUT_META: Record<ContactStatut, Meta> = {
   A_APPELER: { label: "À appeler", className: "bg-slate-100 text-slate-700" },
   A_RAPPELER: { label: "À rappeler", className: "bg-amber-100 text-amber-800" },
   INTERESSE: { label: "Intéressé", className: "bg-blue-100 text-blue-700" },
-  COUPON_ENVOYE: { label: "Coupon envoyé", className: "bg-orange-100 text-[#C2410C]" },
+  COUPON_ENVOYE: { label: "Coupon envoyé", className: "bg-orange-100 text-hex-c2410c" },
   NON_INTERESSE: { label: "Pas intéressé", className: "bg-rose-100 text-rose-700" },
   INJOIGNABLE: { label: "Injoignable", className: "bg-gray-200 text-gray-600" },
   CONVERTI: { label: "Converti", className: "bg-emerald-100 text-emerald-700" },
@@ -179,7 +179,7 @@ export const EFFET_META: Record<AppelEffet, Meta & { aide: string }> = {
 
 export const ETAT_COUPON_META: Record<EtatCoupon | "AUCUN", Meta> = {
   AUCUN: { label: "Aucun", className: "bg-gray-100 text-gray-500" },
-  ACTIF: { label: "Envoyé", className: "bg-orange-100 text-[#C2410C]" },
+  ACTIF: { label: "Envoyé", className: "bg-orange-100 text-hex-c2410c" },
   UTILISE: { label: "Utilisé", className: "bg-emerald-100 text-emerald-700" },
   EXPIRE: { label: "Expiré", className: "bg-gray-200 text-gray-600" },
 };

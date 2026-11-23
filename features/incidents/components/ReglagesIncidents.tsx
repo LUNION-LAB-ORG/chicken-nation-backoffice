@@ -111,7 +111,7 @@ function NouvelleCategorie() {
         type="button"
         disabled={!pret || creer.isPending}
         onClick={() => creer.mutate({ nom: nom.trim(), pole, delai_heures: delai }, { onSuccess: () => setNom("") })}
-        className="inline-flex h-[38px] items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex h-[38px] items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
       >
         {creer.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
         Ajouter
@@ -161,12 +161,12 @@ function Bons({ reglages }: { reglages: ReglagesIncident }) {
         Le manager et son assistant peuvent offrir un bon pour un incident de leur restaurant
       </label>
       <div className="flex items-center justify-end gap-3">
-        {!valide && <span className="text-xs text-[#B91C1C]">Montants de 100 à 100.000 F, validité de 1 à 365 jours.</span>}
+        {!valide && <span className="text-xs text-hex-b91c1c">Montants de 100 à 100.000 F, validité de 1 à 365 jours.</span>}
         <button
           type="button"
           disabled={!change || !valide || enregistrer.isPending}
           onClick={() => enregistrer.mutate({ bareme, validite_jours: validite, bon_restaurant: restaurant })}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {enregistrer.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Enregistrer

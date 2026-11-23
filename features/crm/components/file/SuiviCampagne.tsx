@@ -46,8 +46,8 @@ export function SuiviCampagne({ s, onRetour }: { s: ISuiviCampagne; onRetour: ()
             ))}
             {s.sans_agent > 0 && (
               <tr className="bg-orange-50/60">
-                <td className="px-4 py-2 font-semibold text-[#8A4B00]">Sans agent</td>
-                <td className="px-4 py-2 text-right font-semibold text-[#8A4B00]">{fmtNombre(s.sans_agent)}</td>
+                <td className="px-4 py-2 font-semibold text-hex-8a4b00">Sans agent</td>
+                <td className="px-4 py-2 text-right font-semibold text-hex-8a4b00">{fmtNombre(s.sans_agent)}</td>
                 <td className="px-4 py-2 text-right text-gray-400" />
               </tr>
             )}

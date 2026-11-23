@@ -23,7 +23,7 @@ export function IncidentsClient({ customerId }: { customerId: string | null | un
   const reste = data.meta.total - data.data.length;
   return (
     <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-orange-100 bg-orange-50/50 px-3 py-2">
-      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9A3412]">
+      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-hex-9a3412">
         <AlertTriangle className="h-3.5 w-3.5" />
         {data.meta.total > 1 ? `${data.meta.total} incidents` : "1 incident"}
       </span>

@@ -173,7 +173,7 @@ const PromoDetail = ({ promo, onEdit, onDelete, onDuplicate, className = '' }: P
           {onEdit && (
             <button
               onClick={() => onEdit(promo)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-blanc rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               <Edit size={18} />
               <span>Modifier</span>
@@ -183,7 +183,7 @@ const PromoDetail = ({ promo, onEdit, onDelete, onDuplicate, className = '' }: P
           {onDuplicate && (
             <button
               onClick={() => onDuplicate(promo)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 dark:to-[#4b5260] text-blanc rounded-xl hover:from-gray-600 dark:hover:from-[#4b5260] hover:to-gray-700 dark:hover:to-[#3a404c] transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               <Copy size={18} />
               <span>Dupliquer</span>
@@ -192,7 +192,7 @@ const PromoDetail = ({ promo, onEdit, onDelete, onDuplicate, className = '' }: P
 
           <button
             onClick={() => navigator.share?.({ title: promo.title, text: promo.description })}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-blanc rounded-xl hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
             <Share size={18} />
             <span>Partager</span>
@@ -201,7 +201,7 @@ const PromoDetail = ({ promo, onEdit, onDelete, onDuplicate, className = '' }: P
           {onDelete && (
             <button
               onClick={() => onDelete(promo)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-blanc rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
             >
               <Trash2 size={18} />
               <span>Supprimer</span>

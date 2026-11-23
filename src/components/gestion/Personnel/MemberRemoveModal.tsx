@@ -32,7 +32,7 @@ const MemberRemoveModal: React.FC<MemberRemoveModalProps> = ({
   if (mode === "suspend") {
     return (
       <Modal isOpen={open} onClose={onClose} title="Suspendre l'utilisateur">
-        <div className="text-center text-[#484848] text-[15px] mb-6">
+        <div className="text-center text-hex-484848 text-[15px] mb-6">
           {member?.fullname ? <b>{member.fullname}</b> : "L'utilisateur"} perdra
           l&apos;accès à la plateforme.
           <br />
@@ -41,14 +41,14 @@ const MemberRemoveModal: React.FC<MemberRemoveModalProps> = ({
         <div className="flex justify-center gap-4">
           <button
             type="button"
-            className="bg-[#ECECEC] text-[#9796A1] cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px]"
+            className="bg-hex-ececec text-[#9796A1] cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px]"
             onClick={onClose}
           >
             Annuler
           </button>
           <button
             type="button"
-            className="bg-[#F17922] text-white cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px] hover:bg-orange-600"
+            className="bg-[#F17922] text-blanc cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px] hover:bg-orange-600"
             onClick={onConfirm}
           >
             Suspendre
@@ -62,7 +62,7 @@ const MemberRemoveModal: React.FC<MemberRemoveModalProps> = ({
   const canDelete = confirmText.trim().toLowerCase() === "supprimer";
   return (
     <Modal isOpen={open} onClose={onClose} title="Supprimer définitivement">
-      <div className="text-center text-[#484848] text-[15px] mb-3">
+      <div className="text-center text-hex-484848 text-[15px] mb-3">
         ⚠️ Suppression <b>définitive et irréversible</b> de{" "}
         {member?.fullname ? <b>{member.fullname}</b> : "l'utilisateur"}.
         <br />
@@ -81,7 +81,7 @@ const MemberRemoveModal: React.FC<MemberRemoveModalProps> = ({
       <div className="flex justify-center gap-4">
         <button
           type="button"
-          className="bg-[#ECECEC] text-[#9796A1] cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px]"
+          className="bg-hex-ececec text-[#9796A1] cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px]"
           onClick={onClose}
         >
           Annuler
@@ -89,7 +89,7 @@ const MemberRemoveModal: React.FC<MemberRemoveModalProps> = ({
         <button
           type="button"
           disabled={!canDelete}
-          className="bg-red-600 text-white cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px] hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="bg-red-600 text-blanc cursor-pointer rounded-lg px-7 py-2 text-[13px] min-w-[120px] hover:bg-red-700 dark:hover:bg-red-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
           onClick={onConfirm}
         >
           Supprimer définitivement

@@ -27,7 +27,7 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
           : `${majuscule(origine(p))}, jamais appelé`;
 
   const classeAppel =
-    "flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-[#F17922] text-white px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60";
+    "flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-lg bg-[#F17922] text-blanc px-3 py-2 text-sm font-semibold hover:bg-[#e06a15] disabled:opacity-60";
 
   // Absent quand le numéro est masqué : le rôle qui lit sans rappeler n'a pas de lien d'appel.
   const appel = lienAppel(p.telephone);
@@ -50,7 +50,7 @@ export function CarteFile({ p, onOuvrir, commune = false }: { p: IContactLigne; 
           */}
           {!commune &&
             (p.campaign ? (
-              <span className="inline-flex items-center gap-1 rounded-full border border-[#F17922]/40 bg-[#FDF3E7] px-2 py-0.5 text-[11px] font-semibold text-[#8A4B00]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#F17922]/40 bg-hex-fdf3e7 px-2 py-0.5 text-[11px] font-semibold text-hex-8a4b00">
                 <Megaphone className="w-3 h-3" /> {p.campaign.name}
               </span>
             ) : (

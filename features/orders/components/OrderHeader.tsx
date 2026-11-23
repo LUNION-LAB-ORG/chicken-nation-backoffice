@@ -66,7 +66,7 @@ function OrderHeader() {
                     onClick: handleRefresh,
                     variant: "secondary" as const,
                     className:
-                      "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
+                      "bg-white border border-gray-300 text-hex-595959 hover:bg-gray-50",
                   },
                 ]
               : []),

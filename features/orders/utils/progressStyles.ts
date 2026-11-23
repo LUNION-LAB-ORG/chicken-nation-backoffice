@@ -9,7 +9,7 @@ const UI = {
         active: "bg-[#F17922]",
         inactive: "bg-white",
         lineActive: "bg-[#F17922]",
-        lineInactive: "bg-[#FFE8D7]",
+        lineInactive: "bg-hex-ffe8d7",
         danger: "bg-[#FF3B30]",
     },
     border: {

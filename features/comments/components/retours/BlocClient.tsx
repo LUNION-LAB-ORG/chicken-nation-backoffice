@@ -60,7 +60,7 @@ export function BlocClient({
             {appel && (
               <a
                 href={appel}
-                className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#F17922] text-sm font-bold text-white hover:bg-[#e06a15]"
+                className="flex h-11 items-center justify-center gap-2 rounded-lg bg-[#F17922] text-sm font-bold text-blanc hover:bg-[#e06a15]"
               >
                 <Phone className="h-4 w-4" />
                 Appeler
@@ -126,7 +126,7 @@ export function BlocClient({
               })
             }
             disabled={!!raison}
-            className="h-11 rounded-lg border-2 border-[#C2410C] bg-white text-sm font-bold text-[#9A3412] hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
+            className="h-11 rounded-lg border-2 border-[#C2410C] bg-white text-sm font-bold text-hex-9a3412 hover:bg-orange-50 disabled:cursor-not-allowed disabled:border-gray-200 disabled:text-gray-400 disabled:hover:bg-white"
           >
             Créer un incident
           </button>

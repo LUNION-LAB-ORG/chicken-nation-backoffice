@@ -67,7 +67,7 @@ export function CancelCourseModal({ isOpen, course }: Props) {
           <button
             onClick={handleConfirm}
             disabled={cancelMutation.isPending}
-            className="flex-1 py-2.5 rounded-lg bg-red-600 text-white text-sm font-semibold disabled:bg-gray-300"
+            className="flex-1 py-2.5 rounded-lg bg-red-600 text-blanc text-sm font-semibold disabled:bg-gray-300"
           >
             {cancelMutation.isPending ? 'Annulation…' : 'Confirmer l\'annulation'}
           </button>

@@ -80,8 +80,8 @@ export const LoyaltyConfigForm = ({
         />
       </div>
 
-      <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-[#595959]">
+      <div className="border-2 border-hex-d9d9d9/50 rounded-2xl p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-hex-595959">
           Seuils des Niveaux de Fidélité
         </h3>
         <p className="text-sm text-[#9796A1] -mt-2">
@@ -126,7 +126,7 @@ export const LoyaltyConfigForm = ({
         <motion.button
           type="button"
           onClick={onCancel}
-          className="px-8 py-3 rounded-xl bg-[#ECECEC] text-[#9796A1] min-w-[160px]"
+          className="px-8 py-3 rounded-xl bg-hex-ececec text-[#9796A1] min-w-[160px]"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}
@@ -135,7 +135,7 @@ export const LoyaltyConfigForm = ({
         </motion.button>
         <motion.button
           type="submit"
-          className="px-8 py-3 rounded-xl bg-[#F17922] text-white min-w-[170px] disabled:opacity-50"
+          className="px-8 py-3 rounded-xl bg-[#F17922] text-blanc min-w-[170px] disabled:opacity-50"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}

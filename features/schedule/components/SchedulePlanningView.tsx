@@ -78,7 +78,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
             <button
               type="button"
               onClick={() => setShowGenerateModal(true)}
-              className="inline-flex items-center gap-1 bg-[#F17922] text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#D8631F] whitespace-nowrap"
+              className="inline-flex items-center gap-1 bg-[#F17922] text-blanc text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-[#D8631F] whitespace-nowrap"
             >
               <Plus className="w-3.5 h-3.5" />
               Générer
@@ -93,7 +93,7 @@ export function SchedulePlanningView({ restaurantId, choixRestaurant }: Props) {
               type="button"
               onClick={() => setFiltre(f.key)}
               className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
-                filtre === f.key ? "bg-[#F17922] text-white" : "bg-gray-100 text-gray-600"
+                filtre === f.key ? "bg-[#F17922] text-blanc" : "bg-gray-100 text-gray-600"
               }`}
             >
               {f.label}

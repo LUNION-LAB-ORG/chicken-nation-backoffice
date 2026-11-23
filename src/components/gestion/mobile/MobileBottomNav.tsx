@@ -127,7 +127,7 @@ export default function MobileBottomNav() {
                   className={it.active ? "text-[#F17922]" : "text-gray-400"}
                 />
                 {!!it.badge && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F17922] text-white text-[10px] font-semibold flex items-center justify-center">
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#F17922] text-blanc text-[10px] font-semibold flex items-center justify-center">
                     {it.badge > 99 ? "99+" : it.badge}
                   </span>
                 )}

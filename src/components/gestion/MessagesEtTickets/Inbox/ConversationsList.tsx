@@ -185,7 +185,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
             onClick={() => {
               onNewConversation?.();
             }}
-            className="bg-[#F17922] hover:bg-orange-600 text-white md:px-4 md:py-2 px-3 py-2.5 cursor-pointer rounded-xl md:text-sm text-xs font-medium flex items-center"
+            className="bg-[#F17922] hover:bg-orange-600 text-blanc md:px-4 md:py-2 px-3 py-2.5 cursor-pointer rounded-xl md:text-sm text-xs font-medium flex items-center"
           >
             <Plus className="mr-1 md:w-5 md:h-5 w-4 h-4" />
             Nouvelle
@@ -211,21 +211,21 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
         <div className="flex gap-2 md:gap-3">
           <button
             onClick={() => setActiveFilter('all')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'all' ? 'bg-[#F17922] text-blanc' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Toutes ({totalServeur ?? conversations.length})
           </button>
           <button
             onClick={() => setActiveFilter('client')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'client' ? 'bg-[#F17922] text-blanc' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Clients ({conversations.filter(c => c.customer).length}{hasNextPage ? '+' : ''})
           </button>
           <button
             onClick={() => setActiveFilter('internal')}
-            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            className={`cursor-pointer md:px-4 md:py-2 px-3 py-1.5 rounded-xl md:text-sm text-xs font-medium ${activeFilter === 'internal' ? 'bg-[#F17922] text-blanc' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
           >
             Internes ({conversations.filter(c => !c.customer).length}{hasNextPage ? '+' : ''})
@@ -316,7 +316,7 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                             pas montrées, sinon un groupe de six ressemble à un
                             tête-à-tête. */}
                         {conversation.users.length > 2 && (
-                          <span className="absolute bottom-0 left-0 md:text-[10px] text-[9px] font-bold text-white bg-[#F17922] rounded-full px-1 leading-4">
+                          <span className="absolute bottom-0 left-0 md:text-[10px] text-[9px] font-bold text-blanc bg-[#F17922] rounded-full px-1 leading-4">
                             +{conversation.users.length - 2}
                           </span>
                         )}
@@ -347,11 +347,11 @@ function ConversationsList({ selectedConversation, onSelectConversation, onNewCo
                 <div className="flex-1 ml-3 min-w-0">
                   <div className="flex items-center justify-between md:mb-2 mb-1">
                     <div className="flex items-center md:space-x-2 space-x-1">
-                      <span className="md:text-base text-sm font-semibold text-black">
+                      <span className="md:text-base text-sm font-semibold text-noir">
                         {displayName}
                       </span>
                       {conversation.unreadNumber > 0 && (
-                        <span className="bg-red-500 text-white md:text-sm text-xs md:px-2 md:py-1 px-1.5 py-0.5 rounded-full font-medium md:min-w-[24px] md:h-6 min-w-[20px] h-5 flex items-center justify-center">
+                        <span className="bg-red-500 text-blanc md:text-sm text-xs md:px-2 md:py-1 px-1.5 py-0.5 rounded-full font-medium md:min-w-[24px] md:h-6 min-w-[20px] h-5 flex items-center justify-center">
                           {conversation.unreadNumber}
                         </span>
                       )}

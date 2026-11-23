@@ -334,7 +334,7 @@ export default function Inventory() {
           <div className="relative">
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
+              className="flex items-center space-x-2 bg-hex-f4f4f5 rounded-[10px] px-4 py-2 cursor-pointer"
             >
               <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
                 {currentView === "products" ? "Produits" : "Catégories"}
@@ -386,7 +386,7 @@ export default function Inventory() {
                   type="button"
                   onClick={() => setShowReorderModal(true)}
                   title={`Ordre d'affichage des ${translateCategory(selectedTab).toLowerCase()} dans l'application`}
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-gray-200 px-3 py-1.5 text-[10px] font-medium text-[#71717A] hover:bg-gray-50 lg:text-[13px]"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-[10px] border border-gray-200 px-3 py-1.5 text-[10px] font-medium text-hex-71717a hover:bg-gray-50 lg:text-[13px]"
                 >
                   <ArrowUpDown size={14} />
                   Ordre

@@ -50,7 +50,7 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="mt-6 w-full cursor-pointer bg-[#F17922] text-white rounded-xl py-3 px-4 font-medium hover:bg-[#F17972] transition-colors"
+        className="mt-6 w-full cursor-pointer bg-[#F17922] text-blanc rounded-xl py-3 px-4 font-medium hover:bg-[#F17972] transition-colors"
       >
         Confirmer le paiement
       </button>
@@ -98,12 +98,12 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
                 type="button"
                 onClick={handleConfirm}
                 disabled={!transactionId.trim() || isPending}
-                className="w-full py-3 rounded-lg bg-[#F17922] text-white font-semibold cursor-pointer hover:bg-[#F17972] transition-colors disabled:opacity-50 flex items-center justify-center"
+                className="w-full py-3 rounded-lg bg-[#F17922] text-blanc font-semibold cursor-pointer hover:bg-[#F17972] transition-colors disabled:opacity-50 flex items-center justify-center"
               >
                 {isPending ? (
                   <>
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-blanc"
                       fill="none"
                       viewBox="0 0 24 24"
                     >

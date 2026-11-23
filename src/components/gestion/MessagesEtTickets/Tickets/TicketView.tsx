@@ -509,7 +509,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                           </span>
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
-                        <div className="bg-[#F17922] text-white md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
+                        <div className="bg-[#F17922] text-blanc md:px-4 md:py-3 px-3 py-2 rounded-2xl ml-auto max-w-fit">
                           <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
                         </div>
                         {/* Réactions : même composant que la messagerie, pour que les deux
@@ -589,7 +589,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           <button
             onClick={() => setMessageType('public')}
             className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium md:mr-3 mr-2 cursor-pointer ${messageType === 'public'
-              ? 'bg-[#F17922] text-white'
+              ? 'bg-[#F17922] text-blanc'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
           >
@@ -599,7 +599,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
           <button
             onClick={() => setMessageType('internal')}
             className={`flex items-center md:px-4 md:py-2 px-3 py-2 rounded-full md:text-sm text-xs font-medium cursor-pointer ${messageType === 'internal'
-              ? 'bg-[#F17922] text-white'
+              ? 'bg-[#F17922] text-blanc'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
           >
@@ -624,7 +624,7 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
             title="Envoyer le message"
             onClick={handleSendMessage}
             disabled={!message.trim() || sendMessageMutation.isPending}
-            className="bg-[#F17922] text-white md:p-3 p-2 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            className="bg-[#F17922] text-blanc md:p-3 p-2 rounded-full hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
           >
             {sendMessageMutation.isPending ? (
               <Loader2 className="md:w-5 md:h-5 w-4 h-4 animate-spin" />

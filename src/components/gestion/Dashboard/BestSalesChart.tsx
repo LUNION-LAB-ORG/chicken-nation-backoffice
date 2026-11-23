@@ -147,10 +147,10 @@ const BestSalesChart: React.FC<BestSalesChartProps> = ({
           {bestSalesData.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between py-2  border-b-[1px] border-[#E6E6E6]  "
+              className="flex items-center justify-between py-2  border-b-[1px] border-hex-e6e6e6  "
             >
               <div className="flex items-center mx-2">
-                <div className="lg:w-26 lg:h-20 w-16 h-16 mr-3 rounded-2xl border-[2px] mb-2 border-[#ffeacd]">
+                <div className="lg:w-26 lg:h-20 w-16 h-16 mr-3 rounded-2xl border-[2px] mb-2 border-hex-ffeacd">
                   <Image
                     src={formatImageUrl(item.image)}
                     alt={item.name}
@@ -165,7 +165,7 @@ const BestSalesChart: React.FC<BestSalesChartProps> = ({
                   />
                 </div>
                 <div>
-                  <h4 className="lg:text-[13px] text-[10px] font-bold text-[#595959] lg:line-clamp-2 line-clamp-3 lg:w-60 w-26 mr-4">
+                  <h4 className="lg:text-[13px] text-[10px] font-bold text-hex-595959 lg:line-clamp-2 line-clamp-3 lg:w-60 w-26 mr-4">
                     {item.name}
                   </h4>
                   <div className="flex items-center gap-1 mt-1">

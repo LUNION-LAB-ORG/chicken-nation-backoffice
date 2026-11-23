@@ -136,7 +136,7 @@ export function GenericStatCardServer({
 
       {/* Section objectif avec fond beige */}
       {objective && (
-        <div className="bg-[#FFF8EE] p-3 py-2 flex items-center justify-between">
+        <div className="bg-hex-fff8ee p-3 py-2 flex items-center justify-between">
           <span className="text-sm text-gray-700">{objective.value}</span>
           <CircularProgress percentage={objective.percentage} />
         </div>

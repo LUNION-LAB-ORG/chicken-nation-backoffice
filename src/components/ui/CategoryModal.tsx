@@ -65,7 +65,7 @@ export default function CategoryModal({ isOpen, onClose, title, children }: Cate
             className="relative w-full max-w-3xl rounded-2xl bg-white shadow-xl modal-content overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4 bg-[#FDEDD3]">
+            <div className="flex items-center justify-between px-6 py-4 bg-hex-fdedd3">
               <div className="flex-1 text-center">
                 <h3 className="text-[#F17922] font-medium">{title}</h3>
               </div>

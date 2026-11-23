@@ -214,7 +214,7 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
                 onClick={() => setTargetMode(opt.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
                   targetMode === opt.id
-                    ? "border-[#F17922] bg-[#FFF3E8] text-[#F17922]"
+                    ? "border-[#F17922] bg-hex-fff3e8 text-[#F17922]"
                     : "border-gray-200 text-gray-600 hover:border-gray-300"
                 }`}
               >
@@ -307,7 +307,7 @@ export default function CreateMessageModal({ isOpen, onClose }: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending ? (
               <Loader2 size={16} className="animate-spin" />

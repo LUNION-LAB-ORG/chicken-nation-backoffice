@@ -50,7 +50,7 @@ export function ChoixLivreurCourse({ course }: { course: CourseEnDirect }) {
   if (!course.livreur) {
     if (modifiable) return <MenuLivreur course={course} />;
     return (
-      <p className="flex h-8 items-center gap-1.5 text-xs text-[#71717A]">
+      <p className="flex h-8 items-center gap-1.5 text-xs text-hex-71717a">
         <UserRound className="h-3.5 w-3.5" />
         {course.turbo ? 'Livreur Turbo' : 'Aucun livreur'}
       </p>
@@ -71,12 +71,12 @@ export function ChoixLivreurCourse({ course }: { course: CourseEnDirect }) {
         }}
         onKeyDown={(e) => e.stopPropagation()}
         title="Numéro et gestes du livreur"
-        className="group/livreur flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg px-1 text-left transition-colors hover:bg-[#F4F4F5]"
+        className="group/livreur flex h-8 min-w-0 flex-1 items-center gap-2 rounded-lg px-1 text-left transition-colors hover:bg-hex-f4f4f5"
       >
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-[10px] font-bold text-[#52525B] group-hover/livreur:bg-white">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-hex-f4f4f5 text-[10px] font-bold text-hex-52525b group-hover/livreur:bg-white">
           {(course.livreur.prenom ?? 'L').trim().charAt(0).toUpperCase()}
         </span>
-        <span className="min-w-0 flex-1 truncate text-xs font-medium text-[#18181B] underline-offset-2 group-hover/livreur:underline">
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-hex-18181b underline-offset-2 group-hover/livreur:underline">
           {nom}
         </span>
         <Phone className="h-3.5 w-3.5 shrink-0 text-[#A1A1AA] group-hover/livreur:text-[#F17922]" />
@@ -198,7 +198,7 @@ function MenuLivreur({ course, compact = false }: { course: CourseEnDirect; comp
       className={
         petitEcran
           ? 'fixed inset-x-0 bottom-0 z-[70] flex max-h-[75dvh] flex-col rounded-t-2xl bg-white shadow-2xl'
-          : 'fixed z-[70] flex max-h-[360px] flex-col overflow-hidden rounded-xl border border-[#E4E4E7] bg-white shadow-xl'
+          : 'fixed z-[70] flex max-h-[360px] flex-col overflow-hidden rounded-xl border border-hex-e4e4e7 bg-white shadow-xl'
       }
       style={
         petitEcran || !place
@@ -212,36 +212,36 @@ function MenuLivreur({ course, compact = false }: { course: CourseEnDirect; comp
     >
       {petitEcran && (
         <div className="flex items-center justify-between px-4 pb-1 pt-3">
-          <p className="text-sm font-semibold text-[#18181B]">
+          <p className="text-sm font-semibold text-hex-18181b">
             Livreur de <span className="tabular-nums">{course.code ?? course.reference}</span>
           </p>
           <button
             type="button"
             onClick={() => setOuvert(false)}
             aria-label="Fermer"
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#F4F4F5]"
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-hex-f4f4f5"
           >
-            <X className="h-4 w-4 text-[#52525B]" />
+            <X className="h-4 w-4 text-hex-52525b" />
           </button>
         </div>
       )}
-      <label className="mx-3 my-2 flex items-center gap-2 rounded-lg border border-[#E4E4E7] bg-[#FAFAFA] px-2.5">
+      <label className="mx-3 my-2 flex items-center gap-2 rounded-lg border border-hex-e4e4e7 bg-hex-fafafa px-2.5">
         <Search className="h-3.5 w-3.5 shrink-0 text-[#A1A1AA]" />
         <input
           autoFocus={!petitEcran}
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
           placeholder="Rechercher un livreur"
-          className="h-8 min-w-0 flex-1 bg-transparent text-sm text-[#18181B] outline-none placeholder:text-[#A1A1AA]"
+          className="h-8 min-w-0 flex-1 bg-transparent text-sm text-hex-18181b outline-none placeholder:text-[#A1A1AA]"
         />
       </label>
       <div className="min-h-0 flex-1 overflow-y-auto pb-2">
         {isLoading ? (
-          <p className="px-4 py-3 text-sm text-[#71717A]">Chargement des livreurs…</p>
+          <p className="px-4 py-3 text-sm text-hex-71717a">Chargement des livreurs…</p>
         ) : isError ? (
           <p className="px-4 py-3 text-sm text-red-600">Impossible de lire les livreurs.</p>
         ) : lignes.length === 0 ? (
-          <p className="px-4 py-3 text-sm text-[#71717A]">
+          <p className="px-4 py-3 text-sm text-hex-71717a">
             {recherche ? 'Aucun livreur trouvé.' : 'Aucun livreur actif pour ce restaurant ni à proximité.'}
           </p>
         ) : (
@@ -259,12 +259,12 @@ function MenuLivreur({ course, compact = false }: { course: CourseEnDirect; comp
                 >
                   <span className={`min-w-0 flex-1 ${choix.selectionnable || actuel ? '' : 'opacity-50'}`}>
                     <span className="flex items-center gap-1.5">
-                      <span className="truncate text-sm font-medium text-[#18181B]" title={nom}>
+                      <span className="truncate text-sm font-medium text-hex-18181b" title={nom}>
                         {nom}
                       </span>
                       {actuel && <Check className="h-3.5 w-3.5 shrink-0 text-[#F17922]" aria-label="Livreur actuel" />}
                     </span>
-                    <span className="block truncate text-[11px] text-[#71717A]">
+                    <span className="block truncate text-[11px] text-hex-71717a">
                       {choix.selectionnable || actuel ? sousTitre : raison}
                     </span>
                   </span>
@@ -294,8 +294,8 @@ function MenuLivreur({ course, compact = false }: { course: CourseEnDirect; comp
         onKeyDown={(e) => e.stopPropagation()}
         className={
           compact
-            ? 'inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-[#E4E4E7] bg-white px-2 text-xs font-semibold text-[#52525B] transition-colors hover:border-[#F17922]/60 hover:text-[#F17922] disabled:opacity-60'
-            : 'flex h-8 w-full items-center gap-2 rounded-lg border border-dashed border-[#F17922] bg-orange-50/60 px-2 text-left text-xs font-semibold text-[#C2410C] transition-colors hover:bg-orange-50 disabled:opacity-60'
+            ? 'inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-hex-e4e4e7 bg-white px-2 text-xs font-semibold text-hex-52525b transition-colors hover:border-[#F17922]/60 hover:text-[#F17922] disabled:opacity-60'
+            : 'flex h-8 w-full items-center gap-2 rounded-lg border border-dashed border-[#F17922] bg-orange-50/60 px-2 text-left text-xs font-semibold text-hex-c2410c transition-colors hover:bg-orange-50 disabled:opacity-60'
         }
       >
         {!compact && (

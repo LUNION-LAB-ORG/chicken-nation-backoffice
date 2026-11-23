@@ -223,7 +223,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
   return (
     <form onSubmit={handleSubmit} className="space-y-4 p-4">
       <div>
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           Nom du supplément
         </label>
         <Input
@@ -233,14 +233,14 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
           onChange={handleChange}
           required
           placeholder="Nom du supplément"
-          className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.name ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px] placeholder-gray-400`}
+          className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.name ? 'border-red-500' : 'border-hex-d8d8d8'} px-4 text-[13px] placeholder-gray-400`}
         />
         {formErrors.name && <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>}
       </div>
 
       {/* Prix */}
       <div className="w-full">
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           Prix
         </label>
         <div className="relative w-full">
@@ -256,7 +256,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
             step="1"
             placeholder="0"
             required
-            className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.price ? 'border-red-500' : 'border-[#D8D8D8]'} pl-13 pr-4 text-[13px] placeholder-gray-400`}
+            className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.price ? 'border-red-500' : 'border-hex-d8d8d8'} pl-13 pr-4 text-[13px] placeholder-gray-400`}
           />
         </div>
         {formErrors.price && <p className="text-red-500 text-xs mt-1">{formErrors.price}</p>}
@@ -264,7 +264,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
       </div>
 
       <div>
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           Catégorie
         </label>
         <Select
@@ -272,14 +272,14 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
           value={formData.category}
           onChange={handleChange}
           placeholder="Sélectionnez une catégorie"
-          className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.category ? 'border-red-500' : 'border-[#D8D8D8]'} px-4 text-[13px]`}
+          className={`w-full h-[42px] rounded-xl bg-white border ${formErrors.category ? 'border-red-500' : 'border-hex-d8d8d8'} px-4 text-[13px]`}
         />
         {formErrors.category && <p className="text-red-500 text-xs mt-1">{formErrors.category}</p>}
       </div>
 
       {/* Niveau épicé (3 états) */}
       <div>
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           Niveau épicé
         </label>
         <div className="flex gap-2">
@@ -296,8 +296,8 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
               onClick={() => setFormData((prev) => ({ ...prev, spice_level: value }))}
               className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border transition-colors ${
                 formData.spice_level === value
-                  ? "bg-[#F17922] text-white border-[#F17922]"
-                  : "bg-white text-gray-600 border-[#D8D8D8] hover:border-[#F17922]"
+                  ? "bg-[#F17922] text-blanc border-[#F17922]"
+                  : "bg-white text-gray-600 border-hex-d8d8d8 hover:border-[#F17922]"
               }`}
             >
               {label}
@@ -308,7 +308,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
 
       {/* Modes de commande disponibles */}
       <div>
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           Disponible pour
         </label>
         <div className="flex gap-2">
@@ -334,8 +334,8 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
                 }
                 className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border transition-colors ${
                   active
-                    ? "bg-[#F17922] text-white border-[#F17922]"
-                    : "bg-white text-gray-600 border-[#D8D8D8] hover:border-[#F17922]"
+                    ? "bg-[#F17922] text-blanc border-[#F17922]"
+                    : "bg-white text-gray-600 border-hex-d8d8d8 hover:border-[#F17922]"
                 }`}
               >
                 {label}
@@ -347,7 +347,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
 
       {/* SKU HubRise */}
       <div>
-        <label className="block text-sm text-[#595959] font-light mb-2">
+        <label className="block text-sm text-hex-595959 font-light mb-2">
           SKU HubRise
         </label>
         <Input
@@ -356,7 +356,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
           value={formData.hubrise_sku}
           onChange={handleChange}
           placeholder="Ex: CHKN-001"
-          className="w-full h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-4 text-[13px] placeholder-gray-400"
+          className="w-full h-[42px] rounded-xl bg-white border border-hex-d8d8d8 px-4 text-[13px] placeholder-gray-400"
         />
       </div>
 
@@ -373,7 +373,7 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         </div>
 
         <div>
-          <label className="block text-sm text-[#595959] font-light mb-2">
+          <label className="block text-sm text-hex-595959 font-light mb-2">
             Photo du supplément
           </label>
           <div 
@@ -412,14 +412,14 @@ export default function EditSupplement({ onCancel, onSuccess, product }: EditSup
         <Button
           type="button"
           onClick={onCancel}
-          className="h-[32px] text-[#9796A1] px-12 cursor-pointer rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
+          className="h-[32px] text-[#9796A1] px-12 cursor-pointer rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
         >
           Annuler
         </Button>
         <Button 
           type="submit"
           disabled={isLoading}
-          className="h-[32px] px-12 cursor-pointer rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[32px] px-12 cursor-pointer rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Enregistrement...' : 'Mettre à jour'}
         </Button>

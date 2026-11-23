@@ -88,7 +88,7 @@ const SimpleSelect = ({ options, value, onChange, placeholder, className }: Simp
         ref={buttonRef}
         type="button"
         onClick={handleButtonClick}
-        className="w-full flex items-center justify-between bg-[#d8d8d8] text-[#595959] font-semibold px-4 py-2 rounded-xl text-sm"
+        className="w-full flex items-center justify-between bg-hex-d8d8d8 text-hex-595959 font-semibold px-4 py-2 rounded-xl text-sm"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -123,8 +123,8 @@ const SimpleSelect = ({ options, value, onChange, placeholder, className }: Simp
                 onClick={(e) => handleOptionClick(e, option.value)}
                 role="option"
                 aria-selected={option.value === value}
-                className={`px-4 py-2 cursor-pointer hover:bg-[#FBD2B5] hover:text-[#F17922] transition-colors truncate ${
-                  option.value === value ? 'bg-[#FBD2B5] text-[#F17922] font-medium' : 'text-gray-700'
+                className={`px-4 py-2 cursor-pointer hover:bg-hex-fbd2b5 hover:text-[#F17922] transition-colors truncate ${
+                  option.value === value ? 'bg-hex-fbd2b5 text-[#F17922] font-medium' : 'text-gray-700'
                 }`}
               >
                 {option.label}

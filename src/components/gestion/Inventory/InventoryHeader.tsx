@@ -41,7 +41,7 @@ export default function InventoryHeader({
         <div className="flex items-center gap-2">
           <Button
             onClick={onCreateCategory}
-            className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100"
+            className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100"
           >
             Créer une catégorie
           </Button>

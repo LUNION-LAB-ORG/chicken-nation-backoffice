@@ -54,22 +54,22 @@ export default function GamesModule() {
               onClick={() => setTab(key)}
               className={`text-left rounded-xl border p-4 transition-all cursor-pointer ${
                 isActive
-                  ? "border-[#F17922] bg-[#FFF9F4] shadow-sm"
-                  : "border-[#E4E4E7] bg-white hover:border-[#F17922]/40"
+                  ? "border-[#F17922] bg-hex-fff9f4 shadow-sm"
+                  : "border-hex-e4e4e7 bg-white hover:border-[#F17922]/40"
               }`}
             >
               <div className="flex items-start gap-3">
                 <div
                   className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                    isActive ? "bg-[#F17922]" : "bg-[#F4F4F5]"
+                    isActive ? "bg-[#F17922]" : "bg-hex-f4f4f5"
                   }`}
                 >
-                  <Icon size={20} className={isActive ? "text-white" : "text-[#9796A1]"} />
+                  <Icon size={20} className={isActive ? "text-blanc" : "text-[#9796A1]"} />
                 </div>
                 <div className="min-w-0">
                   <div
                     className={`text-[15px] font-semibold ${
-                      isActive ? "text-[#F17922]" : "text-[#18181B]"
+                      isActive ? "text-[#F17922]" : "text-hex-18181b"
                     }`}
                   >
                     {label}

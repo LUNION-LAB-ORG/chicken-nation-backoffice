@@ -129,7 +129,7 @@ export default function SegmentList({ searchQuery, onCreate }: Props) {
                 <p className="text-xs text-gray-500 mb-3">
                   {segment.description}
                 </p>
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-[#FFF3E8] text-[#F17922]">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-hex-fff3e8 text-[#F17922]">
                   {segment.count.toLocaleString("fr-FR")} abonnés
                 </span>
               </div>

@@ -63,7 +63,7 @@ interface DeliveryInfoSectionProps {
 }
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition";
+  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition";
 
 const LABEL_CLASS = "text-xs font-semibold text-gray-500 mb-1.5 block";
 
@@ -300,7 +300,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           <button
             type="button"
             onClick={() => onFormDataChange({ restaurant_id: suggestionProche.id })}
-            className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
+            className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-blanc transition hover:bg-amber-600"
           >
             Choisir
           </button>
@@ -389,7 +389,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
                   className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition ${
                     selected
                       ? "border-[#F17922] bg-orange-50 text-[#F17922]"
-                      : "border-gray-200 bg-white text-[#595959] hover:border-[#F17922]/40 hover:bg-gray-50"
+                      : "border-gray-200 bg-white text-hex-595959 hover:border-[#F17922]/40 hover:bg-gray-50"
                   }`}
                 >
                   {opt.label}

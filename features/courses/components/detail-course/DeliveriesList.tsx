@@ -103,11 +103,11 @@ export function DeliveriesList({ deliveries }: Props) {
               {/* Sous-traitance Turbo : qui livre et comment le joindre.
                   Le staff doit savoir qu'un livreur EXTERNE va se présenter. */}
               {(delivery.turbo_course_id || delivery.turbo_courier_id) && (
-                <div className="mt-2 rounded-md bg-[#FFF6E9] border border-[#F5D8AE] px-2.5 py-2">
-                  <div className="font-semibold text-[#7A3502]">
+                <div className="mt-2 rounded-md bg-hex-fff6e9 border border-hex-f5d8ae px-2.5 py-2">
+                  <div className="font-semibold text-hex-7a3502">
                     🛵 Livreur externe Turbo
                   </div>
-                  <div className="text-[#7A3502]">
+                  <div className="text-hex-7a3502">
                     {delivery.turbo_courier_name ?? 'Livreur non encore communiqué'}
                     {delivery.turbo_courier_phone ? ` · ${delivery.turbo_courier_phone}` : ''}
                   </div>

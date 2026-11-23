@@ -291,7 +291,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
         : "bg-white rounded-2xl shadow-xl w-full max-w-[760px] mx-0 md:mx-0 p-0 max-h-[92vh] overflow-y-auto"}>
         {/* Header — en mode page, le titre + retour vivent dans DashboardPageHeader. */}
         {!asPage && (
-          <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-[#FFF3E3] rounded-t-2xl h-[40px]">
+          <div className="relative flex items-center justify-center px-0 pt-0 pb-0 bg-hex-fff3e3 rounded-t-2xl h-[40px]">
             <h2 className="text-base font-semibold text-[#F17922] mx-auto text-center">
               Créer un membre
             </h2>
@@ -309,7 +309,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
           <div className="px-4 pt-6 pb-4 flex flex-col gap-4">
             <div className="flex flex-col items-center justify-center gap-2">
               <div
-                className="w-[96px] h-[96px] rounded-full bg-[#F4F4F5] flex items-center justify-center overflow-hidden cursor-pointer"
+                className="w-[96px] h-[96px] rounded-full bg-hex-f4f4f5 flex items-center justify-center overflow-hidden cursor-pointer"
                 onClick={() =>
                   document.getElementById("member-image-upload")?.click()
                 }
@@ -347,49 +347,49 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               onChange={handleChange}
               placeholder="Nom complet"
               required
-              className="h-[44px] rounded-lg border border-[#ECECEC] bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
+              className="h-[44px] rounded-lg border border-hex-ececec bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
             />
             <Input
               name="email"
               value={formData.email}
               onChange={handleChange}
               placeholder="Adresse email"
-              className="h-[44px] rounded-lg border border-[#ECECEC] bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
+              className="h-[44px] rounded-lg border border-hex-ececec bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
             />
             <Input
               name="phone"
               value={formData.phone || ""}
               onChange={handleChange}
               placeholder="Numéro de téléphone"
-              className="h-[44px] rounded-lg border border-[#ECECEC] bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
+              className="h-[44px] rounded-lg border border-hex-ececec bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
             />
             <Input
               name="address"
               value={formData.address || ""}
               onChange={handleChange}
               placeholder="Adresse"
-              className="h-[44px] rounded-lg border border-[#ECECEC] bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
+              className="h-[44px] rounded-lg border border-hex-ececec bg-white text-[15px] px-4 placeholder-[#D8D8D8] focus:ring-2 focus:ring-[#F17922]/30 mb-1"
             />
             <div className="relative">
-              <div className="text-[#595959] text-[15px] font-normal mb-1">
+              <div className="text-hex-595959 text-[15px] font-normal mb-1">
                 Rôle
               </div>
               <div
-                className="flex items-center border border-[#ECECEC] rounded-lg bg-white px-4 h-[44px] cursor-pointer select-none"
+                className="flex items-center border border-hex-ececec rounded-lg bg-white px-4 h-[44px] cursor-pointer select-none"
                 onClick={() => setShowRoleDropdown((v) => !v)}
               >
-                <span className="flex-1 text-[#71717A] text-[15px] font-semibold">
+                <span className="flex-1 text-hex-71717a text-[15px] font-semibold">
                   {roleOptions.find((opt) => opt.value === role)?.label ||
                     "Choisissez un rôle"}
                 </span>
                 <span className="text-[#F17922] font-bold text-xl">›</span>
               </div>
               {showRoleDropdown && (
-                <div className="absolute left-0 right-0 z-20 bg-white rounded-xl shadow-lg border border-[#ECECEC] mt-1">
+                <div className="absolute left-0 right-0 z-20 bg-white rounded-xl shadow-lg border border-hex-ececec mt-1">
                   {roleOptions.map((option) => (
                     <div
                       key={option.value}
-                      className="px-4 py-2 text-[15px] text-[#232323] hover:bg-[#FFF3E3] hover:text-[#F17922] cursor-pointer rounded-xl"
+                      className="px-4 py-2 text-[15px] text-hex-232323 hover:bg-hex-fff3e3 hover:text-[#F17922] cursor-pointer rounded-xl"
                       onMouseDown={() => {
                         setRole(option.value);
                         setShowRoleDropdown(false);
@@ -403,13 +403,13 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
             </div>
             {needsRestaurantPicker && (
               <div>
-                <div className="text-[#595959] text-[15px] font-normal mb-1">
+                <div className="text-hex-595959 text-[15px] font-normal mb-1">
                   Restaurant
                 </div>
                 <select
                   value={restaurantId}
                   onChange={(e) => setRestaurantId(e.target.value)}
-                  className="w-full h-[44px] rounded-lg border border-[#ECECEC] bg-white px-4 text-[15px] text-[#71717A] focus:ring-2 focus:ring-[#F17922]/30"
+                  className="w-full h-[44px] rounded-lg border border-hex-ececec bg-white px-4 text-[15px] text-hex-71717a focus:ring-2 focus:ring-[#F17922]/30"
                 >
                   <option value="">Choisissez un restaurant</option>
                   {restaurants.map((r) => (
@@ -424,14 +424,14 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               <Button
                 type="button"
                 onClick={onCancel}
-                className="h-[40px] cursor-pointer text-[#9796A1] rounded-lg bg-[#ECECEC] text-[15px] items-center justify-center hover:bg-gray-100 w-full"
+                className="h-[40px] cursor-pointer text-[#9796A1] rounded-lg bg-hex-ececec text-[15px] items-center justify-center hover:bg-gray-100 w-full"
               >
                 Annuler
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="h-[40px] cursor-pointer rounded-lg bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[15px] w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-[40px] cursor-pointer rounded-lg bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[15px] w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? "Enregistrement..." : "Enregistrer"}
               </Button>
@@ -448,12 +448,12 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
             </span>
           </div>
           <div className="flex flex-row items-center justify-between px-12 pt-3 pb-2 w-full gap-3">
-            <span className="text-[15px] text-[#71717A] font-medium">
+            <span className="text-[15px] text-hex-71717a font-medium">
               Photo de profil
             </span>
             <div className="flex items-center gap-3">
               <div
-                className="w-[88px] h-[88px]  bg-[#F4F4F5]  rounded-full flex flex-col items-center justify-center
+                className="w-[88px] h-[88px]  bg-hex-f4f4f5  rounded-full flex flex-col items-center justify-center
                 cursor-pointer hover:bg-gray-50 transition-colors overflow-hidden"
                 onClick={() =>
                   document
@@ -492,8 +492,8 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
             <div className="w-32" />
           </div>
           <div className="flex flex-col gap-0 px-12">
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">
                 Nom et prénom(s)
               </label>
               <Input
@@ -508,8 +508,8 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               />
             </div>
             {/* Email */}
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">
                 E-mail
               </label>
               <Input
@@ -522,8 +522,8 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               />
             </div>
             {/* Téléphone */}
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">
                 Téléphone
               </label>
               <Input
@@ -536,8 +536,8 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               />
             </div>
             {/* Adresse */}
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px]">
-              <label className="text-[#71717A] w-[160px] text-[15px] font-normal">
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px]">
+              <label className="text-hex-71717a w-[160px] text-[15px] font-normal">
                 Adresse
               </label>
               <Input
@@ -556,8 +556,8 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               Contrôle du compte
             </span>
           </div>
-          <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px] px-12">
-            <label className="text-[#595959] w-[160px] text-[15px] font-normal">
+          <div className="flex flex-row items-center border-b border-hex-ececec h-[54px] px-12">
+            <label className="text-hex-595959 w-[160px] text-[15px] font-normal">
               Rôle
             </label>
             <div
@@ -565,7 +565,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
               ref={roleDropdownRef}
             >
               <div
-                className="ml-2 text-[#71717A] text-[15px] font-semibold cursor-pointer select-none bg-transparent outline-none border-none focus:ring-0
+                className="ml-2 text-hex-71717a text-[15px] font-semibold cursor-pointer select-none bg-transparent outline-none border-none focus:ring-0
                  focus:outline-none min-w-[220px] max-w-[300px] h-[40px] flex items-center"
                 onClick={() => setShowRoleDropdown((v) => !v)}
               >
@@ -573,11 +573,11 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
                   "Choisissez un rôle"}
               </div>
               {showRoleDropdown && (
-                <div className="absolute top-full left-0 z-20 bg-white rounded-xl shadow-lg border border-[#ECECEC] min-w-[220px] max-w-[300px] mt-1">
+                <div className="absolute top-full left-0 z-20 bg-white rounded-xl shadow-lg border border-hex-ececec min-w-[220px] max-w-[300px] mt-1">
                   {roleOptions.map((option) => (
                     <div
                       key={option.value}
-                      className="px-4 py-2 text-[15px] text-[#232323] hover:bg-[#FFF3E3] hover:text-[#F17922] cursor-pointer rounded-xl"
+                      className="px-4 py-2 text-[15px] text-hex-232323 hover:bg-hex-fff3e3 hover:text-[#F17922] cursor-pointer rounded-xl"
                       onMouseDown={() => {
                         setRole(option.value);
                         setShowRoleDropdown(false);
@@ -589,17 +589,17 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
                 </div>
               )}
             </div>
-            <span className="text-[#71717A] font-bold text-2xl ml-2">›</span>
+            <span className="text-hex-71717a font-bold text-2xl ml-2">›</span>
           </div>
           {needsRestaurantPicker && (
-            <div className="flex flex-row items-center border-b border-[#ECECEC] h-[54px] px-12">
-              <label className="text-[#595959] w-[160px] text-[15px] font-normal">
+            <div className="flex flex-row items-center border-b border-hex-ececec h-[54px] px-12">
+              <label className="text-hex-595959 w-[160px] text-[15px] font-normal">
                 Restaurant
               </label>
               <select
                 value={restaurantId}
                 onChange={(e) => setRestaurantId(e.target.value)}
-                className="ml-2 flex-1 bg-transparent text-[#71717A] text-[15px] font-semibold outline-none h-[40px] cursor-pointer"
+                className="ml-2 flex-1 bg-transparent text-hex-71717a text-[15px] font-semibold outline-none h-[40px] cursor-pointer"
               >
                 <option value="">Choisissez un restaurant</option>
                 {restaurants.map((r) => (
@@ -615,7 +615,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
             <Button
               type="button"
               onClick={onCancel}
-              className="h-[32px] cursor-pointer text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center
+              className="h-[32px] cursor-pointer text-[#9796A1] px-12 rounded-[10px] bg-hex-ececec text-[13px] items-center
               justify-center hover:bg-gray-100 min-w-[120px]"
             >
               Annuler
@@ -623,7 +623,7 @@ export default function AddMember({ onCancel, onSuccess, asPage = false }: AddMe
             <Button
               type="submit"
               disabled={isLoading}
-              className="h-[32px] cursor-pointer px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white
+              className="h-[32px] cursor-pointer px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc
               text-[13px] min-w-[230px] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Enregistrement..." : "Enregistrer"}

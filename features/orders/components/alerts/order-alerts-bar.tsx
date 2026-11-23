@@ -26,7 +26,7 @@ export function OrderAlertsBar() {
               : "bg-gray-50 border-gray-200"
           }`}
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-orange-500 text-white">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-orange-500 text-blanc">
             <Clock className="w-4 h-4" />
           </div>
 
@@ -49,7 +49,7 @@ export function OrderAlertsBar() {
     }
   `}
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-red-500 text-white">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-red-500 text-blanc">
             <AlertCircle className="w-4 h-4" />
           </div>
 
@@ -66,7 +66,7 @@ export function OrderAlertsBar() {
           onClick={() => setActiveModal("stats")}
           className="flex shrink-0 items-center gap-3 px-3 py-2 rounded-lg border bg-gray-50 border-gray-200 min-w-[110px]"
         >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-blue-500 text-white">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full shrink-0 bg-blue-500 text-blanc">
             <CheckCircle2 className="w-4 h-4" />
           </div>
 

@@ -258,7 +258,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
                 setShowResults(true);
               }
             }}
-            className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+            className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
             placeholder="Rechercher un client (nom, téléphone, email)..."
           />
           {isLoading && (
@@ -275,19 +275,19 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute z-50 w-full mt-2 bg-white border-2 border-[#D9D9D9] rounded-2xl shadow-lg max-h-[300px] overflow-y-auto"
+                className="absolute z-50 w-full mt-2 bg-white border-2 border-hex-d9d9d9 rounded-2xl shadow-lg max-h-[300px] overflow-y-auto"
               >
                 {customersData.data.map((customer: Customer) => (
                   <motion.button
                     key={customer.id}
                     type="button"
                     onClick={() => handleSelectCustomer(customer)}
-                    className="w-full px-4 py-3 text-left hover:bg-[#F5F5F5] border-b border-[#D9D9D9]/30 last:border-b-0 transition-colors"
+                    className="w-full px-4 py-3 text-left hover:bg-hex-f5f5f5 border-b border-hex-d9d9d9/30 last:border-b-0 transition-colors"
                     whileHover={{ x: 4 }}
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-semibold text-[#595959] text-sm">
+                        <p className="font-semibold text-hex-595959 text-sm">
                           {[customer.first_name, customer.last_name]
                             .filter(Boolean)
                             .join(" ") || "Sans nom"}
@@ -308,12 +308,12 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
 
                 {/* Pagination */}
                 {customersData.meta && customersData.meta.totalPages > 1 && (
-                  <div className="flex items-center justify-between px-4 py-2 bg-[#F5F5F5] border-t border-[#D9D9D9]">
+                  <div className="flex items-center justify-between px-4 py-2 bg-hex-f5f5f5 border-t border-hex-d9d9d9">
                     <button
                       type="button"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="text-xs font-semibold text-[#595959] disabled:opacity-50"
+                      className="text-xs font-semibold text-hex-595959 disabled:opacity-50"
                     >
                       ← Précédent
                     </button>
@@ -328,7 +328,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
                         )
                       }
                       disabled={currentPage === customersData.meta.totalPages}
-                      className="text-xs font-semibold text-[#595959] disabled:opacity-50"
+                      className="text-xs font-semibold text-hex-595959 disabled:opacity-50"
                     >
                       Suivant →
                     </button>
@@ -346,7 +346,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute z-50 w-full mt-2 bg-white border-2 border-[#D9D9D9] rounded-2xl shadow-lg p-4"
+              className="absolute z-50 w-full mt-2 bg-white border-2 border-hex-d9d9d9 rounded-2xl shadow-lg p-4"
             >
               <p className="text-sm text-gray-500 text-center">
                 Aucun client trouvé. Saisissez les informations ci-dessous.
@@ -370,7 +370,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           id="fullname"
           value={formData.fullname || ""}
           onChange={(e) => onFormDataChange({ fullname: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="Nom complet du client"
         />
       </div>
@@ -385,7 +385,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           id="phone"
           value={formData.phone || ""}
           onChange={(e) => onFormDataChange({ phone: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="+225 07 07 07 07 07"
         />
       </div>
@@ -400,7 +400,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           id="email"
           value={formData.email || ""}
           onChange={(e) => onFormDataChange({ email: e.target.value })}
-          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
+          className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="Email du client"
         />
       </div>
@@ -413,7 +413,7 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           type="button"
           onClick={handleSaveNewCustomer}
           disabled={isPending}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 py-2.5 text-[13px] font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
         >

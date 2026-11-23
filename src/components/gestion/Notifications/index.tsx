@@ -115,7 +115,7 @@ export default function Notifications() {
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? "bg-[#FFF3E8] text-[#F17922]"
+                  ? "bg-hex-fff3e8 text-[#F17922]"
                   : "text-gray-500 hover:bg-gray-50"
               }`}
             >

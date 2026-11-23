@@ -43,11 +43,11 @@ export default function GiftsModule() {
           <button
             type="button"
             onClick={() => setView({ mode: "list" })}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#71717A] hover:text-[#18181B] cursor-pointer"
+            className="inline-flex items-center gap-2 text-sm font-medium text-hex-71717a hover:text-hex-18181b cursor-pointer"
           >
             <ArrowLeft size={16} /> Retour aux campagnes
           </button>
-          <div className="bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
+          <div className="bg-white border border-hex-e4e4e7 rounded-xl p-5 sm:p-6">
             <h2 className="text-[18px] font-semibold text-[#F17922] mb-5">Envoyer un cadeau</h2>
             {/* Retour automatique à la liste une fois la campagne partie. */}
             <SendGiftManager onSent={() => setView({ mode: "list" })} />

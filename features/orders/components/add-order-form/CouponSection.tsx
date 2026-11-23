@@ -8,7 +8,7 @@ import { CouponCommande, LONGUEUR_MAX_CODE } from "../../hooks/useCouponCommande
 import { formaterEcheance, formaterFrancs, phraseReduction } from "../../utils/couponFormat";
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] font-semibold uppercase tracking-wide text-[#595959] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
+  "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] font-semibold uppercase tracking-wide text-hex-595959 placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
 
 /** La réduction vit dans le panier : en-tête resserré, mêmes mots. */
 const EnTete = ({ sousTitre }: { sousTitre: string }) => (
@@ -186,7 +186,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
               type="button"
               onClick={verifier}
               disabled={!contexteValide || enVerification || verrouille || !saisie.trim()}
-              className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 text-[13px] font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {enVerification ? (
                 <>
@@ -228,7 +228,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
             {bons.map((bon) => (
               <li
                 key={bon.id}
-                className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-[#595959]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs text-hex-595959"
               >
                 <Wallet className="w-3.5 h-3.5 text-[#F17922]" />
                 <span className="font-mono font-semibold tracking-wide">{bon.code_masque}</span>

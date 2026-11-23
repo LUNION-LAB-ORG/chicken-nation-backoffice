@@ -119,12 +119,12 @@ RestaurantViewProps) {
   }, [menuOpen]);
 
   return (
-    <div className="flex-1 bg-white border border-[#ECECEC] rounded-[15px] p-6 flex-col h-full w-full">
+    <div className="flex-1 bg-white border border-hex-ececec rounded-[15px] p-6 flex-col h-full w-full">
       {/* Tableau des restaurants */}
       {filteredRestaurants.map((restaurant) => (
         <div
           key={restaurant.id || Math.random().toString()}
-          className="bg-white p-4 py-3 border border-[#ECECEC]/50 rounded-2xl shadow-sm flex justify-between items-center mb-3"
+          className="bg-white p-4 py-3 border border-hex-ececec/50 rounded-2xl shadow-sm flex justify-between items-center mb-3"
         >
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 relative">
@@ -146,13 +146,13 @@ RestaurantViewProps) {
             <button
               type="button"
               onClick={() => handleDashboardClick(restaurant)}
-              className="bg-[#F17922] text-white px-4 py-2 rounded-full text-xs lg:text-sm hover:bg-[#e06a15] transition-colors"
+              className="bg-[#F17922] text-blanc px-4 py-2 rounded-full text-xs lg:text-sm hover:bg-[#e06a15] transition-colors"
             >
               Tableau de bord
             </button>
 
             <span
-              className="text-[#71717A] text-lg cursor-pointer select-none px-2 ml-1"
+              className="text-hex-71717a text-lg cursor-pointer select-none px-2 ml-1"
               ref={menuBtnRef}
               onClick={(e) => handleMenuOpen(e, restaurant)}
             >

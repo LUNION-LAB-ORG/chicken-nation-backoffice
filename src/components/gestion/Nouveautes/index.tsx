@@ -219,8 +219,8 @@ function NewsCard({
           <span
             className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${
               item.isActive
-                ? "bg-green-500/90 text-white"
-                : "bg-gray-500/90 text-white"
+                ? "bg-green-500/90 text-blanc"
+                : "bg-gray-500/90 text-blanc"
             }`}
           >
             {item.isActive ? "Active" : "Inactive"}

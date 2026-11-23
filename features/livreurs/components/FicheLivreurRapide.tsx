@@ -88,31 +88,31 @@ export function FicheLivreurRapide({
             {(livreur.prenom ?? '').trim().charAt(0).toUpperCase() || <UserRound className="h-5 w-5" />}
           </span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-base font-bold text-[#18181B]" title={nom}>
+            <p className="truncate text-base font-bold text-hex-18181b" title={nom}>
               {nom}
             </p>
-            {contexte && <p className="truncate text-xs text-[#71717A]">{contexte}</p>}
+            {contexte && <p className="truncate text-xs text-hex-71717a">{contexte}</p>}
           </div>
           <button
             type="button"
             onClick={onFermer}
             aria-label="Fermer"
-            className="-mr-1 -mt-1 flex h-8 w-8 items-center justify-center rounded-full hover:bg-[#F4F4F5]"
+            className="-mr-1 -mt-1 flex h-8 w-8 items-center justify-center rounded-full hover:bg-hex-f4f4f5"
           >
-            <X className="h-4 w-4 text-[#52525B]" />
+            <X className="h-4 w-4 text-hex-52525b" />
           </button>
         </div>
 
-        <div className="mt-4 rounded-xl bg-[#FAFAFA] p-3">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-[#71717A]">Téléphone</p>
+        <div className="mt-4 rounded-xl bg-hex-fafafa p-3">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-hex-71717a">Téléphone</p>
           {numero ? (
             <>
-              <p className="mt-0.5 select-all text-xl font-bold tabular-nums text-[#18181B]">{numero}</p>
+              <p className="mt-0.5 select-all text-xl font-bold tabular-nums text-hex-18181b">{numero}</p>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {appel && (
                   <a
                     href={appel}
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#F17922] text-sm font-semibold text-white hover:opacity-90"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#F17922] text-sm font-semibold text-blanc hover:opacity-90"
                   >
                     <Phone className="h-4 w-4" />
                     Appeler
@@ -123,16 +123,16 @@ export function FicheLivreurRapide({
                     href={whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#E4E4E7] bg-white text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+                    className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-hex-e4e4e7 bg-white text-sm font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
                   >
-                    <MessageCircle className="h-4 w-4 text-[#16A34A]" />
+                    <MessageCircle className="h-4 w-4 text-hex-16a34a" />
                     WhatsApp
                   </a>
                 )}
                 <button
                   type="button"
                   onClick={() => void copier()}
-                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-[#E4E4E7] bg-white text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+                  className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-hex-e4e4e7 bg-white text-sm font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
                 >
                   <Copy className="h-4 w-4" />
                   Copier
@@ -140,7 +140,7 @@ export function FicheLivreurRapide({
               </div>
             </>
           ) : (
-            <p className="mt-0.5 text-sm text-[#71717A]">Aucun numéro enregistré.</p>
+            <p className="mt-0.5 text-sm text-hex-71717a">Aucun numéro enregistré.</p>
           )}
         </div>
 
@@ -153,7 +153,7 @@ export function FicheLivreurRapide({
                 onFermer();
                 openEnDirect(livreur.id);
               }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-hex-e4e4e7 px-3 text-sm font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
             >
               <MapPin className="h-4 w-4 text-[#F17922]" />
               Voir sur la carte
@@ -166,9 +166,9 @@ export function FicheLivreurRapide({
                 onFermer();
                 openLivreur(livreur.id);
               }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#E4E4E7] px-3 text-sm font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-hex-e4e4e7 px-3 text-sm font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
             >
-              <ExternalLink className="h-4 w-4 text-[#71717A]" />
+              <ExternalLink className="h-4 w-4 text-hex-71717a" />
               Voir sa fiche
             </button>
           )}

@@ -771,7 +771,7 @@ const PersonalizedPromo = ({ promoData, onSave, onCancel, className = '' }: Pers
               type="button"
               onClick={handleSaveAsActive}
               disabled={isSubmitting}
-              className="w-70 px-6 py-3 bg-gradient-to-r from-[#F17922] to-[#FA6345] text-white rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-70 px-6 py-3 bg-gradient-to-r from-[#F17922] to-[#FA6345] text-blanc rounded-lg hover:opacity-90 transition-opacity font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Enregistrement...' : 'Enregistrer'}
             </button>

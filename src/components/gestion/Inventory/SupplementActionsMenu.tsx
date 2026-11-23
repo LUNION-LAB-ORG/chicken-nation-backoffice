@@ -23,7 +23,7 @@ export default function SupplementActionsMenu({
   return (
     <div
       ref={menuRef}
-      className="fixed bg-white rounded-xl shadow-lg px-0 py-0 min-w-[200px] border border-[#ECECEC] select-none z-[120]"
+      className="fixed bg-white rounded-xl shadow-lg px-0 py-0 min-w-[200px] border border-hex-ececec select-none z-[120]"
       style={{
         top: `${menuPosition.top}px`,
         left: `${menuPosition.left}px`,
@@ -35,7 +35,7 @@ export default function SupplementActionsMenu({
         <HasPermission module={Modules.INVENTAIRE} action={Action.UPDATE}>
           <button
             type="button"
-            className="block w-full text-[#484848] text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-[#F7F7F7] rounded-t-xl outline-none"
+            className="block w-full text-hex-484848 text-[14px] cursor-pointer text-left font-normal px-4 py-2.5 hover:bg-hex-f7f7f7 rounded-t-xl outline-none"
             onClick={onEdit}
           >
             Modifier le supplément
@@ -46,7 +46,7 @@ export default function SupplementActionsMenu({
         <HasPermission module={Modules.INVENTAIRE} action={Action.DELETE}>
           <button
             type="button"
-            className="block w-full text-[#F04438] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-[#FFF3F2] rounded-b-xl outline-none"
+            className="block w-full text-[#F04438] text-[14px] cursor-pointer text-left font-semibold px-4 py-2.5 hover:bg-hex-fff3f2 rounded-b-xl outline-none"
             onClick={onDelete}
           >
             Supprimer le supplément

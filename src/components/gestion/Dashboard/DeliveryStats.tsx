@@ -115,7 +115,7 @@ const DeliveryStats: React.FC<DeliveryStatsProps> = ({ data, isLoading }) => {
                 }}
               >
                 {item.percentage > 5 && (
-                  <span className="text-white text-xs font-bold drop-shadow-md">
+                  <span className="text-blanc text-xs font-bold drop-shadow-md">
                     {item.percentage}%
                   </span>
                 )}

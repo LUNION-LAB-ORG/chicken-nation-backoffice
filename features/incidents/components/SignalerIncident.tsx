@@ -29,7 +29,7 @@ import { Choix, Zone, classeChamp } from "./Elements";
 /** La commande choisie, en une ligne. */
 function ResumeCommande({ commande, onChanger }: { commande: ContexteCommande; onChanger?: () => void }) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg bg-[#FBF8F5] px-3 py-2.5">
+    <div className="flex items-start justify-between gap-3 rounded-lg bg-hex-fbf8f5 px-3 py-2.5">
       <div className="min-w-0 text-[13px]">
         <p className="font-semibold text-gray-900">
           {commande.reference} · {formatMontant(commande.montant)}
@@ -303,7 +303,7 @@ export function SignalerIncident({ demande, onFermer }: { demande: DemandeSignal
               type="button"
               onClick={envoyer}
               disabled={!peutEnvoyer}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {signaler.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Signaler l&apos;incident

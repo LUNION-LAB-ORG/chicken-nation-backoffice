@@ -35,7 +35,7 @@ export default function MemberActionsMenu({
 
   return (
     <div
-      className="bg-white rounded-xl shadow-lg px-0 py-0 min-w-[210px] border border-[#ECECEC] select-none z-[120]"
+      className="bg-white rounded-xl shadow-lg px-0 py-0 min-w-[210px] border border-hex-ececec select-none z-[120]"
       style={{ boxShadow: "0 4px 28px 0 rgba(44, 44, 44, 0.10)" }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -43,7 +43,7 @@ export default function MemberActionsMenu({
         <HasPermission module={Modules.PERSONNELS} action={Action.READ}>
           <button
             type="button"
-            className={`${itemBase} text-[#232323] hover:bg-[#F5F5F5]`}
+            className={`${itemBase} text-hex-232323 hover:bg-hex-f5f5f5`}
             onClick={onViewProfile}
           >
             Voir le profil
@@ -55,7 +55,7 @@ export default function MemberActionsMenu({
         <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
           <button
             type="button"
-            className={`${itemBase} text-[#232323] hover:bg-[#F5F5F5]`}
+            className={`${itemBase} text-hex-232323 hover:bg-hex-f5f5f5`}
             onClick={onEdit}
           >
             Modifier
@@ -68,7 +68,7 @@ export default function MemberActionsMenu({
         <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
           <button
             type="button"
-            className={`${itemBase} text-[#F17922] hover:bg-[#FFF6E9]`}
+            className={`${itemBase} text-[#F17922] hover:bg-hex-fff6e9`}
             onClick={onSetPrincipal}
           >
             ★ Définir comme principal
@@ -82,7 +82,7 @@ export default function MemberActionsMenu({
             <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
               <button
                 type="button"
-                className={`${itemBase} text-[#34C759] hover:bg-[#E5F9EB]`}
+                className={`${itemBase} text-hex-34c759 hover:bg-hex-e5f9eb`}
                 onClick={onRestore}
               >
                 Restaurer l&apos;utilisateur
@@ -94,7 +94,7 @@ export default function MemberActionsMenu({
             <HasPermission module={Modules.PERSONNELS} action={Action.UPDATE}>
               <button
                 type="button"
-                className={`${itemBase} text-[#F17922] hover:bg-[#FFF6E9]`}
+                className={`${itemBase} text-[#F17922] hover:bg-hex-fff6e9`}
                 onClick={onSuspend}
               >
                 Suspendre l&apos;utilisateur
@@ -107,7 +107,7 @@ export default function MemberActionsMenu({
         <HasPermission module={Modules.PERSONNELS} action={Action.DELETE}>
           <button
             type="button"
-            className={`${itemBase} text-[#f12222] hover:bg-red-50 rounded-b-xl border-t border-[#F5F5F5]`}
+            className={`${itemBase} text-[#f12222] hover:bg-red-50 rounded-b-xl border-t border-hex-f5f5f5`}
             onClick={onDelete}
           >
             Supprimer définitivement

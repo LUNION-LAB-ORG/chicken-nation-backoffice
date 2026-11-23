@@ -190,7 +190,7 @@ const PaymentSettings: React.FC = () => {
             onClick={() => setSelected(null)}
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors cursor-pointer ${
               selected === null
-                ? "bg-[#F17922] text-white border-[#F17922]"
+                ? "bg-[#F17922] text-blanc border-[#F17922]"
                 : "bg-white text-gray-700 border-gray-200 hover:border-[#F17922]/50"
             }`}
           >
@@ -203,7 +203,7 @@ const PaymentSettings: React.FC = () => {
               onClick={() => setSelected(r.id)}
               className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-medium border transition-colors cursor-pointer ${
                 selected === r.id
-                  ? "bg-[#F17922] text-white border-[#F17922]"
+                  ? "bg-[#F17922] text-blanc border-[#F17922]"
                   : "bg-white text-gray-700 border-gray-200 hover:border-[#F17922]/50"
               }`}
             >
@@ -374,7 +374,7 @@ const PaymentSettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isPending}
-          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 cursor-pointer"
+          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 cursor-pointer"
         >
           {isPending ? "Enregistrement..." : "Enregistrer"}
         </button>

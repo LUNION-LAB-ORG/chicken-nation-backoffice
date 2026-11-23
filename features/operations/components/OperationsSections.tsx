@@ -222,8 +222,8 @@ const ACCENT_HEADER: Record<Accent, string> = {
   purple: "bg-gradient-to-r from-purple-50 to-purple-100/50 border-purple-200",
 };
 const ACCENT_ICON: Record<Accent, string> = {
-  amber: "bg-amber-500 text-white",
-  purple: "bg-purple-600 text-white",
+  amber: "bg-amber-500 text-blanc",
+  purple: "bg-purple-600 text-blanc",
 };
 const ACCENT_COUNT: Record<Accent, string> = {
   amber: "bg-white text-amber-700 border-amber-200",
@@ -270,7 +270,7 @@ function KanbanColumn({
         {lateCount > 0 && (
           <span
             title={`${lateCount} commande${lateCount > 1 ? "s" : ""} en retard`}
-            className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-bold bg-red-600 text-white animate-pulse"
+            className="inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-bold bg-red-600 text-blanc animate-pulse"
           >
             <AlertTriangle className="w-3 h-3" />
             {lateCount}

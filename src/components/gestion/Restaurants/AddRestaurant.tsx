@@ -415,7 +415,7 @@ export default function AddRestaurant({
           <h3 className="font-medium text-gray-700">Informations générales</h3>
           {/* Nom */}
           <div>
-            <label className="block text-sm text-[#595959] font-light mb-2">
+            <label className="block text-sm text-hex-595959 font-light mb-2">
               Nom du restaurant
             </label>
             <Input
@@ -426,7 +426,7 @@ export default function AddRestaurant({
               required
               placeholder="Nom du restaurant"
               className={`w-full h-[42px] rounded-xl bg-white border ${
-                formErrors.name ? "border-red-500" : "border-[#D8D8D8]"
+                formErrors.name ? "border-red-500" : "border-hex-d8d8d8"
               } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
             />
             {formErrors.name && (
@@ -435,7 +435,7 @@ export default function AddRestaurant({
           </div>
           {/* Description */}
           <div>
-            <label className="block text-sm text-[#595959] font-light mb-2">
+            <label className="block text-sm text-hex-595959 font-light mb-2">
               Description
             </label>
             <textarea
@@ -445,7 +445,7 @@ export default function AddRestaurant({
               placeholder="Description du restaurant"
               rows={3}
               className={`w-full rounded-xl bg-white border ${
-                formErrors.description ? "border-red-500" : "border-[#D8D8D8]"
+                formErrors.description ? "border-red-500" : "border-hex-d8d8d8"
               } px-4 py-2 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
             />
             {formErrors.description && (
@@ -456,7 +456,7 @@ export default function AddRestaurant({
           </div>
           {/* Carte */}
           <div>
-            <label className="block text-sm text-[#595959] font-light mb-2">
+            <label className="block text-sm text-hex-595959 font-light mb-2">
               Localisation
             </label>
             <RestaurantMap
@@ -474,7 +474,7 @@ export default function AddRestaurant({
           </div>
           Photo
           <div>
-            <label className="block text-sm text-[#595959] font-light mb-2">
+            <label className="block text-sm text-hex-595959 font-light mb-2">
               Photo du restaurant
             </label>
             <div
@@ -518,7 +518,7 @@ export default function AddRestaurant({
 
           {/* Nom du gérant */}
           <div>
-            <label className="block text-sm text-[#595959] font-light mb-2">
+            <label className="block text-sm text-hex-595959 font-light mb-2">
               Nom complet du gérant
             </label>
             <Input
@@ -531,7 +531,7 @@ export default function AddRestaurant({
               className={`w-full h-[42px] rounded-xl bg-white border ${
                 formErrors.managerFullname
                   ? "border-red-500"
-                  : "border-[#D8D8D8]"
+                  : "border-hex-d8d8d8"
               } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
             />
             {formErrors.managerFullname && (
@@ -544,7 +544,7 @@ export default function AddRestaurant({
           {/* Contact du gérant */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-[#595959] font-light mb-2">
+              <label className="block text-sm text-hex-595959 font-light mb-2">
                 Email du gérant
               </label>
               <Input
@@ -557,7 +557,7 @@ export default function AddRestaurant({
                 className={`w-full h-[42px] rounded-xl bg-white border ${
                   formErrors.managerEmail
                     ? "border-red-500"
-                    : "border-[#D8D8D8]"
+                    : "border-hex-d8d8d8"
                 } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
               />
               {formErrors.managerEmail && (
@@ -567,7 +567,7 @@ export default function AddRestaurant({
               )}
             </div>
             <div>
-              <label className="block text-sm text-[#595959] font-light mb-2">
+              <label className="block text-sm text-hex-595959 font-light mb-2">
                 Téléphone du gérant
               </label>
               <Input
@@ -580,7 +580,7 @@ export default function AddRestaurant({
                 className={`w-full h-[42px] rounded-xl bg-white border ${
                   formErrors.managerPhone
                     ? "border-red-500"
-                    : "border-[#D8D8D8]"
+                    : "border-hex-d8d8d8"
                 } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
               />
               {formErrors.managerPhone && (
@@ -601,7 +601,7 @@ export default function AddRestaurant({
           {/* Contact */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm text-[#595959] dark:text-gray-700 font-light mb-2">
+              <label className="block text-sm text-hex-595959 dark:text-gray-700 font-light mb-2">
                 Téléphone
               </label>
               <Input
@@ -612,7 +612,7 @@ export default function AddRestaurant({
                 required
                 placeholder="+225 XX XX XX XX"
                 className={`w-full h-[42px] rounded-xl bg-white border ${
-                  formErrors.phone ? "border-red-500" : "border-[#D8D8D8]"
+                  formErrors.phone ? "border-red-500" : "border-hex-d8d8d8"
                 } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
               />
               {formErrors.phone && (
@@ -620,7 +620,7 @@ export default function AddRestaurant({
               )}
             </div>
             <div>
-              <label className="block text-sm text-[#595959] font-light mb-2">
+              <label className="block text-sm text-hex-595959 font-light mb-2">
                 Email
               </label>
               <Input
@@ -631,7 +631,7 @@ export default function AddRestaurant({
                 required
                 placeholder="email@restaurant.com"
                 className={`w-full h-[42px] rounded-xl bg-white border ${
-                  formErrors.email ? "border-red-500" : "border-[#D8D8D8]"
+                  formErrors.email ? "border-red-500" : "border-hex-d8d8d8"
                 } px-4 text-[13px] text-gray-700 dark:text-gray-700 placeholder-gray-400 dark:placeholder-gray-400`}
               />
               {formErrors.email && (
@@ -659,14 +659,14 @@ export default function AddRestaurant({
         <Button
           type="button"
           onClick={onCancel}
-          className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
+          className="h-[32px] text-[#9796A1] px-12 rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
         >
           Annuler
         </Button>
         <Button
           type="submit"
           disabled={isLoading}
-          className="h-[32px] px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-[32px] px-12 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] min-w-[160px] lg:min-w-[280px] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading
             ? "Traitement en cours..."

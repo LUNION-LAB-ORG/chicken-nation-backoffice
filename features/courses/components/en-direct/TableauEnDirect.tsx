@@ -68,7 +68,7 @@ export function TableauEnDirect() {
 
   const cartes = (cle: ColonneEnDirect, liste: CourseEnDirect[]) =>
     liste.length === 0 ? (
-      <p className="rounded-xl border border-dashed border-[#E4E4E7] px-3 py-6 text-center text-xs text-[#A1A1AA]">
+      <p className="rounded-xl border border-dashed border-hex-e4e4e7 px-3 py-6 text-center text-xs text-[#A1A1AA]">
         {cle === 'A_AFFECTER' ? 'Rien à affecter' : 'Aucune course'}
       </p>
     ) : (
@@ -95,7 +95,7 @@ export function TableauEnDirect() {
               ? 'bg-red-100 text-red-700'
               : cle === 'TURBO'
                 ? 'bg-violet-100 text-violet-700'
-                : 'bg-white text-[#52525B]'
+                : 'bg-white text-hex-52525b'
         }`}
       >
         {n}
@@ -111,9 +111,9 @@ export function TableauEnDirect() {
           <section
             key={cle}
             aria-label={titre}
-            className={`flex min-w-0 flex-col rounded-2xl p-2 ${cle === 'TURBO' ? 'bg-violet-50/60' : 'bg-[#F4F4F5]/70'}`}
+            className={`flex min-w-0 flex-col rounded-2xl p-2 ${cle === 'TURBO' ? 'bg-violet-50/60' : 'bg-hex-f4f4f5/70'}`}
           >
-            <h3 className="flex items-center justify-between gap-2 px-1.5 pb-2 pt-1 text-[13px] font-semibold text-[#18181B]">
+            <h3 className="flex items-center justify-between gap-2 px-1.5 pb-2 pt-1 text-[13px] font-semibold text-hex-18181b">
               <span className="truncate">{titre}</span>
               {pastille(cle)}
             </h3>
@@ -142,8 +142,8 @@ export function TableauEnDirect() {
                 onClick={() => setColonneChoisie(cle)}
                 className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[13px] font-semibold transition-colors ${
                   choisie
-                    ? 'border-[#F17922] bg-[#F17922] text-white'
-                    : 'border-[#E4E4E7] bg-white text-[#18181B]'
+                    ? 'border-[#F17922] bg-[#F17922] text-blanc'
+                    : 'border-hex-e4e4e7 bg-white text-hex-18181b'
                 }`}
               >
                 {titre}
@@ -182,8 +182,8 @@ function Squelette() {
   return (
     <div aria-hidden className="grid gap-3 lg:grid-cols-4">
       {[0, 1, 2, 3].map((i) => (
-        <div key={i} className={`space-y-2 rounded-2xl bg-[#F4F4F5]/70 p-2 ${i > 0 ? 'hidden lg:block' : ''}`}>
-          <div className="h-4 w-24 animate-pulse rounded-full bg-[#E4E4E7]" />
+        <div key={i} className={`space-y-2 rounded-2xl bg-hex-f4f4f5/70 p-2 ${i > 0 ? 'hidden lg:block' : ''}`}>
+          <div className="h-4 w-24 animate-pulse rounded-full bg-hex-e4e4e7" />
           {[0, 1].map((j) => (
             <div key={j} className="h-24 animate-pulse rounded-xl bg-white" />
           ))}

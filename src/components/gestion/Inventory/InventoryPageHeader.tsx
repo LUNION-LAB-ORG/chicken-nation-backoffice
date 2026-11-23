@@ -54,7 +54,7 @@ export default function InventoryPageHeader({ onViewChange }: InventoryPageHeade
 
       {/* Titre */}
       <div className="bg-[#F17922] rounded-[10px] px-4 py-2">
-        <span className="text-[13px] text-white font-medium">
+        <span className="text-[13px] text-blanc font-medium">
           {currentView === 'products' ? 'Tous les produits' : 'Toutes les catégories'}
         </span>
       </div>

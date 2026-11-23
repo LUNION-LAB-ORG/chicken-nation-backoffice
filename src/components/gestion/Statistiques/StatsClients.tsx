@@ -1509,7 +1509,7 @@ export default function StatsClients() {
                   {inactive.data && (
                     <button
                       onClick={handleExportChurn}
-                      className="px-3 py-1.5 bg-[#F17922] text-white text-xs font-medium rounded-xl hover:bg-orange-600 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 bg-[#F17922] text-blanc text-xs font-medium rounded-xl hover:bg-orange-600 transition-colors flex items-center gap-1"
                     >
                       <Download className="w-3 h-3" />
                       {formatNumber(inactive.data.totalCount)}

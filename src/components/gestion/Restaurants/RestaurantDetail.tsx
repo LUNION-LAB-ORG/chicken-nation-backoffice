@@ -423,7 +423,7 @@ export default function RestaurantDetail({
                   label: "Modifier",
                   onClick: () => onEdit(restaurant),
                   variant: "primary",
-                  className: "bg-[#F17922] text-white hover:bg-[#e06a15]",
+                  className: "bg-[#F17922] text-blanc hover:bg-[#e06a15]",
                 },
               ]
             : [
@@ -954,17 +954,17 @@ export default function RestaurantDetail({
                   {/* Badges de statut */}
                   <div className="absolute top-2 right-2 flex flex-col gap-2">
                     {selectedMenu.isPromotion || selectedMenu.is_promotion ? (
-                      <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded">
+                      <span className="bg-green-500 text-blanc text-xs font-medium px-2 py-1 rounded">
                         Promotion
                       </span>
                     ) : null}
                     {(selectedMenu as { isNew?: boolean }).isNew && (
-                      <span className="bg-blue-500 text-white text-xs font-medium px-2 py-1 rounded">
+                      <span className="bg-blue-500 text-blanc text-xs font-medium px-2 py-1 rounded">
                         Nouveau
                       </span>
                     )}
                     {selectedMenu.isAvailable === false && (
-                      <span className="bg-red-500 text-white text-xs font-medium px-2 py-1 rounded">
+                      <span className="bg-red-500 text-blanc text-xs font-medium px-2 py-1 rounded">
                         Non disponible
                       </span>
                     )}
@@ -1112,7 +1112,7 @@ export default function RestaurantDetail({
               <button
                 type="button"
                 onClick={handleCloseMenuModal}
-                className="px-4 py-2 bg-gray-100 text-gray-700 cursor-pointer rounded-lg hover:bg-red-500 hover:text-white hover:border-white transition"
+                className="px-4 py-2 bg-gray-100 text-gray-700 cursor-pointer rounded-lg hover:bg-red-500 hover:text-blanc hover:border-white transition"
               >
                 Fermer
               </button>

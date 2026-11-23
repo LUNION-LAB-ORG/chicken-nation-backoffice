@@ -60,7 +60,7 @@ export const BandeauCourse: React.FC<Props> = ({ group, commandes, maintenant, o
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F17922]">
-            <Package className="h-4 w-4 text-white" aria-hidden />
+            <Package className="h-4 w-4 text-blanc" aria-hidden />
           </div>
           <div className="min-w-0">
             <div className="text-[10px] font-bold uppercase tracking-wider text-[#F17922]">Course</div>
@@ -137,7 +137,7 @@ export function BoutonConfirmerRecuperation({
       onClick={onClick}
       className={`w-full rounded-xl px-3 py-2 text-sm font-bold transition ${
         auRestaurant
-          ? "bg-green-600 text-white hover:bg-green-700"
+          ? "bg-green-600 text-blanc hover:bg-green-700 dark:hover:bg-green-500"
           : "border-2 border-[#F17922] bg-white text-[#F17922] hover:bg-orange-50"
       }`}
     >

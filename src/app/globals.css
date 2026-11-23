@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Thème clair et sombre : couleurs en variables (fichier généré). */
+@import "./theme.css";
 
 /* Safe-area (encoche / barre d'accueil iOS) — non nuls uniquement avec viewportFit:"cover" */
 @utility pt-safe {

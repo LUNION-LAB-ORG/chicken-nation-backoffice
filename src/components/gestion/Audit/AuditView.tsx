@@ -19,22 +19,22 @@ import AuditDetailModal from "./AuditDetailModal";
 const PAGE_SIZE = 25;
 
 const ACTION_BADGE: Record<string, string> = {
-  CREATE: "bg-[#E6F4EC] text-[#1E8E5A]",
-  UPDATE: "bg-[#E7F0FB] text-[#2B6CB0]",
-  DELETE: "bg-[#FDECEA] text-[#C0392B]",
-  LOGIN: "bg-[#F3E8FF] text-[#7C3AED]",
-  READ: "bg-[#F1F3F5] text-[#6C757D]",
-  OTHER: "bg-[#F1F3F5] text-[#6C757D]",
+  CREATE: "bg-hex-e6f4ec text-hex-1e8e5a",
+  UPDATE: "bg-hex-e7f0fb text-hex-2b6cb0",
+  DELETE: "bg-hex-fdecea text-hex-c0392b",
+  LOGIN: "bg-hex-f3e8ff text-[#7C3AED]",
+  READ: "bg-hex-f1f3f5 text-hex-6c757d",
+  OTHER: "bg-hex-f1f3f5 text-hex-6c757d",
 };
 
 const statusColor = (s: number | null) =>
   s == null
     ? "text-[#9796A1]"
     : s >= 500
-      ? "text-[#C0392B]"
+      ? "text-hex-c0392b"
       : s >= 400
-        ? "text-[#9A5B12]"
-        : "text-[#1E8E5A]";
+        ? "text-hex-9a5b12"
+        : "text-hex-1e8e5a";
 
 const fmtDate = (iso: string) =>
   new Date(iso).toLocaleString("fr-FR", {
@@ -46,7 +46,7 @@ const fmtDate = (iso: string) =>
   });
 
 const selectCls =
-  "h-9 rounded-lg border border-[#E4E4E7] bg-white px-2.5 text-[13px] text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "h-9 rounded-lg border border-hex-e4e4e7 bg-white px-2.5 text-[13px] text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 /**
  * Vue du journal d'audit, partagée par « Actions » et « Logs » (prop `view`).
@@ -113,14 +113,14 @@ export default function AuditView({
       </div>
 
       {/* Filtres */}
-      <div className="bg-white border border-[#E4E4E7] rounded-xl p-4 flex flex-wrap items-center gap-2.5">
+      <div className="bg-white border border-hex-e4e4e7 rounded-xl p-4 flex flex-wrap items-center gap-2.5">
         <div className="relative flex-1 min-w-[200px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9796A1]" />
           <input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Rechercher (auteur, chemin, cible…)"
-            className="w-full h-9 rounded-lg border border-[#E4E4E7] bg-white pl-9 pr-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+            className="w-full h-9 rounded-lg border border-hex-e4e4e7 bg-white pl-9 pr-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
           />
         </div>
 
@@ -168,8 +168,8 @@ export default function AuditView({
               onClick={() => setErrorsOnly((v) => !v)}
               className={`inline-flex items-center gap-1.5 h-9 rounded-lg px-3 text-[13px] font-medium cursor-pointer border ${
                 errorsOnly
-                  ? "bg-[#FDECEA] text-[#C0392B] border-[#F5C6C0]"
-                  : "bg-white text-[#71717A] border-[#E4E4E7] hover:bg-[#FAFAFA]"
+                  ? "bg-hex-fdecea text-hex-c0392b border-hex-f5c6c0"
+                  : "bg-white text-hex-71717a border-hex-e4e4e7 hover:bg-hex-fafafa"
               }`}
             >
               <AlertTriangle size={14} /> Erreurs
@@ -180,18 +180,18 @@ export default function AuditView({
         <button
           type="button"
           onClick={() => refetch()}
-          className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-[#E4E4E7] bg-white px-3 text-[13px] text-[#71717A] hover:bg-[#FAFAFA] cursor-pointer"
+          className="inline-flex items-center gap-1.5 h-9 rounded-lg border border-hex-e4e4e7 bg-white px-3 text-[13px] text-hex-71717a hover:bg-hex-fafafa cursor-pointer"
         >
           <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} /> Actualiser
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white border border-[#E4E4E7] rounded-xl overflow-hidden">
+      <div className="bg-white border border-hex-e4e4e7 rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-[13px]">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA] border-b border-[#F1F3F5]">
+              <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa border-b border-hex-f1f3f5">
                 <th className="py-2.5 px-4 font-medium">Quand</th>
                 <th className="py-2.5 px-3 font-medium">Auteur</th>
                 <th className="py-2.5 px-3 font-medium">Action</th>
@@ -220,13 +220,13 @@ export default function AuditView({
                   <tr
                     key={log.id}
                     onClick={() => setSelected(log)}
-                    className="border-b border-[#F7F7F8] last:border-0 hover:bg-[#FFF9F4] cursor-pointer"
+                    className="border-b border-hex-f7f7f8 last:border-0 hover:bg-hex-fff9f4 cursor-pointer"
                   >
-                    <td className="py-2.5 px-4 whitespace-nowrap text-[#71717A]">
+                    <td className="py-2.5 px-4 whitespace-nowrap text-hex-71717a">
                       {fmtDate(log.created_at)}
                     </td>
                     <td className="py-2.5 px-3">
-                      <div className="font-medium text-[#18181B]">
+                      <div className="font-medium text-hex-18181b">
                         {log.actor_name ?? "Système"}
                       </div>
                       {log.actor_role && (
@@ -242,8 +242,8 @@ export default function AuditView({
                         {log.action}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-[#18181B]">{log.module ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-[#71717A] max-w-[220px] truncate">
+                    <td className="py-2.5 px-3 text-hex-18181b">{log.module ?? "—"}</td>
+                    <td className="py-2.5 px-3 text-hex-71717a max-w-[220px] truncate">
                       {log.entity_id ? (
                         <span className="font-mono text-[12px]">#{log.entity_id.slice(0, 8)}</span>
                       ) : (
@@ -251,7 +251,7 @@ export default function AuditView({
                       )}
                     </td>
                     {view === "logs" && (
-                      <td className="py-2.5 px-3 font-mono text-[12px] text-[#71717A]">
+                      <td className="py-2.5 px-3 font-mono text-[12px] text-hex-71717a">
                         {log.method}
                       </td>
                     )}
@@ -274,7 +274,7 @@ export default function AuditView({
 
         {/* Pagination */}
         {meta && meta.total > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#F1F3F5]">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-hex-f1f3f5">
             <span className="text-[12px] text-[#9796A1]">
               {meta.total.toLocaleString("fr-FR")} entrée(s) · page {meta.page}/{totalPages}
             </span>
@@ -283,7 +283,7 @@ export default function AuditView({
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="inline-flex items-center gap-1 h-8 rounded-lg border border-[#E4E4E7] px-2.5 text-[12px] text-[#71717A] disabled:opacity-40 hover:bg-[#FAFAFA] cursor-pointer disabled:cursor-default"
+                className="inline-flex items-center gap-1 h-8 rounded-lg border border-hex-e4e4e7 px-2.5 text-[12px] text-hex-71717a disabled:opacity-40 hover:bg-hex-fafafa cursor-pointer disabled:cursor-default"
               >
                 <ChevronLeft size={14} /> Précédent
               </button>
@@ -291,7 +291,7 @@ export default function AuditView({
                 type="button"
                 disabled={!meta.hasMore}
                 onClick={() => setPage((p) => p + 1)}
-                className="inline-flex items-center gap-1 h-8 rounded-lg border border-[#E4E4E7] px-2.5 text-[12px] text-[#71717A] disabled:opacity-40 hover:bg-[#FAFAFA] cursor-pointer disabled:cursor-default"
+                className="inline-flex items-center gap-1 h-8 rounded-lg border border-hex-e4e4e7 px-2.5 text-[12px] text-hex-71717a disabled:opacity-40 hover:bg-hex-fafafa cursor-pointer disabled:cursor-default"
               >
                 Suivant <ChevronRight size={14} />
               </button>

@@ -28,7 +28,7 @@ const Button = ({
   const baseStyles = 'rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
   
   const variantStyles = {
-    primary: 'bg-accent hover:bg-accent/90 text-white focus:ring-accent',
+    primary: 'bg-accent hover:bg-accent/90 text-blanc focus:ring-accent',
     secondary: 'bg-secondary hover:bg-secondary/90 text-dark focus:ring-secondary',
     outline: 'border border-accent text-accent hover:bg-accent/10 focus:ring-accent',
   };

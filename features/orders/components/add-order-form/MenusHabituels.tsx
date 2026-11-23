@@ -63,7 +63,7 @@ const MenusHabituels: React.FC<MenusHabituelsProps> = ({
   return (
     // Conteneur de requête : le nombre de colonnes suit la largeur du bloc.
     // ⚠️ Aucune fenêtre (`fixed`) dedans.
-    <section className="rounded-2xl bg-[#FFF8F3] p-3 ring-1 ring-[#F17922]/15 sm:p-4 @container/habitudes">
+    <section className="rounded-2xl bg-hex-fff8f3 p-3 ring-1 ring-[#F17922]/15 sm:p-4 @container/habitudes">
       <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
         <History className="h-4 w-4 text-[#F17922]" />
         Menus habituels du client
@@ -105,7 +105,7 @@ const MenusHabituels: React.FC<MenusHabituelsProps> = ({
                     className="h-14 w-14 rounded-lg object-cover"
                   />
                   {auPanier > 0 && (
-                    <span className="absolute -left-1.5 -top-1.5 rounded-full bg-[#F17922] px-1.5 py-px text-[10px] font-bold text-white shadow-sm">
+                    <span className="absolute -left-1.5 -top-1.5 rounded-full bg-[#F17922] px-1.5 py-px text-[10px] font-bold text-blanc shadow-sm">
                       x{auPanier}
                     </span>
                   )}
@@ -152,7 +152,7 @@ const MenusHabituels: React.FC<MenusHabituelsProps> = ({
               type="button"
               onClick={() => onRemettre(derniere.lignes)}
               disabled={remiseEnCours}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {remiseEnCours && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Remettre au panier

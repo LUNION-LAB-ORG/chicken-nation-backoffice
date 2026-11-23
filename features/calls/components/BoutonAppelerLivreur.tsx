@@ -53,7 +53,7 @@ export default function BoutonAppelerLivreur({
         disabled={starting || occupe}
         title={titre}
         aria-label={titre}
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#FFF0E4] text-[#F17922] transition-colors hover:bg-[#F17922] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-full bg-hex-fff0e4 text-[#F17922] transition-colors hover:bg-[#F17922] hover:text-blanc disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
       >
         <Phone className="h-4 w-4" />
       </button>
@@ -67,7 +67,7 @@ export default function BoutonAppelerLivreur({
       disabled={starting || occupe}
       title={titre}
       aria-label={titre}
-      className={`inline-flex items-center gap-1.5 rounded-full bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#d95f0e] disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-full bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-blanc shadow-sm transition-colors hover:bg-[#d95f0e] disabled:opacity-40 disabled:cursor-not-allowed ${className}`}
     >
       <Phone className="h-3.5 w-3.5" />
       {starting ? "Appel…" : "Appeler"}

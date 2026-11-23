@@ -63,7 +63,7 @@ export default function TemplateList({ searchQuery, onEdit, onCreate }: Props) {
             </p>
             <button
               onClick={onCreate}
-              className="mt-4 px-5 py-2 bg-[#F17922] text-white text-sm font-semibold rounded-xl hover:bg-[#e06816] cursor-pointer"
+              className="mt-4 px-5 py-2 bg-[#F17922] text-blanc text-sm font-semibold rounded-xl hover:bg-[#e06816] cursor-pointer"
             >
               Créer un modèle
             </button>

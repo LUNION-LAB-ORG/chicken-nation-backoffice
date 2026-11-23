@@ -221,9 +221,9 @@ export default function EnDirect({ integre = false }: { integre?: boolean } = {}
       {!integre && <BandeauRestaurants className="shrink-0" />}
 
       <div className="flex flex-col gap-4 lg:grid lg:min-h-[520px] lg:flex-1 lg:grid-cols-[380px_minmax(0,1fr)]">
-        <div className="min-w-0 overflow-hidden rounded-xl border border-[#E4E4E7] bg-white lg:min-h-0 lg:overflow-y-auto">
+        <div className="min-w-0 overflow-hidden rounded-xl border border-hex-e4e4e7 bg-white lg:min-h-0 lg:overflow-y-auto">
           {avecAlertes && (
-            <div className="border-b border-[#F4F4F5]">
+            <div className="border-b border-hex-f4f4f5">
               <ListeAlertes
                 signaux={signaux}
                 nomsRestaurants={nomsRestaurants}
@@ -259,7 +259,7 @@ export default function EnDirect({ integre = false }: { integre?: boolean } = {}
             type="button"
             onClick={() => setCarteOuverte((v) => !v)}
             aria-expanded={carteOuverte}
-            className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-[#E4E4E7] bg-white px-3 py-2 text-sm font-semibold text-[#18181B] hover:bg-[#FAFAFA] lg:hidden"
+            className="mb-3 inline-flex items-center gap-1.5 rounded-lg border border-hex-e4e4e7 bg-white px-3 py-2 text-sm font-semibold text-hex-18181b hover:bg-hex-fafafa lg:hidden"
           >
             <IconeCarte className="h-4 w-4 text-[#F17922]" />
             {carteOuverte ? "Masquer la carte" : "Voir la carte"}

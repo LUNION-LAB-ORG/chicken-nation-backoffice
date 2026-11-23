@@ -32,7 +32,7 @@ interface LivreursTabsProps {
 // sortir de l'écran (avec `w-fit` seul, elle prenait la largeur des onglets).
 const LivreursTabs: React.FC<LivreursTabsProps> = ({ selected, onSelect, counts }) => (
   <div
-    className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-4 w-fit max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
+    className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 mb-4 w-fit max-w-full overflow-x-auto scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
     style={{ minHeight: 40 }}
   >
     {LIVREURS_TABS.map((tab, idx) => {
@@ -44,7 +44,7 @@ const LivreursTabs: React.FC<LivreursTabsProps> = ({ selected, onSelect, counts 
           type="button"
           onClick={() => onSelect(tab.key)}
           className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0 inline-flex items-center gap-1.5
-            ${isActive ? "bg-[#F17922] text-white shadow-none" : "bg-transparent text-[#71717A] font-normal"}
+            ${isActive ? "bg-[#F17922] text-blanc shadow-none" : "bg-transparent text-hex-71717a font-normal"}
             ${idx === 0 ? "" : "ml-1"}
           `}
           style={{ minWidth: 75, height: 30 }}
@@ -52,7 +52,7 @@ const LivreursTabs: React.FC<LivreursTabsProps> = ({ selected, onSelect, counts 
           {tab.Icon && <tab.Icon className="w-3.5 h-3.5" />}
           {tab.label}
           {typeof count === "number" && (
-            <span className={`ml-1 ${isActive ? "text-white/80" : "text-[#A1A1AA]"}`}>
+            <span className={`ml-1 ${isActive ? "text-blanc/80" : "text-[#A1A1AA]"}`}>
               ({count})
             </span>
           )}

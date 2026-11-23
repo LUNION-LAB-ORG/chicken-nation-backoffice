@@ -6,7 +6,7 @@ import React from 'react';
 
 const AuthHeader: React.FC = () => {
   return (
-    <header className="bg-[#F17922] w-full text-white py-2 shadow-md relative">
+    <header className="bg-[#F17922] w-full text-blanc py-2 shadow-md relative">
       <div className="container mx-auto px-2 sm:px-3 md:px-4">
         <div className="flex items-center justify-between">
           <div className="flex-shrink-0">

@@ -141,7 +141,7 @@ export const EtatCourseLivreur: React.FC<Props> = ({ course, commandes, service,
 
   return (
     <div className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 ${ton.cadre}`}>
-      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${ton.pastille}`}>
+      <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-blanc ${ton.pastille}`}>
         <Icone className="h-4 w-4" aria-hidden />
       </span>
       <div className="min-w-0">

@@ -121,7 +121,7 @@ export function QrCodeModal({
               type="button"
               onClick={telecharger}
               disabled={!image}
-              className="h-9 px-3.5 flex items-center gap-2 rounded-xl bg-[#F17922] text-white text-xs font-medium hover:bg-orange-600 disabled:opacity-40 transition-colors"
+              className="h-9 px-3.5 flex items-center gap-2 rounded-xl bg-[#F17922] text-blanc text-xs font-medium hover:bg-orange-600 disabled:opacity-40 transition-colors"
             >
               <Download className="w-4 h-4" />
               Télécharger l&apos;image

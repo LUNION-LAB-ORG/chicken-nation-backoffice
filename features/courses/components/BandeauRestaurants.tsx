@@ -93,8 +93,8 @@ function Puce({
       title={titre}
       className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-3 text-sm font-semibold transition-colors ${
         choisie
-          ? 'border-[#F17922] bg-[#F17922] text-white'
-          : 'border-[#E4E4E7] bg-white text-[#18181B] hover:border-[#F17922]/50'
+          ? 'border-[#F17922] bg-[#F17922] text-blanc'
+          : 'border-hex-e4e4e7 bg-white text-hex-18181b hover:border-[#F17922]/50'
       }`}
     >
       {nom}
@@ -136,13 +136,13 @@ function Chiffre({
         aria-expanded={!!ouvert}
         title={ouvert ? 'Replier la liste' : 'Voir ces livreurs'}
         className={`-mx-1.5 inline-flex items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 transition-colors ${
-          ouvert ? 'bg-orange-50 ring-1 ring-[#F17922]/40' : 'hover:bg-[#F4F4F5]'
+          ouvert ? 'bg-orange-50 ring-1 ring-[#F17922]/40' : 'hover:bg-hex-f4f4f5'
         }`}
       >
         <span className="font-bold" style={{ color: couleur }}>
           {valeur}
         </span>
-        <span className="text-[#52525B]">{mot}</span>
+        <span className="text-hex-52525b">{mot}</span>
         <ChevronDown className={`h-3 w-3 text-[#A1A1AA] transition-transform ${ouvert ? 'rotate-180' : ''}`} />
       </button>
     );
@@ -152,7 +152,7 @@ function Chiffre({
       <span className="font-bold" style={{ color: couleur }}>
         {valeur}
       </span>{' '}
-      <span className="text-[#52525B]">{mot}</span>
+      <span className="text-hex-52525b">{mot}</span>
       {sous && (
         <span className="text-xs" style={{ color: couleur }}>
           {' '}
@@ -189,8 +189,8 @@ function LigneChiffres({
     r.sans_livreur.courses > 0 ? minutesDepuis(r.sans_livreur.plus_ancienne_depuis, maintenant) : null;
   const { activite, service } = lignesPiedCarte(r);
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-[#E4E4E7] bg-white px-3 py-2 text-sm">
-      {nom && <span className="font-semibold text-[#18181B]">{nom}</span>}
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-hex-e4e4e7 bg-white px-3 py-2 text-sm">
+      {nom && <span className="font-semibold text-hex-18181b">{nom}</span>}
       <Chiffre
         valeur={r.livreurs.disponibles}
         mot={mots.disponibles}
@@ -218,8 +218,8 @@ function LigneChiffres({
         couleur={COULEURS_TON[ton]}
         sous={attente !== null ? `depuis ${dureeLisible(attente)}` : null}
       />
-      <span className="whitespace-nowrap text-[#52525B]">{activite}</span>
-      {service && <span className="whitespace-nowrap text-[#52525B]">{service}</span>}
+      <span className="whitespace-nowrap text-hex-52525b">{activite}</span>
+      {service && <span className="whitespace-nowrap text-hex-52525b">{service}</span>}
     </div>
   );
 }
@@ -240,13 +240,13 @@ function ListeDuChiffre({
   const livreurs = livreursDuChiffre(restaurants, restaurantId, groupe);
   const avecRestaurant = !restaurantId && restaurants.length > 1;
   return (
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-3">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-[#18181B]">{titreListeChiffre(groupe, livreurs.length)}</p>
+        <p className="text-sm font-semibold text-hex-18181b">{titreListeChiffre(groupe, livreurs.length)}</p>
         <button
           type="button"
           onClick={onFermer}
-          className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-[#71717A] hover:bg-[#F4F4F5] hover:text-[#18181B]"
+          className="inline-flex h-7 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-hex-71717a hover:bg-hex-f4f4f5 hover:text-hex-18181b"
         >
           Replier
           <ChevronUp className="h-3.5 w-3.5" />
@@ -261,7 +261,7 @@ function ListeDuChiffre({
               .filter(Boolean)
               .join(' · ');
             return (
-              <li key={l.id} className="flex items-center gap-2.5 rounded-lg border border-[#F4F4F5] px-2.5 py-2">
+              <li key={l.id} className="flex items-center gap-2.5 rounded-lg border border-hex-f4f4f5 px-2.5 py-2">
                 <PastilleEtat variante="anneau" etat={etat} prenom={l.prenom} nom={l.nom} taille={32} />
                 <button
                   type="button"
@@ -269,10 +269,10 @@ function ListeDuChiffre({
                   title="Numéro et gestes du livreur"
                   className="group/livreur min-w-0 flex-1 text-left"
                 >
-                  <span className="block truncate text-sm font-semibold text-[#18181B] underline-offset-2 group-hover/livreur:underline">
+                  <span className="block truncate text-sm font-semibold text-hex-18181b underline-offset-2 group-hover/livreur:underline">
                     {nom}
                   </span>
-                  <span className="block truncate text-[11px] text-[#71717A]">{ligne}</span>
+                  <span className="block truncate text-[11px] text-hex-71717a">{ligne}</span>
                 </button>
                 {etat === 'PAUSE_AUTO' && <BoutonDebloquer livreurId={l.id} />}
                 <BoutonAppelerLivreur variante="icone" delivererId={l.id} nom={nom} detail={l.restaurant.nom} />
@@ -297,10 +297,10 @@ function Squelettes() {
     <div aria-hidden className="space-y-2">
       <div className="flex gap-2">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="h-9 w-24 animate-pulse rounded-lg bg-[#F4F4F5]" />
+          <div key={i} className="h-9 w-24 animate-pulse rounded-lg bg-hex-f4f4f5" />
         ))}
       </div>
-      <div className="h-10 animate-pulse rounded-xl bg-[#F4F4F5]" />
+      <div className="h-10 animate-pulse rounded-xl bg-hex-f4f4f5" />
     </div>
   );
 }

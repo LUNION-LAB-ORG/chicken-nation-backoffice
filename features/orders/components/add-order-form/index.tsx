@@ -433,7 +433,7 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
             <button
               type="submit"
               disabled={isSubmitting || formData.items.length === 0}
-              className="inline-flex h-10 min-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#F17922] px-6 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-10 min-w-[200px] items-center justify-center gap-2 rounded-xl bg-[#F17922] px-6 text-[13px] font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

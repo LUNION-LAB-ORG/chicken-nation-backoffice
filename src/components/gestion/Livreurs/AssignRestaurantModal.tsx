@@ -101,7 +101,7 @@ const AssignRestaurantModal: React.FC<AssignRestaurantModalProps> = ({
     geste === "affecter" ? (
       <Store className="w-5 h-5 text-[#F17922]" />
     ) : geste === "valider" ? (
-      <Check className="w-5 h-5 text-[#22C55E]" />
+      <Check className="w-5 h-5 text-hex-22c55e" />
     ) : (
       <ShieldAlert className="w-5 h-5 text-amber-600" />
     );
@@ -109,12 +109,12 @@ const AssignRestaurantModal: React.FC<AssignRestaurantModalProps> = ({
   return (
     <ModalShell isOpen={isOpen} onClose={onClose} title={TITRES[geste]} icon={icone}>
       {geste === "affecter" ? (
-        <p className="text-sm text-[#52525B] mb-4">
+        <p className="text-sm text-hex-52525b mb-4">
           Choisissez le restaurant auquel affecter <strong>{livreurNom}</strong>. Le livreur recevra
           les courses de ce restaurant et rejoindra son planning dès le prochain créneau.
         </p>
       ) : (
-        <p className="text-sm text-[#52525B] mb-4">
+        <p className="text-sm text-hex-52525b mb-4">
           Choisissez le restaurant de <strong>{livreurNom}</strong>. Il sera rattaché à ce restaurant
           et ajouté à son planning dès le prochain créneau.
         </p>
@@ -141,12 +141,12 @@ const AssignRestaurantModal: React.FC<AssignRestaurantModalProps> = ({
                 onClick={() => setSelectedId(r.id)}
                 className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
                   isSelected
-                    ? "border-[#F17922] bg-[#FFF7F2]"
-                    : "border-[#E4E4E7] hover:border-[#F17922]/50 hover:bg-[#FAFAFA]"
+                    ? "border-[#F17922] bg-hex-fff7f2"
+                    : "border-hex-e4e4e7 hover:border-[#F17922]/50 hover:bg-hex-fafafa"
                 }`}
               >
-                <div className="font-semibold text-sm text-[#18181B]">{r.name}</div>
-                {r.address && <div className="text-xs text-[#71717A] mt-0.5">{r.address}</div>}
+                <div className="font-semibold text-sm text-hex-18181b">{r.name}</div>
+                {r.address && <div className="text-xs text-hex-71717a mt-0.5">{r.address}</div>}
                 {distance && <div className="text-xs text-[#F17922] mt-0.5">{distance}</div>}
               </button>
             );
@@ -159,7 +159,7 @@ const AssignRestaurantModal: React.FC<AssignRestaurantModalProps> = ({
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="px-4 py-2 text-sm font-medium text-[#52525B] rounded-lg hover:bg-[#F4F4F5] disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-hex-52525b rounded-lg hover:bg-hex-f4f4f5 disabled:opacity-50"
         >
           Annuler
         </button>
@@ -167,7 +167,7 @@ const AssignRestaurantModal: React.FC<AssignRestaurantModalProps> = ({
           type="button"
           onClick={handleConfirm}
           disabled={!choisi || (geste === "affecter" && choisi === currentRestaurantId) || isPending}
-          className="px-4 py-2 text-sm font-semibold text-white bg-[#F17922] rounded-lg hover:bg-[#DC6718] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-semibold text-blanc bg-[#F17922] rounded-lg hover:bg-[#DC6718] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? BOUTONS[geste].envoi : BOUTONS[geste].repos}
         </button>

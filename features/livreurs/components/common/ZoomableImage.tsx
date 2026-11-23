@@ -32,7 +32,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   if (!src) {
     return (
       <div
-        className={`rounded-xl bg-[#FAFAFA] border border-[#E4E4E7] flex items-center justify-center ${className}`}
+        className={`rounded-xl bg-hex-fafafa border border-hex-e4e4e7 flex items-center justify-center ${className}`}
         style={{ height }}
       >
         {fallback}
@@ -45,7 +45,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`group relative rounded-xl overflow-hidden border border-[#E4E4E7] bg-[#FAFAFA] w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#F17922] ${className}`}
+        className={`group relative rounded-xl overflow-hidden border border-hex-e4e4e7 bg-hex-fafafa w-full cursor-zoom-in focus:outline-none focus:ring-2 focus:ring-[#F17922] ${className}`}
         style={{ height }}
         aria-label={`Agrandir : ${alt}`}
       >
@@ -53,7 +53,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
         {/* Overlay hover avec icône */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
           <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2.5">
-            <Expand className="w-5 h-5 text-[#18181B]" />
+            <Expand className="w-5 h-5 text-hex-18181b" />
           </div>
         </div>
       </button>

@@ -56,7 +56,7 @@ export function CourseDetailSidebar({ course }: Props) {
         <h3 className="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-3">Livreur</h3>
         {course.deliverer ? (
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-blanc font-bold text-sm shrink-0">
               {delivererName
                 .split(" ")
                 .filter(Boolean)
@@ -131,7 +131,7 @@ export function CourseDetailSidebar({ course }: Props) {
             {course.statut === "PENDING_ASSIGNMENT" && !course.turbo_escalated_at && (
               <button
                 onClick={() => toggleModal("courses", "force_assign")}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F17922] text-white text-sm font-semibold hover:opacity-90 transition"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#F17922] text-blanc text-sm font-semibold hover:opacity-90 transition"
               >
                 <UserPlus className="w-4 h-4" />
                 Forcer l&apos;affectation
@@ -141,7 +141,7 @@ export function CourseDetailSidebar({ course }: Props) {
               <button
                 onClick={() => retryCourse(course.id)}
                 disabled={isRetrying}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-blanc text-sm font-semibold hover:bg-green-700 dark:hover:bg-green-500 transition disabled:opacity-60"
               >
                 <RotateCw className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`} />
                 {isRetrying ? "Relance en cours…" : "Relancer la recherche"}
@@ -155,7 +155,7 @@ export function CourseDetailSidebar({ course }: Props) {
               <button
                 onClick={() => relancer(course.id)}
                 disabled={isRelancing}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-green-600 text-blanc text-sm font-semibold hover:bg-green-700 dark:hover:bg-green-500 transition disabled:opacity-60"
               >
                 <RotateCw className={`w-4 h-4 ${isRelancing ? "animate-spin" : ""}`} />
                 {isRelancing ? "Relance en cours…" : "Relancer la livraison"}
@@ -206,9 +206,9 @@ export function CourseDetailSidebar({ course }: Props) {
       {(course.turbo_escalated_at || (terminal && course.cancelled_reason)) && (
         <div className="space-y-2">
           {course.turbo_escalated_at && (
-            <div className="flex items-start gap-2 rounded-xl bg-[#FFF6E9] border border-[#F5D8AE] px-3 py-2">
+            <div className="flex items-start gap-2 rounded-xl bg-hex-fff6e9 border border-hex-f5d8ae px-3 py-2">
               <Truck className="w-4 h-4 text-[#F17922] shrink-0 mt-0.5" />
-              <p className="text-xs text-[#7A3502]">
+              <p className="text-xs text-hex-7a3502">
                 Course confiée à <strong>Turbo</strong>. Le suivi est piloté par leurs
                 notifications.
               </p>

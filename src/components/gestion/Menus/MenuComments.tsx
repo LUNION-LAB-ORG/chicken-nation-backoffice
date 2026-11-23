@@ -122,7 +122,7 @@ export default function MenuComments({ menuId, menuName }: MenuCommentsProps) {
                 >
                   <div className="flex items-start space-x-3">
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-white font-bold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-blanc font-bold flex-shrink-0">
                       {comment.customer?.image ? (
                         <Image
                           src={formatImageUrl(comment.customer.image)}

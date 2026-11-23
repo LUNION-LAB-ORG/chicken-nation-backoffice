@@ -19,7 +19,7 @@ export default function StatsErrorState({
       {onRetry && (
         <button
           onClick={onRetry}
-          className="px-4 py-2 bg-[#F17922] text-white text-sm font-medium rounded-xl hover:bg-orange-600 transition-colors"
+          className="px-4 py-2 bg-[#F17922] text-blanc text-sm font-medium rounded-xl hover:bg-orange-600 transition-colors"
         >
           Réessayer
         </button>

@@ -62,7 +62,7 @@ export function IncidentNote({
           description: message?.trim() || undefined,
         })
       }
-      className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#C2410C]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#9A3412] transition hover:bg-orange-50"
+      className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[#C2410C]/40 bg-white px-3 py-1.5 text-xs font-semibold text-hex-9a3412 transition hover:bg-orange-50"
     >
       <AlertTriangle className="h-3.5 w-3.5" />
       Créer un incident

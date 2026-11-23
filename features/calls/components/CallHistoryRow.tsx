@@ -93,7 +93,7 @@ export default function CallHistoryRow({
           disabled={disabled}
           aria-label={`Rappeler ${label}`}
           title="Rappeler"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-[#F17922] hover:text-white disabled:opacity-40 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus-visible:opacity-100"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-[#F17922] hover:text-blanc disabled:opacity-40 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 sm:focus-visible:opacity-100"
         >
           <Phone className="h-4 w-4" />
         </button>

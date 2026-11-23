@@ -75,7 +75,7 @@ function Table({ lignes, onOuvrir, avecRestaurant }: { lignes: IncidentLigne[]; 
               </td>
               <td className="whitespace-nowrap px-3.5 py-3">
                 <PastilleStatut statut={i.statut} />
-                {i.en_retard && <div className="mt-1 text-xs font-semibold text-[#B91C1C]">En retard</div>}
+                {i.en_retard && <div className="mt-1 text-xs font-semibold text-hex-b91c1c">En retard</div>}
               </td>
               <td className="whitespace-nowrap px-3.5 py-3 text-gray-800">
                 {i.geste === "BON" && i.bon_montant ? `Bon de ${formatMontant(i.bon_montant)}` : i.geste ? LIBELLE_GESTE[i.geste] : ""}

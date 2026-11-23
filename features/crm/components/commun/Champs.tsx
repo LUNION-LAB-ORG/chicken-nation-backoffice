@@ -108,7 +108,7 @@ export function Bouton({
   className?: string;
 }) {
   const styles = {
-    primaire: "bg-[#F17922] text-white hover:bg-[#e06a15] border border-[#F17922]",
+    primaire: "bg-[#F17922] text-blanc hover:bg-[#e06a15] border border-[#F17922]",
     secondaire: "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50",
     danger: "bg-white text-rose-600 border border-rose-200 hover:bg-rose-50",
     discret: "bg-transparent text-gray-600 hover:bg-gray-100 border border-transparent",

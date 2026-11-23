@@ -53,13 +53,13 @@ const LoyaltyConfigManager = () => {
         className="bg-white rounded-2xl shadow-lg p-8"
       >
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[#595959]">
+          <h1 className="text-2xl font-bold text-hex-595959">
             Configuration de Fidélité
           </h1>
           {peutConfigurer && !showForm && (
             <motion.button
               onClick={() => setShowForm(true)}
-              className="px-6 py-2 bg-[#F17922] text-white rounded-xl"
+              className="px-6 py-2 bg-[#F17922] text-blanc rounded-xl"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

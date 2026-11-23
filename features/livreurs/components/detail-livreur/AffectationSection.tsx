@@ -25,20 +25,20 @@ const AffectationSection: React.FC<AffectationSectionProps> = ({
     <p className="text-[18px] font-medium text-[#F17922] mb-3">Affectation</p>
 
     {/* Restaurant */}
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-4 mb-3">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4 mb-3">
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-lg bg-[#F17922]/10 flex items-center justify-center flex-shrink-0">
           <Store className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">Restaurant affecté</p>
+          <p className="text-xs text-hex-71717a">Restaurant affecté</p>
           {livreur.restaurant ? (
             <>
-              <p className="text-sm font-semibold text-[#18181B] mt-0.5">
+              <p className="text-sm font-semibold text-hex-18181b mt-0.5">
                 {livreur.restaurant.name}
               </p>
               {livreur.restaurant.address && (
-                <p className="text-xs text-[#71717A] mt-0.5">{livreur.restaurant.address}</p>
+                <p className="text-xs text-hex-71717a mt-0.5">{livreur.restaurant.address}</p>
               )}
             </>
           ) : (
@@ -58,14 +58,14 @@ const AffectationSection: React.FC<AffectationSectionProps> = ({
     </div>
 
     {/* Véhicule */}
-    <div className="rounded-xl border border-[#E4E4E7] bg-white p-4">
+    <div className="rounded-xl border border-hex-e4e4e7 bg-white p-4">
       <div className="flex items-start gap-3">
         <div className="h-10 w-10 rounded-lg bg-[#F17922]/10 flex items-center justify-center flex-shrink-0">
           <Truck className="w-5 h-5 text-[#F17922]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-[#71717A]">Type de véhicule</p>
-          <p className="text-sm font-semibold text-[#18181B] mt-0.5">
+          <p className="text-xs text-hex-71717a">Type de véhicule</p>
+          <p className="text-sm font-semibold text-hex-18181b mt-0.5">
             {livreur.type_vehicule ? vehiculeLabel[livreur.type_vehicule] : "Non renseigné"}
           </p>
         </div>

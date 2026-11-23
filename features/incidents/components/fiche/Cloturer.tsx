@@ -27,7 +27,7 @@ export function Cloturer({ incident }: { incident: IncidentFiche }) {
   return (
     <Bloc titre="Informer le client et clôturer">
       {incident.bon && (
-        <p className="rounded-lg bg-[#FBF8F5] px-3 py-2 text-[13px] text-gray-700">
+        <p className="rounded-lg bg-hex-fbf8f5 px-3 py-2 text-[13px] text-gray-700">
           À dire au client : un bon de <strong>{formatMontant(incident.bon.montant)}</strong> l&apos;attend, code{" "}
           <strong className="tracking-wide">{incident.bon.code}</strong>.
         </p>
@@ -51,7 +51,7 @@ export function Cloturer({ incident }: { incident: IncidentFiche }) {
           type="button"
           onClick={envoyer}
           disabled={!!manque || cloturer.isPending}
-          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#166534] px-4 text-sm font-semibold text-white hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#166534] px-4 text-sm font-semibold text-blanc hover:bg-[#14532d] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {cloturer.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           Clôturer l&apos;incident
@@ -110,7 +110,7 @@ export function Rouvrir({ incident }: { incident: IncidentFiche }) {
               { onSuccess: () => setOuvert(false) },
             )
           }
-          className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#18181B] px-3 text-[13px] font-semibold text-white hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#18181B] px-3 text-[13px] font-semibold text-blanc hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
         >
           {rouvrir.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           Rouvrir

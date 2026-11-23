@@ -387,7 +387,7 @@ function SectionRegroupement(
           type="button"
           onClick={enregistrer}
           disabled={enCours || nbErreurs > 0 || nbChangements === 0}
-          className="h-10 rounded-xl bg-[#F17922] px-5 text-sm font-semibold text-white transition hover:bg-[#e06816] disabled:opacity-50"
+          className="h-10 rounded-xl bg-[#F17922] px-5 text-sm font-semibold text-blanc transition hover:bg-[#e06816] disabled:opacity-50"
         >
           {enCours ? "Enregistrement…" : "Enregistrer le regroupement"}
         </button>

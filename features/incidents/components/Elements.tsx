@@ -71,7 +71,7 @@ export function Choix<V extends string | number>({
               onClick={() => onChange(o.valeur)}
               className={`min-h-9 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 choisi
-                  ? "border-[#F17922] bg-[#F17922] text-white"
+                  ? "border-[#F17922] bg-[#F17922] text-blanc"
                   : "border-gray-200 bg-white text-gray-700 hover:border-[#F17922]/50"
               }`}
             >

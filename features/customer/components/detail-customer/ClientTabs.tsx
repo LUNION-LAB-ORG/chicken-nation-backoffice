@@ -30,7 +30,7 @@ export function ClientTabs({ activeTab, onTabChange }: ClientTabsProps) {
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 min-w-fit px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? "bg-[#F17922] text-white shadow-sm"
+                ? "bg-[#F17922] text-blanc shadow-sm"
                 : "text-gray-600 hover:bg-gray-50"
             }`}
           >

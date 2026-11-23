@@ -74,18 +74,18 @@ export default function SidebarNavigation({
                   <div className="relative">
                     <Icon
                       className={`h-5 w-5 ${
-                        isParentActive ? "text-white" : "text-gray-500"
+                        isParentActive ? "text-blanc" : "text-gray-500"
                       }`}
                     />
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold bg-red-500 text-white leading-none">
+                      <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold bg-red-500 text-blanc leading-none">
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
                     )}
                   </div>
                   <span
                     className={`text-sm ${
-                      isParentActive ? "text-white" : "text-gray-600"
+                      isParentActive ? "text-blanc" : "text-gray-600"
                     }`}
                   >
                     {item.label}
@@ -95,13 +95,13 @@ export default function SidebarNavigation({
                 {expandedSections[item.id] ? (
                   <ChevronDown
                     className={`h-4 w-4 ${
-                      isParentActive ? "text-white" : "text-gray-400"
+                      isParentActive ? "text-blanc" : "text-gray-400"
                     }`}
                   />
                 ) : (
                   <ChevronRight
                     className={`h-4 w-4 ${
-                      isParentActive ? "text-white" : "text-gray-400"
+                      isParentActive ? "text-blanc" : "text-gray-400"
                     }`}
                   />
                 )}
@@ -156,7 +156,7 @@ export default function SidebarNavigation({
             icon={
               <Icon
                 className={`h-5 w-5 ${
-                  activeTab === item.id ? "text-white" : "text-gray-500"
+                  activeTab === item.id ? "text-blanc" : "text-gray-500"
                 }`}
               />
             }

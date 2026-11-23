@@ -33,7 +33,7 @@ export function UserCounter({
         Largeur automatique : le bandeau était figé à w-52, et un libellé un
         peu long passait à la ligne en débordant de la pastille bleue.
       */}
-      <div className="absolute top-0 left-5 h-7 max-w-[calc(100%-2.5rem)] rounded-b-xl bg-[#007AFF] px-4 text-white flex items-center">
+      <div className="absolute top-0 left-5 h-7 max-w-[calc(100%-2.5rem)] rounded-b-xl bg-[#007AFF] px-4 text-blanc flex items-center">
         <span className="text-xs font-normal uppercase tracking-wide truncate">
           {libelle}
         </span>

@@ -51,8 +51,8 @@ function SupprimerMessage({ onSupprimer, aDroite = false }: SupprimerMessageProp
       aria-label="Retirer ce message"
       className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] leading-none transition-opacity disabled:opacity-50 cursor-pointer ${
         aConfirmer
-          ? 'bg-[#FDECEA] text-[#C0392B] opacity-100'
-          : 'text-gray-400 hover:bg-gray-100 hover:text-[#C0392B] opacity-0 group-hover:opacity-100'
+          ? 'bg-hex-fdecea text-hex-c0392b opacity-100'
+          : 'text-gray-400 hover:bg-gray-100 hover:text-hex-c0392b opacity-0 group-hover:opacity-100'
       } ${aDroite ? 'order-first' : ''}`}
     >
       {enCours ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}

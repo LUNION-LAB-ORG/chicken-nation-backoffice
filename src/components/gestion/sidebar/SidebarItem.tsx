@@ -33,12 +33,12 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({
     <span className="relative inline-flex">
       {icon}
       {badge !== undefined && badge > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold bg-red-500 text-white leading-none">
+        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full text-[10px] font-bold bg-red-500 text-blanc leading-none">
           {badge > 99 ? "99+" : badge}
         </span>
       )}
     </span>
-    <span className={`text-sm ${active ? "text-white" : "text-gray-600"}`}>
+    <span className={`text-sm ${active ? "text-blanc" : "text-gray-600"}`}>
       {label}
     </span>
   </button>

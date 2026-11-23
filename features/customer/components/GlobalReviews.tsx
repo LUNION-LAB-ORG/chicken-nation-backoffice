@@ -112,7 +112,7 @@ function CustomDropdown({
                 w-full px-3 py-2 text-left flex items-center justify-between gap-2 
                 hover:bg-gray-50 transition-colors duration-150
                 ${option.value === value 
-                  ? 'bg-[#FFF8EE] text-[#F17922] font-medium' 
+                  ? 'bg-hex-fff8ee text-[#F17922] font-medium' 
                   : 'text-gray-700'
                 }
                 first:rounded-t-lg last:rounded-b-lg
@@ -272,7 +272,7 @@ export function GlobalReviews() {
       {/* ✅ Header simple */}
       <div className="flex justify-between items-center mb-6">
         <div>
-           <span className="bg-[#F17922] px-4 py-2 text-white text-sm font-medium  rounded-xl">
+           <span className="bg-[#F17922] px-4 py-2 text-blanc text-sm font-medium  rounded-xl">
            {totalItems} commentaire{totalItems > 1 ? 's' : ''}
            </span>
          
@@ -297,7 +297,7 @@ export function GlobalReviews() {
               className={`flex items-center gap-2 px-4 py-2 text-sm rounded-xl transition-all ${
                 comments.length === 0 || isExporting
                   ? 'text-gray-400 bg-gray-100 cursor-not-allowed'
-                  : 'text-white bg-[#F17922] hover:bg-[#e06816] hover:shadow-md'
+                  : 'text-blanc bg-[#F17922] hover:bg-[#e06816] hover:shadow-md'
               }`}
             >
               {isExporting ? (
@@ -441,7 +441,7 @@ export function GlobalReviews() {
                 </div>
 
                 {/* ✅ Avatar du client - même style que MenuComments */}
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-white font-bold flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-blanc font-bold flex-shrink-0">
                   {comment.customer?.image ? (
                     <Image
                       src={formatImageUrl(comment.customer.image)}
@@ -700,7 +700,7 @@ function EditableMessage({
           type="button"
           onClick={() => mutate(brouillon.trim())}
           disabled={!valide || isPending}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[#F17922]/90 disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] px-3 py-1.5 text-xs font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:opacity-50"
         >
           {isPending && <Loader2 className="h-3 w-3 animate-spin" />}
           Enregistrer

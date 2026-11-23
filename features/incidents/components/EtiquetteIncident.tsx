@@ -28,7 +28,7 @@ function Etiquette({ orderId }: { orderId: string }) {
         if (e.key === "Enter" || e.key === " ") ouvrir(e);
       }}
       title={`Incident ${incident.code} : ouvrir la fiche`}
-      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 px-2 py-1 text-[11px] font-semibold text-[#9A3412] hover:bg-orange-100"
+      className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-orange-300 bg-orange-50 px-2 py-1 text-[11px] font-semibold text-hex-9a3412 hover:bg-orange-100"
     >
       <AlertTriangle className="h-3 w-3" />
       {incident.categorie}

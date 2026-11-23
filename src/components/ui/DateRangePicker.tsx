@@ -199,7 +199,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({ onRangeSelect }) => {
                     ${!day.isCurrentMonth ? "text-gray-300" : ""}
                     ${day.isToday && !isStart && !isEnd ? "bg-orange-100 text-orange-700" : ""}
                     ${inRange ? "bg-orange-50" : ""}
-                    ${isStart || isEnd ? "bg-[#F17922] text-white font-semibold" : !inRange ? "hover:bg-gray-100" : ""}
+                    ${isStart || isEnd ? "bg-[#F17922] text-blanc font-semibold" : !inRange ? "hover:bg-gray-100" : ""}
                   `}
                 >
                   {day.date.getDate()}
@@ -248,7 +248,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({ onRangeSelect }) => {
             }
             setIsOpen(false)
           }}
-          className="flex-1 text-xs bg-[#F17922] text-white py-1 px-2 rounded hover:bg-[#d66a1d] transition-colors"
+          className="flex-1 text-xs bg-[#F17922] text-blanc py-1 px-2 rounded hover:bg-[#d66a1d] transition-colors"
           disabled={!tempStartDate || !tempEndDate}
         >
           Valider

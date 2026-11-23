@@ -62,19 +62,19 @@ const PromoCard = ({ promo, onClick, className = "" }: PromoCardProps) => {
     switch (promo.status) {
       case "active":
         return (
-          <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-2 right-2 bg-green-500 text-blanc px-2 py-1 rounded-full text-xs font-medium">
             Actif
           </div>
         );
       case "expired":
         return (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-2 right-2 bg-red-500 text-blanc px-2 py-1 rounded-full text-xs font-medium">
             Expiré
           </div>
         );
       case "upcoming":
         return (
-          <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+          <div className="absolute top-2 right-2 bg-blue-500 text-blanc px-2 py-1 rounded-full text-xs font-medium">
             À venir
           </div>
         );

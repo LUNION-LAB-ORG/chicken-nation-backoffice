@@ -113,7 +113,7 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
           <h2 className="text-xl font-bold text-gray-900">Avis du {formatRecu(avis.created_at)}</h2>
           <PastilleRessenti ressenti={avis.ressenti} />
           <PastilleStatut statut={avis.statut} />
-          {retard && <span className="text-[13px] font-bold text-[#9A3412]">{retard}</span>}
+          {retard && <span className="text-[13px] font-bold text-hex-9a3412">{retard}</span>}
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <ChoixAgent avis={avis} peutTraiter={droits.peutTraiter} />
@@ -134,7 +134,7 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
         <div className="flex flex-col gap-4 md:flex-row md:gap-6">
           <div className="flex flex-col gap-4 p-4 sm:p-6 md:w-3/5">
             <Carte titre="Commentaire du client">
-              <p className="whitespace-pre-line rounded-lg bg-[#FBF8F5] px-4 py-3 text-[15px] leading-relaxed text-gray-900">
+              <p className="whitespace-pre-line rounded-lg bg-hex-fbf8f5 px-4 py-3 text-[15px] leading-relaxed text-gray-900">
                 {avis.commentaire}
               </p>
               <dl className="grid grid-cols-2 gap-3 text-[13px] sm:grid-cols-4">
@@ -162,7 +162,7 @@ export function FicheRetour({ id, onRetour }: { id: string; onRetour: () => void
             {droits.peutTraiter && <ClotureAvis key={cleCloture(avis)} avis={avis} />}
           </div>
 
-          <div className="flex flex-col gap-4 rounded-b-xl bg-[#FBFBFB] p-4 sm:p-6 md:w-2/5 md:rounded-r-xl md:rounded-bl-none">
+          <div className="flex flex-col gap-4 rounded-b-xl bg-hex-fbfbfb p-4 sm:p-6 md:w-2/5 md:rounded-r-xl md:rounded-bl-none">
             <BlocClient
               avis={avis}
               peutTraiter={droits.peutTraiter}

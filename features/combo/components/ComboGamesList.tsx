@@ -37,7 +37,7 @@ const Td: React.FC<{ children: React.ReactNode; className?: string }> = ({
   children,
   className = "",
 }) => (
-  <td className={`px-4 py-3 text-sm text-[#18181B] ${className}`}>{children}</td>
+  <td className={`px-4 py-3 text-sm text-hex-18181b ${className}`}>{children}</td>
 );
 
 export default function ComboGamesList({
@@ -58,7 +58,7 @@ export default function ComboGamesList({
 
   if (!games || games.length === 0) {
     return (
-      <div className="text-center py-16 bg-white rounded-2xl border border-[#E4E4E7]">
+      <div className="text-center py-16 bg-white rounded-2xl border border-hex-e4e4e7">
         <div className="text-5xl mb-3">🍔</div>
         <h3 className="text-lg font-semibold text-gray-700">Aucun jeu</h3>
         <p className="text-gray-500">
@@ -71,10 +71,10 @@ export default function ComboGamesList({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E4E4E7] overflow-hidden">
+    <div className="bg-white rounded-2xl border border-hex-e4e4e7 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] border-collapse">
-          <thead className="bg-[#FAFAFA] border-b border-[#F1F3F5]">
+          <thead className="bg-hex-fafafa border-b border-hex-f1f3f5">
             <tr>
               <Th>Jeu</Th>
               <Th>Solution</Th>
@@ -86,13 +86,13 @@ export default function ComboGamesList({
               <Th className="text-right">Actions</Th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#F1F3F5]">
+          <tbody className="divide-y divide-hex-f1f3f5">
             {games.map((game) => {
               const status = resolveStatus(game);
               return (
                 <tr
                   key={game.id}
-                  className="hover:bg-[#FFF9F2] transition-colors"
+                  className="hover:bg-hex-fff9f2 transition-colors"
                 >
                   <Td>
                     <div className="font-medium">{game.title}</div>
@@ -103,12 +103,12 @@ export default function ComboGamesList({
                       </div>
                     )}
                   </Td>
-                  <Td className="text-[#71717A] max-w-[220px]">
+                  <Td className="text-hex-71717a max-w-[220px]">
                     <span className="line-clamp-2">
                       {describeSolution(game.solution_items)}
                     </span>
                   </Td>
-                  <Td className="text-[#71717A]">
+                  <Td className="text-hex-71717a">
                     <span className="inline-flex items-center gap-1">
                       <Gift size={13} className="text-[#F17922]" />
                       {game.gift?.label ||
@@ -123,7 +123,7 @@ export default function ComboGamesList({
                         : ""}
                     </span>
                   </Td>
-                  <Td className="text-[#71717A] whitespace-nowrap text-[12px]">
+                  <Td className="text-hex-71717a whitespace-nowrap text-[12px]">
                     <div>{dateTimeFmt(game.starts_at)}</div>
                     <div className="text-[#9796A1]">
                       → {dateTimeFmt(game.ends_at)}
@@ -148,7 +148,7 @@ export default function ComboGamesList({
                         type="button"
                         title="Suivi"
                         onClick={() => onTrack(game)}
-                        className="p-1.5 rounded-lg text-[#1E8E5A] hover:bg-[#E6F4EC] cursor-pointer"
+                        className="p-1.5 rounded-lg text-hex-1e8e5a hover:bg-hex-e6f4ec cursor-pointer"
                       >
                         <BarChart3 size={16} />
                       </button>
@@ -157,7 +157,7 @@ export default function ComboGamesList({
                           type="button"
                           title="Éditer"
                           onClick={() => onEdit(game)}
-                          className="p-1.5 rounded-lg text-[#2B6CB0] hover:bg-[#E7F0FB] cursor-pointer"
+                          className="p-1.5 rounded-lg text-hex-2b6cb0 hover:bg-hex-e7f0fb cursor-pointer"
                         >
                           <Pencil size={16} />
                         </button>
@@ -178,7 +178,7 @@ export default function ComboGamesList({
                           className={`p-1.5 rounded-lg ${
                             game.status === "DRAWN"
                               ? "text-gray-300 cursor-not-allowed"
-                              : "text-[#C0392B] hover:bg-[#FDECEA] cursor-pointer"
+                              : "text-hex-c0392b hover:bg-hex-fdecea cursor-pointer"
                           }`}
                         >
                           <Trash2 size={16} />

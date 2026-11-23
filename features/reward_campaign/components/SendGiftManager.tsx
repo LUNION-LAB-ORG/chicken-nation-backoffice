@@ -41,11 +41,11 @@ const LEVELS: { key: LoyaltyLevel; label: string }[] = [
 ];
 
 const Label: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <label className="block text-sm font-medium text-[#71717A] mb-1.5">{children}</label>
+  <label className="block text-sm font-medium text-hex-71717a mb-1.5">{children}</label>
 );
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 const money = (n: number) => `${Math.round(n).toLocaleString("fr-FR")} FCFA`;
 export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}) {
@@ -197,7 +197,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
   return (
     <div className="max-w-3xl">
       {/* Formulaire */}
-      <div className="lg:col-span-3 bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
+      <div className="lg:col-span-3 bg-white border border-hex-e4e4e7 rounded-xl p-5 sm:p-6">
         <h2 className="text-[18px] font-semibold text-[#F17922] mb-5">
           Envoyer un cadeau
         </h2>
@@ -215,12 +215,12 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 onClick={() => setType(t.key)}
                 className={`text-left rounded-lg border p-3 transition-colors cursor-pointer ${
                   active
-                    ? "border-[#F17922] bg-[#FFF6E9]"
-                    : "border-[#E4E4E7] hover:bg-gray-50"
+                    ? "border-[#F17922] bg-hex-fff6e9"
+                    : "border-hex-e4e4e7 hover:bg-gray-50"
                 }`}
               >
-                <Icon size={18} className={active ? "text-[#F17922]" : "text-[#71717A]"} />
-                <div className={`mt-1.5 text-sm font-semibold ${active ? "text-[#F17922]" : "text-[#18181B]"}`}>
+                <Icon size={18} className={active ? "text-[#F17922]" : "text-hex-71717a"} />
+                <div className={`mt-1.5 text-sm font-semibold ${active ? "text-[#F17922]" : "text-hex-18181b"}`}>
                   {t.label}
                 </div>
                 <div className="text-[11px] text-[#9796A1] leading-tight mt-0.5">{t.desc}</div>
@@ -264,8 +264,8 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   }}
                   className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                     giftKind === k.key
-                      ? "bg-[#F17922] text-white"
-                      : "bg-[#F4F4F5] text-[#71717A] hover:bg-[#E4E4E7]"
+                      ? "bg-[#F17922] text-blanc"
+                      : "bg-hex-f4f4f5 text-hex-71717a hover:bg-hex-e4e4e7"
                   }`}
                 >
                   {k.label}
@@ -274,7 +274,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
             </div>
             {giftKind === "SUPPLEMENT" ? (
               giftSupp ? (
-                <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
+                <div className="flex items-center gap-3 rounded-lg border border-hex-e4e4e7 p-2.5">
                   {giftSupp.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -284,7 +284,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                     />
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-[#18181B] truncate">
+                    <div className="text-sm font-semibold text-hex-18181b truncate">
                       {giftSupp.name}
                     </div>
                     <div className="text-[11px] text-[#9796A1]">
@@ -294,7 +294,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   <button
                     type="button"
                     onClick={() => setGiftSupp(null)}
-                    className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer"
+                    className="text-[#9796A1] hover:text-hex-c0392b cursor-pointer"
                   >
                     <X size={16} />
                   </button>
@@ -314,7 +314,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                     />
                   </div>
                   {suppSearch.trim().length >= 1 && (
-                    <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+                    <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
                       {suppsFiltered.length === 0 ? (
                         <div className="px-3 py-2 text-sm text-[#9796A1]">
                           {suppQuery.isLoading ? "Chargement…" : "Aucun supplément"}
@@ -328,7 +328,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                               setGiftSupp(s);
                               setSuppSearch("");
                             }}
-                            className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
                           >
                             <span className="truncate">{s.name}</span>
                             <span className="text-[#9796A1] shrink-0">
@@ -342,7 +342,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 </>
               )
             ) : giftDish ? (
-              <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
+              <div className="flex items-center gap-3 rounded-lg border border-hex-e4e4e7 p-2.5">
                 {giftDish.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -352,7 +352,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold text-[#18181B] truncate">
+                  <div className="text-sm font-semibold text-hex-18181b truncate">
                     {giftDish.name}
                   </div>
                   <div className="text-[11px] text-[#9796A1]">
@@ -362,7 +362,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 <button
                   type="button"
                   onClick={() => setGiftDish(null)}
-                  className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer"
+                  className="text-[#9796A1] hover:text-hex-c0392b cursor-pointer"
                 >
                   <X size={16} />
                 </button>
@@ -382,7 +382,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   />
                 </div>
                 {dishSearch.trim().length >= 1 && (
-                  <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+                  <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
                     {dishesFiltered.length === 0 ? (
                       <div className="px-3 py-2 text-sm text-[#9796A1]">
                         {dishesQuery.isLoading ? "Chargement…" : "Aucun plat"}
@@ -401,7 +401,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                             });
                             setDishSearch("");
                           }}
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
                         >
                           <span className="truncate">{d.name}</span>
                           <span className="text-[#9796A1] shrink-0">
@@ -466,8 +466,8 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
               onClick={() => setTarget(t)}
               className={`px-4 py-2 rounded-lg text-sm font-medium border cursor-pointer ${
                 target === t
-                  ? "border-[#F17922] bg-[#FFF6E9] text-[#F17922]"
-                  : "border-[#E4E4E7] text-[#71717A] hover:bg-gray-50"
+                  ? "border-[#F17922] bg-hex-fff6e9 text-[#F17922]"
+                  : "border-hex-e4e4e7 text-hex-71717a hover:bg-gray-50"
               }`}
             >
               {t === "all" ? "Tous les clients" : "Sélection"}
@@ -483,7 +483,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 type="button"
                 onClick={() => setLevel("")}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${
-                  level === "" ? "border-[#F17922] bg-[#FFF6E9] text-[#F17922]" : "border-[#E4E4E7] text-[#71717A]"
+                  level === "" ? "border-[#F17922] bg-hex-fff6e9 text-[#F17922]" : "border-hex-e4e4e7 text-hex-71717a"
                 }`}
               >
                 Tous niveaux
@@ -494,7 +494,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                   type="button"
                   onClick={() => setLevel(l.key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer ${
-                    level === l.key ? "border-[#F17922] bg-[#FFF6E9] text-[#F17922]" : "border-[#E4E4E7] text-[#71717A]"
+                    level === l.key ? "border-[#F17922] bg-hex-fff6e9 text-[#F17922]" : "border-hex-e4e4e7 text-hex-71717a"
                   }`}
                 >
                   {l.label}
@@ -519,7 +519,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
               <div className="text-xs text-[#9796A1] mt-1">Recherche…</div>
             )}
             {custSearch.trim().length >= 2 && custQuery.data && (
-              <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-52 overflow-y-auto">
+              <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-52 overflow-y-auto">
                 {(custQuery.data.data ?? []).map((c) => {
                   const label =
                     `${c.first_name ?? ""} ${c.last_name ?? ""}`.trim() || c.phone || c.id;
@@ -528,7 +528,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                       key={c.id}
                       type="button"
                       onClick={() => addCustomer({ id: c.id, name: label })}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex justify-between"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex justify-between"
                     >
                       <span>{label}</span>
                       <span className="text-[#9796A1]">{c.phone}</span>
@@ -545,7 +545,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 {selected.map((s) => (
                   <span
                     key={s.id}
-                    className="inline-flex items-center gap-1 bg-[#FFF6E9] text-[#7A3502] text-xs font-medium px-2.5 py-1 rounded-full"
+                    className="inline-flex items-center gap-1 bg-hex-fff6e9 text-hex-7a3502 text-xs font-medium px-2.5 py-1 rounded-full"
                   >
                     {s.name}
                     <button
@@ -571,7 +571,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 type="button"
                 onClick={() => setScheduled(false)}
                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border cursor-pointer ${
-                  !scheduled ? "border-[#F17922] bg-[#FFF6E9] text-[#F17922]" : "border-[#E4E4E7] text-[#71717A]"
+                  !scheduled ? "border-[#F17922] bg-hex-fff6e9 text-[#F17922]" : "border-hex-e4e4e7 text-hex-71717a"
                 }`}
               >
                 Immédiat
@@ -580,7 +580,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
                 type="button"
                 onClick={() => setScheduled(true)}
                 className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border cursor-pointer ${
-                  scheduled ? "border-[#F17922] bg-[#FFF6E9] text-[#F17922]" : "border-[#E4E4E7] text-[#71717A]"
+                  scheduled ? "border-[#F17922] bg-hex-fff6e9 text-[#F17922]" : "border-hex-e4e4e7 text-hex-71717a"
                 }`}
               >
                 Programmé
@@ -614,7 +614,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
             onChange={(e) => setIgnoreCapping(e.target.checked)}
             className="mt-0.5 h-4 w-4 accent-[#F17922]"
           />
-          <span className="text-sm text-[#71717A]">
+          <span className="text-sm text-hex-71717a">
             Ignorer le capping anti-fatigue{" "}
             <span className="text-[#9796A1]">
               (envoyer même aux clients récemment gâtés)
@@ -626,7 +626,7 @@ export default function SendGiftManager({ onSent }: { onSent?: () => void } = {}
           type="button"
           onClick={submit}
           disabled={createMut.isPending}
-          className="w-full flex items-center justify-center gap-2 bg-[#F17922] text-white font-semibold py-3 rounded-lg hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 bg-[#F17922] text-blanc font-semibold py-3 rounded-lg hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
         >
           {createMut.isPending ? (
             <Loader2 size={18} className="animate-spin" />

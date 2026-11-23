@@ -329,7 +329,7 @@ export default function HubRise() {
       </div>
 
       {/* Liste des restaurants */}
-      <div className="flex-1 bg-white border border-[#ECECEC] rounded-[15px] p-6 flex flex-col gap-4">
+      <div className="flex-1 bg-white border border-hex-ececec rounded-[15px] p-6 flex flex-col gap-4">
         {restaurants.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-gray-400">
             <Store className="w-12 h-12 mb-3" />
@@ -579,9 +579,9 @@ interface ActionButtonProps {
 
 function ActionButton({ icon: Icon, label, onClick, variant, loading, disabled }: ActionButtonProps) {
   const variantStyles: Record<string, string> = {
-    primary: "bg-[#F17922] text-white hover:bg-[#e06816] shadow-sm",
+    primary: "bg-[#F17922] text-blanc hover:bg-[#e06816] shadow-sm",
     secondary: "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50",
-    accent: "bg-gradient-to-r from-[#F17922] to-[#FA6345] text-white hover:opacity-90 shadow-sm",
+    accent: "bg-gradient-to-r from-[#F17922] to-[#FA6345] text-blanc hover:opacity-90 shadow-sm",
     danger: "bg-white text-red-500 border border-red-200 hover:bg-red-50",
     ghost: "bg-transparent text-gray-500 hover:bg-gray-100",
   };

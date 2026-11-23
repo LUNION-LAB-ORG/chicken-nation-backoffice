@@ -81,7 +81,7 @@ export default function UserCallList({
               }
               disabled={disabled}
               aria-label={`Appeler ${u.fullname}`}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition-all hover:bg-emerald-600 active:scale-90 disabled:opacity-40"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-blanc shadow-sm transition-all hover:bg-emerald-600 active:scale-90 disabled:opacity-40"
             >
               <Phone className="h-4 w-4" />
             </button>

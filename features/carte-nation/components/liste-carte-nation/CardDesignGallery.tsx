@@ -147,7 +147,7 @@ export function CardDesignGallery({ onClose }: CardDesignGalleryProps) {
             <button
               onClick={generateAll}
               disabled={isLoading}
-              className="flex items-center justify-center gap-2 rounded-lg bg-[#F17922] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex items-center justify-center gap-2 rounded-lg bg-[#F17922] px-4 py-2 text-sm font-semibold text-blanc transition-colors hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

@@ -127,7 +127,7 @@ export function SectionLivraison({ commande }: Props) {
   return (
     <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 md:p-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <span className="w-8 h-8 rounded-xl bg-[#FFF0E4] text-[#F17922] flex items-center justify-center">
+        <span className="w-8 h-8 rounded-xl bg-hex-fff0e4 text-[#F17922] flex items-center justify-center">
           <Bike className="w-4 h-4" />
         </span>
         <div className="min-w-0">
@@ -151,7 +151,7 @@ export function SectionLivraison({ commande }: Props) {
       <div className="flex items-center gap-3 rounded-2xl bg-gray-50 border border-gray-100 p-3">
         <div
           className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${
-            livreur ? "bg-gradient-to-br from-[#F17922] to-amber-500 text-white" : "bg-gray-200 text-gray-400"
+            livreur ? "bg-gradient-to-br from-[#F17922] to-amber-500 text-blanc" : "bg-gray-200 text-gray-400"
           }`}
         >
           <Bike className="w-5 h-5" />
@@ -314,7 +314,7 @@ function Etape({ ligne, suivante }: { ligne: LigneFrise; suivante: LigneFrise | 
       <span
         className={`relative z-10 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
           faite
-            ? "bg-[#F17922] text-white"
+            ? "bg-[#F17922] text-blanc"
             : enCours
               ? "bg-white ring-2 ring-[#F17922]"
               : "bg-white ring-2 ring-gray-200"
@@ -350,7 +350,7 @@ function Etape({ ligne, suivante }: { ligne: LigneFrise; suivante: LigneFrise | 
           </p>
         </div>
         {suivante?.duree && (
-          <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-[#C2570C]">
+          <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-hex-c2570c">
             <Timer className="w-3 h-3" />
             {suivante.duree}
           </p>

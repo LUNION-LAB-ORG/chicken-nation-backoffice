@@ -182,13 +182,13 @@ const PrinterSettings: React.FC = () => {
       </div>
 
       {/* Tabs USB / Bluetooth */}
-      <div className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 mb-4 w-fit">
+      <div className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 mb-4 w-fit">
         <button
           type="button"
           onClick={() => setTransport("usb")}
           className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-[10px] transition-colors ${
             transport === "usb"
-              ? "bg-[#F17922] text-white"
+              ? "bg-[#F17922] text-blanc"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -199,7 +199,7 @@ const PrinterSettings: React.FC = () => {
           onClick={() => setTransport("bluetooth")}
           className={`flex items-center gap-1.5 px-4 py-1.5 text-[13px] font-medium rounded-[10px] transition-colors ${
             transport === "bluetooth"
-              ? "bg-[#F17922] text-white"
+              ? "bg-[#F17922] text-blanc"
               : "text-gray-600 hover:text-gray-900"
           }`}
         >
@@ -411,7 +411,7 @@ const WindowsHelpPanel: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleCopyCommand}
-                    className="px-3 py-2 bg-[#F17922] text-white rounded text-xs font-medium hover:bg-[#d96810] flex items-center gap-1 shrink-0"
+                    className="px-3 py-2 bg-[#F17922] text-blanc rounded text-xs font-medium hover:bg-[#d96810] flex items-center gap-1 shrink-0"
                     title="Copier la commande"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -500,7 +500,7 @@ const ConnectedState: React.FC<{
         type="button"
         onClick={onTest}
         disabled={busy}
-        className="flex items-center gap-1.5 px-4 py-2 bg-[#F17922] text-white rounded-lg text-sm font-medium hover:bg-[#d96810] disabled:opacity-50"
+        className="flex items-center gap-1.5 px-4 py-2 bg-[#F17922] text-blanc rounded-lg text-sm font-medium hover:bg-[#d96810] disabled:opacity-50"
       >
         {busy ? (
           <RefreshCw className="w-4 h-4 animate-spin" />
@@ -545,7 +545,7 @@ const DisconnectedState: React.FC<{
       type="button"
       onClick={onConnect}
       disabled={busy}
-      className="flex items-center gap-1.5 px-4 py-2 bg-[#F17922] text-white rounded-lg text-sm font-medium hover:bg-[#d96810] disabled:opacity-50"
+      className="flex items-center gap-1.5 px-4 py-2 bg-[#F17922] text-blanc rounded-lg text-sm font-medium hover:bg-[#d96810] disabled:opacity-50"
     >
       {busy ? (
         <RefreshCw className="w-4 h-4 animate-spin" />

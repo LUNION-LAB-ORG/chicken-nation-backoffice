@@ -169,15 +169,15 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
       case 'OPEN':
-        return 'bg-red-500 text-white';
+        return 'bg-red-500 text-blanc';
       case 'IN_PROGRESS':
-        return 'bg-[#F17922] text-white';
+        return 'bg-[#F17922] text-blanc';
       case 'RESOLVED':
-        return 'bg-green-500 text-white';
+        return 'bg-green-500 text-blanc';
       case 'CLOSED':
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-500 text-blanc';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-500 text-blanc';
     }
   };
 
@@ -185,13 +185,13 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
   const getPriorityColor = (priority: TicketPriority) => {
     switch (priority) {
       case 'HIGH':
-        return 'bg-red-500 text-white';
+        return 'bg-red-500 text-blanc';
       case 'MEDIUM':
-        return 'bg-yellow-500 text-white';
+        return 'bg-yellow-500 text-blanc';
       case 'LOW':
-        return 'bg-green-500 text-white';
+        return 'bg-green-500 text-blanc';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-gray-500 text-blanc';
     }
   };
 
@@ -294,9 +294,9 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                   title={isDeliverer ? 'Ticket livreur' : 'Ticket client'}
                 >
                   {isDeliverer ? (
-                    <Bike className="w-2 h-2 text-white" />
+                    <Bike className="w-2 h-2 text-blanc" />
                   ) : (
-                    <UserIcon className="w-2 h-2 text-white" />
+                    <UserIcon className="w-2 h-2 text-blanc" />
                   )}
                 </div>
               </div>
@@ -339,7 +339,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
               }
             </span>
             {ticket.unreadCount > 0 && (
-              <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-white">
+              <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-blanc">
                 {ticket.unreadCount}
               </span>
             )}
@@ -361,7 +361,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
               <button
                 onClick={onNewCategory}
                 title="Créer une catégorie"
-                className="flex items-center space-x-2 bg-[#F17922] text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
+                className="flex items-center space-x-2 bg-[#F17922] text-blanc px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span className="whitespace-nowrap">Créer une catégorie</span>
@@ -370,7 +370,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
             {onNewTicket && (
               <button
                 onClick={onNewTicket}
-                className="flex items-center space-x-2 bg-[#F17922] text-white px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
+                className="flex items-center space-x-2 bg-[#F17922] text-blanc px-3 py-2 cursor-pointer rounded-xl hover:bg-orange-600 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span className="hidden sm:inline">Nouveau</span>
@@ -508,7 +508,7 @@ function TicketsSidebar({ selectedTicket, onSelectTicket, onNewTicket, onNewCate
                     </p>
                   </div>
                   {unreadTotal > 0 && (
-                    <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-white shrink-0">
+                    <span className="min-w-[20px] h-5 px-1.5 flex items-center justify-center rounded-full text-xs font-semibold bg-red-500 text-blanc shrink-0">
                       {unreadTotal}
                     </span>
                   )}

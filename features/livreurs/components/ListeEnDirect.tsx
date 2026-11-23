@@ -33,10 +33,10 @@ function Squelette() {
     <div aria-hidden>
       {[0, 1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="flex h-14 items-center gap-2.5 px-3">
-          <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-[#F4F4F5]" />
+          <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-hex-f4f4f5" />
           <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="h-3 w-40 animate-pulse rounded-full bg-[#F4F4F5]" />
-            <div className="h-2.5 w-28 animate-pulse rounded-full bg-[#F4F4F5]" />
+            <div className="h-3 w-40 animate-pulse rounded-full bg-hex-f4f4f5" />
+            <div className="h-2.5 w-28 animate-pulse rounded-full bg-hex-f4f4f5" />
           </div>
         </div>
       ))}
@@ -105,19 +105,19 @@ export function ListeEnDirect({
           const repliee = section.cle === 'HORS_SERVICE';
           const ouverte = !repliee || horsServiceOuvert;
           return (
-            <section key={section.cle} className="border-t border-[#F4F4F5] first:border-t-0">
+            <section key={section.cle} className="border-t border-hex-f4f4f5 first:border-t-0">
               {repliee ? (
                 <button
                   type="button"
                   onClick={() => setHorsServiceOuvert((v) => !v)}
                   aria-expanded={ouverte}
-                  className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-semibold text-[#71717A] hover:bg-[#FAFAFA]"
+                  className="flex w-full items-center gap-1.5 px-3 py-2 text-left text-xs font-semibold text-hex-71717a hover:bg-hex-fafafa"
                 >
                   {ouverte ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                   {section.titre} {section.lignes.length}
                 </button>
               ) : (
-                <h4 className="px-3 pb-1 pt-2.5 text-xs font-semibold text-[#71717A]">
+                <h4 className="px-3 pb-1 pt-2.5 text-xs font-semibold text-hex-71717a">
                   {section.titre} {section.lignes.length}
                 </h4>
               )}
@@ -134,7 +134,7 @@ export function ListeEnDirect({
 
   return (
     <section className="pb-1">
-      <h3 className="px-3 pb-1 pt-3 text-sm font-semibold text-[#18181B]">Livreurs live</h3>
+      <h3 className="px-3 pb-1 pt-3 text-sm font-semibold text-hex-18181b">Livreurs live</h3>
       {contenu}
     </section>
   );

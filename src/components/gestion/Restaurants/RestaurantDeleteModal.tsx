@@ -16,7 +16,7 @@ const RestaurantDeleteModal: React.FC<RestaurantDeleteModalProps> = ({
   onConfirm,
 }) => (
   <Modal isOpen={open} onClose={onClose} title="Supprimer le restaurant">
-    <div className="text-center text-[#484848] text-[16px] mb-6">
+    <div className="text-center text-hex-484848 text-[16px] mb-6">
       Cette action supprimera définitivement le restaurant &quot;
       {restaurant?.name}&quot; et toutes ses données associées.
       <br />
@@ -25,14 +25,14 @@ const RestaurantDeleteModal: React.FC<RestaurantDeleteModalProps> = ({
     <div className="flex justify-center gap-4">
       <button
         type="button"
-        className="bg-[#ECECEC] text-[#9796A1] cursor-pointer rounded-lg px-7 py-1 text-[13px] min-w-[120px]"
+        className="bg-hex-ececec text-[#9796A1] cursor-pointer rounded-lg px-7 py-1 text-[13px] min-w-[120px]"
         onClick={onClose}
       >
         Annuler
       </button>
       <button
         type="button"
-        className="bg-[#F17922] text-white cursor-pointer rounded-lg px-7 py-1 text-[13px] min-w-[120px]"
+        className="bg-[#F17922] text-blanc cursor-pointer rounded-lg px-7 py-1 text-[13px] min-w-[120px]"
         onClick={onConfirm}
       >
         Supprimer

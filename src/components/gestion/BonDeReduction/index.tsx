@@ -136,15 +136,15 @@ const VoucherFilterBar = () => {
     <div className="mb-6">
       <div className="text-xs font-semibold text-gray-600 mb-2">STATUT</div>
       <div className="w-full overflow-x-auto">
-        <div className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent" style={{ minHeight: 40 }}>
+        <div className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent" style={{ minHeight: 40 }}>
           {statusFilters.map((sf) => (
             <button
               key={sf.key ?? "all"}
               className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0 ml-1
                 ${
                   (filters?.status ?? null) === sf.key
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
               style={{ minWidth: 75, height: 30 }}
@@ -278,7 +278,7 @@ const CreateVoucherModal = ({ onClose }: { onClose: () => void }) => {
             <button
               type="submit"
               disabled={!customerId || !amount || createMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#F17922] rounded-lg hover:bg-[#d96a1c] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="px-4 py-2 text-sm font-medium text-blanc bg-[#F17922] rounded-lg hover:bg-[#d96a1c] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {createMutation.isPending ? "Création..." : "Créer le bon"}
             </button>
@@ -519,7 +519,7 @@ const RedemptionOrderCell = ({ redemption }: { redemption: Redemption }) => {
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-[#d96a1c] hover:underline cursor-pointer"
+        className="flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-hex-d96a1c hover:underline cursor-pointer"
       >
         #{orderRef ?? "Commande"}
         <ExternalLink className="w-3.5 h-3.5" />

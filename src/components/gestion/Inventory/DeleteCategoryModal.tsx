@@ -33,7 +33,7 @@ export default function DeleteCategoryModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="h-[38px] text-[#9796A1] px-6 rounded-[10px] bg-[#ECECEC] text-[13px] 
+            className="h-[38px] text-[#9796A1] px-6 rounded-[10px] bg-hex-ececec text-[13px] 
             items-center justify-center hover:bg-gray-100 order-2 sm:order-1"
           >
             Annuler
@@ -42,7 +42,7 @@ export default function DeleteCategoryModal({
             type="button"
             onClick={() => onConfirm(category)}
             disabled={isLoading}
-            className="h-[38px] px-6 rounded-[10px] bg-red-600 hover:bg-red-700 text-white text-[13px] 
+            className="h-[38px] px-6 rounded-[10px] bg-red-600 hover:bg-red-700 dark:hover:bg-red-500 text-blanc text-[13px] 
             flex items-center justify-center order-1 sm:order-2"
           >
             {isLoading ? (

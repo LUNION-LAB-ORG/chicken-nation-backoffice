@@ -28,7 +28,7 @@ export const PastilleStatut = ({ statut }: { statut: AvisStatut }) => (
 
 /** « Client rapproché » en vert, « Non rapproché » en orange. */
 export const Rapprochement = ({ rapproche }: { rapproche: boolean }) => (
-  <span className={`text-xs font-semibold ${rapproche ? "text-[#1C5E34]" : "text-[#9A3412]"}`}>
+  <span className={`text-xs font-semibold ${rapproche ? "text-hex-1c5e34" : "text-hex-9a3412"}`}>
     {rapproche ? "Client rapproché" : "Non rapproché"}
   </span>
 );

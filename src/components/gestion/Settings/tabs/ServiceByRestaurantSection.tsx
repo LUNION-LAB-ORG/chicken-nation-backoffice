@@ -112,7 +112,7 @@ export default function ServiceByRestaurantSection() {
           type="button"
           onClick={save}
           disabled={isPending || loading}
-          className="h-10 rounded-xl bg-[#F17922] px-5 text-sm font-medium text-white hover:bg-[#e06a15] disabled:opacity-50"
+          className="h-10 rounded-xl bg-[#F17922] px-5 text-sm font-medium text-blanc hover:bg-[#e06a15] disabled:opacity-50"
         >
           {isPending ? "Enregistrement…" : "Enregistrer les services"}
         </button>

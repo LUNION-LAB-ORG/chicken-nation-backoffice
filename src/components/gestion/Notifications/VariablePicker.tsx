@@ -49,7 +49,7 @@ export default function VariablePicker({ onInsert }: Props) {
                   onInsert(`{{${v.key}}}`);
                   setOpen(false);
                 }}
-                className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-[#FFF3E8] transition-all cursor-pointer group"
+                className="w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-left hover:bg-hex-fff3e8 transition-all cursor-pointer group"
               >
                 <div className="flex items-center gap-2">
                   <code className="text-xs font-mono bg-gray-100 group-hover:bg-[#F17922]/10 px-1.5 py-0.5 rounded text-gray-600 group-hover:text-[#F17922]">

@@ -108,7 +108,7 @@ export function RegenerateCardModal({
           <button
             onClick={handleRegenerate}
             disabled={isPending}
-            className="flex flex-1 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#F17922] px-3 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex flex-1 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-[#F17922] px-3 py-3 text-sm font-semibold text-blanc transition-colors hover:bg-[#d96a1d] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isPending ? (
               <>

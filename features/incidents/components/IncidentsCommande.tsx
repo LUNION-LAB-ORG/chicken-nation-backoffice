@@ -78,7 +78,7 @@ export function IncidentsCommande({
   return (
     <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center gap-2.5">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FFF0E4] text-[#F17922]">
+        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-hex-fff0e4 text-[#F17922]">
           <AlertTriangle className="h-4 w-4" />
         </span>
         <h3 className="text-[15px] font-bold text-gray-900">Incidents</h3>

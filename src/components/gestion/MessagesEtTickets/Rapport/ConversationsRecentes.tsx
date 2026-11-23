@@ -55,7 +55,7 @@ function ConversationItem({ conv }: { conv: Conversation }) {
                 Lu
               </span>
             ) : (
-              <span className="inline-flex items-center px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-red-500 text-white mb-2">
+              <span className="inline-flex items-center px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-red-500 text-blanc mb-2">
                 {unreadCount} non lu{unreadCount > 1 ? 's' : ''}
               </span>
             )}

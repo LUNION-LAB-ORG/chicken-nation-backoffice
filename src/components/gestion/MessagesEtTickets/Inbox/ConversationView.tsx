@@ -922,7 +922,7 @@ function ConversationView({ conversationId, onBack, messageCibleId = null, onMes
         </div>
 
         {/* Messages */}
-        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto bg-[#FAFAFA] md:px-6 md:py-4 px-4 py-3">
+        <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto bg-hex-fafafa md:px-6 md:py-4 px-4 py-3">
           {/*
             Recherche d'un message cité plus ancien que ce qui est chargé.
             Hauteur nulle et collé en haut : il flotte sur le fil sans le
@@ -1150,14 +1150,14 @@ function ConversationView({ conversationId, onBack, messageCibleId = null, onMes
                                 ? // Une alerte ne ressemble à la bulle de personne : ni la
                                   // couleur du personnel, ni celle du client. Elle se
                                   // repère d'un coup d'œil en remontant le fil.
-                                  'bg-[#FDF3E7] text-[#8A4B00] border border-[#F3D5B0] rounded-bl-md'
+                                  'bg-hex-fdf3e7 text-hex-8a4b00 border border-hex-f3d5b0 rounded-bl-md'
                                 : aDroite
-                                ? 'bg-[#F17922] text-white rounded-br-md'
+                                ? 'bg-[#F17922] text-blanc rounded-br-md'
                                 : meMentionne
                                 ? 'bg-orange-50/80 text-gray-900 border border-orange-100 border-l-4 border-l-[#F17922] shadow-sm rounded-bl-md'
                                 : 'bg-white text-gray-900 border border-gray-100 shadow-sm rounded-bl-md'
                             } ${isTemp ? 'opacity-70' : ''} ${
-                              surligne ? 'ring-2 ring-[#F17922]/60 ring-offset-2 ring-offset-[#FAFAFA]' : ''
+                              surligne ? 'ring-2 ring-[#F17922]/60 ring-offset-2 ring-offset-hex-fafafa' : ''
                             }`}
                           >
                             {/* Message cité, en tête de bulle : un clic y ramène. */}
@@ -1495,7 +1495,7 @@ function ConversationView({ conversationId, onBack, messageCibleId = null, onMes
               title="Envoyer le message"
               onClick={handleSendMessage}
               disabled={!canSend}
-              className="bg-[#F17922] text-white p-2.5 cursor-pointer rounded-full hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors"
+              className="bg-[#F17922] text-blanc p-2.5 cursor-pointer rounded-full hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed shrink-0 transition-colors"
             >
               {sendMessageMutation.isPending ? (
                 <div className="animate-spin rounded-full w-4 h-4 border-b-2 border-white"></div>
@@ -1569,7 +1569,7 @@ function ConversationView({ conversationId, onBack, messageCibleId = null, onMes
             className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors"
             title="Fermer"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 text-blanc" />
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img

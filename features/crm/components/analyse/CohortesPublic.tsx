@@ -197,7 +197,7 @@ export function CohortesPublic({ periode }: { periode: IPeriode }) {
     >
       {publics.length > 1 && (
         <div className="w-full overflow-x-auto mb-3">
-          <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max" role="tablist">
+          <div className="flex items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1 w-fit min-w-max" role="tablist">
             {publics.map((p) => (
               <button
                 key={p}
@@ -206,7 +206,7 @@ export function CohortesPublic({ periode }: { periode: IPeriode }) {
                 aria-selected={p === onglet}
                 onClick={() => setChoisi(p)}
                 className={`text-[13px] font-semibold px-3 py-1 rounded-lg whitespace-nowrap ${
-                  p === onglet ? "bg-white text-[#F17922] shadow-sm" : "text-[#71717A] hover:text-gray-700"
+                  p === onglet ? "bg-white text-[#F17922] shadow-sm" : "text-hex-71717a hover:text-gray-700"
                 }`}
               >
                 {PUBLIC_META[p].label}

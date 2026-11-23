@@ -649,7 +649,7 @@ const Menus = () => {
         </div>
       )}
       {menuState.view === "create" && peutCreer && (
-        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
+        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-hex-d8d8d8/30">
           <div className="w-full min-[1620px]:mr-56">
             <AddMenuForm
               optionsRef={optionsRef}
@@ -720,7 +720,7 @@ const Menus = () => {
         </div>
       )}
       {menuState.view === "edit" && peutModifier && menuState.selectedMenu && (
-        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-[#D8D8D8]/30">
+        <div className="flex flex-col lg:flex-row gap-4 bg-white rounded-xl p-4 lg:p-6 border-2 border-hex-d8d8d8/30">
           <div className="w-full min-[1620px]:mr-56">
             {menuState.loadingMenu ? (
               <div className="flex items-center justify-center h-96">

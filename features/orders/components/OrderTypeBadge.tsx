@@ -3,9 +3,9 @@ import { OrderTable } from "../types/ordersTable.types";
 
 export const OrderTypeBadge = ({ type }: { type: OrderTable["orderType"] }) => {
   const styles = {
-    "À livrer": "bg-[#FBDBA7] text-[#71717A]",
-    "À table": "bg-[#CCE3FD] text-[#71717A]",
-    "À récupérer": "bg-[#C9A9E9] text-white",
+    "À livrer": "bg-hex-fbdba7 text-hex-71717a",
+    "À table": "bg-hex-cce3fd text-hex-71717a",
+    "À récupérer": "bg-hex-c9a9e9 text-blanc",
   };
 
   const getIcon = () => {

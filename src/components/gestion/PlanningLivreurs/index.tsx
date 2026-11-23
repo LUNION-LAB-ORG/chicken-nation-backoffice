@@ -42,7 +42,7 @@ export default function PlanningLivreurs() {
             label: "Actualiser",
             onClick: () => qc.invalidateQueries({ queryKey: ["schedule"] }),
             variant: "secondary" as const,
-            className: "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
+            className: "bg-white border border-gray-300 text-hex-595959 hover:bg-gray-50",
           },
         ]}
       />

@@ -166,7 +166,7 @@ export function SearchableDropdown({
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       {/* Label */}
-      <label className="block md:text-sm text-xs font-medium text-black mb-2">
+      <label className="block md:text-sm text-xs font-medium text-noir mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
@@ -197,7 +197,7 @@ export function SearchableDropdown({
           disabled={disabled}
           className={`
             block w-full md:pl-12 pl-10 md:pr-12 pr-10 md:py-4 py-3 
-            border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 
+            border rounded-xl md:text-sm text-xs text-noir placeholder-gray-400 
             focus:outline-none focus:ring-2 focus:ring-[#F17922] 
             ${error ? 'border-red-500' : 'border-gray-300'} 
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
@@ -254,7 +254,7 @@ export function SearchableDropdown({
                 onClick={() => handleOptionSelect(option)}
                 className={`
                   px-4 py-3 cursor-pointer hover:bg-gray-50 flex items-center space-x-3
-                  ${isSelected(option.id) ? 'bg-orange-50 text-orange-600' : 'text-black'}
+                  ${isSelected(option.id) ? 'bg-orange-50 text-orange-600' : 'text-noir'}
                   border-b border-gray-100 last:border-b-0
                 `}
               >
@@ -263,7 +263,7 @@ export function SearchableDropdown({
                   <div className={`
                     w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0
                     ${isSelected(option.id) 
-                      ? 'bg-[#F17922] border-[#F17922] text-white' 
+                      ? 'bg-[#F17922] border-[#F17922] text-blanc' 
                       : 'border-gray-300 bg-white'
                     }
                   `}>
@@ -274,7 +274,7 @@ export function SearchableDropdown({
                 )}
 
                 {/* Avatar ou initiales */}
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-white font-bold flex-shrink-0">
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-[#F17922] flex items-center justify-center text-blanc font-bold flex-shrink-0">
                   {option.image && formatImageUrl(option.image) ? (
                     <Image
                       src={formatImageUrl(option.image)}
@@ -321,15 +321,15 @@ export function SearchableDropdown({
               </div>
             ))
           ) : searchTerm.trim() ? (
-            <div className="px-4 py-8 text-center text-sm text-black">
+            <div className="px-4 py-8 text-center text-sm text-noir">
               Aucun résultat trouvé pour &quot;{searchTerm}&quot;
             </div>
           ) : options.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-black">
+            <div className="px-4 py-8 text-center text-sm text-noir">
               Aucune option disponible
             </div>
           ) : (
-            <div className="px-4 py-8 text-center text-sm text-black">
+            <div className="px-4 py-8 text-center text-sm text-noir">
               Tapez pour rechercher...
             </div>
           )}

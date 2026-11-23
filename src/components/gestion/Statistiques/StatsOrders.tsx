@@ -816,14 +816,14 @@ export default function StatsOrders() {
                   </div>
                   <div className="flex flex-col justify-center space-y-2">
                     <div className="flex items-center gap-2 bg-green-50 rounded-xl p-2.5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: PUNCTUALITY_COLORS.onTime }}>OK</div>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-blanc font-bold text-xs" style={{ backgroundColor: PUNCTUALITY_COLORS.onTime }}>OK</div>
                       <div>
                         <div className="text-xs font-semibold text-gray-900">A l&apos;heure</div>
                         <div className="text-[11px] text-gray-500">{formatNumber(lateOrders.data.onTimeOrders)} ({onTimeRate.toFixed(1)}%)</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 bg-red-50 rounded-xl p-2.5">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs" style={{ backgroundColor: PUNCTUALITY_COLORS.late }}>!</div>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-blanc font-bold text-xs" style={{ backgroundColor: PUNCTUALITY_COLORS.late }}>!</div>
                       <div>
                         <div className="text-xs font-semibold text-gray-900">En retard</div>
                         <div className="text-[11px] text-gray-500">{formatNumber(lateOrders.data.lateOrders)} ({(lateOrders.data.lateRate ?? 0).toFixed(1)}%)</div>

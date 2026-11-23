@@ -852,7 +852,7 @@ const DeliverySettings: React.FC = () => {
               <button
                 type="button"
                 onClick={addTier}
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-[#e06816]"
+                className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] hover:text-hex-e06816"
               >
                 <Plus size={16} /> Ajouter un palier
               </button>
@@ -887,7 +887,7 @@ const DeliverySettings: React.FC = () => {
         <button
           onClick={handleSave}
           disabled={isPending || !!etatPage.bloque}
-          className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
+          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
         >
           {isPending ? "Enregistrement..." : "Enregistrer"}
         </button>

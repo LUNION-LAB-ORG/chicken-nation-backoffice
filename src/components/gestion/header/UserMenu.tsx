@@ -7,6 +7,7 @@ import { ChevronDown, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import ChoixTheme from "./ChoixTheme";
 
 export default function UserMenu() {
   const { user, logout } = useAuthStore();
@@ -100,6 +101,10 @@ export default function UserMenu() {
                     <p className="text-sm text-gray-500 capitalize">Profil</p>
                   </div>
                 </div>
+              </div>
+
+              <div className="border-b border-gray-100">
+                <ChoixTheme />
               </div>
 
               <div className="p-2">

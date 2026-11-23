@@ -27,7 +27,7 @@ const PriceSummarySection: React.FC<PriceSummarySectionProps> = ({ order }) => {
 
   return (
     <div className="space-y-2 md:space-y-3">
-      <div className="flex justify-between items-center text-[#71717A] mb-3">
+      <div className="flex justify-between items-center text-hex-71717a mb-3">
         <span className="text-sm">Prix net</span>
         <span className="font-bold">{order.netAmount.toLocaleString()}F</span>
       </div>
@@ -77,7 +77,7 @@ const PriceSummarySection: React.FC<PriceSummarySectionProps> = ({ order }) => {
         <span className="text-[18px] font-medium text-[#F17922]">
           Prix Total
         </span>
-        <div className="bg-[#F17922] text-white px-6 py-2 rounded-xl font-bold">
+        <div className="bg-[#F17922] text-blanc px-6 py-2 rounded-xl font-bold">
           {order.amount.toLocaleString()}F
         </div>
       </div>

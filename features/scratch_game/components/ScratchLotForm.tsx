@@ -14,13 +14,13 @@ import {
 } from "../types/scratch.types";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 const Label: React.FC<{ children: React.ReactNode; hint?: string }> = ({
   children,
   hint,
 }) => (
-  <label className="block text-sm font-medium text-[#71717A] mb-1.5">
+  <label className="block text-sm font-medium text-hex-71717a mb-1.5">
     {children}
     {hint && <span className="text-[#9796A1] font-normal"> · {hint}</span>}
   </label>
@@ -232,9 +232,9 @@ export default function ScratchLotForm({
       className="space-y-6"
     >
       {isFloor && (
-        <div className="flex items-center gap-2 rounded-lg bg-[#FFF6E9] border border-[#F5D8AE] px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg bg-hex-fff6e9 border border-hex-f5d8ae px-4 py-3">
           <Star size={16} className="text-[#F17922]" />
-          <p className="text-sm text-[#7A3502]">
+          <p className="text-sm text-hex-7a3502">
             Lot <strong>PLANCHER</strong> (points). Son type est fixe et il ne
             peut pas être supprimé — il garantit une récompense minimale. Sa
             fréquence se règle globalement dans l&apos;onglet{" "}
@@ -260,19 +260,19 @@ export default function ScratchLotForm({
                   onClick={() => setType(t.key)}
                   className={`text-left rounded-lg border p-3 transition-colors ${
                     disabled
-                      ? "opacity-40 cursor-not-allowed border-[#E4E4E7]"
+                      ? "opacity-40 cursor-not-allowed border-hex-e4e4e7"
                       : activeType
-                      ? "border-[#F17922] bg-[#FFF6E9] cursor-pointer"
-                      : "border-[#E4E4E7] hover:bg-gray-50 cursor-pointer"
+                      ? "border-[#F17922] bg-hex-fff6e9 cursor-pointer"
+                      : "border-hex-e4e4e7 hover:bg-gray-50 cursor-pointer"
                   }`}
                 >
                   <Icon
                     size={18}
-                    className={activeType ? "text-[#F17922]" : "text-[#71717A]"}
+                    className={activeType ? "text-[#F17922]" : "text-hex-71717a"}
                   />
                   <div
                     className={`mt-1.5 text-sm font-semibold ${
-                      activeType ? "text-[#F17922]" : "text-[#18181B]"
+                      activeType ? "text-[#F17922]" : "text-hex-18181b"
                     }`}
                   >
                     {t.label}
@@ -384,8 +384,8 @@ export default function ScratchLotForm({
           réglée globalement (Réglages » Poids du plancher), et le moteur ignore
           ces champs pour le lot plancher. */}
       {!isFloor && (
-      <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-[#595959]">
+      <div className="border-2 border-hex-d9d9d9/50 rounded-2xl p-6 space-y-4">
+        <h3 className="text-lg font-semibold text-hex-595959">
           Paramètres de tirage
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -497,7 +497,7 @@ export default function ScratchLotForm({
       </label>
 
       {error && (
-        <div className="rounded-lg bg-[#FDECEA] text-[#C0392B] text-sm px-4 py-2.5">
+        <div className="rounded-lg bg-hex-fdecea text-hex-c0392b text-sm px-4 py-2.5">
           {error}
         </div>
       )}
@@ -506,7 +506,7 @@ export default function ScratchLotForm({
         <motion.button
           type="button"
           onClick={onCancel}
-          className="px-8 py-3 rounded-xl bg-[#ECECEC] text-[#9796A1] min-w-[160px]"
+          className="px-8 py-3 rounded-xl bg-hex-ececec text-[#9796A1] min-w-[160px]"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}
@@ -515,7 +515,7 @@ export default function ScratchLotForm({
         </motion.button>
         <motion.button
           type="submit"
-          className="px-8 py-3 rounded-xl bg-[#F17922] text-white min-w-[170px] disabled:opacity-50 flex items-center justify-center gap-2"
+          className="px-8 py-3 rounded-xl bg-[#F17922] text-blanc min-w-[170px] disabled:opacity-50 flex items-center justify-center gap-2"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isPending}

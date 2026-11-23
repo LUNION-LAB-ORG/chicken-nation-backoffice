@@ -211,7 +211,7 @@ const NotificationSettings: React.FC = () => {
           <button
             onClick={handleSaveTwilio}
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#F17922] text-white font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
           >
             {isPending ? "Enregistrement..." : "Enregistrer"}
           </button>
@@ -337,7 +337,7 @@ const NotificationSettings: React.FC = () => {
           <button
             onClick={handleSync}
             disabled={syncing}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-all disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-blanc font-semibold rounded-xl hover:bg-blue-700 dark:hover:bg-blue-500 transition-all disabled:opacity-50"
           >
             {syncing ? (
               <Loader2 size={16} className="animate-spin" />

@@ -56,7 +56,7 @@ export default function NotificationBanner() {
               setPerm(ok ? "granted" : notificationPermission()),
             );
           }}
-          className="rounded-full bg-[#F17922] px-4 py-2 text-xs font-medium text-white transition-colors hover:bg-[#e06a15]"
+          className="rounded-full bg-[#F17922] px-4 py-2 text-xs font-medium text-blanc transition-colors hover:bg-[#e06a15]"
         >
           Activer
         </button>

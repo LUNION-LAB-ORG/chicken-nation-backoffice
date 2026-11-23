@@ -153,8 +153,8 @@ export function ModaleIgnorerRelance({ groupe, mode = "ignorer", onClose }: Prop
             type="button"
             onClick={valider}
             disabled={enCours}
-            className={`h-11 sm:h-10 px-4 rounded-xl text-sm font-semibold text-white disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2 ${
-              annulation ? "bg-red-600 hover:bg-red-700" : "bg-[#F17922] hover:bg-[#e06816]"
+            className={`h-11 sm:h-10 px-4 rounded-xl text-sm font-semibold text-blanc disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2 ${
+              annulation ? "bg-red-600 hover:bg-red-700 dark:hover:bg-red-500" : "bg-[#F17922] hover:bg-[#e06816]"
             }`}
           >
             {enCours && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -30,10 +30,10 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({ order }) => {
                     "bg-white border border-[#FF3B30] hover:bg-gray-50 text-[#FF3B30]":
                       action.variant === "danger",
 
-                    "bg-white border hover:bg-[#F17922] hover:text-white":
+                    "bg-white border hover:bg-[#F17922] hover:text-blanc":
                       action.variant === "secondary",
 
-                    "bg-[#F17922] hover:bg-[#F17972] text-white":
+                    "bg-[#F17922] hover:bg-[#F17972] text-blanc":
                       action.variant === "primary",
                   }
                 )}

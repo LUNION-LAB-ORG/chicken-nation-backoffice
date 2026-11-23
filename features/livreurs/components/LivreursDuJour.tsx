@@ -75,15 +75,15 @@ function prevusAuCreneau(tableau: TableauLivraison | undefined): Map<string, 'MO
 
 function Squelette() {
   return (
-    <div className="rounded-xl border border-[#F4F4F5] bg-white">
+    <div className="rounded-xl border border-hex-f4f4f5 bg-white">
       <div className="h-11 px-3 py-3">
-        <div className="h-4 w-48 animate-pulse rounded-full bg-[#F4F4F5]" />
+        <div className="h-4 w-48 animate-pulse rounded-full bg-hex-f4f4f5" />
       </div>
       {[0, 1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex h-14 items-center gap-3 border-t border-[#F4F4F5] px-3">
-          <div className="h-9 w-9 animate-pulse rounded-full bg-[#F4F4F5]" />
-          <div className="h-3 w-32 animate-pulse rounded-full bg-[#F4F4F5]" />
-          <div className="ml-auto h-3 w-40 animate-pulse rounded-full bg-[#F4F4F5]" />
+        <div key={i} className="flex h-14 items-center gap-3 border-t border-hex-f4f4f5 px-3">
+          <div className="h-9 w-9 animate-pulse rounded-full bg-hex-f4f4f5" />
+          <div className="h-3 w-32 animate-pulse rounded-full bg-hex-f4f4f5" />
+          <div className="ml-auto h-3 w-40 animate-pulse rounded-full bg-hex-f4f4f5" />
         </div>
       ))}
     </div>
@@ -210,14 +210,14 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
             />
           );
           return (
-            <section key={bloc.id} className="min-w-0 overflow-hidden rounded-xl border border-[#E4E4E7] bg-white">
-              <h3 className="truncate px-3 py-3 text-sm font-semibold text-[#18181B]">
+            <section key={bloc.id} className="min-w-0 overflow-hidden rounded-xl border border-hex-e4e4e7 bg-white">
+              <h3 className="truncate px-3 py-3 text-sm font-semibold text-hex-18181b">
                 {enTeteRestaurant(bloc.nom, enService, bloc.lignes.length, prevusParRestaurant.get(bloc.id))}
               </h3>
               <div className="overflow-x-auto">
                 <div className="min-w-[600px]">
                   <div
-                    className={`grid gap-3 border-t border-[#F4F4F5] bg-[#FAFAFA] px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#71717A] ${
+                    className={`grid gap-3 border-t border-hex-f4f4f5 bg-hex-fafafa px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-hex-71717a ${
                       avecJour ? COLONNES_AVEC_JOUR : COLONNES_SANS_JOUR
                     }`}
                   >
@@ -238,7 +238,7 @@ export function LivreursDuJour({ restaurantId, recherche = '', onOuvrir }: Livre
                       <button
                         type="button"
                         onClick={() => setHsOuverts((o) => ({ ...o, [bloc.id]: !o[bloc.id] }))}
-                        className="flex w-full items-center gap-1.5 border-t border-[#F4F4F5] px-3 py-2.5 text-left text-xs font-semibold text-[#71717A] hover:bg-[#FAFAFA]"
+                        className="flex w-full items-center gap-1.5 border-t border-hex-f4f4f5 px-3 py-2.5 text-left text-xs font-semibold text-hex-71717a hover:bg-hex-fafafa"
                       >
                         {ouvert ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
                         Hors service {replies.length}

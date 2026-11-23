@@ -165,8 +165,8 @@ export const OperationsCard: React.FC<Props> = ({
               <span
                 className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg border ${
                   programmee.plusTard
-                    ? "bg-[#FDF3E7] text-[#8A4B00] border-[#F3D5B0]"
-                    : "bg-[#EAF7F0] text-[#1E8E5A] border-[#CDEBD9]"
+                    ? "bg-hex-fdf3e7 text-hex-8a4b00 border-hex-f3d5b0"
+                    : "bg-hex-eaf7f0 text-hex-1e8e5a border-hex-cdebd9"
                 }`}
                 title={programmee.titre}
               >
@@ -275,7 +275,7 @@ function PaymentAction({ order, onPay }: { order: Order; onPay?: () => void }) {
           e.stopPropagation();
           onPay?.();
         }}
-        className="w-full mt-3 h-8 inline-flex items-center justify-center gap-1.5 px-3 text-xs font-bold rounded-lg bg-[#F17922] text-white hover:bg-[#D96A1D] transition shadow-sm"
+        className="w-full mt-3 h-8 inline-flex items-center justify-center gap-1.5 px-3 text-xs font-bold rounded-lg bg-[#F17922] text-blanc hover:bg-[#D96A1D] transition shadow-sm"
       >
         <Wallet className="w-3.5 h-3.5" />
         Faire le paiement

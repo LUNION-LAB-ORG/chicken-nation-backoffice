@@ -158,7 +158,7 @@ const PromoStats = ({ className = '', promotions = [], onViewAllPromotions }: Pr
       case 'Expiré':
         return 'bg-red-100 text-red-600'
       case 'Public':
-        return 'bg-[#E4E4E7] text-[#F17922]'
+        return 'bg-hex-e4e4e7 text-[#F17922]'
       case 'Privé':
         return 'bg-blue-100 text-blue-600' // ✅ AJOUT : Style pour les promotions privées
       default:
@@ -174,7 +174,7 @@ const PromoStats = ({ className = '', promotions = [], onViewAllPromotions }: Pr
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-md font-medium text-gray-500">{section.title}</h3>
               {section.totalCount !== undefined && (
-                <span className="bg-[#F17922] text-white text-xs font-medium px-2 py-1 rounded-full">
+                <span className="bg-[#F17922] text-blanc text-xs font-medium px-2 py-1 rounded-full">
                   {section.totalCount}
                 </span>
               )}
@@ -195,7 +195,7 @@ const PromoStats = ({ className = '', promotions = [], onViewAllPromotions }: Pr
                       </div>
                       <div className="ml-4 text-right">
                         {section.title === "Nombres des promotions" ? (
-                          <p className="text-xs font-medium text-[#006fee]">{item.category}</p>
+                          <p className="text-xs font-medium text-hex-006fee">{item.category}</p>
                         ) : (
                           <>
                             <p className="text-xs text-gray-600 mb-1">{item.category}</p>
@@ -226,7 +226,7 @@ const PromoStats = ({ className = '', promotions = [], onViewAllPromotions }: Pr
             <div className="bg-gray-400 hover:bg-[#F17200] cursor-pointer px-6 py-4">
               <button
                 type="button"
-                className="w-full text-white text-sm font-medium cursor-pointer   transition-colors"
+                className="w-full text-blanc text-sm font-medium cursor-pointer   transition-colors"
                 onClick={onViewAllPromotions}
               >
                 Voir tous

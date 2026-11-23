@@ -50,8 +50,8 @@ export const ITEM_TYPE_LABEL: Record<ComboItemType, string> = {
 };
 
 export const ITEM_TYPE_BADGE: Record<ComboItemType, string> = {
-  DISH: "bg-[#FFF6E9] text-[#B25A00]",
-  SUPPLEMENT: "bg-[#E7F0FB] text-[#2B6CB0]",
+  DISH: "bg-hex-fff6e9 text-hex-b25a00",
+  SUPPLEMENT: "bg-hex-e7f0fb text-hex-2b6cb0",
 };
 
 /**
@@ -77,10 +77,10 @@ export const STATUS_LABEL: Record<ComboStatus, string> = {
 };
 
 export const STATUS_BADGE: Record<ComboStatus, string> = {
-  SCHEDULED: "bg-[#E7F0FB] text-[#2B6CB0]",
-  ACTIVE: "bg-[#E6F4EC] text-[#1E8E5A]",
-  ENDED: "bg-[#EEF1F4] text-[#6C757D]",
-  DRAWN: "bg-[#F3E8FF] text-[#7C3AED]",
+  SCHEDULED: "bg-hex-e7f0fb text-hex-2b6cb0",
+  ACTIVE: "bg-hex-e6f4ec text-hex-1e8e5a",
+  ENDED: "bg-hex-eef1f4 text-hex-6c757d",
+  DRAWN: "bg-hex-f3e8ff text-[#7C3AED]",
 };
 
 /** Résumé lisible de la combinaison-solution. */

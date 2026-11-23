@@ -54,7 +54,7 @@ export function CancelOrderModal({ isOpen, order }: CancelOrderModalProps) {
             onClick={() =>
               handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED)
             }
-            className="w-full py-3 rounded-lg bg-red-600 text-white font-semibold cursor-pointer"
+            className="w-full py-3 rounded-lg bg-red-600 text-blanc font-semibold cursor-pointer"
           >
             {isLoading ? "Traitement..." : "Confirmer l'annulation"}
           </button>

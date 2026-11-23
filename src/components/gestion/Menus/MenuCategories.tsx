@@ -181,14 +181,14 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
         </div>
 
         {/* Navigation des catégories */}
-        <div className="w-full overflow-x-auto mb-6 bg-[#F4F4F4] p-2 pb-0">
+        <div className="w-full overflow-x-auto mb-6 bg-hex-f4f4f4 p-2 pb-0">
           <div className="flex justify-self gap-6 min-w-max md:min-w-0 md:flex-wrap gap-y-2">
             {categories.map((category) => (
               <button
                 key={category.id}
                 className={`whitespace-nowrap text-xs uppercase sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 rounded-t-xl transition-colors flex-shrink-0 md:flex-shrink ${
                   activeCategory === category.name
-                    ? "bg-[#F17922] text-white"
+                    ? "bg-[#F17922] text-blanc"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
                 onClick={() => {
@@ -247,7 +247,7 @@ export default function MenuCategories({ categories: propCategories, onEditMenu,
                 key={index}
                 onClick={() => setActivePage(index + 1)}
                 className={`w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full text-xs ${
-                  activePage === index + 1 ? "bg-[#FF5722] text-white" : "bg-gray-100 text-gray-700"
+                  activePage === index + 1 ? "bg-[#FF5722] text-blanc" : "bg-gray-100 text-gray-700"
                 }`}
               >
                 {index + 1}

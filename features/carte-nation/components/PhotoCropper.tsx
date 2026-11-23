@@ -102,7 +102,7 @@ export function PhotoCropper({
   return (
     <div className="space-y-3">
       {/* Conteneur positionné : react-easy-crop se place en absolu à l'intérieur */}
-      <div className="relative mx-auto h-72 w-full overflow-hidden rounded-2xl bg-gray-900">
+      <div className="relative mx-auto h-72 w-full overflow-hidden rounded-2xl bg-gray-900 dark:bg-[#0e1014]">
         <Cropper
           image={sameOriginSrc}
           crop={crop}
@@ -147,7 +147,7 @@ export function PhotoCropper({
           type="button"
           onClick={handleApply}
           disabled={busy || !pixels}
-          className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[#F17922] py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#d96a1d] disabled:opacity-50"
+          className="flex flex-[2] items-center justify-center gap-2 rounded-xl bg-[#F17922] py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-[#d96a1d] disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {applyLabel}

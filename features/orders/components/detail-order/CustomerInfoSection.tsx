@@ -91,8 +91,8 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
       <p className="text-[18px] font-medium text-[#F17922] mb-4">Client</p>
 
       <div className="flex flex-row items-center justify-between mb-4">
-        <p className="text-sm text-[#71717A]">Client</p>
-        <p className="text-sm text-[#71717A] font-bold">{order.clientName}</p>
+        <p className="text-sm text-hex-71717a">Client</p>
+        <p className="text-sm text-hex-71717a font-bold">{order.clientName}</p>
       </div>
 
       {/* Carte client — dropdown qui déplie/replie la localisation de livraison,
@@ -105,11 +105,11 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
             aria-expanded={mapOpen}
             className="w-full flex items-center justify-between py-1.5 cursor-pointer group"
           >
-            <span className="flex items-center gap-1.5 text-sm text-[#71717A]">
+            <span className="flex items-center gap-1.5 text-sm text-hex-71717a">
               <MapPin className="w-4 h-4 text-[#F17922]" />
               Localisation
             </span>
-            <span className="flex items-center gap-1 text-xs font-semibold text-[#F17922] group-hover:text-[#D96A1D] transition-colors">
+            <span className="flex items-center gap-1 text-xs font-semibold text-[#F17922] group-hover:text-hex-d96a1d transition-colors">
               {mapOpen ? "Masquer la carte" : "Voir sur la carte"}
               {mapOpen ? (
                 <ChevronUp className="w-4 h-4" />
@@ -158,32 +158,32 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({ order }) => {
       )}
 
       <div className="flex flex-row justify-between items-start mb-4">
-        <p className="text-sm text-[#71717A]">Adresse</p>
-        <p className="text-sm text-[#71717A] font-bold text-right max-w-[250px]">
+        <p className="text-sm text-hex-71717a">Adresse</p>
+        <p className="text-sm text-hex-71717a font-bold text-right max-w-[250px]">
           {formatAddress(order.address)}
         </p>
       </div>
 
       {order.clientEmail && (
         <div className="flex flex-row items-center justify-between mb-2">
-          <p className="text-sm text-[#71717A]">Email</p>
-          <p className="text-sm text-[#71717A] font-bold">{order.clientEmail}</p>
+          <p className="text-sm text-hex-71717a">Email</p>
+          <p className="text-sm text-hex-71717a font-bold">{order.clientEmail}</p>
         </div>
       )}
 
       {order.clientPhone && (
         <div className="flex flex-row items-center justify-between mb-2">
-          <p className="text-sm text-[#71717A]">Téléphone</p>
-          <p className="text-sm text-[#71717A] font-bold">{order.clientPhone}</p>
+          <p className="text-sm text-hex-71717a">Téléphone</p>
+          <p className="text-sm text-hex-71717a font-bold">{order.clientPhone}</p>
         </div>
       )}
 
       {/* Customer orders count button */}
       <div className="flex flex-row items-center justify-between mt-3">
-        <p className="text-sm text-[#71717A]">Commandes</p>
+        <p className="text-sm text-hex-71717a">Commandes</p>
         <button
           onClick={() => setShowOrdersModal(true)}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#F17922] hover:text-[#D96A1D] transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#F17922] hover:text-hex-d96a1d transition-colors cursor-pointer"
         >
           <ShoppingBag className="w-3.5 h-3.5" />
           {totalOrders} commande{totalOrders > 1 ? "s" : ""}
@@ -258,7 +258,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
                 <div
                   key={o.id}
                   className={`border rounded-xl overflow-hidden transition-colors ${
-                    isCurrent ? "border-[#F17922]/40 bg-[#FFF8F2]" : "border-gray-100 bg-white"
+                    isCurrent ? "border-[#F17922]/40 bg-hex-fff8f2" : "border-gray-100 bg-white"
                   }`}
                 >
                   {/* Order row */}
@@ -273,7 +273,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
                             #{o.reference}
                           </span>
                           {isCurrent && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#F17922] text-white">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#F17922] text-blanc">
                               Actuelle
                             </span>
                           )}
@@ -318,7 +318,7 @@ function CustomerOrdersModal({ customerId, customerName, currentOrderId, onClose
                                 className="object-cover"
                               />
                               {item.price === 0 && (
-                                <div className="absolute bottom-0 right-0 bg-[#F17922] text-white text-[7px] px-0.5 rounded-tl">
+                                <div className="absolute bottom-0 right-0 bg-[#F17922] text-blanc text-[7px] px-0.5 rounded-tl">
                                   Offert
                                 </div>
                               )}

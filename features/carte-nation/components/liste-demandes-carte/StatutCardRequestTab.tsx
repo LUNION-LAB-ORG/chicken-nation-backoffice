@@ -43,7 +43,7 @@ const StatutCardRequestTab: React.FC = () => {
     <div className="mb-6 w-full">
       <div className="w-full overflow-x-auto">
         <div
-          className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 w-fit min-w-full
+          className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 w-fit min-w-full
           scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
           style={{ minHeight: 40 }}
         >
@@ -52,8 +52,8 @@ const StatutCardRequestTab: React.FC = () => {
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
                   !filters?.status || filters?.status === null
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
             style={{ minWidth: 75, height: 30 }}
@@ -68,8 +68,8 @@ const StatutCardRequestTab: React.FC = () => {
                  px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap flex-shrink-0
                 ${
                   filters?.status === status.key
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
                 ml-1
               `}

@@ -39,7 +39,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
           <div className="bg-linear-to-br from-yellow-50 to-orange-50 rounded-xl border-2 border-orange-200 p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-xl shadow-lg">
-                <CreditCard className="w-7 h-7 text-white" />
+                <CreditCard className="w-7 h-7 text-blanc" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-gray-900">
@@ -202,7 +202,7 @@ export function CarteTab({ customerData }: CarteTabProps) {
           >
             <button
               onClick={() => setShowImage({ request: null, status: false })}
-              className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors"
+              className="absolute -top-12 right-0 text-blanc hover:text-gray-300 transition-colors"
             >
               <XCircle className="w-8 h-8" />
             </button>

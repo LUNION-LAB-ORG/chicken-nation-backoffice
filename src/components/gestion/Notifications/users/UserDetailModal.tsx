@@ -52,7 +52,7 @@ export default function UserDetailModal({ isOpen, onClose, user }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#FFF3E8] rounded-full flex items-center justify-center text-[#F17922] font-bold">
+            <div className="w-10 h-10 bg-hex-fff3e8 rounded-full flex items-center justify-center text-[#F17922] font-bold">
               {(user.customer.first_name?.[0] ?? "?").toUpperCase()}
             </div>
             <div>

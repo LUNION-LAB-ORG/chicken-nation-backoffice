@@ -77,7 +77,7 @@ export default function DiffusionsModule() {
           <button
             type="button"
             onClick={() => setCreation(true)}
-            className="shrink-0 inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-3 md:px-4 text-[13px] font-semibold text-white hover:bg-[#F17922]/90 cursor-pointer"
+            className="shrink-0 inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-3 md:px-4 text-[13px] font-semibold text-blanc hover:bg-[#F17922]/90 cursor-pointer"
           >
             <Plus size={16} />
             <span className="hidden sm:inline">Nouvelle diffusion</span>
@@ -185,7 +185,7 @@ function LigneDiffusion({ diffusion }: { diffusion: IDiffusion }) {
                 type="button"
                 disabled={envoyer.isPending}
                 onClick={() => setConfirmation(true)}
-                className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-3 text-[13px] font-semibold text-white disabled:opacity-50 cursor-pointer"
+                className="inline-flex h-[42px] items-center gap-1.5 rounded-xl bg-[#F17922] px-3 text-[13px] font-semibold text-blanc disabled:opacity-50 cursor-pointer"
               >
                 <Send size={15} />
                 Envoyer

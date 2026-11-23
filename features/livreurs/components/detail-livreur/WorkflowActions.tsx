@@ -69,7 +69,7 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
             type="button"
             onClick={onValidate}
             disabled={!canValidate}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50 disabled:cursor-not-allowed"
             title={!canValidate ? "Documents obligatoires manquants" : undefined}
           >
             <Check className="w-4 h-4" />
@@ -93,7 +93,7 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
           <button
             type="button"
             onClick={onAssignRestaurant}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#F17922] rounded-lg hover:bg-[#DC6718]"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#F17922] rounded-lg hover:bg-[#DC6718]"
           >
             <Store className="w-4 h-4" />
             {livreur.restaurant_id ? "Changer de restaurant" : "Affecter un restaurant"}
@@ -105,7 +105,7 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
             type="button"
             onClick={() => reactivate(livreur.id)}
             disabled={isReactivating}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-blanc bg-[#22C55E] rounded-lg hover:bg-[#16A34A] disabled:opacity-50"
           >
             <RefreshCw className="w-4 h-4" />
             {isReactivating ? "Réactivation…" : "Réactiver"}
@@ -139,7 +139,7 @@ const WorkflowActions: React.FC<WorkflowActionsProps> = ({
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#71717A] hover:text-[#EF4444] mt-4 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-hex-71717a hover:text-[#EF4444] mt-4 disabled:opacity-50"
           >
             <Trash2 className="w-4 h-4" />
             Supprimer définitivement

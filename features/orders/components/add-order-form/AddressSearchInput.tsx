@@ -245,7 +245,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
           onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => setShowDropdown(true)}
           onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
-          className="flex-1 bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+          className="flex-1 bg-transparent py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
           placeholder={placeholder}
         />
 
@@ -291,7 +291,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
               >
                 <MapPin className="w-5 h-5 text-[#F17922] mr-3 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-[#595959] text-sm truncate">
+                  <div className="font-semibold text-hex-595959 text-sm truncate">
                     {prediction.structured_formatting.main_text}
                   </div>
                   {prediction.structured_formatting.secondary_text && (
@@ -316,7 +316,7 @@ const AddressSearchInput: React.FC<AddressSearchInputProps> = ({
           <div className="flex items-start gap-2">
             <MapPin className="w-4 h-4 text-[#F17922] mt-0.5 flex-shrink-0" />
             <div className="flex-1 text-xs">
-              <p className="font-semibold text-[#595959]">{value.title}</p>
+              <p className="font-semibold text-hex-595959">{value.title}</p>
               <p className="text-gray-600 mt-1">{value.address}</p>
             </div>
           </div>

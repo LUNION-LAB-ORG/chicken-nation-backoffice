@@ -662,7 +662,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
     >
       {/* Zone de téléchargement d'image */}
       <motion.div
-        className="w-full lg:w-1/2 bg-[#F5F5F5] rounded-xl flex items-center justify-start min-h-[300px] relative overflow-hidden"
+        className="w-full lg:w-1/2 bg-hex-f5f5f5 rounded-xl flex items-center justify-start min-h-[300px] relative overflow-hidden"
         whileHover={{ scale: 1.01 }}
         transition={{ type: "spring", stiffness: 300 }}
       >
@@ -700,7 +700,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div className="p-2 px-3 bg-[#D9D9D9] rounded-xl">
+              <div className="p-2 px-3 bg-hex-d9d9d9 rounded-xl">
                 <p className="text-sm text-gray-600">
                   Ajouter une photo du menu
                 </p>
@@ -762,7 +762,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
         <div className="space-y-6">
           {/* Titre */}
           <motion.div
-            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -773,14 +773,14 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-hex-595959 font-semibold"
               placeholder="Ajouter un titre"
             />
           </motion.div>
 
           {/* Prix de vente */}
           <motion.div
-            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -792,10 +792,10 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, price: e.target.value })
                 }
-                className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+                className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-hex-595959 font-semibold"
                 placeholder="0.00"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#acacac] font-semibold bg-hex-d9d9d9 p-1 px-4 rounded-xl">
                 XOF
               </span>
             </div>
@@ -803,7 +803,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
           {/* Réduction (pleine largeur de la colonne) */}
           <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -851,12 +851,12 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                         }));
                       }
                     }}
-                    className="w-full px-2 py-2 text-[13px] focus:outline-none text-[#595959] font-semibold focus:border-transparent"
+                    className="w-full px-2 py-2 text-[13px] focus:outline-none text-hex-595959 font-semibold focus:border-transparent"
                     placeholder="0.00"
                     min="0"
                     max={formData.price}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-[#D9D9D9] p-1 px-4 rounded-xl">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[#acacac] font-semibold bg-hex-d9d9d9 p-1 px-4 rounded-xl">
                     XOF
                   </span>
                 </motion.div>
@@ -868,7 +868,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Niveau épicé (3 états) */}
             <motion.div
-              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -895,8 +895,8 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                     }
                     className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
                       formData.spice_level === value
-                        ? "bg-[#F17922] text-white border-[#F17922]"
-                        : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                        ? "bg-[#F17922] text-blanc border-[#F17922]"
+                        : "bg-white text-gray-600 border-hex-d9d9d9 hover:border-[#F17922]"
                     }`}
                   >
                     {label}
@@ -907,7 +907,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
             {/* Modes de commande disponibles */}
             <motion.div
-              className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -937,8 +937,8 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                       }
                       className={`flex-1 text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
                         active
-                          ? "bg-[#F17922] text-white border-[#F17922]"
-                          : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                          ? "bg-[#F17922] text-blanc border-[#F17922]"
+                          : "bg-white text-gray-600 border-hex-d9d9d9 hover:border-[#F17922]"
                       }`}
                     >
                       {label}
@@ -951,7 +951,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
           {/* Créneau horaire de disponibilité (pleine largeur) */}
           <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -968,7 +968,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, available_from: e.target.value }))
                 }
-                className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+                className="flex-1 h-[42px] rounded-xl bg-white border border-hex-d8d8d8 px-3 text-[13px]"
               />
               <span className="text-gray-400">→</span>
               <input
@@ -977,14 +977,14 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                 onChange={(e) =>
                   setFormData((prev) => ({ ...prev, available_until: e.target.value }))
                 }
-                className="flex-1 h-[42px] rounded-xl bg-white border border-[#D8D8D8] px-3 text-[13px]"
+                className="flex-1 h-[42px] rounded-xl bg-white border border-hex-d8d8d8 px-3 text-[13px]"
               />
             </div>
           </motion.div>
 
           {/* Privé */}
           <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -1010,7 +1010,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
           {/* Audience (vide = tout le monde) */}
           <motion.div
-            className="space-y-2 w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="space-y-2 w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -1041,8 +1041,8 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                     }
                     className={`flex-1 min-w-[70px] text-[12px] font-semibold px-2 py-2 rounded-xl border-2 transition-colors ${
                       active
-                        ? "bg-[#F17922] text-white border-[#F17922]"
-                        : "bg-white text-gray-600 border-[#D9D9D9] hover:border-[#F17922]"
+                        ? "bg-[#F17922] text-blanc border-[#F17922]"
+                        : "bg-white text-gray-600 border-hex-d9d9d9 hover:border-[#F17922]"
                     }`}
                   >
                     {label}
@@ -1053,7 +1053,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
           </motion.div>
           {/* Description */}
           <motion.div
-            className=" w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className=" w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -1063,7 +1063,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full text-[#595959] font-semibold text-[13px] py-2 focus:outline-none
+              className="w-full text-hex-595959 font-semibold text-[13px] py-2 focus:outline-none
               focus:border-transparent"
               rows={4}
               placeholder="4 Morceaux,
@@ -1076,7 +1076,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
           {/* SKU HubRise */}
           <motion.div
-            className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
@@ -1087,7 +1087,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, hubrise_sku: e.target.value })
               }
-              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+              className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-hex-595959 font-semibold"
               placeholder="SKU HubRise (ex: DISH-001)"
             />
           </motion.div>
@@ -1097,13 +1097,13 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
           <div>
             <label
               htmlFor="cooking_time"
-              className="block text-[13px] font-semibold text-[#595959] mb-2"
+              className="block text-[13px] font-semibold text-hex-595959 mb-2"
             >
               Temps de préparation{" "}
               <span className="font-normal text-[#9796A1]">(en minutes)</span>
             </label>
             <motion.div
-              className="w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              className="w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -1115,7 +1115,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, cooking_time: e.target.value })
                 }
-                className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-[#595959] font-semibold"
+                className="w-full py-2 text-[13px] focus:outline-none focus:border-transparent text-hex-595959 font-semibold"
                 placeholder="Ex. 10"
               />
             </motion.div>
@@ -1129,18 +1129,18 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
         <div className="space-y-6">
           {/* Catégorie */}
           <motion.div
-            className="  px-3 py-4 border-2 border-[#D9D9D9]/50 flex items-center justify-between rounded-2xl
+            className="  px-3 py-4 border-2 border-hex-d9d9d9/50 flex items-center justify-between rounded-2xl
            "
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <span className="text-lg text-[#595959] font-semibold">
+            <span className="text-lg text-hex-595959 font-semibold">
               Catégorie
             </span>
 
             <div className="ml-2 min-w-0 w-52 relative z-50">
               {isLoadingCategories ? (
-                <div className="bg-[#d8d8d8] text-[#595959] font-semibold px-4 py-2 rounded-xl text-sm">
+                <div className="bg-hex-d8d8d8 text-hex-595959 font-semibold px-4 py-2 rounded-xl text-sm">
                   Chargement...
                 </div>
               ) : (
@@ -1158,11 +1158,11 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
           {/* Restaurant */}
           <motion.div
-            className="w-full px-3 py-2 border-2 border-[#d8d8d8] rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+            className="w-full px-3 py-2 border-2 border-hex-d8d8d8 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <h3 className="text-lg font-medium text-[#595959]">
+            <h3 className="text-lg font-medium text-hex-595959">
               Restaurants exclus
             </h3>
             <p className="text-[13px] text-gray-500 mb-2">
@@ -1179,8 +1179,8 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
           </motion.div>
 
           {/* Suppléments */}
-          <div className="border-2 border-[#D9D9D9]/50 rounded-2xl p-4 space-y-4">
-            <h3 className="text-lg font-medium text-[#595959]">
+          <div className="border-2 border-hex-d9d9d9/50 rounded-2xl p-4 space-y-4">
+            <h3 className="text-lg font-medium text-hex-595959">
               Suppléments exclus
             </h3>
             <p className="text-[13px] text-gray-500">
@@ -1190,7 +1190,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
             {/* Ingrédients */}
             <motion.div
-              className="w-full px-3 py-2 border-2 border-[#d8d8d8] rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent relative"
+              className="w-full px-3 py-2 border-2 border-hex-d8d8d8 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent relative"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -1212,7 +1212,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
             {/* Accompagnements */}
             <motion.div
-              className="w-full px-3 py-2 border-2 border-[#d8d8d8] rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              className="w-full px-3 py-2 border-2 border-hex-d8d8d8 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -1234,7 +1234,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
 
             {/* Boissons */}
             <motion.div
-              className="w-full px-3 py-2 border-2 border-[#d8d8d8] rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
+              className="w-full px-3 py-2 border-2 border-hex-d8d8d8 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent"
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
@@ -1271,7 +1271,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
       <div className="flex items-center justify-center gap-4 mt-6">
         <motion.button
           type="button"
-          className="h-[32px] text-[#9796A1] px-8 rounded-[10px] bg-[#ECECEC] text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
+          className="h-[32px] text-[#9796A1] px-8 rounded-[10px] bg-hex-ececec text-[13px] items-center justify-center hover:bg-gray-100 min-w-[160px]"
           onClick={() => onCancel?.()}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -1280,7 +1280,7 @@ const AddMenuForm = ({ onCancel, onSubmit, optionsRef }: AddMenuFormProps) => {
         </motion.button>
         <motion.button
           type="submit"
-          className="h-[32px] px-8 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-white text-[13px] min-w-[170px]"
+          className="h-[32px] px-8 rounded-[10px] bg-[#F17922] hover:bg-[#F17922]/90 text-blanc text-[13px] min-w-[170px]"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           disabled={isSubmitting}

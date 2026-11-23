@@ -156,7 +156,7 @@ export function EditCustomerModal({ isOpen, customer, onClose }: Props) {
             type="button"
             onClick={handleSubmit}
             disabled={mutation.isPending}
-            className="flex-1 inline-flex items-center justify-center gap-2 py-2 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:bg-[#D8631F] disabled:opacity-60"
+            className="flex-1 inline-flex items-center justify-center gap-2 py-2 rounded-lg bg-[#F17922] text-blanc text-sm font-semibold hover:bg-[#D8631F] disabled:opacity-60"
           >
             {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
             Enregistrer

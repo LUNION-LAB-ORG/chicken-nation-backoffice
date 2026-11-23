@@ -25,9 +25,9 @@ import {
  */
 
 const CADRE =
-  "w-full px-3 py-2 border-2 border-[#D9D9D9]/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent";
+  "w-full px-3 py-2 border-2 border-hex-d9d9d9/50 rounded-2xl focus-within:outline-none focus-within:ring-2 focus-within:ring-[#F17922] focus-within:border-transparent";
 const CHAMP =
-  "w-full py-1.5 text-[13px] focus:outline-none text-[#595959] font-semibold bg-transparent";
+  "w-full py-1.5 text-[13px] focus:outline-none text-hex-595959 font-semibold bg-transparent";
 const LIBELLE = "block text-[13px] font-semibold text-gray-700";
 
 /** Groupe neuf, prérempli sur le cas le plus courant : une sauce à choisir. */
@@ -120,14 +120,14 @@ function OptionsEnLecture({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-lg font-medium text-[#595959]">Menu composable</h3>
+        <h3 className="text-lg font-medium text-hex-595959">Menu composable</h3>
         <p className="mt-0.5 text-[12px] text-gray-500">
           Les questions posées au client avant qu'il ajoute ce plat au panier.
         </p>
       </div>
 
       {groups.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-[#D9D9D9] px-4 py-8 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-hex-d9d9d9 px-4 py-8 text-center">
           <p className="text-[13px] font-semibold text-gray-600">
             Ce plat n'a aucune option
           </p>
@@ -143,11 +143,11 @@ function OptionsEnLecture({
           return (
             <div
               key={groupe.id ?? indexGroupe}
-              className="rounded-2xl border-2 border-[#D9D9D9]/50 p-4 space-y-3"
+              className="rounded-2xl border-2 border-hex-d9d9d9/50 p-4 space-y-3"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-[14px] font-semibold text-[#595959]">
+                  <p className="text-[14px] font-semibold text-hex-595959">
                     {groupe.name || "Groupe sans titre"}
                   </p>
                   {groupe.description && (
@@ -157,7 +157,7 @@ function OptionsEnLecture({
                   )}
                 </div>
                 {requis && (
-                  <span className="shrink-0 rounded-lg bg-[#FFF6E9] px-2 py-1 text-[12px] font-semibold text-[#F17922]">
+                  <span className="shrink-0 rounded-lg bg-hex-fff6e9 px-2 py-1 text-[12px] font-semibold text-[#F17922]">
                     Réponse obligatoire
                   </span>
                 )}
@@ -182,7 +182,7 @@ function OptionsEnLecture({
                       key={choix.id ?? indexChoix}
                       className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl bg-gray-50 px-3 py-2"
                     >
-                      <span className="text-[13px] font-semibold text-[#595959]">
+                      <span className="text-[13px] font-semibold text-hex-595959">
                         {choix.label || "Choix sans libellé"}
                       </span>
                       <span className="text-[12px] text-gray-500">
@@ -196,7 +196,7 @@ function OptionsEnLecture({
                         </span>
                       )}
                       {choix.is_default && (
-                        <span className="rounded-lg bg-[#FFF6E9] px-2 py-0.5 text-[11px] font-semibold text-[#F17922]">
+                        <span className="rounded-lg bg-hex-fff6e9 px-2 py-0.5 text-[11px] font-semibold text-[#F17922]">
                           Par défaut
                         </span>
                       )}
@@ -284,7 +284,7 @@ export default function DishOptionsEditor({
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-lg font-medium text-[#595959]">Menu composable</h3>
+          <h3 className="text-lg font-medium text-hex-595959">Menu composable</h3>
           <p className="mt-0.5 text-[12px] text-gray-500">
             Les questions posées au client avant qu'il ajoute ce plat au panier.
             Sans aucun groupe, le plat reste un plat ordinaire.
@@ -294,14 +294,14 @@ export default function DishOptionsEditor({
           type="button"
           disabled={disabled}
           onClick={() => onChange([...groups, groupeVierge()])}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#F17922] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#F17922]/90 disabled:opacity-50 cursor-pointer"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[#F17922] px-4 py-2 text-[13px] font-semibold text-blanc transition-colors hover:bg-[#F17922]/90 disabled:opacity-50 cursor-pointer"
         >
           <Plus size={16} /> Ajouter un groupe
         </button>
       </div>
 
       {groups.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-[#D9D9D9] px-4 py-8 text-center">
+        <div className="rounded-2xl border-2 border-dashed border-hex-d9d9d9 px-4 py-8 text-center">
           <p className="text-[13px] font-semibold text-gray-600">
             Ce plat n'a aucune option
           </p>
@@ -318,7 +318,7 @@ export default function DishOptionsEditor({
           return (
             <div
               key={indexGroupe}
-              className="rounded-2xl border-2 border-[#D9D9D9]/50 p-4 space-y-4"
+              className="rounded-2xl border-2 border-hex-d9d9d9/50 p-4 space-y-4"
             >
               {/* Ligne de tête : ordre, titre, suppression */}
               <div className="flex items-start gap-3">
@@ -422,7 +422,7 @@ export default function DishOptionsEditor({
                         min_select: Math.max(0, Number(e.target.value) || 0),
                       })
                     }
-                    className="w-16 rounded-xl border-2 border-[#D9D9D9]/50 px-2 py-1 text-[13px] font-semibold text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                    className="w-16 rounded-xl border-2 border-hex-d9d9d9/50 px-2 py-1 text-[13px] font-semibold text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
                   />
                 </div>
 
@@ -438,7 +438,7 @@ export default function DishOptionsEditor({
                         max_select: Math.max(1, Number(e.target.value) || 1),
                       })
                     }
-                    className="w-16 rounded-xl border-2 border-[#D9D9D9]/50 px-2 py-1 text-[13px] font-semibold text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                    className="w-16 rounded-xl border-2 border-hex-d9d9d9/50 px-2 py-1 text-[13px] font-semibold text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
                   />
                 </div>
               </div>
@@ -474,7 +474,7 @@ export default function DishOptionsEditor({
                           label: e.target.value,
                         })
                       }
-                      className="min-w-[140px] flex-1 rounded-lg border border-[#D9D9D9] bg-white px-2 py-1.5 text-[13px] font-semibold text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                      className="min-w-[140px] flex-1 rounded-lg border border-hex-d9d9d9 bg-white px-2 py-1.5 text-[13px] font-semibold text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
                       placeholder="Libellé, par exemple Mayonnaise"
                     />
 
@@ -489,7 +489,7 @@ export default function DishOptionsEditor({
                             price_delta: Math.max(0, Number(e.target.value) || 0),
                           })
                         }
-                        className="w-28 rounded-lg border border-[#D9D9D9] bg-white py-1.5 pl-2 pr-11 text-[13px] font-semibold text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                        className="w-28 rounded-lg border border-hex-d9d9d9 bg-white py-1.5 pl-2 pr-11 text-[13px] font-semibold text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
                         placeholder="0"
                       />
                       <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[11px] font-semibold text-[#acacac]">
@@ -505,7 +505,7 @@ export default function DishOptionsEditor({
                           supplement_id: e.target.value || null,
                         })
                       }
-                      className="min-w-[150px] rounded-lg border border-[#D9D9D9] bg-white px-2 py-1.5 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+                      className="min-w-[150px] rounded-lg border border-hex-d9d9d9 bg-white px-2 py-1.5 text-[13px] text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
                       title="Rattacher ce choix à un supplément du catalogue, pour la cuisine et les tickets"
                     >
                       <option value="">Aucun supplément lié</option>
@@ -575,7 +575,7 @@ export default function DishOptionsEditor({
                       items: [...groupe.items, choixVierge()],
                     })
                   }
-                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] transition-colors hover:text-[#e06816] disabled:opacity-50 cursor-pointer"
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-[#F17922] transition-colors hover:text-hex-e06816 disabled:opacity-50 cursor-pointer"
                 >
                   <Plus size={16} /> Ajouter un choix
                 </button>

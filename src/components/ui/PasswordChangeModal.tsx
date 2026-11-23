@@ -34,7 +34,7 @@ export default function PasswordChangeModal({
                 className="object-contain"
               />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-blanc mb-2">
               Bienvenue chez Chicken Nation !
             </h2>
             <div className="w-16 h-1 bg-white/30 rounded-full"></div>
@@ -97,7 +97,7 @@ export default function PasswordChangeModal({
           <div className="space-y-3">
             <button
               onClick={handleChangePassword}
-              className="w-full bg-gradient-to-r cursor-pointer from-[#F17922] to-orange-500 hover:from-[#F17922] hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-orange-400/50 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
+              className="w-full bg-gradient-to-r cursor-pointer from-[#F17922] to-orange-500 hover:from-[#F17922] hover:to-orange-600 text-blanc font-semibold py-4 px-6 rounded-xl shadow-lg transition-all duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-orange-400/50 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center"
             >
               <svg
                 className="w-5 h-5 mr-2"

@@ -114,7 +114,7 @@ function Reactions({ reactions = [], aDroite = false, onBasculer, desactive = fa
           title={r.mine ? 'Retirer ma réaction' : 'Réagir'}
           className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[11px] leading-none transition-colors disabled:opacity-50 cursor-pointer ${
             r.mine
-              ? 'border-[#F17922] bg-[#FDF3E7] text-[#8A4B00]'
+              ? 'border-[#F17922] bg-hex-fdf3e7 text-hex-8a4b00'
               : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
           }`}
         >
@@ -159,7 +159,7 @@ function Reactions({ reactions = [], aDroite = false, onBasculer, desactive = fa
                   onClick={() => choisir(emoji)}
                   aria-label={`Réagir avec ${emoji}`}
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-[18px] leading-none transition-transform hover:scale-125 cursor-pointer ${
-                    deja ? 'bg-[#FDF3E7]' : 'hover:bg-gray-50'
+                    deja ? 'bg-hex-fdf3e7' : 'hover:bg-gray-50'
                   }`}
                 >
                   {emoji}

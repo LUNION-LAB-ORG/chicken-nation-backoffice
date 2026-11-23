@@ -101,8 +101,8 @@ const SelectWithCheckboxes = ({
         >
           <div className="py-0 max-h-60 overflow-y-auto">
             <div
-              className="flex items-center justify-between px-4 py-3 bg-[#f5f5f5]
-               hover:bg-[#f5f5f5] cursor-pointer border-b-2 border-white"
+              className="flex items-center justify-between px-4 py-3 bg-hex-f5f5f5
+               hover:bg-hex-f5f5f5 cursor-pointer border-b-2 border-white"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -118,7 +118,7 @@ const SelectWithCheckboxes = ({
                 e.preventDefault();
               }}
             >
-              <span className="text-[#595959] font-regular text-[13px]">
+              <span className="text-hex-595959 font-regular text-[13px]">
                {placeholder}
               </span>
               <div
@@ -152,9 +152,9 @@ const SelectWithCheckboxes = ({
               .map((option, index) => (
                 <div
                   key={option.value}
-                  className={`flex items-center justify-between px-4 py-3 hover:bg-[#f5f5f5] cursor-pointer ${
+                  className={`flex items-center justify-between px-4 py-3 hover:bg-hex-f5f5f5 cursor-pointer ${
                     index === 0 ? "border-b-2 border-white" : ""
-                  } bg-[#f5f5f5]`}
+                  } bg-hex-f5f5f5`}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();
@@ -166,7 +166,7 @@ const SelectWithCheckboxes = ({
                     e.preventDefault();
                   }}
                 >
-                  <span className="text-[#595959] font-regular text-[13px]">
+                  <span className="text-hex-595959 font-regular text-[13px]">
                     {option.label}
                   </span>
                   <div
@@ -206,11 +206,11 @@ const SelectWithCheckboxes = ({
   return (
     <div className="relative" ref={containerRef}>
       <div
-        className={`flex items-center justify-center w-full px-4 py-2 bg-[#d8d8d8] rounded-xl cursor-pointer ${className}`}
+        className={`flex items-center justify-center w-full px-4 py-2 bg-hex-d8d8d8 rounded-xl cursor-pointer ${className}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center justify-center gap-2">
-          <span className="text-[#595959] font-semibold text-[13px]">
+          <span className="text-hex-595959 font-semibold text-[13px]">
             Sélectionnez les restaurants
           </span>
           <Image

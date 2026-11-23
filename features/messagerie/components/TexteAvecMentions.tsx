@@ -6,7 +6,7 @@ import { decouperMentions } from '../utils/mentions-texte';
 import type { VarianteBulle } from './HeureMessage';
 
 const STYLE_MENTION: Record<VarianteBulle, string> = {
-  orange: 'font-semibold underline decoration-white/60 underline-offset-2',
+  orange: 'font-semibold underline decoration-blanc/60 underline-offset-2',
   blanc: 'font-semibold text-[#F17922]',
   alerte: 'font-semibold',
 };

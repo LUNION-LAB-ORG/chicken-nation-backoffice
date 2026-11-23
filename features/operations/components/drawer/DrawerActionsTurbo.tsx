@@ -44,7 +44,7 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
       from: OrderStatus.COLLECTED,
       to: OrderStatus.COMPLETED,
       label: isCollectedAndPaid ? "Terminer la commande" : "Terminer (payer d'abord)",
-      tone: "bg-gray-700",
+      tone: "bg-gray-700 dark:bg-[#3a404c]",
     },
   ];
 
@@ -77,7 +77,7 @@ export const DrawerActionsTurbo: React.FC<Props> = ({ order }) => {
         <button
           onClick={() => handleOrderUpdateStatus(order.id, next.to)}
           disabled={disableNext}
-          className={`w-full py-3 text-white font-semibold rounded-lg disabled:bg-gray-300 ${next.tone}`}
+          className={`w-full py-3 text-blanc font-semibold rounded-lg disabled:bg-gray-300 ${next.tone}`}
           title={
             order.status === OrderStatus.COLLECTED && !order.paied
               ? "Enregistrez d'abord le paiement via l'onglet Paiement"

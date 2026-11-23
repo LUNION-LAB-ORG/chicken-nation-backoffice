@@ -53,10 +53,10 @@ function Squelette() {
     <div aria-hidden>
       {[0, 1].map((i) => (
         <div key={i} className="flex h-12 items-start gap-2 px-3 py-2">
-          <div className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#F4F4F5]" />
+          <div className="mt-1.5 h-2 w-2 shrink-0 animate-pulse rounded-full bg-hex-f4f4f5" />
           <div className="min-w-0 flex-1 space-y-1.5">
-            <div className="h-3 w-52 animate-pulse rounded-full bg-[#F4F4F5]" />
-            <div className="h-2.5 w-32 animate-pulse rounded-full bg-[#F4F4F5]" />
+            <div className="h-3 w-52 animate-pulse rounded-full bg-hex-f4f4f5" />
+            <div className="h-2.5 w-32 animate-pulse rounded-full bg-hex-f4f4f5" />
           </div>
         </div>
       ))}
@@ -69,7 +69,7 @@ function LigneAnciennes({ nombre, peutFermer, enCours, onFermer }: CoursesAncien
   const texte = texteCoursesAnciennes(nombre);
   if (!texte) return null;
   return (
-    <div className="mx-3 mb-2 mt-1 rounded-lg bg-[#FAFAFA] px-3 py-2 text-xs text-[#52525B]">
+    <div className="mx-3 mb-2 mt-1 rounded-lg bg-hex-fafafa px-3 py-2 text-xs text-hex-52525b">
       {question ? (
         <>
           <p>{confirmationCoursesAnciennes(nombre)}</p>
@@ -81,14 +81,14 @@ function LigneAnciennes({ nombre, peutFermer, enCours, onFermer }: CoursesAncien
                 onFermer();
                 setQuestion(false);
               }}
-              className="h-7 rounded-lg bg-[#F17922] px-3 font-semibold text-white hover:opacity-90 disabled:opacity-60"
+              className="h-7 rounded-lg bg-[#F17922] px-3 font-semibold text-blanc hover:opacity-90 disabled:opacity-60"
             >
               {enCours ? 'Envoi…' : 'Fermer'}
             </button>
             <button
               type="button"
               onClick={() => setQuestion(false)}
-              className="h-7 rounded-lg border border-[#E4E4E7] bg-white px-3 font-semibold text-[#18181B] hover:bg-[#F4F4F5]"
+              className="h-7 rounded-lg border border-hex-e4e4e7 bg-white px-3 font-semibold text-hex-18181b hover:bg-hex-f4f4f5"
             >
               Annuler
             </button>
@@ -122,7 +122,7 @@ export function ListeAlertes({ signaux, nomsRestaurants, maintenant, onToucher, 
 
   return (
     <section className="pb-1">
-      <h3 className="flex items-center gap-2 px-3 pb-1 pt-3 text-sm font-semibold text-[#18181B]">
+      <h3 className="flex items-center gap-2 px-3 pb-1 pt-3 text-sm font-semibold text-hex-18181b">
         À traiter
         {total > 0 && (
           <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[11px] font-semibold leading-none text-red-700">
@@ -147,7 +147,7 @@ export function ListeAlertes({ signaux, nomsRestaurants, maintenant, onToucher, 
             return (
               <li
                 key={`${s.cle}-${s.course?.id ?? ''}-${s.livreur?.id ?? ''}-${i}`}
-                className="px-3 py-2 transition-colors hover:bg-[#FAFAFA]"
+                className="px-3 py-2 transition-colors hover:bg-hex-fafafa"
               >
                 <button type="button" onClick={() => onToucher(s)} className="flex w-full items-start gap-2 text-left">
                   <span
@@ -161,7 +161,7 @@ export function ListeAlertes({ signaux, nomsRestaurants, maintenant, onToucher, 
                     >
                       {titre}
                     </span>
-                    <span className="mt-0.5 block h-4 truncate text-[11px] leading-4 text-[#71717A]" title={detail || undefined}>
+                    <span className="mt-0.5 block h-4 truncate text-[11px] leading-4 text-hex-71717a" title={detail || undefined}>
                       {detail}
                     </span>
                   </span>
@@ -176,7 +176,7 @@ export function ListeAlertes({ signaux, nomsRestaurants, maintenant, onToucher, 
                         onClick={agir}
                         className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[11px] font-semibold transition disabled:opacity-60 ${
                           principal
-                            ? 'bg-[#F17922] text-white hover:opacity-90'
+                            ? 'bg-[#F17922] text-blanc hover:opacity-90'
                             : 'border border-[#F17922] text-[#F17922] hover:bg-orange-50'
                         }`}
                       >

@@ -45,13 +45,13 @@ const ImageLightbox: React.FC<ImageLightboxProps> = ({ isOpen, onClose, src, alt
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-5 right-5 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+        className="absolute top-5 right-5 p-2 rounded-full bg-white/10 text-blanc hover:bg-white/20 transition-colors"
         aria-label="Fermer"
       >
         <X className="w-5 h-5" />
       </button>
 
-      <p className="absolute top-5 left-5 text-white/70 text-sm font-medium flex items-center gap-1.5">
+      <p className="absolute top-5 left-5 text-blanc/70 text-sm font-medium flex items-center gap-1.5">
         <ZoomIn className="w-4 h-4" />
         Cliquez pour fermer · Échap
       </p>

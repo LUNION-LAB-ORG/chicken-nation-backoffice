@@ -57,7 +57,7 @@ const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
       <div className="py-1">
         <button
           type="button"
-          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#595959] hover:bg-orange-50 cursor-pointer"
+          className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-hex-595959 hover:bg-orange-50 cursor-pointer"
           onClick={() => {
             onViewDetails();
             onClose();
@@ -70,7 +70,7 @@ const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
         {canAccept && (
           <button
             type="button"
-            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#22C55E] font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-hex-22c55e font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-50"
             onClick={() => {
               onValidate();
               onClose();
@@ -89,7 +89,7 @@ const LivreurContextMenu: React.FC<LivreurContextMenuProps> = ({
           <button
             type="button"
             disabled={isReactivating}
-            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-[#22C55E] font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-50"
+            className="w-full px-4 py-2 text-left text-sm flex items-center gap-2 text-hex-22c55e font-semibold hover:bg-gray-50 cursor-pointer disabled:opacity-50"
             onClick={() => {
               reactivate(livreur.id);
               onClose();

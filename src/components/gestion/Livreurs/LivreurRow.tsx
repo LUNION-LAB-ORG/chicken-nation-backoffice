@@ -134,20 +134,20 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
   const renderFile = () => {
     const rang = live ? rangDuLivreur(live, unSeulRestaurant) : null;
     if (!rang) return null;
-    return <span className="text-sm font-bold text-[#18181B]">{place(rang)}</span>;
+    return <span className="text-sm font-bold text-hex-18181b">{place(rang)}</span>;
   };
 
   // Colonne GPS retirée le 10/11 : « Expiré » partout, la position est sur la Carte live.
 
   return (
     <tr
-      className="group border-b border-[#F4F4F5] hover:bg-[#FFF7F2] cursor-pointer transition-colors"
+      className="group border-b border-hex-f4f4f5 hover:bg-hex-fff7f2 cursor-pointer transition-colors"
       onClick={onView}
     >
       {/* 1. Livreur */}
       <td className="py-3 px-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full overflow-hidden bg-[#F4F4F5] flex items-center justify-center flex-shrink-0">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-hex-f4f4f5 flex items-center justify-center flex-shrink-0">
             {avatarUrl ? (
               <Image
                 src={avatarUrl}
@@ -163,21 +163,21 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
             )}
           </div>
           <div>
-            <div className="text-sm font-semibold text-[#18181B]">{nomComplet}</div>
-            <div className="text-xs text-[#71717A]">{livreur.phone}</div>
+            <div className="text-sm font-semibold text-hex-18181b">{nomComplet}</div>
+            <div className="text-xs text-hex-71717a">{livreur.phone}</div>
           </div>
         </div>
       </td>
 
       {/* 2. Restaurant */}
-      <td className="py-3 px-4 text-sm text-[#52525B]">
+      <td className="py-3 px-4 text-sm text-hex-52525b">
         {livreur.restaurant?.name ?? (
           <span className="text-[#A1A1AA] italic">Non affecté</span>
         )}
       </td>
 
       {/* 3. Véhicule */}
-      <td className="py-3 px-4 text-sm text-[#52525B]">
+      <td className="py-3 px-4 text-sm text-hex-52525b">
         {livreur.type_vehicule ? vehiculeLabel[livreur.type_vehicule] ?? livreur.type_vehicule : ""}
       </td>
 
@@ -211,7 +211,7 @@ const LivreurRow: React.FC<LivreurRowProps> = ({ livreur, live, onView, unSeulRe
                 e.stopPropagation();
                 setMenuOpen((o) => !o);
               }}
-              className="livreur-menu-button p-1.5 rounded-md hover:bg-[#F4F4F5] text-[#71717A] hover:text-[#18181B] transition-colors"
+              className="livreur-menu-button p-1.5 rounded-md hover:bg-hex-f4f4f5 text-hex-71717a hover:text-hex-18181b transition-colors"
               aria-label="Actions"
             >
               <MoreHorizontal className="w-4 h-4" />

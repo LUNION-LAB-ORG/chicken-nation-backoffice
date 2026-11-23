@@ -79,7 +79,7 @@ function InboxModule({
       : null;
 
   return (
-    <div className="h-full bg-[#FBFBFB]">
+    <div className="h-full bg-hex-fbfbfb">
       <div className="flex h-full">
         {/* Liste des conversations */}
         <div

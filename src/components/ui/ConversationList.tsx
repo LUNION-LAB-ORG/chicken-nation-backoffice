@@ -106,7 +106,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
           >
             {/* Badge non lu */}
             {hasUnread && (
-              <div className="absolute top-2 right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+              <div className="absolute top-2 right-2 bg-red-500 text-blanc text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
                 {conversation.unread_count > 99 ? '99+' : conversation.unread_count}
               </div>
             )}

@@ -84,7 +84,7 @@ function EnTete({ r }: { r: IRapport }) {
           ) : (
             couverts.map((p) => <Puce key={p} label={PUBLIC_META[p].court} className={PUBLIC_META[p].className} />)
           )}
-          {r.filtres.campagne && <Puce label={`Campagne : ${r.filtres.campagne.nom}`} className="bg-orange-100 text-[#C2410C]" />}
+          {r.filtres.campagne && <Puce label={`Campagne : ${r.filtres.campagne.nom}`} className="bg-orange-100 text-hex-c2410c" />}
           {r.filtres.restaurant && <Puce label={r.filtres.restaurant.nom} className="bg-gray-100 text-gray-700" />}
         </div>
       </div>
@@ -96,8 +96,8 @@ function EnTete({ r }: { r: IRapport }) {
 function ARetenir({ phrases }: { phrases: string[] }) {
   if (phrases.length === 0) return null;
   return (
-    <div className="rounded-2xl border border-orange-100 bg-[#FDF3E7] px-5 py-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#C2410C]">À retenir</p>
+    <div className="rounded-2xl border border-orange-100 bg-hex-fdf3e7 px-5 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-hex-c2410c">À retenir</p>
       <ul className="mt-2 space-y-1.5">
         {phrases.map((p) => (
           <li key={p} className="flex gap-2.5 text-sm leading-snug text-gray-800">
@@ -394,7 +394,7 @@ export function Rapport() {
             type="button"
             onClick={exporter}
             disabled={exportEnCours || !r}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#F17922] px-3.5 py-2 text-sm font-semibold text-white hover:bg-[#e06a15] disabled:opacity-50"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-[#F17922] px-3.5 py-2 text-sm font-semibold text-blanc hover:bg-[#e06a15] disabled:opacity-50"
           >
             {exportEnCours ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <FileDown className="h-4 w-4" aria-hidden />}
             Exporter en PDF

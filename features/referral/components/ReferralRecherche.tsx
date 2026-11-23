@@ -26,12 +26,12 @@ export default function ReferralRecherche({
           value={saisie}
           onChange={(e) => setSaisie(e.target.value)}
           placeholder={placeholder}
-          className="h-10 w-56 rounded-lg border border-[#E4E4E7] pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+          className="h-10 w-56 rounded-lg border border-hex-e4e4e7 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
         />
       </div>
       <button
         type="submit"
-        className="h-10 px-4 rounded-lg bg-[#F17922] text-white text-sm font-medium hover:bg-[#e06816] cursor-pointer"
+        className="h-10 px-4 rounded-lg bg-[#F17922] text-blanc text-sm font-medium hover:bg-[#e06816] cursor-pointer"
       >
         Chercher
       </button>

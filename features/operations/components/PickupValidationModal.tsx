@@ -152,7 +152,7 @@ export const PickupValidationModal: React.FC<Props> = ({ course, commandes, rest
             <button
               onClick={handleValidate}
               disabled={!remise.peutValider || aRemettre.length === 0 || lecture || isPending}
-              className="px-4 py-2 text-sm bg-[#F17922] text-white font-semibold rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1.5"
+              className="px-4 py-2 text-sm bg-[#F17922] text-blanc font-semibold rounded-lg disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1.5"
             >
               {lecture ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden /> : <Check className="w-4 h-4" />}
               {isPending ? "Validation…" : remise.bouton}

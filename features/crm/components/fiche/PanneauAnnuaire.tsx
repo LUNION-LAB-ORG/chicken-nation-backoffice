@@ -28,7 +28,7 @@ export function PanneauAnnuaire({ contactId }: { contactId: string }) {
         type="button"
         onClick={() => mutate(contactId)}
         disabled={isPending}
-        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-3.5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#F17922] px-3.5 py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-[#e06a15] disabled:cursor-not-allowed disabled:opacity-60"
       >
         <UserPlus className="h-4 w-4" />
         {isPending ? "Un instant…" : "Prendre en charge"}

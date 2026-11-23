@@ -115,7 +115,7 @@ export default function EditTemplateModal({ isOpen, onClose, template }: Props) 
           <button
             type="submit"
             disabled={isPending}
-            className="px-6 py-2.5 bg-[#F17922] text-white rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="px-6 py-2.5 bg-[#F17922] text-blanc rounded-xl text-sm font-semibold hover:bg-[#e06816] transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer"
           >
             {isPending && <Loader2 size={16} className="animate-spin" />}
             Enregistrer

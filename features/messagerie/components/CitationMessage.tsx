@@ -9,18 +9,18 @@ import type { VarianteBulle } from './HeureMessage';
 const STYLE: Record<VarianteBulle, { cadre: string; nom: string; texte: string }> = {
   orange: {
     cadre: 'bg-white/15 border-white/70 hover:bg-white/25',
-    nom: 'text-white',
-    texte: 'text-white/90',
+    nom: 'text-blanc',
+    texte: 'text-blanc/90',
   },
   blanc: {
     cadre: 'bg-orange-50 border-[#F17922] hover:bg-orange-100/70',
-    nom: 'text-[#C25E0F]',
+    nom: 'text-hex-c25e0f',
     texte: 'text-gray-600',
   },
   alerte: {
-    cadre: 'bg-[#F8E3C8]/70 border-[#D98B2B] hover:bg-[#F8E3C8]',
-    nom: 'text-[#8A4B00]',
-    texte: 'text-[#8A4B00]/80',
+    cadre: 'bg-hex-f8e3c8/70 border-[#D98B2B] hover:bg-hex-f8e3c8',
+    nom: 'text-hex-8a4b00',
+    texte: 'text-hex-8a4b00/80',
   },
 };
 

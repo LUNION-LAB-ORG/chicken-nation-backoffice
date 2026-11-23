@@ -46,7 +46,7 @@ export default function CallSettings() {
           type="button"
           onClick={() => update.mutate(config)}
           disabled={update.isPending}
-          className="h-11 px-6 rounded-xl bg-[#F17922] hover:bg-[#e06a15] text-white font-medium disabled:opacity-50"
+          className="h-11 px-6 rounded-xl bg-[#F17922] hover:bg-[#e06a15] text-blanc font-medium disabled:opacity-50"
         >
           {update.isPending ? "Enregistrement…" : "Enregistrer"}
         </button>

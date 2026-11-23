@@ -71,7 +71,7 @@ const ManagerCredentialsCustomModal: React.FC<
             onClick={(e) => e.stopPropagation()}
           >
             {/* ✅ HEADER ÉLARGI AVEC DESIGN AMÉLIORÉ */}
-            <div className="flex items-center px-8 py-4 bg-[#FDEDD3]">
+            <div className="flex items-center px-8 py-4 bg-hex-fdedd3">
               <div className="flex-1 text-center">
                 <h3 className="text-[#F17922] font-bold text-xl">
                   🔑 Accès du gérant
@@ -102,9 +102,9 @@ const ManagerCredentialsCustomModal: React.FC<
               <div className="flex flex-col gap-6 items-center">
                 <div className="w-full flex flex-col gap-6 px-6 py-4">
                   {/* ✅ CHAMP EMAIL ÉLARGI */}
-                  <div className="flex items-center justify-between bg-[#F7F7F7] rounded-xl px-6 py-4">
+                  <div className="flex items-center justify-between bg-hex-f7f7f7 rounded-xl px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-[#595959] text-sm font-medium">
+                      <span className="text-hex-595959 text-sm font-medium">
                         👤 Utilisateur
                       </span>
                       <span className="text-[#F17922] font-mono text-lg font-bold">
@@ -113,7 +113,7 @@ const ManagerCredentialsCustomModal: React.FC<
                     </div>
                     <button
                       type="button"
-                      className="bg-[#F17922] text-white text-sm px-8 py-2 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b] transition-colors font-medium"
+                      className="bg-[#F17922] text-blanc text-sm px-8 py-2 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b] transition-colors font-medium"
                       onClick={() => {
                         navigator.clipboard.writeText(email);
                         toast.success("Email copié !");
@@ -124,9 +124,9 @@ const ManagerCredentialsCustomModal: React.FC<
                   </div>
 
                   {/* ✅ CHAMP MOT DE PASSE ÉLARGI */}
-                  <div className="flex items-center justify-between bg-[#F7F7F7] rounded-xl px-6 py-4">
+                  <div className="flex items-center justify-between bg-hex-f7f7f7 rounded-xl px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-[#595959] text-sm font-medium">
+                      <span className="text-hex-595959 text-sm font-medium">
                         🔐 Mot de passe
                       </span>
                       <span className="text-[#F17922] font-mono text-lg font-bold">
@@ -135,7 +135,7 @@ const ManagerCredentialsCustomModal: React.FC<
                     </div>
                     <button
                       type="button"
-                      className="bg-[#F17922] text-white text-sm px-8 py-2 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b] transition-colors font-medium"
+                      className="bg-[#F17922] text-blanc text-sm px-8 py-2 cursor-pointer rounded-lg ml-4 hover:bg-[#f18c3b] transition-colors font-medium"
                       onClick={() => {
                         navigator.clipboard.writeText(password);
                         toast.success("Mot de passe copié !");
@@ -174,7 +174,7 @@ const ManagerCredentialsCustomModal: React.FC<
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full bg-gradient-to-r from-[#F17922] to-[#FA6345] hover:from-[#E06A1B] hover:to-[#E85A3A] text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 text-lg shadow-lg"
+                    className="w-full bg-gradient-to-r from-[#F17922] to-[#FA6345] hover:from-[#E06A1B] hover:to-[#E85A3A] text-blanc font-bold py-4 px-6 rounded-xl transition-all duration-200 text-lg shadow-lg"
                   >
                     ✅ J&apos;ai noté les identifiants - Fermer
                   </button>

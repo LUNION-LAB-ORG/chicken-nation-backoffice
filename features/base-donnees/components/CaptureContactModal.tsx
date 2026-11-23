@@ -174,7 +174,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
     <BottomSheet isOpen={isOpen} onClose={handleClose} className="md:max-w-lg">
         {/* Header */}
         <div
-          className="flex items-start gap-3 px-6 py-5 text-white rounded-t-2xl"
+          className="flex items-start gap-3 px-6 py-5 text-blanc rounded-t-2xl"
           style={{ background: `linear-gradient(135deg, #ff9f5a, ${ORANGE})` }}
         >
           <div className="w-11 h-11 rounded-xl bg-white/20 grid place-items-center flex-none">
@@ -184,7 +184,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
             <h3 className="text-lg font-bold leading-tight">
               Enregistrer un client Glovo / Yango
             </h3>
-            <p className="text-sm text-white/90">Sans quitter la page des commandes</p>
+            <p className="text-sm text-blanc/90">Sans quitter la page des commandes</p>
           </div>
           <button
             type="button"
@@ -217,7 +217,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={reset}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-white text-sm font-semibold"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-blanc text-sm font-semibold"
                 style={{ backgroundColor: ORANGE }}
               >
                 <UserPlus className="w-4 h-4" />
@@ -383,7 +383,7 @@ export function CaptureContactModal({ isOpen, onClose }: Props) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit || mutation.isPending}
-                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-white text-sm font-semibold disabled:opacity-50"
+                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-lg text-blanc text-sm font-semibold disabled:opacity-50"
                 style={{ backgroundColor: ORANGE }}
               >
                 {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}

@@ -156,7 +156,7 @@ const AllPromotions = ({
         {/* Header avec filtres */}
         <div className="flex justify-between items-center mb-6">
           {/* Compteur */}
-          <span className="bg-[#F17922] text-white text-sm font-medium px-3 py-1 rounded-full">
+          <span className="bg-[#F17922] text-blanc text-sm font-medium px-3 py-1 rounded-full">
             {filteredPromotions.length} promotion{filteredPromotions.length > 1 ? 's' : ''}
           </span>
 
@@ -167,7 +167,7 @@ const AllPromotions = ({
               <button
                 type="button"
                 onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
+                className="flex items-center space-x-2 bg-hex-f4f4f5 rounded-[10px] px-4 py-2 cursor-pointer"
               >
                 <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
                   {getStatusLabel(filterStatus)}
@@ -199,7 +199,7 @@ const AllPromotions = ({
               <button
                 type="button"
                 onClick={() => setIsVisibilityDropdownOpen(!isVisibilityDropdownOpen)}
-                className="flex items-center space-x-2 bg-[#F4F4F5] rounded-[10px] px-4 py-2 cursor-pointer"
+                className="flex items-center space-x-2 bg-hex-f4f4f5 rounded-[10px] px-4 py-2 cursor-pointer"
               >
                 <span className="text-[10px] lg:text-[14px] text-[#9796A1]">
                   {getVisibilityLabel(filterVisibility)}

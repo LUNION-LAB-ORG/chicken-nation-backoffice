@@ -6,8 +6,8 @@ interface StatusBadgeProps {
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const styles = {
-    offline: 'bg-[#FBD2B5] text-slate-600',
-    online: 'bg-[#4FCBBA] text-white'
+    offline: 'bg-hex-fbd2b5 text-slate-600',
+    online: 'bg-[#4FCBBA] text-blanc'
   }
 
   const labels = {

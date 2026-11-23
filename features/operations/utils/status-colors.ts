@@ -32,9 +32,9 @@ export function getStatusBadgeClasses(status: OrderStatus): string {
     case OrderStatus.PICKED_UP: // EN LIVRAISON → vert
     case OrderStatus.COLLECTED: // RÉCUPÉRÉE → vert
     case OrderStatus.COMPLETED: // TERMINÉE → vert
-      return "bg-green-50 text-[#17C964] border-[#17C964]/30";
+      return "bg-green-50 text-hex-17c964 border-[#17C964]/30";
     case OrderStatus.CANCELLED: // ANNULÉE → noir/gris
-      return "bg-gray-100 text-[#090909] border-gray-300";
+      return "bg-gray-100 text-hex-090909 border-gray-300";
     default:
       return "bg-gray-50 text-gray-700 border-gray-200";
   }
@@ -65,19 +65,19 @@ export function getTypeMeta(type: OrderType): ITypeMeta {
       return {
         label: "À livrer",
         Icon: Truck,
-        cls: "bg-[#FBDBA7] text-[#71717A] border-[#F5A524]/40",
+        cls: "bg-hex-fbdba7 text-hex-71717a border-[#F5A524]/40",
       };
     case OrderType.PICKUP:
       return {
         label: "À récupérer",
         Icon: ShoppingBag,
-        cls: "bg-[#C9A9E9] text-white border-[#C9A9E9]",
+        cls: "bg-hex-c9a9e9 text-blanc border-hex-c9a9e9",
       };
     case OrderType.TABLE:
       return {
         label: "À table",
         Icon: UtensilsCrossed,
-        cls: "bg-[#CCE3FD] text-[#71717A] border-blue-300/40",
+        cls: "bg-hex-cce3fd text-hex-71717a border-blue-300/40",
       };
   }
 }

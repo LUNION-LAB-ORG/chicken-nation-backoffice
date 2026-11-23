@@ -122,7 +122,7 @@ export default function ClickActionPicker({ action, value, onChange }: ClickActi
             onClick={() => onChange({ action: a.id, value: "" })}
             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
               action === a.id
-                ? "bg-[#F17922] text-white"
+                ? "bg-[#F17922] text-blanc"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -156,7 +156,7 @@ export default function ClickActionPicker({ action, value, onChange }: ClickActi
                   type="button"
                   onClick={() => onChange({ action: "menu", value: menu.id })}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-orange-50 transition-colors cursor-pointer ${
-                    value === menu.id ? "bg-[#FFF3E8]" : ""
+                    value === menu.id ? "bg-hex-fff3e8" : ""
                   }`}
                 >
                   {menu.image && (
@@ -203,7 +203,7 @@ export default function ClickActionPicker({ action, value, onChange }: ClickActi
                   type="button"
                   onClick={() => onChange({ action: "category", value: cat.id })}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-orange-50 transition-colors cursor-pointer ${
-                    value === cat.id ? "bg-[#FFF3E8]" : ""
+                    value === cat.id ? "bg-hex-fff3e8" : ""
                   }`}
                 >
                   <div className="min-w-0 flex-1">

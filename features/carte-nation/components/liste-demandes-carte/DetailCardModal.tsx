@@ -220,7 +220,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   <>
                     <button
                       onClick={() => setMode("approve")}
-                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-emerald-700 dark:hover:bg-emerald-500"
                     >
                       <CheckCircle2 className="h-4 w-4" />
                       Approuver
@@ -277,7 +277,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   <button
                     onClick={handleApprove}
                     disabled={isBusy}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-emerald-700 dark:hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isReviewing ? (
                       <>
@@ -324,7 +324,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   <button
                     onClick={handleReject}
                     disabled={isBusy || reasonTooShort}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-red-700 dark:hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isReviewing ? (
                       <>
@@ -366,7 +366,7 @@ export function DetailCardModal({ request, onClose }: DetailCardModalProps) {
                   <button
                     onClick={handleDelete}
                     disabled={isBusy}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-sm font-semibold text-blanc transition-colors hover:bg-red-700 dark:hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isDeleting ? (
                       <>

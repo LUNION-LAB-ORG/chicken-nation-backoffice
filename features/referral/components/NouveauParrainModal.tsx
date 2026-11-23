@@ -40,9 +40,9 @@ export default function NouveauParrainModal({
           <ReferralClientPicker pour="parrain" onPick={setClient} />
         ) : (
           <>
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-[#E4E4E7] px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-hex-e4e4e7 px-3 py-2.5">
               <span>
-                <span className="block text-sm font-medium text-[#18181B]">{client.fullname ?? "Sans nom"}</span>
+                <span className="block text-sm font-medium text-hex-18181b">{client.fullname ?? "Sans nom"}</span>
                 <span className="block text-xs text-[#9796A1]">{client.phone}</span>
               </span>
               <button
@@ -55,13 +55,13 @@ export default function NouveauParrainModal({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#71717A] mb-1.5">Code de parrainage</label>
+              <label className="block text-xs font-medium text-hex-71717a mb-1.5">Code de parrainage</label>
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="CN-PRENOM"
                 maxLength={24}
-                className="h-11 w-full rounded-lg border border-[#E4E4E7] px-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+                className="h-11 w-full rounded-lg border border-hex-e4e4e7 px-3 text-sm uppercase focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
               />
               <p className="mt-1 text-[11px] text-[#9796A1]">
                 Laissé vide : CN- suivi du prénom, ou du nom si le prénom est déjà pris.
@@ -73,7 +73,7 @@ export default function NouveauParrainModal({
                 type="button"
                 onClick={valider}
                 disabled={creer.isPending}
-                className="h-11 flex items-center gap-2 rounded-lg bg-[#F17922] px-5 text-sm font-semibold text-white hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
+                className="h-11 flex items-center gap-2 rounded-lg bg-[#F17922] px-5 text-sm font-semibold text-blanc hover:bg-[#e06816] disabled:opacity-50 cursor-pointer"
               >
                 {creer.isPending ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
                 Ajouter le parrain

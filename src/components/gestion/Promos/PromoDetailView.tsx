@@ -194,7 +194,7 @@ const PromoDetailView = ({
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl border border-orange-200">
             <div className="p-2 bg-[#F17922] rounded-lg ">
-              <Eye className="text-white" size={24} />
+              <Eye className="text-blanc" size={24} />
             </div>
             <div>
               <h3 className="text-lg font-bold text-gray-900">
@@ -323,21 +323,21 @@ const PromoDetailView = ({
               {/*  Indicateur de statut utilisant le vrai statut */}
               {promo.status === "EXPIRED" && (
                 <div className="absolute inset-0 bg-black/50 rounded-3xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xs sm:text-sm">
+                  <span className="text-blanc font-bold text-xs sm:text-sm">
                     EXPIRÉ
                   </span>
                 </div>
               )}
               {promo.status === "UPCOMING" && (
                 <div className="absolute inset-0 bg-blue-500/50 rounded-3xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xs sm:text-sm">
+                  <span className="text-blanc font-bold text-xs sm:text-sm">
                     À VENIR
                   </span>
                 </div>
               )}
               {promo.status === "DRAFT" && (
                 <div className="absolute inset-0 bg-yellow-500/50 rounded-3xl flex items-center justify-center">
-                  <span className="text-white font-bold text-xs sm:text-sm">
+                  <span className="text-blanc font-bold text-xs sm:text-sm">
                     BROUILLON
                   </span>
                 </div>
@@ -351,7 +351,7 @@ const PromoDetailView = ({
             <div className="bg-white rounded-lg border border-gray-200 shadow-xs">
               <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
                 <div className="p-2 bg-[#F17922] rounded-lg">
-                  <Users className="text-white" size={18} />
+                  <Users className="text-blanc" size={18} />
                 </div>
                 <h4 className="text-sm font-bold text-gray-900">
                   Cibles utilisateurs
@@ -378,7 +378,7 @@ const PromoDetailView = ({
                     promo.visibility === "PRIVATE"
                       ? "bg-gray-100 text-gray-400 border border-gray-300 opacity-50"
                       : promo.target_premium
-                      ? "bg-[#F17922] text-white"
+                      ? "bg-[#F17922] text-blanc"
                       : "bg-gray-100 text-gray-400 border border-gray-300 opacity-50"
                   }`}
                 >
@@ -392,7 +392,7 @@ const PromoDetailView = ({
                     promo.visibility === "PRIVATE"
                       ? "bg-gray-100 text-gray-400 border border-gray-300 opacity-50"
                       : promo.target_gold
-                      ? "bg-gray-800 text-white"
+                      ? "bg-gray-800 dark:bg-[#2a2f38] text-blanc"
                       : "bg-gray-100 text-gray-400 border border-gray-300 opacity-50"
                   }`}
                 >
@@ -405,7 +405,7 @@ const PromoDetailView = ({
           <div className="bg-white rounded-lg border border-gray-200 shadow-xs">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
               <div className="p-2 bg-[#F17922] rounded-lg">
-                <Target className="text-white" size={18} />
+                <Target className="text-blanc" size={18} />
               </div>
               <h4 className="text-sm font-bold text-gray-900">
                 Contraintes et limites
@@ -414,7 +414,7 @@ const PromoDetailView = ({
             <div className="p-6 space-y-4">
               {promo.max_total_usage && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg   ">
-                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-white">
+                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-blanc">
                     📊
                   </div>
                   <div className="flex-1 flex justify-between items-center">
@@ -430,7 +430,7 @@ const PromoDetailView = ({
 
               {promo.max_usage_per_user && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg ">
-                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-white">
+                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-blanc">
                     ​🧑‍🦰​
                   </div>
                   <div className="flex-1 flex justify-between items-center">
@@ -446,7 +446,7 @@ const PromoDetailView = ({
 
               {promo.min_order_amount && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg ">
-                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-white">
+                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-blanc">
                     💰
                   </div>
                   <div className="flex-1 flex justify-between items-center">
@@ -462,7 +462,7 @@ const PromoDetailView = ({
 
               {promo.max_discount_amount && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg  ">
-                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-white">
+                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-blanc">
                     🎯
                   </div>
                   <div className="flex-1 flex justify-between items-center">
@@ -478,7 +478,7 @@ const PromoDetailView = ({
 
               {promo.current_usage !== undefined && (
                 <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg ">
-                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-white">
+                  <div className="w-12 h-12 bg-[#F17922] rounded-lg flex items-center justify-center text-xl text-blanc">
                     📈
                   </div>
                   <div className="flex-1 flex justify-between items-center">
@@ -506,7 +506,7 @@ const PromoDetailView = ({
                 <HasPermission module={Modules.PROMOTIONS} action={Action.UPDATE}>
                   <button
                     onClick={() => onEdit(promo)}
-                    className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 bg-[#F17922] text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-[#E06A1B] transition-colors duration-200 flex-1 sm:flex-none"
+                    className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 bg-[#F17922] text-blanc rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-[#E06A1B] transition-colors duration-200 flex-1 sm:flex-none"
                   >
                     <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
                     <span className="hidden xs:inline sm:inline">Modifier</span>
@@ -522,7 +522,7 @@ const PromoDetailView = ({
                     text: promo.description,
                   })
                 }
-                className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 bg-green-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors duration-200 flex-1 sm:flex-none"
+                className="flex items-center justify-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 bg-green-500 text-blanc rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-green-600 transition-colors duration-200 flex-1 sm:flex-none"
               >
                 <Share size={16} className="sm:w-[18px] sm:h-[18px]" />
                 <span>Partager</span>
@@ -552,14 +552,14 @@ const PromoDetailView = ({
         {/* Section droite - Informations détaillées */}
         <div className="space-y-6">
           {/* Header avec icône et titre */}
-          <div className="flex items-center gap-4 p-6 bg-linear-to-r from-[#F17922] to-[#FA6345] rounded-2xl text-white shadow-xs relative overflow-hidden group">
+          <div className="flex items-center gap-4 p-6 bg-linear-to-r from-[#F17922] to-[#FA6345] rounded-2xl text-blanc shadow-xs relative overflow-hidden group">
             <div className="absolute inset-0 bg-linear-to-r from-white/5 to-white/10 transform -translate-x-full group-hover:translate-x-full transition-transform duration-500"></div>
             <div className="bg-white/20 p-3 rounded-xl relative z-10 group-hover:rotate-3 transition-transform">
               <Target size={28} />
             </div>
             <div className="relative z-10">
               <h3 className="text-2xl font-bold">Informations détaillées</h3>
-              <p className="text-white/90 text-sm">
+              <p className="text-blanc/90 text-sm">
                 Toutes les informations de votre promotion
               </p>
             </div>
@@ -703,7 +703,7 @@ const PromoDetailView = ({
           <div className="bg-white rounded-lg border border-gray-200 shadow-xs">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center gap-3">
               <div className="p-2 bg-[#F17922] rounded-lg">
-                <Palette className="text-white" size={18} />
+                <Palette className="text-blanc" size={18} />
               </div>
               <h4 className="text-sm font-bold text-gray-900">
                 Couleurs du design

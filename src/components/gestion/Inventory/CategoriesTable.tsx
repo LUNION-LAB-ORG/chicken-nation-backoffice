@@ -112,7 +112,7 @@ export default function CategoriesTable({
                 {onCreateCategory && (
                   <button
                     onClick={onCreateCategory}
-                    className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
+                    className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-blanc font-medium rounded-xl 
                     hover:bg-[#F17922]/90 transition-colors"
                   >
                     Ajouter une catégorie
@@ -271,20 +271,20 @@ export default function CategoriesTable({
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="w-16"></th>
-                  <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px] ">
+                  <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[300px] ">
                     <div className="flex items-center">Catégorie</div>
                   </th>
-                  <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                  <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[300px]">
                     <div className="flex items-center">Nombre de produits</div>
                   </th>
-                  <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                  <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[300px]">
                     <div className="flex items-center">Description</div>
                   </th>
-                  <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                  <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[300px]">
                     <div className="flex items-center">Visibilité</div>
                   </th>
                   {/* Colonne Actions - conditionnelle */}
-                  <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
+                  <th className="text-center py-4 text-[14px] text-hex-71717a font-bold w-[100px]">
                     Actions
                   </th>
                 </tr>
@@ -300,7 +300,7 @@ export default function CategoriesTable({
                         {onCreateCategory && (
                           <button
                             onClick={onCreateCategory}
-                            className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
+                            className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-blanc font-medium rounded-xl 
                             hover:bg-[#F17922]/90 transition-colors"
                           >
                             Ajouter une catégorie

@@ -95,7 +95,7 @@ export function Campagnes({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {peutAnalyser ? (
-          <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1">
+          <div className="flex items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1">
             {(
               [
                 ["liste", "Campagnes", LayoutGrid],
@@ -107,7 +107,7 @@ export function Campagnes({
                 type="button"
                 onClick={() => setVue(cle)}
                 className={`inline-flex items-center gap-1.5 text-[13px] font-semibold px-3 py-1 rounded-lg ${
-                  vue === cle ? "bg-white text-[#F17922] shadow-sm" : "text-[#71717A]"
+                  vue === cle ? "bg-white text-[#F17922] shadow-sm" : "text-hex-71717a"
                 }`}
               >
                 <Icone className="w-3.5 h-3.5" /> {label}

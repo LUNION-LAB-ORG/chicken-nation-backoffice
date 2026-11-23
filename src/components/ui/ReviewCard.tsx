@@ -16,7 +16,7 @@ export function ReviewCard({ clientName, clientInitial, date, comment, rating, a
   return (
     <div className="flex flex-col p-4 border rounded-lg shadow-sm space-y-2">
       <div className="flex items-center space-x-3">
-        <div className={`w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-white font-bold`}>
+        <div className={`w-10 h-10 rounded-full ${avatarColor} flex items-center justify-center text-blanc font-bold`}>
           {clientInitial}
         </div>
         <div className="flex-1">

@@ -11,7 +11,7 @@ import { useAuthStore } from "../../users/hook/authStore";
 import { Action, Modules } from "../../users/types/auth.type";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30 disabled:bg-[#FAFAFA] disabled:text-[#71717A]";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30 disabled:bg-hex-fafafa disabled:text-hex-71717a";
 
 const Field: React.FC<{
   label: string;
@@ -19,7 +19,7 @@ const Field: React.FC<{
   children: React.ReactNode;
 }> = ({ label, hint, children }) => (
   <div>
-    <label className="block text-sm font-medium text-[#71717A] mb-1.5">
+    <label className="block text-sm font-medium text-hex-71717a mb-1.5">
       {label}
     </label>
     {children}
@@ -109,19 +109,19 @@ export default function ScratchSettingsPanel() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div className="bg-white rounded-2xl border border-[#E4E4E7] p-5 sm:p-6">
+      <div className="bg-white rounded-2xl border border-hex-e4e4e7 p-5 sm:p-6">
         <h2 className="text-[18px] font-semibold text-[#F17922] mb-1 flex items-center gap-2">
           <SlidersHorizontal size={18} /> Réglages Gratte &amp; Gagne
         </h2>
-        <p className="text-sm text-[#71717A] mb-5">
+        <p className="text-sm text-hex-71717a mb-5">
           Paramètres globaux du moteur. L&apos;activation rend le jeu disponible
           côté application cliente.
         </p>
 
         {/* Toggle enabled */}
-        <div className="flex items-center justify-between rounded-xl border border-[#E4E4E7] px-4 py-3.5 mb-6">
+        <div className="flex items-center justify-between rounded-xl border border-hex-e4e4e7 px-4 py-3.5 mb-6">
           <div>
-            <div className="text-sm font-semibold text-[#18181B]">
+            <div className="text-sm font-semibold text-hex-18181b">
               Moteur activé
             </div>
             <div className="text-[11px] text-[#9796A1]">
@@ -138,7 +138,7 @@ export default function ScratchSettingsPanel() {
               onClick={() => handleToggle(!enabled)}
               disabled={mutation.isPending}
               className={`relative h-7 w-12 shrink-0 rounded-full transition-colors cursor-pointer disabled:opacity-60 ${
-                enabled ? "bg-[#F17922]" : "bg-[#D9D9D9]"
+                enabled ? "bg-[#F17922]" : "bg-hex-d9d9d9"
               }`}
             >
               {/* Pastille : piste 48px, pastille 24px, marge 2px de chaque côté
@@ -155,8 +155,8 @@ export default function ScratchSettingsPanel() {
             <span
               className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${
                 enabled
-                  ? "bg-[#E6F4EC] text-[#1E8E5A]"
-                  : "bg-[#EEF1F4] text-[#6C757D]"
+                  ? "bg-hex-e6f4ec text-hex-1e8e5a"
+                  : "bg-hex-eef1f4 text-hex-6c757d"
               }`}
             >
               {enabled ? "Activé" : "Désactivé"}
@@ -239,7 +239,7 @@ export default function ScratchSettingsPanel() {
               type="button"
               onClick={handleSaveNumbers}
               disabled={mutation.isPending}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F17922] text-white font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#F17922] text-blanc font-semibold hover:bg-[#e06816] disabled:opacity-60 cursor-pointer"
             >
               {mutation.isPending ? (
                 <Loader2 size={16} className="animate-spin" />

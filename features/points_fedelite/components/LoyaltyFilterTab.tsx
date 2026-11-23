@@ -50,15 +50,15 @@ const LoyaltyFilterTab: React.FC = () => {
         </div>
         <div className="w-full overflow-x-auto">
           <div
-            className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
+            className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
             style={{ minHeight: 40 }}
           >
             <button
               className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0
                 ${
                   !filters?.type || filters?.type === null
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
               style={{ minWidth: 75, height: 30 }}
@@ -72,8 +72,8 @@ const LoyaltyFilterTab: React.FC = () => {
                 className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0 ml-1
                 ${
                   filters?.type === type.key
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
                 style={{ minWidth: 75, height: 30 }}
@@ -92,15 +92,15 @@ const LoyaltyFilterTab: React.FC = () => {
         </div>
         <div className="w-full overflow-x-auto">
           <div
-            className="flex items-center bg-[#f4f4f5] rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
+            className="flex items-center bg-hex-f4f4f5 rounded-[12px] px-2 w-fit min-w-full scrollbar-thin scrollbar-thumb-[#E4E4E7] scrollbar-track-transparent"
             style={{ minHeight: 40 }}
           >
             <button
               className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0
                 ${
                   !filters?.is_used || filters?.is_used === null
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
               style={{ minWidth: 75, height: 30 }}
@@ -114,8 +114,8 @@ const LoyaltyFilterTab: React.FC = () => {
                 className={`transition-colors font-bold cursor-pointer text-[11px] lg:text-[14px] px-3 sm:px-5 py-1 rounded-[12px] focus:outline-none whitespace-nowrap shrink-0 ml-1
                 ${
                   filters?.is_used === status.key
-                    ? "bg-[#F17922] text-white font-bold shadow-none"
-                    : "bg-transparent text-[#71717A] font-normal"
+                    ? "bg-[#F17922] text-blanc font-bold shadow-none"
+                    : "bg-transparent text-hex-71717a font-normal"
                 }
               `}
                 style={{ minWidth: 75, height: 30 }}

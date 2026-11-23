@@ -69,7 +69,7 @@ function Contenu({ incident }: { incident: Fiche }) {
         <PastilleStatut statut={incident.statut} />
         <PastilleGravite gravite={incident.gravite} />
         {delai && (
-          <span className={`text-[13px] font-semibold ${delai.retard ? "text-[#B91C1C]" : "text-gray-500"}`}>{delai.texte}</span>
+          <span className={`text-[13px] font-semibold ${delai.retard ? "text-hex-b91c1c" : "text-gray-500"}`}>{delai.texte}</span>
         )}
         <span className="ml-auto font-mono text-xs text-gray-400">{incident.code}</span>
       </div>
@@ -77,7 +77,7 @@ function Contenu({ incident }: { incident: Fiche }) {
       <div className="flex flex-col gap-4 lg:flex-row">
         <div className="flex min-w-0 flex-col gap-4 lg:w-3/5">
           <Bloc titre="Problème signalé">
-            <p className="whitespace-pre-line rounded-lg bg-[#FBF8F5] px-4 py-3 text-[15px] leading-relaxed text-gray-900">
+            <p className="whitespace-pre-line rounded-lg bg-hex-fbf8f5 px-4 py-3 text-[15px] leading-relaxed text-gray-900">
               {incident.description}
             </p>
             {!resolu && <Responsable incident={incident} />}

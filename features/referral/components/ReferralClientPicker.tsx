@@ -38,7 +38,7 @@ export default function ReferralClientPicker({
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher un client (nom, téléphone)…"
-          className="h-11 w-full rounded-lg border border-[#E4E4E7] pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
+          className="h-11 w-full rounded-lg border border-hex-e4e4e7 pl-9 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
         />
         {isFetching && (
           <Loader2 size={15} className="absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-[#9796A1]" />
@@ -46,7 +46,7 @@ export default function ReferralClientPicker({
       </div>
 
       {search.trim().length >= 2 && data && (
-        <ul className="max-h-64 overflow-auto rounded-lg border border-[#E4E4E7] divide-y divide-[#F2F2F4]">
+        <ul className="max-h-64 overflow-auto rounded-lg border border-hex-e4e4e7 divide-y divide-hex-f2f2f4">
           {data.length === 0 ? (
             <li className="px-3 py-3 text-sm text-[#9796A1]">Aucun client trouvé.</li>
           ) : (
@@ -58,13 +58,13 @@ export default function ReferralClientPicker({
                     type="button"
                     disabled={!!bloque}
                     onClick={() => onPick(c)}
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-[#FFF6E9] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent cursor-pointer"
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-hex-fff6e9 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent cursor-pointer"
                   >
                     <span>
-                      <span className="block text-sm font-medium text-[#18181B]">{c.fullname ?? "Sans nom"}</span>
+                      <span className="block text-sm font-medium text-hex-18181b">{c.fullname ?? "Sans nom"}</span>
                       <span className="block text-xs text-[#9796A1]">{c.phone}</span>
                     </span>
-                    {bloque && <span className="text-xs text-[#71717A] whitespace-nowrap">{bloque}</span>}
+                    {bloque && <span className="text-xs text-hex-71717a whitespace-nowrap">{bloque}</span>}
                   </button>
                 </li>
               );

@@ -99,7 +99,7 @@ export function LoyaltyPointsList({
                         className="w-10 h-10 rounded-full object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F17922] to-[#ff9f5a] flex items-center justify-center text-white font-bold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F17922] to-[#ff9f5a] flex items-center justify-center text-blanc font-bold text-sm">
                         {point.customer?.first_name?.charAt(0) || ""}
                         {point.customer?.last_name?.charAt(0) || ""}
                       </div>

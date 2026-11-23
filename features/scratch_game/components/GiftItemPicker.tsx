@@ -12,7 +12,7 @@ import { formatImageUrl } from "@/utils/imageHelpers";
 import { money } from "../utils/scratch.utils";
 
 const inputCls =
-  "w-full h-11 rounded-lg border border-[#E4E4E7] px-3 text-sm text-[#18181B] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
+  "w-full h-11 rounded-lg border border-hex-e4e4e7 px-3 text-sm text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
 export type GiftKind = "DISH" | "SUPPLEMENT";
 
@@ -97,8 +97,8 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
             onClick={() => switchKind(k.key)}
             className={`rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
               kind === k.key
-                ? "bg-[#F17922] text-white"
-                : "bg-[#F4F4F5] text-[#71717A] hover:bg-[#E4E4E7]"
+                ? "bg-[#F17922] text-blanc"
+                : "bg-hex-f4f4f5 text-hex-71717a hover:bg-hex-e4e4e7"
             }`}
           >
             {k.label}
@@ -108,7 +108,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
 
       {/* Sélection courante */}
       {value ? (
-        <div className="flex items-center gap-3 rounded-lg border border-[#E4E4E7] p-2.5">
+        <div className="flex items-center gap-3 rounded-lg border border-hex-e4e4e7 p-2.5">
           {value.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -118,7 +118,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
             />
           )}
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-[#18181B] truncate">
+            <div className="text-sm font-semibold text-hex-18181b truncate">
               {value.name}
             </div>
             <div className="text-[11px] text-[#9796A1]">
@@ -128,7 +128,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="text-[#9796A1] hover:text-[#C0392B] cursor-pointer"
+            className="text-[#9796A1] hover:text-hex-c0392b cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -148,7 +148,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
             />
           </div>
           {dishSearch.trim().length >= 1 && (
-            <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+            <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
               {dishes.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-[#9796A1]">
                   {dishesQuery.isLoading ? "Chargement…" : "Aucun plat"}
@@ -168,7 +168,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
                       });
                       setDishSearch("");
                     }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
                   >
                     <span className="truncate">{d.name}</span>
                     <span className="text-[#9796A1] shrink-0">
@@ -195,7 +195,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
             />
           </div>
           {suppSearch.trim().length >= 1 && (
-            <div className="mt-1 border border-[#E4E4E7] rounded-lg divide-y divide-[#F1F3F5] max-h-56 overflow-y-auto">
+            <div className="mt-1 border border-hex-e4e4e7 rounded-lg divide-y divide-hex-f1f3f5 max-h-56 overflow-y-auto">
               {supps.length === 0 ? (
                 <div className="px-3 py-2 text-sm text-[#9796A1]">
                   {suppsQuery.isLoading ? "Chargement…" : "Aucun supplément"}
@@ -215,7 +215,7 @@ export default function GiftItemPicker({ value, onChange }: GiftItemPickerProps)
                       });
                       setSuppSearch("");
                     }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-[#FFF6E9] cursor-pointer flex items-center justify-between gap-2"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-hex-fff6e9 cursor-pointer flex items-center justify-between gap-2"
                   >
                     <span className="truncate">{s.name}</span>
                     <span className="text-[#9796A1] shrink-0">

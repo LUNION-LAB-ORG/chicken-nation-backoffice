@@ -598,7 +598,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             e.preventDefault();
             if (platsRecherche.length > 0) ouvrirPlat(platsRecherche[0]);
           }}
-          className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+          className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-hex-595959 placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
           placeholder="Rechercher un plat"
           aria-label="Rechercher un plat"
         />
@@ -622,8 +622,8 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
       <div className="@container/catalogue">
         <div className="grid grid-cols-1 gap-4 @3xl/catalogue:grid-cols-[220px_minmax(0,1fr)]">
           {/* Catégories */}
-          <div className="rounded-2xl border-2 border-[#D9D9D9]/50 bg-white p-3 @3xl/catalogue:p-4">
-            <h4 className="mb-3 hidden text-sm font-semibold text-[#595959] @3xl/catalogue:block">
+          <div className="rounded-2xl border-2 border-hex-d9d9d9/50 bg-white p-3 @3xl/catalogue:p-4">
+            <h4 className="mb-3 hidden text-sm font-semibold text-hex-595959 @3xl/catalogue:block">
               📂 Catégories
             </h4>
 
@@ -650,8 +650,8 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                       }}
                       className={`shrink-0 rounded-xl px-3 py-2 text-left transition-all @3xl/catalogue:w-full @3xl/catalogue:px-4 @3xl/catalogue:py-3 ${
                         active
-                          ? "bg-[#F17922] text-white shadow-md"
-                          : "bg-[#F5F5F5] text-[#595959] hover:bg-[#F17922]/10"
+                          ? "bg-[#F17922] text-blanc shadow-md"
+                          : "bg-hex-f5f5f5 text-hex-595959 hover:bg-[#F17922]/10"
                       }`}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -677,8 +677,8 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
           </div>
 
           {/* Plats */}
-          <div className="min-w-0 rounded-2xl border-2 border-[#D9D9D9]/50 bg-white p-4 @container/plats">
-            <h4 className="mb-3 text-sm font-semibold text-[#595959]">
+          <div className="min-w-0 rounded-2xl border-2 border-hex-d9d9d9/50 bg-white p-4 @container/plats">
+            <h4 className="mb-3 text-sm font-semibold text-hex-595959">
               🍽️ Plats
               {enRecherche && (
                 <span className="font-normal text-gray-400"> · recherche « {recherche.trim()} »</span>
@@ -821,7 +821,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
                     {/* Quantité — sous le prix, avec l'identité du plat */}
                     <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
-                      <label className="text-sm font-semibold text-[#595959]">
+                      <label className="text-sm font-semibold text-hex-595959">
                         Quantité
                       </label>
                       <div className="flex items-center gap-1 rounded-full border border-gray-200 p-1">
@@ -830,7 +830,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                           onClick={() =>
                             setTempQuantity(Math.max(1, tempQuantity - 1))
                           }
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-hex-595959 transition hover:bg-[#F17922] hover:text-blanc"
                           whileTap={{ scale: 0.9 }}
                         >
                           <Minus className="w-4 h-4" />
@@ -841,7 +841,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                         <motion.button
                           type="button"
                           onClick={() => setTempQuantity(tempQuantity + 1)}
-                          className="flex h-9 w-9 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
+                          className="flex h-9 w-9 items-center justify-center rounded-full text-hex-595959 transition hover:bg-[#F17922] hover:text-blanc"
                           whileTap={{ scale: 0.9 }}
                         >
                           <Plus className="w-4 h-4" />
@@ -898,14 +898,14 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                 groupedSupplements.DRINK.length > 0 ||
                 groupedSupplements.ACCESSORY.length > 0) && (
                 <div className="mb-4 space-y-4">
-                  <label className="text-sm font-semibold text-[#595959] block">
+                  <label className="text-sm font-semibold text-hex-595959 block">
                     Suppléments
                   </label>
 
                   {(["FOOD", "DRINK", "ACCESSORY"] as const).map((cat) =>
                     groupedSupplements[cat].length > 0 ? (
                       <div key={cat} className="rounded-xl border border-gray-200 p-3">
-                        <h6 className="text-sm font-semibold text-[#595959] mb-2">
+                        <h6 className="text-sm font-semibold text-hex-595959 mb-2">
                           {categoryLabels[cat].label}
                         </h6>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -918,10 +918,10 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                                 title={isExcluded ? "Non disponible pour ce plat" : undefined}
                                 className={`flex items-center gap-2 p-2 rounded-lg border-2 transition-all ${
                                   isExcluded
-                                    ? "border-[#D9D9D9]/50 bg-gray-100 opacity-60 cursor-not-allowed"
+                                    ? "border-hex-d9d9d9/50 bg-gray-100 opacity-60 cursor-not-allowed"
                                     : qty > 0
                                     ? "border-[#F17922] bg-[#F17922]/10"
-                                    : "border-[#D9D9D9]/50 hover:border-[#F17922]/50"
+                                    : "border-hex-d9d9d9/50 hover:border-[#F17922]/50"
                                 }`}
                               >
                                 {supp.image && (
@@ -934,7 +934,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                                   />
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <p className={`text-xs font-semibold truncate ${isExcluded ? "text-gray-400 line-through" : "text-[#595959]"}`}>
+                                  <p className={`text-xs font-semibold truncate ${isExcluded ? "text-gray-400 line-through" : "text-hex-595959"}`}>
                                     {supp.label}
                                   </p>
                                   <p className={`text-xs font-bold ${isExcluded ? "text-gray-400" : "text-[#F17922]"}`}>
@@ -952,7 +952,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                                       onClick={() => updateSupplementQuantity(supp.value, -1)}
                                       className={`w-7 h-7 rounded-md font-semibold text-sm flex items-center justify-center ${
                                         qty > 0
-                                          ? "bg-[#F17922] text-white"
+                                          ? "bg-[#F17922] text-blanc"
                                           : "bg-gray-200 text-gray-400 cursor-not-allowed"
                                       }`}
                                       whileTap={qty > 0 ? { scale: 0.9 } : undefined}
@@ -960,13 +960,13 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                                     >
                                       −
                                     </motion.button>
-                                    <span className="text-sm font-semibold text-[#595959] min-w-[20px] text-center">
+                                    <span className="text-sm font-semibold text-hex-595959 min-w-[20px] text-center">
                                       {qty}
                                     </span>
                                     <motion.button
                                       type="button"
                                       onClick={() => updateSupplementQuantity(supp.value, 1)}
-                                      className="w-7 h-7 bg-[#F17922] text-white rounded-md font-semibold text-sm flex items-center justify-center"
+                                      className="w-7 h-7 bg-[#F17922] text-blanc rounded-md font-semibold text-sm flex items-center justify-center"
                                       whileTap={{ scale: 0.9 }}
                                     >
                                       +
@@ -1005,7 +1005,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
                   type="button"
                   onClick={addItemToCart}
                   disabled={!!blocageComposition}
-                  className={`h-11 min-w-[220px] rounded-xl px-6 text-sm font-semibold text-white transition ${
+                  className={`h-11 min-w-[220px] rounded-xl px-6 text-sm font-semibold text-blanc transition ${
                     blocageComposition
                       ? "cursor-not-allowed bg-gray-300"
                       : "bg-[#F17922] hover:bg-[#F17922]/90"

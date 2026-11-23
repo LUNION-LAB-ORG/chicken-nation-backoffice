@@ -233,7 +233,7 @@ export default function SupportThread({
                             bloc.interne
                               ? "border border-amber-200 bg-amber-50 text-amber-900"
                               : bloc.agent
-                                ? "bg-[#F17922] text-white"
+                                ? "bg-[#F17922] text-blanc"
                                 : "border border-stone-200 bg-white text-stone-800"
                           }`}
                         >
@@ -260,7 +260,7 @@ export default function SupportThread({
                 onClick={() => setInterne(false)}
                 className={`h-7 rounded-md px-2.5 text-xs font-medium transition-colors cursor-pointer ${
                   !interne
-                    ? "bg-stone-900 text-white"
+                    ? "bg-stone-900 dark:bg-[#0e1014] text-blanc"
                     : "text-stone-500 hover:bg-stone-100"
                 }`}
               >
@@ -271,7 +271,7 @@ export default function SupportThread({
                 onClick={() => setInterne(true)}
                 className={`inline-flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium transition-colors cursor-pointer ${
                   interne
-                    ? "bg-amber-500 text-white"
+                    ? "bg-amber-500 text-blanc"
                     : "text-stone-500 hover:bg-stone-100"
                 }`}
               >
@@ -316,7 +316,7 @@ export default function SupportThread({
               disabled={!saisie.trim() || envoiEnCours}
               className={`mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
                 saisie.trim() && !envoiEnCours
-                  ? "bg-[#F17922] text-white hover:bg-[#d96a1b] cursor-pointer"
+                  ? "bg-[#F17922] text-blanc hover:bg-[#d96a1b] cursor-pointer"
                   : "bg-stone-200 text-stone-400"
               }`}
               aria-label="Envoyer"

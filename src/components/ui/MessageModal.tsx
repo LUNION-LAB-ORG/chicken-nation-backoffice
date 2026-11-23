@@ -81,9 +81,9 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#F17922] to-[#FA6345]">
           <div className="flex items-center space-x-4">
-            <MessageCircle className="w-8 h-8 text-white" />
+            <MessageCircle className="w-8 h-8 text-blanc" />
             <div>
-              <h2 className="text-2xl font-bold text-white">Messages</h2>
+              <h2 className="text-2xl font-bold text-blanc">Messages</h2>
               <p className="text-orange-100 text-sm">
                 Conversations avec les clients
               </p>
@@ -92,7 +92,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
           
           {/* Statistiques */}
           {stats && (
-            <div className="hidden md:flex items-center space-x-6 text-white">
+            <div className="hidden md:flex items-center space-x-6 text-blanc">
               <div className="text-center">
                 <div className="text-2xl font-bold">{stats.total_conversations}</div>
                 <div className="text-xs text-orange-100">Conversations</div>
@@ -112,7 +112,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
-            <X className="w-6 h-6 text-white" />
+            <X className="w-6 h-6 text-blanc" />
           </button>
         </div>
 
@@ -158,7 +158,7 @@ const MessageModal: React.FC<MessageModalProps> = ({ isOpen, onClose }) => {
                   <MessageCircle className="w-4 h-4 inline mr-1" />
                   Non lues
                   {stats && stats.unread_conversations > 0 && (
-                    <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                    <span className="ml-1 bg-red-500 text-blanc text-xs rounded-full px-1.5 py-0.5">
                       {stats.unread_conversations}
                     </span>
                   )}

@@ -41,7 +41,7 @@ export function DrawerHistoriqueTab({ order }: Props) {
   return (
     <div className="p-5 md:p-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <span className="w-8 h-8 rounded-xl bg-[#FFF0E4] text-[#F17922] flex items-center justify-center">
+        <span className="w-8 h-8 rounded-xl bg-hex-fff0e4 text-[#F17922] flex items-center justify-center">
           <HistoryIcon className="w-4 h-4" />
         </span>
         <h3 className="text-[15px] font-bold text-gray-900">Historique des commandes</h3>
@@ -167,7 +167,7 @@ function HistoriqueRow({
     <div
       className={`border rounded-2xl overflow-hidden transition ${
         current
-          ? "border-[#F17922]/40 bg-[#FFF8F2]"
+          ? "border-[#F17922]/40 bg-hex-fff8f2"
           : "border-gray-100 bg-white hover:border-gray-200"
       }`}
     >
@@ -179,7 +179,7 @@ function HistoriqueRow({
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-sm font-bold text-gray-900">#{order.reference}</span>
             {current && (
-              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#F17922] text-white">
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#F17922] text-blanc">
                 Actuelle
               </span>
             )}
@@ -220,7 +220,7 @@ function HistoriqueRow({
                     className="object-cover w-full h-full"
                   />
                   {item.price === 0 && (
-                    <span className="absolute bottom-0 inset-x-0 bg-[#F17922] text-white text-[8px] font-bold text-center py-0.5">
+                    <span className="absolute bottom-0 inset-x-0 bg-[#F17922] text-blanc text-[8px] font-bold text-center py-0.5">
                       Offert
                     </span>
                   )}

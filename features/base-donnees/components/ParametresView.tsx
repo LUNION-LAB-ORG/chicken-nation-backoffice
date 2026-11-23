@@ -105,7 +105,7 @@ export function ParametresView() {
           type="button"
           onClick={() => mutation.mutate(form)}
           disabled={mutation.isPending}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#F17922] text-white text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#F17922] text-blanc text-sm font-semibold hover:opacity-90 disabled:opacity-60"
         >
           {mutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
           Enregistrer

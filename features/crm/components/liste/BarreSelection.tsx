@@ -20,7 +20,7 @@ export function BarreSelection({ ids, onVider }: { ids: string[]; onVider: () =>
 
   return (
     <div className="sticky bottom-3 z-20 mt-3">
-      <div className="flex flex-wrap items-center gap-3 bg-gray-900 text-white rounded-xl px-4 py-3 shadow-lg">
+      <div className="flex flex-wrap items-center gap-3 bg-gray-900 dark:bg-[#0e1014] text-blanc rounded-xl px-4 py-3 shadow-lg">
         <span className="text-sm font-semibold">
           {ids.length} sélectionné{ids.length > 1 ? "s" : ""}
         </span>
@@ -35,7 +35,7 @@ export function BarreSelection({ ids, onVider }: { ids: string[]; onVider: () =>
         <Bouton variante="primaire" desactive={!agent || assigner.isPending} onClick={() => lancer(agent)}>
           <UserCheck className="w-4 h-4" /> Assigner
         </Bouton>
-        <Bouton variante="discret" desactive={assigner.isPending} onClick={() => lancer(null)} className="text-white hover:bg-white/10">
+        <Bouton variante="discret" desactive={assigner.isPending} onClick={() => lancer(null)} className="text-blanc hover:bg-white/10">
           <UserMinus className="w-4 h-4" /> Retirer l&apos;agent
         </Bouton>
         <button type="button" onClick={onVider} className="ml-auto p-1 rounded hover:bg-white/10" aria-label="Vider la sélection">

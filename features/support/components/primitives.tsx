@@ -62,7 +62,7 @@ const TONS: Record<Ton, string> = {
   neutre: "bg-stone-100 text-stone-600",
   attente: "bg-amber-50 text-amber-700",
   resolu: "bg-emerald-50 text-emerald-700",
-  urgent: "bg-[#F17922]/10 text-[#B45309]",
+  urgent: "bg-[#F17922]/10 text-hex-b45309",
 };
 
 export function Puce({

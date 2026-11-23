@@ -19,10 +19,10 @@ const TYPE_META: Record<RewardCampaignType, { label: string; icon: React.Element
 
 /** Le statut d'un destinataire raconte OÙ il en est, pas juste son état brut. */
 const RECIPIENT_STATUS: Record<RecipientStatus, { label: string; cls: string }> = {
-  PENDING: { label: "Pas encore gratté", cls: "bg-[#FEF3C7] text-[#92400E]" },
-  SCRATCHED: { label: "Gratté — à utiliser", cls: "bg-[#E7F0FB] text-[#2B6CB0]" },
-  CONSUMED: { label: "Utilisé", cls: "bg-[#E6F4EC] text-[#1E8E5A]" },
-  REVOKED: { label: "Annulé", cls: "bg-[#EEF1F4] text-[#6C757D]" },
+  PENDING: { label: "Pas encore gratté", cls: "bg-hex-fef3c7 text-hex-92400e" },
+  SCRATCHED: { label: "Gratté — à utiliser", cls: "bg-hex-e7f0fb text-hex-2b6cb0" },
+  CONSUMED: { label: "Utilisé", cls: "bg-hex-e6f4ec text-hex-1e8e5a" },
+  REVOKED: { label: "Annulé", cls: "bg-hex-eef1f4 text-hex-6c757d" },
 };
 
 const fmt = (iso?: string | null) =>
@@ -63,25 +63,25 @@ export default function GiftCampaignDetail({
       <button
         type="button"
         onClick={onBack}
-        className="inline-flex items-center gap-2 text-sm font-medium text-[#71717A] hover:text-[#18181B] cursor-pointer"
+        className="inline-flex items-center gap-2 text-sm font-medium text-hex-71717a hover:text-hex-18181b cursor-pointer"
       >
         <ArrowLeft size={16} /> Retour aux campagnes
       </button>
 
       {/* Le cadeau envoyé */}
-      <div className="bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
+      <div className="bg-white border border-hex-e4e4e7 rounded-xl p-5 sm:p-6">
         <div className="flex items-start gap-4">
           {payload.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={formatImageUrl(payload.image)} alt="" className="h-16 w-16 rounded-xl object-cover" />
           ) : (
-            <div className="h-16 w-16 rounded-xl bg-[#FFF6E9] flex items-center justify-center shrink-0">
+            <div className="h-16 w-16 rounded-xl bg-hex-fff6e9 flex items-center justify-center shrink-0">
               <Icon size={26} className="text-[#F17922]" />
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-semibold text-[#18181B]">{campaign.name}</h2>
-            <p className="text-sm text-[#71717A] mt-0.5">
+            <h2 className="text-lg font-semibold text-hex-18181b">{campaign.name}</h2>
+            <p className="text-sm text-hex-71717a mt-0.5">
               {meta.label}
               {itemName ? ` · ${itemName}` : ""}
               {payload.item_type === "SUPPLEMENT" ? " (supplément)" : ""}
@@ -96,7 +96,7 @@ export default function GiftCampaignDetail({
 
         {/* Capping : la raison n°1 d'un « je n'ai rien reçu ». */}
         {data && data.skipped_capping > 0 && (
-          <div className="mt-4 rounded-lg bg-[#FFF7ED] border border-[#FCD9A8] px-3.5 py-2.5 text-[13px] text-[#9A5B12]">
+          <div className="mt-4 rounded-lg bg-hex-fff7ed border border-hex-fcd9a8 px-3.5 py-2.5 text-[13px] text-hex-9a5b12">
             <strong>{data.skipped_capping} client(s) n&apos;ont RIEN reçu</strong> : ils avaient déjà
             reçu un cadeau de campagne récemment (capping anti-fatigue). Pour passer outre, cochez
             « Ignorer le capping anti-fatigue » à l&apos;envoi.
@@ -105,10 +105,10 @@ export default function GiftCampaignDetail({
       </div>
 
       {/* Destinataires */}
-      <div className="bg-white border border-[#E4E4E7] rounded-xl p-5 sm:p-6">
+      <div className="bg-white border border-hex-e4e4e7 rounded-xl p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-4">
           <Users size={18} className="text-[#F17922]" />
-          <h3 className="text-[16px] font-semibold text-[#18181B]">
+          <h3 className="text-[16px] font-semibold text-hex-18181b">
             Destinataires {data ? `(${data.total})` : ""}
           </h3>
         </div>
@@ -126,7 +126,7 @@ export default function GiftCampaignDetail({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] border-b border-[#F1F3F5]">
+                <tr className="text-left text-[11px] uppercase tracking-wide text-[#9796A1] border-b border-hex-f1f3f5">
                   <th className="py-2 pr-3 font-medium">Client</th>
                   <th className="py-2 px-3 font-medium">Statut</th>
                   <th className="py-2 px-3 font-medium">Gratté le</th>
@@ -137,9 +137,9 @@ export default function GiftCampaignDetail({
                 {recipients.map((r) => {
                   const badge = RECIPIENT_STATUS[r.status] ?? RECIPIENT_STATUS.PENDING;
                   return (
-                    <tr key={r.reward_id} className="border-b border-[#F7F7F8] last:border-0">
+                    <tr key={r.reward_id} className="border-b border-hex-f7f7f8 last:border-0">
                       <td className="py-3 pr-3">
-                        <div className="font-medium text-[#18181B]">{r.fullname ?? "—"}</div>
+                        <div className="font-medium text-hex-18181b">{r.fullname ?? "—"}</div>
                         <div className="text-xs text-[#9796A1]">{r.phone ?? "—"}</div>
                       </td>
                       <td className="py-3 px-3">
@@ -149,8 +149,8 @@ export default function GiftCampaignDetail({
                           {badge.label}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-[#71717A]">{fmt(r.scratched_at)}</td>
-                      <td className="py-3 pl-3 text-[#71717A]">{fmt(r.consumed_at)}</td>
+                      <td className="py-3 px-3 text-hex-71717a">{fmt(r.scratched_at)}</td>
+                      <td className="py-3 pl-3 text-hex-71717a">{fmt(r.consumed_at)}</td>
                     </tr>
                   );
                 })}

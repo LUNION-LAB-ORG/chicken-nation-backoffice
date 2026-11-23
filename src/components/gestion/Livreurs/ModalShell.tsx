@@ -39,15 +39,15 @@ const ModalShell: React.FC<ModalShellProps> = ({
         className={`w-full ${maxWidth} bg-white rounded-2xl shadow-2xl animate-in zoom-in-95`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between p-5 border-b border-[#F4F4F5]">
+        <div className="flex items-start justify-between p-5 border-b border-hex-f4f4f5">
           <div className="flex items-center gap-3">
             {icon}
-            <h2 className="text-lg font-semibold text-[#18181B]">{title}</h2>
+            <h2 className="text-lg font-semibold text-hex-18181b">{title}</h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-[#F4F4F5] text-[#71717A] transition-colors"
+            className="p-1.5 rounded-lg hover:bg-hex-f4f4f5 text-hex-71717a transition-colors"
             aria-label="Fermer"
           >
             <X className="w-4 h-4" />

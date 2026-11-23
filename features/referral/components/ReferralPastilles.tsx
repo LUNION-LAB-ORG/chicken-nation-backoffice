@@ -21,7 +21,7 @@ export default function ReferralPastilles<V extends string>({
 }) {
   return (
     <div className="max-w-full overflow-x-auto">
-      <div className="flex items-center gap-1 bg-[#f4f4f5] rounded-xl p-1 w-fit min-w-max">
+      <div className="flex items-center gap-1 bg-hex-f4f4f5 rounded-xl p-1 w-fit min-w-max">
         {pastilles.map((p) => {
           const choisie = p.valeur === valeur;
           return (
@@ -30,12 +30,12 @@ export default function ReferralPastilles<V extends string>({
               type="button"
               onClick={() => onChange(p.valeur)}
               className={`text-[13px] font-semibold px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
-                choisie ? "bg-[#F17922] text-white" : "text-[#71717A] hover:text-gray-700"
+                choisie ? "bg-[#F17922] text-blanc" : "text-hex-71717a hover:text-gray-700"
               }`}
             >
               {p.label}
               {p.nombre !== undefined && (
-                <span className={`ml-1.5 text-[12px] font-medium ${choisie ? "text-white/80" : "text-[#9796A1]"}`}>
+                <span className={`ml-1.5 text-[12px] font-medium ${choisie ? "text-blanc/80" : "text-[#9796A1]"}`}>
                   {nombre(p.nombre)}
                 </span>
               )}

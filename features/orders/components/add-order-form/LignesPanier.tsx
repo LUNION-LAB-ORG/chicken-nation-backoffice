@@ -35,7 +35,7 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
     return (
       <div className="px-4 py-8 text-center">
         <div className="mb-2 text-3xl">🛒</div>
-        <p className="text-sm font-semibold text-[#595959]">Votre panier est vide</p>
+        <p className="text-sm font-semibold text-hex-595959">Votre panier est vide</p>
         <p className="mt-1 text-xs text-gray-400">Sélectionnez une catégorie puis ajoutez des plats</p>
       </div>
     );
@@ -58,7 +58,7 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
 
             <div className="min-w-0 flex-1">
               <div className="flex items-start gap-1">
-                <p className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-[#595959]">{dish.name}</p>
+                <p className="min-w-0 flex-1 text-[13px] font-bold leading-snug text-hex-595959">{dish.name}</p>
                 <button
                   type="button"
                   onClick={() => onModifier(index)}
@@ -110,7 +110,7 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
                     onClick={() => onQuantite(index, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                     aria-label={`Diminuer la quantité de ${dish.name}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent disabled:hover:text-gray-300"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-hex-595959 transition hover:bg-[#F17922] hover:text-blanc disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent disabled:hover:text-gray-300"
                   >
                     <Minus className="h-3.5 w-3.5" />
                   </button>
@@ -119,7 +119,7 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
                     type="button"
                     onClick={() => onQuantite(index, item.quantity + 1)}
                     aria-label={`Augmenter la quantité de ${dish.name}`}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-[#595959] transition hover:bg-[#F17922] hover:text-white"
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-hex-595959 transition hover:bg-[#F17922] hover:text-blanc"
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>

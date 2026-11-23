@@ -20,7 +20,7 @@ export function AddressesTab({ customerData }: AddressesTabProps) {
         >
           <div className="flex items-start gap-4">
             <div className="bg-linear-to-br from-[#F17922] to-[#ff9f5a] rounded-lg shrink-0">
-              <MapPin className="w-6 h-6 text-white" />
+              <MapPin className="w-6 h-6 text-blanc" />
             </div>
             <div className="flex-1">
               <h4 className="font-semibold text-gray-900 mb-1">

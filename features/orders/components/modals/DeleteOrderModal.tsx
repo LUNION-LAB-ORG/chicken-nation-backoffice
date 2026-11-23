@@ -66,7 +66,7 @@ export function DeleteOrderModal({ isOpen, order, onDeleted }: DeleteOrderModalP
           <button
             onClick={handleDelete}
             disabled={isPending}
-            className="w-full py-3 rounded-lg bg-red-600 text-white font-semibold cursor-pointer hover:bg-red-700 disabled:opacity-50"
+            className="w-full py-3 rounded-lg bg-red-600 text-blanc font-semibold cursor-pointer hover:bg-red-700 dark:hover:bg-red-500 disabled:opacity-50"
           >
             {isPending ? "Suppression..." : "Supprimer"}
           </button>

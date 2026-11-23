@@ -36,7 +36,7 @@ export function Entonnoir({
             <span className="text-gray-700 font-medium">{e.libelle}</span>
             <div className="h-7 bg-gray-50 rounded-lg overflow-hidden" title={`${fmtPct(e.part_entree)} des entrés`}>
               <div
-                className="h-full rounded-lg flex items-center px-2 text-xs font-semibold text-white tabular-nums"
+                className="h-full rounded-lg flex items-center px-2 text-xs font-semibold text-blanc tabular-nums"
                 style={{ width: `${Math.max(4, (e.nombre / base) * 100)}%`, backgroundColor: teinteEtape(e.cle, i) }}
               >
                 {fmtNombre(e.nombre)}

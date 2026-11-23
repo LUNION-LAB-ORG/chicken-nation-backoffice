@@ -99,3 +99,24 @@
   margin-bottom: 1rem;
   color: #1a1a1a;
 }
+
+/* Thème sombre (voir src/app/theme.css). */
+html.dark .stat-card,
+html.dark .chart-container,
+html.dark .products-list,
+html.dark .progress-section {
+  background: #1b1e25;
+}
+html.dark .stat-value,
+html.dark .chart-title {
+  color: #eef0f4;
+}
+html.dark .product-item {
+  border-bottom-color: #2d323c;
+}
+html.dark .product-price {
+  color: #949bab;
+}
+html.dark .progress-bar {
+  background: #2d323c;
+}

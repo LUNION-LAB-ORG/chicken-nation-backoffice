@@ -65,7 +65,7 @@ export default function Reviews() {
       {peutLireRetours && (
         <div
           role="tablist"
-          className="flex w-fit items-center rounded-[12px] bg-[#f4f4f5] px-2"
+          className="flex w-fit items-center rounded-[12px] bg-hex-f4f4f5 px-2"
           style={{ minHeight: 40 }}
         >
           {VUES.map((v, idx) => {
@@ -78,7 +78,7 @@ export default function Reviews() {
                 aria-selected={actif}
                 onClick={() => choisirVue(v.cle)}
                 className={`inline-flex items-center gap-2 whitespace-nowrap rounded-[12px] px-5 py-1 text-[11px] font-bold transition-colors focus:outline-none lg:text-[14px] ${
-                  actif ? "bg-[#F17922] text-white" : "bg-transparent font-normal text-[#71717A]"
+                  actif ? "bg-[#F17922] text-blanc" : "bg-transparent font-normal text-hex-71717a"
                 } ${idx === 0 ? "" : "ml-1"}`}
                 style={{ minWidth: 75, height: 30 }}
               >
@@ -86,7 +86,7 @@ export default function Reviews() {
                 {v.cle === "retours" && pastille && (
                   <span
                     className={`rounded-full px-1.5 text-[11px] font-bold leading-[18px] ${
-                      actif ? "bg-white text-[#F17922]" : "bg-[#F17922] text-white"
+                      actif ? "bg-white text-[#F17922]" : "bg-[#F17922] text-blanc"
                     }`}
                   >
                     {pastille}

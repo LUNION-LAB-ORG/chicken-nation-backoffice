@@ -52,7 +52,7 @@ export const DrawerCancelAction: React.FC<Props> = ({ order }) => {
             type="button"
             disabled={isLoading}
             onClick={() => handleOrderUpdateStatus(order.id, OrderStatus.CANCELLED)}
-            className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition disabled:opacity-60"
+            className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 dark:hover:bg-red-500 text-blanc text-sm font-semibold transition disabled:opacity-60"
           >
             {isLoading ? "Annulation…" : "Confirmer"}
           </button>

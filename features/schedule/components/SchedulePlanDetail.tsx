@@ -207,7 +207,7 @@ export function SchedulePlanDetail({ planId, onPlanRefait, onPlanSupprime }: Pro
                 type="button"
                 onClick={() => lancer(actions.principal!)}
                 disabled={mutationPrincipale(actions.principal).isPending}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] text-white text-xs font-semibold px-3 py-2 hover:bg-[#D8631F] disabled:opacity-60 whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#F17922] text-blanc text-xs font-semibold px-3 py-2 hover:bg-[#D8631F] disabled:opacity-60 whitespace-nowrap"
               >
                 {mutationPrincipale(actions.principal).isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                 {LIBELLE_GESTE[actions.principal]}
@@ -677,7 +677,7 @@ const FenetreJour: React.FC<{
             type="button"
             onClick={() => onEnregistrer(mode)}
             disabled={enCours || inchange}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#F17922] rounded-lg hover:bg-[#D8631F] disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blanc bg-[#F17922] rounded-lg hover:bg-[#D8631F] disabled:opacity-50"
           >
             {enCours && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             Enregistrer

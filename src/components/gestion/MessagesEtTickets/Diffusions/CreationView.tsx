@@ -105,7 +105,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
               onChange={(e) => setNom(e.target.value)}
               maxLength={120}
               placeholder="Ex : Promo week-end de mars"
-              className="mt-1 w-full h-[42px] rounded-xl border border-[#D8D8D8] bg-white px-3 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+              className="mt-1 w-full h-[42px] rounded-xl border border-hex-d8d8d8 bg-white px-3 text-[13px] text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
             />
 
             <label htmlFor="d-corps" className="block mt-4 text-[13px] font-semibold text-gray-700">
@@ -118,7 +118,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
               rows={7}
               maxLength={LONGUEUR_MAX}
               placeholder="Bonjour {{first_name}}, ce week-end les burgers sont à moins 20 pour cent."
-              className="mt-1 w-full rounded-xl border border-[#D8D8D8] bg-white px-3 py-2 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+              className="mt-1 w-full rounded-xl border border-hex-d8d8d8 bg-white px-3 py-2 text-[13px] text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
             />
             <div className="flex items-start justify-between gap-3 mt-1">
               <p className="text-[11px] text-gray-400">
@@ -156,7 +156,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
                 </button>
               </div>
             ) : (
-              <label className="mt-1 flex items-center gap-2 h-[42px] px-3 rounded-xl border border-dashed border-[#D8D8D8] text-[13px] text-gray-500 cursor-pointer w-fit">
+              <label className="mt-1 flex items-center gap-2 h-[42px] px-3 rounded-xl border border-dashed border-hex-d8d8d8 text-[13px] text-gray-500 cursor-pointer w-fit">
                 <ImagePlus size={16} />
                 Joindre une image
                 <input
@@ -179,7 +179,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
                 onClick={() => changerCible(() => setMode('segment'))}
                 className={`flex-1 h-[38px] rounded-xl text-[12px] font-semibold cursor-pointer ${
                   mode === 'segment'
-                    ? 'bg-[#F17922] text-white'
+                    ? 'bg-[#F17922] text-blanc'
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
@@ -189,7 +189,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
                 type="button"
                 onClick={() => changerCible(() => setMode('ids'))}
                 className={`flex-1 h-[38px] rounded-xl text-[12px] font-semibold cursor-pointer ${
-                  mode === 'ids' ? 'bg-[#F17922] text-white' : 'bg-gray-100 text-gray-700'
+                  mode === 'ids' ? 'bg-[#F17922] text-blanc' : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 Clients choisis
@@ -206,7 +206,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
               </div>
             ) : (
               <div className="mt-3">
-                <div className="flex items-center gap-2 h-[42px] rounded-xl border border-[#D8D8D8] px-3">
+                <div className="flex items-center gap-2 h-[42px] rounded-xl border border-hex-d8d8d8 px-3">
                   <Search size={15} className="text-gray-400 shrink-0" />
                   <input
                     value={terme}
@@ -307,7 +307,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
               value={quand}
               min={new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16)}
               onChange={(e) => setQuand(e.target.value)}
-              className="mt-1 w-full h-[42px] rounded-xl border border-[#D8D8D8] bg-white px-3 text-[13px] text-[#595959] focus:outline-none focus:ring-2 focus:ring-[#F17922]"
+              className="mt-1 w-full h-[42px] rounded-xl border border-hex-d8d8d8 bg-white px-3 text-[13px] text-hex-595959 focus:outline-none focus:ring-2 focus:ring-[#F17922]"
             />
             <p className="text-[11px] text-gray-400 mt-1">
               Laissé vide, la diffusion reste en brouillon et part quand vous cliquez
@@ -321,7 +321,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
         <button
           type="button"
           onClick={onRetour}
-          className="h-[42px] px-5 rounded-xl bg-[#ECECEC] text-[13px] font-semibold text-[#9796A1] cursor-pointer"
+          className="h-[42px] px-5 rounded-xl bg-hex-ececec text-[13px] font-semibold text-[#9796A1] cursor-pointer"
         >
           Annuler
         </button>
@@ -340,7 +340,7 @@ export default function CreationView({ onRetour }: { onRetour: () => void }) {
               { onSuccess: onRetour },
             )
           }
-          className="h-[42px] px-5 rounded-xl bg-[#F17922] text-[13px] font-semibold text-white disabled:opacity-50 cursor-pointer"
+          className="h-[42px] px-5 rounded-xl bg-[#F17922] text-[13px] font-semibold text-blanc disabled:opacity-50 cursor-pointer"
         >
           {creer.isPending ? 'Création en cours' : 'Créer la diffusion'}
         </button>

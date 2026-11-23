@@ -18,7 +18,7 @@ function getRelativeTime(dateStr: string): string {
 function getPriorityBadge(priority: 'HIGH' | 'MEDIUM' | 'LOW') {
   if (priority === 'HIGH') {
     return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-red-500 text-white">
+      <span className="inline-flex items-center px-3 py-1 rounded-full md:text-[10px] text-[10px] font-medium bg-red-500 text-blanc">
         HIGH
       </span>
     );

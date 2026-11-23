@@ -231,7 +231,7 @@ export default function StatsMarketing() {
                 {churnExport.data && (
                   <button
                     onClick={handleExportChurn}
-                    className="px-3 py-1.5 bg-[#F17922] text-white text-xs font-medium rounded-xl hover:bg-orange-600 transition-colors"
+                    className="px-3 py-1.5 bg-[#F17922] text-blanc text-xs font-medium rounded-xl hover:bg-orange-600 transition-colors"
                   >
                     <Download className="inline w-3 h-3 mr-1" />Exporter {formatNumber(churnExport.data.totalCount)} contacts
                   </button>

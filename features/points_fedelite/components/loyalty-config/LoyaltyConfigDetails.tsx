@@ -44,7 +44,7 @@ export const LoyaltyConfigDetails = ({ config }: LoyaltyConfigDetailsProps) => {
       </div>
 
       <div className="border-t-2 border-gray-200 pt-6 mt-6">
-        <h3 className="text-lg font-semibold text-[#595959] mb-4">
+        <h3 className="text-lg font-semibold text-hex-595959 mb-4">
           Seuils des Niveaux
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

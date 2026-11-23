@@ -32,7 +32,7 @@ function Tuile({ titre, valeur, detail, alerte }: { titre: string; valeur: strin
   return (
     <div className="flex flex-col gap-1 rounded-xl border border-slate-100 bg-white p-4">
       <span className="text-xs font-semibold text-gray-500">{titre}</span>
-      <span className={`text-2xl font-bold tabular-nums ${alerte ? "text-[#B91C1C]" : "text-gray-900"}`}>{valeur}</span>
+      <span className={`text-2xl font-bold tabular-nums ${alerte ? "text-hex-b91c1c" : "text-gray-900"}`}>{valeur}</span>
       {detail && <span className="text-xs text-gray-500">{detail}</span>}
     </div>
   );
@@ -92,14 +92,14 @@ export function TableauDeBordIncidents({ pointDeVente }: { pointDeVente: boolean
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex items-center gap-1 rounded-xl bg-[#f4f4f5] p-1">
+        <div className="flex items-center gap-1 rounded-xl bg-hex-f4f4f5 p-1">
           {PRESETS.map((p) => (
             <button
               key={p.cle}
               type="button"
               onClick={() => choisir(p.cle)}
               className={`whitespace-nowrap rounded-lg px-3 py-1 text-[13px] font-semibold ${
-                preset === p.cle ? "bg-white text-[#F17922] shadow-sm" : "text-[#71717A] hover:text-gray-700"
+                preset === p.cle ? "bg-white text-[#F17922] shadow-sm" : "text-hex-71717a hover:text-gray-700"
               }`}
             >
               {p.libelle}

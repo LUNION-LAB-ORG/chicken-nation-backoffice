@@ -304,7 +304,7 @@ export default function Operations() {
                       variant: "secondary" as const,
                       icon: UserPlus,
                       className:
-                        "bg-[#F17922] border border-[#F17922] text-white hover:opacity-90",
+                        "bg-[#F17922] border border-[#F17922] text-blanc hover:opacity-90",
                     },
                   ]
                 : []),
@@ -317,7 +317,7 @@ export default function Operations() {
                       icon: RotateCw,
                       iconOnlyWhenCompact: true,
                       className:
-                        "bg-white border border-gray-300 text-[#595959] hover:bg-gray-50",
+                        "bg-white border border-gray-300 text-hex-595959 hover:bg-gray-50",
                     },
                   ]
                 : []),
@@ -354,7 +354,7 @@ export default function Operations() {
       {/* ── Sélecteur d'onglets — segmented control plein-largeur sur mobile ──── */}
       {!isEditing && (
         <div className="px-4 pt-3 pb-0">
-          <div className="flex items-center bg-[#f4f4f5] rounded-[14px] p-1 gap-1 w-full sm:w-fit">
+          <div className="flex items-center bg-hex-f4f4f5 rounded-[14px] p-1 gap-1 w-full sm:w-fit">
             {onglets.map((tab) => {
               const isActive = activeTab === tab.key;
               const pastille = tab.key === "relances" ? nbRelancesOnglet : 0;
@@ -368,7 +368,7 @@ export default function Operations() {
                     setActiveTab(tab.key);
                   }}
                   className={`flex-1 sm:flex-none transition-all font-bold cursor-pointer text-[13px] ${onglets.length > 2 ? "px-2" : "px-5"} sm:px-5 rounded-[11px] focus:outline-none whitespace-nowrap inline-flex items-center justify-center gap-1.5 min-h-[42px] sm:min-h-[30px]
-                    ${isActive ? "bg-[#F17922] text-white shadow-sm" : "bg-transparent text-[#71717A] font-normal active:bg-black/5"}
+                    ${isActive ? "bg-[#F17922] text-blanc shadow-sm" : "bg-transparent text-hex-71717a font-normal active:bg-black/5"}
                   `}
                 >
                   <tab.Icon className={`w-4 h-4 sm:w-3.5 sm:h-3.5 ${onglets.length > 2 ? "hidden min-[400px]:block" : ""}`} />
@@ -376,7 +376,7 @@ export default function Operations() {
                   {pastille > 0 && (
                     <span
                       className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold leading-none inline-flex items-center justify-center ${
-                        isActive ? "bg-white text-[#F17922]" : "bg-[#F17922] text-white"
+                        isActive ? "bg-white text-[#F17922]" : "bg-[#F17922] text-blanc"
                       }`}
                     >
                       {pastille > 99 ? "99+" : pastille}

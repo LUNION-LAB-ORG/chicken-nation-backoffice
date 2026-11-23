@@ -79,7 +79,7 @@ export function FiltresRetours({
             <button
               type="button"
               onClick={() => onChange({ en_retard: false })}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#C2410C] bg-white px-3 py-1 text-xs font-semibold text-[#9A3412] hover:bg-orange-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#C2410C] bg-white px-3 py-1 text-xs font-semibold text-hex-9a3412 hover:bg-orange-50"
               aria-label="Retirer le filtre Échéance dépassée"
             >
               Échéance dépassée
@@ -90,7 +90,7 @@ export function FiltresRetours({
             <button
               type="button"
               onClick={() => onChange({ resolus_7j: false })}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[#1C5E34] bg-white px-3 py-1 text-xs font-semibold text-[#1C5E34] hover:bg-green-50"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#1C5E34] bg-white px-3 py-1 text-xs font-semibold text-hex-1c5e34 hover:bg-green-50"
               aria-label="Retirer le filtre Résolus sur 7 jours"
             >
               Résolus sur 7 jours

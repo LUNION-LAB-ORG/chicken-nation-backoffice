@@ -106,11 +106,11 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
     <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white @4xl/commande:max-h-[calc(100dvh-5.5rem)]">
       {/* En-tête */}
       <div className="flex shrink-0 items-center justify-between bg-[#F17922] px-4 py-3">
-        <h4 className="flex items-center gap-2 text-sm font-bold text-white">
+        <h4 className="flex items-center gap-2 text-sm font-bold text-blanc">
           <span>🛒</span>
           Panier
         </h4>
-        <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
+        <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-blanc">
           {nombreArticles} article{nombreArticles > 1 ? "s" : ""}
         </span>
       </div>
@@ -147,7 +147,7 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
       {/* Résumé de prix */}
       <div className="shrink-0 space-y-2 border-t-2 border-[#F17922]/10 px-4 py-4">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-medium text-[#71717A]">
+          <span className="text-[13px] font-medium text-hex-71717a">
             Sous-total articles
             {sousTotalRecalcule && (
               <span className="block text-[11px] font-normal text-gray-400">
@@ -155,15 +155,15 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
               </span>
             )}
           </span>
-          <span className="shrink-0 text-[13px] font-semibold text-[#595959]">
+          <span className="shrink-0 text-[13px] font-semibold text-hex-595959">
             {sousTotal.toLocaleString()} XOF
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] font-medium text-[#71717A]">Frais de livraison</span>
+          <span className="text-[13px] font-medium text-hex-71717a">Frais de livraison</span>
           {livraison ? (
-            <span className="shrink-0 text-[13px] font-semibold text-[#595959]">
+            <span className="shrink-0 text-[13px] font-semibold text-hex-595959">
               {fraisLivraison > 0
                 ? `${fraisLivraison.toLocaleString()} XOF`
                 : adresse
@@ -177,8 +177,8 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
 
         {taxe > 0 && (
           <div className="flex items-center justify-between gap-3">
-            <span className="text-[13px] font-medium text-[#71717A]">Taxe</span>
-            <span className="shrink-0 text-[13px] font-semibold text-[#595959]">{taxe.toLocaleString()} XOF</span>
+            <span className="text-[13px] font-medium text-hex-71717a">Taxe</span>
+            <span className="shrink-0 text-[13px] font-semibold text-hex-595959">{taxe.toLocaleString()} XOF</span>
           </div>
         )}
 
@@ -193,10 +193,10 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
           </div>
         )}
 
-        <div className="!my-3 border-t-2 border-dashed border-[#D9D9D9]/50" />
+        <div className="!my-3 border-t-2 border-dashed border-hex-d9d9d9/50" />
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-base font-bold text-[#595959]">Total à payer</span>
+          <span className="text-base font-bold text-hex-595959">Total à payer</span>
           <div className="shrink-0 text-right">
             <span className="text-xl font-extrabold text-[#F17922]">{total.toLocaleString()}</span>
             <span className="ml-1 text-sm font-bold text-[#F17922]">XOF</span>
@@ -217,7 +217,7 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
         <button
           type="submit"
           disabled={envoiEnCours || formData.items.length === 0}
-          className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#F17922] px-3 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-[#F17922] px-3 text-[13px] font-semibold text-blanc transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {envoiEnCours ? (
             <>

@@ -243,7 +243,7 @@ export function ForceAssignModal({ isOpen, course }: Props) {
           <button
             onClick={handleConfirm}
             disabled={!choisi || forceAssign.isPending}
-            className="flex-1 py-2.5 rounded-lg bg-[#F17922] text-white text-sm font-semibold disabled:bg-gray-300"
+            className="flex-1 py-2.5 rounded-lg bg-[#F17922] text-blanc text-sm font-semibold disabled:bg-gray-300"
           >
             {forceAssign.isPending
               ? 'Envoi…'

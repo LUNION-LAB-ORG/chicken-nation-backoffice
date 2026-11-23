@@ -24,18 +24,18 @@ const Ligne: React.FC<{ f: ReferralFilleulLigne; onOuvrirFiche: (id: string) => 
   f,
   onOuvrirFiche,
 }) => (
-  <tr className="border-b border-[#F2F2F4] last:border-0 hover:bg-[#FAFAFA]">
+  <tr className="border-b border-hex-f2f2f4 last:border-0 hover:bg-hex-fafafa">
     <td className="py-3 px-3">
-      <div className="text-sm font-medium text-[#18181B]">{f.fullname ?? "Sans nom"}</div>
+      <div className="text-sm font-medium text-hex-18181b">{f.fullname ?? "Sans nom"}</div>
       <div className="text-xs text-[#9796A1]">{f.phone}</div>
     </td>
     <td className="py-3 px-3">
-      <div className="text-sm text-[#18181B]">{f.referrer_name ?? "Sans nom"}</div>
+      <div className="text-sm text-hex-18181b">{f.referrer_name ?? "Sans nom"}</div>
       {f.referrer_code && (
         <span className="text-[10px] font-semibold text-[#F17922]">{f.referrer_code}</span>
       )}
     </td>
-    <td className="py-3 px-3 text-xs text-[#71717A] whitespace-nowrap">{shortDate(f.joined_at)}</td>
+    <td className="py-3 px-3 text-xs text-hex-71717a whitespace-nowrap">{shortDate(f.joined_at)}</td>
     <td className="py-3 px-3">{f.gift && <Pastille style={ETAT_CADEAU[f.gift]} />}</td>
     <td className="py-3 px-3">
       <Pastille style={STATUT_FILLEUL[f.status] ?? STATUT_FILLEUL.PENDING} />
@@ -43,7 +43,7 @@ const Ligne: React.FC<{ f: ReferralFilleulLigne; onOuvrirFiche: (id: string) => 
         <div className="text-[11px] text-[#9796A1] mt-0.5 whitespace-nowrap">le {shortDate(f.qualified_at)}</div>
       )}
     </td>
-    <td className="py-3 px-3 text-right text-sm text-[#18181B] whitespace-nowrap">
+    <td className="py-3 px-3 text-right text-sm text-hex-18181b whitespace-nowrap">
       {fcfa(f.sales)}
       <div className="text-[11px] text-[#9796A1]">{pluriel(f.orders_count, "commande")}</div>
     </td>
@@ -51,7 +51,7 @@ const Ligne: React.FC<{ f: ReferralFilleulLigne; onOuvrirFiche: (id: string) => 
       <button
         type="button"
         onClick={() => onOuvrirFiche(f.referrer_id)}
-        className="text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-[#FFF6E9] cursor-pointer whitespace-nowrap"
+        className="text-sm font-medium text-[#F17922] border border-[#F17922]/30 rounded-lg px-3 py-1.5 hover:bg-hex-fff6e9 cursor-pointer whitespace-nowrap"
       >
         Voir le parrain
       </button>
@@ -102,14 +102,14 @@ export default function FilleulsList({
       </div>
 
       <div
-        className={`bg-white border border-[#E4E4E7] rounded-xl overflow-hidden transition-opacity ${
+        className={`bg-white border border-hex-e4e4e7 rounded-xl overflow-hidden transition-opacity ${
           isPlaceholderData ? "opacity-50" : ""
         }`}
       >
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">
             <thead>
-              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-[#FAFAFA] text-left">
+              <tr className="text-[11px] uppercase tracking-wide text-[#9796A1] bg-hex-fafafa text-left">
                 <th className="py-2.5 px-3 font-medium">Filleul</th>
                 <th className="py-2.5 px-3 font-medium">Parrain</th>
                 <th className="py-2.5 px-3 font-medium">Inscrit le</th>

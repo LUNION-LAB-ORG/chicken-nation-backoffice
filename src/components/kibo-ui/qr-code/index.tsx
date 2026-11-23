@@ -41,11 +41,12 @@ export const QRCode = ({
   useEffect(() => {
     const generateQR = async () => {
       try {
-        const styles = getComputedStyle(document.documentElement);
         const foregroundColor =
-          foreground ?? styles.getPropertyValue("--foreground");
+          // Toujours foncé sur clair : un QR code inversé (thème sombre)
+          // n'est pas lu par tous les téléphones, ni une fois imprimé.
+          foreground ?? "#171717";
         const backgroundColor =
-          background ?? styles.getPropertyValue("--background");
+          background ?? "#ffffff";
 
         const foregroundOklch = getOklch(
           foregroundColor,

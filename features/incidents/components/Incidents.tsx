@@ -38,7 +38,7 @@ export function Incidents() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div role="tablist" aria-label="Vues des incidents" className="flex w-full gap-1 overflow-x-auto rounded-xl bg-[#F4F4F5] p-1 sm:w-fit">
+        <div role="tablist" aria-label="Vues des incidents" className="flex w-full gap-1 overflow-x-auto rounded-xl bg-hex-f4f4f5 p-1 sm:w-fit">
           {vues.map(({ cle, libelle, Icone, nombre }) => {
             const choisie = cle === vue;
             return (
@@ -49,7 +49,7 @@ export function Incidents() {
                 aria-selected={choisie}
                 onClick={() => setVue(cle)}
                 className={`inline-flex h-9 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 text-sm font-semibold transition-colors sm:flex-none sm:px-4 ${
-                  choisie ? "bg-white text-[#18181B] shadow-sm" : "text-[#71717A] hover:text-[#18181B]"
+                  choisie ? "bg-white text-hex-18181b shadow-sm" : "text-hex-71717a hover:text-hex-18181b"
                 }`}
               >
                 <Icone className={`h-4 w-4 ${choisie ? "text-[#F17922]" : ""}`} />
@@ -57,7 +57,7 @@ export function Incidents() {
                 {nombre !== null && nombre > 0 && (
                   <span
                     className={`min-w-[20px] rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                      choisie ? "bg-orange-50 text-[#F17922]" : "bg-white text-[#52525B]"
+                      choisie ? "bg-orange-50 text-[#F17922]" : "bg-white text-hex-52525b"
                     }`}
                   >
                     {nombre}
@@ -70,7 +70,7 @@ export function Incidents() {
 
         <div className="flex flex-wrap items-center gap-3">
           {compteurs && compteurs.en_retard > 0 && (
-            <span className="text-[13px] font-semibold text-[#B91C1C]">
+            <span className="text-[13px] font-semibold text-hex-b91c1c">
               {compteurs.en_retard} en retard
             </span>
           )}
@@ -78,7 +78,7 @@ export function Incidents() {
             <button
               type="button"
               onClick={() => signaler()}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-white hover:bg-[#e06a15]"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#F17922] px-4 text-sm font-semibold text-blanc hover:bg-[#e06a15]"
             >
               <Plus className="h-4 w-4" />
               Signaler un incident

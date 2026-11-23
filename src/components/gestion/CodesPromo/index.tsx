@@ -130,7 +130,7 @@ function DeleteConfirmModal({
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-blanc bg-red-600 rounded-lg hover:bg-red-700 dark:hover:bg-red-500 transition-colors disabled:opacity-50"
           >
             {isLoading ? "Suppression..." : "Supprimer"}
           </button>
@@ -583,7 +583,7 @@ function PromoCodeFormModal({
           <button
             onClick={handleSubmit as any}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-white bg-[#F17922] rounded-lg hover:bg-[#d96810] transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium text-blanc bg-[#F17922] rounded-lg hover:bg-[#d96810] transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {isLoading && <RefreshCw size={14} className="animate-spin" />}
             {promo ? "Mettre à jour" : "Créer"}
@@ -1016,7 +1016,7 @@ export default function CodesPromo() {
                     onClick={() => handlePageChange(pageNum)}
                     className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                       pageNum === meta.page
-                        ? "bg-[#F17922] text-white"
+                        ? "bg-[#F17922] text-blanc"
                         : "hover:bg-gray-200 text-gray-600"
                     }`}
                   >

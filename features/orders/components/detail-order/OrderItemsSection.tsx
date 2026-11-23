@@ -14,7 +14,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
       <div>
         <h3 className="text-lg font-medium text-[#F17922]">Commande</h3>
         <div className="flex gap-2 flex-row items-center justify-between text-sm">
-          <span className="font-medium text-[#71717A]">
+          <span className="font-medium text-hex-71717a">
             Coût de la commande
           </span>
           <span className="font-bold text-[#F17922]">
@@ -38,7 +38,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                       className="object-cover"
                     />
                     {item.price === 0 && (
-                      <div className="absolute bottom-0 right-0 bg-[#F17922] text-white text-[8px] px-1 py-0.5 rounded-tl-md">
+                      <div className="absolute bottom-0 right-0 bg-[#F17922] text-blanc text-[8px] px-1 py-0.5 rounded-tl-md">
                         Offert
                       </div>
                     )}
@@ -71,7 +71,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                       </div>
                       <p
                         className={`ml-8 shrink-0 text-sm font-bold ${
-                          item.price === 0 ? "text-[#F17922]" : "text-[#71717A]"
+                          item.price === 0 ? "text-[#F17922]" : "text-hex-71717a"
                         }`}
                       >
                         {item.price === 0
@@ -122,7 +122,7 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({ order }) => {
                               : item.supplements}
                           </span>
                         </div>
-                        <p className="ml-8 shrink-0 text-sm font-medium text-[#71717A]">
+                        <p className="ml-8 shrink-0 text-sm font-medium text-hex-71717a">
                           {`${item.supplementsPrice.toLocaleString()} F`}
                         </p>
                       </div>

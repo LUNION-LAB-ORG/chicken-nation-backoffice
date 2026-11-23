@@ -215,26 +215,26 @@ export default function SupplementView({
                   />
                 </th>
                 <th className="w-16"></th>
-                <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[250px]">
+                <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[250px]">
                   <div className="flex items-center">
                     Produits
                     <ChevronDown className="ml-2 w-4 h-4" />
                   </div>
                 </th>
-                <th className="text-left py-4 text-[14px] text-[#71717A] font-bold w-[200px]">
+                <th className="text-left py-4 text-[14px] text-hex-71717a font-bold w-[200px]">
                   <div className="flex items-center">
                     Catégorie
                     <ChevronDown className="ml-2 w-4 h-4" />
                   </div>
                 </th>
-                <th className="text-right py-4 text-[14px] text-[#71717A] font-bold w-[250px]">
+                <th className="text-right py-4 text-[14px] text-hex-71717a font-bold w-[250px]">
                   <div className="flex items-center justify-end">
                     Prix XOF
                     <ChevronDown className="ml-2 w-4 h-4" />
                   </div>
                 </th>
                 {/* Colonne Disponible - conditionnelle */}
-                <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[300px]">
+                <th className="text-center py-4 text-[14px] text-hex-71717a font-bold w-[300px]">
                   <div className="flex items-center justify-center">
                     Disponible
                     <ChevronDown className="ml-2 w-4 h-4" />
@@ -242,7 +242,7 @@ export default function SupplementView({
                 </th>
                 {/* Colonne Actions - conditionnelle */}
                 {colonneActions && (
-                  <th className="text-center py-4 text-[14px] text-[#71717A] font-bold w-[100px]">
+                  <th className="text-center py-4 text-[14px] text-hex-71717a font-bold w-[100px]">
                     <div className="flex items-center justify-center">
                       {aDesActions ? "Actions" : "Fiche"}
                     </div>
@@ -407,7 +407,7 @@ export default function SupplementView({
                         {onCreateProduct && (
                           <button
                             onClick={onCreateProduct}
-                            className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
+                            className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-blanc font-medium rounded-xl 
                         hover:bg-[#F17922]/90 transition-colors"
                           >
                             Ajouter un produit
@@ -430,12 +430,12 @@ export default function SupplementView({
             .map((product) => (
               <div
                 key={product.id}
-                className={`bg-white rounded-xl shadow-sm border border-[#ECECEC] p-4 flex items-center gap-4 transition ${
-                  onEdit || onView ? "cursor-pointer hover:bg-[#FFF6E9]/60" : ""
+                className={`bg-white rounded-xl shadow-sm border border-hex-ececec p-4 flex items-center gap-4 transition ${
+                  onEdit || onView ? "cursor-pointer hover:bg-hex-fff6e9/60" : ""
                 }`}
                 onClick={() => (onEdit ? onEdit(product) : onView?.(product))}
               >
-                <div className="w-14 h-14 rounded-lg bg-[#FFF6E9] flex items-center justify-center overflow-hidden">
+                <div className="w-14 h-14 rounded-lg bg-hex-fff6e9 flex items-center justify-center overflow-hidden">
                   <Image
                     src={
                       product.image
@@ -450,14 +450,14 @@ export default function SupplementView({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center flex-row justify-between gap-2">
-                    <span className="text-[13px] text-[#232323] font-semibold truncate">
+                    <span className="text-[13px] text-hex-232323 font-semibold truncate">
                       {safeString(product.name)}
                     </span>
-                    <span className="bg-[#FBDBA7] text-[#7A3502] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-hex-fbdba7 text-hex-7a3502 text-[10px] font-bold px-2 py-0.5 rounded-full">
                       {translateCategory(product.category)}
                     </span>
                   </div>
-                  <div className="text-[12px] text-[#71717A] truncate">
+                  <div className="text-[12px] text-hex-71717a truncate">
                     {product.price === 0 ? (
                       <span className="text-[#F17922] font-medium">
                         Gratuit
@@ -488,7 +488,7 @@ export default function SupplementView({
                 {/* Menu actions - conditionnel */}
                 {aDesActions ? (
                   <span
-                    className="text-[#71717A] text-lg cursor-pointer select-none px-2"
+                    className="text-hex-71717a text-lg cursor-pointer select-none px-2"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleMenuOpen(product.id, e);
@@ -498,7 +498,7 @@ export default function SupplementView({
                   </span>
                 ) : onView ? (
                   <span
-                    className="text-[#71717A] text-lg cursor-pointer select-none px-2"
+                    className="text-hex-71717a text-lg cursor-pointer select-none px-2"
                     aria-label="Voir la fiche"
                   >
                     <Eye size={20} />
@@ -510,7 +510,7 @@ export default function SupplementView({
           {paginatedProducts.length === 0 && filteredProducts.length === 0 && (
             <div
               key="empty-supplements-mobile"
-              className="bg-white rounded-xl shadow-sm border border-[#ECECEC] p-6 flex flex-col items-center justify-center"
+              className="bg-white rounded-xl shadow-sm border border-hex-ececec p-6 flex flex-col items-center justify-center"
             >
               <span className="text-[14px] text-[#F17922] mb-4">
                 Aucun produit trouvé
@@ -518,7 +518,7 @@ export default function SupplementView({
               {onCreateProduct && (
                 <button
                   onClick={onCreateProduct}
-                  className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-white font-medium rounded-xl 
+                  className="px-4 py-2 text-[14px] cursor-pointer bg-[#F17922] text-blanc font-medium rounded-xl 
                 hover:bg-[#F17922]/90 transition-colors"
                 >
                   Ajouter un produit

@@ -127,7 +127,7 @@ export default function Clients() {
                   onClick={() => handleSegmentChange(tab.key)}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                     activeSegment === tab.key
-                      ? "bg-[#F17922] text-white shadow-sm"
+                      ? "bg-[#F17922] text-blanc shadow-sm"
                       : "bg-white text-gray-600 border border-gray-200 hover:bg-orange-50 hover:text-[#F17922]"
                   }`}
                 >
@@ -151,7 +151,7 @@ export default function Clients() {
                   onClick={handleExport}
                   disabled={exporting}
                   title="Exporter les clients filtrés (Excel)"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#F17922] text-white hover:bg-[#d96a18] disabled:opacity-60 cursor-pointer shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium bg-[#F17922] text-blanc hover:bg-[#d96a18] disabled:opacity-60 cursor-pointer shrink-0"
                 >
                   {exporting ? (
                     <Loader2 size={16} className="animate-spin" />

@@ -42,12 +42,12 @@ const RejectLivreurModal: React.FC<RejectLivreurModalProps> = ({
       title="Refuser le livreur"
       icon={<XCircle className="w-5 h-5 text-[#EF4444]" />}
     >
-      <p className="text-sm text-[#52525B] mb-4">
+      <p className="text-sm text-hex-52525b mb-4">
         Vous êtes sur le point de refuser <strong>{livreurNom}</strong>. Cette action est
         irréversible. Indiquez le motif — il pourra être affiché au livreur.
       </p>
 
-      <label className="block text-sm font-medium text-[#18181B] mb-1.5">
+      <label className="block text-sm font-medium text-hex-18181b mb-1.5">
         Motif du refus <span className="text-[#EF4444]">*</span>
       </label>
       <textarea
@@ -56,7 +56,7 @@ const RejectLivreurModal: React.FC<RejectLivreurModalProps> = ({
         placeholder="Ex. Documents illisibles, informations incohérentes…"
         rows={4}
         maxLength={500}
-        className="w-full rounded-lg border border-[#E4E4E7] px-3 py-2 text-sm focus:outline-none focus:border-[#F17922] focus:ring-1 focus:ring-[#F17922]"
+        className="w-full rounded-lg border border-hex-e4e4e7 px-3 py-2 text-sm focus:outline-none focus:border-[#F17922] focus:ring-1 focus:ring-[#F17922]"
       />
       <p className="text-xs text-[#A1A1AA] mt-1">{reason.length} / 500 caractères</p>
 
@@ -65,7 +65,7 @@ const RejectLivreurModal: React.FC<RejectLivreurModalProps> = ({
           type="button"
           onClick={onClose}
           disabled={isPending}
-          className="px-4 py-2 text-sm font-medium text-[#52525B] rounded-lg hover:bg-[#F4F4F5] disabled:opacity-50"
+          className="px-4 py-2 text-sm font-medium text-hex-52525b rounded-lg hover:bg-hex-f4f4f5 disabled:opacity-50"
         >
           Annuler
         </button>
@@ -73,7 +73,7 @@ const RejectLivreurModal: React.FC<RejectLivreurModalProps> = ({
           type="button"
           onClick={handleConfirm}
           disabled={reason.trim().length < 3 || isPending}
-          className="px-4 py-2 text-sm font-semibold text-white bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-sm font-semibold text-blanc bg-[#EF4444] rounded-lg hover:bg-[#DC2626] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? "Envoi…" : "Refuser"}
         </button>

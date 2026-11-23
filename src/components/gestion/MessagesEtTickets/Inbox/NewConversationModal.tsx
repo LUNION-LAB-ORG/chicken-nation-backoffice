@@ -236,7 +236,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
         {/* Content */}
         <div className="md:p-6 p-4 pt-2">
-          <p className="text-black md:text-sm text-xs mb-6">
+          <p className="text-noir md:text-sm text-xs mb-6">
             Créer une nouvelle conversation avec un client ou une conversation interne.
           </p>
 
@@ -252,7 +252,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
           {/* ✅ Problème 3 : Masquer "Avec client" pour les admins */}
           {user?.role !== 'ADMIN' && (
             <div className="mb-6">
-              <label className="block text-sm font-medium text-black mb-3">
+              <label className="block text-sm font-medium text-noir mb-3">
                 Type de conversation
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -260,8 +260,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                   type="button"
                   onClick={() => setConversationType('Avec client')}
                   className={`px-6 py-2.5 rounded-xl border-2 transition-all  font-medium text-sm ${conversationType === 'Avec client'
-                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-white'
-                    : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-blanc'
+                    : 'border-gray-200 bg-white cursor-pointer text-noir hover:border-gray-300 hover:bg-gray-50'
                     }`}
                 >
                   Avec client
@@ -270,8 +270,8 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
                   type="button"
                   onClick={() => setConversationType('Interne')}
                   className={`px-6 py-2.5 rounded-xl border-2 transition-all font-medium text-sm flex items-center justify-center gap-2 ${conversationType === 'Interne'
-                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-white'
-                    : 'border-gray-200 bg-white cursor-pointer text-black hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-[#F17922] bg-gradient-to-r from-[#F17922] to-orange-600 text-blanc'
+                    : 'border-gray-200 bg-white cursor-pointer text-noir hover:border-gray-300 hover:bg-gray-50'
                     }`}
                 >
                   <Users className="w-4 h-4" />
@@ -336,7 +336,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
           {/* Sujet */}
           <div className="mb-6">
-            <label className="block md:text-sm text-xs font-medium text-black mb-2">
+            <label className="block md:text-sm text-xs font-medium text-noir mb-2">
               {estGroupe ? 'Nom du groupe' : 'Sujet de la conversation'}
               <span className="text-red-500 ml-1">*</span>
             </label>
@@ -345,7 +345,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="Ex: Problème avec commande #12345"
-              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] ${errors.subject ? 'border-red-500' : 'border-gray-300'
+              className={`w-full md:px-4 md:py-4 px-3 py-3 border rounded-xl md:text-sm text-xs text-noir placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] ${errors.subject ? 'border-red-500' : 'border-gray-300'
                 }`}
             />
             {errors.subject && (
@@ -355,7 +355,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
 
           {/* Message initial */}
           <div className="mb-16">
-            <label className="block md:text-sm text-xs font-medium text-black mb-2">
+            <label className="block md:text-sm text-xs font-medium text-noir mb-2">
               Message initial (optionnel)
             </label>
             <textarea
@@ -363,7 +363,7 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
               onChange={(e) => setInitialMessage(e.target.value)}
               placeholder="Tapez votre message initial..."
               rows={4}
-              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs text-black placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] resize-none"
+              className="w-full md:px-4 md:py-4 px-3 py-3 border border-gray-300 rounded-xl md:text-sm text-xs text-noir placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F17922] focus:border-[#F17922] resize-none"
             />
           </div>
 
@@ -372,14 +372,14 @@ function NewConversationModal({ isOpen, onClose, onCreateConversation }: NewConv
             <button
               onClick={handleCancel}
               disabled={isCreating}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer  border border-gray-300 text-black rounded-xl md:text-sm text-xs font-medium hover:text-white hover:border-white hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer  border border-gray-300 text-noir rounded-xl md:text-sm text-xs font-medium hover:text-blanc hover:border-white hover:bg-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Annuler
             </button>
             <button
               onClick={handleCreateConversation}
               disabled={isCreating || !subject.trim()}
-              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-[#F17922] text-white rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+              className="md:px-6 md:py-3 px-4 py-2 cursor-pointer bg-[#F17922] text-blanc rounded-xl md:text-sm text-xs font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
             >
               {isCreating ? (
                 <>

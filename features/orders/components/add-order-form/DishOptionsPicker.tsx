@@ -64,7 +64,7 @@ export default function DishOptionsPicker({
 
   return (
     <div className="mb-5 space-y-4">
-      <label className="block text-sm font-semibold text-[#595959]">
+      <label className="block text-sm font-semibold text-hex-595959">
         Composer le plat
       </label>
 

@@ -77,7 +77,7 @@ export default function LecteurVocal({
         onClick={basculer}
         title={enLecture ? 'Mettre en pause' : 'Écouter la note vocale'}
         className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-          sombre ? 'bg-white/20 hover:bg-white/30 text-white' : 'bg-[#F17922]/10 hover:bg-[#F17922]/20 text-[#F17922]'
+          sombre ? 'bg-white/20 hover:bg-white/30 text-blanc' : 'bg-[#F17922]/10 hover:bg-[#F17922]/20 text-[#F17922]'
         }`}
       >
         {enLecture ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
@@ -90,7 +90,7 @@ export default function LecteurVocal({
           />
         </div>
       </div>
-      <span className={`text-[11px] tabular-nums shrink-0 ${sombre ? 'text-white/80' : 'text-gray-500'}`}>
+      <span className={`text-[11px] tabular-nums shrink-0 ${sombre ? 'text-blanc/80' : 'text-gray-500'}`}>
         {formaterDuree(restant)}
       </span>
     </div>
