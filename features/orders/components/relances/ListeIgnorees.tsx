@@ -41,10 +41,14 @@ function LigneIgnoree({ ligne, maintenant }: { ligne: IgnoreeLigne; maintenant: 
               Annulée par le client
             </span>
           )}
-          {!ligne.encore_en_attente && (
-            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
-              Plus en attente
-            </span>
+          {ligne.annulee ? (
+            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">Annulée</span>
+          ) : (
+            !ligne.encore_en_attente && (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-600">
+                Plus en attente
+              </span>
+            )
           )}
         </div>
         <p className="text-xs text-gray-500">
@@ -52,15 +56,18 @@ function LigneIgnoree({ ligne, maintenant }: { ligne: IgnoreeLigne; maintenant: 
           {raison ? ` : ${raison}` : ""}
         </p>
       </div>
-      <button
-        type="button"
-        disabled={retablir.isPending}
-        onClick={() => retablir.mutate(ligne.id)}
-        className="self-start sm:self-auto inline-flex items-center gap-1.5 h-10 sm:h-9 px-3.5 rounded-xl border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer whitespace-nowrap"
-      >
-        {retablir.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
-        Rétablir
-      </button>
+      {/* Annulée en l'ignorant (23/11) : elle ne revient pas dans les relances. */}
+      {!ligne.annulee && (
+        <button
+          type="button"
+          disabled={retablir.isPending}
+          onClick={() => retablir.mutate(ligne.id)}
+          className="self-start sm:self-auto inline-flex items-center gap-1.5 h-10 sm:h-9 px-3.5 rounded-xl border border-gray-200 bg-white text-[13px] font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 cursor-pointer whitespace-nowrap"
+        >
+          {retablir.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+          Rétablir
+        </button>
+      )}
     </li>
   );
 }

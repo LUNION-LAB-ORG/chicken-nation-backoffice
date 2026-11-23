@@ -82,9 +82,9 @@ describe('relance : bouton « Confirmer le paiement »', () => {
       'ignorer',
       'ouvrir',
     ]);
+    // Paiement en cours : pas « Ignorer », qui annulerait la commande (23/11).
     expect(actionsRelance(groupe({ etat: 'EN_COURS', signale: signal() }), { estAdmin: false })).toEqual([
       'confirmer_paiement',
-      'ignorer',
       'ouvrir',
     ]);
   });

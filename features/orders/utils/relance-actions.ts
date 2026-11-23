@@ -17,7 +17,9 @@ import type { BrouillonLigne, GroupeRelance } from "../types/relance.types";
  *  - `liberer` : sa propre prise, ou celle d'un collègue pour l'ADMIN ;
  *  - `ignorer` : sauf la prise d'un collègue (l'ADMIN passe), et JAMAIS sur
  *    une commande à confirmer : elle resterait en attente pour toujours, le
- *    client verrait « À confirmer » sans fin (le serveur répond 409) ;
+ *    client verrait « À confirmer » sans fin (le serveur répond 409). Ni
+ *    pendant « paiement en cours » : ignorer annule la commande (23/11), le
+ *    paiement arriverait sur une commande annulée (le serveur répond 409) ;
  *  - `annuler` : « Annuler la commande », à sa place, réservé à la commande
  *    à confirmer, avec la même garde sur la prise d'un collègue ;
  *  - `ouvrir` : toujours.
@@ -50,7 +52,10 @@ export function actionsRelance(
   if (parMoi) actions.push("reprendre");
   if (confirmable && (parMoi || (signale && (!parAutre || estAdmin)))) actions.push("confirmer_paiement");
   if (parMoi || (parAutre && estAdmin)) actions.push("liberer");
-  if (!parAutre || estAdmin) actions.push(aConfirmer ? "annuler" : "ignorer");
+  if (!parAutre || estAdmin) {
+    if (aConfirmer) actions.push("annuler");
+    else if (etat !== "EN_COURS") actions.push("ignorer");
+  }
   actions.push("ouvrir");
   return actions;
 }

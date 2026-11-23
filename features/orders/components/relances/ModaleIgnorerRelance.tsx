@@ -21,8 +21,9 @@ interface Props {
 
 /**
  * « Ignorer cette commande ? » : la relance sort des alertes de TOUTE
- * l'équipe, avec le nom de l'agent et une raison courte. Elle reste
- * visible dans « Ignorées », d'où on peut la rétablir. Ignorer ne supprime
+ * l'équipe, avec le nom de l'agent et une raison courte, et la commande est
+ * ANNULÉE (23/11) : elle se voit dans Commandes au statut Annulée, le client
+ * le voit dans son suivi. Elle reste dans « Ignorées ». Ignorer ne supprime
  * jamais la commande.
  *
  * « Annuler cette commande ? » : la commande à confirmer que le client ne
@@ -77,8 +78,11 @@ export function ModaleIgnorerRelance({ groupe, mode = "ignorer", onClose }: Prop
             </>
           ) : (
             <>
-              <p>Elle sortira des alertes de toute l&apos;équipe. Vous pourrez la rétablir.</p>
-              {paniers > 1 && <p className="mt-1">Les {paniers} paniers de ce client seront ignorés.</p>}
+              <p>
+                Elle sera annulée et sortira des alertes de toute l&apos;équipe. Le client le voit dans son suivi.
+                Le bon, le code et les cadeaux lui sont rendus.
+              </p>
+              {paniers > 1 && <p className="mt-1">Les {paniers} paniers de ce client seront ignorés et annulés.</p>}
             </>
           )}
           <p className="mt-2 text-gray-500">

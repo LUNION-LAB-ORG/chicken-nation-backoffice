@@ -181,6 +181,11 @@ export interface IgnoreeLigne extends BrouillonLigne {
   raison_texte: string | null;
   /** Le panier est-il toujours un brouillon (ni payé, ni annulé, ni repris) ? */
   encore_en_attente: boolean;
+  /**
+   * Annulée en l'ignorant (depuis le 23/11) : plus rien à rétablir.
+   * Absent d'un serveur plus ancien, lu comme « non ».
+   */
+  annulee?: boolean;
 }
 
 export interface IgnoreesReponse {

@@ -57,9 +57,14 @@ export const useIgnorerRelance = () => {
   const invalider = useInvalidateRelances();
   return useMutation({
     mutationFn: ({ orderId, dto }: { orderId: string; dto: IgnorerRelanceDTO }) => relanceAPI.ignorer(orderId, dto),
-    onSuccess: () => {
+    onSuccess: (r) => {
       void invalider();
-      toast.success("Commande ignorée pour toute l'équipe");
+      // Ignorer annule (23/11). Rien d'annulé : payée ou reprise entre-temps,
+      // ou serveur plus ancien, elle est seulement ignorée.
+      const annulees = r?.annulees ?? 0;
+      if (annulees > 1) toast.success(`${annulees} commandes ignorées et annulées`);
+      else if (annulees === 1) toast.success("Commande ignorée et annulée");
+      else toast.success("Commande ignorée pour toute l'équipe");
     },
     onError: (e: ErreurApi) => {
       toast.error(e.message);
