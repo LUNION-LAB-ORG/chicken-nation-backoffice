@@ -92,6 +92,15 @@ const teintes = TEINTES.flatMap((t) => {
   ];
 });
 
+// Valeurs claires des mêmes variables : un bloc toujours foncé (infobulle,
+// panneau d'appel) les retrouve avec la classe \`palette-claire\`.
+const grisClairs = FAMILLES_GRISES.flatMap((famille) =>
+  Object.keys(GRIS_SOMBRE).map((nuance) => [`--color-${famille}-${nuance}`, valeur(famille, nuance)]),
+);
+const teintesClaires = TEINTES.flatMap((t) =>
+  [50, 100, 200, 700, 800, 900, 950].map((nuance) => [`--color-${t}-${nuance}`, valeur(t, nuance)]),
+);
+
 const couleursCode = [...utilisees].sort().map((nom) => {
   const hex = nom.slice(4);
   const sombre = hexVersHsl(hex).l < 0.5 ? sombrePourTexte(hex) : sombrePourFond(hex);
@@ -117,6 +126,9 @@ const css = `/*
  *  - Un code couleur du code (\`bg-hex-f4f4f5\`, \`text-hex-595959\`) garde son
  *    code en clair et prend une valeur calculée en sombre.
  *  - Une classe \`dark:\` reste possible pour un cas particulier.
+ *  - Un bloc foncé dans les deux thèmes (infobulle, panneau d'appel, barre de
+ *    sélection) porte \`palette-claire\` : il garde les couleurs du thème clair,
+ *    pour lesquelles il a été dessiné.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -154,6 +166,28 @@ ${lignes(teintes)}
 
   /* Codes couleur du code */
 ${lignes(couleursCode.map((c) => [`--color-${c.nom}`, c.sombre]))}
+}
+
+/* Bloc toujours foncé : la palette du thème clair. */
+html.dark .palette-claire {
+  --color-white: #ffffff;
+  --color-noir: #000000;
+${lignes(grisClairs)}
+${lignes(teintesClaires)}
+${lignes(couleursCode.map((c) => [`--color-${c.nom}`, c.clair]))}
+}
+
+/* Graphiques (Recharts) : infobulle par défaut et colonne de survol, écrites
+   en dur par la bibliothèque. */
+html.dark .recharts-default-tooltip {
+  background-color: ${SURFACE} !important;
+  border-color: ${GRIS_SOMBRE[200]} !important;
+}
+html.dark .recharts-rectangle.recharts-tooltip-cursor {
+  fill: rgba(255, 255, 255, 0.06);
+}
+html.dark .recharts-curve.recharts-tooltip-cursor {
+  stroke: ${GRIS_SOMBRE[300]};
 }
 `;
 

@@ -87,9 +87,11 @@ export const GRID_STYLE = {
 } as const;
 
 // === Style de tooltip ===
+// Fond et bordure du thème (mêmes valeurs en clair) : le texte des infobulles
+// suit le thème, un fond blanc écrit en dur le rendait illisible en sombre.
 export const TOOLTIP_CONTAINER_STYLE: React.CSSProperties = {
-  backgroundColor: 'white',
-  border: '1px solid #F3F4F6',
+  backgroundColor: 'var(--color-white)',
+  border: '1px solid var(--color-gray-100)',
   borderRadius: '12px',
   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
   padding: '12px 16px',

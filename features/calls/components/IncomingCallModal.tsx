@@ -64,7 +64,7 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-md sm:p-4"
     >
       <style>{KEYFRAMES}</style>
-      <div className="w-full sm:w-[380px] rounded-t-[2rem] sm:rounded-[2rem] bg-gradient-to-b from-slate-900 dark:from-[#0e1014] to-slate-800 dark:to-[#2a2f38] text-blanc shadow-2xl px-8 pt-9 pb-10 sm:pb-9 text-center animate-[cn-slide-up_.35s_cubic-bezier(.16,1,.3,1)]">
+      <div className="palette-claire w-full sm:w-[380px] rounded-t-[2rem] sm:rounded-[2rem] bg-gradient-to-b from-slate-900 dark:from-[#0e1014] to-slate-800 dark:to-[#2a2f38] text-blanc shadow-2xl px-8 pt-9 pb-10 sm:pb-9 text-center animate-[cn-slide-up_.35s_cubic-bezier(.16,1,.3,1)]">
         {/* Badge appel entrant */}
         <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium text-slate-200">
           <span className="relative flex h-2 w-2">

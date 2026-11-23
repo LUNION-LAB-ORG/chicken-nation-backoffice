@@ -20,7 +20,7 @@ export function BarreSelection({ ids, onVider }: { ids: string[]; onVider: () =>
 
   return (
     <div className="sticky bottom-3 z-20 mt-3">
-      <div className="flex flex-wrap items-center gap-3 bg-gray-900 dark:bg-[#0e1014] text-blanc rounded-xl px-4 py-3 shadow-lg">
+      <div className="palette-claire flex flex-wrap items-center gap-3 bg-gray-900 dark:bg-[#0e1014] text-blanc rounded-xl px-4 py-3 shadow-lg">
         <span className="text-sm font-semibold">
           {ids.length} sélectionné{ids.length > 1 ? "s" : ""}
         </span>

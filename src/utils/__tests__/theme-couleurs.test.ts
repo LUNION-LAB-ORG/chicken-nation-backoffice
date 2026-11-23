@@ -32,12 +32,16 @@ const parcourir = (dossier) => {
 const themeCss = readFileSync(join(RACINE, 'src/app/theme.css'), 'utf8');
 
 describe('thème sombre : le code', () => {
+  // Lit tout le code : plus long que la limite par défaut quand les suites tournent ensemble.
   test('aucune couleur à convertir (codes couleur, text-white, fonds gris foncés)', () => {
     const restants = fichiers
-      .filter((f) => convertir(readFileSync(f, 'utf8')).texte !== readFileSync(f, 'utf8'))
+      .filter((f) => {
+        const texte = readFileSync(f, 'utf8');
+        return convertir(texte).texte !== texte;
+      })
       .map((f) => f.slice(RACINE.length + 1));
     expect(restants).toEqual([]);
-  });
+  }, 30_000);
 
   test('chaque couleur du thème utilisée a sa valeur claire et sa valeur sombre', () => {
     const utilisees = new Set();
@@ -46,13 +50,23 @@ describe('thème sombre : le code', () => {
     const manquantes = [...utilisees].filter((nom) => !theme.includes(`--color-${nom}:`) || !sombre.includes(`--color-${nom}:`));
     expect(manquantes).toEqual([]);
     expect(utilisees.size).toBeGreaterThan(50);
-  });
+  }, 30_000);
 
   test('le thème est branché : variante dark par classe, fond des cartes, texte blanc fixe', () => {
     expect(themeCss).toContain('@custom-variant dark (&:where(.dark, .dark *));');
     expect(themeCss).toContain(`--color-white: ${SURFACE};`);
     expect(themeCss).toContain('--color-blanc: #ffffff;');
     expect(readFileSync(join(RACINE, 'src/app/globals.css'), 'utf8')).toContain('@import "./theme.css";');
+  });
+
+  test('bloc toujours foncé et infobulles des graphiques lisibles en sombre', () => {
+    // `palette-claire` rend au bloc les valeurs claires (texte gris clair sur fond foncé).
+    const bloc = themeCss.split('html.dark .palette-claire {')[1] ?? '';
+    expect(bloc).toContain('--color-white: #ffffff;');
+    expect(bloc).toMatch(/--color-gray-200: oklch\(/);
+    expect(themeCss).toContain('html.dark .recharts-default-tooltip');
+    const config = readFileSync(join(RACINE, 'features/statistics/utils/chart-config.ts'), 'utf8');
+    expect(config).toContain("backgroundColor: 'var(--color-white)'");
   });
 });
 
