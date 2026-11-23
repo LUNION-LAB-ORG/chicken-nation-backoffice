@@ -61,6 +61,26 @@ export const getDishDetail = async (dishId: string) => {
   }
 };
 
+/**
+ * Plats que CE client peut commander : même masque que la grille d'une
+ * catégorie en prise de commande (actifs, non privés, dans son audience).
+ * Sert à la recherche d'un plat, toutes catégories confondues.
+ */
+export const getDishesPourClient = async (customerId: string) => {
+  try {
+    const { url, headers } = await prepareRequest(BASE_URL, '', { customerId });
+
+    const response = await fetch(url, { method: 'GET', headers });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json() as Dish[];
+  } catch (error) {
+    console.error(error);
+    throw new Error(getHumanReadableError(error));
+  }
+};
+
 export const getAllDishes = async () => {
   try {
     const { url, headers } = await prepareRequest(BASE_URL, '/get-all');

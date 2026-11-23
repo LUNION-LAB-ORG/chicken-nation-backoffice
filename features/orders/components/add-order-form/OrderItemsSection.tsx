@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import Checkbox from "@/components/ui/Checkbox";
@@ -14,9 +16,9 @@ import {
 import { Dish } from "../../../menus/types/dish.types";
 import { useCategoryListQuery } from "../../../menus/queries/category/category-list.query";
 import { useCategoryOneQuery } from "../../../menus/queries/category/category-one.query";
-import { Edit2, Minus, Plus, Trash, X } from "lucide-react";
+import { Minus, Plus, Search, UtensilsCrossed, X } from "lucide-react";
 import { useDishListQuery } from "../../../menus/queries/dish-list.query";
-import { OrderType } from "../../types/order.types";
+import { useDishListClientQuery } from "../../../menus/queries/dish-list-client.query";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { getAllSupplements, Supplement } from "@/services/supplementService";
 import { DishOptionGroup } from "../../../menus/types/dish-option.types";
@@ -29,7 +31,20 @@ import {
   resumeComposition,
   verifierComposition,
 } from "../../utils/dishOptions";
-import { ReductionAffichee } from "../../types/coupon.types";
+import { DepartPlat, LigneDerniereCommande } from "../../types/habitudes.types";
+import {
+  RECHERCHE_MIN,
+  ajouterLigne,
+  chercherPlats,
+  ligneComposee,
+  lignePlatSimple,
+  messageNonRepris,
+  preparerReprise,
+} from "../../utils/habitudes";
+import CartePlat from "./CartePlat";
+import EnTeteSection from "./EnTeteSection";
+import LignesPanier, { LignePanier } from "./LignesPanier";
+import MenusHabituels from "./MenusHabituels";
 
 interface OrderItemsSectionProps {
   formData: OrderFormData;
@@ -38,12 +53,13 @@ interface OrderItemsSectionProps {
   /** Remonte le sous-total (plats+suppléments) au parent → sert au calcul des offres de livraison. */
   onSubtotalChange?: (subtotal: number) => void;
   /**
-   * Réduction calculée par le serveur (coupon vérifié, ou remise figée en
-   * modification). `montant` à null : en attente de vérification, rien n'est déduit.
+   * Où afficher les lignes du panier : le panneau à côté du formulaire, posé
+   * par le parent. Les lignes y sont rendues d'ici, parce que leur prix et
+   * leurs gestes (modifier, retirer, quantité) vivent avec le catalogue.
    */
-  reduction?: ReductionAffichee;
-  /** Taxe figée d'une commande modifiée (le serveur la reconduit). Zéro en création. */
-  taxe?: number;
+  ciblePanier?: HTMLElement | null;
+  /** Modification d'une commande : sa dernière commande n'est pas proposée. */
+  enModification?: boolean;
 }
 
 const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
@@ -51,10 +67,19 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
   items,
   onItemsChange,
   onSubtotalChange,
-  reduction,
-  taxe = 0,
+  ciblePanier,
+  enModification = false,
 }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  // Recherche d'un plat, toutes catégories confondues.
+  const [recherche, setRecherche] = useState("");
+  // « Remettre au panier » : vérification des plats à options en cours.
+  const [remiseEnCours, setRemiseEnCours] = useState(false);
+  // Panier du dernier rendu, pour un ajout fait après une attente réseau.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
   const [selectedDishForConfig, setSelectedDishForConfig] =
     useState<Dish | null>(null);
   const [editingItemIndex, setEditingItemIndex] = useState<number | null>(null);
@@ -91,6 +116,35 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     useCategoryOneQuery(selectedCategoryId, formData.customer_id);
 
   const dishes = categoryData?.dishes || [];
+
+  // RECHERCHE : même règle que la grille. Avec un client, les plats de SON
+  // audience (masque du serveur) ; sans client, tout le catalogue. Si la liste
+  // du client ne répond pas, on retombe sur le catalogue : le serveur refuse
+  // de toute façon un plat réservé à l'enregistrement.
+  const { data: platsClient, isLoading: chargementPlatsClient } = useDishListClientQuery(
+    formData.customer_id || undefined,
+  );
+  const enRecherche = recherche.trim().length >= RECHERCHE_MIN;
+  const platsRecherche = useMemo(
+    () =>
+      enRecherche
+        ? chercherPlats((formData.customer_id ? platsClient : undefined) ?? allDishes ?? [], recherche)
+        : [],
+    [enRecherche, recherche, formData.customer_id, platsClient, allDishes],
+  );
+  const platsAffiches: Dish[] = enRecherche ? platsRecherche : dishes;
+  const chargementGrille = enRecherche
+    ? !!formData.customer_id && chargementPlatsClient && !allDishes
+    : isLoadingDishes;
+
+  // Quantité déjà au panier, par plat : rappelée sur sa carte.
+  const quantiteParPlat = useMemo(() => {
+    const table: Record<string, number> = {};
+    items.forEach((item) => {
+      table[item.dish_id] = (table[item.dish_id] ?? 0) + item.quantity;
+    });
+    return table;
+  }, [items]);
 
   // Récupérer TOUS les suppléments du catalogue, groupés par catégorie.
   // Sert à afficher la liste complète dans la modal (les exclus du plat
@@ -195,6 +249,79 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
   const removeItem = (index: number) => {
     onItemsChange(items.filter((_, i) => i !== index));
+  };
+
+  /** Quantité changée depuis le panier, sans rouvrir la fenêtre du plat. */
+  const changerQuantite = (index: number, quantite: number) => {
+    if (quantite < 1) return;
+    onItemsChange(items.map((item, i) => (i === index ? { ...item, quantity: quantite } : item)));
+  };
+
+  /**
+   * Ouvre la fenêtre d'un plat. `depart` : sa dernière façon de le commander
+   * (menus habituels) ; sans lui, la fenêtre part de zéro comme avant.
+   */
+  const ouvrirPlat = (dish: Dish, depart?: DepartPlat) => {
+    // Privilégier la version "withEffective" (qui contient
+    // excluded_supplement_ids) — celle du categoryData ne l'a pas.
+    setSelectedDishForConfig(getDishById(dish.id) || dish);
+    setEditingItemIndex(null);
+    setTempQuantity(1);
+    setTempSupplements(depart?.supplements ?? []);
+    setTempEpice(depart?.epice ?? false);
+    // `null` : les choix par défaut seront posés à l'arrivée du détail. Des
+    // choix d'une commande passée sont nettoyés à l'arrivée (`idsConnus`).
+    setTempOptionIds(depart && depart.option_item_ids.length > 0 ? depart.option_item_ids : null);
+  };
+
+  /**
+   * « + » d'une carte : une unité au panier, sans passer par la fenêtre. Un
+   * plat composable a des choix obligatoires : sa fenêtre s'ouvre.
+   */
+  const ajouterDirect = (dish: Dish) => {
+    const plat = getDishById(dish.id) || dish;
+    if (plat.composable) {
+      ouvrirPlat(plat);
+      return;
+    }
+    onItemsChange(ajouterLigne(items, lignePlatSimple(plat)));
+  };
+
+  /**
+   * « Remettre au panier » la dernière commande du client. Les plats
+   * ordinaires partent tels quels ; un plat à options n'est repris que si ses
+   * choix d'alors tiennent toujours, sinon l'agent le compose de nouveau.
+   */
+  const remettreDerniereCommande = async (lignes: LigneDerniereCommande[]) => {
+    if (remiseEnCours) return;
+    const catalogue = new Map((allDishes ?? []).map((dish: Dish) => [dish.id, dish]));
+    const reprise = preparerReprise(lignes, catalogue);
+    const reprises = [...reprise.lignes];
+    const aComposer: string[] = [];
+
+    if (reprise.aVerifier.length > 0) {
+      setRemiseEnCours(true);
+      try {
+        for (const { ligne, dish } of reprise.aVerifier) {
+          try {
+            const detail = (await queryClient.fetchQuery(dishOneQueryOption(dish.id))) as Dish;
+            const composee = ligneComposee(ligne, dish, detail?.option_groups ?? []);
+            if (composee) reprises.push(composee);
+            else aComposer.push(ligne.nom);
+          } catch {
+            aComposer.push(ligne.nom);
+          }
+        }
+      } finally {
+        setRemiseEnCours(false);
+      }
+    }
+
+    if (reprises.length > 0) {
+      onItemsChange(reprises.reduce(ajouterLigne, itemsRef.current));
+    }
+    const nonRepris = messageNonRepris(reprise.retires, aComposer);
+    if (nonRepris) toast(nonRepris, { duration: 6000 });
   };
 
   const editItem = (index: number) => {
@@ -404,16 +531,25 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
     ACCESSORY: { label: "🍟 Suppléments", icon: "🍟" },
   };
 
-  // Frais de livraison depuis le formData (auto-rempli par DeliveryInfoSection)
-  const isDelivery = formData.type === OrderType.DELIVERY;
-  const currentDeliveryFee = isDelivery ? (formData.delivery_fee || 0) : 0;
-  // Le coupon ne couvre jamais la livraison : la remise se déduit des articles seuls.
-  // Coupon vérifié : sous-total et articles remisés viennent du serveur.
-  const remise = reduction?.montant ?? 0;
-  const sousTotalAffiche = reduction?.sousTotal ?? totalCart;
-  const sousTotalRecalcule = Math.round(sousTotalAffiche) !== Math.round(totalCart);
-  const articlesApresRemise = reduction?.totalArticles ?? Math.max(0, totalCart - remise);
-  const grandTotal = articlesApresRemise + taxe + currentDeliveryFee;
+  // Lignes du panier, prêtes pour le panneau à côté du formulaire. Une ligne
+  // dont le plat n'est pas (encore) au catalogue n'a ni nom ni prix : elle
+  // n'est pas affichée, comme avant.
+  const lignesPanier: LignePanier[] = items.flatMap((item, index) => {
+    const dish = getDishById(item.dish_id);
+    if (!dish) return [];
+    return [
+      {
+        index,
+        item,
+        dish,
+        total: calculateItemTotal(item),
+        composition:
+          (item.option_item_ids?.length ?? 0) > 0
+            ? resumeComposition(groupesParPlat[item.dish_id] ?? [], item.option_item_ids ?? [])
+            : null,
+      },
+    ];
+  });
 
   // Remonte le sous-total au parent → transmis au calcul de frais pour appliquer
   // les offres de livraison conditionnées à un montant minimum.
@@ -423,145 +559,160 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold text-[#595959]">
-        Articles commandés *
-      </h3>
+      <EnTeteSection
+        Icone={UtensilsCrossed}
+        titre="Articles commandés *"
+        sousTitre="Recherchez un plat ou choisissez une catégorie, puis ajoutez-le au panier."
+      />
 
-      {/* Layout principal: Catégories + Plats */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Colonne gauche: Catégories */}
-        <div className="lg:col-span-3">
-          <div className="bg-white border-2 border-[#D9D9D9]/50 rounded-2xl p-4 sticky top-4">
-            <h4 className="text-sm font-semibold text-[#595959] mb-3">
+      {/* Ce que le client commande d'habitude, dès qu'il est choisi. */}
+      <MenusHabituels
+        customerId={formData.customer_id || undefined}
+        platParId={getDishById}
+        quantiteParPlat={quantiteParPlat}
+        onChoisir={ouvrirPlat}
+        onAjouter={ajouterDirect}
+        onRemettre={remettreDerniereCommande}
+        remiseEnCours={remiseEnCours}
+        sansDerniereCommande={enModification}
+      />
+
+      {/* Recherche d'un plat, toutes catégories confondues */}
+      <div className="flex w-full items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50/60 px-3.5 transition focus-within:border-[#F17922] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#F17922]/15">
+        <Search className="h-4 w-4 shrink-0 text-gray-400" />
+        <input
+          type="text"
+          value={recherche}
+          onChange={(e) => setRecherche(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            // Entrée ouvre le premier plat trouvé : elle n'enregistre pas la commande.
+            e.preventDefault();
+            if (platsRecherche.length > 0) ouvrirPlat(platsRecherche[0]);
+          }}
+          className="w-full bg-transparent py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none"
+          placeholder="Rechercher un plat"
+          aria-label="Rechercher un plat"
+        />
+        {recherche && (
+          <button
+            type="button"
+            onClick={() => setRecherche("")}
+            aria-label="Effacer la recherche"
+            className="shrink-0 rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Catégories + plats. La disposition suit la largeur disponible (le
+          panier occupe la droite de l'écran) : catégories en ligne au-dessus
+          des plats quand la place manque, en colonne à gauche sinon.
+          ⚠️ Aucune fenêtre (`fixed`) dans ces deux conteneurs : un conteneur
+          de requête décalerait une fenêtre placée dedans. */}
+      <div className="@container/catalogue">
+        <div className="grid grid-cols-1 gap-4 @3xl/catalogue:grid-cols-[220px_minmax(0,1fr)]">
+          {/* Catégories */}
+          <div className="rounded-2xl border-2 border-[#D9D9D9]/50 bg-white p-3 @3xl/catalogue:p-4">
+            <h4 className="mb-3 hidden text-sm font-semibold text-[#595959] @3xl/catalogue:block">
               📂 Catégories
             </h4>
 
             {isLoadingCategories ? (
-              <div className="space-y-2">
+              <div className="flex gap-2 @3xl/catalogue:flex-col">
                 {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="h-12 bg-gray-200 rounded-xl animate-pulse"
+                    className="h-10 w-32 shrink-0 animate-pulse rounded-xl bg-gray-200 @3xl/catalogue:h-12 @3xl/catalogue:w-full"
                   />
                 ))}
               </div>
             ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                {categories.map((category: any) => (
-                  <motion.button
-                    key={category.id}
-                    type="button"
-                    onClick={() => setSelectedCategoryId(category.id)}
-                    className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
-                      selectedCategoryId === category.id
-                        ? "bg-[#F17922] text-white shadow-md"
-                        : "bg-[#F5F5F5] text-[#595959] hover:bg-[#F17922]/10"
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className="flex items-center gap-2">
-                      {category.image && (
-                        <Image
-                          src={formatImageUrl(category.image)}
-                          alt={category.name}
-                          width={32}
-                          height={32}
-                          className="rounded-lg object-cover"
-                        />
-                      )}
-                      <span className="text-sm font-semibold truncate">
-                        {category.name}
-                      </span>
-                    </div>
-                  </motion.button>
-                ))}
+              <div className="flex gap-2 overflow-x-auto pb-1 @3xl/catalogue:max-h-[500px] @3xl/catalogue:flex-col @3xl/catalogue:overflow-x-visible @3xl/catalogue:overflow-y-auto @3xl/catalogue:pb-0">
+                {categories.map((category: any) => {
+                  const active = !enRecherche && selectedCategoryId === category.id;
+                  return (
+                    <motion.button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        setRecherche("");
+                        setSelectedCategoryId(category.id);
+                      }}
+                      className={`shrink-0 rounded-xl px-3 py-2 text-left transition-all @3xl/catalogue:w-full @3xl/catalogue:px-4 @3xl/catalogue:py-3 ${
+                        active
+                          ? "bg-[#F17922] text-white shadow-md"
+                          : "bg-[#F5F5F5] text-[#595959] hover:bg-[#F17922]/10"
+                      }`}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {category.image && (
+                          <Image
+                            src={formatImageUrl(category.image)}
+                            alt={category.name}
+                            width={32}
+                            height={32}
+                            className="h-7 w-7 rounded-lg object-cover @3xl/catalogue:h-8 @3xl/catalogue:w-8"
+                          />
+                        )}
+                        <span className="whitespace-nowrap text-sm font-semibold @3xl/catalogue:truncate">
+                          {category.name}
+                        </span>
+                      </div>
+                    </motion.button>
+                  );
+                })}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Colonne droite: Plats */}
-        <div className="lg:col-span-9">
-          <div className="bg-white border-2 border-[#D9D9D9]/50 rounded-2xl p-4">
-            <h4 className="text-sm font-semibold text-[#595959] mb-3">
+          {/* Plats */}
+          <div className="min-w-0 rounded-2xl border-2 border-[#D9D9D9]/50 bg-white p-4 @container/plats">
+            <h4 className="mb-3 text-sm font-semibold text-[#595959]">
               🍽️ Plats
+              {enRecherche && (
+                <span className="font-normal text-gray-400"> · recherche « {recherche.trim()} »</span>
+              )}
             </h4>
 
-            {!selectedCategoryId ? (
-              <div className="text-center py-12 text-gray-400">
+            {!enRecherche && !selectedCategoryId ? (
+              <div className="py-12 text-center text-gray-400">
                 <p>Sélectionnez une catégorie pour voir les plats</p>
               </div>
-            ) : isLoadingDishes ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            ) : chargementGrille ? (
+              <div className="grid grid-cols-2 gap-3 @lg/plats:grid-cols-3 @3xl/plats:grid-cols-4 @5xl/plats:grid-cols-5">
                 {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="h-32 bg-gray-200 rounded-xl animate-pulse"
-                  />
+                  <div key={i} className="h-32 animate-pulse rounded-xl bg-gray-200" />
                 ))}
               </div>
-            ) : dishes.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <p>Aucun plat disponible dans cette catégorie</p>
+            ) : platsAffiches.length === 0 ? (
+              <div className="py-12 text-center text-gray-400">
+                <p>
+                  {enRecherche
+                    ? `Aucun plat ne correspond à « ${recherche.trim()} »`
+                    : "Aucun plat disponible dans cette catégorie"}
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 max-h-[500px] overflow-y-auto">
-                {dishes.map((dish: Dish) => (
-                  <motion.div
+              <div className="grid max-h-[500px] grid-cols-2 gap-3 overflow-y-auto @lg/plats:grid-cols-3 @3xl/plats:grid-cols-4 @5xl/plats:grid-cols-5">
+                {platsAffiches.map((dish: Dish) => (
+                  <CartePlat
                     key={dish.id}
-                    className="border-2 border-[#D9D9D9]/50 rounded-xl p-3 hover:border-[#F17922] transition-all cursor-pointer"
-                    whileTap={{ scale: 0.98 }}
-                    onMouseEnter={() => {
-                      // Préchargement au survol : le détail est presque toujours
-                      // en cache au moment du clic, la saisie ne ralentit pas.
-                      // Sans effet sur un plat ordinaire.
+                    dish={dish}
+                    auPanier={quantiteParPlat[dish.id] ?? 0}
+                    onOuvrir={() => ouvrirPlat(dish)}
+                    onAjouter={() => ajouterDirect(dish)}
+                    // Préchargement au survol : le détail est presque toujours
+                    // en cache au moment du clic, la saisie ne ralentit pas.
+                    // Sans effet sur un plat ordinaire.
+                    onSurvol={() => {
                       if (dish.composable) {
                         void queryClient.prefetchQuery(dishOneQueryOption(dish.id));
                       }
                     }}
-                    onClick={() => {
-                      // Privilégier la version "withEffective" (qui contient
-                      // excluded_supplement_ids) — celle du categoryData ne l'a pas.
-                      const dishWithExclusions = getDishById(dish.id) || dish;
-                      setSelectedDishForConfig(dishWithExclusions);
-                      setEditingItemIndex(null);
-                      setTempQuantity(1);
-                      setTempSupplements([]);
-                      setTempEpice(false);
-                      setTempOptionIds(null);
-                    }}
-                  >
-                    {dish.image && (
-                      <Image
-                        src={formatImageUrl(dish.image)}
-                        alt={dish.name}
-                        width={120}
-                        height={80}
-                        className="w-full h-32 object-cover rounded-lg mb-2"
-                      />
-                    )}
-                    <h5 className="font-semibold text-[#595959] text-sm mb-1">
-                      {dish.name}
-                    </h5>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#F17922] font-bold text-sm">
-                        {dish.is_promotion && dish.promotion_price ? (
-                          <>
-                            <span className="line-through text-gray-400 text-xs mr-1">
-                              {dish.price} XOF
-                            </span>
-                            {dish.promotion_price} XOF
-                          </>
-                        ) : (
-                          `${dish.price} XOF`
-                        )}
-                      </span>
-                      {dish.is_alway_epice && (
-                        <span className="text-xs">🌶️</span>
-                      )}
-                    </div>
-                  </motion.div>
+                  />
                 ))}
               </div>
             )}
@@ -569,7 +720,11 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         </div>
       </div>
 
-      {/* Modal de configuration du plat */}
+      {/* Modal de configuration du plat. Posée sur la page : le formulaire
+          est un conteneur de requête (sa disposition suit sa largeur), et une
+          fenêtre placée dedans serait cadrée sur lui, pas sur l'écran. */}
+      {typeof document !== "undefined" &&
+        createPortal(
       <AnimatePresence>
         {selectedDishForConfig && (
           <motion.div
@@ -857,193 +1012,21 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+          document.body,
+        )}
 
-      {/* Panier */}
-      {items.length > 0 && (
-        <div className="bg-gradient-to-br from-white to-[#FFF8F3] border-2 border-[#F17922]/20 rounded-2xl overflow-hidden">
-          {/* Header du panier */}
-          <div className="bg-[#F17922] px-4 sm:px-6 py-3 flex items-center justify-between">
-            <h4 className="text-white font-bold text-sm sm:text-base flex items-center gap-2">
-              <span>🛒</span>
-              Panier
-            </h4>
-            <span className="bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full">
-              {items.length} article{items.length > 1 ? "s" : ""}
-            </span>
-          </div>
-
-          {/* Liste des items */}
-          <div className="p-4 sm:p-6 space-y-3">
-            {items.map((item, index) => {
-              const dish = getDishById(item.dish_id);
-              if (!dish) return null;
-
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-white rounded-xl border border-[#D9D9D9]/30 shadow-sm hover:shadow-md transition-shadow"
-                >
-                  {dish.image && (
-                    <Image
-                      src={formatImageUrl(dish.image)}
-                      alt={dish.name}
-                      width={72}
-                      height={72}
-                      className="rounded-xl object-cover w-16 h-16 sm:w-[72px] sm:h-[72px] flex-shrink-0"
-                    />
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-[#595959] text-sm sm:text-base truncate">
-                      {dish.name}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5 mt-1">
-                      <span className="inline-flex items-center bg-[#F5F5F5] text-[#595959] text-xs font-semibold px-2 py-0.5 rounded-md">
-                        x{item.quantity}
-                      </span>
-                      {item.epice && (
-                        <span className="inline-flex items-center bg-red-50 text-red-500 text-xs font-semibold px-2 py-0.5 rounded-md">
-                          🌶️ Épicé
-                        </span>
-                      )}
-                      {item.supplements.length > 0 && (
-                        <span className="inline-flex items-center bg-blue-50 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-md">
-                          +{item.supplements.reduce((sum, s) => sum + s.quantity, 0)} supp.
-                        </span>
-                      )}
-                    </div>
-                    {(item.option_item_ids?.length ?? 0) > 0 && (
-                      <p className="mt-1 truncate text-xs text-gray-500">
-                        {resumeComposition(
-                          groupesParPlat[item.dish_id] ?? [],
-                          item.option_item_ids ?? [],
-                        ) || "Composition enregistrée"}
-                      </p>
-                    )}
-                    <p className="text-[#F17922] font-bold text-sm sm:text-base mt-1">
-                      {calculateItemTotal(item).toLocaleString()} XOF
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-1">
-                    <motion.button
-                      type="button"
-                      onClick={() => editItem(index)}
-                      className="text-[#F17922] hover:bg-[#F17922]/10 p-2 rounded-lg transition-colors"
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Edit2 size={18} />
-                    </motion.button>
-                    <motion.button
-                      type="button"
-                      onClick={() => removeItem(index)}
-                      className="text-red-400 hover:bg-red-50 hover:text-red-600 p-2 rounded-lg transition-colors"
-                      whileTap={{ scale: 0.9 }}
-                    >
-                      <Trash size={18} />
-                    </motion.button>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          {/* Résumé de prix */}
-          <div className="bg-white border-t-2 border-[#F17922]/10 px-4 sm:px-6 py-4 sm:py-6 space-y-3">
-            {/* Sous-total */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm sm:text-base text-[#71717A] font-medium">
-                Sous-total articles
-                {sousTotalRecalcule && (
-                  <span className="block text-[11px] font-normal text-gray-400">
-                    Recalculé par le serveur aux prix du jour
-                  </span>
-                )}
-              </span>
-              <span className="text-sm sm:text-base font-semibold text-[#595959]">
-                {sousTotalAffiche.toLocaleString()} XOF
-              </span>
-            </div>
-
-            {/* Frais de livraison */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm sm:text-base text-[#71717A] font-medium">
-                Frais de livraison
-              </span>
-              {isDelivery ? (
-                <span className="text-sm sm:text-base font-semibold text-[#595959]">
-                  {currentDeliveryFee > 0
-                    ? `${currentDeliveryFee.toLocaleString()} XOF`
-                    : formData.delivery_fee === 0
-                      ? "Gratuit"
-                      : "Non calculé"}
-                </span>
-              ) : (
-                <span className="text-sm sm:text-base font-semibold text-green-600">
-                  Non applicable
-                </span>
-              )}
-            </div>
-
-            {/* Taxe figée (modification d'une commande de l'app) */}
-            {taxe > 0 && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base text-[#71717A] font-medium">
-                  Taxe
-                </span>
-                <span className="text-sm sm:text-base font-semibold text-[#595959]">
-                  {taxe.toLocaleString()} XOF
-                </span>
-              </div>
-            )}
-
-            {/* Réduction (montant renvoyé par le serveur) */}
-            {reduction && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base text-green-700 font-medium">
-                  Réduction{reduction.libelle ? ` · ${reduction.libelle}` : ""}
-                </span>
-                <span className="text-sm sm:text-base font-semibold text-green-700">
-                  {reduction.montant === null
-                    ? "En attente"
-                    : `−${reduction.montant.toLocaleString()} XOF`}
-                </span>
-              </div>
-            )}
-
-            {/* Séparateur */}
-            <div className="border-t-2 border-dashed border-[#D9D9D9]/50 my-2" />
-
-            {/* Total */}
-            <div className="flex justify-between items-center">
-              <span className="text-base sm:text-lg font-bold text-[#595959]">
-                Total à payer
-              </span>
-              <div className="text-right">
-                <span className="text-xl sm:text-2xl font-extrabold text-[#F17922]">
-                  {grandTotal.toLocaleString()}
-                </span>
-                <span className="text-sm sm:text-base font-bold text-[#F17922] ml-1">
-                  XOF
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {items.length === 0 && (
-        <div className="text-center py-12 text-gray-400 border-2 border-dashed border-[#D9D9D9]/50 rounded-2xl bg-[#FAFAFA]">
-          <div className="text-4xl mb-3">🛒</div>
-          <p className="font-semibold text-[#595959]">Votre panier est vide</p>
-          <p className="text-sm mt-1 text-gray-400">Sélectionnez une catégorie puis ajoutez des plats</p>
-        </div>
-      )}
+      {/* Lignes du panier : rendues dans le panneau à côté du formulaire. */}
+      {ciblePanier &&
+        createPortal(
+          <LignesPanier
+            lignes={lignesPanier}
+            onModifier={editItem}
+            onRetirer={removeItem}
+            onQuantite={changerQuantite}
+          />,
+          ciblePanier,
+        )}
     </div>
   );
 };

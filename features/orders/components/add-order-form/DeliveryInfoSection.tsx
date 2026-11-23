@@ -18,8 +18,16 @@ import {
   getCurrentTime,
 } from "../../../../utils/date/format-date";
 import AddressSearchInput from "./AddressSearchInput";
+import EnTeteSection from "./EnTeteSection";
 import { getParsedAddress } from "../../utils/getParsedAddress";
-import { fraisLivraisonRetenus, LivraisonFormulaire } from "../../utils/bascule";
+import {
+  aideFrais,
+  fraisAutomatiques,
+  FraisEnregistres,
+  lireSaisieFrais,
+  livraisonInchangee,
+  valeurChampFrais,
+} from "../../utils/frais-livraison";
 import { useDeliveryFeeQuery } from "../../queries/delivery-fee.query";
 import { useRestaurantListQuery } from "../../../restaurants/queries/restaurant-list.query";
 import { useDirectionsQuery } from "../../../maps/queries/directions.query";
@@ -35,11 +43,17 @@ interface DeliveryInfoSectionProps {
   /** Sous-total du panier → applique les offres de livraison à montant minimum dans l'aperçu. */
   orderAmount?: number;
   /**
-   * Reprise d'une commande du site à payer à la livraison : sa livraison et
-   * ses frais, gardés tant que l'agent ne change ni l'adresse, ni le
-   * restaurant, ni le type (`fraisLivraisonRetenus`).
+   * Modification d'une commande : sa livraison et ses frais ENREGISTRÉS. Ils
+   * restent tant que l'agent ne change ni l'adresse, ni le restaurant, ni le
+   * type : ouvrir une commande ne refait pas le calcul (`fraisAutomatiques`).
    */
-  fraisFiges?: (LivraisonFormulaire & { delivery_fee: number }) | null;
+  fraisEnregistres?: FraisEnregistres | null;
+  /**
+   * Reprise au téléphone d'une commande du site à payer à la livraison : le
+   * client a accepté ces frais sur le site, et le serveur les garde tant que
+   * la livraison ne change pas. Le champ est alors fermé.
+   */
+  fraisDuSite?: boolean;
 }
 
 const INPUT_CLASS =
@@ -74,7 +88,8 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   formData,
   onFormDataChange,
   orderAmount,
-  fraisFiges,
+  fraisEnregistres,
+  fraisDuSite = false,
 }) => {
   const isDelivery = formData.type === OrderType.DELIVERY;
 
@@ -86,10 +101,11 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
     if (Object.keys(update).length > 0) onFormDataChange(update);
   }, [formData.date, formData.time, onFormDataChange]);
 
-  // Remettre delivery_fee à 0 quand le type change de DELIVERY → autre
+  // Remettre delivery_fee à 0 quand le type change de DELIVERY → autre. Une
+  // saisie de l'agent ne vaut que pour une livraison : elle repart aussi.
   useEffect(() => {
-    if (!isDelivery && formData.delivery_fee && formData.delivery_fee > 0) {
-      onFormDataChange({ delivery_fee: 0 });
+    if (!isDelivery && ((formData.delivery_fee ?? 0) > 0 || formData.frais_manuels)) {
+      onFormDataChange({ delivery_fee: 0, frais_manuels: false });
     }
   }, [isDelivery]);
 
@@ -112,14 +128,23 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
       : undefined
   );
 
-  // Auto-mettre à jour les frais de livraison quand la query retourne un nouveau résultat
-  // (changement d'adresse ou de restaurant). Commande du site reprise : ses
-  // frais restent tant que sa livraison ne change pas.
+  // FRAIS POSÉS PAR L'ÉCRAN. Modification : ceux de la commande enregistrée,
+  // tant que sa livraison ne change pas (ouvrir une commande ne refait plus
+  // le calcul). Sinon : l'aperçu du serveur. Ce que l'agent a saisi dans le
+  // champ, zéro compris, n'est plus jamais écrasé (`formData.frais_manuels`).
+  const memeLivraison = livraisonInchangee(formData, fraisEnregistres);
+  const fraisVerrouilles = fraisDuSite && memeLivraison;
+  const fraisAuto = fraisAutomatiques({
+    livraison: formData,
+    apercu: deliveryFee?.montant,
+    enregistres: fraisEnregistres,
+    // Frais du site : la saisie n'y change rien, le serveur les garde.
+    saisis: !!formData.frais_manuels && !fraisVerrouilles,
+  });
   useEffect(() => {
-    if (isDelivery && deliveryFee?.montant !== undefined) {
-      onFormDataChange({ delivery_fee: fraisLivraisonRetenus(formData, deliveryFee.montant, fraisFiges) });
-    }
-  }, [deliveryFee?.montant, isDelivery, formData.address, formData.restaurant_id, formData.type]);
+    if (!isDelivery || fraisAuto === undefined || formData.delivery_fee === fraisAuto) return;
+    onFormDataChange({ delivery_fee: fraisAuto });
+  }, [fraisAuto, isDelivery, formData.delivery_fee]);
 
   const handleAddressChange = (addressData: unknown) => {
     if (addressData) {
@@ -222,18 +247,17 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
       : "Date et heure du service à table.";
 
   return (
-    <div className="space-y-4">
+    // Conteneur de requête : la disposition suit la largeur de la carte, pas
+    // celle de l'écran (le panier occupe la droite).
+    <div className="space-y-4 @container">
       {/* En-tête de section */}
-      <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
-          <MapPinned className="w-4 h-4" />
-        </span>
-        <div>
-          <h3 className="text-[15px] font-bold text-gray-800">{sectionTitle}</h3>
-          <p className="text-xs text-gray-400">{sectionSubtitle}</p>
-        </div>
-      </div>
+      <EnTeteSection Icone={MapPinned} titre={sectionTitle} sousTitre={sectionSubtitle} />
 
+      {/* Livraison, carte large : adresse et carte à gauche, service, frais,
+          date et note à droite. Sinon tout s'empile, comme avant. */}
+      <div className={isDelivery ? "grid grid-cols-1 gap-4 @[38rem]:grid-cols-2 @[38rem]:gap-5" : "space-y-4"}>
+      {isDelivery && (
+      <div className="min-w-0 space-y-4">
       {/* Adresse avec recherche Google Maps */}
       {isDelivery && (
         <AddressSearchInput
@@ -317,16 +341,21 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           </div>
         ))}
 
+      </div>
+      )}
+
+      <div className="min-w-0 space-y-4">
       {/* Service de livraison — Override admin du choix auto */}
       {isDelivery && (
         <div>
           <label className={LABEL_CLASS}>Service de livraison</label>
-          <div className="flex gap-2">
+          {/* Trois mots courts, sur une ligne à toute largeur. Le détail est dans l'infobulle. */}
+          <div className="grid grid-cols-3 gap-2">
             {(
               [
-                { value: undefined, label: "Auto (selon zone)", desc: "Le backend choisit" },
-                { value: DeliveryService.CHICKEN_NATION, label: "Chicken Nation", desc: "Livreur interne" },
-                { value: DeliveryService.TURBO, label: "Turbo Delivery", desc: "Sous-traitant" },
+                { value: undefined, label: "Auto", aide: "Choisi selon la zone de livraison" },
+                { value: DeliveryService.CHICKEN_NATION, label: "Interne", aide: "Livreur Chicken Nation" },
+                { value: DeliveryService.TURBO, label: "Turbo", aide: "Turbo Delivery, sous-traitant" },
               ] as const
             ).map((opt) => {
               const selected = formData.delivery_service === opt.value;
@@ -334,15 +363,16 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
                 <button
                   key={opt.label}
                   type="button"
+                  title={opt.aide}
+                  aria-pressed={selected}
                   onClick={() => onFormDataChange({ delivery_service: opt.value })}
-                  className={`flex-1 rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                  className={`rounded-xl border px-3 py-2.5 text-[13px] font-semibold transition ${
                     selected
                       ? "border-[#F17922] bg-orange-50 text-[#F17922]"
                       : "border-gray-200 bg-white text-[#595959] hover:border-[#F17922]/40 hover:bg-gray-50"
                   }`}
                 >
-                  <div>{opt.label}</div>
-                  <div className="mt-0.5 text-[10px] font-normal opacity-70">{opt.desc}</div>
+                  {opt.label}
                 </button>
               );
             })}
@@ -362,30 +392,69 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
               type="number"
               id="delivery_fee"
               min={0}
-              value={formData.delivery_fee || ""}
-              // Jamais négatif : le serveur refuse des frais sous zéro (400).
+              inputMode="numeric"
+              // Vide tant que rien n'est posé ; « 0 » s'affiche et se garde
+              // (livraison offerte), il n'est plus pris pour un champ vide.
+              value={valeurChampFrais(formData.delivery_fee)}
+              disabled={fraisVerrouilles}
               onChange={(e) =>
-                onFormDataChange({ delivery_fee: Math.max(0, Number(e.target.value) || 0) })
+                onFormDataChange({ delivery_fee: lireSaisieFrais(e.target.value), frais_manuels: true })
               }
+              // Champ laissé vide : retour aux frais posés par l'écran.
+              onBlur={() => {
+                if (formData.delivery_fee !== undefined) return;
+                onFormDataChange({
+                  delivery_fee: fraisAutomatiques({
+                    livraison: formData,
+                    apercu: deliveryFee?.montant,
+                    enregistres: fraisEnregistres,
+                    saisis: false,
+                  }),
+                  frais_manuels: false,
+                });
+              }}
               placeholder={
                 deliveryFee?.montant
                   ? `Auto: ${deliveryFee.montant.toLocaleString()} XOF`
                   : "0"
               }
-              className={`${INPUT_CLASS} pl-10`}
+              className={`${INPUT_CLASS} pl-10 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400`}
             />
-            {deliveryFee?.montant !== undefined && (
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-600 whitespace-nowrap">
-                Auto : {deliveryFee.montant.toLocaleString()} XOF
-              </span>
-            )}
+            {/* Frais calculés par le serveur. Différents de ceux du champ :
+                un clic les applique (jamais d'office sur une saisie ni sur
+                les frais d'une commande enregistrée). */}
+            {deliveryFee?.montant !== undefined &&
+              (fraisVerrouilles || formData.delivery_fee === deliveryFee.montant ? (
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-600 whitespace-nowrap">
+                  Auto : {deliveryFee.montant.toLocaleString()} XOF
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  title="Appliquer les frais calculés"
+                  onClick={() =>
+                    onFormDataChange({
+                      delivery_fee: deliveryFee.montant,
+                      // Modification : le choix de l'agent tient, sinon les
+                      // frais enregistrés reviendraient aussitôt.
+                      frais_manuels: !!fraisEnregistres,
+                    })
+                  }
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full border border-green-200 bg-green-50 px-2 py-0.5 text-[11px] font-semibold text-green-700 whitespace-nowrap transition hover:bg-green-100"
+                >
+                  Auto : {deliveryFee.montant.toLocaleString()} XOF
+                </button>
+              ))}
           </div>
-          {deliveryFee?.distance !== undefined && (
-            <p className="mt-1 text-[11px] text-gray-400">
-              Calculé automatiquement selon la zone ({deliveryFee.distance?.toFixed(1)} km).
-              Modifiez le champ pour forcer un autre montant.
-            </p>
-          )}
+          {(() => {
+            const aide = aideFrais({
+              verrouilles: fraisVerrouilles,
+              saisis: !!formData.frais_manuels,
+              enregistres: memeLivraison,
+              distance: deliveryFee?.distance ?? undefined,
+            });
+            return aide ? <p className="mt-1 text-[11px] text-gray-400">{aide}</p> : null;
+          })()}
         </div>
       )}
 
@@ -431,6 +500,8 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
           rows={3}
           placeholder="Instructions particulières, allergies, etc."
         />
+      </div>
+      </div>
       </div>
     </div>
   );

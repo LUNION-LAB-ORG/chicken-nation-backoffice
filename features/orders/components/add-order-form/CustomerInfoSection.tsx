@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, Search, UserRound } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { OrderFormData } from "../../types/order-form.types";
+import EnTeteSection from "./EnTeteSection";
 import { Customer } from "../../../customer/types/customer.types";
 import { useCustomerListQuery } from "../../../customer/queries/customer-list.query";
 import { useCustomerAddMutation } from "../../../customer/queries/customer-add.mutation";
@@ -119,11 +120,14 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
         normalizeValue(formData.phone) !== normalizeValue(selectedCustomer.phone) ||
         normalizeValue(formData.email) !== normalizeValue(selectedCustomer.email);
 
+      // Formulaire remis à zéro après un enregistrement : plus de client du
+      // tout, pas un « nouveau client » à enregistrer avec des champs vides.
+      const vide = !formData.fullname && !formData.phone && !formData.email;
       if (hasChanged) {
-        setNeedsSave(true);
+        setNeedsSave(!vide);
         setSelectedCustomer(null);
         setIsKnownCustomer(false);
-        onCustomerChange?.(null, true);
+        onCustomerChange?.(null, !vide);
       }
     } else if (formData.fullname || formData.phone || formData.email) {
       setNeedsSave(true);
@@ -219,29 +223,22 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
-            <UserRound className="w-4 h-4" />
-          </span>
-          <div>
-            <h3 className="text-[15px] font-bold text-gray-800">Client</h3>
-            <p className="text-xs text-gray-400">
-              Recherchez un client existant ou saisissez-en un nouveau.
-            </p>
-          </div>
-        </div>
-        {(selectedCustomer || isKnownCustomer) && (
-          <span className="shrink-0 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
-            Client existant
-          </span>
-        )}
-        {needsSave && !selectedCustomer && !isKnownCustomer && (
-          <span className="shrink-0 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F17922]">
-            Nouveau client
-          </span>
-        )}
-      </div>
+      <EnTeteSection
+        Icone={UserRound}
+        titre="Client"
+        sousTitre="Recherchez un client existant ou saisissez-en un nouveau."
+        droite={
+          selectedCustomer || isKnownCustomer ? (
+            <span className="shrink-0 rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-600">
+              Client existant
+            </span>
+          ) : needsSave ? (
+            <span className="shrink-0 rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-[#F17922]">
+              Nouveau client
+            </span>
+          ) : undefined
+        }
+      />
 
       {/* Barre de recherche */}
       <div className="relative">
@@ -358,6 +355,11 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           )}
       </div>
 
+      {/* Nom, téléphone, email : côte à côte quand la carte est large.
+          ⚠️ La recherche reste hors de ce conteneur : sa liste de résultats
+          doit passer au-dessus des blocs suivants. */}
+      <div className="@container">
+      <div className="grid grid-cols-1 gap-4 @[26rem]:grid-cols-2 @[38rem]:grid-cols-3">
       {/* Nom complet */}
       <div>
         <label htmlFor="fullname" className="text-xs font-semibold text-gray-500 mb-1.5 block">
@@ -401,6 +403,8 @@ const CustomerInfoSection: React.FC<CustomerInfoSectionProps> = ({
           className="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-[13px] font-semibold text-[#595959] placeholder:font-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition"
           placeholder="Email du client"
         />
+      </div>
+      </div>
       </div>
 
       {/* Bouton d'enregistrement pour nouveau client */}

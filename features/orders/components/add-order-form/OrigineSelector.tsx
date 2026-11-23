@@ -65,9 +65,10 @@ interface OrigineSelectorProps {
 
 type Origine = { auto: boolean; label: string; desc: string; icon: LucideIcon };
 
-const CALL_CENTER: Origine = { auto: false, label: "Call center", desc: "Saisie par le personnel", icon: Headset };
-const APPLICATION: Origine = { auto: true, label: "Application", desc: "Passée par le client", icon: Smartphone };
-const SITE_WEB: Origine = { auto: true, label: "Site web", desc: "Passée par le client", icon: Globe };
+// « Manuel » et « Auto » : les mots des listes de commandes et de la caisse.
+const CALL_CENTER: Origine = { auto: false, label: "Call center", desc: "Manuel, saisie par le personnel", icon: Headset };
+const APPLICATION: Origine = { auto: true, label: "Application", desc: "Auto, passée par le client", icon: Smartphone };
+const SITE_WEB: Origine = { auto: true, label: "Site web", desc: "Auto, passée par le client", icon: Globe };
 
 /**
  * ORIGINE d'une commande, en modification seulement.
@@ -99,9 +100,6 @@ const OrigineSelector: React.FC<OrigineSelectorProps> = ({
   const enLigne = duSite ? "sur le site" : "dans l'application";
   return (
     <div>
-      <label className="text-xs font-semibold text-gray-500 mb-1.5 block">
-        Origine de la commande
-      </label>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
         {origines.map((o) => {
           const selected = auto === o.auto;

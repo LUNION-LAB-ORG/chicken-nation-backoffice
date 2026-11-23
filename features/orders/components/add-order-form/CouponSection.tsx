@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { BadgeCheck, CircleAlert, Info, Loader2, Lock, TicketPercent, Undo2, Wallet, X } from "lucide-react";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import { CouponCommande, LONGUEUR_MAX_CODE } from "../../hooks/useCouponCommande";
@@ -9,15 +10,14 @@ import { formaterEcheance, formaterFrancs, phraseReduction } from "../../utils/c
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 pr-9 text-[13px] font-semibold uppercase tracking-wide text-[#595959] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-gray-400 focus:outline-none focus:border-[#F17922] focus:ring-2 focus:ring-[#F17922]/15 transition disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400";
 
+/** La réduction vit dans le panier : en-tête resserré, mêmes mots. */
 const EnTete = ({ sousTitre }: { sousTitre: string }) => (
-  <div className="flex items-center gap-2.5">
-    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
-      <TicketPercent className="w-4 h-4" />
-    </span>
-    <div>
-      <h3 className="text-[15px] font-bold text-gray-800">Réduction</h3>
-      <p className="text-xs text-gray-400">{sousTitre}</p>
-    </div>
+  <div>
+    <h3 className="flex items-center gap-1.5 text-[13px] font-bold text-gray-800">
+      <TicketPercent className="h-4 w-4 shrink-0 text-[#F17922]" />
+      Réduction
+    </h3>
+    <p className="mt-0.5 text-[11px] leading-snug text-gray-400">{sousTitre}</p>
   </div>
 );
 
@@ -66,7 +66,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
     "shrink-0 rounded-lg border bg-white px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <EnTete
         sousTitre={
           retraitPrevu
@@ -76,9 +76,9 @@ const CouponSection: React.FC<CouponSectionProps> = ({
       />
 
       {retraitPrevu && (
-        <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
+        <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
           <Undo2 className="mt-0.5 w-4 h-4 shrink-0 text-amber-500" />
-          <div className="flex-1 space-y-0.5">
+          <div className="min-w-0 flex-1 basis-40 space-y-0.5">
             <p className="text-[13px] font-semibold text-amber-800">
               Retrait prévu :{" "}
               {retraitPrevu.code ? `code ${retraitPrevu.code}, ` : ""}−{formaterFrancs(retraitPrevu.remise)}
@@ -100,9 +100,9 @@ const CouponSection: React.FC<CouponSectionProps> = ({
 
       {apercuBandeau ? (
         aJour ? (
-          <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-3.5 py-3">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border border-green-200 bg-green-50 px-3 py-2.5">
             <BadgeCheck className="mt-0.5 w-4 h-4 shrink-0 text-green-600" />
-            <div className="flex-1 space-y-0.5">
+            <div className="min-w-0 flex-1 basis-40 space-y-0.5">
               <p className="text-[13px] font-semibold text-green-800">{phraseReduction(apercuBandeau)}</p>
               <p className="text-xs text-green-700">
                 Nouveau total à payer :{" "}
@@ -119,13 +119,13 @@ const CouponSection: React.FC<CouponSectionProps> = ({
             </button>
           </div>
         ) : (
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3">
+          <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5">
             {contexteValide ? (
               <Loader2 className="mt-0.5 w-4 h-4 shrink-0 animate-spin text-amber-500" />
             ) : (
               <Info className="mt-0.5 w-4 h-4 shrink-0 text-amber-500" />
             )}
-            <div className="flex-1 space-y-0.5">
+            <div className="min-w-0 flex-1 basis-40 space-y-0.5">
               <p className="text-[13px] font-semibold text-amber-800">
                 {contexteValide
                   ? "Panier modifié, nouvelle vérification"
@@ -151,8 +151,8 @@ const CouponSection: React.FC<CouponSectionProps> = ({
           <label htmlFor="code-reduction" className="text-xs font-semibold text-gray-500">
             Code promo ou bon
           </label>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-1">
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
               <input
                 id="code-reduction"
                 type="text"
@@ -163,7 +163,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
                 disabled={!contexteValide || enVerification || verrouille}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Saisissez le code dicté par le client"
+                placeholder="Code dicté par le client"
                 aria-invalid={etat.statut === "erreur"}
                 aria-describedby="code-reduction-message"
                 className={INPUT_CLASS}
@@ -186,7 +186,7 @@ const CouponSection: React.FC<CouponSectionProps> = ({
               type="button"
               onClick={verifier}
               disabled={!contexteValide || enVerification || verrouille || !saisie.trim()}
-              className="inline-flex h-[42px] min-w-[120px] items-center justify-center gap-2 rounded-xl bg-[#F17922] px-5 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#F17922] px-4 text-[13px] font-semibold text-white transition hover:bg-[#F17922]/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {enVerification ? (
                 <>
@@ -278,7 +278,7 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({
   const panierTropBas = remise > 0 && sousTotal !== undefined && sousTotal < remise;
   const retirable = !!onRetirer;
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <EnTete
         sousTitre={
           retirable
@@ -286,9 +286,9 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({
             : "Fixée à la création de la commande."
         }
       />
-      <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3">
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
         <Lock className="mt-0.5 w-4 h-4 shrink-0 text-gray-400" />
-        <div className="flex-1 space-y-0.5">
+        <div className="min-w-0 flex-1 basis-40 space-y-0.5">
           <p className="text-[13px] text-gray-600">
             Réduction appliquée à la création :{" "}
             <span className="font-semibold text-gray-800">
@@ -315,19 +315,24 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({
           </button>
         )}
       </div>
-      {retirable && (
-        <ConfirmDialog
-          isOpen={confirmation}
-          onClose={() => setConfirmation(false)}
-          onConfirm={() => {
-            setConfirmation(false);
-            onRetirer();
-          }}
-          title="Retirer le coupon ?"
-          description="Le bon ou le code sera rendu au client à l'enregistrement."
-          confirmLabel="Retirer"
-        />
-      )}
+      {/* Posée sur la page : le panier reste en place quand la page défile,
+          une fenêtre placée dedans passerait sous l'en-tête et le menu. */}
+      {retirable &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <ConfirmDialog
+            isOpen={confirmation}
+            onClose={() => setConfirmation(false)}
+            onConfirm={() => {
+              setConfirmation(false);
+              onRetirer();
+            }}
+            title="Retirer le coupon ?"
+            description="Le bon ou le code sera rendu au client à l'enregistrement."
+            confirmLabel="Retirer"
+          />,
+          document.body,
+        )}
       {panierTropBas && (
         <p role="alert" className="flex items-start gap-1.5 text-xs font-medium text-red-600">
           <CircleAlert className="mt-px w-3.5 h-3.5 shrink-0" />
@@ -344,9 +349,9 @@ export const CouponLectureSeule: React.FC<CouponLectureSeuleProps> = ({
  * appliquer (commande payée) : la carte reste visible et dit pourquoi.
  */
 export const CouponIndisponible: React.FC<{ motif: string }> = ({ motif }) => (
-  <div className="space-y-4">
+  <div className="space-y-3">
     <EnTete sousTitre="Aucune réduction sur cette commande." />
-    <div className="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-3.5 py-3">
+    <div className="flex flex-wrap items-start gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
       <Lock className="mt-0.5 w-4 h-4 shrink-0 text-gray-400" />
       <p className="text-[13px] text-gray-600">{motif}</p>
     </div>

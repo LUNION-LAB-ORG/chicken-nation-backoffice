@@ -68,7 +68,9 @@ const formulaireVide = (userId: string): OrderFormData => ({
     restaurant_id: "",
     auto: false,
     user_id: userId,
-    delivery_fee: 0,
+    // Absent, pas zéro : zéro est un montant (livraison offerte), que le
+    // serveur appliquerait tel quel si l'aperçu des frais n'avait pas répondu.
+    delivery_fee: undefined,
 });
 
 /**

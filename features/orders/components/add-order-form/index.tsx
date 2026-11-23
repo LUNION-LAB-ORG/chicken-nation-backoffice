@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
-import { Ban, ClipboardList, Loader2, Store } from "lucide-react";
+import { ArrowLeftRight, Ban, ClipboardList, Loader2, Store } from "lucide-react";
 
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SimpleSelect from "@/components/ui/SimpleSelect";
@@ -15,9 +15,11 @@ import { OrderTable } from "../../types/ordersTable.types";
 import CouponSection, { CouponIndisponible, CouponLectureSeule } from "./CouponSection";
 import CustomerInfoSection from "./CustomerInfoSection";
 import DeliveryInfoSection from "./DeliveryInfoSection";
+import EnTeteSection from "./EnTeteSection";
 import OrderItemsSection from "./OrderItemsSection";
 import OrderTypeSelector from "./OrderTypeSelector";
 import OrigineSelector from "./OrigineSelector";
+import PanierCommande from "./PanierCommande";
 import { apresBascule, estAConfirmer, panierAnnuleParLeClient } from "../../utils/bascule";
 import { estDuSite } from "../../utils/canal-commande";
 import { MESSAGE_COMMANDE_PAYEE } from "../../utils/modification-coupon";
@@ -78,25 +80,30 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
     couponModif,
   } = useOrderForm(editOrder, { repriseTelephone, onFermer });
 
-  // Livraison et frais à l'ouverture du formulaire. Commande du site à payer à
-  // la livraison reprise : ces frais restent tant que la livraison ne change
-  // pas (le serveur applique la même règle).
+  // Livraison et frais à l'ouverture du formulaire. MODIFICATION : les frais
+  // enregistrés restent tant que la livraison ne change pas, l'écran ne les
+  // recalcule plus (23/11). Avant, seule la commande du site à payer à la
+  // livraison les gardait ; pour elle, le serveur les impose aussi pendant la
+  // reprise au téléphone (`fraisDuSite`), le champ est alors fermé.
   const [depart] = useState(() => formData);
-  const fraisFiges =
-    bascule?.fraisDuSite
-      ? {
-          type: depart.type,
-          address: depart.address,
-          restaurant_id: depart.restaurant_id,
-          delivery_fee: depart.delivery_fee || 0,
-        }
-      : null;
+  const fraisEnregistres = editOrder
+    ? {
+        type: depart.type,
+        address: depart.address,
+        restaurant_id: depart.restaurant_id,
+        delivery_fee: depart.delivery_fee || 0,
+      }
+    : null;
 
   // Sous-total (plats+suppléments) remonté par OrderItemsSection → transmis au calcul
   // des frais pour appliquer les offres de livraison à montant minimum (aperçu backoffice).
   const [subtotal, setSubtotal] = useState(0);
 
-  // Récap de la barre collante — toujours visible pendant la composition.
+  // Panneau du panier : OrderItemsSection y rend les lignes (leur prix et
+  // leurs gestes vivent avec le catalogue).
+  const [ciblePanier, setCiblePanier] = useState<HTMLElement | null>(null);
+
+  // Récap du panier et de la barre collante, toujours visibles pendant la composition.
   const itemsCount = formData.items.reduce((sum, item) => sum + item.quantity, 0);
   const deliveryFee =
     formData.type === OrderType.DELIVERY ? formData.delivery_fee || 0 : 0;
@@ -124,41 +131,94 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
   const sousTotalAffiche = reduction?.sousTotal ?? subtotal;
   const articlesApresRemise = reduction?.totalArticles ?? Math.max(0, subtotal - remise);
   const grandTotal = articlesApresRemise + taxeFigee + deliveryFee;
+  const sousTotalRecalcule = Math.round(sousTotalAffiche) !== Math.round(subtotal);
+  const restaurantChoisi = restaurants.find((r) => r.value === formData.restaurant_id)?.label;
+
+  // ── Réduction : code promo ou bon, affichée dans le panier ──────────────
+  // MODIFICATION (rôles qui créent une commande) : le coupon en place se
+  // retire, et un coupon s'applique sur une commande qui n'en a pas (ou dont
+  // le retrait est demandé : remplacement en une seule requête). Le serveur
+  // refuse tout changement sur une commande payée. Les autres rôles voient
+  // la réduction en lecture seule.
+  const saisieCoupon = (
+    <CouponSection coupon={coupon} totalApresRemise={grandTotal} verrouille={isSubmitting} />
+  );
+  const blocReduction: ReactNode =
+    editOrder && couponModif ? (
+      retraitDemande ? (
+        <CouponSection
+          coupon={coupon}
+          totalApresRemise={grandTotal}
+          verrouille={isSubmitting}
+          retraitPrevu={{
+            code: editOrder.codePromo,
+            remise: editOrder.discount,
+            annuler: couponModif.annulerRetrait,
+          }}
+        />
+      ) : editOrder.discount > 0 || editOrder.codePromo ? (
+        <CouponLectureSeule
+          code={editOrder.codePromo}
+          remise={editOrder.discount}
+          // 0 pendant le chargement du catalogue : pas d'alerte à tort.
+          sousTotal={formData.items.length > 0 && subtotal > 0 ? subtotal : undefined}
+          motif={couponModif.droit ? couponModif.motifFige : null}
+          onRetirer={
+            couponModif.peutChanger && couponModif.aUnCoupon ? couponModif.demanderRetrait : undefined
+          }
+          verrouille={isSubmitting}
+        />
+      ) : coupon.actif ? (
+        saisieCoupon
+      ) : couponModif.droit && couponModif.motifFige === MESSAGE_COMMANDE_PAYEE ? (
+        <CouponIndisponible motif={couponModif.motifFige} />
+      ) : null
+    ) : coupon.actif ? (
+      saisieCoupon
+    ) : null;
 
   return (
     <>
     <motion.form
       onSubmit={handleSubmit}
-      className="w-full space-y-5"
+      // Conteneur de requête : la disposition suit la largeur RÉELLE du
+      // formulaire (menu ouvert ou replié, petit ou grand écran), pas celle de
+      // l'écran. ⚠️ Aucune fenêtre (`fixed`) dedans : elles sont posées sur
+      // la page (fenêtre du plat, confirmations).
+      className="w-full @container/commande"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
     >
+      {/*
+        Assez de place (environ 900 px) : la saisie à gauche, le panier à
+        droite, toujours visible (il reste en place quand la page défile).
+        Sinon : une seule colonne, le panier sous les articles. La réduction
+        vit dans le panier.
+      */}
+      <div className="grid grid-cols-1 gap-5 @4xl/commande:grid-cols-[minmax(0,1fr)_320px] @4xl/commande:items-start @5xl/commande:grid-cols-[minmax(0,1fr)_340px] @7xl/commande:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="min-w-0 space-y-5">
       {/* ── 1. Type de commande + restaurant ─────────────────────────────── */}
       <div className={CARD_CLASS}>
-        <div className="flex items-center gap-2.5 mb-5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#F17922]">
-            <ClipboardList className="w-4 h-4" />
-          </span>
-          <div>
-            <h2 className="text-[15px] font-bold text-gray-800">
-              {editOrder
-                ? `Modifier la commande #${editOrder.reference}`
-                : "Nouvelle commande"}
-            </h2>
-            <p className="text-xs text-gray-400">
-              Choisissez le type de commande et le restaurant qui prépare.
-            </p>
-          </div>
+        <div className="mb-5">
+          <EnTeteSection
+            Icone={ClipboardList}
+            titre={editOrder ? `Modifier la commande #${editOrder.reference}` : "Nouvelle commande"}
+            sousTitre="Choisissez le type de commande et le restaurant qui prépare."
+          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-4 lg:gap-6 items-end">
+        {/* Type et restaurant côte à côte quand la place le permet ; l'un sous
+            l'autre tant que le panier, à droite, resserre la colonne. */}
+        <div className="grid grid-cols-1 items-end gap-4 @7xl/commande:grid-cols-[1fr_300px] @7xl/commande:gap-6">
           <OrderTypeSelector
             selectedType={formData.type}
             onChange={(type) => setFormData({ ...formData, type })}
           />
 
-          <div className="relative z-40">
+          {/* Sans `z-40` : la liste du sélecteur est posée sur la page, et ce
+              rang faisait passer le champ par-dessus l'en-tête fixe au défilement. */}
+          <div className="relative">
             <label className="text-xs font-semibold text-gray-500 mb-1.5 flex items-center gap-1.5">
               <Store className="w-3.5 h-3.5 text-gray-400" />
               Restaurant *
@@ -200,7 +260,9 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
             </p>
           </div>
         )}
+      </div>
 
+      {/* ── Source : Manuel ou Auto, en modification seulement ───────────── */}
         {/*
           Pas de bascule d'origine sur une commande annulée : la bascule
           transmet la commande au restaurant et met le paiement à la caisse,
@@ -209,8 +271,15 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
           panier annulé par le client repris au téléphone (`reactivation`),
           que l'enregistrement sur « Call center » réactive.
         */}
-        {editOrder && bascule && (!annulee || reactivation) && (
-          <div className="mt-4 border-t border-gray-100 pt-4">
+      {editOrder && bascule && (!annulee || reactivation) && (
+        <div className={CARD_CLASS}>
+          <div className="mb-5">
+            <EnTeteSection
+              Icone={ArrowLeftRight}
+              titre="Source de la commande"
+              sousTitre="Manuel (call center) ou Auto (application ou site)."
+            />
+          </div>
             <OrigineSelector
               auto={!!formData.auto}
               // `status` est un libellé d'affichage (« EN ATTENTE ») ; `rawStatus`
@@ -235,14 +304,15 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
               aConfirmer={estAConfirmer(editOrder)}
               onChange={(auto) => setFormData({ ...formData, auto })}
             />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── 2. Client | Livraison ────────────────────────────────────────── */}
-      {/* La livraison reçoit la colonne la plus large : elle porte la carte. */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-5 items-start">
-        <div className={`${CARD_CLASS} xl:col-span-2`}>
+      {/* Côte à côte sur un très grand écran seulement : le panier prend la
+          droite. La livraison reçoit la colonne la plus large (la carte).
+          Empilés, chacun range ses champs sur plusieurs colonnes. */}
+      <div className="grid grid-cols-1 min-[1800px]:grid-cols-5 gap-5 items-start">
+        <div className={`${CARD_CLASS} min-[1800px]:col-span-2`}>
           <CustomerInfoSection
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
@@ -251,12 +321,13 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
           />
         </div>
 
-        <div className={`${CARD_CLASS} xl:col-span-3`}>
+        <div className={`${CARD_CLASS} min-[1800px]:col-span-3`}>
           <DeliveryInfoSection
             formData={formData}
             onFormDataChange={(data) => setFormData({ ...formData, ...data })}
             orderAmount={subtotal}
-            fraisFiges={fraisFiges}
+            fraisEnregistres={fraisEnregistres}
+            fraisDuSite={!!bascule?.fraisDuSite && !formData.auto}
           />
         </div>
       </div>
@@ -268,79 +339,38 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
           items={formData.items}
           onItemsChange={(items) => setFormData({ ...formData, items })}
           onSubtotalChange={setSubtotal}
-          reduction={reduction}
-          taxe={taxeFigee}
+          ciblePanier={ciblePanier}
+          enModification={!!editOrder}
         />
       </div>
+      </div>
 
-      {/* ── 4. Réduction : code promo ou bon ─────────────────────────────── */}
-      {/*
-        MODIFICATION (rôles qui créent une commande) : le coupon en place se
-        retire, et un coupon s'applique sur une commande qui n'en a pas (ou
-        dont le retrait est demandé : remplacement en une seule requête). Le
-        serveur refuse tout changement sur une commande payée. Les autres rôles
-        voient la réduction en lecture seule.
-      */}
-      {editOrder && couponModif ? (
-        retraitDemande ? (
-          <div className={CARD_CLASS}>
-            <CouponSection
-              coupon={coupon}
-              totalApresRemise={grandTotal}
-              verrouille={isSubmitting}
-              retraitPrevu={{
-                code: editOrder.codePromo,
-                remise: editOrder.discount,
-                annuler: couponModif.annulerRetrait,
-              }}
-            />
-          </div>
-        ) : editOrder.discount > 0 || editOrder.codePromo ? (
-          <div className={CARD_CLASS}>
-            <CouponLectureSeule
-              code={editOrder.codePromo}
-              remise={editOrder.discount}
-              // 0 pendant le chargement du catalogue : pas d'alerte à tort.
-              sousTotal={formData.items.length > 0 && subtotal > 0 ? subtotal : undefined}
-              motif={couponModif.droit ? couponModif.motifFige : null}
-              onRetirer={
-                couponModif.peutChanger && couponModif.aUnCoupon
-                  ? couponModif.demanderRetrait
-                  : undefined
-              }
-              verrouille={isSubmitting}
-            />
-          </div>
-        ) : coupon.actif ? (
-          <div className={CARD_CLASS}>
-            <CouponSection
-              coupon={coupon}
-              totalApresRemise={grandTotal}
-              verrouille={isSubmitting}
-            />
-          </div>
-        ) : (
-          couponModif.droit &&
-          couponModif.motifFige === MESSAGE_COMMANDE_PAYEE && (
-            <div className={CARD_CLASS}>
-              <CouponIndisponible motif={couponModif.motifFige} />
-            </div>
-          )
-        )
-      ) : (
-        coupon.actif && (
-          <div className={CARD_CLASS}>
-            <CouponSection
-              coupon={coupon}
-              totalApresRemise={grandTotal}
-              verrouille={isSubmitting}
-            />
-          </div>
-        )
-      )}
+      {/* ── Panier : à côté de la saisie, toujours visible ───────────────── */}
+      {/* `top` : sous l'en-tête fixe de la page (3,5 rem) plus une marge. */}
+      <aside className="min-w-0 @4xl/commande:sticky @4xl/commande:top-[4.5rem]">
+        <PanierCommande
+          formData={formData}
+          restaurant={restaurantChoisi}
+          nombreArticles={itemsCount}
+          cibleLignes={setCiblePanier}
+          blocReduction={blocReduction}
+          sousTotal={sousTotalAffiche}
+          sousTotalRecalcule={sousTotalRecalcule}
+          fraisLivraison={deliveryFee}
+          taxe={taxeFigee}
+          reduction={reduction}
+          total={grandTotal}
+          enModification={!!editOrder}
+          envoiEnCours={isSubmitting}
+          onAnnuler={handleCancel}
+        />
+      </aside>
+
+      </div>
 
       {/* ── Barre récap collante : total + actions toujours visibles ─────── */}
-      <div className="sticky bottom-4 z-30">
+      {/* Une seule colonne seulement : à côté du formulaire, le panier les porte. */}
+      <div className="sticky bottom-4 z-30 mt-5 @4xl/commande:hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/95 backdrop-blur px-4 sm:px-6 py-3.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
           <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 text-[13px]">
             <span className="text-gray-500">

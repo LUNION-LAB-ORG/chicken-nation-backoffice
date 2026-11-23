@@ -107,7 +107,11 @@ export interface LivraisonFormulaire {
  * le serveur les garde (`OrderService.update`). L'aperçu, lui, calcule pour
  * maintenant : une offre finie ou épuisée depuis y serait sautée, et l'écran
  * aurait affiché d'autres frais que ceux enregistrés. Livraison changée par
- * l'agent, ou toute autre commande : les frais de l'aperçu.
+ * l'agent, ou nouvelle commande : les frais de l'aperçu.
+ *
+ * Depuis le 23/11, TOUTE commande modifiée passe ici avec ses frais
+ * enregistrés (`utils/frais-livraison.ts`, qui ajoute la saisie de l'agent) :
+ * ouvrir une commande ne refait plus le calcul de ses frais.
  */
 export function fraisLivraisonRetenus(
   livraison: LivraisonFormulaire,

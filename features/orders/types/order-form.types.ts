@@ -34,7 +34,16 @@ export interface OrderFormData {
     restaurant_id?: string;
     auto: boolean;
     user_id: string;
+    /**
+     * Frais de livraison. Absent : rien n'est posé, le serveur calcule. Zéro
+     * est un montant (livraison offerte).
+     */
     delivery_fee?: number;
+    /**
+     * État de l'ÉCRAN, jamais envoyé (`prepareOrderData` ne le reprend pas) :
+     * l'agent a écrit dans le champ des frais, plus rien ne les recalcule.
+     */
+    frais_manuels?: boolean;
     /** Override admin : force FREE (Chicken Nation) ou TURBO (sous-traitant). Si absent, auto-détection backend. */
     delivery_service?: DeliveryService;
     /**
