@@ -1,16 +1,19 @@
 "use client";
 
 import React from "react";
-import { Loader2, MapPin, Store, UserRound } from "lucide-react";
+import { Bike, Loader2, Navigation, ShoppingBag, Store, UserRound, UtensilsCrossed } from "lucide-react";
 import { ReductionAffichee } from "../../types/coupon.types";
 import { OrderFormData } from "../../types/order-form.types";
 import { OrderType } from "../../types/order.types";
 import { getParsedAddress } from "../../utils/getParsedAddress";
+import { texteTrajet, TrajetLivraison } from "../../utils/panier";
 
 interface PanierCommandeProps {
   formData: OrderFormData;
   /** Nom du restaurant choisi, s'il y en a un. */
   restaurant?: string;
+  /** Trajet du restaurant à l'adresse (livraison), remonté par la section Livraison. */
+  trajet?: TrajetLivraison | null;
   /** Quantité totale d'articles. */
   nombreArticles: number;
   /** Reçoit l'élément où les lignes du panier sont rendues (OrderItemsSection). */
@@ -31,30 +34,41 @@ interface PanierCommandeProps {
   onAnnuler: () => void;
 }
 
-/** Mêmes mots que le sélecteur du type de commande. */
-const LIBELLE_TYPE: Record<OrderType, string> = {
-  [OrderType.DELIVERY]: "Livraison",
-  [OrderType.PICKUP]: "Retrait",
-  [OrderType.TABLE]: "Sur place",
+/** Mêmes mots et mêmes icônes que le sélecteur du type de commande. */
+const TYPE: Record<OrderType, { libelle: string; detail: string; Icone: React.FC<{ className?: string }> }> = {
+  [OrderType.DELIVERY]: { libelle: "Livraison", detail: "", Icone: Bike },
+  [OrderType.PICKUP]: { libelle: "Retrait", detail: "Le client vient chercher", Icone: ShoppingBag },
+  [OrderType.TABLE]: { libelle: "Sur place", detail: "Service à table", Icone: UtensilsCrossed },
 };
 
+/** Une ligne du rappel : libellé à gauche, valeur à droite. */
 const Rappel = ({
   Icone,
+  libelle,
   texte,
   manque,
+  complement,
 }: {
   Icone: React.FC<{ className?: string }>;
+  libelle: string;
   texte: string;
   manque: string;
+  complement?: React.ReactNode;
 }) => (
-  <p className="flex items-start gap-2">
-    <Icone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-gray-400" />
-    {texte ? (
-      <span className="min-w-0 break-words font-semibold text-[#595959]">{texte}</span>
-    ) : (
-      <span className="text-gray-400">{manque}</span>
-    )}
-  </p>
+  <div className="grid grid-cols-[5.75rem_minmax(0,1fr)] items-start gap-2">
+    <dt className="flex items-center gap-1.5 text-gray-400">
+      <Icone className="h-3.5 w-3.5 shrink-0" />
+      {libelle}
+    </dt>
+    <dd className="min-w-0">
+      {texte ? (
+        <span className="break-words font-semibold text-gray-800">{texte}</span>
+      ) : (
+        <span className="text-gray-400">{manque}</span>
+      )}
+      {complement}
+    </dd>
+  </div>
 );
 
 /**
@@ -68,6 +82,7 @@ const Rappel = ({
 const PanierCommande: React.FC<PanierCommandeProps> = ({
   formData,
   restaurant,
+  trajet,
   nombreArticles,
   cibleLignes,
   blocReduction,
@@ -84,7 +99,8 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
   const livraison = formData.type === OrderType.DELIVERY;
   const adresse = livraison ? getParsedAddress(formData.address) : null;
   const client = [formData.fullname?.trim(), formData.phone?.trim()].filter(Boolean).join(" · ");
-  const lieu = [LIBELLE_TYPE[formData.type], restaurant].filter(Boolean).join(" · ");
+  const type = TYPE[formData.type];
+  const distanceDuree = livraison ? texteTrajet(trajet) : null;
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white @4xl/commande:max-h-[calc(100dvh-5.5rem)]">
@@ -99,18 +115,26 @@ const PanierCommande: React.FC<PanierCommandeProps> = ({
         </span>
       </div>
 
-      {/* À qui et où : ce que l'agent relit avant d'enregistrer */}
-      <div className="shrink-0 space-y-1.5 border-b border-gray-100 px-4 py-3 text-xs">
-        <Rappel Icone={UserRound} texte={client} manque="Client à renseigner" />
-        <Rappel Icone={Store} texte={restaurant ? lieu : ""} manque={`${LIBELLE_TYPE[formData.type]} · restaurant à choisir`} />
-        {livraison && (
-          <Rappel
-            Icone={MapPin}
-            texte={adresse?.title || adresse?.address || ""}
-            manque="Adresse de livraison à renseigner"
-          />
-        )}
-      </div>
+      {/* À qui, d'où et où : ce que l'agent relit avant d'enregistrer. Le
+          restaurant qui prépare et le lieu de livraison sur deux lignes. */}
+      <dl className="shrink-0 space-y-2 border-b border-gray-100 px-4 py-3 text-xs">
+        <Rappel Icone={UserRound} libelle="Client" texte={client} manque="À renseigner" />
+        <Rappel Icone={Store} libelle="Restaurant" texte={restaurant ?? ""} manque="À choisir" />
+        <Rappel
+          Icone={type.Icone}
+          libelle={type.libelle}
+          texte={livraison ? adresse?.title || adresse?.address || "" : type.detail}
+          manque="Adresse à renseigner"
+          complement={
+            distanceDuree && (
+              <span className="mt-1.5 flex w-fit items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[11px] font-semibold text-[#F17922]">
+                <Navigation className="h-3 w-3 shrink-0" />
+                {distanceDuree}
+              </span>
+            )
+          }
+        />
+      </dl>
 
       {/* Articles (rendus ici par OrderItemsSection) puis réduction : ils
           défilent ensemble quand le panier est long, le total et les boutons

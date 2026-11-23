@@ -44,6 +44,7 @@ import {
 import CartePlat from "./CartePlat";
 import EnTeteSection from "./EnTeteSection";
 import LignesPanier, { LignePanier } from "./LignesPanier";
+import { supplementsNommes } from "../../utils/panier";
 import MenusHabituels from "./MenusHabituels";
 
 interface OrderItemsSectionProps {
@@ -543,6 +544,13 @@ const OrderItemsSection: React.FC<OrderItemsSectionProps> = ({
         item,
         dish,
         total: calculateItemTotal(item),
+        // Nom pris du catalogue complet, sinon des suppléments du plat.
+        supplements: supplementsNommes(
+          item.supplements,
+          (id) =>
+            allSupplementsFlat.find((sup) => sup.id === id)?.name ??
+            dish.dish_supplements?.find((ds) => ds.supplement?.id === id)?.supplement?.name,
+        ),
         composition:
           (item.option_item_ids?.length ?? 0) > 0
             ? resumeComposition(groupesParPlat[item.dish_id] ?? [], item.option_item_ids ?? [])

@@ -23,6 +23,7 @@ import PanierCommande from "./PanierCommande";
 import { apresBascule, estAConfirmer, panierAnnuleParLeClient } from "../../utils/bascule";
 import { estDuSite } from "../../utils/canal-commande";
 import { MESSAGE_COMMANDE_PAYEE } from "../../utils/modification-coupon";
+import { TrajetLivraison } from "../../utils/panier";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
@@ -102,6 +103,8 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
   // Panneau du panier : OrderItemsSection y rend les lignes (leur prix et
   // leurs gestes vivent avec le catalogue).
   const [ciblePanier, setCiblePanier] = useState<HTMLElement | null>(null);
+  // Distance et durée du trajet de livraison, affichées dans le panier.
+  const [trajet, setTrajet] = useState<TrajetLivraison | null>(null);
 
   // Récap du panier et de la barre collante, toujours visibles pendant la composition.
   const itemsCount = formData.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -328,6 +331,7 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
             orderAmount={subtotal}
             fraisEnregistres={fraisEnregistres}
             fraisDuSite={!!bascule?.fraisDuSite && !formData.auto}
+            onTrajet={setTrajet}
           />
         </div>
       </div>
@@ -351,6 +355,7 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
         <PanierCommande
           formData={formData}
           restaurant={restaurantChoisi}
+          trajet={formData.type === OrderType.DELIVERY ? trajet : null}
           nombreArticles={itemsCount}
           cibleLignes={setCiblePanier}
           blocReduction={blocReduction}

@@ -13,6 +13,8 @@ export interface LignePanier {
   item: OrderItemFormData;
   dish: Dish;
   total: number;
+  /** Suppléments nommés : « Coca », « Sauce piment x2 ». */
+  supplements: string[];
   /** « Sauce : Piquante · Format : Menu » d'un plat composable. */
   composition: string | null;
 }
@@ -41,8 +43,7 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
 
   return (
     <ul className="divide-y divide-gray-100">
-      {lignes.map(({ index, item, dish, total, composition }) => {
-        const supplements = item.supplements.reduce((somme, s) => somme + s.quantity, 0);
+      {lignes.map(({ index, item, dish, total, supplements, composition }) => {
         return (
           <li key={index} className="flex gap-3 px-4 py-3">
             {dish.image && (
@@ -78,18 +79,22 @@ const LignesPanier: React.FC<LignesPanierProps> = ({ lignes, onModifier, onRetir
                 </button>
               </div>
 
-              {(item.epice || supplements > 0) && (
-                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {/* Épicé, puis chaque supplément par son nom. */}
+              {(item.epice || supplements.length > 0) && (
+                <div className="mt-1 flex flex-wrap items-center gap-1">
                   {item.epice && (
                     <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-500">
                       🌶️ Épicé
                     </span>
                   )}
-                  {supplements > 0 && (
-                    <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600">
-                      +{supplements} supp.
+                  {supplements.map((supplement, i) => (
+                    <span
+                      key={`${supplement}-${i}`}
+                      className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-600"
+                    >
+                      + {supplement}
                     </span>
-                  )}
+                  ))}
                 </div>
               )}
               {composition !== null && (

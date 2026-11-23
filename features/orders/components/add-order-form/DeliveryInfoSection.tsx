@@ -17,6 +17,7 @@ import {
   getCurrentDate,
   getCurrentTime,
 } from "../../../../utils/date/format-date";
+import { TrajetLivraison } from "../../utils/panier";
 import AddressSearchInput from "./AddressSearchInput";
 import EnTeteSection from "./EnTeteSection";
 import { getParsedAddress } from "../../utils/getParsedAddress";
@@ -54,6 +55,11 @@ interface DeliveryInfoSectionProps {
    * la livraison ne change pas. Le champ est alors fermé.
    */
   fraisDuSite?: boolean;
+  /**
+   * Trajet du restaurant à l'adresse, pour le panier : distance et durée par
+   * la route, sinon la distance des frais. `null` hors livraison.
+   */
+  onTrajet?: (trajet: TrajetLivraison | null) => void;
 }
 
 const INPUT_CLASS =
@@ -90,6 +96,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   orderAmount,
   fraisEnregistres,
   fraisDuSite = false,
+  onTrajet,
 }) => {
   const isDelivery = formData.type === OrderType.DELIVERY;
 
@@ -234,6 +241,19 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
     [restoCoords, clientCoords]
   );
   const { data: route } = useDirectionsQuery(isDelivery ? routeParams : null);
+
+  // Trajet pour le panier : rien n'est relu, ce sont les réponses déjà là.
+  const distanceRoute = isDelivery && routeParams ? route?.distanceMeters : undefined;
+  const dureeRoute = isDelivery && routeParams ? route?.durationSeconds : undefined;
+  const distanceFrais =
+    isDelivery && adresse && formData.restaurant_id ? (deliveryFee?.distance ?? undefined) : undefined;
+  useEffect(() => {
+    onTrajet?.(
+      distanceRoute || dureeRoute || distanceFrais
+        ? { distanceMetres: distanceRoute, dureeSecondes: dureeRoute, distanceFraisKm: distanceFrais }
+        : null,
+    );
+  }, [distanceRoute, dureeRoute, distanceFrais, onTrajet]);
 
   const sectionTitle = isDelivery
     ? "Livraison"
