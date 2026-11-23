@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Ban, ClipboardList, Loader2, Store } from "lucide-react";
 
+import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import SimpleSelect from "@/components/ui/SimpleSelect";
 import { useDashboardStore } from "@/store/dashboardStore";
 import { useOrderForm } from "../../hooks/useOrderForm";
@@ -22,12 +24,14 @@ import { MESSAGE_COMMANDE_PAYEE } from "../../utils/modification-coupon";
 
 interface AddOrderFormProps {
   editOrder?: OrderTable;
+  /** Quitte le formulaire : retour à l'écran d'où il a été ouvert. */
+  onFermer?: () => void;
 }
 
 /** Carte blanche standard des sections du formulaire. */
 const CARD_CLASS = "bg-white rounded-2xl border border-gray-200 p-5 sm:p-6";
 
-const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
+const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
   // « Reprendre au téléphone » : lu une fois à l'ouverture, puis effacé à la
   // fermeture du formulaire pour ne pas resservir à une autre modification.
   const repriseTelephoneId = useDashboardStore((s) => s.repriseTelephoneId);
@@ -68,10 +72,11 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
     isSubmitting,
     handleSubmit,
     handleCancel,
+    annulation,
     handleCustomerChange,
     coupon,
     couponModif,
-  } = useOrderForm(editOrder, { repriseTelephone });
+  } = useOrderForm(editOrder, { repriseTelephone, onFermer });
 
   // Livraison et frais à l'ouverture du formulaire. Commande du site à payer à
   // la livraison reprise : ces frais restent tant que la livraison ne change
@@ -121,6 +126,7 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
   const grandTotal = articlesApresRemise + taxeFigee + deliveryFee;
 
   return (
+    <>
     <motion.form
       onSubmit={handleSubmit}
       className="w-full space-y-5"
@@ -409,6 +415,26 @@ const AddOrderForm = ({ editOrder }: AddOrderFormProps) => {
         </div>
       </div>
     </motion.form>
+
+    {/*
+      Hors du formulaire et posée sur la page : l'animation d'entrée du
+      formulaire décalerait une fenêtre placée dedans.
+    */}
+    {typeof document !== "undefined" &&
+      createPortal(
+        <ConfirmDialog
+          isOpen={annulation.ouverte}
+          onClose={annulation.continuer}
+          onConfirm={annulation.confirmer}
+          title="Annuler la prise de commande ?"
+          description="Toutes les données saisies seront perdues."
+          confirmLabel="Oui, annuler"
+          cancelLabel="Continuer la saisie"
+          variant="danger"
+        />,
+        document.body,
+      )}
+    </>
   );
 };
 

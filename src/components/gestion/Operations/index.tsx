@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Activity, Archive, PhoneCall, Plus, RotateCw, UserPlus } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -129,6 +129,14 @@ export default function Operations() {
     activeTab === "historique" &&
     (ordersView === "create" || ordersView === "edit");
 
+  // Dernier onglet affiché AVANT le formulaire de commande : le fermer
+  // (« Annuler », flèche de retour) y ramène (« En cours », « Commandes » ou
+  // « À relancer »), quel que soit le bouton qui l'a ouvert.
+  const ongletAvantFormulaire = useRef<CommandesTab>("historique");
+  useEffect(() => {
+    if (!isEditing) ongletAvantFormulaire.current = activeTab;
+  }, [activeTab, isEditing]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -225,6 +233,12 @@ export default function Operations() {
     setSectionView("orders", "edit");
   };
 
+  /** Ferme le formulaire de commande et revient à l'onglet d'où il a été ouvert. */
+  const fermerFormulaire = () => {
+    setSectionView("orders", "list");
+    setActiveTab(ongletAvantFormulaire.current);
+  };
+
   // ── Données "Commandes" ──────────────────────────────────────────────────────
   const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useOrderListQuery({
     restaurantId: selectedRestaurantId,
@@ -254,7 +268,7 @@ export default function Operations() {
           /* Mode création / modification : header avec bouton retour */
           <DashboardPageHeader
             mode={ordersView}
-            onBack={() => setSectionView("orders", "list")}
+            onBack={fermerFormulaire}
             title={ordersView === "create" ? "Créer une commande" : "Modifier la commande"}
             gradient={true}
             actions={
@@ -424,11 +438,11 @@ export default function Operations() {
           )}
 
           {/* Création */}
-          {ordersView === "create" && <AddOrderForm />}
+          {ordersView === "create" && <AddOrderForm onFermer={fermerFormulaire} />}
 
           {/* Modification */}
           {ordersView === "edit" && ordersSelectedItem && (
-            <AddOrderForm editOrder={ordersSelectedItem} />
+            <AddOrderForm editOrder={ordersSelectedItem} onFermer={fermerFormulaire} />
           )}
         </div>
       )}

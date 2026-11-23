@@ -72,17 +72,23 @@ const formulaireVide = (userId: string): OrderFormData => ({
 });
 
 /**
+ * `onFermer` : quitte le formulaire et ramène à l'écran d'où il a été ouvert
+ * (« En cours », « Commandes », « À relancer »). Sans lui : la liste.
+ *
  * `repriseTelephone` : modification ouverte par « Reprendre au téléphone ».
  * L'origine part sur « Call center », car c'est cette bascule, à
  * l'enregistrement, qui reprend la commande côté serveur. Laissée sur
  * « Application », la commande resterait un panier non payé que le
  * restaurant ne voit pas.
  */
-export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone?: boolean } = {}) => {
+export const useOrderForm = (
+    editOrder?: OrderTable,
+    options: { repriseTelephone?: boolean; onFermer?: () => void } = {},
+) => {
     const { user, can } = useAuthStore();
     const { setSectionView } = useDashboardStore();
     const isEditMode = !!editOrder;
-    const { repriseTelephone = false } = options;
+    const { repriseTelephone = false, onFermer } = options;
 
     const initialFormData = useMemo(() => {
         if (editOrder) {
@@ -265,21 +271,26 @@ export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone
         }
     };
 
+    const fermer = onFermer ?? (() => setSectionView("orders", "list"));
+
+    // « Annuler » d'une nouvelle commande : confirmation dans une fenêtre de
+    // l'écran (plus celle du navigateur), puis fermeture du formulaire.
+    const [annulationDemandee, setAnnulationDemandee] = useState(false);
+
     const handleCancel = () => {
+        // Modification : retour sans confirmation, la commande enregistrée ne change pas.
         if (isEditMode) {
-            // En mode édition, retour à la liste sans confirmation
-            setSectionView("orders", "list");
+            fermer();
             return;
         }
+        setAnnulationDemandee(true);
+    };
 
-        if (
-            confirm(
-                "Êtes-vous sûr de vouloir annuler ? Toutes les données seront perdues."
-            )
-        ) {
-            setFormData(formulaireVide(user.id));
-            coupon.reinitialiser();
-        }
+    const confirmerAnnulation = () => {
+        setAnnulationDemandee(false);
+        setFormData(formulaireVide(user.id));
+        coupon.reinitialiser();
+        fermer();
     };
 
     return {
@@ -291,6 +302,11 @@ export const useOrderForm = (editOrder?: OrderTable, options: { repriseTelephone
         setIsSubmitting,
         handleSubmit,
         handleCancel,
+        annulation: {
+            ouverte: annulationDemandee,
+            continuer: () => setAnnulationDemandee(false),
+            confirmer: confirmerAnnulation,
+        },
         handleCustomerChange,
         coupon,
         /** Modification seulement ; `null` à la création. */
