@@ -87,7 +87,7 @@ export default function ConfigurationPaystack() {
             )}
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Chaque restaurant encaisse sur son sous-compte. Le compte principal ne garde pas plus que le supplément.
+            Chaque restaurant encaisse sur son sous-compte. Le compte principal ne garde pas plus que le taux des frais de service.
           </p>
         </div>
         <button
@@ -159,7 +159,7 @@ export default function ConfigurationPaystack() {
       </div>
 
       {/* Frais ajoutés au client */}
-      {config?.frais && <FraisPaystack frais={config.frais} />}
+      {config?.frais && <FraisPaystack frais={config.frais} fraisService={config.frais_service} />}
 
       {/* Sous-comptes des restaurants */}
       <div>

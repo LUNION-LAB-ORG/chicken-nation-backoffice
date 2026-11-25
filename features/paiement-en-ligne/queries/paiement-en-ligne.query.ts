@@ -34,6 +34,8 @@ export const useReglagesPaiementMutation = () => {
     mutationFn: (dto: ReglagesPaiementEnLigneDTO) => paiementEnLigneAPI.reglages(dto),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: paiementEnLigneKeys.configuration() });
+      // Les frais de service sont aussi le « Taux de taxe » de l'onglet Commandes.
+      void queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast.success("Réglage enregistré");
     },
     onError: (e: ErreurApi) => {

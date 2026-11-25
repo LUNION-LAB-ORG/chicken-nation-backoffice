@@ -24,18 +24,18 @@ export interface RestaurantPaystack {
   motif: string | null;
 }
 
-/** Frais Paystack ajoutés au client, en pourcentage du montant de la commande. */
+/** Frais de paiement Paystack ajoutés au client, en pourcentage du total de la commande. */
 export interface FraisPaystack {
   mobile_money: number;
   carte: number;
-  /** Ajouté aux deux taux ; c'est aussi la part maximale du compte principal. */
-  supplement: number;
 }
 
 export interface ConfigurationPaiementEnLigne {
   en_ligne_actif: boolean;
   fournisseur: Fournisseur;
   frais: FraisPaystack;
+  /** Frais de service des commandes, en pourcentage du prix des plats : aussi la part maximale du compte principal. */
+  frais_service: number;
   paystack: {
     cle_configuree: boolean;
     mode: "test" | "live" | null;
@@ -49,4 +49,5 @@ export interface ReglagesPaiementEnLigneDTO {
   en_ligne_actif?: boolean;
   fournisseur?: Fournisseur;
   frais?: Partial<FraisPaystack>;
+  frais_service?: number;
 }

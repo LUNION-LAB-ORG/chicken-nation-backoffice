@@ -37,10 +37,16 @@ export function lireTauxSaisi(saisie: string): number | null {
   return Math.round(t * 100) / 100;
 }
 
-/** Frais ajoutés au client, au franc supérieur (même calcul que le serveur). */
-export function fraisPourLeClient(montant: number, taux: number, supplement: number): number {
-  const centiemes = Math.round((taux + supplement) * 100);
+/** Frais de paiement ajoutés au client, au franc supérieur (même calcul que le serveur). */
+export function fraisPourLeClient(montant: number, taux: number): number {
+  const centiemes = Math.round(taux * 100);
   return Math.floor((Math.round(montant) * centiemes + 9_999) / 10_000);
+}
+
+/** Frais de service d'une commande : pourcentage du prix des plats, à la dizaine supérieure (comme le serveur). */
+export function fraisDeService(plats: number, pourCent: number): number {
+  const centiemes = Math.round(pourCent * 100);
+  return Math.ceil((Math.round(plats) * centiemes) / 10_000 / 10 - 1e-9) * 10;
 }
 
 /** « 0 % » ou « 2,5 % » ; tiret si inconnu. */
