@@ -41,9 +41,9 @@ export const relanceAPI = {
 
   liberer: (orderId: string) => avecIntrouvable(api.post<{ ok: true }>(chemin(orderId, "liberer"), {})),
 
+  /** La commande reste en attente : elle sort seulement des alertes de l'équipe. */
   ignorer: (orderId: string, dto: IgnorerRelanceDTO) =>
-    // `annulees` : paniers annulés en les ignorant (absent d'un serveur plus ancien).
-    avecIntrouvable(api.post<{ ok: true; nombre: number; annulees?: number }>(chemin(orderId, "ignorer"), dto)),
+    avecIntrouvable(api.post<{ ok: true; nombre: number }>(chemin(orderId, "ignorer"), dto)),
 
   retablir: (orderId: string) =>
     avecIntrouvable(api.post<{ ok: true; hors_fenetre: boolean }>(chemin(orderId, "retablir"), {})),

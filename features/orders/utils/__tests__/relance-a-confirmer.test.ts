@@ -118,8 +118,8 @@ describe('relance : boutons d’une commande à confirmer', () => {
       'ouvrir',
     ]);
     expect(en({ etat: 'PRIS', prise: prise(false) })).toEqual(['ouvrir']);
-    // Paiement en cours : pas « Ignorer », qui annulerait la commande (23/11).
-    expect(en({ etat: 'EN_COURS' })).toEqual(['ouvrir']);
+    // Paiement en cours : « Ignorer » reste possible, il n'annule pas (25/11).
+    expect(en({ etat: 'EN_COURS' })).toEqual(['ignorer', 'ouvrir']);
     expect(
       actionsRelance(groupe({ aConfirmer: false, etat: 'PRIS', prise: prise(false) }), { estAdmin: true }),
     ).toEqual(['liberer', 'ignorer', 'ouvrir']);

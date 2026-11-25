@@ -56,7 +56,7 @@ function LigneIgnoree({ ligne, maintenant }: { ligne: IgnoreeLigne; maintenant: 
           {raison ? ` : ${raison}` : ""}
         </p>
       </div>
-      {/* Annulée en l'ignorant (23/11) : elle ne revient pas dans les relances. */}
+      {/* Annulée depuis (par un agent, ou en l'ignorant du 23 au 25/11) : elle ne revient pas dans les relances. */}
       {!ligne.annulee && (
         <button
           type="button"
