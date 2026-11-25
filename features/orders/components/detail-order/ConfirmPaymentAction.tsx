@@ -30,8 +30,8 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
 
   if (order.rawStatus !== OrderStatus.PENDING) return null;
 
-  const handleConfirm = () => {
-    const trimmed = transactionId.trim();
+  const handleConfirm = (saisie?: string) => {
+    const trimmed = (saisie ?? transactionId).trim();
     if (!trimmed || isPending) return;
 
     mutate(
@@ -59,7 +59,7 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full">
             <h2 className="text-xl font-bold text-gray-900 mb-1">
-              Confirmer le paiement KKiaPay
+              Confirmer le paiement en ligne
             </h2>
             <p className="text-sm text-gray-500 mb-5">
               Commande #{order.reference || order.id.slice(0, 8)}
@@ -84,6 +84,15 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
             <p className="text-xs text-gray-500 mt-1.5">
               Copie la Référence depuis la fiche transaction du dashboard KKiaPay.
             </p>
+            {/* Paystack (25/11) : aucune référence à recopier, le serveur revérifie les paiements lancés. */}
+            <button
+              type="button"
+              onClick={() => handleConfirm("paystack")}
+              disabled={isPending}
+              className="mt-4 w-full py-2.5 rounded-lg border border-[#F17922] bg-white text-[#F17922] text-sm font-semibold cursor-pointer hover:bg-orange-50 disabled:opacity-50"
+            >
+              Payée par Paystack : vérifier chez Paystack
+            </button>
 
             <div className="flex gap-3 mt-6">
               <button
@@ -96,7 +105,7 @@ const ConfirmPaymentAction = ({ order }: ConfirmPaymentActionProps) => {
               </button>
               <button
                 type="button"
-                onClick={handleConfirm}
+                onClick={() => handleConfirm()}
                 disabled={!transactionId.trim() || isPending}
                 className="w-full py-3 rounded-lg bg-[#F17922] text-blanc font-semibold cursor-pointer hover:bg-[#F17972] transition-colors disabled:opacity-50 flex items-center justify-center"
               >

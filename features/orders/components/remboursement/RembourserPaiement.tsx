@@ -16,9 +16,10 @@ function Ligne({ libelle, children }: { libelle: string; children: React.ReactNo
   );
 }
 
-/** Ce que KKiaPay sait de la transaction. */
+/** Ce que le prestataire (KKiaPay ou Paystack) sait de la transaction. */
 function FicheKkiapay({ v }: { v: VerificationRemboursement }) {
   const k = v.kkiapay;
+  const prestataire = v.fournisseur === "PAYSTACK" ? "Paystack" : "KKiaPay";
   const payee = k?.statut === "SUCCESS";
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-4 py-2">
@@ -28,7 +29,7 @@ function FicheKkiapay({ v }: { v: VerificationRemboursement }) {
         </Ligne>
         {k ? (
           <>
-            <Ligne libelle="Chez KKiaPay">
+            <Ligne libelle={`Chez ${prestataire}`}>
               <span className={payee ? "text-green-700" : "text-amber-700"}>{k.libelle}</span>
             </Ligne>
             {k.montant !== null && <Ligne libelle="Montant">{formatMontant(k.montant)}</Ligne>}
@@ -70,7 +71,7 @@ export function FenetreRemboursement({ paiementId, onFermer }: { paiementId: str
         {verification.isPending ? (
           <p className="flex items-center justify-center gap-2 py-10 text-sm text-gray-500">
             <Loader2 className="h-5 w-5 animate-spin text-[#F17922]" />
-            Vérification auprès de KKiaPay…
+            Vérification auprès du prestataire de paiement…
           </p>
         ) : verification.isError || !v ? (
           <div className="flex flex-col items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -167,7 +168,7 @@ export function RembourserPaiement({ paiementId }: { paiementId: string }) {
       <button
         type="button"
         onClick={() => setOuvert(true)}
-        title="Rembourser ce paiement par KKiaPay"
+        title="Rembourser ce paiement"
         className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[11px] font-semibold text-gray-500 hover:bg-red-50 hover:text-red-600"
       >
         <Undo2 className="h-3.5 w-3.5" />

@@ -12,6 +12,8 @@ import {
   Globe,
   Check,
 } from "lucide-react";
+import ReglagesPaiementEnLigne from "../../../../../features/paiement-en-ligne/components/ReglagesPaiementEnLigne";
+import ConfigurationPaystack from "../../../../../features/paiement-en-ligne/components/ConfigurationPaystack";
 
 /**
  * MULTI-COMPTES KKiaPay : chaque restaurant peut encaisser sur SON compte.
@@ -179,6 +181,12 @@ const PaymentSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Paiement en ligne (25/11) : interrupteur, prestataire, Paystack. */}
+      <ReglagesPaiementEnLigne />
+      <ConfigurationPaystack />
+
+      <h3 className="text-base font-bold text-gray-900 pt-2">KKiaPay</h3>
+
       {/* Sélecteur de compte : Global + un par restaurant */}
       <div className="bg-white rounded-2xl border border-gray-200 p-4">
         <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">

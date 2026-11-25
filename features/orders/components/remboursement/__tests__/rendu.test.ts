@@ -34,8 +34,14 @@ const rendre = (v) => {
 };
 
 describe('fenêtre de remboursement', () => {
-  test('pendant la vérification : on attend KKiaPay', () => {
-    expect(rendre(null)).toContain('Vérification auprès de KKiaPay');
+  test('pendant la vérification : on attend le prestataire (KKiaPay ou Paystack)', () => {
+    expect(rendre(null)).toContain('Vérification auprès du prestataire de paiement');
+  });
+
+  test('paiement Paystack : la fiche dit « Chez Paystack »', () => {
+    const html = rendre({ ...verification(), fournisseur: 'PAYSTACK' });
+    expect(html).toContain('Chez Paystack');
+    expect(html).not.toContain('Chez KKiaPay');
   });
 
   test('payée chez KKiaPay : la fiche, l’avertissement et « Rembourser 6.060 F »', () => {

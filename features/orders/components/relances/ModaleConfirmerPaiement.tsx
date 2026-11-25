@@ -78,6 +78,17 @@ function Formulaire({ groupe, maintenant, onClose }: { groupe: GroupeRelance; ma
     confirmer.mutate({ orderId: panier.id, dto: { transaction_id: identifiant } }, { onSuccess: onClose });
   };
 
+  // Paystack (25/11) : aucun identifiant à recopier, le serveur revérifie
+  // les paiements Paystack lancés pour ce panier.
+  const verifierPaystack = () => {
+    if (!panier) {
+      setErreur("Choisissez le panier que le client a payé.");
+      return;
+    }
+    effacerRefus();
+    confirmer.mutate({ orderId: panier.id, dto: { transaction_id: "paystack" } }, { onSuccess: onClose });
+  };
+
   const fermer = () => {
     if (!enCours) onClose();
   };
@@ -159,6 +170,7 @@ function Formulaire({ groupe, maintenant, onClose }: { groupe: GroupeRelance; ma
           <label htmlFor="transaction-kkiapay" className="text-xs font-semibold text-gray-500 mb-1.5 block">
             Identifiant de la transaction KKiaPay
           </label>
+          <p className="text-[11px] text-gray-400 mb-1.5">Paiement par Paystack : pas d&apos;identifiant, utilisez « Vérifier chez Paystack ».</p>
           <input
             id="transaction-kkiapay"
             type="text"
@@ -192,12 +204,20 @@ function Formulaire({ groupe, maintenant, onClose }: { groupe: GroupeRelance; ma
             Annuler
           </button>
           <button
+            type="button"
+            onClick={verifierPaystack}
+            disabled={enCours || !panier}
+            className="h-11 sm:h-10 px-4 rounded-xl border border-[#F17922] bg-white text-sm font-semibold text-[#F17922] hover:bg-orange-50 disabled:opacity-50 cursor-pointer"
+          >
+            Vérifier chez Paystack
+          </button>
+          <button
             type="submit"
             disabled={enCours || !panier}
             className="h-11 sm:h-10 px-4 rounded-xl bg-[#F17922] text-sm font-semibold text-blanc hover:bg-[#e06816] disabled:opacity-50 cursor-pointer inline-flex items-center justify-center gap-2"
           >
             {enCours && <Loader2 className="w-4 h-4 animate-spin" />}
-            {enCours ? "Vérification auprès de KKiaPay…" : "Confirmer le paiement"}
+            {enCours ? "Vérification…" : "Confirmer le paiement"}
           </button>
         </div>
       </form>

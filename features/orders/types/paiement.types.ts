@@ -33,6 +33,8 @@ export interface Paiement {
     /** Remboursement KKiaPay (12/11) : quand et par qui. */
     rembourse_at?: string | null;
     rembourse_par_nom?: string | null;
+    /** Prestataire en ligne (25/11) ; null : KKiaPay ou encaissement à la main. */
+    fournisseur?: "KKIAPAY" | "PAYSTACK" | null;
     // Relations
     order?: Order | null;
     // Metadata

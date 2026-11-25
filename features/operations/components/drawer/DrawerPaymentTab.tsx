@@ -44,6 +44,21 @@ interface IPaiementLine {
   amount: number;
 }
 
+/** Moyens lus chez Paystack (codes en minuscules) ; le reste tel quel. */
+const SOURCES_EN_LIGNE: Record<string, string> = {
+  wave: "Wave",
+  orange: "Orange Money",
+  mtn: "MTN",
+  moov: "Moov",
+  visa: "Visa",
+  mastercard: "Mastercard",
+  mobile_money: "Mobile Money",
+  card: "Carte",
+};
+function libelleSource(source: string): string {
+  return SOURCES_EN_LIGNE[source] ?? source;
+}
+
 function formatPrix(n: number): string {
   return n.toLocaleString("fr-FR").replace(/\s/g, ".") + " F";
 }
@@ -589,8 +604,9 @@ const PaiementRow: React.FC<{ paiement: Paiement; canEdit: boolean; peutRembours
             {modeMeta.label}
           </span>
           {paiement.source && paiement.source !== "cash" && (
-            <span className="text-[11px] text-gray-500">· {paiement.source}</span>
+            <span className="text-[11px] text-gray-500">· {libelleSource(paiement.source)}</span>
           )}
+          {paiement.fournisseur === "PAYSTACK" && <span className="text-[11px] text-gray-500">· Paystack</span>}
         </div>
 
         <div className="flex items-center justify-between mt-1">

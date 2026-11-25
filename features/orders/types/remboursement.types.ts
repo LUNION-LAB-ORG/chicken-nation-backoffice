@@ -24,6 +24,8 @@ export interface VerificationRemboursement {
     date: string | null;
   } | null;
   compte: string;
+  /** Prestataire du paiement (25/11) : le bloc `kkiapay` porte alors ce que dit ce prestataire. */
+  fournisseur?: "KKIAPAY" | "PAYSTACK";
   remboursable: boolean;
   constatable: boolean;
   raison: string | null;
