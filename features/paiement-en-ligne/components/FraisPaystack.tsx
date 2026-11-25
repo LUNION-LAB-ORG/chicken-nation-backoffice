@@ -9,7 +9,7 @@ import { fraisDeService, fraisPourLeClient, lireTauxSaisi } from "../utils/paiem
 type Cle = "mobile_money" | "carte" | "frais_service";
 const CHAMPS: { cle: Cle; libelle: string; aide: string }[] = [
   { cle: "mobile_money", libelle: "Frais Mobile Money", aide: "Wave, Orange Money, MTN" },
-  { cle: "carte", libelle: "Frais carte bancaire", aide: "Locale ou internationale" },
+  { cle: "carte", libelle: "Frais carte bancaire", aide: "Locale 3,8 %, internationale 4,5 % chez Paystack" },
   { cle: "frais_service", libelle: "Frais de service", aide: "Sur le prix des plats, toutes commandes de l'appli et du site" },
 ];
 const PLATS = 10000;
@@ -55,6 +55,7 @@ export default function FraisPaystack({ frais, fraisService }: { frais: Frais; f
       </div>
       <p className="text-sm text-gray-500 mb-3">
         Avec Paystack, le client choisit Mobile Money ou carte avant de payer, et paie sa commande plus les frais de ce moyen.
+        Le restaurant reçoit sa commande entière.
       </p>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {CHAMPS.map((c) => (

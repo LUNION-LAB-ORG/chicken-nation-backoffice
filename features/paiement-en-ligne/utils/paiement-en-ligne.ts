@@ -37,10 +37,18 @@ export function lireTauxSaisi(saisie: string): number | null {
   return Math.round(t * 100) / 100;
 }
 
-/** Frais de paiement ajoutés au client, au franc supérieur (même calcul que le serveur). */
+/**
+ * Frais de paiement ajoutés au client (même calcul que le serveur). Paystack
+ * prend son pourcentage sur le total débité : le client paie donc
+ * commande / (1 − taux), au franc supérieur, pour que le restaurant reçoive
+ * au moins la commande.
+ */
 export function fraisPourLeClient(montant: number, taux: number): number {
+  const m = Math.round(montant);
   const centiemes = Math.round(taux * 100);
-  return Math.floor((Math.round(montant) * centiemes + 9_999) / 10_000);
+  if (m <= 0 || centiemes <= 0 || centiemes >= 10_000) return 0;
+  const reste = 10_000 - centiemes;
+  return Math.floor((m * 10_000 + reste - 1) / reste) - m;
 }
 
 /** Frais de service d'une commande : pourcentage du prix des plats, à la dizaine supérieure (comme le serveur). */
