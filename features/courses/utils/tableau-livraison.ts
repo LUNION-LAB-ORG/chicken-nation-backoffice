@@ -12,7 +12,7 @@
  */
 
 import type { EtatDisponibilite } from '../../livreurs/types/livreur.types';
-import { etatConnu } from '../../livreurs/utils/disponibilite';
+import { NOM_ETAT, etatConnu } from '../../livreurs/utils/disponibilite';
 import type {
   CleSignal,
   LivreurDuTableau,
@@ -214,12 +214,14 @@ export function motsDesChiffres(r: RestaurantDuTableau): {
   disponibles: string;
   enCourse: string;
   enPause: string;
+  indisponibles: string;
   nonAssignees: string;
 } {
   return {
     disponibles: r.livreurs.disponibles > 1 ? 'disponibles' : 'disponible',
     enCourse: 'en course',
     enPause: 'en pause',
+    indisponibles: r.livreurs.appli_fermee > 1 ? 'indisponibles' : 'indisponible',
     nonAssignees: r.sans_livreur.courses > 1 ? 'non assignées' : 'non assignée',
   };
 }
@@ -229,12 +231,18 @@ export function motsDesChiffres(r: RestaurantDuTableau): {
  * selon les statuts en restant sur la même page ») : mêmes états que le
  * compte du serveur.
  */
-export type GroupeChiffre = 'DISPONIBLES' | 'EN_COURSE' | 'EN_PAUSE';
+export type GroupeChiffre = 'DISPONIBLES' | 'EN_COURSE' | 'EN_PAUSE' | 'INDISPONIBLES';
 
+/**
+ * « Indisponibles » (25/11) : en service, mais l'appli ne répond plus (appli
+ * fermée, connexion coupée, injoignable) ; le compte `appli_fermee` du
+ * serveur. Avec eux, les quatre chiffres font le total « en service ».
+ */
 export const ETATS_DU_GROUPE: Record<GroupeChiffre, readonly string[]> = {
   DISPONIBLES: ['DISPONIBLE', 'OFFRE_EN_ATTENTE', 'EN_APPEL'],
   EN_COURSE: ['EN_COURSE'],
   EN_PAUSE: ['EN_PAUSE', 'PAUSE_AUTO'],
+  INDISPONIBLES: ['APPLI_FERMEE', 'CONNEXION_COUPEE', 'INJOIGNABLE'],
 };
 
 export interface LivreurDuChiffre extends LivreurDuTableau {
@@ -255,9 +263,20 @@ export function livreursDuChiffre(
     );
 }
 
-/** « 16 livreurs en pause », « 1 livreur disponible », « Aucun livreur en course ». */
+/** « 16 livreurs en pause », « 1 livreur disponible », « 2 livreurs indisponibles », « Aucun livreur en course ». */
 export function titreListeChiffre(groupe: GroupeChiffre, n: number): string {
-  const etat = groupe === 'DISPONIBLES' ? (n > 1 ? 'disponibles' : 'disponible') : groupe === 'EN_COURSE' ? 'en course' : 'en pause';
+  const etat =
+    groupe === 'DISPONIBLES'
+      ? n > 1
+        ? 'disponibles'
+        : 'disponible'
+      : groupe === 'INDISPONIBLES'
+        ? n > 1
+          ? 'indisponibles'
+          : 'indisponible'
+        : groupe === 'EN_COURSE'
+          ? 'en course'
+          : 'en pause';
   if (n === 0) return `Aucun livreur ${etat}`;
   return `${n} ${n > 1 ? 'livreurs' : 'livreur'} ${etat}`;
 }
@@ -265,11 +284,15 @@ export function titreListeChiffre(groupe: GroupeChiffre, n: number): string {
 /**
  * Seconde ligne d'un livreur dans la liste dépliée : sa course, sa place
  * dans la file, ou le détail de son état (« En pause jusqu'à 14 h 32 »).
+ * Un livreur indisponible a toujours sa raison (« Connexion coupée »), même
+ * si le serveur n'envoie pas de libellé.
  */
 export function detailDuLivreurDuChiffre(l: Pick<LivreurDuTableau, 'etat' | 'libelle' | 'course' | 'rang_file'>): string | null {
   if (l.course) return l.course.reference;
   if (l.rang_file) return l.rang_file === 1 ? '1er de la file' : `${l.rang_file}e de la file`;
-  return l.libelle?.trim() || null;
+  const libelle = l.libelle?.trim();
+  if (libelle) return libelle;
+  return ETATS_DU_GROUPE.INDISPONIBLES.includes(l.etat) ? NOM_ETAT[etatConnu(l.etat)] : null;
 }
 
 // ============================================================

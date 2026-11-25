@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment -- tests bun : leurs types ne sont pas installés dans le backoffice. */
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import {
+  ETATS_DU_GROUPE,
   actionsATraiter,
   commandeDuSignal,
   dureeLisible,
@@ -389,6 +392,7 @@ describe('bandeau compact (10/11) : chiffres en mots entiers, accordés', () => 
       disponibles: 'disponibles',
       enCourse: 'en course',
       enPause: 'en pause',
+      indisponibles: 'indisponible',
       nonAssignees: 'non assignée',
     });
     const un = restaurant({
@@ -396,6 +400,10 @@ describe('bandeau compact (10/11) : chiffres en mots entiers, accordés', () => 
       sans_livreur: { courses: 2, plus_ancienne_depuis: null },
     });
     expect(motsDesChiffres(un)).toMatchObject({ disponibles: 'disponible', nonAssignees: 'non assignées' });
+    const coupes = (n) =>
+      restaurant({ livreurs: { disponibles: 0, en_course: 0, en_pause: 0, appli_fermee: n, en_service: n, prevus: null } });
+    expect(motsDesChiffres(coupes(1)).indisponibles).toBe('indisponible');
+    expect(motsDesChiffres(coupes(2)).indisponibles).toBe('indisponibles');
   });
 });
 
@@ -421,5 +429,82 @@ describe('chiffres du bandeau qui se déplient (10/11)', () => {
     expect(detailDuLivreurDuChiffre(l('awa', 'DISPONIBLE', { rang_file: 3 }))).toBe('3e de la file');
     expect(detailDuLivreurDuChiffre(l('koffi', 'EN_PAUSE', { libelle: "En pause jusqu'à 14 h 32" }))).toBe("En pause jusqu'à 14 h 32");
     expect(detailDuLivreurDuChiffre(l('koffi', 'EN_PAUSE'))).toBeNull();
+  });
+});
+
+/**
+ * Demande du 25/11 : « affiche aussi les livreurs indisponibles (connexion
+ * coupée ou autre) ». Le bandeau montrait 0 disponible, 2 en course, 3 en
+ * pause pour 6 en service : le sixième, appli coupée, n'était nulle part.
+ */
+describe('chiffre « indisponible » du bandeau (25/11)', () => {
+  const l = (id, etat, p = {}) => ({ id, prenom: id, nom: null, telephone: null, etat, rang_file: null, course: null, libelle: null, ...p });
+  const restos = [
+    restaurant({
+      id: 'angre',
+      nom: 'CHICKEN NATION ANGRE',
+      liste: [
+        l('awa', 'DISPONIBLE', { rang_file: 1 }),
+        l('koffi', 'EN_PAUSE'),
+        l('moussa', 'CONNEXION_COUPEE', { libelle: 'Connexion coupée' }),
+        l('ali', 'HORS_SERVICE'),
+      ],
+    }),
+    restaurant({
+      id: 'faya',
+      nom: 'CHICKEN NATION FAYA',
+      liste: [l('ines', 'APPLI_FERMEE', { libelle: 'Appli fermée' }), l('yann', 'INJOIGNABLE'), l('seri', 'INACTIF')],
+    }),
+  ];
+
+  test('appli fermée, connexion coupée et injoignable ; jamais hors service ni inactif', () => {
+    expect(ETATS_DU_GROUPE.INDISPONIBLES).toEqual(['APPLI_FERMEE', 'CONNEXION_COUPEE', 'INJOIGNABLE']);
+    expect(livreursDuChiffre(restos, null, 'INDISPONIBLES').map((x) => x.id)).toEqual(['moussa', 'ines', 'yann']);
+    expect(livreursDuChiffre(restos, 'angre', 'INDISPONIBLES').map((x) => x.id)).toEqual(['moussa']);
+  });
+
+  test('un livreur n’est que dans un seul chiffre', () => {
+    const etats = Object.values(ETATS_DU_GROUPE).flat();
+    expect(new Set(etats).size).toBe(etats.length);
+  });
+
+  test('titre de la liste, accordé', () => {
+    expect(titreListeChiffre('INDISPONIBLES', 0)).toBe('Aucun livreur indisponible');
+    expect(titreListeChiffre('INDISPONIBLES', 1)).toBe('1 livreur indisponible');
+    expect(titreListeChiffre('INDISPONIBLES', 3)).toBe('3 livreurs indisponibles');
+  });
+
+  test('la raison est toujours écrite, même sans libellé du serveur', () => {
+    expect(detailDuLivreurDuChiffre(l('moussa', 'CONNEXION_COUPEE', { libelle: 'Connexion coupée' }))).toBe('Connexion coupée');
+    expect(detailDuLivreurDuChiffre(l('moussa', 'CONNEXION_COUPEE'))).toBe('Connexion coupée');
+    expect(detailDuLivreurDuChiffre(l('ines', 'APPLI_FERMEE'))).toBe('Appli fermée');
+    expect(detailDuLivreurDuChiffre(l('yann', 'INJOIGNABLE'))).toBe('Injoignable');
+    // Les autres chiffres gardent leur seconde ligne d'avant.
+    expect(detailDuLivreurDuChiffre(l('koffi', 'EN_PAUSE'))).toBeNull();
+  });
+
+  test('carte « Tous les restaurants » : les indisponibles s’additionnent', () => {
+    const a = restaurant({ id: 'a', livreurs: { disponibles: 0, en_course: 2, en_pause: 3, appli_fermee: 1, en_service: 6, prevus: 6 } });
+    const b = restaurant({ id: 'b', livreurs: { disponibles: 1, en_course: 0, en_pause: 0, appli_fermee: 2, en_service: 3, prevus: null } });
+    const total = totalDuReseau([a, b]);
+    expect(total.livreurs.appli_fermee).toBe(3);
+    const { disponibles, en_course, en_pause, appli_fermee, en_service } = total.livreurs;
+    expect(disponibles + en_course + en_pause + appli_fermee).toBe(en_service);
+  });
+});
+
+const reglesTableau = join(import.meta.dir, '../../../../../backend/src/modules/course/helpers/tableau-livraison.rules.ts');
+describe.skipIf(!existsSync(reglesTableau))('chiffres du bandeau, fidèles au compte du serveur', () => {
+  const source = existsSync(reglesTableau) ? readFileSync(reglesTableau, 'utf8') : '';
+  const etatsDuCompte = (champ) => {
+    const m = new RegExp(`${champ}: compte\\(([^)]*)\\)`).exec(source);
+    return m ? m[1].split(',').map((x) => x.trim().replace(/'/g, '')) : null;
+  };
+
+  test('mêmes états que `construireTableau` pour chaque chiffre', () => {
+    expect(etatsDuCompte('disponibles')).toEqual([...ETATS_DU_GROUPE.DISPONIBLES]);
+    expect(etatsDuCompte('en_course')).toEqual([...ETATS_DU_GROUPE.EN_COURSE]);
+    expect(etatsDuCompte('en_pause')).toEqual([...ETATS_DU_GROUPE.EN_PAUSE]);
+    expect(etatsDuCompte('appli_fermee')).toEqual([...ETATS_DU_GROUPE.INDISPONIBLES]);
   });
 });

@@ -212,6 +212,14 @@ function LigneChiffres({
         ouvert={ouvert === 'EN_PAUSE'}
         onBasculer={() => onBasculer('EN_PAUSE')}
       />
+      {/* En service mais appli fermée, connexion coupée ou injoignable (25/11). */}
+      <Chiffre
+        valeur={r.livreurs.appli_fermee}
+        mot={mots.indisponibles}
+        couleur={r.livreurs.appli_fermee > 0 ? '#B91C1C' : '#71717A'}
+        ouvert={ouvert === 'INDISPONIBLES'}
+        onBasculer={() => onBasculer('INDISPONIBLES')}
+      />
       <Chiffre
         valeur={r.sans_livreur.courses}
         mot={mots.nonAssignees}

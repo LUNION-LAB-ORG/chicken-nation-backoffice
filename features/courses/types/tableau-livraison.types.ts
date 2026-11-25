@@ -90,7 +90,7 @@ export interface RestaurantDuTableau {
     en_course: number;
     /** En pause, Pause automatique. */
     en_pause: number;
-    /** Appli fermée, connexion coupée et injoignables (additionné, pas affiché). */
+    /** Appli fermée, connexion coupée et injoignables : le chiffre « indisponible » du bandeau (25/11). */
     appli_fermee: number;
     /** Tous sauf Hors service et Inactif. */
     en_service: number;
