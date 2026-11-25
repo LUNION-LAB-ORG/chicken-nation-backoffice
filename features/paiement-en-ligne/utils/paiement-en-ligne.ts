@@ -30,6 +30,19 @@ export function alertePaiementEnLigne(c: ConfigurationPaiementEnLigne | undefine
   return null;
 }
 
+/** Taux saisi (« 2,3 » ou « 2.3 ») : nombre de 0 à 20, ou null s'il est illisible. */
+export function lireTauxSaisi(saisie: string): number | null {
+  const t = Number(saisie.trim().replace(",", "."));
+  if (saisie.trim() === "" || !Number.isFinite(t) || t < 0 || t > 20) return null;
+  return Math.round(t * 100) / 100;
+}
+
+/** Frais ajoutés au client, au franc supérieur (même calcul que le serveur). */
+export function fraisPourLeClient(montant: number, taux: number, supplement: number): number {
+  const centiemes = Math.round((taux + supplement) * 100);
+  return Math.floor((Math.round(montant) * centiemes + 9_999) / 10_000);
+}
+
 /** « 0 % » ou « 2,5 % » ; tiret si inconnu. */
 export function partLisible(part: number | null | undefined): string {
   if (part === null || part === undefined || !Number.isFinite(part)) return "inconnue";

@@ -11,6 +11,7 @@ import {
 } from "../queries/paiement-en-ligne.query";
 import type { RestaurantPaystack, SousComptePaystack } from "../types/paiement-en-ligne.types";
 import { partLisible, urlWebhookPaystack } from "../utils/paiement-en-ligne";
+import FraisPaystack from "./FraisPaystack";
 
 const MASQUE = "********";
 const CHAMPS = [
@@ -86,7 +87,7 @@ export default function ConfigurationPaystack() {
             )}
           </div>
           <p className="text-sm text-gray-500 mt-1">
-            Chaque restaurant encaisse sur son sous-compte, frais Paystack compris. Rien sur le compte principal.
+            Chaque restaurant encaisse sur son sous-compte. Le compte principal ne garde pas plus que le supplément.
           </p>
         </div>
         <button
@@ -156,6 +157,9 @@ export default function ConfigurationPaystack() {
           Tableau de bord Paystack, Settings, API Keys &amp; Webhooks : collez cette adresse dans « Webhook URL ».
         </p>
       </div>
+
+      {/* Frais ajoutés au client */}
+      {config?.frais && <FraisPaystack frais={config.frais} />}
 
       {/* Sous-comptes des restaurants */}
       <div>
