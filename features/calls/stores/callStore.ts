@@ -10,10 +10,12 @@ export interface ActiveCall {
   direction: ActiveCallDirection;
   phase: ActiveCallPhase;
   peerLabel: string; // qui on appelle (sortant) / qui appelle (entrant)
-  /** Ligne sous le nom, pour un livreur : « Livreur · Angré · Course CRS-A1 ». */
+  /** Ligne sous le nom : « Livreur · Angré · Course CRS-A1 », « Client · Commande ORD-… ». */
   peerDetail?: string | null;
   /** Appel avec un livreur : son identifiant (fin de sonnerie expliquée). */
   livreurId?: string | null;
+  /** Appel avec un client dans l'appli : son identifiant (fin de sonnerie expliquée). */
+  clientId?: string | null;
   myName: string;
 }
 

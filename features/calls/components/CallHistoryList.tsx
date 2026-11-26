@@ -11,6 +11,7 @@ import { useOutgoingCall } from "../hooks/useOutgoingCall";
 import { useCallStore } from "../stores/callStore";
 import { ICall } from "../types/call.type";
 import { livreurDeLAppel, rappelLivreur } from "../utils/appel-livreur";
+import { clientDeLAppel, rappelClient } from "../utils/appel-client";
 import CallHistoryRow, { isMissedForMe } from "./CallHistoryRow";
 
 function SkeletonRows() {
@@ -48,6 +49,7 @@ export default function CallHistoryList() {
   /** Peut-on rappeler cette entrée ? (miroir exact des branches de onCallBack) */
   const canCallBack = (c: ICall): boolean => {
     if (livreurDeLAppel(c)) return !!rappelLivreur(c, user?.role, droitAppels); // un livreur : lui seul
+    if (clientDeLAppel(c)) return !!rappelClient(c, user?.role, droitAppels); // un client : lui seul, dans l'appli
     if (c.caller_id === user?.id) return true; // je re-cible ma propre cible
     if (isAdmin && c.caller) return true; // admin → rappel P2P de l'appelant
     if (c.caller?.restaurant) return true; // je rappelle le restaurant de l'appelant
@@ -63,6 +65,20 @@ export default function CallHistoryList() {
         call({
           targetKind: "DELIVERER",
           deliverer_id: cible.delivererId,
+          targetLabel: cible.nom,
+          peerDetail: cible.detail,
+        });
+      }
+      return;
+    }
+    // Appel avec un client (entrant ou sortant) : on le rappelle dans l'appli.
+    if (clientDeLAppel(c)) {
+      const cible = rappelClient(c, user?.role, droitAppels);
+      if (cible) {
+        call({
+          targetKind: "CUSTOMER",
+          customer_id: cible.customerId,
+          order_id: cible.orderId ?? undefined,
           targetLabel: cible.nom,
           peerDetail: cible.detail,
         });

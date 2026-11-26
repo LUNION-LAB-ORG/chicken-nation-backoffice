@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bike, Phone, PhoneOff } from "lucide-react";
+import { Bike, Phone, PhoneOff, Smartphone } from "lucide-react";
 import { useCallActions } from "../hooks/useCallActions";
 import { useCallStore } from "../stores/callStore";
 import { callsApi } from "../apis/calls.api";
@@ -10,6 +10,7 @@ import { getInitials } from "../utils/initials";
 import { incomingRing } from "../utils/ringtone";
 import { closeCallNotification, stopTitleFlash } from "../utils/notifications";
 import { lignesSonnerieLivreur, lireAppelantLivreur } from "../utils/appel-livreur";
+import { lignesSonnerieClient, lireAppelantClient } from "../utils/appel-client";
 
 const KEYFRAMES = `
 @keyframes cn-slide-up { from { transform: translateY(48px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
@@ -20,8 +21,15 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
   const { accept, reject } = useCallActions();
   // Appel d'un livreur depuis son appli : nom, téléphone, restaurant, course.
   const livreur = lireAppelantLivreur(incoming);
-  const lignes = livreur ? lignesSonnerieLivreur(livreur) : null;
-  const nom = livreur?.nom ?? incoming.callerName;
+  // Appel d'un client depuis l'appli Chicken Nation (26/11) : nom, téléphone, commande.
+  const client = lireAppelantClient(incoming);
+  const lignesClient = client ? lignesSonnerieClient(client) : null;
+  const lignes = livreur
+    ? lignesSonnerieLivreur(livreur)
+    : lignesClient
+      ? { sousTitre: lignesClient.sousTitre, telephone: lignesClient.telephone, course: lignesClient.commande }
+      : null;
+  const nom = livreur?.nom ?? client?.nom ?? incoming.callerName;
   // Débounce : décrocher/refuser ne peut être cliqué qu'une fois.
   const [busy, setBusy] = useState(false);
 
@@ -71,7 +79,7 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400" />
           </span>
-          {livreur ? "Appel d'un livreur" : "Appel entrant"}
+          {livreur ? "Appel d'un livreur" : client ? "Appel d'un client" : "Appel entrant"}
         </div>
 
         {/* Avatar + anneaux animés */}
@@ -87,6 +95,11 @@ export default function IncomingCallModal({ incoming }: { incoming: IIncomingCal
           {livreur && (
             <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#F17922] shadow-md">
               <Bike className="h-5 w-5" />
+            </span>
+          )}
+          {client && (
+            <span className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-full bg-white text-[#F17922] shadow-md">
+              <Smartphone className="h-5 w-5" />
             </span>
           )}
         </div>

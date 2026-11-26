@@ -3,6 +3,7 @@ import Image from "next/image";
 import { CustomerMapperData } from "../../types/customer-mapper.types";
 import { BoutonCopier } from "@/components/ui/BoutonCopier";
 import { numeroACopier } from "@/utils/telephone";
+import BoutonAppelerClient from "../../../calls/components/BoutonAppelerClient";
 
 interface ClientHeaderProps {
   customerData: CustomerMapperData;
@@ -92,6 +93,8 @@ export function ClientHeader({ customerData }: ClientHeaderProps) {
                   />
                 </span>
               )}
+              {/* Appel dans l'appli du client (26/11) : service client et admin seulement. */}
+              <BoutonAppelerClient customerId={customerData.id} nom={customerData.fullName} />
               {customerData.email && (
                 <span className="inline-flex min-w-0 items-center gap-1.5">
                   <Mail className="h-4 w-4 shrink-0 text-gray-400" />

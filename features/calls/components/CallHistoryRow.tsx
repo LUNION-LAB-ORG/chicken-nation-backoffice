@@ -5,11 +5,15 @@ import { CallStatus, ICall } from "../types/call.type";
 import { formatDuration, formatRelativeTime } from "../utils/call-format";
 import { getInitials } from "../utils/initials";
 import { detailLivreur, livreurDeLAppel } from "../utils/appel-livreur";
+import { clientDeLAppel, detailClient } from "../utils/appel-client";
 
 export function peerLabel(call: ICall, meId?: string): string {
   // Appel avec un livreur (il a appelé, ou on l'a appelé) : son nom.
   const livreur = livreurDeLAppel(call);
   if (livreur) return livreur.nom;
+  // Appel avec un client dans l'appli (il a appelé, ou on l'a appelé) : son nom.
+  const client = clientDeLAppel(call);
+  if (client) return client.nom;
   if (call.caller_id === meId) {
     if (call.target_kind === "USER") return call.target_user?.fullname ?? "Personne";
     if (call.target_kind === "CALL_CENTER") return "Call Center";
@@ -41,6 +45,7 @@ export default function CallHistoryRow({
   const missed = call.status === CallStatus.MISSED || call.status === CallStatus.CANCELLED;
   const label = peerLabel(call, meId);
   const livreur = livreurDeLAppel(call);
+  const client = livreur ? null : clientDeLAppel(call);
   const Icon = missed ? PhoneMissed : iAmCaller ? PhoneOutgoing : PhoneIncoming;
   const iconColor = missed ? "text-red-500" : iAmCaller ? "text-[#F17922]" : "text-emerald-600";
 
@@ -73,6 +78,12 @@ export default function CallHistoryRow({
           {livreur && (
             <>
               <span className="truncate">{detailLivreur(livreur.restaurant, livreur.courseReference)}</span>
+              <span>·</span>
+            </>
+          )}
+          {client && (
+            <>
+              <span className="truncate">{detailClient(client.commandeReference)}</span>
               <span>·</span>
             </>
           )}

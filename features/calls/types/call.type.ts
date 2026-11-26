@@ -9,11 +9,14 @@ export enum CallStatus {
   FAILED = "FAILED",
 }
 
-/** `DELIVERER` : un livreur précis (appel du service client vers un livreur, 24/10). */
-export type CallTargetKind = "RESTAURANT" | "CALL_CENTER" | "USER" | "DELIVERER";
+/**
+ * `DELIVERER` : un livreur précis (appel du service client vers un livreur, 24/10).
+ * `CUSTOMER` : un client dans l'appli Chicken Nation (26/11).
+ */
+export type CallTargetKind = "RESTAURANT" | "CALL_CENTER" | "USER" | "DELIVERER" | "CUSTOMER";
 
-/** Type de l'appelant : un membre du personnel, ou un livreur depuis son appli. */
-export type CallerType = UserType | "DELIVERER";
+/** Type de l'appelant : un membre du personnel, un livreur ou un client depuis son appli. */
+export type CallerType = UserType | "DELIVERER" | "CUSTOMER";
 
 /** Payload d'ouverture d'appel. */
 export interface IStartCallPayload {
@@ -22,6 +25,10 @@ export interface IStartCallPayload {
   targetUserId?: string;
   /** Requis avec `targetKind: "DELIVERER"` : le livreur dont l'appli sonne. */
   deliverer_id?: string;
+  /** Requis avec `targetKind: "CUSTOMER"` : le client dont l'appli sonne. */
+  customer_id?: string;
+  /** Avec `targetKind: "CUSTOMER"` : la commande dont on veut parler. */
+  order_id?: string;
 }
 
 /** Fonction de déclenchement d'appel partagée par les pickers. */
@@ -46,16 +53,26 @@ export interface ICallDeliverer {
   restaurant?: { id: string; name: string } | null;
 }
 
+/** Client tel que l'historique le renvoie (appelant ou cible d'un appel). */
+export interface ICallCustomer {
+  id: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  phone?: string | null;
+}
+
 export interface ICall {
   id: string;
   room_slug: string;
   room_name?: string | null;
   status: CallStatus;
-  /** Null quand c'est un livreur qui appelle (`caller_deliverer_id`). */
+  /** Null quand c'est un livreur (`caller_deliverer_id`) ou un client (`caller_customer_id`) qui appelle. */
   caller_id: string | null;
   caller_type: CallerType;
   caller_deliverer_id?: string | null;
   target_deliverer_id?: string | null;
+  caller_customer_id?: string | null;
+  target_customer_id?: string | null;
   target_kind: CallTargetKind;
   target_restaurant_id?: string | null;
   target_user_id?: string | null;
@@ -80,6 +97,10 @@ export interface ICall {
   course?: { id: string; reference: string | null } | null;
   course_id?: string | null;
   order_id?: string | null;
+  caller_customer?: ICallCustomer | null;
+  target_customer?: ICallCustomer | null;
+  /** Commande dont parle l'appel avec un client (historique). */
+  order?: { id: string; reference: string | null } | null;
 }
 
 export interface IStartCallResponse {
@@ -90,6 +111,8 @@ export interface IStartCallResponse {
   targetLabel: string;
   /** Appel vers un livreur : lui, son restaurant et sa course en cours. */
   livreur?: IAppelantLivreur | null;
+  /** Appel vers un client dans l'appli : lui et la commande. */
+  client?: IAppelantClient | null;
 }
 
 export interface IAnswerCallResponse {
@@ -107,6 +130,8 @@ export interface IActiveCallRestore {
   access: ICallAccess;
   /** Appel avec un livreur (il appelle, ou on l'appelle). */
   livreur?: IAppelantLivreur | null;
+  /** Appel avec un client (il appelle, ou on l'appelle). */
+  client?: IAppelantClient | null;
 }
 
 /** Statut léger renvoyé par GET /calls/:id (polling de convergence). */
@@ -143,6 +168,24 @@ export interface IIncomingCallEvent {
    * reconnaître sans chercher. Absent pour un appel du personnel.
    */
   livreur?: IAppelantLivreur | null;
+  /** Appel venant d'un client (`callerType: "CUSTOMER"`) : lui et sa commande. */
+  client?: IAppelantClient | null;
+}
+
+/**
+ * Client d'un appel, tel que le serveur le renvoie (commit 3cea51a) : sur
+ * `call:incoming`, sur chaque entrée de `GET /calls/ringing`, sur
+ * `GET /calls/active` et dans la réponse de `POST /calls` vers un client.
+ */
+export interface IAppelantClient {
+  id: string;
+  /** « Awa Koné » ; à défaut son téléphone ; à défaut « Client ». */
+  nom: string;
+  /** Numéro complet (+225…). */
+  telephone: string | null;
+  /** Commande dont il est question, null sans commande. */
+  commande_id: string | null;
+  commande_reference: string | null;
 }
 
 /**

@@ -59,6 +59,7 @@ import { estDuSite, libelleCanal } from "../../../orders/utils/canal-commande";
 import { libellePaiement } from "../../../orders/utils/libelle-paiement";
 import { SectionLivraison } from "./SectionLivraison";
 import { IncidentsCommande } from "../../../incidents/components/IncidentsCommande";
+import BoutonAppelerClient from "../../../calls/components/BoutonAppelerClient";
 
 interface Props {
   order: Order;
@@ -103,7 +104,7 @@ export function DrawerDetailsTab({ order }: Props) {
     <div className="p-5 md:p-6 space-y-5">
       <TurboCancellationBanner order={ui} />
       <HeroBlock ui={ui} source={source} />
-      <ClientBlock ui={ui} />
+      <ClientBlock ui={ui} source={source} />
       <NoteBlock ui={ui} />
       <ItemsBlock ui={ui} />
       <PriceBlock ui={ui} />
@@ -308,7 +309,7 @@ function HeroBlock({ ui, source }: { ui: OrderTable; source: Order }) {
 
 // ─── Client ────────────────────────────────────────────────────────────────
 
-function ClientBlock({ ui }: { ui: OrderTable }) {
+function ClientBlock({ ui, source }: { ui: OrderTable; source: Order }) {
   const name = ui.clientName || "Client";
   // Carte restaurant → client, dépliée par un clic sur l'ADRESSE elle-même :
   // c'est l'information géographique qui sert d'affordance, pas un lien à part.
@@ -351,6 +352,15 @@ function ClientBlock({ ui }: { ui: OrderTable }) {
                 className="!px-1.5 !py-1 !text-[11px]"
               />
             </div>
+          )}
+          {/* Appel dans l'appli du client (26/11) : service client et admin seulement. */}
+          {source.customer_id && (
+            <BoutonAppelerClient
+              customerId={source.customer_id}
+              nom={name}
+              orderId={source.id}
+              orderReference={source.reference}
+            />
           )}
           {ui.clientEmail && (
             <p className="flex items-center gap-1.5 text-xs text-gray-600">

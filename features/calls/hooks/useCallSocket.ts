@@ -20,6 +20,12 @@ import {
   lireAppelantLivreur,
   texteFinAppelLivreur,
 } from "../utils/appel-livreur";
+import {
+  detailAppelClient,
+  detailClientDepuisServeur,
+  lireAppelantClient,
+  texteFinAppelClient,
+} from "../utils/appel-client";
 import type {
   ICallAcceptedEvent,
   ICallCancelledEvent,
@@ -108,9 +114,16 @@ export function useCallSocket() {
         // page serait bloqué) + titre clignotant. Cliquer = revenir à l'onglet.
         // Un livreur : son nom, son restaurant et sa course.
         const livreur = lireAppelantLivreur(e);
+        // Un client : son nom et sa commande.
+        const client = lireAppelantClient(e);
+        const detail = livreur
+          ? detailAppelLivreur(livreur)
+          : client
+            ? detailAppelClient(client)
+            : `Appel ${e.targetLabel}`;
         showCallNotification(
-          `📞 ${livreur?.nom ?? e.callerName} vous appelle`,
-          `${livreur ? detailAppelLivreur(livreur) : `Appel ${e.targetLabel}`}, cliquez pour répondre`,
+          `📞 ${livreur?.nom ?? client?.nom ?? e.callerName} vous appelle`,
+          `${detail}, cliquez pour répondre`,
           { silent: false },
         );
         startTitleFlash("📞 Appel entrant…");
@@ -153,6 +166,11 @@ export function useCallSocket() {
         const fin = texteFinAppelLivreur(e.reason, act.peerLabel);
         if (fin) toast(fin, { icon: "📵" });
       }
+      // Appel vers un client dans l'appli qui sonnait encore : même explication.
+      if (act?.callId === e.callId && act.clientId && act.direction === "outgoing" && act.phase === "calling") {
+        const fin = texteFinAppelClient(e.reason, act.peerLabel);
+        if (fin) toast(fin, { icon: "📵" });
+      }
       store().endIfMatches(e.callId);
       store().clearIncomingIf(e.callId);
       stopAlerts();
@@ -192,9 +210,12 @@ export function useCallSocket() {
                 direction: restored.direction,
                 phase: restored.phase,
                 peerLabel: restored.peerLabel,
-                // Appel avec un livreur : restaurant et course.
-                peerDetail: detailDepuisServeur(restored.livreur),
+                // Appel avec un livreur : restaurant et course ; avec un
+                // client : sa commande.
+                peerDetail:
+                  detailDepuisServeur(restored.livreur) ?? detailClientDepuisServeur(restored.client),
                 livreurId: restored.livreur?.id ?? null,
+                clientId: restored.client?.id ?? null,
                 myName: useAuthStore.getState().user?.fullname ?? "Moi",
               });
             }

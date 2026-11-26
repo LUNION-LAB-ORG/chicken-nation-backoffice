@@ -13,6 +13,12 @@ import {
   texteErreurAppelLivreur,
   texteSansConnexion,
 } from "../utils/appel-livreur";
+import {
+  CLIENT,
+  detailClientDepuisServeur,
+  texteClientSansConnexion,
+  texteErreurAppelClient,
+} from "../utils/appel-client";
 import type { IStartCallPayload } from "../types/call.type";
 
 /** Démarre un appel sortant et bascule le store en `active` (phase "calling"). */
@@ -44,17 +50,23 @@ export function useOutgoingCall() {
         restaurantId: args.restaurantId,
         targetUserId: args.targetUserId,
         deliverer_id: args.deliverer_id,
+        customer_id: args.customer_id,
+        order_id: args.order_id,
       });
       const versLivreur = args.targetKind === LIVREUR;
+      const versClient = args.targetKind === CLIENT;
       setActive({
         callId: res.call.id,
         access: res.access,
         direction: "outgoing",
         phase: "calling",
         peerLabel: res.targetLabel ?? args.targetLabel,
-        // Un livreur : restaurant et course en cours lus par le serveur.
-        peerDetail: detailDepuisServeur(res.livreur) ?? args.peerDetail ?? null,
+        // Un livreur : restaurant et course en cours lus par le serveur ; un
+        // client : la commande dont on parle.
+        peerDetail:
+          detailDepuisServeur(res.livreur) ?? detailClientDepuisServeur(res.client) ?? args.peerDetail ?? null,
         livreurId: versLivreur ? (res.livreur?.id ?? args.deliverer_id ?? null) : null,
+        clientId: versClient ? (res.client?.id ?? args.customer_id ?? null) : null,
         myName: user?.fullname ?? "Moi",
       });
       // Le receveur a décroché pendant le retour HTTP ? On rattrape l'événement
@@ -66,12 +78,14 @@ export function useOutgoingCall() {
       }
       invalidate();
       if (res.online === 0) {
-        toast(texteSansConnexion(args.targetKind, res.targetLabel ?? args.targetLabel), {
+        const nom = res.targetLabel ?? args.targetLabel;
+        toast(versClient ? texteClientSansConnexion(nom) : texteSansConnexion(args.targetKind, nom), {
           icon: "📞",
         });
       }
     } catch (error: unknown) {
       if (args.targetKind === LIVREUR) toast.error(texteErreurAppelLivreur(error));
+      else if (args.targetKind === CLIENT) toast.error(texteErreurAppelClient(error), { duration: 7000 });
       else toast.error(error instanceof Error ? error.message : "Impossible de démarrer l'appel");
     } finally {
       setStarting(false);
