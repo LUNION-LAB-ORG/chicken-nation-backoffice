@@ -318,6 +318,8 @@ export const mapApiOrderToUiOrder = (order: Order): OrderTable => {
     auto: order.auto,
     // Origine (utils/canal-commande) : le canal d'abord, `auto` sans canal.
     channel: order.channel ?? null,
+    // Repère « à confirmer » (utils/bascule) : absent d'un serveur plus ancien.
+    a_confirmer: order.a_confirmer ?? null,
   };
 };
 

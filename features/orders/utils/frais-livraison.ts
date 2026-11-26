@@ -73,9 +73,12 @@ export function aideFrais(args: {
   enregistres: boolean;
   /** Distance de l'aperçu, en kilomètres. */
   distance?: number;
+  /** Où le client a accepté ces frais (26/11) ; absent : le site, comme avant. */
+  origine?: "site" | "appli";
 }): string | null {
   if (args.verrouilles) {
-    return "Frais acceptés par le client sur le site : ils restent tant que l'adresse et le restaurant ne changent pas.";
+    const ou = args.origine === "appli" ? "dans l'application" : "sur le site";
+    return `Frais acceptés par le client ${ou} : ils restent tant que l'adresse et le restaurant ne changent pas.`;
   }
   if (args.saisis) {
     return "Montant saisi à la main : il n'est plus recalculé. « Auto » remet les frais calculés.";

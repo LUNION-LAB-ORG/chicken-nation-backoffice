@@ -25,6 +25,7 @@ import { estDuSite } from "../../utils/canal-commande";
 import {
   aLHeure,
   depuis,
+  lieuPaiementReception,
   pastilleAnnulation,
   reste,
   texteCommandeRecente,
@@ -98,7 +99,7 @@ const Commande = ({ b }: { b: BrouillonLigne }) => (
     {b.paiement_a_la_livraison && (
       <Pastille ton="ambre">
         <Banknote className="w-3 h-3" />
-        À la livraison
+        {b.type === "DELIVERY" ? "À la livraison" : "Au restaurant"}
       </Pastille>
     )}
     <span>{LIBELLE_TYPE[b.type] ?? b.type}</span>
@@ -110,7 +111,9 @@ const Commande = ({ b }: { b: BrouillonLigne }) => (
 function texteEtat(g: GroupeRelance, maintenant: number): string {
   if (g.etat === "EN_COURS") return "Paiement en cours";
   // Personne n'est en train de payer : on appelle pour confirmer la commande.
-  if (g.etat === "A_RELANCER" && g.a_confirmer) return "Paiement à la livraison : appeler pour confirmer";
+  if (g.etat === "A_RELANCER" && g.a_confirmer) {
+    return `Paiement ${lieuPaiementReception(g.tete?.type)} : appeler pour confirmer`;
+  }
   if (g.etat === "PRIS" && g.prise) {
     return g.prise.par_moi
       ? `Vous vous en occupez, encore ${reste(g.prise.expire_le, maintenant)}`

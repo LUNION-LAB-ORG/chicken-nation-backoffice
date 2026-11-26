@@ -170,4 +170,6 @@ export interface OrderTable {
    * `auto` au lieu d'afficher un libellé vide.
    */
   channel?: CanalCommande | null;
+  /** Repère « à confirmer » du serveur (26/11), application comprise. */
+  a_confirmer?: boolean | null;
 }

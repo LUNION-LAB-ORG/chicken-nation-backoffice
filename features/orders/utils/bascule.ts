@@ -11,22 +11,32 @@ import { PaiementStatus } from "../types/paiement.types";
 
 type CommandeBascule = Pick<
   OrderTable,
-  "orderType" | "rawStatus" | "paied" | "paiements" | "paymentChannel" | "amount" | "auto" | "channel"
+  "orderType" | "rawStatus" | "paied" | "paiements" | "paymentChannel" | "amount" | "auto" | "channel" | "a_confirmer"
 >;
 
 /**
- * Commande du site à payer à la livraison, que le centre d'appels n'a pas
- * encore confirmée : jumeau de `estAConfirmer` côté serveur
+ * Les deux façons d'être « à confirmer » : la commande vient du site, comme
+ * avant, ou elle porte le repère posé à la création (26/11, application
+ * comprise, quand le réglage demande une confirmation). Jumeau de
+ * `siteOuRepere` côté serveur.
+ */
+export const siteOuRepere = (commande: Pick<OrderTable, "channel" | "a_confirmer">): boolean =>
+  commande.channel === "WEB" || commande.a_confirmer === true;
+
+/**
+ * Commande à payer à la réception (du site, ou de l'application avec le
+ * repère), que le centre d'appels n'a pas encore confirmée : jumeau de
+ * `estAConfirmer` côté serveur
  * (backend/src/modules/order/helpers/paiement-livraison.rules.ts). Sur une
  * commande du client, « Restaurant » veut dire paiement OFFLINE
  * (`utils/orderMapper`).
  */
 export function estAConfirmer(
-  commande: Pick<OrderTable, "auto" | "channel" | "paymentChannel" | "paied" | "rawStatus">,
+  commande: Pick<OrderTable, "auto" | "channel" | "a_confirmer" | "paymentChannel" | "paied" | "rawStatus">,
 ): boolean {
   return (
     !!commande.auto &&
-    commande.channel === "WEB" &&
+    siteOuRepere(commande) &&
     commande.paymentChannel === "Restaurant" &&
     !commande.paied &&
     commande.rawStatus === OrderStatus.PENDING
@@ -56,8 +66,9 @@ export function apresBascule(commande: CommandeBascule): {
   fraisDuSite: boolean;
   paiement: "caisse" | "livreur" | "inchange";
 } {
+  // Du site, ou de l'application à confirmer : le client a validé ces frais.
   const fraisDuSite =
-    !commande.paied && commande.channel === "WEB" && commande.paymentChannel === "Restaurant" && !!commande.auto;
+    !commande.paied && siteOuRepere(commande) && commande.paymentChannel === "Restaurant" && !!commande.auto;
   const montantFige = commande.paied ? "payee" : null;
 
   const paiements = commande.paiements ?? [];
@@ -78,13 +89,13 @@ export function apresBascule(commande: CommandeBascule): {
  * (409 si la commande n'est plus relançable).
  */
 export function panierAnnuleParLeClient(
-  commande: Pick<OrderTable, "rawStatus" | "auto" | "paymentChannel" | "paied" | "channel">,
+  commande: Pick<OrderTable, "rawStatus" | "auto" | "paymentChannel" | "paied" | "channel" | "a_confirmer">,
 ): boolean {
   return (
     commande.rawStatus === OrderStatus.CANCELLED &&
     commande.auto &&
     (commande.paymentChannel === "Appli" ||
-      (commande.channel === "WEB" && commande.paymentChannel === "Restaurant")) &&
+      (siteOuRepere(commande) && commande.paymentChannel === "Restaurant")) &&
     !commande.paied
   );
 }

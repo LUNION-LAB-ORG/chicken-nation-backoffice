@@ -98,6 +98,12 @@ export interface Order {
      * alors sur `auto` (`utils/canal-commande.ts`).
      */
     channel?: CanalCommande | null;
+    /**
+     * Repère « à confirmer » (26/11) : posé à la création d'une commande de
+     * l'application ou du site à payer à la réception, quand le réglage demande
+     * la confirmation du centre d'appels. Absent d'un serveur plus ancien.
+     */
+    a_confirmer?: boolean | null;
     payment_method: 'ONLINE' | 'OFFLINE' | null;
     status: OrderStatus;
     restaurant_id: string;

@@ -78,6 +78,9 @@ describe('frais de livraison : texte sous le champ', () => {
 
   test('frais du site, montant saisi, frais enregistrés, ou calcul de la zone', () => {
     expect(aide({ verrouilles: true, saisis: true, enregistres: true })).toContain('acceptés par le client sur le site');
+    // Commande de l'application à confirmer (26/11).
+    expect(aide({ verrouilles: true, origine: 'appli' })).toContain("acceptés par le client dans l'application");
+    expect(aide({ verrouilles: true, origine: 'site' })).toContain('acceptés par le client sur le site');
     expect(aide({ saisis: true, enregistres: true, distance: 3 })).toBe(
       'Montant saisi à la main : il n\'est plus recalculé. « Auto » remet les frais calculés.',
     );

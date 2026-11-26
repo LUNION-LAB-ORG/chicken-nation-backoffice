@@ -55,6 +55,8 @@ interface DeliveryInfoSectionProps {
    * la livraison ne change pas. Le champ est alors fermé.
    */
   fraisDuSite?: boolean;
+  /** Où le client a accepté ces frais : le site (défaut) ou l'application (26/11). */
+  fraisAcceptesDans?: "site" | "appli";
   /**
    * Trajet du restaurant à l'adresse, pour le panier : distance et durée par
    * la route, sinon la distance des frais. `null` hors livraison.
@@ -96,6 +98,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
   orderAmount,
   fraisEnregistres,
   fraisDuSite = false,
+  fraisAcceptesDans = "site",
   onTrajet,
 }) => {
   const isDelivery = formData.type === OrderType.DELIVERY;
@@ -472,6 +475,7 @@ const DeliveryInfoSection: React.FC<DeliveryInfoSectionProps> = ({
               saisis: !!formData.frais_manuels,
               enregistres: memeLivraison,
               distance: deliveryFee?.distance ?? undefined,
+              origine: fraisAcceptesDans,
             });
             return aide ? <p className="mt-1 text-[11px] text-gray-400">{aide}</p> : null;
           })()}

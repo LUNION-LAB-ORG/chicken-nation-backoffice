@@ -87,6 +87,14 @@ export const cleAlerte = (g: Pick<GroupeRelance, "tete" | "alerte_le">) => `${g.
  * « Annulée par le client », elle faisait croire que le client avait renoncé,
  * et l'agent risquait de ne pas appeler, ou d'annuler une commande valide.
  */
+/**
+ * Où se paie une commande « à la réception » (26/11) : au livreur pour une
+ * livraison, au restaurant pour une commande à emporter ou sur place. Type
+ * absent : « à la livraison », le seul cas d'avant.
+ */
+export const lieuPaiementReception = (type?: string | null): string =>
+  type && type !== "DELIVERY" ? "au restaurant" : "à la livraison";
+
 export function pastilleAnnulation(
   g: Pick<GroupeRelance, "a_confirmer" | "signaux">,
   maintenant: number,
@@ -198,7 +206,7 @@ export function texteBandeau(groupes: GroupeRelance[], maintenant: number): stri
   if (n === 1) {
     const { tete, signaux, a_confirmer } = aRelancer[0];
     const motif = [
-      a_confirmer ? "paiement à la livraison, appeler pour confirmer" : "",
+      a_confirmer ? `paiement ${lieuPaiementReception(tete?.type)}, appeler pour confirmer` : "",
       textePaiementEnLigne(aRelancer[0], maintenant) ? "paiement en ligne en cours" : "",
       !a_confirmer && signaux.annulee_par_client ? "annulée par le client" : "",
       signaux.paiement_refuse ? "paiement refusé" : "",

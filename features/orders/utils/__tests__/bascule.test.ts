@@ -1,6 +1,6 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
-import { apresBascule, estAConfirmer, fraisLivraisonRetenus, panierAnnuleParLeClient } from '../bascule';
+import { apresBascule, estAConfirmer, fraisLivraisonRetenus, panierAnnuleParLeClient, siteOuRepere } from '../bascule';
 
 /**
  * Bascule vers le call center : ce que la modification fera de la taxe, du
@@ -71,6 +71,32 @@ describe('estAConfirmer : jumeau de la règle du serveur', () => {
     expect(estAConfirmer(commande({ paied: true }))).toBe(false);
     expect(estAConfirmer(commande({ rawStatus: 'ACCEPTED' }))).toBe(false);
     expect(estAConfirmer(commande({ rawStatus: 'CANCELLED' }))).toBe(false);
+  });
+
+  // 26/11, « directe ou après confirmation » : même réglage pour l'application.
+  test('application avec le repère « à confirmer » : à confirmer, comme celle du site', () => {
+    const appli = (o = {}) => commande({ channel: 'APP', a_confirmer: true, ...o });
+    expect(siteOuRepere(appli())).toBe(true);
+    expect(estAConfirmer(appli())).toBe(true);
+    expect(estAConfirmer(appli({ orderType: 'À emporter' }))).toBe(true);
+    // Sans le repère (réglage « directe », ou serveur plus ancien) : jamais.
+    expect(estAConfirmer(appli({ a_confirmer: false }))).toBe(false);
+    expect(estAConfirmer(appli({ a_confirmer: null }))).toBe(false);
+    expect(estAConfirmer(appli({ a_confirmer: undefined }))).toBe(false);
+    // Les autres conditions restent : payable en ligne, reprise, payée, acceptée.
+    expect(estAConfirmer(appli({ paymentChannel: 'Appli' }))).toBe(false);
+    expect(estAConfirmer(appli({ auto: false }))).toBe(false);
+    expect(estAConfirmer(appli({ paied: true }))).toBe(false);
+    expect(estAConfirmer(appli({ rawStatus: 'ACCEPTED' }))).toBe(false);
+  });
+
+  test('application à confirmer : ses frais restent à la reprise, et elle se reprend après une annulation par le client', () => {
+    const appli = (o = {}) => commande({ channel: 'APP', a_confirmer: true, ...o });
+    expect(apresBascule(appli())).toEqual({ montantFige: null, fraisDuSite: true, paiement: 'inchange' });
+    expect(panierAnnuleParLeClient(appli({ rawStatus: 'CANCELLED' }))).toBe(true);
+    // Directe (sans repère) : ni frais gardés, ni reprise d'une annulée.
+    expect(apresBascule(appli({ a_confirmer: false })).fraisDuSite).toBe(false);
+    expect(panierAnnuleParLeClient(appli({ a_confirmer: false, rawStatus: 'CANCELLED' }))).toBe(false);
   });
 });
 

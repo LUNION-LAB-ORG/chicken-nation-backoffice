@@ -1,6 +1,12 @@
 // @ts-nocheck -- lancé par `bun test` (intégré à Bun) : ses types ne sont pas installés dans le backoffice.
 import { describe, expect, test } from 'bun:test';
-import { avertissementRepriseEnLigne, pastilleAnnulation, texteBandeau, textePaiementEnLigne } from '../relance';
+import {
+  avertissementRepriseEnLigne,
+  lieuPaiementReception,
+  pastilleAnnulation,
+  texteBandeau,
+  textePaiementEnLigne,
+} from '../relance';
 import { actionsRelance, repriseALaLivraison } from '../relance-actions';
 
 /** Commande du site à payer à la livraison : textes et boutons de « À relancer ». */
@@ -55,6 +61,18 @@ describe('relance : commande à confirmer, texte de la notification', () => {
     const t = texteBandeau([groupe()], maintenant);
     expect(t).toStartWith('1 commande à relancer : Awa');
     expect(t).toContain('paiement à la livraison, appeler pour confirmer');
+  });
+
+  // 26/11 : une commande à emporter (application ou site) se paie au restaurant.
+  test('commande à emporter ou sur place à confirmer : « paiement au restaurant »', () => {
+    expect(lieuPaiementReception('DELIVERY')).toBe('à la livraison');
+    expect(lieuPaiementReception('PICKUP')).toBe('au restaurant');
+    expect(lieuPaiementReception('TABLE')).toBe('au restaurant');
+    // Type absent : le seul cas d'avant.
+    expect(lieuPaiementReception(undefined)).toBe('à la livraison');
+    const g = groupe();
+    g.tete = ligne('o1', { paiement_a_la_livraison: true, type: 'PICKUP', channel: 'APP' });
+    expect(texteBandeau([g], maintenant)).toContain('paiement au restaurant, appeler pour confirmer');
   });
 
   test('plusieurs commandes : « dont n à confirmer », avec les autres motifs', () => {

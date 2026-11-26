@@ -302,8 +302,9 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
                 editOrder.rawStatus === OrderStatus.PENDING &&
                 !editOrder.paied
               }
-              // Commande du site à payer à la livraison, encore à confirmer :
-              // seule la bascule au call center la transmet au restaurant.
+              // Commande à payer à la réception, encore à confirmer (du site,
+              // ou de l'application depuis le 26/11) : seule la bascule au
+              // call center la transmet au restaurant.
               aConfirmer={estAConfirmer(editOrder)}
               onChange={(auto) => setFormData({ ...formData, auto })}
             />
@@ -331,6 +332,8 @@ const AddOrderForm = ({ editOrder, onFermer }: AddOrderFormProps) => {
             orderAmount={subtotal}
             fraisEnregistres={fraisEnregistres}
             fraisDuSite={!!bascule?.fraisDuSite && !formData.auto}
+            // Commande de l'application à confirmer (26/11) : mêmes frais gardés.
+            fraisAcceptesDans={editOrder && !estDuSite(editOrder) ? "appli" : "site"}
             onTrajet={setTrajet}
           />
         </div>
