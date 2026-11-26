@@ -156,7 +156,7 @@ export default function ReferralGiftEditor({
                     className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-sm"
                     aria-label="Plat offert"
                   >
-                    <option value="">— Choisir un plat —</option>
+                    <option value="">Choisir un plat</option>
                     {dishes.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
@@ -177,7 +177,7 @@ export default function ReferralGiftEditor({
                     className="h-10 w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-sm"
                     aria-label="Supplément offert"
                   >
-                    <option value="">— Choisir un supplément —</option>
+                    <option value="">Choisir un supplément</option>
                     {supplements.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.price} F)

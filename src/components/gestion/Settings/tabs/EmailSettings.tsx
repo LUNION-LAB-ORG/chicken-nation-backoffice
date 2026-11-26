@@ -52,7 +52,7 @@ const EmailSettings: React.FC = () => {
       const value = values[field.key];
       if (value !== undefined) {
         updateSetting(
-          { key: field.key, value, description: `Configuration email — ${field.label}` },
+          { key: field.key, value, description: `Configuration email : ${field.label}` },
           {
             onSuccess: () => {
               count--;

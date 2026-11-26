@@ -97,8 +97,8 @@ const MobileAppSettings: React.FC = () => {
 
       {/* Force update toggle */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
             <h3 className="text-lg font-bold text-gray-900">Forcer la mise à jour</h3>
             <p className="text-sm text-gray-500 mt-1">
               Oblige les utilisateurs à mettre à jour l&apos;app avant de pouvoir l&apos;utiliser
@@ -106,7 +106,7 @@ const MobileAppSettings: React.FC = () => {
           </div>
           <button
             onClick={() => setForceUpdate(!forceUpdate)}
-            className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors ${
               forceUpdate ? "bg-[#F17922]" : "bg-gray-300"
             }`}
           >

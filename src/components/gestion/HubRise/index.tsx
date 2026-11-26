@@ -393,20 +393,20 @@ function RestaurantCard({
     <div className="border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
       {/* En-tête du restaurant */}
       <div
-        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
+        className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 p-4 cursor-pointer hover:bg-gray-50/50 transition-colors"
         onClick={() => onToggleExpand(id)}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#F17922]/10 to-[#FA6345]/10 flex items-center justify-center">
+        <div className="flex items-center gap-3 min-w-0 flex-1 basis-48">
+          <div className="w-10 h-10 shrink-0 rounded-xl bg-gradient-to-br from-[#F17922]/10 to-[#FA6345]/10 flex items-center justify-center">
             <Store className="w-5 h-5 text-[#F17922]" />
           </div>
-          <div>
-            <h3 className="font-medium text-gray-800">{restaurant.name}</h3>
-            <p className="text-xs text-gray-400">{restaurant.address || "Adresse non renseignée"}</p>
+          <div className="min-w-0">
+            <h3 className="font-medium text-gray-800 break-words">{restaurant.name}</h3>
+            <p className="text-xs text-gray-400 break-words">{restaurant.address || "Adresse non renseignée"}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0 ml-auto">
           {/* Badge statut */}
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isConnected

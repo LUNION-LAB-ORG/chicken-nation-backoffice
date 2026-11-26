@@ -50,21 +50,21 @@ const AUTO_TAGS = [
   {
     key: "orders",
     label: "Nombre de commandes",
-    description: "Total des commandes complétées — segmenter par fréquence d'achat",
+    description: "Total des commandes complétées : segmenter par fréquence d'achat",
     source: "commandes",
     example: "Ex : orders > 5 → clients fidèles",
   },
   {
     key: "total_spent",
     label: "Total dépensé (FCFA)",
-    description: "Montant cumulé des commandes — identifier les gros acheteurs",
+    description: "Montant cumulé des commandes : identifier les gros acheteurs",
     source: "commandes",
     example: "Ex : total_spent > 50000 → clients à forte valeur",
   },
   {
     key: "loyalty_level",
     label: "Niveau de fidélité",
-    description: "STANDARD, VIP ou VVIP — offres personnalisées par tier",
+    description: "STANDARD, VIP ou VVIP : offres personnalisées par tier",
     source: "fidélité",
     example: "Ex : loyalty_level = VVIP → offres exclusives",
   },
@@ -96,7 +96,7 @@ const NotificationSettings: React.FC = () => {
     const newValue = current === "true" ? "false" : "true";
     setValues({ ...values, [key]: newValue });
     updateSetting(
-      { key, value: newValue, description: `Twilio — ${key}` },
+      { key, value: newValue, description: `Twilio : ${key}` },
       {
         onSuccess: () => {
           setSaved(true);
@@ -112,7 +112,7 @@ const NotificationSettings: React.FC = () => {
       const value = values[field.key];
       if (value !== undefined) {
         updateSetting(
-          { key: field.key, value, description: `Twilio — ${field.label}` },
+          { key: field.key, value, description: `Twilio : ${field.label}` },
           {
             onSuccess: () => {
               count--;

@@ -147,9 +147,9 @@ const PaymentSettings: React.FC = () => {
     if (selected === null) {
       const webhookPath = values["kkiapay_webhook_path"];
       if (webhookPath !== undefined) {
-        toSave.push({ key: "kkiapay_webhook_path", value: webhookPath, description: "KKiaPay — Webhook URL (base)" });
+        toSave.push({ key: "kkiapay_webhook_path", value: webhookPath, description: "KKiaPay : Webhook URL (base)" });
       }
-      toSave.push({ key: "kkiapay_sandbox", value: String(sandbox), description: "KKiaPay — Mode Sandbox" });
+      toSave.push({ key: "kkiapay_sandbox", value: String(sandbox), description: "KKiaPay : Mode Sandbox" });
     }
 
     let count = toSave.length;
@@ -233,7 +233,7 @@ const PaymentSettings: React.FC = () => {
             Compte non configuré : les paiements de ce restaurant utilisent le compte
             Global. ⚠️ Ordre impératif : d&apos;abord poser l&apos;URL de webhook + le
             Secret hash dans le dashboard KKiaPay du restaurant, PUIS enregistrer ici
-            les 4 clés (webhook secret compris) — dès les clés saisies, l&apos;argent
+            les 4 clés (webhook secret compris) : dès les clés saisies, l&apos;argent
             bascule sur ce compte et seul son webhook confirme les commandes.
           </p>
         )}
@@ -245,8 +245,8 @@ const PaymentSettings: React.FC = () => {
           <CreditCard size={20} className="text-[#F17922]" />
           <h3 className="text-lg font-bold text-gray-900">
             {selected === null
-              ? "Configuration KKiaPay — Global"
-              : `Configuration KKiaPay — ${selectedName}`}
+              ? "Configuration KKiaPay : Global"
+              : `Configuration KKiaPay : ${selectedName}`}
           </h3>
         </div>
         <p className="text-sm text-gray-500 mb-6">
@@ -302,7 +302,7 @@ const PaymentSettings: React.FC = () => {
               {revealedSecretKey === field.key && (
                 <p className="text-[11px] text-amber-600 mt-1">
                   Copie cette valeur dans le « Secret hash » du dashboard KKiaPay,
-                  puis Enregistrer ici — les deux côtés doivent porter le même secret.
+                  puis Enregistrer ici : les deux côtés doivent porter le même secret.
                 </p>
               )}
             </div>

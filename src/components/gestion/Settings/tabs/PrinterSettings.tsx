@@ -329,9 +329,9 @@ const WindowsHelpPanel: React.FC = () => {
   const handleCopyCommand = async () => {
     try {
       await navigator.clipboard.writeText(KIOSK_COMMAND);
-      toast.success("Commande copiée — collez-la dans la cible du raccourci");
+      toast.success("Commande copiée : collez-la dans la cible du raccourci");
     } catch {
-      toast.error("Impossible de copier — sélectionnez la commande manuellement");
+      toast.error("Impossible de copier : sélectionnez la commande manuellement");
     }
   };
 
@@ -344,7 +344,7 @@ const WindowsHelpPanel: React.FC = () => {
       >
         <Info className="w-5 h-5 text-blue-600 shrink-0" />
         <span className="flex-1 text-left text-sm font-medium text-blue-900">
-          Configuration Windows {isWindows ? "(détecté)" : ""} — impression silencieuse sans dialog
+          Configuration Windows {isWindows ? "(détecté)" : ""} : impression silencieuse sans dialog
         </span>
         {open ? (
           <ChevronDown className="w-4 h-4 text-blue-600" />
@@ -363,11 +363,11 @@ const WindowsHelpPanel: React.FC = () => {
             <p className="text-xs leading-relaxed">
               Sur Windows, dès qu&apos;un driver est installé pour
               l&apos;imprimante (cas de toutes les imprimantes reconnues par
-              Windows — quel que soit leur modèle&nbsp;: POS-90, Epson TM,
+              Windows, quel que soit leur modèle&nbsp;: POS-90, Epson TM,
               Star TSP, Xprinter, etc.), l&apos;OS la <strong>réserve</strong>{" "}
               pour lui-même : WebUSB ne peut alors plus y accéder, c&apos;est
               une restriction de sécurité Windows. Sur macOS / Linux,
-              cette restriction n&apos;existe pas — c&apos;est pour ça que
+              cette restriction n&apos;existe pas : c&apos;est pour ça que
               l&apos;USB direct fonctionne sur Mac mais pas sur le poste
               Windows.
             </p>
@@ -375,7 +375,7 @@ const WindowsHelpPanel: React.FC = () => {
 
           <div className="space-y-2">
             <p className="font-medium text-gray-900">
-              Solution recommandée — Chrome en mode kiosk-printing
+              Solution recommandée : Chrome en mode kiosk-printing
             </p>
             <p className="text-xs leading-relaxed">
               Chrome dispose d&apos;un flag <code className="px-1 py-0.5 bg-gray-100 rounded font-mono text-[11px]">--kiosk-printing</code>{" "}
@@ -396,7 +396,7 @@ const WindowsHelpPanel: React.FC = () => {
                 : décocher <em>« Laisser Windows gérer mon imprimante par défaut »</em>,
                 puis <strong>définir votre imprimante thermique comme
                 imprimante par défaut</strong> (ex. POS-90, Epson TM-T20,
-                Xprinter, etc. — le nom exact figure dans la liste des
+                Xprinter, etc. Le nom exact figure dans la liste des
                 imprimantes Windows).
               </li>
               <li>
@@ -454,7 +454,7 @@ const WindowsHelpPanel: React.FC = () => {
               >
                 Zadig
               </a>{" "}
-              (remplacement du driver par WinUSB) — mais l&apos;imprimante
+              (remplacement du driver par WinUSB), mais l&apos;imprimante
               devient alors inutilisable pour Word, PDF et toute autre
               application Windows. À éviter sauf besoin spécifique.
             </p>

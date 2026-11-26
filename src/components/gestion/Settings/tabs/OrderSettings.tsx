@@ -1,205 +1,110 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSettingsQuery, useSettingMutation } from "@/hooks/useSettingsQuery";
-import { CheckCircle } from "lucide-react";
-
-interface IOrderField {
-  key: string;
-  label: string;
-  /** Pour un `<select>` : la valeur du serveur quand la clé est absente en base. */
-  placeholder: string;
-  /**
-   * Valeur du serveur quand la clé est absente et qu'elle dépend d'un autre
-   * réglage : prend le pas sur `placeholder`.
-   */
-  defaut?: (values: Record<string, string>) => string;
-  type?: string;
-  step?: string;
-  hint?: string;
-  /** Si fourni : rendu en `<select>`, sur le modèle de DeliverySettings. */
-  options?: { value: string; label: string }[];
-}
-
-const ORDER_KEYS: IOrderField[] = [
-  {
-    key: "order_tax_rate",
-    label: "Taux de taxe (%)",
-    placeholder: "0.01",
-    type: "number",
-    step: "0.001",
-    hint: "Ex: 0.01 = 1%, 0.18 = 18%",
-  },
-  {
-    key: "base_delivery_fee",
-    label: "Frais de livraison de base (FCFA)",
-    placeholder: "2000",
-    type: "number",
-    step: "100",
-    hint: "Montant minimum de frais de livraison",
-  },
-];
+import React, { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-hot-toast";
+import { CheckCircle, ShoppingBag, Truck, Utensils } from "lucide-react";
+import { useSettingsQuery } from "@/hooks/useSettingsQuery";
+import { updateSetting } from "@/services/settings.service";
+import {
+  CLE_COUPURE_JUSQUA,
+  CLE_COUPURE_MESSAGE,
+  CLE_PARCOURS,
+  TYPES_DE_COMMANDE,
+  choixPaiement,
+  clesAEnregistrer,
+  ecrireTypePropose,
+  libelleDuReglage,
+  paiementAffiche,
+  typePropose,
+  type TypeDeCommande,
+  type Valeurs,
+} from "./reglages-commandes";
 
 /**
- * TYPES DE COMMANDE ET PAIEMENT, APPLICATION ET SITE (26/11, « même
- * réglage ») : pour chaque type, s'il est proposé aux clients et comment ils
- * peuvent payer. Lus par le serveur (`reglages-commande.rules.ts`) :
- * l'application et le site n'affichent que ce qui est permis, et la création
- * d'une commande le contrôle. Clé absente : la valeur de `placeholder`, ce
- * qui se faisait déjà.
+ * PARAMÈTRES > VENTE > COMMANDES (26/11).
+ *
+ * Ce que les clients de l'application et du site peuvent commander, comment
+ * ils paient, et ce que devient une commande à payer à la réception. Lu par
+ * le serveur (`reglages-commande.rules.ts`), qui le contrôle à la création de
+ * chaque commande. Les règles de l'écran sont dans `reglages-commandes.ts`.
+ *
+ * Retirés de cet onglet, pour qu'un réglage n'ait qu'un seul endroit :
+ *  - « Taux de taxe » : c'est « Frais de service » de l'onglet Paiements ;
+ *  - « Frais de livraison de base » : plus aucun calcul ne le lit, les frais
+ *    de livraison viennent de la grille de l'onglet Livraison.
+ * Ajoutée ici : la coupure de la livraison, qui était dans l'onglet Livraison
+ * et faisait un second interrupteur pour le même type.
  */
-const OUI_NON = [
-  { value: "1", label: "Oui : proposé aux clients" },
-  { value: "0", label: "Non : retiré de l'application et du site" },
-];
 
-/**
- * Ancien réglage « Paiement à la livraison sur le site » (19/10), remplacé
- * par « Paiement d'une livraison ». Tant que le nouveau n'est pas enregistré,
- * le serveur part de l'ancien : proposé (ou jamais réglé), en ligne ou à la
- * livraison ; coupé, en ligne seulement. Même lecture que le serveur
- * (`paiementLivraisonActif`).
- */
-const ANCIEN_REGLAGE_SITE = "order_paiement_livraison_site";
-const paiementLivraisonParDefaut = (values: Record<string, string>): string => {
-  const ancien = (values[ANCIEN_REGLAGE_SITE] ?? "").trim().toLowerCase();
-  return ancien === "" || ancien === "1" || ancien === "true" || ancien === "oui" ? "LES_DEUX" : "EN_LIGNE";
+const ICONES: Record<TypeDeCommande["cle"], React.FC<{ className?: string }>> = {
+  livraison: Truck,
+  emporter: ShoppingBag,
+  sur_place: Utensils,
 };
 
-const paiements = (lieu: string) => [
-  { value: "EN_LIGNE", label: "En ligne seulement" },
-  { value: "A_LA_RECEPTION", label: `${lieu} seulement` },
-  { value: "LES_DEUX", label: `En ligne ou ${lieu.toLowerCase()}` },
-];
-
-const AIDE_PAIEMENT =
-  "Les clients dont l'application n'est pas à jour ne peuvent payer qu'en ligne.";
-
-const TYPES_KEYS: IOrderField[] = [
-  { key: "order_type_livraison", label: "Livraison", placeholder: "1", options: OUI_NON },
+const PARCOURS = [
   {
-    key: "order_paiement_livraison",
-    label: "Paiement d'une livraison",
-    placeholder: "LES_DEUX",
-    defaut: paiementLivraisonParDefaut,
-    options: paiements("À la livraison"),
-    hint: AIDE_PAIEMENT,
-  },
-  { key: "order_type_emporter", label: "À emporter", placeholder: "1", options: OUI_NON },
-  {
-    key: "order_paiement_emporter",
-    label: "Paiement d'une commande à emporter",
-    placeholder: "EN_LIGNE",
-    options: paiements("Au restaurant"),
+    value: "APRES_CONFIRMATION",
+    titre: "Après confirmation du centre d'appels",
+    detail:
+      "La commande arrive dans « À relancer ». Le centre d'appels appelle le client, puis la transmet au restaurant.",
   },
   {
-    key: "order_type_sur_place",
-    label: "Sur place",
-    placeholder: "0",
-    options: [
-      { value: "1", label: "Oui : proposé aux clients" },
-      { value: "0", label: "Non : retiré de l'application" },
-    ],
-    hint: "Dans l'application seulement : le site ne propose pas la commande sur place.",
-  },
-  {
-    key: "order_paiement_sur_place",
-    label: "Paiement d'une commande sur place",
-    placeholder: "EN_LIGNE",
-    options: paiements("Au restaurant"),
+    value: "DIRECTE",
+    titre: "Directe au restaurant",
+    detail: "La commande arrive tout de suite au restaurant. À choisir si personne ne peut appeler.",
   },
 ];
 
-/**
- * COMMANDE À PAYER À LA RÉCEPTION (26/11) : ce qu'elle devient à sa création,
- * dans l'application comme sur le site. Clé absente : après confirmation, ce
- * que le site faisait déjà.
- */
-const RECEPTION_KEY: IOrderField = {
-  key: "order_paiement_reception",
-  label: "Commande à payer à la réception",
-  placeholder: "APRES_CONFIRMATION",
-  options: [
-    { value: "APRES_CONFIRMATION", label: "Après confirmation du centre d'appels" },
-    { value: "DIRECTE", label: "Directe au restaurant" },
-  ],
-  hint: "Après confirmation : la commande arrive dans « À relancer », le centre d'appels appelle le client puis la transmet au restaurant. Directe : elle arrive tout de suite au restaurant. Choisissez Directe si personne ne peut appeler.",
-};
-
-/** Tous les réglages enregistrés par le bouton de l'onglet. */
-const TOUS_LES_CHAMPS: IOrderField[] = [...ORDER_KEYS, ...TYPES_KEYS, RECEPTION_KEY];
+const CHAMP =
+  "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white";
+const LIBELLE = "block text-sm font-medium text-gray-700 mb-1.5";
+const AIDE = "text-xs text-gray-400 mt-1";
+const CARTE = "bg-white rounded-2xl border border-gray-200 p-4 sm:p-6";
 
 const OrderSettings: React.FC = () => {
-  const { data: settings, isLoading } = useSettingsQuery("order_");
-  const deliverySettings = useSettingsQuery("base_delivery");
-  const { mutate: updateSetting, isPending } = useSettingMutation();
-  const [values, setValues] = useState<Record<string, string>>({});
-  const [saved, setSaved] = useState(false);
+  const commandes = useSettingsQuery("order_");
+  const coupure = useSettingsQuery("delivery.app_disabled");
+  const queryClient = useQueryClient();
+  const [valeurs, setValeurs] = useState<Valeurs>({});
+  const [enCours, setEnCours] = useState(false);
+  const [enregistre, setEnregistre] = useState(false);
+
+  /** Ce qui est enregistré : sert à ne renvoyer que ce qui a changé. */
+  const enBase = useMemo(() => {
+    const lu: Valeurs = {};
+    for (const s of commandes.data ?? []) lu[s.key] = s.value;
+    for (const s of coupure.data ?? []) lu[s.key] = s.value;
+    return lu;
+  }, [commandes.data, coupure.data]);
 
   useEffect(() => {
-    const map: Record<string, string> = {};
-    for (const s of settings ?? []) map[s.key] = s.value;
-    for (const s of deliverySettings.data ?? []) map[s.key] = s.value;
-    setValues(map);
-  }, [settings, deliverySettings.data]);
+    setValeurs(enBase);
+  }, [enBase]);
 
-  const handleSave = () => {
-    let count = TOUS_LES_CHAMPS.length;
-    for (const field of TOUS_LES_CHAMPS) {
-      const value = values[field.key];
-      if (value !== undefined) {
-        updateSetting(
-          { key: field.key, value, description: field.label },
-          {
-            onSuccess: () => {
-              count--;
-              if (count <= 0) {
-                setSaved(true);
-                setTimeout(() => setSaved(false), 2000);
-              }
-            },
-          }
-        );
-      } else {
-        count--;
-      }
+  const aEnregistrer = clesAEnregistrer(valeurs, enBase);
+  const modifier = (cle: string, valeur: string) => setValeurs((v) => ({ ...v, [cle]: valeur }));
+
+  const enregistrer = async () => {
+    if (!aEnregistrer.length) return;
+    setEnCours(true);
+    try {
+      await Promise.all(
+        aEnregistrer.map((cle) => updateSetting(cle, valeurs[cle] ?? "", libelleDuReglage(cle))),
+      );
+      toast.success("Paramètres enregistrés");
+      setEnregistre(true);
+      setTimeout(() => setEnregistre(false), 2000);
+    } catch (e) {
+      toast.error((e as Error)?.message || "Enregistrement impossible");
+    } finally {
+      setEnCours(false);
+      await queryClient.invalidateQueries({ queryKey: ["settings"] });
     }
   };
 
-  /** Un réglage : liste de choix ou saisie, avec son aide. */
-  const champ = (field: IOrderField) => (
-    <div key={field.key}>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {field.label}
-      </label>
-      {field.options ? (
-        <select
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white"
-          // Absente ou vide, la clé vaut ce que le serveur applique alors (`placeholder`).
-          value={values[field.key] || field.defaut?.(values) || field.placeholder}
-          onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-        >
-          {field.options.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
-        </select>
-      ) : (
-        <input
-          type={field.type}
-          step={field.step}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-          placeholder={field.placeholder}
-          value={values[field.key] ?? ""}
-          onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-        />
-      )}
-      {field.hint && (
-        <p className="text-xs text-gray-400 mt-1">{field.hint}</p>
-      )}
-    </div>
-  );
-
-  if (isLoading) {
+  if (commandes.isLoading || coupure.isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F17922]" />
@@ -207,37 +112,167 @@ const OrderSettings: React.FC = () => {
     );
   }
 
+  const parcours = valeurs[CLE_PARCOURS] === "DIRECTE" ? "DIRECTE" : "APRES_CONFIRMATION";
+
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6">
-      <h3 className="text-lg font-bold text-gray-900 mb-1">Configuration des commandes</h3>
-      <p className="text-sm text-gray-500 mb-6">Paramètres de taxe et frais de livraison</p>
+    <div className="space-y-4">
+      <div className={CARTE}>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Types de commande et paiement</h3>
+        <p className="text-sm text-gray-500">
+          Ce que les clients peuvent commander depuis l&apos;application et le site, et comment ils paient. Le centre
+          d&apos;appels et la caisse ne sont pas concernés.
+        </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {ORDER_KEYS.map(champ)}
+        <div className="mt-5 space-y-3">
+          {TYPES_DE_COMMANDE.map((type) => {
+            const Icone = ICONES[type.cle];
+            const propose = typePropose(type, valeurs);
+            return (
+              <section key={type.cle} className="rounded-xl border border-gray-200 p-4">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
+                  <h4 className="flex items-center gap-2 text-base font-bold text-gray-900">
+                    <Icone className="w-4 h-4 text-[#F17922]" />
+                    {type.titre}
+                  </h4>
+                  {type.appliSeulement && (
+                    <span className="text-xs text-gray-500">
+                      Dans l&apos;application seulement : le site ne propose pas la commande sur place.
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className={LIBELLE} htmlFor={`propose-${type.cle}`}>
+                      Proposé aux clients
+                    </label>
+                    <select
+                      id={`propose-${type.cle}`}
+                      className={CHAMP}
+                      value={propose ? "1" : "0"}
+                      onChange={(e) => setValeurs((v) => ecrireTypePropose(type, e.target.value === "1", v))}
+                    >
+                      <option value="1">Oui</option>
+                      <option value="0">Non</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={LIBELLE} htmlFor={`paiement-${type.cle}`}>
+                      Paiement de la commande
+                    </label>
+                    <select
+                      id={`paiement-${type.cle}`}
+                      className={CHAMP}
+                      value={paiementAffiche(type, valeurs)}
+                      onChange={(e) => modifier(type.paiement, e.target.value)}
+                    >
+                      {choixPaiement(type.lieu).map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Livraison coupée : ce que le client lit, et quand elle reprend. */}
+                  {type.cle === "livraison" && !propose && (
+                    <>
+                      <div>
+                        <label className={LIBELLE} htmlFor="coupure-message">
+                          Message affiché au client
+                        </label>
+                        <input
+                          id="coupure-message"
+                          type="text"
+                          className={CHAMP}
+                          placeholder="La livraison est temporairement indisponible…"
+                          value={valeurs[CLE_COUPURE_MESSAGE] ?? ""}
+                          onChange={(e) => modifier(CLE_COUPURE_MESSAGE, e.target.value)}
+                        />
+                        <p className={AIDE}>Facultatif. Le centre d&apos;appels peut toujours saisir une livraison.</p>
+                      </div>
+                      <div>
+                        <label className={LIBELLE} htmlFor="coupure-jusqua">
+                          Reprise automatique le
+                        </label>
+                        <input
+                          id="coupure-jusqua"
+                          type="datetime-local"
+                          className={CHAMP}
+                          value={valeurs[CLE_COUPURE_JUSQUA] ?? ""}
+                          onChange={(e) => modifier(CLE_COUPURE_JUSQUA, e.target.value)}
+                        />
+                        <p className={AIDE}>Facultatif. Sans date, la livraison reste coupée jusqu&apos;à votre retour ici.</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <p className="mt-4 text-xs text-gray-500">
+          Les frais de service se règlent dans Vente &gt; Paiements, les frais de livraison dans Livraison.
+        </p>
       </div>
 
-      <h3 className="text-lg font-bold text-gray-900 mt-8 mb-1">Types de commande et paiement</h3>
-      <p className="text-sm text-gray-500 mb-6">
-        Ce que les clients peuvent commander depuis l&apos;application et le site, et comment ils paient. Le centre
-        d&apos;appels et la caisse ne sont pas concernés.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {TYPES_KEYS.map(champ)}
-        {champ(RECEPTION_KEY)}
+      <div className={CARTE}>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Commande à payer à la réception</h3>
+        <p className="text-sm text-gray-500">
+          Ce que devient une commande que le client paie au livreur ou au restaurant, depuis l&apos;application comme
+          depuis le site.
+        </p>
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3" role="radiogroup" aria-label="Commande à payer à la réception">
+          {PARCOURS.map((p) => {
+            const choisi = parcours === p.value;
+            return (
+              <button
+                key={p.value}
+                type="button"
+                role="radio"
+                aria-checked={choisi}
+                onClick={() => modifier(CLE_PARCOURS, p.value)}
+                className={`text-left rounded-xl border-2 p-4 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                  choisi ? "border-[#F17922] bg-[#F17922]/5" : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <span className="flex items-center gap-2 text-sm font-bold text-gray-900">
+                  <span
+                    className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
+                      choisi ? "border-[#F17922]" : "border-gray-300"
+                    }`}
+                  >
+                    {choisi && <span className="h-2 w-2 rounded-full bg-[#F17922]" />}
+                  </span>
+                  {p.titre}
+                </span>
+                <span className="mt-1.5 block text-xs text-gray-500">{p.detail}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="mt-6 flex justify-end items-center gap-3">
-        {saved && (
+      <div className="flex flex-wrap justify-end items-center gap-3">
+        {enregistre ? (
           <span className="flex items-center gap-1.5 text-green-600 text-sm font-medium">
             <CheckCircle size={16} /> Enregistré
           </span>
+        ) : (
+          aEnregistrer.length > 0 && (
+            <span className="text-sm text-gray-500">
+              {aEnregistrer.length === 1 ? "1 modification à enregistrer" : `${aEnregistrer.length} modifications à enregistrer`}
+            </span>
+          )
         )}
         <button
-          onClick={handleSave}
-          disabled={isPending}
-          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50"
+          type="button"
+          onClick={enregistrer}
+          disabled={enCours || aEnregistrer.length === 0}
+          className="px-6 py-2.5 bg-[#F17922] text-blanc font-semibold rounded-xl hover:bg-[#e06816] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isPending ? "Enregistrement..." : "Enregistrer"}
+          {enCours ? "Enregistrement..." : "Enregistrer"}
         </button>
       </div>
     </div>

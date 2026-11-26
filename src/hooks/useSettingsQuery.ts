@@ -30,10 +30,12 @@ export const useSettingMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      toast.success('Paramètre mis à jour');
+      // Un onglet enregistre ses réglages un par un : un seul message pour
+      // tout l'enregistrement, au lieu d'une pile de messages identiques.
+      toast.success('Paramètres enregistrés', { id: 'parametres-enregistres' });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erreur lors de la mise à jour');
+      toast.error(error.message || 'Erreur lors de la mise à jour', { id: 'parametres-erreur' });
     },
   });
 };

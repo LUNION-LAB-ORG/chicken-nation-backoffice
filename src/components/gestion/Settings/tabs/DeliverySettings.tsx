@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
-  Ban,
   BarChart3,
   Calendar,
   CheckCircle,
@@ -97,39 +96,9 @@ function lireGrille(brut: string | undefined): Palier[] {
 }
 
 const SECTIONS: ISettingSection[] = [
-  // ── Disponibilité de la livraison (coupure temporaire app) ─────────────
-  {
-    title: "Disponibilité de la livraison",
-    description:
-      "Couper temporairement la livraison pour les commandes passées via l'app. Le call center n'est jamais affecté.",
-    Icon: Ban,
-    fields: [
-      {
-        key: "delivery.app_disabled",
-        label: "Désactiver la livraison sur l'app",
-        placeholder: "0",
-        hint: "Oui : les clients de l'app ne peuvent plus commander en livraison (ils gardent « À emporter »). Le call center continue normalement.",
-        options: [
-          { value: "0", label: "Non : livraison active" },
-          { value: "1", label: "Oui : livraison coupée (appli)" },
-        ],
-      },
-      {
-        key: "delivery.app_disabled_until",
-        label: "Jusqu'au (réactivation auto)",
-        placeholder: "",
-        type: "datetime-local",
-        hint: "Optionnel. Au-delà de cette date/heure, la livraison se réactive automatiquement. Vide = jusqu'à réactivation manuelle.",
-      },
-      {
-        key: "delivery.app_disabled_message",
-        label: "Message affiché au client",
-        placeholder: "La livraison est temporairement indisponible…",
-        type: "text",
-        hint: "Message montré au client de l'app s'il tente de commander en livraison pendant la coupure.",
-      },
-    ],
-  },
+  // La coupure de la livraison (`delivery.app_disabled`, son message et sa
+  // date de reprise) se règle depuis le 26/11 dans Vente > Commandes, avec le
+  // type « Livraison » : un seul interrupteur au lieu de deux.
   // ── Service de livraison par défaut (commandes auto — SANS rapport avec les prix) ──
   {
     title: "Service de livraison par défaut",
@@ -592,7 +561,46 @@ const SECTIONS: ISettingSection[] = [
   },
 ];
 
-const DeliverySettings: React.FC = () => {
+/**
+ * VOLETS DE LA LIVRAISON (26/11). L'écran comptait plus de cent réglages sur
+ * une seule page : il est découpé en quatre volets, choisis dans la
+ * navigation des paramètres. Tous restent le MÊME écran : changer de volet
+ * ne perd aucune saisie, et « Enregistrer » enregistre tout ce qui a été
+ * modifié, quel que soit le volet affiché.
+ */
+export type VoletLivraison = "frais" | "courses" | "livreurs" | "planning";
+
+const VOLETS: Record<VoletLivraison, { titre: string; description: string }> = {
+  frais: {
+    titre: "Frais et service",
+    description: "Qui livre les commandes, et les frais de livraison facturés au client.",
+  },
+  courses: {
+    titre: "Courses",
+    description: "Offre d'une course aux livreurs, refus, et regroupement des commandes d'une même tournée.",
+  },
+  livreurs: {
+    titre: "Livreurs",
+    description: "Classement des livreurs, file d'attente et pénalités, enchaînement des courses et géolocalisation.",
+  },
+  planning: {
+    titre: "Planning",
+    description: "Période, jours de repos, créneaux, envoi du planning et présence du matin.",
+  },
+};
+
+const SECTIONS_FRAIS = ["Service de livraison par défaut", "Calcul des frais de livraison"];
+
+const SECTIONS_COURSES = ["Offre de course & refus"];
+
+/** Volet d'une section, d'après son titre. */
+const voletDe = (titre: string): VoletLivraison => {
+  if (SECTIONS_FRAIS.includes(titre)) return "frais";
+  if (SECTIONS_COURSES.includes(titre)) return "courses";
+  return titre.startsWith("Planning") ? "planning" : "livreurs";
+};
+
+const DeliverySettings: React.FC<{ volet?: VoletLivraison }> = ({ volet }) => {
   // On fetch 2 prefixes : l'UI devait connaître tous les settings course.* + deliverer.*
   // pour précharger les valeurs déjà en base.
   const { data: courseSettings, isLoading: isLoadingCourse } = useSettingsQuery("course.");
@@ -727,19 +735,27 @@ const DeliverySettings: React.FC = () => {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-8">
+    <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-6 space-y-8">
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Paramètres de livraison</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">
+          {volet ? VOLETS[volet].titre : "Paramètres de livraison"}
+        </h3>
         <p className="text-sm text-gray-500">
-          Contrôle la mécanique d&apos;affectation des courses, le regroupement de
-          commandes, le scoring livreur, et la géolocalisation.
+          {volet
+            ? VOLETS[volet].description
+            : "Contrôle la mécanique d'affectation des courses, le regroupement de commandes, le scoring livreur, et la géolocalisation."}
         </p>
       </div>
 
       {SECTIONS.map((section) => (
-        <React.Fragment key={section.title}>
+        // Les sections des autres volets restent montées (saisies gardées),
+        // seulement masquées.
+        <div
+          key={section.title}
+          className={!volet || voletDe(section.title) === volet ? "space-y-8" : "hidden"}
+        >
         <section
-          className="border-t border-gray-100 pt-6 first:border-t-0 first:pt-0"
+          className="border-t border-gray-100 pt-6"
         >
           <div className="mb-4">
             <h4 className="text-base font-bold text-[#F17922] mb-1 flex items-center gap-2">
@@ -868,7 +884,7 @@ const DeliverySettings: React.FC = () => {
         {section.title === "Offre de course & refus" && (
           <RegroupementSettings ref={regroupementRef} surEtat={setEtatRegroupement} />
         )}
-        </React.Fragment>
+        </div>
       ))}
 
       <div className="flex flex-wrap justify-end items-center gap-3 pt-4 border-t border-gray-100">
