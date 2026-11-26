@@ -7,16 +7,17 @@ import { CheckCircle, ShoppingBag, Truck, Utensils } from "lucide-react";
 import { useSettingsQuery } from "@/hooks/useSettingsQuery";
 import { updateSetting } from "@/services/settings.service";
 import {
+  CANAUX,
   CLE_COUPURE_JUSQUA,
   CLE_COUPURE_MESSAGE,
   CLE_PARCOURS,
   TYPES_DE_COMMANDE,
+  basculerCanal,
+  canauxCoches,
   choixPaiement,
   clesAEnregistrer,
-  ecrireTypePropose,
   libelleDuReglage,
   paiementAffiche,
-  typePropose,
   type TypeDeCommande,
   type Valeurs,
 } from "./reglages-commandes";
@@ -25,9 +26,10 @@ import {
  * PARAMÈTRES > VENTE > COMMANDES (26/11).
  *
  * Ce que les clients de l'application et du site peuvent commander, comment
- * ils paient, et ce que devient une commande à payer à la réception. Lu par
- * le serveur (`reglages-commande.rules.ts`), qui le contrôle à la création de
- * chaque commande. Les règles de l'écran sont dans `reglages-commandes.ts`.
+ * ils paient, et ce que devient une commande à payer à la réception. Chaque
+ * type se coche par canal (« on doit cocher site web ou appli ») : le serveur
+ * (`reglages-commande.rules.ts`) ne le propose et ne l'accepte que sur les
+ * canaux cochés. Les règles de l'écran sont dans `reglages-commandes.ts`.
  *
  * Retirés de cet onglet, pour qu'un réglage n'ait qu'un seul endroit :
  *  - « Taux de taxe » : c'est « Frais de service » de l'onglet Paiements ;
@@ -126,7 +128,8 @@ const OrderSettings: React.FC = () => {
         <div className="mt-5 space-y-3">
           {TYPES_DE_COMMANDE.map((type) => {
             const Icone = ICONES[type.cle];
-            const propose = typePropose(type, valeurs);
+            const coches = canauxCoches(type, valeurs);
+            const propose = coches.length > 0;
             return (
               <section key={type.cle} className="rounded-xl border border-gray-200 p-4">
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
@@ -134,7 +137,7 @@ const OrderSettings: React.FC = () => {
                     <Icone className="w-4 h-4 text-[#F17922]" />
                     {type.titre}
                   </h4>
-                  {type.appliSeulement && (
+                  {type.canauxPossibles.length === 1 && (
                     <span className="text-xs text-gray-500">
                       Dans l&apos;application seulement : le site ne propose pas la commande sur place.
                     </span>
@@ -142,20 +145,35 @@ const OrderSettings: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className={LIBELLE} htmlFor={`propose-${type.cle}`}>
-                      Proposé aux clients
-                    </label>
-                    <select
-                      id={`propose-${type.cle}`}
-                      className={CHAMP}
-                      value={propose ? "1" : "0"}
-                      onChange={(e) => setValeurs((v) => ecrireTypePropose(type, e.target.value === "1", v))}
-                    >
-                      <option value="1">Oui</option>
-                      <option value="0">Non</option>
-                    </select>
-                  </div>
+                  <fieldset className="min-w-0">
+                    <legend className={LIBELLE}>Proposé sur</legend>
+                    <div className="flex flex-wrap gap-2">
+                      {CANAUX.filter((c) => type.canauxPossibles.includes(c.cle)).map((c) => {
+                        const coche = coches.includes(c.cle);
+                        return (
+                          <label
+                            key={c.cle}
+                            className={`inline-flex items-center gap-2 h-[42px] px-3.5 rounded-lg border text-sm cursor-pointer select-none transition-colors ${
+                              coche
+                                ? "border-[#F17922] bg-[#F17922]/5 text-gray-900 font-semibold"
+                                : "border-gray-300 text-gray-600"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 accent-[#F17922] cursor-pointer"
+                              checked={coche}
+                              onChange={(e) => setValeurs((v) => basculerCanal(type, c.cle, e.target.checked, v))}
+                            />
+                            {c.libelle}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {!propose && (
+                      <p className={AIDE}>Aucune case cochée : ce type n&apos;est proposé nulle part.</p>
+                    )}
+                  </fieldset>
                   <div>
                     <label className={LIBELLE} htmlFor={`paiement-${type.cle}`}>
                       Paiement de la commande
