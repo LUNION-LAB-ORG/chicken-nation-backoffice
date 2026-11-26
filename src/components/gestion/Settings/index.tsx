@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { Gift, MessageSquare, Settings as IconeReglages, ShoppingBag, Smartphone, Truck } from "lucide-react";
+import { Gift, MessageSquare, ShoppingBag, Smartphone, Truck } from "lucide-react";
 import DashboardPageHeader from "@/components/ui/DashboardPageHeader";
 import SettingsTabs, { type GroupeParametres } from "./SettingsTabs";
 import type { VoletLivraison } from "./tabs/DeliverySettings";
@@ -16,9 +16,8 @@ const Chargement = () => (
 );
 
 // Chaque onglet n'est chargé que lorsqu'il est ouvert : la page des
-// paramètres ne télécharge plus les treize écrans d'un coup. Next exige que
+// paramètres ne télécharge plus tous les écrans d'un coup. Next exige que
 // les options de `dynamic` soient écrites en ligne, à chaque appel.
-const GeneralSettings = dynamic(() => import("./tabs/GeneralSettings"), { loading: Chargement });
 const EmailSettings = dynamic(() => import("./tabs/EmailSettings"), { loading: Chargement });
 const OrderSettings = dynamic(() => import("./tabs/OrderSettings"), { loading: Chargement });
 const DeliverySettings = dynamic(() => import("./tabs/DeliverySettings"), { loading: Chargement });
@@ -116,13 +115,10 @@ const GROUPES: GroupeParametres[] = [
       { key: "hubrise", label: "HubRise" },
     ],
   },
-  {
-    key: "general",
-    label: "Général",
-    Icon: IconeReglages,
-    description: "Identité et informations publiques de Chicken Nation.",
-    onglets: [{ key: "general", label: "Général" }],
-  },
+  // L'onglet « Général » (nom, description, logo, e-mail de support, liens
+  // sociaux) a été retiré le 26/11, à la demande du client : aucun de ses
+  // sept réglages `chicken_nation_*` n'était lu, ni par le serveur, ni par le
+  // site, ni par l'application.
 ];
 
 /** Dernier onglet ouvert, retrouvé à la prochaine visite (par navigateur). */
@@ -203,7 +199,6 @@ const Settings: React.FC = () => {
           {onglet === "mobile" && <MobileAppSettings />}
           {onglet === "printer" && <PrinterSettings />}
           {onglet === "hubrise" && <HubRiseSettings />}
-          {onglet === "general" && <GeneralSettings />}
         </div>
       </div>
     </div>
