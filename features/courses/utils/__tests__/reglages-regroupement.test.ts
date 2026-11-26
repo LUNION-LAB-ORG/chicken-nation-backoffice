@@ -542,3 +542,84 @@ describe.skipIf(!existsSync(reglagesLivreur))('« Appli considérée fermée apr
     expect(def('deliverer.appli_fermee_apres_s').lecture).toBe('livreur');
   });
 });
+
+/**
+ * Relecture du 26/11 : le serveur lit depuis le 28/10 (9af8167) cinq réglages
+ * du regroupement par la tournée, comparée aux livraisons séparées
+ * (`regroupement-tournee.rules.ts`). L'écran n'en montrait aucun : ils ne se
+ * changeaient qu'en base.
+ */
+describe('« Regrouper malgré un trajet plus long » (26/11)', () => {
+  const groupe = () => GROUPES_NOUVELLE_METHODE.find((g) => g.titre === 'Regrouper malgré un trajet plus long');
+
+  test('rangé après « Même direction », l’interrupteur en tête', () => {
+    const titres = GROUPES_NOUVELLE_METHODE.map((g) => g.titre);
+    expect(titres.indexOf('Regrouper malgré un trajet plus long')).toBe(titres.indexOf('Même direction') + 1);
+    expect(groupe().reglages.map((d) => d.cle)).toEqual([
+      'course.regroupement_tournee',
+      'course.regroupement_tournee_max_min',
+      'course.regroupement_perte_max_min',
+      'course.regroupement_gain_min',
+      'course.turbo_prise_en_charge_min',
+    ]);
+    expect(def('course.regroupement_tournee')).toMatchObject({ type: 'oui_non', defaut: '1', lecture: 'planificateur' });
+  });
+
+  test('libellés avec leur unité, défauts du serveur', () => {
+    expect(libelleAvecUnite(def('course.regroupement_tournee_max_min'))).toBe('Durée maximale de cette tournée groupée (minutes)');
+    expect(libelleAvecUnite(def('course.turbo_prise_en_charge_min'))).toBe("Délai supposé d'un coursier Turbo (minutes)");
+    expect(groupe().reglages.map((d) => d.defaut)).toEqual(['1', '50', '20', '10', '15']);
+  });
+
+  test('durée de la tournée groupée : 10 à 120, 0 refusé et signalé', () => {
+    const d = def('course.regroupement_tournee_max_min');
+    expect(verifierSaisie(d, '50')).toEqual({ ok: true, valeur: '50' });
+    expect(verifierSaisie(d, '9')).toEqual({ ok: false, message: 'Valeur attendue entre 10 et 120' });
+    expect(verifierSaisie(d, '121')).toEqual({ ok: false, message: 'Valeur attendue entre 10 et 120' });
+    expect(valeurAppliquee(d, '0')).toEqual({
+      valeur: '50',
+      refusee: true,
+      message: 'Valeur enregistrée « 0 » refusée : le serveur applique 50.',
+    });
+  });
+
+  test('0 a un sens pour la perte, le gain et le délai Turbo, et l’aide le dit', () => {
+    for (const cle of ['course.regroupement_perte_max_min', 'course.regroupement_gain_min', 'course.turbo_prise_en_charge_min']) {
+      expect({ cle, ok: verifierSaisie(def(cle), '0').ok }).toEqual({ cle, ok: true });
+    }
+    expect(def('course.regroupement_perte_max_min').aide).toMatch(/0 : aucune commande à l'heure ne passe en retard/);
+    expect(def('course.regroupement_gain_min').aide).toMatch(/0 : jamais\.$/);
+    expect(verifierSaisie(def('course.regroupement_gain_min'), '61').ok).toBe(false);
+    expect(verifierSaisie(def('course.turbo_prise_en_charge_min'), '91').ok).toBe(false);
+  });
+
+  test('textes sans tiret long', () => {
+    const textes = [groupe().titre, groupe().description, ...groupe().reglages.flatMap((d) => [d.libelle, d.aide ?? ''])];
+    for (const t of textes) expect(t).not.toMatch(/[–—]/);
+  });
+});
+
+const planificationOuiNon = join(import.meta.dir, '../../../../../backend/src/modules/course/helpers/planification.rules.ts');
+describe.skipIf(!existsSync(planificationOuiNon))('interrupteurs du planificateur, fidèles au serveur', () => {
+  const source = existsSync(planificationOuiNon) ? readFileSync(planificationOuiNon, 'utf8') : '';
+  const bloc = source.match(/const CLES_BOOLEENS[^=]*=\s*\{([\s\S]*?)\};/)?.[1] ?? '';
+  const interrupteurs = [...bloc.matchAll(/(\w+): '([^']+)'/g)].map((m) => ({ nom: m[1], cle: m[2] }));
+  const blocDefauts = source.match(/REGLAGES_PLANIFICATION_DEFAUT[^=]*=\s*Object\.freeze\(\{([\s\S]*?)\}\);/)?.[1] ?? '';
+
+  test('les interrupteurs sont bien lus dans les sources du serveur', () => {
+    expect(interrupteurs.length).toBeGreaterThanOrEqual(5);
+    expect(interrupteurs.map((i) => i.cle)).toContain('course.regroupement_tournee');
+  });
+
+  test('chaque interrupteur du serveur est à l’écran, en oui ou non, même défaut', () => {
+    for (const i of interrupteurs) {
+      const d = def(i.cle);
+      const defautServeur = blocDefauts.match(new RegExp(`\\b${i.nom}: (true|false),`))?.[1];
+      expect({ cle: i.cle, type: d.type, defaut: d.defaut }).toEqual({
+        cle: i.cle,
+        type: 'oui_non',
+        defaut: defautServeur === 'true' ? '1' : defautServeur === 'false' ? '0' : 'défaut du serveur illisible',
+      });
+    }
+  });
+});

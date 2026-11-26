@@ -338,6 +338,70 @@ export const GROUPES_NOUVELLE_METHODE: GroupeReglages[] = [
       },
     ],
   },
+  // Retour du client du 28/10 (serveur 9af8167, `regroupement-tournee.rules.ts`) :
+  // des commandes refusées par les limites ci-dessus partent quand même
+  // ensemble si la tournée groupée, par la route, livre mieux que séparément.
+  // Relecture du 26/11 : le serveur lisait ces cinq réglages, l'écran n'en
+  // montrait aucun.
+  {
+    titre: 'Regrouper malgré un trajet plus long',
+    description:
+      "Quand les limites de durée, de direction, de détour ou de retard refusent un regroupement, la tournée groupée est comparée, par la route, aux livraisons séparées avec les livreurs vraiment disponibles. Les commandes partent ensemble si les clients sont livrés plus tôt ainsi, ou aussi tôt en évitant Turbo ou un second livreur. Trois commandes au plus.",
+    reglages: [
+      {
+        cle: 'course.regroupement_tournee',
+        libelle: 'Comparer la tournée groupée aux livraisons séparées',
+        aide: 'Non : un regroupement refusé par les limites reste refusé.',
+        type: 'oui_non',
+        defaut: '1',
+        lecture: 'planificateur',
+      },
+      {
+        cle: 'course.regroupement_tournee_max_min',
+        libelle: 'Durée maximale de cette tournée groupée',
+        unite: minutes,
+        aide: "Du restaurant au dernier client, arrêts compris. Remplace, pour cette comparaison, la durée maximale d'une tournée.",
+        type: 'nombre',
+        defaut: '50',
+        lecture: 'planificateur',
+        min: 10,
+        max: 120,
+      },
+      {
+        cle: 'course.regroupement_perte_max_min',
+        libelle: "Retard maximal imposé à une commande à l'heure",
+        unite: minutes,
+        aide: "Une commande livrée à temps séparément, et en retard dans le groupe, n'y arrive pas plus tard que de cette durée. Sinon, pas de regroupement. 0 : aucune commande à l'heure ne passe en retard à cause du groupe.",
+        type: 'nombre',
+        defaut: '20',
+        lecture: 'planificateur',
+        min: 0,
+        max: 60,
+      },
+      {
+        cle: 'course.regroupement_gain_min',
+        libelle: 'Gain exigé pour tenir une promesse de moins',
+        unite: minutes,
+        aide: "Si le groupe tient moins de promesses que les livraisons séparées, il part seulement si le retard total des clients baisse d'au moins cette durée. 0 : jamais.",
+        type: 'nombre',
+        defaut: '10',
+        lecture: 'planificateur',
+        min: 0,
+        max: 60,
+      },
+      {
+        cle: 'course.turbo_prise_en_charge_min',
+        libelle: "Délai supposé d'un coursier Turbo",
+        unite: minutes,
+        aide: "Temps entre la bascule vers Turbo et l'arrivée du coursier au restaurant. Sert seulement à cette comparaison, jamais à la bascule.",
+        type: 'nombre',
+        defaut: '15',
+        lecture: 'planificateur',
+        min: 0,
+        max: 90,
+      },
+    ],
+  },
   {
     titre: 'Ajout après le retrait',
     description:
