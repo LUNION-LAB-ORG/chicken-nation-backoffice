@@ -47,6 +47,55 @@ const ORDER_KEYS: IOrderField[] = [
   },
 ];
 
+/**
+ * TYPES DE COMMANDE DANS L'APPLICATION (26/11) : pour chaque type, s'il est
+ * proposé aux clients de l'application et comment ils peuvent payer. Lus par
+ * le serveur (`reglages-commande-appli.rules.ts`) : l'application n'affiche
+ * que ce qui est permis, et la création d'une commande le contrôle. Clé
+ * absente : la valeur de `placeholder`, ce que l'application faisait déjà.
+ */
+const OUI_NON = [
+  { value: "1", label: "Oui : proposé dans l'application" },
+  { value: "0", label: "Non : retiré de l'application" },
+];
+
+const paiements = (lieu: string) => [
+  { value: "EN_LIGNE", label: "En ligne seulement" },
+  { value: "A_LA_RECEPTION", label: `${lieu} seulement` },
+  { value: "LES_DEUX", label: `En ligne ou ${lieu.toLowerCase()}` },
+];
+
+const AIDE_PAIEMENT =
+  "Sans paiement en ligne, la commande arrive directement au restaurant. Les clients dont l'application n'est pas à jour ne peuvent payer qu'en ligne.";
+
+const APPLI_KEYS: IOrderField[] = [
+  { key: "order_type_livraison_appli", label: "Livraison", placeholder: "1", options: OUI_NON },
+  {
+    key: "order_paiement_livraison_appli",
+    label: "Paiement d'une livraison",
+    placeholder: "EN_LIGNE",
+    options: paiements("À la livraison"),
+    hint: AIDE_PAIEMENT,
+  },
+  { key: "order_type_emporter_appli", label: "À emporter", placeholder: "1", options: OUI_NON },
+  {
+    key: "order_paiement_emporter_appli",
+    label: "Paiement d'une commande à emporter",
+    placeholder: "EN_LIGNE",
+    options: paiements("Au restaurant"),
+  },
+  { key: "order_type_sur_place_appli", label: "Sur place", placeholder: "0", options: OUI_NON },
+  {
+    key: "order_paiement_sur_place_appli",
+    label: "Paiement d'une commande sur place",
+    placeholder: "EN_LIGNE",
+    options: paiements("Au restaurant"),
+  },
+];
+
+/** Tous les réglages enregistrés par le bouton de l'onglet. */
+const TOUS_LES_CHAMPS: IOrderField[] = [...ORDER_KEYS, ...APPLI_KEYS];
+
 const OrderSettings: React.FC = () => {
   const { data: settings, isLoading } = useSettingsQuery("order_");
   const deliverySettings = useSettingsQuery("base_delivery");
@@ -62,8 +111,8 @@ const OrderSettings: React.FC = () => {
   }, [settings, deliverySettings.data]);
 
   const handleSave = () => {
-    let count = ORDER_KEYS.length;
-    for (const field of ORDER_KEYS) {
+    let count = TOUS_LES_CHAMPS.length;
+    for (const field of TOUS_LES_CHAMPS) {
       const value = values[field.key];
       if (value !== undefined) {
         updateSetting(
@@ -84,6 +133,39 @@ const OrderSettings: React.FC = () => {
     }
   };
 
+  /** Un réglage : liste de choix ou saisie, avec son aide. */
+  const champ = (field: IOrderField) => (
+    <div key={field.key}>
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+        {field.label}
+      </label>
+      {field.options ? (
+        <select
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white"
+          // Absente ou vide, la clé vaut ce que le serveur applique alors (`placeholder`).
+          value={values[field.key] || field.placeholder}
+          onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+        >
+          {field.options.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      ) : (
+        <input
+          type={field.type}
+          step={field.step}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+          placeholder={field.placeholder}
+          value={values[field.key] ?? ""}
+          onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
+        />
+      )}
+      {field.hint && (
+        <p className="text-xs text-gray-400 mt-1">{field.hint}</p>
+      )}
+    </div>
+  );
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -98,37 +180,16 @@ const OrderSettings: React.FC = () => {
       <p className="text-sm text-gray-500 mb-6">Paramètres de taxe et frais de livraison</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {ORDER_KEYS.map((field) => (
-          <div key={field.key}>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              {field.label}
-            </label>
-            {field.options ? (
-              <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white"
-                // Absente ou vide, la clé vaut ce que le serveur applique alors (`placeholder`).
-                value={values[field.key] || field.placeholder}
-                onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-              >
-                {field.options.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type={field.type}
-                step={field.step}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
-                placeholder={field.placeholder}
-                value={values[field.key] ?? ""}
-                onChange={(e) => setValues({ ...values, [field.key]: e.target.value })}
-              />
-            )}
-            {field.hint && (
-              <p className="text-xs text-gray-400 mt-1">{field.hint}</p>
-            )}
-          </div>
-        ))}
+        {ORDER_KEYS.map(champ)}
+      </div>
+
+      <h3 className="text-lg font-bold text-gray-900 mt-8 mb-1">Types de commande dans l&apos;application</h3>
+      <p className="text-sm text-gray-500 mb-6">
+        Ce que les clients peuvent commander depuis l&apos;application, et comment ils paient. Le site et le centre
+        d&apos;appels ne sont pas concernés.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {APPLI_KEYS.map(champ)}
       </div>
 
       <div className="mt-6 flex justify-end items-center gap-3">
