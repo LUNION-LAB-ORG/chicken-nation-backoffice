@@ -44,21 +44,30 @@ const VOLETS_LIVRAISON: Record<string, VoletLivraison> = {
   delivery_planning: "planning",
 };
 
+/** Paramétrage des commandes : un onglet par canal, le même écran (26/11). */
+const CANAUX_DES_COMMANDES: Record<string, "APP" | "WEB"> = {
+  orders: "APP",
+  orders_site: "WEB",
+};
+
 /**
  * RANGEMENT DES PARAMÈTRES (26/11) : par groupe, puis par onglet. Chaque
  * réglage n'a qu'un seul endroit : les frais de service et de paiement dans
- * Vente > Paiements, les frais de livraison dans Livraison > Frais et
- * service, les types de commande (coupure de la livraison comprise) dans
- * Vente > Commandes.
+ * Vente > Paiements, les frais de livraison et la coupure temporaire de la
+ * livraison dans Livraison > Frais et disponibilité, les types de commande
+ * dans Vente > Commandes de l'appli et Commandes du site (un paramétrage par
+ * canal).
  */
 const GROUPES: GroupeParametres[] = [
   {
     key: "vente",
     label: "Vente",
     Icon: ShoppingBag,
-    description: "Ce que les clients peuvent commander, comment ils paient, et les frais qu'ils paient.",
+    description:
+      "Ce que les clients peuvent commander et comment ils paient : un paramétrage pour l'application, un pour le site. Puis les frais et le paiement en ligne.",
     onglets: [
-      { key: "orders", label: "Commandes" },
+      { key: "orders", label: "Commandes de l'appli" },
+      { key: "orders_site", label: "Commandes du site" },
       { key: "payment", label: "Paiements" },
     ],
   },
@@ -68,7 +77,7 @@ const GROUPES: GroupeParametres[] = [
     Icon: Truck,
     description: "Frais de livraison, attribution des courses, règles des livreurs et planning.",
     onglets: [
-      { key: "delivery", label: "Frais et service" },
+      { key: "delivery", label: "Frais et disponibilité" },
       { key: "delivery_courses", label: "Courses" },
       { key: "delivery_livreurs", label: "Livreurs" },
       { key: "delivery_planning", label: "Planning" },
@@ -157,6 +166,7 @@ const Settings: React.FC = () => {
   // Onglet retiré pour ce compte (Appels) : le premier onglet à la place.
   const onglet = cles.includes(activeTab) ? activeTab : cles[0];
   const voletLivraison = VOLETS_LIVRAISON[onglet];
+  const canalDesCommandes = CANAUX_DES_COMMANDES[onglet];
 
   return (
     <div className="flex-1 overflow-auto p-4 space-y-6">
@@ -172,7 +182,9 @@ const Settings: React.FC = () => {
         <SettingsTabs groupes={groupes} selected={onglet} onSelect={ouvrir} />
 
         <div className="min-w-0">
-          {onglet === "orders" && <OrderSettings />}
+          {/* Un seul écran pour les deux canaux : il reste monté quand on
+              passe de l'un à l'autre, les saisies ne sont pas perdues. */}
+          {canalDesCommandes && <OrderSettings canal={canalDesCommandes} />}
           {onglet === "payment" && <PaymentSettings />}
           {/* Un seul écran pour les trois volets : il reste monté quand on
               change de volet, les saisies non enregistrées ne sont pas perdues. */}

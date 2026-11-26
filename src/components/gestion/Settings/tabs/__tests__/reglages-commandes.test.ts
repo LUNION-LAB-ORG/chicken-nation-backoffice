@@ -4,112 +4,88 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   CANAUX,
-  CLES_DE_L_ONGLET,
+  CLES_DES_ECRANS,
   TYPES_DE_COMMANDE,
-  basculerCanal,
-  canauxCoches,
   choixPaiement,
+  cleParcours,
+  clePaiement,
+  cleType,
   clesAEnregistrer,
   coupureEnVigueur,
-  ecrireCanaux,
   libelleDuReglage,
-  lireCanaux,
   paiementAffiche,
+  parcoursAffiche,
+  typePropose,
+  typesDuCanal,
 } from '../reglages-commandes';
 
 /**
- * Paramètres > Vente > Commandes (26/11) : un seul endroit par réglage.
+ * Paramètres > Vente > Commandes de l'appli, Commandes du site (26/11).
  * Demandes du client : « deux endroits où on gère les frais », « pas de
  * doublons », « C'est paiement de la commande et non paiement d'une
- * livraison », « on doit cocher site web ou appli ».
+ * livraison », puis « on doit avoir le paramétrage pour le site et le
+ * paramétrage pour l'appli, pareil pour commande à payer à la réception ».
  */
 
 const [livraison, emporter, surPlace] = TYPES_DE_COMMANDE;
+const { APP: appli, WEB: site } = CANAUX;
 const maintenant = new Date('2026-11-26T12:00:00');
 
-describe('types cochés par canal : Appli, Site web', () => {
-  test('les deux cases, dans cet ordre ; sur place : l’application seule', () => {
-    expect(CANAUX).toEqual([
-      { cle: 'APP', libelle: 'Appli' },
-      { cle: 'WEB', libelle: 'Site web' },
-    ]);
-    expect(livraison.canauxPossibles).toEqual(['APP', 'WEB']);
-    expect(emporter.canauxPossibles).toEqual(['APP', 'WEB']);
-    expect(surPlace.canauxPossibles).toEqual(['APP']);
+describe('un paramétrage par canal', () => {
+  test('les clés : pour chaque canal, deux par type et le parcours ; le site n’a pas de sur place', () => {
+    expect(cleType(livraison, appli)).toBe('order_type_livraison_appli');
+    expect(clePaiement(emporter, site)).toBe('order_paiement_emporter_site');
+    expect(cleParcours(appli)).toBe('order_paiement_reception_appli');
+    expect(cleParcours(site)).toBe('order_paiement_reception_site');
+    expect(typesDuCanal(appli).map((t) => t.cle)).toEqual(['livraison', 'emporter', 'sur_place']);
+    expect(typesDuCanal(site).map((t) => t.cle)).toEqual(['livraison', 'emporter']);
+    expect([...CLES_DES_ECRANS].sort()).toEqual(
+      [
+        'order_type_livraison_appli',
+        'order_type_emporter_appli',
+        'order_type_sur_place_appli',
+        'order_paiement_livraison_appli',
+        'order_paiement_emporter_appli',
+        'order_paiement_sur_place_appli',
+        'order_paiement_reception_appli',
+        'order_type_livraison_site',
+        'order_type_emporter_site',
+        'order_paiement_livraison_site',
+        'order_paiement_emporter_site',
+        'order_paiement_reception_site',
+      ].sort(),
+    );
   });
 
-  test('lecture comme le serveur : liste, « 1 » les deux, « 0 » aucun, vide la valeur par défaut', () => {
-    expect(lireCanaux('APP,WEB', [])).toEqual(['APP', 'WEB']);
-    expect(lireCanaux('web', [])).toEqual(['WEB']);
-    expect(lireCanaux('1', [])).toEqual(['APP', 'WEB']);
-    expect(lireCanaux('0', ['APP', 'WEB'])).toEqual([]);
-    expect(lireCanaux(undefined, ['APP', 'WEB'])).toEqual(['APP', 'WEB']);
-    expect(lireCanaux('', ['APP'])).toEqual(['APP']);
-    expect(lireCanaux('partout', ['APP', 'WEB'])).toEqual([]);
+  test('rien de réglé, application : livraison et à emporter payés en ligne, pas de sur place, commande directe', () => {
+    expect(typePropose(livraison, appli, {})).toBe(true);
+    expect(typePropose(emporter, appli, {})).toBe(true);
+    expect(typePropose(surPlace, appli, {})).toBe(false);
+    expect(paiementAffiche(livraison, appli, {})).toBe('EN_LIGNE');
+    expect(paiementAffiche(emporter, appli, {})).toBe('EN_LIGNE');
+    expect(parcoursAffiche(appli, {})).toBe('DIRECTE');
   });
 
-  test('rien de réglé : livraison et à emporter cochés partout, sur place nulle part (comme le serveur)', () => {
-    expect(canauxCoches(livraison, {}, maintenant)).toEqual(['APP', 'WEB']);
-    expect(canauxCoches(emporter, {}, maintenant)).toEqual(['APP', 'WEB']);
-    expect(canauxCoches(surPlace, {}, maintenant)).toEqual([]);
+  test('rien de réglé, site : la livraison se paie aussi à la livraison, et la commande attend sa confirmation', () => {
+    expect(typePropose(livraison, site, {})).toBe(true);
+    expect(typePropose(emporter, site, {})).toBe(true);
+    expect(paiementAffiche(livraison, site, {})).toBe('LES_DEUX');
+    expect(paiementAffiche(emporter, site, {})).toBe('EN_LIGNE');
+    expect(parcoursAffiche(site, {})).toBe('APRES_CONFIRMATION');
   });
 
-  test('à emporter : décocher le site, puis l’appli, puis recocher', () => {
-    let v = basculerCanal(emporter, 'WEB', false, {});
-    expect(v).toEqual({ order_type_emporter: 'APP' });
-    v = basculerCanal(emporter, 'APP', false, v);
-    // Aucun canal : « 0 », jamais vide (vide vaudrait la valeur par défaut).
-    expect(v).toEqual({ order_type_emporter: '0' });
-    expect(canauxCoches(emporter, v, maintenant)).toEqual([]);
-    v = basculerCanal(emporter, 'WEB', true, v);
-    expect(v).toEqual({ order_type_emporter: 'WEB' });
-    v = basculerCanal(emporter, 'APP', true, v);
-    expect(v).toEqual({ order_type_emporter: 'APP,WEB' });
-  });
-
-  test('sur place : seule l’application se coche, le site est ignoré', () => {
-    expect(ecrireCanaux(surPlace, ['APP', 'WEB'], {})).toEqual({ order_type_sur_place: 'APP' });
-    expect(canauxCoches(surPlace, { order_type_sur_place: '1' }, maintenant)).toEqual(['APP']);
-    expect(ecrireCanaux(surPlace, [], {})).toEqual({ order_type_sur_place: '0' });
-  });
-});
-
-describe('livraison : un seul interrupteur', () => {
-  test('coupure en vigueur : aucune case cochée ; date de reprise passée : de nouveau cochée', () => {
-    const coupee = { 'delivery.app_disabled': '1' };
-    expect(coupureEnVigueur(coupee, maintenant)).toBe(true);
-    expect(canauxCoches(livraison, coupee, maintenant)).toEqual([]);
-    const future = { ...coupee, 'delivery.app_disabled_until': '2026-11-26T18:00' };
-    expect(canauxCoches(livraison, future, maintenant)).toEqual([]);
-    const passee = { ...coupee, 'delivery.app_disabled_until': '2026-11-26T08:00' };
-    expect(coupureEnVigueur(passee, maintenant)).toBe(false);
-    expect(canauxCoches(livraison, passee, maintenant)).toEqual(['APP', 'WEB']);
-    // Date illisible : la coupure tient, comme sans date.
-    expect(coupureEnVigueur({ ...coupee, 'delivery.app_disabled_until': 'demain' }, maintenant)).toBe(true);
-  });
-
-  test('un seul canal décoché : le type est retiré de ce canal, sans coupure', () => {
-    const v = ecrireCanaux(livraison, ['APP'], {});
-    expect(v).toEqual({ order_type_livraison: 'APP', 'delivery.app_disabled': '0', 'delivery.app_disabled_until': '' });
-    expect(canauxCoches(livraison, v, maintenant)).toEqual(['APP']);
-  });
-
-  test('plus aucun canal : c’est la coupure, le message reste, et la reprise rendra la livraison partout', () => {
-    const avant = { 'delivery.app_disabled_message': 'Pluie', order_type_livraison: 'APP' };
-    const coupe = ecrireCanaux(livraison, [], avant);
-    expect(coupe).toEqual({
-      'delivery.app_disabled_message': 'Pluie',
-      order_type_livraison: 'APP,WEB',
-      'delivery.app_disabled': '1',
-    });
-    expect(canauxCoches(livraison, coupe, maintenant)).toEqual([]);
-
-    // Une case recochée : la coupure est levée, la date vidée.
-    const repris = ecrireCanaux(livraison, ['WEB'], { ...coupe, 'delivery.app_disabled_until': '2026-11-27T08:00' });
-    expect(repris['delivery.app_disabled']).toBe('0');
-    expect(repris['delivery.app_disabled_until']).toBe('');
-    expect(repris.order_type_livraison).toBe('WEB');
-    expect(canauxCoches(livraison, repris, maintenant)).toEqual(['WEB']);
+  test('régler un canal ne touche pas l’autre', () => {
+    const valeurs = {
+      order_type_livraison_appli: '0',
+      order_paiement_emporter_appli: 'LES_DEUX',
+      order_paiement_reception_appli: 'APRES_CONFIRMATION',
+      order_type_emporter_site: '0',
+      order_paiement_reception_site: 'DIRECTE',
+    };
+    expect([typePropose(livraison, appli, valeurs), typePropose(livraison, site, valeurs)]).toEqual([false, true]);
+    expect([typePropose(emporter, appli, valeurs), typePropose(emporter, site, valeurs)]).toEqual([true, false]);
+    expect([paiementAffiche(emporter, appli, valeurs), paiementAffiche(emporter, site, valeurs)]).toEqual(['LES_DEUX', 'EN_LIGNE']);
+    expect([parcoursAffiche(appli, valeurs), parcoursAffiche(site, valeurs)]).toEqual(['APRES_CONFIRMATION', 'DIRECTE']);
   });
 });
 
@@ -123,67 +99,82 @@ describe('paiement de la commande', () => {
     expect(choixPaiement('Au restaurant')[2].label).toBe('En ligne ou au restaurant');
   });
 
-  test('clé absente : ce que le serveur applique ; la livraison part de l’ancien réglage du site', () => {
-    expect(paiementAffiche(emporter, {})).toBe('EN_LIGNE');
-    expect(paiementAffiche(surPlace, {})).toBe('EN_LIGNE');
-    expect(paiementAffiche(livraison, {})).toBe('LES_DEUX');
-    expect(paiementAffiche(livraison, { order_paiement_livraison_site: '1' })).toBe('LES_DEUX');
-    expect(paiementAffiche(livraison, { order_paiement_livraison_site: '0' })).toBe('EN_LIGNE');
-    // Enregistré : il l'emporte.
-    expect(paiementAffiche(livraison, { order_paiement_livraison_site: '0', order_paiement_livraison: 'A_LA_RECEPTION' })).toBe(
-      'A_LA_RECEPTION',
-    );
+  test('livraison sur le site : la clé du 19/10, lue dans ses deux écritures comme le serveur', () => {
+    const lire = (valeur) => paiementAffiche(livraison, site, { order_paiement_livraison_site: valeur });
+    // Ancienne écriture : « 1 » proposé, « 0 » coupé.
+    expect(lire('1')).toBe('LES_DEUX');
+    expect(lire('oui')).toBe('LES_DEUX');
+    expect(lire('0')).toBe('EN_LIGNE');
+    // Nouvelle écriture.
+    expect(lire('LES_DEUX')).toBe('LES_DEUX');
+    expect(lire('A_LA_RECEPTION')).toBe('A_LA_RECEPTION');
+    expect(lire('EN_LIGNE')).toBe('EN_LIGNE');
+    // Illisible : en ligne seulement.
+    expect(lire('peut-être')).toBe('EN_LIGNE');
+    // Ailleurs, « 1 » ne veut rien dire : en ligne seulement.
+    expect(paiementAffiche(livraison, appli, { order_paiement_livraison_appli: '1' })).toBe('EN_LIGNE');
+    expect(paiementAffiche(emporter, site, { order_paiement_emporter_site: '1' })).toBe('EN_LIGNE');
+  });
+});
+
+describe('coupure temporaire de la livraison : affichée ici, réglée dans Livraison', () => {
+  test('en vigueur tant que la date de reprise n’est pas passée', () => {
+    const coupee = { 'delivery.app_disabled': '1' };
+    expect(coupureEnVigueur({}, maintenant)).toBe(false);
+    expect(coupureEnVigueur(coupee, maintenant)).toBe(true);
+    expect(coupureEnVigueur({ ...coupee, 'delivery.app_disabled_until': '2026-11-26T18:00' }, maintenant)).toBe(true);
+    expect(coupureEnVigueur({ ...coupee, 'delivery.app_disabled_until': '2026-11-26T08:00' }, maintenant)).toBe(false);
+    // Date illisible : la coupure tient, comme sans date.
+    expect(coupureEnVigueur({ ...coupee, 'delivery.app_disabled_until': 'demain' }, maintenant)).toBe(true);
+  });
+
+  test('un seul endroit par réglage', () => {
+    // Ces écrans n'enregistrent ni la coupure, ni les frais.
+    for (const cle of ['delivery.app_disabled', 'delivery.app_disabled_until', 'delivery.app_disabled_message', 'order_tax_rate', 'base_delivery_fee'])
+      expect(CLES_DES_ECRANS).not.toContain(cle);
+    // La coupure se règle dans l'onglet Livraison, et nulle part ailleurs.
+    const livraisonSource = readFileSync(join(import.meta.dir, '..', 'DeliverySettings.tsx'), 'utf8');
+    expect(livraisonSource).toMatch(/key:\s*"delivery\.app_disabled"/);
+    const source = readFileSync(join(import.meta.dir, '..', 'OrderSettings.tsx'), 'utf8');
+    expect(source).not.toContain('order_tax_rate');
+    expect(source).not.toContain('base_delivery_fee');
+    expect(source).not.toContain('app_disabled_message');
   });
 });
 
 describe('enregistrement', () => {
-  test('seulement ce qui a changé, et seulement les clés de l’onglet', () => {
-    const enBase = { order_type_emporter: '1', order_paiement_reception: 'DIRECTE', order_tax_rate: '0.01' };
+  test('seulement ce qui a changé, pour les deux canaux', () => {
+    const enBase = { order_type_emporter_appli: '1', order_paiement_reception_site: 'DIRECTE', order_tax_rate: '0.01' };
     expect(clesAEnregistrer(enBase, enBase)).toEqual([]);
-    const modifie = { ...enBase, order_paiement_reception: 'APRES_CONFIRMATION', order_tax_rate: '0.05', 'delivery.app_disabled': '1' };
-    expect(clesAEnregistrer(modifie, enBase).sort()).toEqual(['delivery.app_disabled', 'order_paiement_reception']);
-  });
-
-  test('vider un champ jamais enregistré n’est pas une modification', () => {
-    // « Oui » sur la livraison vide la date de reprise : rien à écrire si elle n'existait pas.
-    expect(clesAEnregistrer({ 'delivery.app_disabled_until': '' }, {})).toEqual([]);
-    expect(clesAEnregistrer({ 'delivery.app_disabled_until': '' }, { 'delivery.app_disabled_until': '2026-11-27T08:00' })).toEqual([
-      'delivery.app_disabled_until',
-    ]);
-  });
-
-  test('un seul endroit par réglage : ni les frais de service ni les frais de livraison de base ici', () => {
-    expect(CLES_DE_L_ONGLET).not.toContain('order_tax_rate');
-    expect(CLES_DE_L_ONGLET).not.toContain('base_delivery_fee');
-    // La coupure n'est plus réglée dans l'onglet Livraison.
-    const livraisonSource = readFileSync(join(import.meta.dir, '..', 'DeliverySettings.tsx'), 'utf8');
-    expect(livraisonSource).not.toMatch(/key:\s*"delivery\.app_disabled/);
-    const source = readFileSync(join(import.meta.dir, '..', 'OrderSettings.tsx'), 'utf8');
-    expect(source).not.toContain('order_tax_rate"');
-    expect(source).not.toContain('base_delivery_fee"');
+    const modifie = {
+      ...enBase,
+      order_paiement_reception_site: 'APRES_CONFIRMATION',
+      order_paiement_reception_appli: 'APRES_CONFIRMATION',
+      order_tax_rate: '0.05',
+    };
+    expect(clesAEnregistrer(modifie, enBase).sort()).toEqual(['order_paiement_reception_appli', 'order_paiement_reception_site']);
   });
 
   test('libellés enregistrés avec les réglages', () => {
-    expect(libelleDuReglage('order_paiement_livraison')).toBe('Livraison : paiement de la commande');
-    expect(libelleDuReglage('order_type_sur_place')).toBe('Sur place : proposé sur (canaux)');
-    expect(libelleDuReglage('order_paiement_reception')).toBe('Commande à payer à la réception');
-    expect(libelleDuReglage('delivery.app_disabled_message')).toBe('Livraison coupée : message au client');
+    expect(libelleDuReglage('order_paiement_livraison_appli')).toBe('Application, livraison : paiement de la commande');
+    expect(libelleDuReglage('order_type_emporter_site')).toBe('Site web, à emporter : proposé');
+    expect(libelleDuReglage('order_paiement_reception_site')).toBe('Site web : commande à payer à la réception');
+    expect(libelleDuReglage('order_paiement_reception_appli')).toBe('Application : commande à payer à la réception');
   });
 });
 
 describe('textes de l’écran', () => {
   const source = readFileSync(join(import.meta.dir, '..', 'OrderSettings.tsx'), 'utf8');
 
-  test('« Proposé sur », avec des cases à cocher par canal', () => {
-    expect(source).toContain('Proposé sur');
-    expect(source).toContain('type="checkbox"');
-    expect(source).not.toContain('Proposé aux clients');
-  });
-
   test('« Paiement de la commande », jamais « Paiement d’une livraison » ; phrase sur l’application pas à jour retirée', () => {
     expect(source).toContain('Paiement de la commande');
     expect(source).not.toContain("Paiement d'une livraison");
     expect(source).not.toContain("n'est pas à jour");
+  });
+
+  test('chaque canal a son titre', () => {
+    expect(appli.titre).toBe("Commandes de l'application");
+    expect(site.titre).toBe('Commandes du site web');
   });
 
   test('aucun tiret cadratin', () => {

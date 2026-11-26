@@ -8,35 +8,38 @@ import { useSettingsQuery } from "@/hooks/useSettingsQuery";
 import { updateSetting } from "@/services/settings.service";
 import {
   CANAUX,
-  CLE_COUPURE_JUSQUA,
-  CLE_COUPURE_MESSAGE,
-  CLE_PARCOURS,
-  TYPES_DE_COMMANDE,
-  basculerCanal,
-  canauxCoches,
   choixPaiement,
+  cleParcours,
+  clePaiement,
+  cleType,
   clesAEnregistrer,
+  coupureEnVigueur,
   libelleDuReglage,
   paiementAffiche,
+  parcoursAffiche,
+  typePropose,
+  typesDuCanal,
+  type Canal,
   type TypeDeCommande,
   type Valeurs,
 } from "./reglages-commandes";
 
 /**
- * PARAMÈTRES > VENTE > COMMANDES (26/11).
+ * PARAMÈTRES > VENTE > COMMANDES DE L'APPLI, COMMANDES DU SITE (26/11).
  *
- * Ce que les clients de l'application et du site peuvent commander, comment
- * ils paient, et ce que devient une commande à payer à la réception. Chaque
- * type se coche par canal (« on doit cocher site web ou appli ») : le serveur
- * (`reglages-commande.rules.ts`) ne le propose et ne l'accepte que sur les
- * canaux cochés. Les règles de l'écran sont dans `reglages-commandes.ts`.
+ * « On doit avoir le paramétrage pour le site et le paramétrage pour l'appli,
+ * pareil pour commande à payer à la réception » : chaque canal a son écran,
+ * de même forme. Pour chaque type : s'il est proposé et comment il se paie ;
+ * puis ce que devient une commande à payer à la réception. Le serveur
+ * (`reglages-commande.rules.ts`) applique à chaque commande le paramétrage de
+ * SON canal. Les règles de l'écran sont dans `reglages-commandes.ts`.
  *
- * Retirés de cet onglet, pour qu'un réglage n'ait qu'un seul endroit :
- *  - « Taux de taxe » : c'est « Frais de service » de l'onglet Paiements ;
- *  - « Frais de livraison de base » : plus aucun calcul ne le lit, les frais
- *    de livraison viennent de la grille de l'onglet Livraison.
- * Ajoutée ici : la coupure de la livraison, qui était dans l'onglet Livraison
- * et faisait un second interrupteur pour le même type.
+ * Les deux écrans sont le même composant, qui reste monté : passer de l'un à
+ * l'autre ne perd aucune saisie, et « Enregistrer » enregistre ce qui a été
+ * modifié sur les deux.
+ *
+ * Un réglage, un seul endroit : les frais de service sont dans Paiements, les
+ * frais de livraison et la coupure temporaire de la livraison dans Livraison.
  */
 
 const ICONES: Record<TypeDeCommande["cle"], React.FC<{ className?: string }>> = {
@@ -62,10 +65,9 @@ const PARCOURS = [
 const CHAMP =
   "w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all bg-white";
 const LIBELLE = "block text-sm font-medium text-gray-700 mb-1.5";
-const AIDE = "text-xs text-gray-400 mt-1";
 const CARTE = "bg-white rounded-2xl border border-gray-200 p-4 sm:p-6";
 
-const OrderSettings: React.FC = () => {
+const OrderSettings: React.FC<{ canal: Canal }> = ({ canal: cleCanal }) => {
   const commandes = useSettingsQuery("order_");
   const coupure = useSettingsQuery("delivery.app_disabled");
   const queryClient = useQueryClient();
@@ -77,9 +79,15 @@ const OrderSettings: React.FC = () => {
   const enBase = useMemo(() => {
     const lu: Valeurs = {};
     for (const s of commandes.data ?? []) lu[s.key] = s.value;
-    for (const s of coupure.data ?? []) lu[s.key] = s.value;
     return lu;
-  }, [commandes.data, coupure.data]);
+  }, [commandes.data]);
+
+  /** Coupure temporaire de la livraison : lue seulement, réglée dans Livraison. */
+  const livraisonCoupee = useMemo(() => {
+    const lu: Valeurs = {};
+    for (const s of coupure.data ?? []) lu[s.key] = s.value;
+    return coupureEnVigueur(lu);
+  }, [coupure.data]);
 
   useEffect(() => {
     setValeurs(enBase);
@@ -114,75 +122,56 @@ const OrderSettings: React.FC = () => {
     );
   }
 
-  const parcours = valeurs[CLE_PARCOURS] === "DIRECTE" ? "DIRECTE" : "APRES_CONFIRMATION";
+  const canal = CANAUX[cleCanal];
+  const parcours = parcoursAffiche(canal, valeurs);
 
   return (
     <div className="space-y-4">
       <div className={CARTE}>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Types de commande et paiement</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{canal.titre}</h3>
         <p className="text-sm text-gray-500">
-          Ce que les clients peuvent commander depuis l&apos;application et le site, et comment ils paient. Le centre
-          d&apos;appels et la caisse ne sont pas concernés.
+          Ce que les clients peuvent commander depuis {canal.nom}, et comment ils paient.
+          {cleCanal === "APP"
+            ? " Le site web a son propre paramétrage, dans l'onglet voisin."
+            : " L'application a son propre paramétrage, dans l'onglet voisin."}
         </p>
 
         <div className="mt-5 space-y-3">
-          {TYPES_DE_COMMANDE.map((type) => {
+          {typesDuCanal(canal).map((type) => {
             const Icone = ICONES[type.cle];
-            const coches = canauxCoches(type, valeurs);
-            const propose = coches.length > 0;
+            const propose = typePropose(type, canal, valeurs);
+            const id = `${type.cle}-${canal.suffixe}`;
             return (
               <section key={type.cle} className="rounded-xl border border-gray-200 p-4">
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-3">
-                  <h4 className="flex items-center gap-2 text-base font-bold text-gray-900">
-                    <Icone className="w-4 h-4 text-[#F17922]" />
-                    {type.titre}
-                  </h4>
-                  {type.canauxPossibles.length === 1 && (
-                    <span className="text-xs text-gray-500">
-                      Dans l&apos;application seulement : le site ne propose pas la commande sur place.
-                    </span>
-                  )}
-                </div>
+                <h4 className="flex items-center gap-2 text-base font-bold text-gray-900 mb-3">
+                  <Icone className="w-4 h-4 text-[#F17922]" />
+                  {type.titre}
+                </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <fieldset className="min-w-0">
-                    <legend className={LIBELLE}>Proposé sur</legend>
-                    <div className="flex flex-wrap gap-2">
-                      {CANAUX.filter((c) => type.canauxPossibles.includes(c.cle)).map((c) => {
-                        const coche = coches.includes(c.cle);
-                        return (
-                          <label
-                            key={c.cle}
-                            className={`inline-flex items-center gap-2 h-[42px] px-3.5 rounded-lg border text-sm cursor-pointer select-none transition-colors ${
-                              coche
-                                ? "border-[#F17922] bg-[#F17922]/5 text-gray-900 font-semibold"
-                                : "border-gray-300 text-gray-600"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 accent-[#F17922] cursor-pointer"
-                              checked={coche}
-                              onChange={(e) => setValeurs((v) => basculerCanal(type, c.cle, e.target.checked, v))}
-                            />
-                            {c.libelle}
-                          </label>
-                        );
-                      })}
-                    </div>
-                    {!propose && (
-                      <p className={AIDE}>Aucune case cochée : ce type n&apos;est proposé nulle part.</p>
-                    )}
-                  </fieldset>
                   <div>
-                    <label className={LIBELLE} htmlFor={`paiement-${type.cle}`}>
+                    <label className={LIBELLE} htmlFor={`propose-${id}`}>
+                      Proposé aux clients
+                    </label>
+                    <select
+                      id={`propose-${id}`}
+                      className={CHAMP}
+                      value={propose ? "1" : "0"}
+                      onChange={(e) => modifier(cleType(type, canal), e.target.value)}
+                    >
+                      <option value="1">Oui</option>
+                      <option value="0">Non</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={LIBELLE} htmlFor={`paiement-${id}`}>
                       Paiement de la commande
                     </label>
                     <select
-                      id={`paiement-${type.cle}`}
+                      id={`paiement-${id}`}
                       className={CHAMP}
-                      value={paiementAffiche(type, valeurs)}
-                      onChange={(e) => modifier(type.paiement, e.target.value)}
+                      value={paiementAffiche(type, canal, valeurs)}
+                      onChange={(e) => modifier(clePaiement(type, canal), e.target.value)}
                     >
                       {choixPaiement(type.lieu).map((o) => (
                         <option key={o.value} value={o.value}>
@@ -191,57 +180,30 @@ const OrderSettings: React.FC = () => {
                       ))}
                     </select>
                   </div>
-
-                  {/* Livraison coupée : ce que le client lit, et quand elle reprend. */}
-                  {type.cle === "livraison" && !propose && (
-                    <>
-                      <div>
-                        <label className={LIBELLE} htmlFor="coupure-message">
-                          Message affiché au client
-                        </label>
-                        <input
-                          id="coupure-message"
-                          type="text"
-                          className={CHAMP}
-                          placeholder="La livraison est temporairement indisponible…"
-                          value={valeurs[CLE_COUPURE_MESSAGE] ?? ""}
-                          onChange={(e) => modifier(CLE_COUPURE_MESSAGE, e.target.value)}
-                        />
-                        <p className={AIDE}>Facultatif. Le centre d&apos;appels peut toujours saisir une livraison.</p>
-                      </div>
-                      <div>
-                        <label className={LIBELLE} htmlFor="coupure-jusqua">
-                          Reprise automatique le
-                        </label>
-                        <input
-                          id="coupure-jusqua"
-                          type="datetime-local"
-                          className={CHAMP}
-                          value={valeurs[CLE_COUPURE_JUSQUA] ?? ""}
-                          onChange={(e) => modifier(CLE_COUPURE_JUSQUA, e.target.value)}
-                        />
-                        <p className={AIDE}>Facultatif. Sans date, la livraison reste coupée jusqu&apos;à votre retour ici.</p>
-                      </div>
-                    </>
-                  )}
                 </div>
+
+                {type.cle === "livraison" && propose && livraisonCoupee && (
+                  <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                    La livraison est suspendue pour le moment, sur l&apos;application et sur le site. Elle se rétablit
+                    dans Livraison &gt; Frais et disponibilité.
+                  </p>
+                )}
               </section>
             );
           })}
         </div>
-
-        <p className="mt-4 text-xs text-gray-500">
-          Les frais de service se règlent dans Vente &gt; Paiements, les frais de livraison dans Livraison.
-        </p>
       </div>
 
       <div className={CARTE}>
         <h3 className="text-lg font-bold text-gray-900 mb-1">Commande à payer à la réception</h3>
         <p className="text-sm text-gray-500">
-          Ce que devient une commande que le client paie au livreur ou au restaurant, depuis l&apos;application comme
-          depuis le site.
+          Ce que devient une commande passée depuis {canal.nom} que le client paie au livreur ou au restaurant.
         </p>
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3" role="radiogroup" aria-label="Commande à payer à la réception">
+        <div
+          className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3"
+          role="radiogroup"
+          aria-label="Commande à payer à la réception"
+        >
           {PARCOURS.map((p) => {
             const choisi = parcours === p.value;
             return (
@@ -250,7 +212,7 @@ const OrderSettings: React.FC = () => {
                 type="button"
                 role="radio"
                 aria-checked={choisi}
-                onClick={() => modifier(CLE_PARCOURS, p.value)}
+                onClick={() => modifier(cleParcours(canal), p.value)}
                 className={`text-left rounded-xl border-2 p-4 cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                   choisi ? "border-[#F17922] bg-[#F17922]/5" : "border-gray-200 hover:border-gray-300"
                 }`}
@@ -280,7 +242,9 @@ const OrderSettings: React.FC = () => {
         ) : (
           aEnregistrer.length > 0 && (
             <span className="text-sm text-gray-500">
-              {aEnregistrer.length === 1 ? "1 modification à enregistrer" : `${aEnregistrer.length} modifications à enregistrer`}
+              {aEnregistrer.length === 1
+                ? "1 modification à enregistrer"
+                : `${aEnregistrer.length} modifications à enregistrer`}
             </span>
           )
         )}

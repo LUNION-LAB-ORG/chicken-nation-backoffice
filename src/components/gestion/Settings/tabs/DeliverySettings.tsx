@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast";
 import {
+  Ban,
   BarChart3,
   Calendar,
   CheckCircle,
@@ -96,9 +97,42 @@ function lireGrille(brut: string | undefined): Palier[] {
 }
 
 const SECTIONS: ISettingSection[] = [
-  // La coupure de la livraison (`delivery.app_disabled`, son message et sa
-  // date de reprise) se règle depuis le 26/11 dans Vente > Commandes, avec le
-  // type « Livraison » : un seul interrupteur au lieu de deux.
+  // ── Coupure temporaire de la livraison, application ET site ────────────
+  // Seul endroit où elle se règle. Les onglets Vente > Commandes de l'appli
+  // et Commandes du site disent, chacun, si la livraison est proposée sur
+  // leur canal ; ils affichent cette coupure sans la régler.
+  {
+    title: "Coupure temporaire de la livraison",
+    description:
+      "Suspendre la livraison pour un temps, sur l'application et sur le site (pluie, manque de livreurs). Le centre d'appels peut toujours saisir une livraison.",
+    Icon: Ban,
+    fields: [
+      {
+        key: "delivery.app_disabled",
+        label: "Livraison suspendue",
+        placeholder: "0",
+        hint: "Oui : les clients de l'application et du site ne peuvent plus commander en livraison, ils gardent les autres modes.",
+        options: [
+          { value: "0", label: "Non : livraison ouverte" },
+          { value: "1", label: "Oui : livraison suspendue" },
+        ],
+      },
+      {
+        key: "delivery.app_disabled_until",
+        label: "Reprise automatique le",
+        placeholder: "",
+        type: "datetime-local",
+        hint: "Facultatif. Passé cette date, la livraison reprend d'elle-même. Sans date, elle reste suspendue jusqu'à votre retour ici.",
+      },
+      {
+        key: "delivery.app_disabled_message",
+        label: "Message affiché au client",
+        placeholder: "La livraison est temporairement indisponible…",
+        type: "text",
+        hint: "Ce que le client lit s'il choisit la livraison pendant la suspension.",
+      },
+    ],
+  },
   // ── Service de livraison par défaut (commandes auto — SANS rapport avec les prix) ──
   {
     title: "Service de livraison par défaut",
@@ -572,8 +606,8 @@ export type VoletLivraison = "frais" | "courses" | "livreurs" | "planning";
 
 const VOLETS: Record<VoletLivraison, { titre: string; description: string }> = {
   frais: {
-    titre: "Frais et service",
-    description: "Qui livre les commandes, et les frais de livraison facturés au client.",
+    titre: "Frais et disponibilité",
+    description: "Suspendre la livraison pour un temps, choisir qui livre, et régler les frais de livraison facturés au client.",
   },
   courses: {
     titre: "Courses",
@@ -589,7 +623,11 @@ const VOLETS: Record<VoletLivraison, { titre: string; description: string }> = {
   },
 };
 
-const SECTIONS_FRAIS = ["Service de livraison par défaut", "Calcul des frais de livraison"];
+const SECTIONS_FRAIS = [
+  "Coupure temporaire de la livraison",
+  "Service de livraison par défaut",
+  "Calcul des frais de livraison",
+];
 
 const SECTIONS_COURSES = ["Offre de course & refus"];
 
