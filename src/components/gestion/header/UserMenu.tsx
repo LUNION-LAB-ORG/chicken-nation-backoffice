@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { useEstMonte } from "@/hooks/useEstMonte";
 import { useUIStore } from "@/store/uiStore";
 import { formatImageUrl } from "@/utils/imageHelpers";
 import { ChevronDown, LogOut } from "lucide-react";
@@ -10,10 +11,19 @@ import { useState } from "react";
 import ChoixTheme from "./ChoixTheme";
 
 export default function UserMenu() {
-  const { user, logout } = useAuthStore();
+  const { user: compte, logout } = useAuthStore();
   const { setShowEditProfile } = useUIStore();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Le compte vient des cookies du navigateur : le serveur ne le connaît pas.
+  // Ce menu est rendu des deux côtés dans la barre mobile (`MobileAppBar`,
+  // sans garde, contrairement à l'en-tête de bureau) : tant que la page n'est
+  // pas hydratée, il écrit ce que le serveur a écrit (« Utilisateur », photo
+  // par défaut), puis le nom et la photo du compte. Sans cela, React refusait
+  // l'hydratation de toute la page à chaque chargement.
+  const estMonte = useEstMonte();
+  const user = estMonte ? compte : null;
 
   const displayName = user?.fullname || "Utilisateur";
   const avatarUrl = formatImageUrl(user?.image, "/icons/account.png");

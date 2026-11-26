@@ -14,6 +14,7 @@ import {
 import { TabKey, useDashboardStore } from "@/store/dashboardStore";
 import { useMobileNavStore } from "@/store/mobileNavStore";
 import { useAuthStore } from "../../../../features/users/hook/authStore";
+import { useEstMonte } from "@/hooks/useEstMonte";
 import { Action, Modules } from "../../../../features/users/types/auth.type";
 import { useUnreadCounts } from "../../../../features/messagerie";
 import { useNombreARelancer } from "../../../../features/orders/queries/relance.query";
@@ -37,7 +38,13 @@ type NavItem = {
 export default function MobileBottomNav() {
   const activeTab = useDashboardStore((s) => s.activeTab);
   const setActiveTab = useDashboardStore((s) => s.setActiveTab);
-  const can = useAuthStore((s) => s.can);
+  const droits = useAuthStore((s) => s.can);
+  // Les droits viennent des cookies du navigateur : le serveur n'en connaît
+  // aucun et n'écrit que « Plus ». Tant que la page n'est pas hydratée, la
+  // barre écrit la même chose ; les entrées du compte arrivent juste après.
+  // Sans cela, React refusait l'hydratation de toute la page.
+  const estMonte = useEstMonte();
+  const can: typeof droits = (module, action) => estMonte && droits(module, action);
   const openMobileMenu = useMobileNavStore((s) => s.openMobileMenu);
   const unread = useUnreadCounts();
   // Paniers non payés à relancer (ADMIN, centre d'appels ; zéro sinon).
