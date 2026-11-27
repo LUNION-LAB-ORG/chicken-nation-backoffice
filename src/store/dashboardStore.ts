@@ -414,6 +414,12 @@ export const useDashboardStore = create<DashboardState>()(
             // On extrait 'modals' pour ne PAS les sauvegarder
             const { modals, ...rest } = state[key];
             persistedSections[key] = rest;
+            // La recherche des commandes est un geste du moment : gardée d'un
+            // jour à l'autre, elle filtrerait « À relancer » sans qu'on s'en
+            // souvienne (27/11).
+            if (key === 'orders' && rest.filters?.search) {
+              persistedSections[key] = { ...rest, filters: { ...rest.filters, search: undefined } };
+            }
           }
         });
 

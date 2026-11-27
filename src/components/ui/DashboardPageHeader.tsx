@@ -61,6 +61,34 @@ const DashboardPageHeader = ({
   className = "",
 }: DashboardPageHeaderProps) => {
   const [searchValue, setSearchValue] = React.useState(searchConfig?.value);
+  const rechercheEnAttente = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const annulerRechercheEnAttente = () => {
+    if (rechercheEnAttente.current) clearTimeout(rechercheEnAttente.current);
+    rechercheEnAttente.current = null;
+  };
+
+  React.useEffect(() => annulerRechercheEnAttente, []);
+
+  /**
+   * Le champ suit la recherche de la page quand elle change AILLEURS que par
+   * lui (bouton « Effacer » d'un écran, par exemple). Il ne suit que les
+   * pages qui lui disent leur recherche (`value`), et jamais ce qu'il vient
+   * lui-même d'envoyer : la frappe n'est pas réécrite.
+   */
+  const derniereEnvoyee = React.useRef(searchConfig?.value ?? "");
+  const valeurExterne =
+    searchConfig && "value" in searchConfig ? (searchConfig.value ?? "") : undefined;
+  React.useEffect(() => {
+    if (valeurExterne === undefined || valeurExterne === derniereEnvoyee.current) return;
+    derniereEnvoyee.current = valeurExterne;
+    setSearchValue(valeurExterne);
+  }, [valeurExterne]);
+
+  const envoyer = (valeur: string | undefined) => {
+    derniereEnvoyee.current = valeur ?? "";
+    searchConfig?.onSearch?.(valeur);
+  };
 
   // Animations
   const containerVariants = {
@@ -69,7 +97,8 @@ const DashboardPageHeader = ({
   };
 
   const handleSearch = () => {
-    searchConfig?.onSearch?.(searchValue);
+    annulerRechercheEnAttente();
+    envoyer(searchValue);
   };
 
   // ✅ Gestion de la recherche en temps réel
@@ -77,11 +106,15 @@ const DashboardPageHeader = ({
     const value = e.target.value;
     setSearchValue(value);
 
-    // Si la recherche en temps réel est activée, déclencher la recherche immédiatement
+    // Recherche en temps réel : une seule, quand la frappe s'arrête. Chaque
+    // touche relançait la sienne une seconde plus tard, soit autant de
+    // lectures que de lettres.
     if (searchConfig?.realTimeSearch) {
-      setTimeout(() => {
-        searchConfig?.onSearch?.(value);
-      }, 1000);
+      annulerRechercheEnAttente();
+      rechercheEnAttente.current = setTimeout(() => {
+        rechercheEnAttente.current = null;
+        envoyer(value);
+      }, 400);
     }
   };
 

@@ -18,6 +18,8 @@ import { estDuSite } from "../../utils/canal-commande";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
 import { avertissementRepriseEnLigne, reglesDe } from "../../utils/relance";
 import { repriseALaLivraison } from "../../utils/relance-actions";
+import { commandeCorrespond, reperesDeBrouillon } from "../../utils/recherche-commande";
+import { LigneRecherche } from "../filtrage/LigneRecherche";
 import { InterrupteurSonRelances } from "./InterrupteurSonRelances";
 import { LigneRelance } from "./LigneRelance";
 import { ListeIgnorees } from "./ListeIgnorees";
@@ -29,6 +31,11 @@ interface Props {
   onOuvrir: (orderId: string) => void;
   /** Ouvre « Modifier la commande » sur la commande reprise au téléphone. */
   onReprendre: (commande: OrderTable) => void;
+  /** Recherche de l'en-tête, déjà lue : nom, numéro ou référence. Vide = tout. */
+  recherche?: string;
+  /** Passe sur l'onglet « Commandes », où la recherche couvre toutes les commandes. */
+  onToutesLesCommandes?: () => void;
+  onEffacerRecherche?: () => void;
 }
 
 const Section = ({
@@ -58,7 +65,13 @@ const Section = ({
  * Pas de section à part pour les commandes à confirmer : le serveur les range
  * en tête de « À relancer ».
  */
-export function OngletRelances({ onOuvrir, onReprendre }: Props) {
+export function OngletRelances({
+  onOuvrir,
+  onReprendre,
+  recherche = "",
+  onToutesLesCommandes,
+  onEffacerRecherche,
+}: Props) {
   const { data, isLoading, isError, refetch } = useRelancesQuery();
   const restaurantId = useDashboardStore((s) => s.selectedRestaurantId);
   const estAdmin = String(useAuthStore((s) => s.user?.role)) === "ADMIN";
@@ -75,9 +88,16 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
   const prendre = usePrendreRelance();
 
   const regles = reglesDe(data);
+  // Un groupe réunit les paniers d'un même client : il correspond dès que l'un d'eux correspond.
   const groupes = useMemo(
-    () => (data?.groupes ?? []).filter((g) => !restaurantId || g.tete.restaurant?.id === restaurantId),
-    [data?.groupes, restaurantId],
+    () =>
+      (data?.groupes ?? []).filter(
+        (g) =>
+          (!restaurantId || g.tete.restaurant?.id === restaurantId) &&
+          (!recherche ||
+            [g.tete, ...g.autres].some((panier) => commandeCorrespond(reperesDeBrouillon(panier), recherche))),
+      ),
+    [data?.groupes, restaurantId, recherche],
   );
   const miens = groupes.filter((g) => g.etat === "PRIS" && g.prise?.par_moi);
   const aRelancer = groupes.filter((g) => g.etat === "A_RELANCER");
@@ -190,6 +210,16 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
         </div>
       </div>
 
+      {!voirIgnorees && !!data && (
+        <LigneRecherche
+          recherche={recherche}
+          nombre={groupes.length}
+          quoi="à relancer"
+          onToutesLesCommandes={() => onToutesLesCommandes?.()}
+          onEffacer={() => onEffacerRecherche?.()}
+        />
+      )}
+
       {voirIgnorees ? (
         <ListeIgnorees maintenant={maintenant} restaurantId={restaurantId} />
       ) : isLoading && !data ? (
@@ -203,7 +233,7 @@ export function OngletRelances({ onOuvrir, onReprendre }: Props) {
             Réessayer
           </button>
         </div>
-      ) : groupes.length === 0 ? (
+      ) : groupes.length === 0 && recherche ? null : groupes.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
           Aucune commande à relancer. Les paniers non payés apparaissent ici {regles.delai_minutes} min après leur
           création, les commandes à payer à la livraison tout de suite.

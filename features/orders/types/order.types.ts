@@ -228,6 +228,12 @@ export interface OrderQuery {
     minAmount?: number;
     maxAmount?: number;
     reference?: string;
+    /**
+     * Recherche libre : nom ou numéro du client, référence, adresse électronique,
+     * note, code promo, référence d'un paiement. Prime sur `reference`, que seul
+     * un serveur plus ancien lit encore.
+     */
+    search?: string;
     sortBy?: string;
     sortOrder?: SortOrder;
     page?: number;

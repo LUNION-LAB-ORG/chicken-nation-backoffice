@@ -42,6 +42,7 @@ import { useRelancesQuery } from "../../../../features/orders/queries/relance.qu
 import { demanderPermissionNotifications } from "../../../../features/orders/hooks/useSonRelances";
 import { peutVoirLesBrouillons } from "../../../../features/orders/utils/brouillons";
 import { parametresSource } from "../../../../features/orders/utils/filtre-source";
+import { lireRecherche } from "../../../../features/orders/utils/recherche-commande";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,10 +151,29 @@ export default function Operations() {
     }
   };
 
+  /** Liste de l'onglet « Commandes », jamais un formulaire resté ouvert. */
+  const chercherPartout = () => {
+    setSectionView("orders", "list");
+    setActiveTab("historique");
+  };
+
+  /**
+   * Recherche de l'en-tête : nom ou numéro du client, référence...
+   *
+   *  - Le serveur cherche dans TOUTES les commandes : le résultat est la liste
+   *    de l'onglet « Commandes ». Lancée depuis « En cours », la recherche y
+   *    mène donc. Le tableau « En cours » n'est jamais filtré : une recherche
+   *    oubliée y cacherait les commandes qui arrivent.
+   *  - « À relancer » filtre sur place : les paniers non payés ne figurent
+   *    que là (utils/recherche-commande.ts).
+   */
   const handleSearch = (query: string) => {
     setFilter("orders", "search", query);
     setPagination("orders", 1, 10);
+    if (activeTab === "temps_reel" && lireRecherche(query)) chercherPartout();
   };
+  const recherche = lireRecherche(filters?.search as string | undefined);
+  const effacerRecherche = () => handleSearch("");
 
   // ── Données "En cours" ───────────────────────────────────────────────────────
   const { data, isLoading } = useOperationsActiveQuery(selectedRestaurantId ?? undefined);
@@ -243,7 +263,10 @@ export default function Operations() {
   const { data: ordersData, isLoading: ordersLoading, error: ordersError } = useOrderListQuery({
     restaurantId: selectedRestaurantId,
     page: pagination.page,
-    reference: filters?.search as string,
+    // Recherche libre ; `reference` reste envoyé pour un serveur plus ancien,
+    // qui ne cherche que dans la référence (le nouveau l'ignore).
+    search: recherche || undefined,
+    reference: recherche || undefined,
     startDate: filters?.startDate
       ? typeof filters.startDate === "string"
         ? filters.startDate
@@ -289,7 +312,7 @@ export default function Operations() {
             mode="list"
             title="Commandes"
             searchConfig={{
-              placeholder: "Rechercher par référence...",
+              placeholder: "Nom, numéro, référence...",
               value: filters?.search as string,
               onSearch: handleSearch,
               realTimeSearch: true,
@@ -451,7 +474,13 @@ export default function Operations() {
       {activeTab === "relances" && voitRelances && (
         <div className="p-4 space-y-4">
           <RestaurantTabs showAllTab={currentUser?.type === UserType.BACKOFFICE} />
-          <OngletRelances onOuvrir={handleOuvrirRelance} onReprendre={reprendreAuTelephone} />
+          <OngletRelances
+            onOuvrir={handleOuvrirRelance}
+            onReprendre={reprendreAuTelephone}
+            recherche={recherche}
+            onToutesLesCommandes={chercherPartout}
+            onEffacerRecherche={effacerRecherche}
+          />
         </div>
       )}
 
