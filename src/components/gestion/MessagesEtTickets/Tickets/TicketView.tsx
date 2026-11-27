@@ -8,6 +8,7 @@ import { Ticket, ArrowLeft, Eye, EyeOff, Send, Loader2, Tag, ShoppingBag, UserCh
 import { CustomDropdown } from '@/components/ui/CustomDropdown';
 import {
   useTicketDetailQuery,
+  LecteurVocal,
   Reactions,
   SupprimerMessage,
   useBasculerReactionTicketMutation,
@@ -23,6 +24,27 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../../../../features/users/hook/authStore';
 import { formatImageUrl } from '@/utils/imageHelpers';
 import { IncidentsCommande } from '../../../../../features/incidents/components/IncidentsCommande';
+
+/**
+ * Note vocale d'un message de ticket (27/11) : le client l'envoie depuis
+ * l'application. `meta` porte la clé du fichier et sa durée ; un message
+ * retiré n'a plus de pièce jointe.
+ */
+const noteVocaleDuMessage = (msg: {
+  meta?: unknown;
+  deleted?: boolean;
+  deletedAt?: string | Date | null;
+}): { url: string; dureeMs: number | null } | null => {
+  if (msg.deleted || msg.deletedAt) return null;
+  const meta = msg.meta as { audioUrl?: unknown; audioDurationMs?: unknown } | null | undefined;
+  if (!meta || typeof meta !== 'object' || typeof meta.audioUrl !== 'string' || !meta.audioUrl) return null;
+  const url = formatImageUrl(meta.audioUrl);
+  if (!url) return null;
+  return { url, dureeMs: typeof meta.audioDurationMs === 'number' ? meta.audioDurationMs : null };
+};
+
+/** Corps posé par le serveur sur une note vocale sans texte : inutile sous le lecteur. */
+const CORPS_NOTE_VOCALE = 'Message vocal';
 
 interface TicketViewProps {
   ticketId: string | null;
@@ -485,7 +507,18 @@ function TicketView({ ticketId, onBack }: TicketViewProps) {
                           <span className="md:text-sm text-xs text-gray-400">{new Date(msg.createdAt).toLocaleString()}</span>
                         </div>
                         <div className="bg-white text-gray-900 md:px-4 md:py-3 px-3 py-2 rounded-2xl">
-                          <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>
+                          {(() => {
+                            const note = noteVocaleDuMessage(msg);
+                            if (!note) return <p className="md:text-sm text-xs leading-relaxed">{msg.body}</p>;
+                            return (
+                              <>
+                                <LecteurVocal url={note.url} dureeMs={note.dureeMs} sombre={false} />
+                                {msg.body && msg.body !== CORPS_NOTE_VOCALE && (
+                                  <p className="md:text-sm text-xs leading-relaxed mt-2">{msg.body}</p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                         {/* Réactions : même composant que la messagerie, pour que les deux
                             écrans se comportent exactement pareil. */}
