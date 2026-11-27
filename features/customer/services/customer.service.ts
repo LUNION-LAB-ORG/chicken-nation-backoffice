@@ -2,6 +2,7 @@ import { getHumanReadableError } from '@/utils/errorMessages';
 import { getAuthToken } from "@/utils/authUtils";
 import { Customer, CustomerQuery } from '../types/customer.types';
 import { PaginatedResponse } from '../../../types';
+import { clientAuNumero, numeroCanonique, rechercheDuNumero } from '../../orders/utils/client-commande';
 import { CustomerAddForm } from '../types/customer-form.types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_PREFIX;
@@ -57,6 +58,18 @@ export const getAllCustomers = async (query?: CustomerQuery) => {
         const userMessage = getHumanReadableError(error);
         throw new Error(userMessage);
     }
+};
+
+/**
+ * Client qui porte exactement ce numéro, ou `null` (27/11) : le formulaire de
+ * commande s'en sert pour rattacher la commande au client connu au lieu de
+ * tenter d'en créer un second, que le serveur refuserait.
+ */
+export const trouverClientParTelephone = async (telephone: string): Promise<Customer | null> => {
+    const canonique = numeroCanonique(telephone);
+    if (!canonique) return null;
+    const page = await getAllCustomers({ page: 1, limit: 10, search: rechercheDuNumero(canonique) });
+    return clientAuNumero(page.data, canonique);
 };
 
 /**

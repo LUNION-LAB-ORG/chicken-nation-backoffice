@@ -119,10 +119,11 @@ export const useOrderForm = (
         setCustomerNeedsSave(needsSave);
         if (customerId) {
             setFormData((prev) => ({ ...prev, customer_id: customerId }));
-        } else if (!needsSave) {
-            // Fiche client vidée : l'identifiant du client choisi auparavant
-            // restait en place, invisible. La commande, et une réduction
-            // vérifiée pour lui, seraient parties à son nom.
+        } else {
+            // Fiche client vidée, ou autre client pas encore enregistré
+            // (27/11) : l'identifiant du client précédent restait en place,
+            // invisible. La commande, et une réduction vérifiée pour lui,
+            // seraient parties à son nom.
             setFormData((prev) => (prev.customer_id ? { ...prev, customer_id: "" } : prev));
         }
     };
