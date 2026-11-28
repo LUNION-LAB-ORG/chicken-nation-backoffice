@@ -45,6 +45,33 @@ const fmtDate = (iso: string) =>
     minute: "2-digit",
   });
 
+/**
+ * Cible d'une ligne. Quand le serveur a gardé des repères, on lit la
+ * référence de la commande puis la personne concernée et son numéro ; sinon
+ * l'identifiant court, ou le chemin, comme avant.
+ */
+function CibleAudit({ log }: { log: AuditLog }) {
+  const principal = log.target_ref || log.target_name || log.target_phone;
+  if (!principal) {
+    return log.entity_id ? (
+      <span className="block truncate font-mono text-[12px]">#{log.entity_id.slice(0, 8)}</span>
+    ) : (
+      <span className="block truncate font-mono text-[12px] text-[#B4B4BB]">{log.path}</span>
+    );
+  }
+  const suite = [log.target_ref ? log.target_name : null, principal === log.target_phone ? null : log.target_phone]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <>
+      <div className={`truncate text-hex-18181b ${log.target_ref ? "font-mono text-[12px]" : "font-medium"}`}>
+        {principal}
+      </div>
+      {suite && <div className="truncate text-[11px] text-[#9796A1]">{suite}</div>}
+    </>
+  );
+}
+
 const selectCls =
   "h-9 rounded-lg border border-hex-e4e4e7 bg-white px-2.5 text-[13px] text-hex-18181b focus:outline-none focus:ring-2 focus:ring-[#F17922]/30";
 
@@ -119,7 +146,7 @@ export default function AuditView({
           <input
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder="Rechercher (auteur, chemin, cible…)"
+            placeholder="Rechercher (auteur, référence, nom, numéro…)"
             className="w-full h-9 rounded-lg border border-hex-e4e4e7 bg-white pl-9 pr-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#F17922]/30"
           />
         </div>
@@ -243,12 +270,8 @@ export default function AuditView({
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-hex-18181b">{log.module ?? "—"}</td>
-                    <td className="py-2.5 px-3 text-hex-71717a max-w-[220px] truncate">
-                      {log.entity_id ? (
-                        <span className="font-mono text-[12px]">#{log.entity_id.slice(0, 8)}</span>
-                      ) : (
-                        <span className="font-mono text-[12px] text-[#B4B4BB]">{log.path}</span>
-                      )}
+                    <td className="py-2.5 px-3 text-hex-71717a max-w-[240px]">
+                      <CibleAudit log={log} />
                     </td>
                     {view === "logs" && (
                       <td className="py-2.5 px-3 font-mono text-[12px] text-hex-71717a">

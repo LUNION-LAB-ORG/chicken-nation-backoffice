@@ -18,6 +18,14 @@ export interface AuditLog {
   user_agent: string | null;
   summary: string | null;
   metadata: Record<string, unknown> | null;
+  /**
+   * Repères lisibles de la cible, figés à l'écriture : la référence (commande,
+   * course, paiement), la personne concernée (client, livreur, personnel) et
+   * son numéro. Absents des lignes qu'un serveur plus ancien renvoie.
+   */
+  target_ref?: string | null;
+  target_name?: string | null;
+  target_phone?: string | null;
   created_at: string;
 }
 

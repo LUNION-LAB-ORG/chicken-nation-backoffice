@@ -63,6 +63,9 @@ export default function AuditDetailModal({
             <Row label="Action" value={log.action} />
             <Row label="Module" value={log.module} />
             <Row label="Cible" value={log.entity_id} />
+            {log.target_ref && <Row label="Référence" value={log.target_ref} />}
+            {log.target_name && <Row label="Personne concernée" value={log.target_name} />}
+            {log.target_phone && <Row label="Numéro" value={log.target_phone} />}
             <Row label="Méthode" value={log.method} />
             <Row
               label="Statut"
