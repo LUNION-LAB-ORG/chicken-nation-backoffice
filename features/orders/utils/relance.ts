@@ -32,6 +32,18 @@ export function duree(minutes: number): string {
   return reste ? `${h} h ${String(reste).padStart(2, "0")}` : `${h} h`;
 }
 
+/**
+ * Délai réglé, qui peut tomber sur une demi-minute : « 1 min 30 », « 3 min »,
+ * « 30 s ». Jamais « 1.5 min ».
+ */
+export function delaiLisible(minutes: number): string {
+  const secondes = Math.max(0, Math.round(minutes * 60));
+  const m = Math.floor(secondes / 60);
+  const s = secondes % 60;
+  if (m >= 60 || s === 0) return duree(m);
+  return m === 0 ? `${s} s` : `${m} min ${String(s).padStart(2, "0")}`;
+}
+
 const minutesDepuis = (iso: string, maintenant: number) => (maintenant - Date.parse(iso)) / MINUTE;
 
 /** « depuis 4 min », « depuis 1 h 12 » ; l'âge se lit sur la création du panier. */

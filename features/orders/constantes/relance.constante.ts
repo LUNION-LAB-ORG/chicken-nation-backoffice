@@ -30,7 +30,8 @@ export const RAISON_TEXTE_MAX = 160;
  * règles reçues, jamais d'un nombre écrit en dur dans une phrase.
  */
 export const REGLES_PAR_DEFAUT = {
-  delai_minutes: 3,
+  // 1 min 30 : le délai se règle à la demi-minute.
+  delai_minutes: 1.5,
   duree_prise_minutes: 10,
   rappel_minutes: 5,
   fenetre_heures: 3,

@@ -70,12 +70,12 @@ describe('contrat serveur : GET /orders/relances', () => {
   test('paiement en ligne en cours : le panier de l’application d’Awa, jusqu’à la fin du délai', () => {
     expect(awa.signaux.paiement_en_ligne_en_cours).toEqual({
       reference: 'ORD-261019-00001',
-      jusqua: '2026-10-19T12:01:00.000Z',
+      jusqua: '2026-10-19T12:00:30.000Z',
     });
     expect(textePaiementEnLigne(awa, maintenant)).toContain('ORD-261019-00001');
     expect([yao, ble].map((g) => g.signaux.paiement_en_ligne_en_cours)).toEqual([null, null]);
     // La liste se relit à la fin du délai pour retirer le signal.
-    expect(REPONSE_RELANCES.prochaine_echeance).toBe('2026-10-19T12:01:00.000Z');
+    expect(REPONSE_RELANCES.prochaine_echeance).toBe('2026-10-19T12:00:30.000Z');
   });
 
   test('notification du système : « dont 2 à confirmer »', () => {

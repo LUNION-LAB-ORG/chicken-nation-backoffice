@@ -16,7 +16,7 @@ import { GroupeRelance } from "../../types/relance.types";
 import { OrderTable } from "../../types/ordersTable.types";
 import { estDuSite } from "../../utils/canal-commande";
 import { mapApiOrderToUiOrder } from "../../utils/orderMapper";
-import { avertissementRepriseEnLigne, reglesDe } from "../../utils/relance";
+import { avertissementRepriseEnLigne, delaiLisible, reglesDe } from "../../utils/relance";
 import { repriseALaLivraison } from "../../utils/relance-actions";
 import { commandeCorrespond, reperesDeBrouillon } from "../../utils/recherche-commande";
 import { LigneRecherche } from "../filtrage/LigneRecherche";
@@ -181,7 +181,8 @@ export function OngletRelances({
       {/* Barre d'outils */}
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="text-xs text-gray-500">
-          Appel conseillé {regles.delai_minutes} min après la commande. Une commande prise se libère seule au bout de{" "}
+          Appel conseillé {delaiLisible(regles.delai_minutes)} après la commande. Une commande prise se libère seule au bout
+          de{" "}
           {regles.duree_prise_minutes} min.
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -235,8 +236,8 @@ export function OngletRelances({
         </div>
       ) : groupes.length === 0 && recherche ? null : groupes.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
-          Aucune commande à relancer. Les paniers non payés apparaissent ici {regles.delai_minutes} min après leur
-          création, les commandes à payer à la livraison tout de suite.
+          Aucune commande à relancer. Les paniers non payés apparaissent ici {delaiLisible(regles.delai_minutes)} après
+          leur création, les commandes à payer à la livraison tout de suite.
         </p>
       ) : (
         <div className="space-y-6">
@@ -246,7 +247,7 @@ export function OngletRelances({
           {enCours.length > 0 && (
             <Section
               titre={`Paiement en cours (${enCours.length})`}
-              sousTitre={`Le client est peut-être en train de payer. Pas d'appel avant ${regles.delai_minutes} min.`}
+              sousTitre={`Le client est peut-être en train de payer. Pas d'appel avant ${delaiLisible(regles.delai_minutes)}.`}
             >
               {enCours.map(ligne)}
             </Section>
